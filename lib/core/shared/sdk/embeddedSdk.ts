@@ -28,7 +28,6 @@ import {
   Kuzzle,
 } from 'kuzzle-sdk';
 
-import KuzzleObject from '../../../kuzzle/kuzzle';
 import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
@@ -98,14 +97,6 @@ export class EmbeddedSDK extends Kuzzle {
    */
   constructor (user?) {
     super(new FunnelProtocol(user), { autoResubscribe: false });
-
-    Reflect.defineProperty(this, '_kuzzle', {
-      value: KuzzleObject.getInstance(),
-    });
-  }
-
-  protected get kuzzle () {
-    return this._kuzzle;
   }
 
   /**

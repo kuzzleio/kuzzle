@@ -174,7 +174,7 @@ describe('#mutex', () => {
 
       kuzzle.ask.resetHistory();
 
-      const anotherMutex = new Mutex(kuzzle, 'bar', { timeout: 0 });
+      const anotherMutex = new Mutex('bar', { timeout: 0 });
 
       await anotherMutex.lock();
       await anotherMutex.unlock();

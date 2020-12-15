@@ -33,7 +33,6 @@ describe('Test: validation initialization', () => {
   });
 
   it('should have the expected structure', () => {
-    should(validation.kuzzle).be.eql(kuzzle);
     should(validation.types).be.an.Object();
     should(validation.specification).be.an.Object();
     should(validation.koncorde).be.an.Object();

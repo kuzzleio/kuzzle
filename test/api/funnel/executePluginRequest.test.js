@@ -51,7 +51,6 @@ describe('funnel.executePluginRequest', () => {
 
   it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
 
     const rq = new Request({controller: 'testme', action: 'fail'});
@@ -80,7 +79,6 @@ describe('funnel.executePluginRequest', () => {
 
   it('should not dump on errors if dump is disabled', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.dump = sinon.stub();
     kuzzle.config.dump.enabled = false;
 
     const rq = new Request({controller: 'testme', action: 'fail'});

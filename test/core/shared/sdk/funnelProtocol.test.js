@@ -41,8 +41,8 @@ describe('Test: sdk/funnelProtocol', () => {
 
       funnelProtocol.on('room-id', () => {
         try {
-          should(funnelProtocol.kuzzle.on).be.calledOnce();
-          should(funnelProtocol.kuzzle.on.getCall(0).args[0])
+          should(kuzzle.on).be.calledOnce();
+          should(kuzzle.on.getCall(0).args[0])
             .be.eql('core:network:internal:message');
 
           done();

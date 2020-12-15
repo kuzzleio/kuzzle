@@ -20,7 +20,6 @@ describe('/lib/core/network/protocols/internal', () => {
     sinon.stub(entrypoint, 'removeConnection');
 
     protocol = new InternalProtocol();
-    protocol._kuzzle = kuzzle;
   });
 
   describe('#init', () => {

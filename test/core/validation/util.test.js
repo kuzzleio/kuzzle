@@ -343,7 +343,7 @@ describe('Test: validation utilities', () => {
         hits: [],
       });
 
-      const result = await getValidationConfiguration(kuzzle);
+      const result = await getValidationConfiguration();
 
       should(result).be.deepEqual(kuzzle.config.validation);
 
@@ -359,7 +359,7 @@ describe('Test: validation utilities', () => {
         hits: [],
       });
 
-      const result = await getValidationConfiguration(kuzzle);
+      const result = await getValidationConfiguration();
 
       should(result).be.an.Object().and.be.empty();
     });
@@ -416,7 +416,7 @@ describe('Test: validation utilities', () => {
         .withArgs('core:storage:private:document:search')
         .resolves(internalEngineResponse);
 
-      const result = await getValidationConfiguration(kuzzle);
+      const result = await getValidationConfiguration();
 
       should(result).be.deepEqual(expectedConfiguration);
     });

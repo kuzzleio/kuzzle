@@ -23,7 +23,6 @@ describe('Test: ElasticSearch service', () => {
   let elasticsearch;
   let timestamp;
   let esClientError;
-  let dateNow = Date.now;
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
@@ -45,11 +44,11 @@ describe('Test: ElasticSearch service', () => {
       formatESError: sinon.spy(error => error)
     };
 
-    Date.now = () => timestamp;
+    sinon.stub(Date, 'now').returns(timestamp);
   });
 
   afterEach(() => {
-    Date.now = dateNow;
+    Date.now.restore();
   });
 
   describe('#constructor', () => {
@@ -59,7 +58,6 @@ describe('Test: ElasticSearch service', () => {
         kuzzle.config.services.storageEngine,
         scopeEnum.PRIVATE);
 
-      should(esPublic._kuzzle).be.exactly(kuzzle);
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
       should(esPublic._indexPrefix).be.eql('&');
       should(esInternal._indexPrefix).be.eql('%');
@@ -1343,7 +1341,6 @@ describe('Test: ElasticSearch service', () => {
           { id: 'services.storage.write_limit_exceeded' });
     });
   });
-
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
@@ -3975,7 +3972,6 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       publicES = new ES(kuzzle.config.services.storageEngine);
       internalES = new ES(
-        kuzzle,
         kuzzle.config.services.storageEngine,
         scopeEnum.PRIVATE);
     });

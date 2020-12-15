@@ -2,34 +2,29 @@
 
 const should = require('should');
 
-const Kuzzle = require('../../mocks/kuzzle.mock');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Role = require('../../../lib/model/security/role');
 const {
   Request,
   BadRequestError
 } = require('../../../index');
 
-const
-  _kuzzle = Symbol.for('_kuzzle');
-
 describe('Test: model/security/role', () => {
-  let
-    kuzzle,
-    context = {
-      protocol: 'test',
-      userId: '-1'
+  let context = {
+    protocol: 'test',
+    userId: '-1'
+  };
+  let request = new Request(
+    {
+      index: 'index',
+      collection: 'collection',
+      controller: 'controller',
+      action: 'action'
     },
-    request = new Request(
-      {
-        index: 'index',
-        collection: 'collection',
-        controller: 'controller',
-        action: 'action'
-      },
-      context);
+    context);
 
   before(() => {
-    kuzzle = new Kuzzle();
+    new KuzzleMock();
   });
 
   describe('#isActionAllowed', () => {
@@ -42,8 +37,6 @@ describe('Test: model/security/role', () => {
           actions: {}
         }
       };
-
-      role[_kuzzle] = kuzzle;
 
       should(role.isActionAllowed(request)).be.false();
 
@@ -68,7 +61,6 @@ describe('Test: model/security/role', () => {
         }
       };
 
-      role[_kuzzle] = kuzzle;
       should(role.isActionAllowed(request)).be.true();
     });
 
@@ -97,8 +89,6 @@ describe('Test: model/security/role', () => {
         }
       };
 
-      role[_kuzzle] = kuzzle;
-
       should(role.isActionAllowed(msRequest)).be.true();
       should(role.isActionAllowed(memoryStorageRequest)).be.true();
       should(role.isActionAllowed(forbiddenMsRequest)).be.false();
@@ -120,8 +110,6 @@ describe('Test: model/security/role', () => {
           }
         }
       };
-
-      role[_kuzzle] = kuzzle;
 
       should(role.isActionAllowed(request)).be.true();
     });
@@ -146,8 +134,6 @@ describe('Test: model/security/role', () => {
           }
         }
       };
-
-      role[_kuzzle] = kuzzle;
 
       should(role.isActionAllowed(req)).be.true();
       should(role.isActionAllowed(req, restrictions)).be.true();
@@ -189,8 +175,6 @@ describe('Test: model/security/role', () => {
         }
       };
 
-      role[_kuzzle] = kuzzle;
-
       should(role.isActionAllowed(request)).be.false();
 
       role.controllers.controller.actions.action = true;
@@ -210,7 +194,6 @@ describe('Test: model/security/role', () => {
         }
       };
 
-      role[_kuzzle] = kuzzle;
       should(role.isActionAllowed(request)).be.false();
     });
 

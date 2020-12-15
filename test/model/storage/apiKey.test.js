@@ -48,17 +48,13 @@ describe('ApiKey', () => {
         expiresAt: 42
       };
 
-      createTokenStub = BaseModel.kuzzle.ask
+      createTokenStub = kuzzle.ask
         .withArgs(createTokenEvent)
         .resolves(token);
 
-      sinon.stub(BaseModel.kuzzle, 'hash').returns('hashed-jwt-token');
+      kuzzle.hash.returns('hashed-jwt-token');
 
       saveStub = sinon.stub(ApiKey.prototype, 'save').resolves();
-    });
-
-    afterEach(() => {
-      BaseModel.kuzzle.hash.restore();
     });
 
     it('should create a new API key and generate a token', async () => {

@@ -16,8 +16,6 @@ const Profile = require('../../../lib/model/security/profile');
 const ProfileRepository = require('../../../lib/core/security/profileRepository');
 const Repository = require('../../../lib/core/shared/repository');
 
-const _kuzzle = Symbol.for('_kuzzle');
-
 describe('Test: security/profileRepository', () => {
   let kuzzle;
   let profileRepository;
@@ -43,7 +41,6 @@ describe('Test: security/profileRepository', () => {
     });
 
     testProfile = new Profile();
-    testProfile[_kuzzle] = kuzzle;
     testProfile._id = 'foo';
     testProfile.policies = [
       {roleId: 'test', restrictedTo: [{index: 'index'}]},

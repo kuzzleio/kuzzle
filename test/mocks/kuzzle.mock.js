@@ -3,12 +3,13 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
+const Kuzzle = require('../../lib/kuzzle/kuzzle');
 const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
 const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
 
-let instance = null;
+global.kuzzle = null;
 
 class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
@@ -18,7 +19,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
 
-    instance = this;
+    global.kuzzle = this;
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -196,28 +197,11 @@ class KuzzleMock extends KuzzleEventEmitter {
     };
 
     this.start = sinon.stub().resolves();
-
-    {
-      const mockProto = Object.getPrototypeOf(this);
-      const kuzzleProto = Object.getPrototypeOf(mockProto);
-
-      for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'hash', 'starting', 'running', 'shuttingDown'].includes(name)) {
-          continue;
-        }
-
-        if (!Object.prototype.hasOwnProperty.call(this, name)) {
-          this[name] = function() {
-            throw new Error(`Kuzzle original property ${name} is not mocked`);
-          };
-        }
-      }
-    }
-  }
-
-  static getInstance () {
-    return instance;
+    this.hash = sinon.stub().callsFake(obj => JSON.stringify(obj));
+    this.running = sinon.stub().returns(false);
   }
 }
+
+KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;

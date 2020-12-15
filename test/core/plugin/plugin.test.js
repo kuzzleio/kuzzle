@@ -59,7 +59,6 @@ describe('Plugin', () => {
 
       plugin = new Plugin(instance, options);
 
-      should(plugin._kuzzle).be.eql(kuzzle);
       should(plugin.name).be.eql('lambda-core');
       should(plugin._application).be.true();
     });
@@ -152,7 +151,7 @@ describe('Plugin', () => {
     it('should instantiates plugin class from disk and wrap it in Kuzzle Plugin', () => {
       fsMock.existsSync.returns(true);
 
-      const loadedPlugin = Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+      const loadedPlugin = Plugin.loadFromDirectory('testPlugin');
 
       should(loadedPlugin.manifest.raw).be.eql(manifest);
       should(fsMock.existsSync).be.calledWith('testPlugin/package.json');
@@ -184,7 +183,7 @@ describe('Plugin', () => {
         }
       };
 
-      plugin = Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+      plugin = Plugin.loadFromDirectory('testPlugin');
 
       should(kuzzle.log.info)
         .calledOnce()
@@ -211,7 +210,7 @@ describe('Plugin', () => {
       };
 
       should(() => {
-        Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+        Plugin.loadFromDirectory('testPlugin');
       }).throwError({ id: 'plugin.manifest.invalid_errors' });
     });
 
@@ -219,7 +218,7 @@ describe('Plugin', () => {
       mockrequire.stop(`${rootDir}/testPlugin/manifest.json`);
 
       should(() => {
-        Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+        Plugin.loadFromDirectory('testPlugin');
       }).throwError({ id: 'plugin.manifest.cannot_load' });
     });
 
@@ -227,7 +226,7 @@ describe('Plugin', () => {
       mockrequire('testPlugin', WrongPlugin);
 
       should(() => {
-        Plugin.loadFromDirectory(kuzzle, 'testPlugin');
+        Plugin.loadFromDirectory('testPlugin');
       }).throwError({ id: 'plugin.assert.init_not_found' });
     });
   });

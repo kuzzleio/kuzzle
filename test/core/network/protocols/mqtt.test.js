@@ -31,7 +31,6 @@ class FakeClient {
 describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   let netMock;
   let entrypoint;
-  let kuzzle;
   let protocol;
   let MqttProtocol;
   let fakeClient;
@@ -54,10 +53,9 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
 
     entrypoint = {
-      kuzzle,
       config: {
         maxRequestSize: 42,
         protocols: {

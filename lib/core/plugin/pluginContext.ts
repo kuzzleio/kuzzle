@@ -25,7 +25,6 @@ import Koncorde from 'koncorde';
 import { Client } from '@elastic/elasticsearch';
 import { JSONObject } from 'kuzzle-sdk';
 
-import Kuzzle from '../../kuzzle/kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import PluginRepository from './pluginRepository';
 import Store from '../shared/store';
@@ -58,6 +57,8 @@ import {
 } from '../../../index';
 
 const contextError = kerror.wrap('plugin', 'context');
+
+declare const kuzzle: any;
 
 export interface Repository {
  create(document: JSONObject, options: any): Promise<any>;
@@ -217,12 +218,6 @@ export class PluginContext {
   };
 
   constructor (pluginName) {
-    const kuzzle = Kuzzle.getInstance();
-
-    Object.defineProperty(this, 'kuzzle', {
-      value: kuzzle,
-    });
-
     this.config = JSON.parse(JSON.stringify(kuzzle.config));
 
     Object.freeze(this.config);
@@ -380,8 +375,6 @@ export class PluginContext {
  * @param {Function} [callback]
  */
 function execute (request, callback) {
-  const kuzzle = Kuzzle.getInstance();
-
   if (callback && typeof callback !== 'function') {
     const error = contextError.get('invalid_callback', typeof callback);
     kuzzle.log.error(error);
@@ -507,9 +500,8 @@ function curryAddStrategy(pluginName) {
     ) {
       throw contextError.get('missing_authenticator', pluginName, name);
     }
-    // @todo use Plugin.checkName to ensure format
-    const kuzzle = Kuzzle.getInstance();
 
+    // @todo use Plugin.checkName to ensure format
     kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
 
     return kuzzle.pipe(
@@ -530,8 +522,6 @@ function curryRemoveStrategy(pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name) {
-    const kuzzle = Kuzzle.getInstance();
-
     kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
     return kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
   };

@@ -14,7 +14,7 @@ class ClientAdapterMock extends ClientAdapter {
       this.registerMappingEvents();
       this.registerCacheEvents();
 
-      this.kuzzle.onAsk(
+      global.kuzzle.onAsk(
         `core:storage:${this.scope}:info:get`,
         sinon.stub().resolves());
     });

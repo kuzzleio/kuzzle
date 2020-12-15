@@ -4,7 +4,6 @@ const util = require('util');
 
 const _ = require('lodash');
 const should = require('should');
-const sinon = require('sinon');
 const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
@@ -19,14 +18,19 @@ describe('Backend', () => {
 
   beforeEach(() => {
     fsStub = new FsMock();
-    mockrequire('fs', fsStub);
     fsStub.existsSync.returns(true);
     fsStub.readFileSync.returns('ref: refs/master');
 
-    const modul = mockrequire.reRequire('../../../lib/core/application/backend');
-    Backend = modul.Backend;
+    mockrequire('fs', fsStub);
+    mockrequire('../../../lib/kuzzle', KuzzleMock);
+
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/application/backend'));
 
     application = new Backend('black-mesa');
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   describe('#_instanceProxy', () => {
@@ -73,9 +77,9 @@ describe('Backend', () => {
 
       await application.start();
 
-      should(application._kuzzle.start).be.calledOnce();
+      should(global.kuzzle.start).be.calledOnce();
 
-      const [plugin, options] = application._kuzzle.start.getCall(0).args;
+      const [plugin, options] = global.kuzzle.start.getCall(0).args;
 
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
@@ -407,24 +411,17 @@ describe('Backend', () => {
       it('should exposes log methods and call kuzzle ones', async () => {
         await application.start();
 
-        application._kuzzle.log = {
-          debug: sinon.stub(),
-          info: sinon.stub(),
-          warn: sinon.stub(),
-          error: sinon.stub(),
-          verbose: sinon.stub(),
-        };
         application.log.debug('debug');
         application.log.info('info');
         application.log.warn('warn');
         application.log.error('error');
         application.log.verbose({ info: 'verbose' });
 
-        should(application._kuzzle.log.debug).be.calledWith(util.inspect('debug'));
-        should(application._kuzzle.log.info).be.calledWith(util.inspect('info'));
-        should(application._kuzzle.log.warn).be.calledWith(util.inspect('warn'));
-        should(application._kuzzle.log.error).be.calledWith(util.inspect('error'));
-        should(application._kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
+        should(global.kuzzle.log.debug).be.calledWith(util.inspect('debug'));
+        should(global.kuzzle.log.info).be.calledWith(util.inspect('info'));
+        should(global.kuzzle.log.warn).be.calledWith(util.inspect('warn'));
+        should(global.kuzzle.log.error).be.calledWith(util.inspect('error'));
+        should(global.kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
       });
     });
   });
@@ -441,11 +438,11 @@ describe('Backend', () => {
     it('should exposes the trigger method', async () => {
       await application.start();
 
-      KuzzleMock.getInstance().pipe.resolves('resonance cascade');
+      global.kuzzle.pipe.resolves('resonance cascade');
 
       const result = await application.trigger('xen:crystal', 'payload');
 
-      should(application._kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
+      should(global.kuzzle.pipe).be.calledWith('xen:crystal', 'payload');
       should(result).be.eql('resonance cascade');
     });
 
@@ -460,7 +457,7 @@ describe('Backend', () => {
   describe('StorageManager#StorageClient', () => {
     it('should allows to construct an ES StorageClient', async () => {
       await application.start();
-      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
+      global.kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage.StorageClient).be.a.Function();
 
       const client = new application.storage.StorageClient({ maxRetries: 42 });
@@ -474,7 +471,7 @@ describe('Backend', () => {
     it('should allows lazily access an ES Client', async () => {
       await application.start();
 
-      application._kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
+      global.kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
       should(application.storage._client).be.null();
 
       should(application.storage.storageClient).be.instanceOf(ElasticsearchClient);

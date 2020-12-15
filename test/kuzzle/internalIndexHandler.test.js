@@ -19,7 +19,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    internalIndexHandler = new InternalIndexHandler(kuzzle);
+    internalIndexHandler = new InternalIndexHandler();
     sinon.stub(ApiKey, 'batchExecute');
 
     internalIndexName = kuzzle.config.services.storageEngine.internalIndex.name;
@@ -55,7 +55,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         name: 'fooindex',
       };
 
-      internalIndexHandler = new InternalIndexHandler(kuzzle);
+      internalIndexHandler = new InternalIndexHandler();
 
       await internalIndexHandler.init();
 
@@ -273,7 +273,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
   describe('#createInitialValidations', () => {
     it('should bootstrap default validation rules', async () => {
-      internalIndexHandler.kuzzle.config.validation = {
+      kuzzle.config.validation = {
         index: {
           collection: {
             foo: 'bar',
@@ -288,7 +288,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
         internalIndexName,
         'validations',
         'index#collection',
-        internalIndexHandler.kuzzle.config.validation.index.collection);
+        kuzzle.config.validation.index.collection);
     });
   });
 
