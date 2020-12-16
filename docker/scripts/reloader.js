@@ -78,6 +78,17 @@ function startProcess () {
     state = stateEnum.STOPPED;
   });
 
+  // exits child process on termination
+  for (const signal of ['SIGINT', 'SIGTERM']) {
+    process.on(signal, () => {
+      if (childProcess) {
+        childProcess.kill(signal);
+      }
+
+      process.exit();
+    });
+  }
+
   state = stateEnum.RUNNING;
 }
 

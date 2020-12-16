@@ -10,7 +10,7 @@ description: InternalLogger.error method
 Logs an error message.
 
 ::: info
-This method can only be used after the application started up.
+Before application startup this method will use `console.log` instead of the configured logger.
 :::
 
 ```ts
