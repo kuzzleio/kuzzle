@@ -385,10 +385,12 @@ class InternalLogger extends ApplicationManager implements InternalLogger {
 
   private _log (level: string, message: any) {
     if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'log');
+      // eslint-disable-next-line no-console
+      console.log(util.inspect(message));
     }
-
-    this._kuzzle.log[level](util.inspect(message));
+    else {
+      this._kuzzle.log[level](util.inspect(message));
+    }
   }
 }
 
