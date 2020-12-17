@@ -7,6 +7,7 @@ kuzzle_latest_major=2
 # Arguments
 
 mode=$MODE
+branch=$BRANCH
 
 if [ -z "$mode" ]; then
   echo "This script has three mode that you can use with the variable MODE"

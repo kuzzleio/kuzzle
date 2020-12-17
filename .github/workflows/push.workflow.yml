@@ -57,7 +57,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
-  integration-tests-legacy:
+  functional-tests-legacy:
     name: Integration Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     strategy:
@@ -83,13 +83,13 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/integration-tests
+      - uses: ./.github/actions/functional-tests
         env:
           KUZZLE_FUNCTIONAL_TESTS: test:functional:legacy:${{ matrix.test_set }}
         with:
           docker-compose-test-file: ./.ci/test.yml
 
-  integration-tests-sdk:
+  functional-tests:
     name: Integration Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     strategy:
@@ -115,13 +115,13 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/integration-tests
+      - uses: ./.github/actions/functional-tests
         env:
           KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:${{ matrix.test_set }}
         with:
           docker-compose-test-file: ./.ci/test.yml
 
-  integration-tests-cluster:
+  functional-tests-cluster:
     name: Integration Tests - Cluster - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     runs-on: ubuntu-18.04
@@ -174,7 +174,7 @@ jobs:
   documentation-production:
     name: Deploy Documentation to production
     if: github.ref == 'ref/head/master'
-    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
+    needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -205,7 +205,7 @@ jobs:
   documentation-staging:
     name: Deploy Documentation to staging
     if: github.ref == 'ref/head/2-dev'
-    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
+    needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -235,7 +235,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
+    needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -266,3 +266,30 @@ jobs:
           DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
+
+  npm-deploy:
+    name: Build and deploy images to Dockerhub
+    needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.npm
+            **/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - uses: ./.github/actions/npmjs
+        with:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

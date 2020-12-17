@@ -1,0 +1,20 @@
+name: Build and Deploy to NPM.js
+description: Build TS and deploy package to NPM.js
+inputs:
+  NPM_TOKEN:
+    description: Dockerhub Username
+    required: true
+    default: ${{ secrets.NPM_TOKEN }}
+runs:
+  using: "composite"
+  steps:
+    - name: Create JS from TS files
+      run: |
+        npm ci --silent
+        npm run build
+      shell: bash
+    - name: Deploy NPM package
+      run: npm publish
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
+      shell: bash
