@@ -1,4 +1,4 @@
-name: Integration Tests
+name: Functional Tests
 description: Run Cucumber tests on a Kuzzle Stack
 inputs:
   docker-compose-test-file:

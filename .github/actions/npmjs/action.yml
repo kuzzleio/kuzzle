@@ -1,10 +1,12 @@
 name: Build and Deploy to NPM.js
 description: Build TS and deploy package to NPM.js
+
 inputs:
   NPM_TOKEN:
-    description: Dockerhub Username
+    description: NPM.js Token
     required: true
     default: ${{ secrets.NPM_TOKEN }}
+
 runs:
   using: "composite"
   steps:

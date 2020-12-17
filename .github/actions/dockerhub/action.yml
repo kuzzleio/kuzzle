@@ -1,5 +1,6 @@
 name: Build and Deploy Docker
 description: Build and deploy Docker image
+
 inputs:
   DOCKER_USERNAME:
     description: Dockerhub Username
@@ -12,6 +13,7 @@ inputs:
   BRANCH:
     description: Branch to use in the build and deploy script
     required: true
+
 runs:
   using: "composite"
   steps:
