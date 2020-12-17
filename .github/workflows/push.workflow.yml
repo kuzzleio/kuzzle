@@ -58,7 +58,7 @@ jobs:
       - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
-    name: Integration Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     strategy:
       matrix:
@@ -90,7 +90,7 @@ jobs:
           docker-compose-test-file: ./.ci/test.yml
 
   functional-tests:
-    name: Integration Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: Functional Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     strategy:
       matrix:
@@ -122,7 +122,7 @@ jobs:
           docker-compose-test-file: ./.ci/test.yml
 
   functional-tests-cluster:
-    name: Integration Tests - Cluster - Node.js v${{ matrix.node-version }}
+    name: Functional Tests - Cluster - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     runs-on: ubuntu-18.04
     strategy:
