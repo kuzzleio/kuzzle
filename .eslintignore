@@ -42,4 +42,5 @@ lib/types/StrategyDefinition.js
 lib/types/Token.js
 lib/types/User.js
 lib/util/interfaces.js
+lib/util/mutex.js
 features-sdk/support/application/functional-tests-app.js
