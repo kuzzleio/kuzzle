@@ -2,12 +2,14 @@ name: Deploy Documentation
 description: Build doc, upload it to S3 and invalidate Cloudfront cache
 
 inputs:
-  ACCESS_KEY:
+  AWS_ACCESS_KEY_ID:
     description: AWS Access key ID
     required: true
-  SECRET_KEY:
+    default: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY:
     description: AWS secret key
     required: true
+    default: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   S3_BUCKET:
     description: S3 bucket name
     required: true
@@ -35,8 +37,8 @@ runs:
     - name: Set up AWS CLI 
       run: |
         export AWS_DEFAULT_REGION="${{ inputs.REGION }}"
-        export AWS_ACCESS_KEY_ID="${{ inputs.ACCESS_KEY }}"
-        export AWS_SECRET_ACCESS_KEY="${{ inputs.SECRET_KEY }}"
+        export AWS_ACCESS_KEY_ID="${{ inputs.AWS_ACCESS_KEY_ID }}"
+        export AWS_SECRET_ACCESS_KEY="${{ inputs.AWS_SECRET_ACCESS_KEY }}"
         export S3_BUCKET="${{ inputs.S3_BUCKET }}"
         export CLOUDFRONT_DISTRIBUTION_ID="${{ inputs.CLOUDFRONT_ID }}"
       shell: bash

@@ -174,6 +174,7 @@ jobs:
   documentation-production:
     name: Deploy Documentation to production
     if: github.ref == 'ref/head/master'
+    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -197,8 +198,6 @@ jobs:
       - uses: ./.github/actions/deploy-doc
         with:
           REGION: us-west-2
-          ACCESS_KEY: AKIAIYAXFUAHXOWP2MJA
-          SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_BUCKET: docs.kuzzle.io
           CLOUDFRONT_ID: E3D6RP0POLCJMM
           FRAMEWORK_BRANCH: master
@@ -206,6 +205,7 @@ jobs:
   documentation-staging:
     name: Deploy Documentation to staging
     if: github.ref == 'ref/head/2-dev'
+    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -229,8 +229,40 @@ jobs:
       - uses: ./.github/actions/deploy-doc
         with:
           REGION: us-west-2
-          ACCESS_KEY: AKIAIYAXFUAHXOWP2MJA
-          SECRET_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           S3_BUCKET: docs-next.kuzzle.io
           CLOUDFRONT_ID: E2ZCCEK9GRB49U
           FRAMEWORK_BRANCH: dev
+
+  dockerhub-deploy:
+    name: Build and deploy images to Dockerhub
+    needs: ['integration-tests-legacy', 'integration-tests-sdk', 'integration-tests-cluster']
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cache node modules
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-node-modules
+        with:
+          path: |
+            ~/.cache/pip
+            ~/.npm
+            **/node_modules
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-build-${{ env.cache-name }}-
+            ${{ runner.os }}-build-
+            ${{ runner.os }}-
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 12
+      - name: Get branch name
+        # Github expose branch name with this format '/ref/branch/branchName'
+        # So we need to extract the wanted part (branchName)
+        run: echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+        id: extract_branch
+      - uses: ./.github/actions/dockerhub
+        with:
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          BRANCH: ${{ steps.extract_branch.outputs.branch }}

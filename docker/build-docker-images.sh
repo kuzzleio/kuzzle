@@ -7,10 +7,6 @@ kuzzle_latest_major=2
 # Arguments
 
 mode=$MODE
-docker_password=$DOCKER_PASSWORD
-# Can be one of the following: *-dev, *-stable, master
-travis_branch=$TRAVIS_BRANCH
-
 
 if [ -z "$mode" ]; then
   echo "This script has three mode that you can use with the variable MODE"
@@ -80,30 +76,30 @@ docker_push() {
 }
 
 if [ "$mode" == "production" ]; then
-  if [ -z "$docker_password" ]; then
+  if [ -z "$DOCKER_PASSWORD" ]; then
     echo "Unable to find DOCKER_PASSWORD for account kuzzleteam"
     exit 1
   fi
 
-  run_or_echo "docker login -u kuzzleteam -p $docker_password"
+  run_or_echo "docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD"
 fi
 
-if [[ "$TRAVIS_BRANCH" == *"-dev" ]]; then
+if [[ "$BRANCH" == *"-dev" ]]; then
   # Build triggered by a merge on branch *-dev
   #   image name example: kuzzleio/kuzzle:2-dev
-  docker_build 'plugin-dev' "$TRAVIS_BRANCH" 'plugin-dev'
-  docker_push 'plugin-dev' "$TRAVIS_BRANCH"
+  docker_build 'plugin-dev' "$BRANCH" 'plugin-dev'
+  docker_push 'plugin-dev' "$BRANCH"
 
-  docker_build 'kuzzle' "$TRAVIS_BRANCH" 'kuzzle'
-  docker_push 'kuzzle' "$TRAVIS_BRANCH"
+  docker_build 'kuzzle' "$BRANCH" 'kuzzle'
+  docker_push 'kuzzle' "$BRANCH"
 
-  docker_build 'kuzzle' "$TRAVIS_BRANCH-alpine" 'kuzzle.alpine'
-  docker_push 'kuzzle' "$TRAVIS_BRANCH-alpine"
+  docker_build 'kuzzle' "$BRANCH-alpine" 'kuzzle.alpine'
+  docker_push 'kuzzle' "$BRANCH-alpine"
 
-  docker_build 'kuzzle' "$TRAVIS_BRANCH-scratch" 'kuzzle.scratch'
-  docker_push 'kuzzle' "$TRAVIS_BRANCH-scratch"
+  docker_build 'kuzzle' "$BRANCH-scratch" 'kuzzle.scratch'
+  docker_push 'kuzzle' "$BRANCH-scratch"
 
-elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]]; then
+elif [[ "$BRANCH" == "master" ]] || [[ "$BRANCH" == *"-stable" ]]; then
   release_tag=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
   major_version=$(echo $release_tag | cut -d. -f 1)
 
@@ -150,6 +146,6 @@ elif [[ "$TRAVIS_BRANCH" == "master" ]] || [[ "$TRAVIS_BRANCH" == *"-stable" ]];
   docker_push 'kuzzle' "$major_version-alpine"
   docker_push 'kuzzle' "$major_version-scratch"
 else
-  echo "Incorrect value for TRAVIS_BRANCH variable ("$TRAVIS_BRANCH"). Exiting."
+  echo "Incorrect value for BRANCH variable ("$BRANCH"). Exiting."
 fi
 
