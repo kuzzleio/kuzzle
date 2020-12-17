@@ -5,8 +5,9 @@
 
 import should from 'should'
 import { omit } from 'lodash'
+import Bluebird from 'bluebird';
 
-import { Backend, Request } from '../../index';
+import { Backend, Request, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
@@ -150,7 +151,24 @@ app.controller.register('tests', {
       http: [
         { verb: 'post', path: '/tests/storage-client/:index' }
       ]
-    }
+    },
+
+    mutex: {
+      handler: async (request: Request) => {
+        const ttl = 5000;
+        const mutex = new Mutex('functionalTestMutexHandler', {
+          timeout: 0,
+          ttl,
+        });
+
+        const locked = await mutex.lock();
+
+        return { locked };
+      },
+      http: [
+        { verb: 'get', path: '/tests/mutex/acquire' }
+      ],
+    },
   }
 });
 
