@@ -25,6 +25,7 @@ order: 500
 | core.fatal.service_unavailable<br/><pre>0x00000002</pre> | [ExternalServiceError](/core/1/api/essentials/errors/handling#externalserviceerror) <pre>(500)</pre> | An external service is unavailable |
 | core.fatal.service_timeout<br/><pre>0x00000003</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Service initialization timeout |
 | core.fatal.unreadable_log_dir<br/><pre>0x00000004</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | Cannot read the content of the log directory |
+| core.fatal.assertion_failed<br/><pre>0x00000005</pre> | [InternalError](/core/1/api/essentials/errors/handling#internalerror) <pre>(500)</pre> | A runtime assertion has failed. Please contact support. |
 
 ---
 

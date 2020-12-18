@@ -289,6 +289,9 @@ class KuzzleMock extends Kuzzle {
           run: this.sandbox.stub().resolves({ids: []})
         },
         internalCache: {
+          _client: {
+            defineCommand: this.sandbox.stub().resolves(),
+          },
           get: this.sandbox.stub().resolves(null),
           del: this.sandbox.stub().resolves(),
           exists: this.sandbox.stub().resolves(),

@@ -60,7 +60,7 @@ describe('services/internalEngine/pluginBootstrap.js', () => {
     });
 
     it('should throw if locked for too long', () => {
-      mockrequire('bluebird', Object.assign(Bluebird, {delay: sinon.stub().returns(Bluebird.resolve())}));
+      mockrequire('bluebird', Object.assign({}, Bluebird, {delay: sinon.stub().returns(Bluebird.resolve())}));
       mockrequire.reRequire('../../../lib/services/internalEngine/pluginBootstrap');
 
       bootstrap.lock = sinon.stub().returns(Bluebird.resolve(true));
