@@ -161,6 +161,12 @@ class BackendController extends ApplicationManager {
   /**
    * Registers a new controller.
    *
+   * Http routes will be auto-generated unless they are provided or an empty array
+   * is provided.
+   *
+   * @param name - Controller name
+   * @param definition - Controller definition
+   *
    * @example
    * app.controller.register('greeting', {
    *   actions: {
@@ -171,11 +177,6 @@ class BackendController extends ApplicationManager {
    *   }
    * })
    *
-   * Http routes will be auto-generated unless they are provided or an empty array
-   * is provided.
-   *
-   * @param name - Controller name
-   * @param definition - Controller definition
    */
   register (name: string, definition: ControllerDefinition) {
     if (this._application.started) {

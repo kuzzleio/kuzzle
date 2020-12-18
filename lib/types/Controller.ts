@@ -39,6 +39,17 @@ export abstract class Controller {
 
   /**
    * Controller definition
+   *
+   * @example
+   * {
+   *   actions: {
+   *     sayHello: {
+   *       handler: async request => `Hello, ${request.input.args.name}`,
+   *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *     }
+   *   }
+   * }
+   *
    */
   public definition: ControllerDefinition;
 
