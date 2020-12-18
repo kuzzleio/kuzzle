@@ -114,16 +114,6 @@ jobs:
         - npm run --silent test:lint
 
     - stage: Unit Tests & Linters
-      name: SonarCloud
-      if: fork != true
-      os: linux
-      dist: trusty
-      language: node_js
-      node_js: 12.18.1
-      script:
-        - .ci/sonar.sh
-
-    - stage: Unit Tests & Linters
       name: Documentation dead links
       language: node_js
       node_js: 12
