@@ -48,11 +48,11 @@ _doc-deploy: &doc-deploy
     - npm run doc-build
   deploy:
     provider: script
-    on:
-      tags: true
-      all_branches: true
     script:
       - npm run doc-upload
+    on:
+      repo: kuzzleio/kuzzle
+      all_branches: true
     skip_cleanup: true
   after_deploy:
     - npm run doc-cloudfront
