@@ -10,7 +10,7 @@ title: Mutex
 
 Instantiates a new mutex, that can be used to lock a resource. 
 
-Allow to have a process played on only 1 node on a Kuzzle cluster, with the other ones waiting until the lock is freed.
+Allows to have a process played on only 1 node on a Kuzzle cluster, with the other ones waiting until the lock is freed.
 
 Also works within a single node: in that case, it's better if lock attempts from different parts of the code use different Mutex instances (with the same lock ID).
 
