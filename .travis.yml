@@ -48,6 +48,9 @@ _doc-deploy: &doc-deploy
     - npm run doc-build
   deploy:
     provider: script
+    on:
+      tags: true
+      all_branches: true
     script:
       - npm run doc-upload
     skip_cleanup: true
