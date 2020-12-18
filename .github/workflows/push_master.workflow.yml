@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -150,7 +150,7 @@ jobs:
           
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -173,7 +173,7 @@ jobs:
   documentation-production:
     name: Deploy Documentation to production
     needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -199,11 +199,13 @@ jobs:
           S3_BUCKET: docs.kuzzle.io
           CLOUDFRONT_ID: E3D6RP0POLCJMM
           FRAMEWORK_BRANCH: master
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
     needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -237,7 +239,7 @@ jobs:
   npm-deploy:
     name: Build and deploy images to Dockerhub
     needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules

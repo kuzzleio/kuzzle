@@ -8,7 +8,7 @@ on:
 jobs:
   lint:
     name: Lint
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -150,7 +150,7 @@ jobs:
           
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -173,7 +173,7 @@ jobs:
   documentation-staging:
     name: Deploy Documentation to staging
     needs: ['functional-tests-legacy', 'functional-tests', 'functional-tests-cluster']
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
