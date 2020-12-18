@@ -5,7 +5,6 @@ inputs:
   NPM_TOKEN:
     description: NPM.js Token
     required: true
-    default: ${{ secrets.NPM_TOKEN }}
 
 runs:
   using: "composite"

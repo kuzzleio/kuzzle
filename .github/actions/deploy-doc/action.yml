@@ -5,11 +5,9 @@ inputs:
   AWS_ACCESS_KEY_ID:
     description: AWS Access key ID
     required: true
-    default: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY:
     description: AWS secret key
     required: true
-    default: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
   S3_BUCKET:
     description: S3 bucket name
     required: true

@@ -5,11 +5,9 @@ inputs:
   DOCKER_USERNAME:
     description: Dockerhub Username
     required: true
-    default: ${{ secrets.DOCKER_USERNAME }}
   DOCKER_PASSWORD:
     description: Dockerhub Username
     required: true
-    default: ${{ secrets.DOCKER_PASSWORD }}
   BRANCH:
     description: Branch to use in the build and deploy script
     required: true
