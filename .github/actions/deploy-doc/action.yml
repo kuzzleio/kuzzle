@@ -32,28 +32,24 @@ runs:
         sudo apt-get install python python-pip
         pip install awscli --upgrade --user
       shell: bash
-    - name: Set up AWS CLI 
-      run: |
-        export AWS_DEFAULT_REGION="${{ inputs.REGION }}"
-        export AWS_ACCESS_KEY_ID="${{ inputs.AWS_ACCESS_KEY_ID }}"
-        export AWS_SECRET_ACCESS_KEY="${{ inputs.AWS_SECRET_ACCESS_KEY }}"
-        export S3_BUCKET="${{ inputs.S3_BUCKET }}"
-        export CLOUDFRONT_DISTRIBUTION_ID="${{ inputs.CLOUDFRONT_ID }}"
-      shell: bash
-    - name: Set up build environment variables 
-      run: |
-        export NODE_ENV=production
-        export BRANCH="${{ inputs.FRAMEWORK_BRANCH }}"
-      shell: bash
     - name: Build documentation
       run: |
         rm -fr doc/framework
         npm install --production=false
         npm run doc-prepare
         npm run doc-build
+      env:
+        NODE_ENV: production
+        BRANCH: ${{ inputs.FRAMEWORK_BRANCH }}
       shell: bash
     - name: Deploy documentation
       run: |
         npm run doc-upload
         npm run doc-cloudfront
+      env:
+        AWS_DEFAULT_REGION: ${{ inputs.REGION }}
+        AWS_ACCESS_KEY_ID: ${{ inputs.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ inputs.AWS_SECRET_ACCESS_KEY }}
+        S3_BUCKET: ${{ inputs.S3_BUCKET }}
+        CLOUDFRONT_DISTRIBUTION_ID: ${{ inputs.CLOUDFRONT_ID }}
       shell: bash
