@@ -397,7 +397,7 @@ describe('services/internalEngine/bootstrap.js', () => {
   describe('#_waitTillUnlocked', () => {
     it('should throw if locked for too long', () => {
       bootstrap.db.exists.returns(Bluebird.resolve(true));
-      mockrequire('bluebird', Object.assign(require('bluebird'), {delay: () => Bluebird.resolve()}));
+      mockrequire('bluebird', Object.assign({}, require('bluebird'), {delay: () => Bluebird.resolve()}));
       mockrequire.reRequire('../../../lib/services/internalEngine/bootstrap');
 
       return bootstrap._waitTillUnlocked()

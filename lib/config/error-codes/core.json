@@ -27,8 +27,13 @@
           "code": 4,
           "message": "Cannot read log directory '%s' : %s.",
           "class": "InternalError"
+        },
+        "assertion_failed": {
+          "description": "A runtime assertion has failed. Please contact support.",
+          "code": 5,
+          "message": "Runtime assertion failed: %s",
+          "class": "InternalError"
         }
-
       }
     },
     "realtime": {
