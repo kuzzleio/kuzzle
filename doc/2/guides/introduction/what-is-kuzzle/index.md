@@ -107,6 +107,8 @@ It is used to manage its data and the user permissions system.
 
 As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://next-console.kuzzle.io](http://next-console.kuzzle.io).
 
+![admin console](./ecosystem-admin-console.png)
+
 ### SDKs
 
 We develop many SDKs to facilitate the use of Kuzzle in applications.  
@@ -116,6 +118,8 @@ These SDKs are available for the most common languages and the majority of front
  - [Dart](/sdk/dart/2) : [Flutter](/sdk/dart/2/getting-started/flutter/)
  - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone/)
  - [Java / Kotlin](/sdk/some/link) : Android, JVM
+
+![sdks and platforms](./ecosystem-sdk-platforms.png)
 
 ### Kourou
 
@@ -132,6 +136,9 @@ We also develop and distribute plugins for Kuzzle.
 These plugins allow you to use the functionalities of other services such as [Amazon S3](https://docs.kuzzle.io/official-plugins/s3/2) or [Prometheus](https://github.com/kuzzleio/kuzzle-plugin-prometheus).
 
 The community is also able to develop and distribute its own plugins to enrich the ecosystem.
+
+![business plugins](./ecosystem-business-plugins.png)
+
 
 ### Expert Professional Support
 
