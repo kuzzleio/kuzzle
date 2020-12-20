@@ -31,7 +31,7 @@ If you're more familiar with the way relational databases store data, here is an
 Elasticsearch is **primarily designed to be a search engine**, so there are **limitations when using it as a database**:
  - once set, mappings types cannot be changed
  - no transaction system
- - [near realtime search](/core/2/guides/main-concepts/querying#some-anchor)
+ - [Near Realtime Search](/core/2/guides/main-concepts/querying#mappings-dynamic-policy)
 
 ## Internal Representation
 
@@ -608,7 +608,7 @@ The actions of this controller may not follow some of the API principles such as
  - adding [Kuzzle Metadata](/core/2/guides/main-concepts/data-storage#kuzzle-metadata)
  - triggering [Database Notifications](/core/2/guides/main-concepts/realtime-engine#database-notifications) 
  - application of [Data Validation](/core/2/guides/advanced/data-validation) rules
- - respect of [write limit](/core/2/guides/main-concepts/data-storage#some-anchor)
+ - respect of [write limit](/core/2/guides/main-concepts/data-storage#write-limit)
 
 The following actions are available:
  - [bulk:write](/core/2/api/controllers/bulk/write): write a document
@@ -657,5 +657,5 @@ await storageClient.index(esRequest)
 ```
 
 ::: warning
-Kuzzle uses an [internal naming system](/core/2/guides/main-concepts/data-storage#some-anchor) to map Elasticsearch index names with Kuzzle indexes and collections names.
+Kuzzle uses an [internal naming system](/core/2/guides/main-concepts/data-storage#internal-representation) to map Elasticsearch index names with Kuzzle indexes and collections names.
 :::

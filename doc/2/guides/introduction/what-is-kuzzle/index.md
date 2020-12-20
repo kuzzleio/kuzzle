@@ -50,42 +50,42 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
       <img src="./feature-data-storage.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Data storage and access
+      <a target="_blank" href="/core/2/guides/main-concepts/data-storage">Data storage and access</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-acl.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Advanced permission system
+      <a target="_blank" href="/core/2/guides/main-concepts/permissions">Advanced permission system</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-auth.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Multi authentication
+      <a target="_blank" href="/core/2/guides/main-concepts/authentication">Multi authentication</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-api.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Multi protocol API (Http, WebSocket, MQTT)
+      <a target="_blank" href="/core/2/guides/main-concepts/api">Multi protocol API (Http, WebSocket, MQTT)</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-realtime.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Realtime engine
+      <a target="_blank" href="/core/2/guides/main-concepts/realtime-engine">Realtime engine</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
       <img src="./feature-cluster.svg"/>
     </div>
     <div class="IconTable-item-text">
-      Integrated cluster mode
+      <a target="_blank" href="/core/2/guides/advanced/cluster-scalability">Integrated cluster mode</a>
     </div>
   </div>
 </div>
@@ -117,7 +117,7 @@ These SDKs are available for the most common languages and the majority of front
  - [Javascript / Typescript](/sdk/js/7) : [Node](/sdk/js/7/getting-started/node-js/), [React](/sdk/js/7/getting-started/react/standalone/), [React Native](/sdk/js/7/getting-started/react-native/), [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/), Angular, etc
  - [Dart](/sdk/dart/2) : [Flutter](/sdk/dart/2/getting-started/flutter/)
  - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone/)
- - [Java / Kotlin](/sdk/some/link) : Android, JVM
+ - [Java / Kotlin](/sdk/jvm/1) : Android, JVM
 
 ![sdks and platforms](./ecosystem-sdk-platforms.png)
 
