@@ -7,7 +7,7 @@ description: ServiceUnavailableError class constructor
 
 # ServiceUnavailableError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used when an action is temporarily unavailable.
 

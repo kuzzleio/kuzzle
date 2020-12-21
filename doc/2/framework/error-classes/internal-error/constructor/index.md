@@ -7,7 +7,7 @@ description: InternalError class constructor
 
 # InternalError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used for unexpected errors, or for assertion failures.
 

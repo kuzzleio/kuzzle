@@ -7,7 +7,7 @@ description: SizeLimitError class constructor
 
 # SizeLimitError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used when maximum limits are exceeded.
 

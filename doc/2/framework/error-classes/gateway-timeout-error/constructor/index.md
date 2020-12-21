@@ -7,7 +7,7 @@ description: GatewayTimeoutError class constructor
 
 # GatewayTimeoutError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used when an action reaches a timeout.
 

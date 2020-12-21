@@ -7,7 +7,7 @@ description: PreconditionError class constructor
 
 # PreconditionError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used when there are unmet prerequisites.
 

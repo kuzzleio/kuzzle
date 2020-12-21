@@ -7,7 +7,7 @@ description: ExternalServiceError class constructor
 
 # ExternalServiceError
 
-Inherits from [KuzzleError](/framework/abstract-classes/kuzzle-error/constructor).
+Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
 This error object is used on an external service failure.
 
