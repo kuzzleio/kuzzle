@@ -28,9 +28,10 @@ A document notification contains the following fields:
 | Property     | Type   | Description                                                                                                              |
 | ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------ |
 | `action`     | string | API controller's action                                                                                                  |
-| `collection` | string | Data collection                                                                                                          |
+| `collection` | string | Collection name                                                                                                          |
 | `controller` | string | API controller                                                                                                           |
-| `index`      | string | Data index                                                                                                               |
+| `index`      | string | Index name                                                                                                               |
+| `node`       | string | Unique identifier of the node who generated the notification                                                             |
 | `protocol`   | string | Network protocol used to modify the document                                                                             |
 | `result`     | object | Notification content                                                                                                     |
 | `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription                    |
@@ -59,6 +60,7 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
+  "node": "nasty-author-4242",
   "result":{
     "_source":{
       "some": "document content",
@@ -92,6 +94,7 @@ These notifications are sent only if the `users` argument is set to any other va
 | `collection` | string | Data collection                                                                                       |
 | `controller` | string | API controller                                                                                        |
 | `index`      | string | Data index                                                                                            |
+| `node`       | string | Unique identifier of the node who generated the notification                                          |
 | `protocol`   | string | Network protocol used by the entering/leaving user                                                    |
 | `result`     | object | Notification content                                                                                  |
 | `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription |
@@ -117,6 +120,7 @@ The `result` object is the notification content, and it has the following struct
   "protocol": "websocket",
   "timestamp": 1497517009931,
   "user": "in",
+  "node": "nasty-author-4242",
   "result": {
     "count": 42
   },

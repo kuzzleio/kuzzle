@@ -16,6 +16,10 @@ describe('#Request', () => {
   let nodeEnv;
 
   beforeEach(() => {
+    global.kuzzle = {
+      id: 'nasty-author-4242'
+    };
+
     nodeEnv = process.env.NODE_ENV;
     rq = new Request({});
   });

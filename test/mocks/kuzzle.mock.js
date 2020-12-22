@@ -20,6 +20,8 @@ class KuzzleMock extends Kuzzle {
 
     _instance = this;
 
+    this.id = 'nasty-author-4242';
+
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
 

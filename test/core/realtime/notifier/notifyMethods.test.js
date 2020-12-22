@@ -171,6 +171,7 @@ describe('notify methods', () => {
           controller: request.input.controller,
           action: 'action',
           protocol: request.context.protocol,
+          node: kuzzle.id,
           scope: 'out',
           result: content
         });
@@ -261,6 +262,7 @@ describe('notify methods', () => {
             controller: request.input.controller,
             action: request.input.action,
             protocol: request.context.protocol,
+            node: kuzzle.id,
             user: 'out',
             result: content
           });
