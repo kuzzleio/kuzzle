@@ -491,6 +491,7 @@ describe('/lib/core/network/protocols/http', () => {
           controller: null,
           error: null,
           index: null,
+          node: 'nasty-author-4242',
           requestId: 'requestId',
           result: 'content',
           status: 444,

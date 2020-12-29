@@ -38,7 +38,7 @@ describe('#RequestResponse', () => {
         'X-Kuzzle-Node': 'nasty-author-4242'
       });
       should(response.result).be.exactly(req.result);
-      should(response.node).be.eql(kuzzle.id);
+      should(response.node).be.eql(global.kuzzle.id);
       should(response.deprecations).be.undefined();
     });
 
