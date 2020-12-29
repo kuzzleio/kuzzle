@@ -10,11 +10,11 @@ const {
 } = require('../../../index');
 
 describe('Test: model/security/role', () => {
-  let context = {
+  const context = {
     protocol: 'test',
     userId: '-1'
   };
-  let request = new Request(
+  const request = new Request(
     {
       index: 'index',
       collection: 'collection',
