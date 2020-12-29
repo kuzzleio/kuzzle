@@ -18,7 +18,7 @@ describe('RealtimeController', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    realtimeController = new RealtimeController(kuzzle);
+    realtimeController = new RealtimeController();
     request = new Request(
       {
         index: 'test',

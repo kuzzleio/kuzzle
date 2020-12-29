@@ -14,7 +14,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    notifier = new Notifier(kuzzle);
+    notifier = new Notifier();
 
     return notifier.init();
   });

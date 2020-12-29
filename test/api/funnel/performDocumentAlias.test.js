@@ -13,7 +13,7 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new Funnel(kuzzle);
+    funnel = new Funnel();
   });
 
   it('should trigger document before alias pipe', () => {

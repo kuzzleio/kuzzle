@@ -14,7 +14,7 @@ describe('Test: hotelClerk.getRoomSize', () => {
 
   before(() => {
     kuzzle = new KuzzleMock();
-    hotelClerk = new HotelClerk(kuzzle, {});
+    hotelClerk = new HotelClerk({});
 
     return hotelClerk.init();
   });

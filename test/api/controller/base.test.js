@@ -8,11 +8,10 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const { NativeController } = require('../../../lib/api/controller/base');
 
 describe('#base/native controller', () => {
-  let
-    kuzzle,
-    actions,
-    nativeController,
-    request;
+  let kuzzle;
+  let actions;
+  let nativeController;
+  let request;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -23,7 +22,7 @@ describe('#base/native controller', () => {
       input: {}
     };
 
-    nativeController = new NativeController(kuzzle, actions);
+    nativeController = new NativeController(actions);
   });
 
   it('should initialize its actions list from the constructor', () => {

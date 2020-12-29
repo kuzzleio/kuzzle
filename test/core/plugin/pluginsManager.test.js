@@ -26,7 +26,7 @@ describe('Plugin', () => {
       config: {}
     };
 
-    return new Plugin(kuzzle, instance, { name, application: app });
+    return new Plugin(instance, { name, application: app });
   };
   const createApplication = name => createPlugin(name, true);
 
@@ -40,7 +40,7 @@ describe('Plugin', () => {
     mockrequire.reRequire('../../../lib/core/plugin/privilegedContext');
     PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginsManager');
 
-    pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager = new PluginsManager();
   });
 
   describe('#set application', () => {

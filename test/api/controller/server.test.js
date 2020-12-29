@@ -31,7 +31,7 @@ describe('ServerController', () => {
       collection
     };
     kuzzle = new KuzzleMock();
-    serverController = new ServerController(kuzzle);
+    serverController = new ServerController();
     request = new Request(data);
   });
 
@@ -311,7 +311,7 @@ describe('ServerController', () => {
 
   describe('#publicApi', () => {
     it('should build the api definition', () => {
-      const nativeController = new NativeController(kuzzle);
+      const nativeController = new NativeController();
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 
@@ -380,7 +380,7 @@ describe('ServerController', () => {
 
   describe('#_buildApiDefinition', () => {
     it('should return api definition for the provided controllers', () => {
-      const nativeController = new NativeController(kuzzle);
+      const nativeController = new NativeController();
       nativeController._addAction('publicMethod', function () {});
       nativeController._addAction('baz', function () {});
 

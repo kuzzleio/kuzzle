@@ -14,7 +14,7 @@ describe('EmbeddedSDK', () => {
     kuzzle = new KuzzleMock();
     kuzzle.state = KuzzleMock.states.RUNNING;
 
-    embeddedSdk = new EmbeddedSDK(kuzzle);
+    embeddedSdk = new EmbeddedSDK();
   });
 
   describe('#as', () => {

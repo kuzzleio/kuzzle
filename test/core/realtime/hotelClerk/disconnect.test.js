@@ -24,7 +24,7 @@ describe('Test: hotelClerk.removeUser', () => {
       }
     };
 
-    hotelClerk = new HotelClerk(kuzzle, realtimeModule);
+    hotelClerk = new HotelClerk(realtimeModule);
 
     hotelClerk.customers.set(connectionId, new Map([
       [ 'foo', { volatile: 'room foo' } ],
