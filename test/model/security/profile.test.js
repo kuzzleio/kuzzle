@@ -11,8 +11,6 @@ const Kuzzle = require('../../mocks/kuzzle.mock');
 const Profile = require('../../../lib/model/security/profile');
 const Role = require('../../../lib/model/security/role');
 
-const _kuzzle = Symbol.for('_kuzzle');
-
 describe('Test: model/security/profile', () => {
   const context = {connectionId: null, userId: null};
   const request = new Request(
@@ -59,17 +57,12 @@ describe('Test: model/security/profile', () => {
         }
       }
     };
-    for (const roleId of Object.keys(roles)) {
-      roles[roleId][_kuzzle] = kuzzle;
-    }
 
     profile.policies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
       .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
-
-    profile[_kuzzle] = kuzzle;
 
     should(await profile.isActionAllowed(request)).be.false();
 
@@ -130,10 +123,6 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    for (const roleId of Object.keys(roles)) {
-      roles[roleId][_kuzzle] = kuzzle;
-    }
-
     profile.constructor._hash = obj => kuzzle.hash(obj);
 
     profile.policies.push({roleId: role3._id});
@@ -141,8 +130,6 @@ describe('Test: model/security/profile', () => {
     kuzzle.ask
       .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
-
-    profile[_kuzzle] = kuzzle;
 
     let rights = await profile.getRights();
     let filteredItem;
@@ -192,7 +179,6 @@ describe('Test: model/security/profile', () => {
 
     beforeEach(() => {
       profile = new Profile();
-      profile[_kuzzle] = kuzzle;
       profile._id = 'test';
       kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
       kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);

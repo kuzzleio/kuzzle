@@ -23,7 +23,7 @@ describe('DocumentController', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    documentController = new DocumentController(kuzzle);
+    documentController = new DocumentController();
 
     request = new Request({
       controller: 'document',

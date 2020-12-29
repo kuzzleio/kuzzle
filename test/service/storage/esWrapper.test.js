@@ -9,9 +9,13 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ESWrapper = require('../../../lib/service/storage/esWrapper');
 
 describe('Test: ElasticSearch Wrapper', () => {
-  const kuzzle = new KuzzleMock();
+  let kuzzle;
   const client = new ESClientMock();
-  const esWrapper = new ESWrapper(client, kuzzle);
+  const esWrapper = new ESWrapper(client);
+
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+  });
 
   describe('#formatESError', () => {
     it('should convert any unknown error to a ExternalServiceError instance', () => {

@@ -40,11 +40,7 @@ describe('Plugin Context', () => {
     PluginContext = modul.PluginContext;
 
     kuzzle = new KuzzleMock();
-    context = new PluginContext(kuzzle, 'pluginName');
-  });
-
-  afterEach(() => {
-    mockrequire.stopAll();
+    context = new PluginContext('pluginName');
   });
 
   describe('#constructor', () => {

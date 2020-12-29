@@ -25,7 +25,7 @@ describe('IndexController', () => {
 
     kuzzle = new KuzzleMock();
 
-    indexController = mockAssertions(new IndexController(kuzzle));
+    indexController = mockAssertions(new IndexController());
     request = new Request(data);
   });
 
@@ -46,7 +46,7 @@ describe('IndexController', () => {
         .onCall(3).resolves(false)
         .onCall(4).resolves(true);
 
-      indexController = new IndexController(kuzzle);
+      indexController = new IndexController();
 
       kuzzle.ask.withArgs('core:storage:public:index:list').resolves([
         'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'

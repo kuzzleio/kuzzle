@@ -93,19 +93,10 @@ export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
   /**
-   * @param kuzzle - Kuzzle object
    * @param user - User to impersonate the SDK with
    */
-  constructor (kuzzle, user?) {
-    super(new FunnelProtocol(kuzzle, user), { autoResubscribe: false });
-
-    Reflect.defineProperty(this, '_kuzzle', {
-      value: kuzzle
-    });
-  }
-
-  protected get kuzzle () {
-    return this._kuzzle;
+  constructor (user?) {
+    super(new FunnelProtocol(user), { autoResubscribe: false });
   }
 
   /**
@@ -118,7 +109,7 @@ export class EmbeddedSDK extends Kuzzle {
       throw contextError.get('invalid_user');
     }
 
-    return new EmbeddedSDK(this._kuzzle, user);
+    return new EmbeddedSDK(user);
   }
 
   /**

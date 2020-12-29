@@ -3,22 +3,23 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const Kuzzle = require('../../lib/kuzzle');
+const Kuzzle = require('../../lib/kuzzle/kuzzle');
+const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
 const configLoader = require('../../lib/config');
-
-const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
 
 const foo = { foo: 'bar' };
 
-let _instance;
+global.kuzzle = null;
 
-class KuzzleMock extends Kuzzle {
+class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
     const config = configLoader.load();
 
-    super(config);
+    super(
+      config.plugins.common.maxConcurrentPipes,
+      config.plugins.common.pipesBufferSize);
 
-    _instance = this;
+    global.kuzzle = this;
 
     this.id = 'nasty-author-4242';
 
@@ -98,7 +99,8 @@ class KuzzleMock extends Kuzzle {
 
     this.shutdown = sinon.stub();
 
-    this.internalIndex = new InternalIndexHandlerMock(this);
+    const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
+    this.internalIndex = new InternalIndexHandlerMock();
 
     this.passport = {
       use: sinon.stub(),
@@ -196,27 +198,12 @@ class KuzzleMock extends Kuzzle {
       set: sinon.stub()
     };
 
-    {
-      const mockProto = Object.getPrototypeOf(this);
-      const kuzzleProto = Object.getPrototypeOf(mockProto);
-
-      for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'hash', 'starting', 'running', 'shuttingDown'].includes(name)) {
-          continue;
-        }
-
-        if (!Object.prototype.hasOwnProperty.call(this, name)) {
-          this[name] = function() {
-            throw new Error(`Kuzzle original property ${name} is not mocked`);
-          };
-        }
-      }
-    }
-  }
-
-  static instance () {
-    return _instance;
+    this.start = sinon.stub().resolves();
+    this.hash = sinon.stub().callsFake(obj => JSON.stringify(obj));
+    this.running = sinon.stub().returns(false);
   }
 }
+
+KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;

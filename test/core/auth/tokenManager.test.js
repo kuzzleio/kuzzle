@@ -21,7 +21,7 @@ describe('Test: token manager core component', () => {
       .withArgs('core:security:user:anonymous:get')
       .resolves({_id: '-1'});
 
-    tokenManager = new TokenManager(kuzzle);
+    tokenManager = new TokenManager();
     token = new Token({
       _id: 'foo#bar',
       expiresAt: Date.now()+1000,

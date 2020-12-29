@@ -28,7 +28,7 @@ describe('Test: collection controller', () => {
     };
 
     kuzzle = new KuzzleMock();
-    collectionController = new CollectionController(kuzzle);
+    collectionController = new CollectionController();
 
     request = new Request(data);
   });

@@ -15,7 +15,7 @@ describe('CacheEngine', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    cacheEngine = new CacheEngine(kuzzle);
+    cacheEngine = new CacheEngine();
     sinon.stub(cacheEngine.public);
     sinon.stub(cacheEngine.internal);
     cacheEngine.public.commands = new RedisClientMock();

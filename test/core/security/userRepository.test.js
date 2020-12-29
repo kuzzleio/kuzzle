@@ -36,7 +36,7 @@ describe('Test: security/userRepository', () => {
     kuzzle = new KuzzleMock();
     kuzzle.ask.restore();
 
-    userRepository = new UserRepository(kuzzle, {
+    userRepository = new UserRepository({
       profile: profileRepositoryMock,
       token: tokenRepositoryMock,
     });

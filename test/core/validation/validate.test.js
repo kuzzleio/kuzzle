@@ -36,7 +36,7 @@ describe('Test: validation.validate', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    validation = new Validation(kuzzle);
+    validation = new Validation();
     [typeChildren, typeNoChild].forEach(type => validation.addType(type));
     Validation.__set__('manageErrorMessage', manageErrorMessage);
     Validation.__set__('checkAllowedProperties', checkAllowedProperties);
