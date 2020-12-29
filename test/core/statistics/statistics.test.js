@@ -40,7 +40,7 @@ describe('Test: statistics core component', () => {
     });
 
     kuzzle = new Kuzzle();
-    stats = new Statistics(kuzzle);
+    stats = new Statistics();
   });
 
   afterEach(() => {

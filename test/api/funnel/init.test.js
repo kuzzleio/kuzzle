@@ -23,7 +23,7 @@ describe('funnel.init', () => {
 
     kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
-    const funnel = new Funnel(kuzzle);
+    const funnel = new Funnel();
 
     sinon.stub(funnel.rateLimiter, 'init');
     await funnel.init();

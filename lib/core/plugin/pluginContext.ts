@@ -58,6 +58,8 @@ import {
 
 const contextError = kerror.wrap('plugin', 'context');
 
+declare const kuzzle: any;
+
 export interface Repository {
  create(document: JSONObject, options: any): Promise<any>;
 
@@ -215,11 +217,7 @@ export class PluginContext {
     warn: (message: any) => void
   };
 
-  constructor (kuzzle, pluginName) {
-    Object.defineProperty(this, 'kuzzle', {
-      value: kuzzle
-    });
-
+  constructor (pluginName) {
     this.config = JSON.parse(JSON.stringify(kuzzle.config));
 
     Object.freeze(this.config);
@@ -258,7 +256,6 @@ export class PluginContext {
     /* context.constructors =============================================== */
 
     const pluginStore = new Store(
-      kuzzle,
       pluginIndex,
       storeScopeEnum.PRIVATE);
 
@@ -272,7 +269,6 @@ export class PluginContext {
       }
 
       const pluginRepository = new PluginRepository(
-        kuzzle,
         pluginStore,
         collection);
 
@@ -324,8 +320,8 @@ export class PluginContext {
     /* context.accessors ================================================== */
 
     this.accessors = {
-      execute: (request, callback) => execute(kuzzle, request, callback),
-      sdk: new EmbeddedSDK(kuzzle),
+      execute: (request, callback) => execute(request, callback),
+      sdk: new EmbeddedSDK(),
       storage: {
         bootstrap: collections => pluginStore.init(collections),
         createCollection: (collection, mappings) => (
@@ -333,8 +329,8 @@ export class PluginContext {
         )
       },
       strategies: {
-        add: curryAddStrategy(kuzzle, pluginName),
-        remove: curryRemoveStrategy(kuzzle, pluginName)
+        add: curryAddStrategy(pluginName),
+        remove: curryRemoveStrategy(pluginName)
       },
       subscription: {
         register: (connectionId, index, collection, filters) => {
@@ -375,11 +371,10 @@ export class PluginContext {
 }
 
 /**
- * @param {Kuzzle} kuzzle
- * @param {KuzzleRequest} request
+  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
-function execute (kuzzle, request, callback) {
+function execute (request, callback) {
   if (callback && typeof callback !== 'function') {
     const error = contextError.get('invalid_callback', typeof callback);
     kuzzle.log.error(error);
@@ -487,13 +482,12 @@ function instantiateRequest(request, data, options = {}) {
 /**
  * Returns a currified function of pluginsManager.registerStrategy
  *
- * @param  {Kuzzle} kuzzle
  * @param  {string} pluginName
  * @returns {function} function taking a strategy name and properties,
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryAddStrategy(kuzzle, pluginName) {
+function curryAddStrategy(pluginName) {
   return async function addStrategy(name, strategy) {
     // strategy constructors cannot be used directly to dynamically
     // add new strategies, because they cannot
@@ -506,6 +500,7 @@ function curryAddStrategy(kuzzle, pluginName) {
     ) {
       throw contextError.get('missing_authenticator', pluginName, name);
     }
+
     // @todo use Plugin.checkName to ensure format
     kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
 
@@ -518,13 +513,12 @@ function curryAddStrategy(kuzzle, pluginName) {
 /**
  * Returns a currified function of pluginsManager.unregisterStrategy
  *
- * @param  {Kuzzle} kuzzle
  * @param  {string} pluginName
  * @returns {function} function taking a strategy name and properties,
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryRemoveStrategy(kuzzle, pluginName) {
+function curryRemoveStrategy(pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name) {

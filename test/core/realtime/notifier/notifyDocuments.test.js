@@ -25,7 +25,7 @@ describe('#notifier.notifyDocuments', () => {
     kuzzle = new KuzzleMock();
     ttl = kuzzle.config.limits.subscriptionDocumentTTL;
 
-    notifier = new Notifier(kuzzle);
+    notifier = new Notifier();
 
     request = new Request({collection, index});
     document = {

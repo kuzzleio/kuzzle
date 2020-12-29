@@ -19,9 +19,9 @@ describe('core/plugin/pluginRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    store = new Store(kuzzle, 'pluginName', scopeEnum.PRIVATE);
+    store = new Store('pluginName', scopeEnum.PRIVATE);
 
-    pluginRepository = new PluginRepository(kuzzle, store, someCollection);
+    pluginRepository = new PluginRepository(store, someCollection);
     pluginRepository.init({
       ObjectConstructor: SomeConstructor,
     });

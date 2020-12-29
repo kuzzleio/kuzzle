@@ -15,7 +15,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    notifier = new Notifier(kuzzle);
+    notifier = new Notifier();
 
     request = new Request({
       controller: 'document',

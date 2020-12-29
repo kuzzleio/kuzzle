@@ -46,7 +46,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     mockrequire.reRequire('../../lib/kuzzle/dumpGenerator');
     DumpGenerator = rewire('../../lib/kuzzle/dumpGenerator');
-    dumpGenerator = new DumpGenerator(kuzzle);
+    dumpGenerator = new DumpGenerator();
 
     kuzzle.config.dump.enabled = true;
     dumpGenerator._dump = false;

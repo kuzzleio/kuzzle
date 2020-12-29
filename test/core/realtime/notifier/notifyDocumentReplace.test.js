@@ -15,7 +15,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    notifier = new Notifier(kuzzle);
+    notifier = new Notifier();
 
     sinon.stub(notifier, 'notifyDocument').resolves();
 

@@ -62,7 +62,7 @@ describe('/lib/core/network/protocols/http', () => {
 
     kuzzle = new KuzzleMock();
 
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
     sinon.stub(entrypoint, 'execute');
     sinon.stub(entrypoint, 'newConnection');
     sinon.stub(entrypoint, 'removeConnection');

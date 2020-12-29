@@ -33,18 +33,18 @@ describe('funnel.processRequest', () => {
     const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginsManager');
 
     kuzzle = new KuzzleMock();
-    funnel = new Funnel(kuzzle);
+    funnel = new Funnel();
 
     kuzzle.emit.restore();
-    pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager = new PluginsManager();
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
-    funnel.controllers.set('fakeController', new MockNativeController(kuzzle));
-    funnel.controllers.set('document', new DocumentController(kuzzle));
+    funnel.controllers.set('fakeController', new MockNativeController());
+    funnel.controllers.set('document', new DocumentController());
     pluginsManager.controllers.set(
       'fakePlugin/controller',
-      new MockBaseController(kuzzle));
+      new MockBaseController());
   });
 
   afterEach(() => {

@@ -23,7 +23,7 @@ describe('/api/controller/security', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     sinon.spy(kerror, 'get');
-    securityController = new SecurityController(kuzzle);
+    securityController = new SecurityController();
     request = new Request({ controller: 'security' });
   });
 
@@ -33,7 +33,7 @@ describe('/api/controller/security', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(new SecurityController(kuzzle)).instanceOf(NativeController);
+      should(new SecurityController()).instanceOf(NativeController);
     });
   });
 

@@ -15,7 +15,7 @@ describe('Test: hotelClerk.listCollections', () => {
     kuzzle = new KuzzleMock();
     kuzzle.koncorde.getCollections.returns([]);
 
-    hotelClerk = new HotelClerk(kuzzle, {});
+    hotelClerk = new HotelClerk({});
 
     return hotelClerk.init();
   });
