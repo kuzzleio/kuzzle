@@ -60,7 +60,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
-    // Kuzzle.__set__('console', { log: () => {} });
 
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
