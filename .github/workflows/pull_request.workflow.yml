@@ -21,12 +21,12 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: 12
       - uses: ./.github/actions/es-lint
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
-    needs: ['lint']
+    needs: [lint]
     strategy:
       matrix:
         node-version: ['12.16.3', '12.20.0']
@@ -51,10 +51,10 @@ jobs:
 
   functional-tests-legacy:
     name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: ['unit-tests']
+    needs: [unit-tests]
     strategy:
       matrix:
-        test_set: ['http', 'websocket', 'mqtt']
+        test_set: [http, websocket, mqtt]
         node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
@@ -72,7 +72,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: 12
       - uses: ./.github/actions/functional-tests
         with:
           docker-compose-test-file: ./.ci/test.yml
@@ -81,10 +81,10 @@ jobs:
 
   functional-tests:
     name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: ['unit-tests']
+    needs: [unit-tests]
     strategy:
       matrix:
-        test_set: ['http', 'websocket']
+        test_set: [http, websocket]
         node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
@@ -102,7 +102,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: 12
       - uses: ./.github/actions/functional-tests
         with:
           docker-compose-test-file: ./.ci/test.yml
@@ -111,7 +111,7 @@ jobs:
 
   functional-tests-cluster:
     name: Functional Tests - Cluster - Node.js v${{ matrix.node-version }}
-    needs: ['unit-tests']
+    needs: [unit-tests]
     runs-on: ubuntu-18.04
     strategy:
       matrix:
@@ -131,10 +131,10 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: '12'
+          node-version: 12
       - name: Cluster legacy tests
         env:
-         NODE_VERSION: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
         run: ./.ci/scripts/run-test-cluster.sh
           
   error-codes-check:
