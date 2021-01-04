@@ -25,6 +25,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_server__protocols__mqtt__developmentMode=false
     - kuzzle_limits__loginsPerSecond=50
     - NODE_ENV=development
+    - NODE_VERSION=${NODE_VERSION:-}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
     # Travis env var must be propagated into the container

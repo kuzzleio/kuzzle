@@ -21,7 +21,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: "12"
+          node-version: '12'
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -29,7 +29,7 @@ jobs:
     needs: ['lint']
     strategy:
       matrix:
-        node-version: ['12.16', '12.18']
+        node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         test_set: ['http', 'websocket', 'mqtt']
-        node-version: ['12.16', '12.18']
+        node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -72,20 +72,20 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '12'
       - uses: ./.github/actions/functional-tests
-        env:
-          KUZZLE_FUNCTIONAL_TESTS: test:functional:legacy:${{ matrix.test_set }}
         with:
           docker-compose-test-file: ./.ci/test.yml
+          test-set: test:functional:legacy:${{ matrix.test_set }}
+          node-version: ${{ matrix.node-version }}
 
-  functional-tests-sdk:
-    name: Functional Tests SDK - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+  functional-tests:
+    name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: ['unit-tests']
     strategy:
       matrix:
         test_set: ['http', 'websocket']
-        node-version: ['12.16', '12.18']
+        node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -102,12 +102,12 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '12'
       - uses: ./.github/actions/functional-tests
-        env:
-          KUZZLE_FUNCTIONAL_TESTS: test:functional:sdk:${{ matrix.test_set }}
         with:
           docker-compose-test-file: ./.ci/test.yml
+          test-set: test:functional:${{ matrix.test_set }}
+          node-version: ${{ matrix.node-version }}
 
   functional-tests-cluster:
     name: Functional Tests - Cluster - Node.js v${{ matrix.node-version }}
@@ -115,7 +115,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ['12.16', '12.18']
+        node-version: ['12.16.3', '12.20.0']
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
@@ -131,8 +131,10 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '12'
       - name: Cluster legacy tests
+        env:
+         NODE_VERSION: ${{ matrix.node-version }}
         run: ./.ci/scripts/run-test-cluster.sh
           
   error-codes-check:

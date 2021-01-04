@@ -28,6 +28,7 @@ services:
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
       - NODE_ENV=development
+      - NODE_VERSION=${NODE_VERSION:-}
       - DEBUG
       - SECRETS_FILE_PREFIX=/var/app/
       - KUZZLE_FUNCTIONAL_TESTS=${KUZZLE_FUNCTIONAL_TESTS:-test:functional}

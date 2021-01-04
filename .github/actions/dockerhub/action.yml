@@ -22,7 +22,7 @@ runs:
       shell: bash
     - name: Build and deploy Docker images
       run: |
-        bash docker/build-docker-images.sh
+        ./docker/build-docker-images.sh
       env:
         MODE: production
         BRANCH: ${{ inputs.BRANCH }}

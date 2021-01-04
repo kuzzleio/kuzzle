@@ -40,7 +40,7 @@ runs:
         npm run doc-build
       env:
         NODE_ENV: production
-        BRANCH: ${{ inputs.FRAMEWORK_BRANCH }}
+        FRAMEWORK_BRANCH: ${{ inputs.FRAMEWORK_BRANCH }}
       shell: bash
     - name: Deploy documentation
       run: |

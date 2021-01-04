@@ -4,8 +4,18 @@ inputs:
   docker-compose-test-file:
     description: Path to a Docker Compose file used to run tests
     required: true
+  test-set:
+    description: 'Name of the tests set to run (ej: test:functional:websocket)'
+    required: true
+  node-version:
+    description: Node version to use in the Kuzzle Docker image
+    required: true
+
 runs:
   using: "composite"
   steps: 
     - run: docker-compose -f ${{ inputs.docker-compose-test-file }} run kuzzle
+      env:
+        KUZZLE_FUNCTIONNAL_TESTS: ${{ inputs.test-set}}
+        NODE_VERSION: ${{ inputs.node-version }}
       shell: bash
