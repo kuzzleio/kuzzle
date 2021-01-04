@@ -94,7 +94,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
-    should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('/tmp/2020-dump-me-master/core');
+    should(fsStub.createReadStream.getCall(0).args[0].match(/\/tmp\/[0-9]+-dump-me-master\/core/g)).have.length(1);
     should(fsStub.createWriteStream).be.calledOnce();
     should(fsStub.createReadStream().pipe).be.called(2);
 
