@@ -35,6 +35,17 @@ import { KuzzleRequest } from '../api/request';
  * }
  */
 export type ControllerDefinition = {
+  /**
+   * Definition of controller actions
+   *
+   * @example
+   * {
+   *   sayHello: {
+   *     handler: async request => `Hello, ${request.input.args.name}`,
+   *     http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *   }
+   * }
+   */
   actions: {
     /**
      * Name of the API action

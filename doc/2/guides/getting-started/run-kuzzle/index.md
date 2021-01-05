@@ -21,6 +21,11 @@ In this guide we will use Docker and Docker Compose to run those services.
  - [Docker Compose](https://docs.docker.com/compose/install/)
  - [Kourou](https://github.com/kuzzleio/kourou)
 
+::: info
+It's recommanded to use Node Version Manager to avoid rights problems when using Node.js and dependencies.  
+You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
+:::
+
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
 You can install Kourou globally by using NPM: `npm install -g kourou`

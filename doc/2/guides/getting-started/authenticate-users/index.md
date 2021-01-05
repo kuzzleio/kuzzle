@@ -18,27 +18,39 @@ Kuzzle uses [Passport.js](http://www.passportjs.org/) under the hood, and theref
 
 We saw that in the [Set Up Permission](/core/2/guides/getting-started/set-up-permissions) guide, when creating a user, we had to provide credentials for the [local](/core/2/guides/main-concepts/authentication#local-strategy) strategy, but we could have provided more strategies (provided the right strategy plugins are used):
 
-```bash
-# This command will only works if the "ldap" strategy 
-# is made available through the correct authentication plugin
-
-kourou security:createUser '{
+```js
+{
+  // User profiles
   content: {
     profileIds: ["dummy"]
   },
+
+  // User credentials
   credentials: {
+
+    // User will be able to login with the "local" strategy
     local: {
-      username: "melis",
+      username: "najada",
       password: "password"
     },
+
+    // User will be able to login with the "ldap" strategy
     ldap: {
       bindDN: "cn=root",
       searchBase: "ou=passport-ldapauth",
-      searchFilter: "(uid=melis)"
+      searchFilter: "(uid=najada)"
     }
   }
-}'
+}
 ```
+
+::: warning
+New authentication strategies are made available by [authentication plugins](/core/2/guides/write-plugins/integrate-authentication-strategy).  
+
+By default, only the [local strategy](/core/2/guides/main-concepts/authentication#local-strategy) is available.  
+
+We also provide an authentication plugin for the [OAuth strategy](/core/2/guides/main-concepts/authentication#oauth-strategy) but it's not available by default and need to be [added to your application](/core/2/guides/develop-on-kuzzle/external-plugins).
+:::
 
 ### Getting an authentication token
 

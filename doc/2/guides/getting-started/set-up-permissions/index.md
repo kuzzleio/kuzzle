@@ -162,7 +162,15 @@ kourou server:now --username melis --password password
 ::: info
 You can now reset anonymous rights to default to make the rest of this tutorial easier:
 ```bash
-kourou admin:resetSecurity --username admin --password password
+kourou security:updateRole '{
+  controllers: {
+    "*": {
+      actions: {
+        "*": true
+      }
+    }
+  }
+}' --id anonymous --username admin --password password
 ```
 :::
 
