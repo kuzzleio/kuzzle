@@ -31,7 +31,7 @@ describe('Test the bulk controller', () => {
 
     kuzzle = new KuzzleMock();
 
-    controller = mockAssertions(new BulkController(kuzzle));
+    controller = mockAssertions(new BulkController());
   });
 
   describe('#constructor', () => {

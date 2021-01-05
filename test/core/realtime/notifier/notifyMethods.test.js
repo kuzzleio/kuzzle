@@ -22,10 +22,10 @@ describe('notify methods', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    hotelClerk = new HotelClerk(kuzzle);
+    hotelClerk = new HotelClerk();
     sinon.stub(hotelClerk, 'removeUser');
 
-    notifier = new Notifier(kuzzle, { hotelClerk });
+    notifier = new Notifier({ hotelClerk });
 
     request = new Request({
       volatile: {foo: 'bar'},

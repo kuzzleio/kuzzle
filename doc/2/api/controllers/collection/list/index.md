@@ -42,7 +42,7 @@ Method: GET
 
 ### Optional:
 
-<DeprecatedBadge since="2.1.4" />
+<DeprecatedBadge version="2.1.4" />
 
 - `from` and `size`: response pagination
 - `type`: filters the returned collections. Allowed values: `all`, `stored` and `realtime` (default : `all`).
@@ -102,6 +102,6 @@ Example:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)
 

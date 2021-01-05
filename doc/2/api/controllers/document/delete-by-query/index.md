@@ -10,9 +10,9 @@ Deletes documents matching the provided search query.
 
 Documents removed that way trigger real-time notifications.
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
-This method also supports the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) to match documents by passing the `lang` argument with the value `koncorde`.  
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
 Koncorde filters will be translated into an Elasticsearch query.  
 
 ::: warning
@@ -21,7 +21,7 @@ Koncorde `bool` operator and `regexp` clause are not supported for search querie
 
 ## Limitations
 
-The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 
 This behavior aims at limiting the pressure on memory and on real-time notifications.
 
@@ -81,13 +81,13 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 - `source`: if set to `true` Kuzzle will return each deleted document body in the response.
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="change-me"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
 
 ---
 
 ## Body properties
 
-- `query`: the search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/guides/cookbooks/realtime-api) syntax.
+- `query`: the search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
 
 ---
 

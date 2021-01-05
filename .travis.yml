@@ -67,7 +67,7 @@ _doc_sdk_snippet: &doc_sdk_snippet
     - npm ci
   script:
     - docker-compose -f .ci/doc/docker-compose.yml run doc-tests index
-  
+
 # ------------------------
 # Jobs configuration
 # ------------------------
@@ -84,6 +84,7 @@ jobs:
       node_js: 12.16.3
       install:
         - npm ci --silent
+        - npm run build-ts
       script:
         - npm run test:unit:coverage
       after_script:
@@ -97,6 +98,7 @@ jobs:
       node_js: 12.18.1
       install:
         - npm ci --silent
+        - npm run build-ts
       script:
         - npm run test:unit:coverage
       after_script:
@@ -112,16 +114,6 @@ jobs:
         - npm ci --silent
       script:
         - npm run --silent test:lint
-
-    - stage: Unit Tests & Linters
-      name: SonarCloud
-      if: fork != true
-      os: linux
-      dist: trusty
-      language: node_js
-      node_js: 12.18.1
-      script:
-        - .ci/sonar.sh
 
     - stage: Unit Tests & Linters
       name: Documentation dead links
@@ -377,64 +369,64 @@ jobs:
           repo: kuzzleio/kuzzle
           all_branches: true
 
-    # ----------------------------
-    # SDK JS v7
-    # ----------------------------
-    - name: SDK JS v7
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-javascript"
-        - "SDK_BRANCH=7-dev"
-      script:
-        - sudo apt-get install libgconf-2-4
-        - npm install
-        - npm run build
-        - travis_retry npm run doc-testing
-      
-    # ----------------------------
-    # SDK C# v2
-    # ----------------------------
-    - name: SDK C# v2
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-csharp"
-        - "SDK_BRANCH=2-dev"
+    # # ----------------------------
+    # # SDK JS v7
+    # # ----------------------------
+    # - name: SDK JS v7
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-javascript"
+    #     - "SDK_BRANCH=7-dev"
+    #   script:
+    #     - sudo apt-get install libgconf-2-4
+    #     - npm install
+    #     - npm run build
+    #     - travis_retry npm run doc-testing
 
-    # ----------------------------
-    # SDK Java v3
-    # ----------------------------
-    - name: SDK Java v3
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-java"
-        - "SDK_BRANCH=3-dev"
+    # # ----------------------------
+    # # SDK C# v2
+    # # ----------------------------
+    # - name: SDK C# v2
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-csharp"
+    #     - "SDK_BRANCH=2-dev"
 
-    # ----------------------------
-    # SDK JVM v1
-    # ----------------------------
-    - name: SDK JVM v1
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-jvm"
-        - "SDK_BRANCH=1-dev"
+    # # ----------------------------
+    # # SDK Java v3
+    # # ----------------------------
+    # - name: SDK Java v3
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-java"
+    #     - "SDK_BRANCH=3-dev"
 
-    # ----------------------------
-    # SDK Go v2
-    # ----------------------------
-    - name: SDK Go v2
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-go"
-        - "SDK_BRANCH=2-dev"
+    # # ----------------------------
+    # # SDK JVM v1
+    # # ----------------------------
+    # - name: SDK JVM v1
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-jvm"
+    #     - "SDK_BRANCH=1-dev"
 
-    # ----------------------------
-    # SDK Dart v2
-    # ----------------------------
-    - name: SDK Dart v2
-      <<: *doc_sdk_snippet
-      env:
-        - "SDK_NAME=sdk-dart"
-        - "SDK_BRANCH=2-dev"
+    # # ----------------------------
+    # # SDK Go v2
+    # # ----------------------------
+    # - name: SDK Go v2
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-go"
+    #     - "SDK_BRANCH=2-dev"
+
+    # # ----------------------------
+    # # SDK Dart v2
+    # # ----------------------------
+    # - name: SDK Dart v2
+    #   <<: *doc_sdk_snippet
+    #   env:
+    #     - "SDK_NAME=sdk-dart"
+    #     - "SDK_BRANCH=2-dev"
 
 
 # ------------------------

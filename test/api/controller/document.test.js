@@ -23,7 +23,7 @@ describe('DocumentController', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    documentController = new DocumentController(kuzzle);
+    documentController = new DocumentController();
 
     request = new Request({
       controller: 'document',
@@ -470,6 +470,25 @@ describe('DocumentController', () => {
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
     });
+
+    it('should return immediately if the provided payload is empty', async () => {
+      request.input.body.documents = [];
+
+      const response = await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
+
+      should(response).match({
+        errors: [],
+        successes: [],
+      });
+
+      should(kuzzle.ask.withArgs('core:storage:public:document:mCreate'))
+        .not.called();
+      should(kuzzle.ask.withArgs('core:realtime:document:mNotify'))
+        .not.called();
+    });
   });
 
   describe('#createOrReplace', () => {
@@ -610,6 +629,135 @@ describe('DocumentController', () => {
         _id: '_id',
         _version: '_version',
         _source: { ...content, name: 'gordon' }
+      });
+    });
+  });
+
+  describe('#upsert', () => {
+    let changes;
+    let defaultValues;
+
+    beforeEach(() => {
+      changes = { foo: 'bar' };
+      defaultValues = { def: 'val' };
+
+      request.input.body = { changes, default: defaultValues };
+      request.input.resource._id = 'foobar';
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on update', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: { ...changes, name: 'gordon' },
+          _updatedFields: Object.keys(changes),
+        });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on create', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...defaultValues, ...changes, name: 'gordon' },
+        created: true,
+      });
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { ...defaultValues, ...changes, name: 'gordon' });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: true,
+      });
+    });
+
+    it('should have default value for refresh, userId and retryOnConflict', async () => {
+      request.input.body.default = undefined;
+
+      await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues: {},
+          refresh: 'false',
+          retryOnConflict: undefined,
+          userId: null,
+        });
+    });
+
+    it('should return the entire document with source: true', async () => {
+      request.input.args.source = true;
+
+      const response = await documentController.upsert(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
       });
     });
   });

@@ -5,8 +5,9 @@
 
 import should from 'should/as-function'
 import { omit } from 'lodash'
+import Bluebird from 'bluebird';
 
-import { Backend, Request } from '../../index';
+import { Backend, Request, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
@@ -40,11 +41,11 @@ async function loadAdditionalPlugins () {
 
 if (! process.env.TRAVIS) {
   // Easier debug
-  app.hook.register('request:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('request:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
-  app.hook.register('hook:onError', (request: Request) => {
-    console.log(request.error);
+  app.hook.register('hook:onError', async (request: Request) => {
+    app.log.error(request.error);
   });
 }
 
@@ -132,7 +133,7 @@ app.controller.register('tests', {
     // access storage client
     storageClient: {
       handler: async (request: Request) => {
-        const client = new app.storage.ESClient();
+        const client = new app.storage.StorageClient();
         const esRequest = {
           body: request.input.body,
           id: request.input.resource._id,
@@ -140,7 +141,7 @@ app.controller.register('tests', {
         };
 
         const response = await client.index(esRequest);
-        const response2 = await app.storage.esClient.index(esRequest);
+        const response2 = await app.storage.storageClient.index(esRequest);
 
         should(omit(response.body, ['_version', 'result', '_seq_no']))
           .match(omit(response2.body, ['_version', 'result', '_seq_no']));
@@ -150,7 +151,24 @@ app.controller.register('tests', {
       http: [
         { verb: 'post', path: '/tests/storage-client/:index' }
       ]
-    }
+    },
+
+    mutex: {
+      handler: async (request: Request) => {
+        const ttl = 5000;
+        const mutex = new Mutex('functionalTestMutexHandler', {
+          timeout: 0,
+          ttl,
+        });
+
+        const locked = await mutex.lock();
+
+        return { locked };
+      },
+      http: [
+        { verb: 'get', path: '/tests/mutex/acquire' }
+      ],
+    },
   }
 });
 

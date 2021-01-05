@@ -121,7 +121,7 @@ Then('I update the role {string} with:', async function (roleId, dataTable) {
     rights[controller] = { actions };
   }
 
-  this.props.result = await this.sdk.security.updateRole(roleId, rights, { refresh: 'wait_for' });
+  this.props.result = await this.sdk.security.updateRole(roleId, { controllers: rights }, { refresh: 'wait_for' });
 });
 
 Then('The role {string} should match the default one', async function (roleId) {
@@ -135,11 +135,11 @@ Then('The role {string} should match the default one', async function (roleId) {
 });
 
 Then('The role {string} should match:', async function (roleId, dataTable) {
-  const
-    controllers = this.parseObject(dataTable),
-    role = await this.sdk.security.getRole(roleId);
+  const controllers = this.parseObject(dataTable);
+  const role = await this.sdk.security.getRole(roleId);
 
   for (const [controller, actions] of Object.entries(controllers)) {
+    should(role.controllers).have.property(controller);
     should(actions).match(role.controllers[controller].actions);
   }
 });

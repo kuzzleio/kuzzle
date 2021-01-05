@@ -37,7 +37,7 @@ Feature: Application
     Then I should receive a result matching:
       | awsAccessKey | "I am the access key" |
 
-  # ESClient constructor
+  # StorageClient constructor
 
   @mappings
   Scenario: Instantiate a new embedded storage Client and use it
@@ -55,3 +55,16 @@ Feature: Application
     | name | "Martial" |
     Then I should receive a result matching:
     | greeting | "Hello, Martial" |
+
+  # Mutex
+  Scenario: Check mutexes
+    When I successfully execute the action "tests":"mutex"
+    Then I should receive a result matching:
+      | locked | true |
+    When I successfully execute the action "tests":"mutex"
+    Then I should receive a result matching:
+      | locked | false |
+    When I wait 5000 milliseconds
+    And I successfully execute the action "tests":"mutex"
+    Then I should receive a result matching:
+      | locked | true |

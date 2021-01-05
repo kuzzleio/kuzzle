@@ -22,7 +22,7 @@ describe('#core/storage/ClientAdapter', () => {
   let kuzzle;
 
   before(() => {
-    mockRequire('../../../lib/util/mutex', MutexMock);
+    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
     mockRequire('../../../lib/service/storage/elasticsearch', ElasticsearchMock);
     ClientAdapter = mockRequire.reRequire('../../../lib/core/storage/clientAdapter');
   });
@@ -35,8 +35,8 @@ describe('#core/storage/ClientAdapter', () => {
     kuzzle = new KuzzleMock();
     kuzzle.ask.restore();
 
-    publicAdapter = new ClientAdapter(kuzzle, scopeEnum.PUBLIC);
-    privateAdapter = new ClientAdapter(kuzzle, scopeEnum.PRIVATE);
+    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
 
     return Promise.all([publicAdapter, privateAdapter].map(adapter => {
       sinon.stub(adapter.cache);
@@ -60,7 +60,7 @@ describe('#core/storage/ClientAdapter', () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
-      uninitializedAdapter = new ClientAdapter(kuzzle, scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
@@ -433,7 +433,7 @@ describe('#core/storage/ClientAdapter', () => {
           should(adapter.cache.addCollection).calledWith('index', 'collection');
 
           const mutex = MutexMock.__getLastMutex();
-          should(mutex.lockId).eql('loadMappings');
+          should(mutex.resource).eql('loadMappings');
           should(mutex.lock).calledOnce();
           should(mutex.unlock).calledOnce();
         }
@@ -1280,6 +1280,45 @@ describe('#core/storage/ClientAdapter', () => {
         should(publicAdapter.client.updateByQuery).not.called();
       });
     });
+
+    describe('#document:upsert', () => {
+      it('should register a "document:upsert" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:document:upsert`,
+            'index',
+            'collection',
+            'id',
+            'changes',
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index', 'collection');
+
+          should(adapter.client.upsert)
+            .calledWith('index', 'collection', 'id', 'changes', 'options');
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:document:upsert',
+          'index',
+          'collection',
+          'id',
+          'changes',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.update).not.called();
+      });
+    });
+
   });
 
   describe('#cache handling events', () => {

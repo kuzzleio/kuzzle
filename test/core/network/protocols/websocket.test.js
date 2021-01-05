@@ -21,7 +21,7 @@ describe('/lib/core/network/protocols/websocket', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
 
     sinon.stub(entrypoint, 'newConnection');
     sinon.stub(entrypoint, 'removeConnection');
@@ -581,7 +581,7 @@ describe('/lib/core/network/protocols/websocket', () => {
 
       for (const heartbeat of values) {
         const
-          ep = new EntryPoint(kuzzle),
+          ep = new EntryPoint(),
           wsp = new WebSocketProtocol();
 
         ep.config.protocols.websocket.heartbeat = heartbeat;
@@ -724,7 +724,7 @@ describe('/lib/core/network/protocols/websocket', () => {
 
       for (const idleTimeout of values) {
         const
-          ep = new EntryPoint(kuzzle),
+          ep = new EntryPoint(),
           wsp = new WebSocketProtocol();
 
         ep.config.protocols.websocket.idleTimeout = idleTimeout;

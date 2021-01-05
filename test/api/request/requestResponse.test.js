@@ -3,8 +3,8 @@
 const should = require('should');
 
 const { BadRequestError } = require('../../../lib/kerror/errors');
-const { Request } = require('../../../lib/api/request/request');
-const { RequestResponse } = require('../../../lib/api/request/requestResponse');
+const { Request } = require('../../../lib/api/request');
+const { RequestResponse } = require('../../../lib/api/request');
 
 describe('#RequestResponse', () => {
   let req;

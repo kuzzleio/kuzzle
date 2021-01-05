@@ -7,9 +7,9 @@ const {
   InternalError,
   BadRequestError
 } = require('../../../lib/kerror/errors');
-const { Request } = require('../../../lib/api/request/request');
-const { RequestContext } = require('../../../lib/api/request/requestContext');
-const { RequestInput } = require('../../../lib/api/request/requestInput');
+const { Request } = require('../../../lib/api/request');
+const { RequestContext } = require('../../../lib/api/request');
+const { RequestInput } = require('../../../lib/api/request');
 
 describe('#Request', () => {
   let rq;

@@ -46,7 +46,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     mockrequire.reRequire('../../lib/kuzzle/dumpGenerator');
     DumpGenerator = rewire('../../lib/kuzzle/dumpGenerator');
-    dumpGenerator = new DumpGenerator(kuzzle);
+    dumpGenerator = new DumpGenerator();
 
     kuzzle.config.dump.enabled = true;
     dumpGenerator._dump = false;
@@ -94,7 +94,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
-    should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('/tmp/2020-dump-me-master/core');
+    should(fsStub.createReadStream.getCall(0).args[0]).be.exactly(`/tmp/${(new Date()).getFullYear()}-dump-me-master/core`);
     should(fsStub.createWriteStream).be.calledOnce();
     should(fsStub.createReadStream().pipe).be.called(2);
 

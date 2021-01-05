@@ -23,7 +23,6 @@ describe('Test: ElasticSearch service', () => {
   let elasticsearch;
   let timestamp;
   let esClientError;
-  let dateNow = Date.now;
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
@@ -36,7 +35,7 @@ describe('Test: ElasticSearch service', () => {
     esClientError = new Error('es client fail');
 
     ES.buildClient = () => new ESClientMock();
-    elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
+    elasticsearch = new ES(kuzzle.config.services.storageEngine);
 
     await elasticsearch.init();
 
@@ -45,22 +44,20 @@ describe('Test: ElasticSearch service', () => {
       formatESError: sinon.spy(error => error)
     };
 
-    Date.now = () => timestamp;
+    sinon.stub(Date, 'now').returns(timestamp);
   });
 
   afterEach(() => {
-    Date.now = dateNow;
+    Date.now.restore();
   });
 
   describe('#constructor', () => {
     it('should initialize properties', () => {
-      const esPublic = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      const esPublic = new ES(kuzzle.config.services.storageEngine);
       const esInternal = new ES(
-        kuzzle,
         kuzzle.config.services.storageEngine,
         scopeEnum.PRIVATE);
 
-      should(esPublic._kuzzle).be.exactly(kuzzle);
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
       should(esPublic._indexPrefix).be.eql('&');
       should(esInternal._indexPrefix).be.eql('%');
@@ -69,7 +66,7 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#init', () => {
     it('should initialize properly', () => {
-      elasticsearch = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      elasticsearch = new ES(kuzzle.config.services.storageEngine);
       elasticsearch._buildClient = () => new ESClientMock();
 
       const promise = elasticsearch.init();
@@ -800,6 +797,240 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#upsert', () => {
+    beforeEach(() => {
+      elasticsearch._client.update.resolves({
+        body: {
+          _id: 'liia',
+          _version: 2,
+          result: 'updated',
+          get: {
+            _source: {city: 'Panipokari'}
+          }
+        }
+      });
+    });
+
+    it('should allow to upsert a document', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        },
+        created: false,
+      });
+    });
+
+    it('should handle default values for upserted documents', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        {
+          defaultValues: { oh: 'noes' },
+        });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            oh: 'noes',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        },
+        created: false,
+      });
+    });
+
+    it('should return the right "_created" result on a document creation', async () => {
+      elasticsearch._client.update.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          result: 'created',
+          get: {
+            _source: {city: 'Panipokari'}
+          }
+        }
+      });
+
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        {
+          defaultValues: { oh: 'noes' },
+        });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: null
+            }
+          },
+          upsert: {
+            oh: 'noes',
+            _kuzzle_info: {
+              author: null,
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: undefined,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+
+      should(result).match({
+        _id: 'liia',
+        _version: 1,
+        _source: {
+          city: 'Panipokari'
+        },
+        created: true,
+      });
+    });
+
+    it('should handle optional configurations', async () => {
+      const result = await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'aschen', retryOnConflict: 42 });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: 'aschen',
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: 'aschen',
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: 'wait_for',
+        _source: true,
+        retryOnConflict: 42
+      });
+
+      should(result).match({
+        _id: 'liia',
+        _version: 2,
+        _source: {
+          city: 'Panipokari'
+        },
+        created: false,
+      });
+    });
+
+    it('should return a rejected promise if client.upsert fails', async () => {
+      elasticsearch._client.update.rejects(esClientError);
+
+      await should(elasticsearch.upsert(index, collection, 'liia', {
+        city: 'Kathmandu'
+      })).rejected();
+
+      should(elasticsearch._esWrapper.formatESError).calledWith(esClientError);
+    });
+
+    it('should default an explicitly null retryOnConflict', async () => {
+      await elasticsearch.upsert(
+        index,
+        collection,
+        'liia',
+        { city: 'Panipokari' },
+        { refresh: 'wait_for', userId: 'oh noes', retryOnConflict: null });
+
+      should(elasticsearch._client.update).be.calledWithMatch({
+        index: esIndexName,
+        body: {
+          doc: {
+            city: 'Panipokari',
+            _kuzzle_info: {
+              updatedAt: timestamp,
+              updater: 'oh noes'
+            }
+          },
+          upsert: {
+            _kuzzle_info: {
+              author: 'oh noes',
+              createdAt: timestamp,
+            },
+          },
+        },
+        id: 'liia',
+        refresh: 'wait_for',
+        _source: true,
+        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+      });
+    });
+  });
+
   describe('#replace', () => {
     beforeEach(() => {
       elasticsearch._client.index.resolves({
@@ -1110,7 +1341,6 @@ describe('Test: ElasticSearch service', () => {
           { id: 'services.storage.write_limit_exceeded' });
     });
   });
-
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
@@ -3740,9 +3970,8 @@ describe('Test: ElasticSearch service', () => {
       publicES;
 
     beforeEach(() => {
-      publicES = new ES(kuzzle, kuzzle.config.services.storageEngine);
+      publicES = new ES(kuzzle.config.services.storageEngine);
       internalES = new ES(
-        kuzzle,
         kuzzle.config.services.storageEngine,
         scopeEnum.PRIVATE);
     });

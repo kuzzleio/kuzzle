@@ -53,6 +53,7 @@ import {
 import {
   RequestContext,
   RequestInput,
+  KuzzleRequest,
   Request,
 } from '../../../index';
 
@@ -116,7 +117,7 @@ export class PluginContext {
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: Request, callback?: any) => Promise<Request>,
+    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>,
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -167,7 +168,7 @@ export class PluginContext {
     /**
      * Instantiate a new Request from the original one.
      */
-    Request: Request;
+    Request: KuzzleRequest;
     /**
      * @deprecated import directly: `import { RequestContext } from 'kuzzle'`
      */
@@ -215,13 +216,8 @@ export class PluginContext {
     warn: (message: any) => void
   };
 
-  constructor (kuzzle, pluginName) {
-    // we have a circular dependency between Kuzzle and the plugins.
-    // We cannot get Kuzzle constructor from the global scope
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const Kuzzle = require('../../kuzzle');
-
-    this.config = JSON.parse(JSON.stringify(kuzzle.config));
+  constructor (pluginName) {
+    this.config = JSON.parse(JSON.stringify(global.kuzzle.config));
 
     Object.freeze(this.config);
 
@@ -249,149 +245,144 @@ export class PluginContext {
 
     /* context.secrets ====================================================== */
 
-    this.secrets = JSON.parse(JSON.stringify(kuzzle.vault.secrets));
+    this.secrets = JSON.parse(JSON.stringify(global.kuzzle.vault.secrets));
 
     Object.freeze(this.secrets);
 
-    if (kuzzle instanceof Kuzzle) {
-      // uppercase are forbidden by ES
-      const pluginIndex = `plugin-${pluginName}`.toLowerCase();
+    // uppercase are forbidden by ES
+    const pluginIndex = `plugin-${pluginName}`.toLowerCase();
 
-      /* context.constructors =============================================== */
+    /* context.constructors =============================================== */
 
-      const pluginStore = new Store(
-        kuzzle,
-        pluginIndex,
-        storeScopeEnum.PRIVATE);
+    const pluginStore = new Store(
+      pluginIndex,
+      storeScopeEnum.PRIVATE);
 
-      // eslint-disable-next-line no-inner-declarations
-      function PluginContextRepository (
-        collection: string,
-        ObjectConstructor: any = null)
-      {
-        if (! collection) {
-          throw contextError.get('missing_collection');
-        }
-
-        const pluginRepository = new PluginRepository(
-          kuzzle,
-          pluginStore,
-          collection);
-
-        pluginRepository.init({ ObjectConstructor });
-
-        return {
-          create: (...args) => pluginRepository.create(...args),
-          createOrReplace: (...args) => pluginRepository.createOrReplace(...args),
-          delete: (...args) => pluginRepository.delete(...args),
-          get: (...args) => pluginRepository.load(...args),
-          mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
-          replace: (...args) => pluginRepository.replace(...args),
-          search: (...args) => pluginRepository.search(...args),
-          update: (...args) => pluginRepository.update(...args)
-        } as Repository;
+    // eslint-disable-next-line no-inner-declarations
+    function PluginContextRepository (
+      collection: string,
+      ObjectConstructor: any = null)
+    {
+      if (! collection) {
+        throw contextError.get('missing_collection');
       }
 
-      // eslint-disable-next-line no-inner-declarations
-      function PluginContextESClient () {
-        return Elasticsearch
-          .buildClient(kuzzle.config.services.storageEngine.client);
-      }
+      const pluginRepository = new PluginRepository(
+        pluginStore,
+        collection);
 
-      this.constructors = {
-        BaseValidationType: require('../validation/baseType'),
-        ESClient: PluginContextESClient as unknown as new () => Client,
-        Koncorde: Koncorde as any,
-        Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
-        Request: instantiateRequest as any,
-        RequestContext: RequestContext as any,
-        RequestInput: RequestInput as any,
-      };
+      pluginRepository.init({ ObjectConstructor });
 
-      Object.freeze(this.constructors);
-
-      /* context.log ======================================================== */
-
-      this.log = {
-        debug: msg => kuzzle.log.debug(`[${pluginName}] ${msg}`),
-        error: msg => kuzzle.log.error(`[${pluginName}] ${msg}`),
-        info: msg => kuzzle.log.info(`[${pluginName}] ${msg}`),
-        silly: msg => kuzzle.log.silly(`[${pluginName}] ${msg}`),
-        verbose: msg => kuzzle.log.verbose(`[${pluginName}] ${msg}`),
-        warn: msg => kuzzle.log.warn(`[${pluginName}] ${msg}`)
-      };
-
-      Object.freeze(this.log);
-
-      /* context.accessors ================================================== */
-
-      this.accessors = {
-        execute: (request, callback) => execute(kuzzle, request, callback),
-        sdk: new EmbeddedSDK(kuzzle),
-        storage: {
-          bootstrap: collections => pluginStore.init(collections),
-          createCollection: (collection, mappings) => (
-            pluginStore.createCollection(collection, { mappings })
-          )
-        },
-        strategies: {
-          add: curryAddStrategy(kuzzle, pluginName),
-          remove: curryRemoveStrategy(kuzzle, pluginName)
-        },
-        subscription: {
-          register: (connectionId, index, collection, filters) => {
-            const request = new Request(
-              {
-                action: 'subscribe',
-                body: filters,
-                collection,
-                controller: 'realtime',
-                index,
-              },
-              {
-                connectionId: connectionId,
-              });
-            return kuzzle.ask(
-              'core:realtime:subscribe',
-              request
-            );
-          },
-          unregister: (connectionId, roomId, notify) =>
-            kuzzle.ask(
-              'core:realtime:unsubscribe',
-              connectionId, roomId, notify
-            )
-        },
-        trigger: (eventName, payload) => (
-          kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
-        ),
-        validation: {
-          addType: kuzzle.validation.addType.bind(kuzzle.validation),
-          validate: kuzzle.validation.validate.bind(kuzzle.validation)
-        },
-      };
-
-      // @todo freeze the "accessors" object once we don't have
-      // the PriviledgedContext anymore
+      return {
+        create: (...args) => pluginRepository.create(...args),
+        createOrReplace: (...args) => pluginRepository.createOrReplace(...args),
+        delete: (...args) => pluginRepository.delete(...args),
+        get: (...args) => pluginRepository.load(...args),
+        mGet: (...args) => pluginRepository.loadMultiFromDatabase(...args),
+        replace: (...args) => pluginRepository.replace(...args),
+        search: (...args) => pluginRepository.search(...args),
+        update: (...args) => pluginRepository.update(...args)
+      } as Repository;
     }
+
+    // eslint-disable-next-line no-inner-declarations
+    function PluginContextESClient () {
+      return Elasticsearch
+        .buildClient(global.kuzzle.config.services.storageEngine.client);
+    }
+
+    this.constructors = {
+      BaseValidationType: require('../validation/baseType'),
+      ESClient: PluginContextESClient as unknown as new () => Client,
+      Koncorde: Koncorde as any,
+      Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
+      Request: instantiateRequest as any,
+      RequestContext: RequestContext as any,
+      RequestInput: RequestInput as any,
+    };
+
+    Object.freeze(this.constructors);
+
+    /* context.log ======================================================== */
+
+    this.log = {
+      debug: msg => global.kuzzle.log.debug(`[${pluginName}] ${msg}`),
+      error: msg => global.kuzzle.log.error(`[${pluginName}] ${msg}`),
+      info: msg => global.kuzzle.log.info(`[${pluginName}] ${msg}`),
+      silly: msg => global.kuzzle.log.silly(`[${pluginName}] ${msg}`),
+      verbose: msg => global.kuzzle.log.verbose(`[${pluginName}] ${msg}`),
+      warn: msg => global.kuzzle.log.warn(`[${pluginName}] ${msg}`)
+    };
+
+    Object.freeze(this.log);
+
+    /* context.accessors ================================================== */
+
+    this.accessors = {
+      execute: (request, callback) => execute(request, callback),
+      sdk: new EmbeddedSDK(),
+      storage: {
+        bootstrap: collections => pluginStore.init(collections),
+        createCollection: (collection, mappings) => (
+          pluginStore.createCollection(collection, { mappings })
+        )
+      },
+      strategies: {
+        add: curryAddStrategy(pluginName),
+        remove: curryRemoveStrategy(pluginName)
+      },
+      subscription: {
+        register: (connectionId, index, collection, filters) => {
+          const request = new KuzzleRequest(
+            {
+              action: 'subscribe',
+              body: filters,
+              collection,
+              controller: 'realtime',
+              index,
+            },
+            {
+              connectionId: connectionId,
+            });
+          return global.kuzzle.ask(
+            'core:realtime:subscribe',
+            request
+          );
+        },
+        unregister: (connectionId, roomId, notify) =>
+          global.kuzzle.ask(
+            'core:realtime:unsubscribe',
+            connectionId, roomId, notify
+          )
+      },
+      trigger: (eventName, payload) => (
+        global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
+      ),
+      validation: {
+        addType: global.kuzzle.validation.addType.bind(global.kuzzle.validation),
+        validate: global.kuzzle.validation.validate.bind(global.kuzzle.validation)
+      },
+    };
+
+    // @todo freeze the "accessors" object once we don't have
+    // the PriviledgedContext anymore
   }
 }
 
 /**
- * @param {Kuzzle} kuzzle
- * @param {Request} request
+  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
-function execute (kuzzle, request, callback) {
+function execute (request, callback) {
   if (callback && typeof callback !== 'function') {
     const error = contextError.get('invalid_callback', typeof callback);
-    kuzzle.log.error(error);
+    global.kuzzle.log.error(error);
     return Bluebird.reject(error);
   }
 
   const promback = new Promback(callback);
 
-  if (!request || !(request instanceof Request)) {
+  if (!request || (!(request instanceof KuzzleRequest) && !(request instanceof Request))) {
     return promback.reject(contextError.get('missing_request'));
   }
 
@@ -405,7 +396,7 @@ function execute (kuzzle, request, callback) {
   request.clearError();
   request.status = 102;
 
-  kuzzle.funnel.executePluginRequest(request)
+  global.kuzzle.funnel.executePluginRequest(request)
     .then(result => {
       request.setResult(
         result,
@@ -443,7 +434,7 @@ function instantiateRequest(request, data, options = {}) {
     throw contextError.get('missing_request_data');
   }
 
-  if (!(_request instanceof Request)) {
+  if (!(_request instanceof KuzzleRequest)) {
     if (_data) {
       _options = _data;
     }
@@ -454,7 +445,7 @@ function instantiateRequest(request, data, options = {}) {
     Object.assign(_options, _request.context.toJSON());
   }
 
-  const target = new Request(_data, _options);
+  const target = new KuzzleRequest(_data, _options);
 
   // forward informations if a request object was supplied
   if (_request) {
@@ -490,13 +481,12 @@ function instantiateRequest(request, data, options = {}) {
 /**
  * Returns a currified function of pluginsManager.registerStrategy
  *
- * @param  {Kuzzle} kuzzle
  * @param  {string} pluginName
  * @returns {function} function taking a strategy name and properties,
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryAddStrategy(kuzzle, pluginName) {
+function curryAddStrategy(pluginName) {
   return async function addStrategy(name, strategy) {
     // strategy constructors cannot be used directly to dynamically
     // add new strategies, because they cannot
@@ -510,15 +500,15 @@ function curryAddStrategy(kuzzle, pluginName) {
       throw contextError.get('missing_authenticator', pluginName, name);
     }
 
-    const mutex = new Mutex(kuzzle, 'auth:strategies:add', { ttl: 30000 });
+    const mutex = new Mutex('auth:strategies:add', { ttl: 30000 });
 
     await mutex.lock();
 
     try {
       // @todo use Plugin.checkName to ensure format
-      kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
+      global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
 
-      return await kuzzle.pipe('core:auth:strategyAdded', {
+      return await global.kuzzle.pipe('core:auth:strategyAdded', {
         name,
         pluginName,
         strategy,
@@ -533,23 +523,22 @@ function curryAddStrategy(kuzzle, pluginName) {
 /**
  * Returns a currified function of pluginsManager.unregisterStrategy
  *
- * @param  {Kuzzle} kuzzle
  * @param  {string} pluginName
  * @returns {function} function taking a strategy name and properties,
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryRemoveStrategy(kuzzle, pluginName) {
+function curryRemoveStrategy(pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name) {
-    const mutex = new Mutex(kuzzle, 'auth:strategies:remove', { ttl: 30000 });
+    const mutex = new Mutex('auth:strategies:remove', { ttl: 30000 });
 
     await mutex.lock();
 
     try {
-      kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-      return await kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
+      global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
+      return await global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
     }
     finally {
       mutex.unlock();

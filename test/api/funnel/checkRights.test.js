@@ -27,7 +27,7 @@ describe('funnel.checkRights', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
+    funnel = new FunnelController();
 
     request = new Request({
       controller: 'document',

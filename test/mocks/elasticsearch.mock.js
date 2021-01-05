@@ -45,6 +45,7 @@ class ElasticsearchMock extends Elasticsearch {
     sinon.stub(this, 'updateCollection').resolves();
     sinon.stub(this, 'updateMapping').resolves();
     sinon.stub(this, 'mExecute').resolves();
+    sinon.stub(this, 'upsert').resolves();
   }
 }
 

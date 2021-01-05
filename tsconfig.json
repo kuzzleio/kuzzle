@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "noUncheckedIndexedAccess": true,
     "declaration": true,
     "listEmittedFiles": true,
     "module": "commonjs",
@@ -17,6 +18,9 @@
     "resolveJsonModule": true
   },
   "rootDir": "lib/",
+  "files": [
+    "lib/types/Global.d.ts"
+  ],
   "include": [
     "lib/**/*.ts",
     "index.ts"

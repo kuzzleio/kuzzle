@@ -6,7 +6,7 @@ title: checkRights
 
 # checkRights
 
-<SinceBadge version="change-me"/>
+<SinceBadge version="2.8.0"/>
 
 Checks if the provided API request can be executed by a user.
 
@@ -61,7 +61,7 @@ Body:
 
 ## Arguments
 
-- `_id`: user unique [kuid](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid)
+- `_id`: user unique [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
 ---
 

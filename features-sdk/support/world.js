@@ -40,34 +40,37 @@ class KuzzleWorld {
     return this._protocol;
   }
 
-  parseObject(dataTable) {
+  parseObject (dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
-      throw new Error('Argument is not a datatTable');
+      throw new Error('Argument is not a dataTable');
     }
 
     const content = dataTable.rowsHash();
 
     for (const key of Object.keys(content)) {
-      content[key] = JSON.parse(content[key]);
+      // eslint-disable-next-line no-eval
+      content[key] = eval(`const o = ${content[key]}; o`);
     }
 
     return content;
   }
 
-
   parseObjectArray (dataTable) {
-    const
-      objectArray = [],
-      keys = dataTable.rawTable[0];
+    if (typeof dataTable.rowsHash !== 'function') {
+      throw new Error('Argument is not a dataTable');
+    }
+
+    const objectArray = [];
+    const keys = dataTable.rawTable[0];
 
     for (let i = 1; i < dataTable.rawTable.length; i++) {
-      const
-        object = {},
-        rawObject = dataTable.rawTable[i];
+      const object = {};
+      const rawObject = dataTable.rawTable[i];
 
       for (let j = 0; j < keys.length; j++) {
         if (rawObject[j] !== '-') {
-          object[keys[j]] = JSON.parse(rawObject[j]);
+          // eslint-disable-next-line no-eval
+          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`);
         }
       }
 

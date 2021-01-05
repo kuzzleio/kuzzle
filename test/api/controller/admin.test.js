@@ -21,7 +21,7 @@ describe('AdminController', () => {
   let request;
 
   before(() => {
-    mockRequire('../../../lib/util/mutex', MutexMock);
+    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
     AdminController = mockRequire.reRequire('../../../lib/api/controller/admin');
   });
 
@@ -32,7 +32,7 @@ describe('AdminController', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    adminController = new AdminController(kuzzle);
+    adminController = new AdminController();
 
     request = new Request({ controller: 'admin' });
 
@@ -101,7 +101,7 @@ describe('AdminController', () => {
 
       const mutex = MutexMock.__getLastMutex();
 
-      should(mutex.lockId).eql('resetSecurity');
+      should(mutex.resource).eql('resetSecurity');
       should(mutex.timeout).eql(0);
       should(mutex.lock).calledOnce();
       should(mutex.unlock).calledOnce();
@@ -115,7 +115,7 @@ describe('AdminController', () => {
 
       const mutex1 = MutexMock.__getLastMutex();
 
-      should(mutex1.lockId).eql('resetSecurity');
+      should(mutex1.resource).eql('resetSecurity');
       should(mutex1.timeout).eql(0);
       should(mutex1.lock).calledOnce();
       should(mutex1.unlock).calledOnce();
@@ -126,7 +126,7 @@ describe('AdminController', () => {
 
       const mutex2 = MutexMock.__getLastMutex();
 
-      should(mutex2.lockId).eql('resetSecurity');
+      should(mutex2.resource).eql('resetSecurity');
       should(mutex2.timeout).eql(0);
       should(mutex2.lock).calledOnce();
       should(mutex2.unlock).calledOnce();
@@ -139,7 +139,7 @@ describe('AdminController', () => {
       try {
         await should(adminController.resetSecurity(request))
           .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
-        should(MutexMock.__getLastMutex().lockId).eql('resetSecurity');
+        should(MutexMock.__getLastMutex().resource).eql('resetSecurity');
       }
       finally {
         MutexMock.__canLock(true);
@@ -168,7 +168,7 @@ describe('AdminController', () => {
 
       const mutex = MutexMock.__getLastMutex();
 
-      should(mutex.lockId).eql('resetDatabase');
+      should(mutex.resource).eql('resetDatabase');
       should(mutex.timeout).eql(0);
       should(mutex.lock).calledOnce();
       should(mutex.unlock).calledOnce();
@@ -180,7 +180,7 @@ describe('AdminController', () => {
       try {
         await should(adminController.resetDatabase(request))
           .rejectedWith(PreconditionError, { id: 'api.process.action_locked' });
-        should(MutexMock.__getLastMutex().lockId).eql('resetDatabase');
+        should(MutexMock.__getLastMutex().resource).eql('resetDatabase');
       }
       finally {
         MutexMock.__canLock(true);
@@ -206,7 +206,7 @@ describe('AdminController', () => {
     });
 
     it('should throw an error if shutdown is in progress', async () => {
-      adminController = new AdminController(kuzzle);
+      adminController = new AdminController();
       adminController.shuttingDown = true;
 
       await should(adminController.shutdown(request))

@@ -15,7 +15,7 @@ describe('security/securityLoader', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    loader = new SecurityLoader(kuzzle);
+    loader = new SecurityLoader();
     return loader.init();
   });
 

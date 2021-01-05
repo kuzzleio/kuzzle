@@ -71,6 +71,7 @@ upgrade-*.report
 
 # JS generated files from TS
 *.d.ts
+!lib/types/Global.d.ts
 *.js.map
 
 /index.js
@@ -79,9 +80,8 @@ lib/kerror/errors/*.js
 lib/core/application/backend.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
-lib/util/interfaces.js
 lib/api/request/index.js
-lib/api/request/request.js
+lib/api/request/kuzzle-request.js
 lib/api/request/requestContext.js
 lib/api/request/requestInput.js
 lib/api/request/requestResponse.js
@@ -100,5 +100,20 @@ lib/kerror/errors/serviceUnavailableError.js
 lib/kerror/errors/sizeLimitError.js
 lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
+lib/types/Controller.js
+lib/types/ControllerDefinition.js
+lib/types/Deprecation.js
+lib/types/EventHandler.js
+lib/types/InternalLogger.js
+lib/types/Plugin.js
+lib/types/PluginManifest.js
+lib/types/RequestPayload.js
+lib/types/ResponsePayload.js
+lib/types/StrategyDefinition.js
+lib/types/Token.js
+lib/types/User.js
+lib/types/index.js
+lib/util/interfaces.js
+lib/util/mutex.js
 features-sdk/support/application/functional-tests-app.js
 

@@ -22,7 +22,7 @@ describe('core/network/httpRouter', () => {
 
   beforeEach(() => {
     kuzzleMock = new KuzzleMock();
-    router = new Router(kuzzleMock);
+    router = new Router();
     handler = sinon.stub().yields();
     rq = new HttpMessage(
       { id: 'requestId' },
@@ -87,7 +87,7 @@ describe('core/network/httpRouter', () => {
 
     it('should update the list of accepted compression algorithms if compression is disabled', () => {
       kuzzleMock.config.server.protocols.http.allowCompression = false;
-      router = new Router(kuzzleMock);
+      router = new Router();
 
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
@@ -103,7 +103,7 @@ describe('core/network/httpRouter', () => {
       kuzzleMock.config.http.accessControlAllowMethods = 'METHOD';
       kuzzleMock.config.http.accessControlAllowHeaders = 'headers';
 
-      router = new Router(kuzzleMock);
+      router = new Router();
 
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
@@ -591,7 +591,7 @@ describe('core/network/httpRouter', () => {
 
       const MockRouter = mockrequire.reRequire('../../../../lib/core/network/httpRouter');
 
-      router = new MockRouter(kuzzleMock);
+      router = new MockRouter();
 
       router.post('/foo/bar', handler);
 

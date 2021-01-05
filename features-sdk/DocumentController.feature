@@ -648,3 +648,49 @@ Feature: Document Controller
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+
+  # document:upsert ============================================================
+
+  @mappings
+  Scenario: Upsert document with and without returning updated document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | body       | { "changes": { "name": "document-1", "age": 42 }, "default": { "foo": "bar" } } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id      | "document-1"                      |
+      | _source  | { "name": "document-1", "age": 42, "foo": "bar" } |
+      | _version | 1                                                 |
+      | created  | true                                              |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | body       | { "changes": { "name": "updated1" }, "default": { "foo": "oh noes" } } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id      | "document-1"                                    |
+      | _source  | { "name": "updated1", "age": 42, "foo": "bar" } |
+      | _version | 2                                               |
+      | created  | false                                           |
+    And The document "document-1" content match:
+      | name | "updated1" |
+      | age  | 42         |
+      | foo  | "bar"      |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"                       |
+      | collection | "yellow-taxi"                         |
+      | _id        | "document-1"                          |
+      | body       | { "changes": { "name": "updated2" } } |
+      | source     | false                                 |
+    Then I should receive a result matching:
+      | _id      | "document-1" |
+      | _version | 3            |
+      | created  | false        |
+    And The document "document-1" content match:
+      | name | "updated2" |
+      | age  | 42         |
+      | foo  | "bar"      |
