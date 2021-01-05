@@ -3,8 +3,10 @@ description: Run Node.js unit tests
 
 runs:
   using: "composite"
-  steps: 
+  steps:
     - run: npm ci --silent
+      shell: bash
+    - run: npm run build
       shell: bash
     - run: npm run test:unit:coverage
       shell: bash
