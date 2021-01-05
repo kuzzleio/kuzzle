@@ -71,6 +71,7 @@ upgrade-*.report
 
 # JS generated files from TS
 *.d.ts
+!lib/types/Global.d.ts
 *.js.map
 
 /index.js

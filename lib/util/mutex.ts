@@ -29,8 +29,6 @@ import buildDebug from './debug';
 const debug = buildDebug('kuzzle:mutex');
 const fatal = kerror.wrap('core', 'fatal');
 
-declare const kuzzle: any;
-
 // LUA script for Redis: we want our mutexes to only delete the lock they
 // acquired. Prevents removing locks acquired by other processes if unlocking
 // occurs after the lock expires
@@ -108,8 +106,7 @@ export class Mutex {
     { attemptDelay = 200, timeout = -1, ttl = 5000 }: MutexOptions = {}
   ) {
     this.resource = resource;
-    this.mutexId = `${kuzzle.id}/${randomBytes(16).toString('hex')}`;
-    this._locked = false;
+    this.mutexId = `${global.kuzzle.id}/${randomBytes(16).toString('hex')}`;
     this.attemptDelay = attemptDelay;
     this.timeout = timeout;
     this.ttl = ttl;
@@ -130,7 +127,7 @@ export class Mutex {
     let duration = 0;
 
     do {
-      this._locked = await kuzzle.ask(
+      this._locked = await global.kuzzle.ask(
         'core:cache:internal:store',
         this.resource,
         this.mutexId,
@@ -165,7 +162,7 @@ export class Mutex {
     }
 
     if (!delScriptRegistered) {
-      await kuzzle.ask(
+      await global.kuzzle.ask(
         'core:cache:internal:script:define',
         'delIfValueEqual',
         1,
@@ -173,7 +170,7 @@ export class Mutex {
       delScriptRegistered = true;
     }
 
-    await kuzzle.ask(
+    await global.kuzzle.ask(
       'core:cache:internal:script:execute',
       'delIfValueEqual',
       this.resource,
