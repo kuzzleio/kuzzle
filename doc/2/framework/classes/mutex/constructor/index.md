@@ -33,9 +33,9 @@ The `options` object is used to configure the mutex behavior. The following prop
 
 | Option         | Type              | Description                                                                                                      |
 | -------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------- |
-| `attemptDelay` | `number`          | (default: 200) Delay in milliseconds between lock attempts |
-| `timeout`      | `number`          | (default: -1) Mutex lock acquisition timeout, in milliseconds. If set to 0, locking will return immediately, whether it can or cannot lock within the 1st attempt. If set to -1, the mutex will try to acquire the resource indefinitely |
-| `ttl`          | `number`          | (default: 5000) Lock time to live, in milliseconds. Locks are freed when `unlock` is invoked, or after that delay has expired. |
+| `attemptDelay` | <pre>number</pre>          | (default: 200) Delay in milliseconds between lock attempts |
+| `timeout`      | <pre>number</pre>          | (default: -1) Mutex lock acquisition timeout, in milliseconds. If set to 0, locking will return immediately, whether it can or cannot lock within the 1st attempt. If set to -1, the mutex will try to acquire the resource indefinitely |
+| `ttl`          | <pre>number</pre>          | (default: 5000) Lock time to live, in milliseconds. Locks are freed when `unlock` is invoked, or after that delay has expired. |
 
 ---
 
