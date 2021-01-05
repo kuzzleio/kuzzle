@@ -84,6 +84,7 @@ jobs:
       node_js: 12.16.3
       install:
         - npm ci --silent
+        - npm run build-ts
       script:
         - npm run test:unit:coverage
       after_script:
@@ -97,6 +98,7 @@ jobs:
       node_js: 12.18.1
       install:
         - npm ci --silent
+        - npm run build-ts
       script:
         - npm run test:unit:coverage
       after_script:
