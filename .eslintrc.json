@@ -57,8 +57,8 @@
     {
       "files": [
         "test/**/*.js",
-        "features/**/*.js",
-        "features-sdk/**/*.js"
+        "features-legacy/**/*.js",
+        "features/**/*.js"
       ],
       "rules": {
         "sort-keys": "off"
