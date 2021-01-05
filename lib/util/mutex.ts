@@ -47,9 +47,25 @@ end
 // to keep track of whether the script was already registered or not
 let delScriptRegistered = false;
 
-interface MutexOptions {
+/**
+ * Mutex class options
+ */
+export interface MutexOptions {
+  /**
+   * Delay between 2 lock attempts (default: 200)
+   */
   attemptDelay?: number,
+
+  /**
+   * Mutex lock acquisition timeout, in milliseconds (default: -1)
+   *   If `-1`, will try to acquire the lock indefinitely.
+   *   If `0`, locking will fail immediately if it cannot lock with its 1st attempt
+   */
   timeout?: number,
+
+  /**
+   * Lock TTL in milliseconds (default: 5000)
+   */
   ttl?: number,
 }
 
