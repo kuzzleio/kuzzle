@@ -1,0 +1,14 @@
+name: Unit Tests
+description: Run Node.js unit tests
+
+runs:
+  using: "composite"
+  steps:
+    - run: npm ci --silent
+      shell: bash
+    - run: npm run build
+      shell: bash
+    - run: npm run test:unit:coverage
+      shell: bash
+    - run: npm run codecov
+      shell: bash
