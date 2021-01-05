@@ -117,7 +117,6 @@ describe('notify methods', () => {
   });
 
   describe('#_notifyDocument', () => {
-
     describe('call from the core', () => {
       it('should do nothing if the provided rooms list is empty', async () => {
         await notifier._notifyDocument(
@@ -140,7 +139,7 @@ describe('notify methods', () => {
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
           request,
           'out',
-          'action',
+          'create',
           content,
           { fromCluster: false });
 
@@ -169,11 +168,12 @@ describe('notify methods', () => {
           index: request.input.resource.index,
           collection: request.input.resource.collection,
           controller: request.input.controller,
-          action: 'action',
+          event: 'write',
+          action: 'create',
           protocol: request.context.protocol,
           node: kuzzle.id,
           scope: 'out',
-          result: content
+          result: content,
         });
 
         should(kuzzle.pipe.callCount).be.eql(2);
@@ -208,7 +208,7 @@ describe('notify methods', () => {
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
           request,
           'out',
-          'action',
+          'create',
           content);
 
         const dispatch = kuzzle.entryPoint.dispatch;

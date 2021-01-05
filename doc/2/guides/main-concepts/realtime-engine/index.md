@@ -111,6 +111,7 @@ Clients subscribing to this channel will receive the following notification:
   "controller": "realtime",  // Controller who trigger the notification
   "action": "publish",       // Action who trigger the notification
   "protocol": "websocket",
+  "event": "publish",
   "scope": "in",
   "result": {
     "_source": {
@@ -212,6 +213,7 @@ Clients subscribing to changes in this collection will receive the following not
   "controller": "document",  // Controller who trigger the notification
   "action": "create",        // Action who trigger the notification
   "protocol": "websocket",
+  "event": "write",
   "scope": "in",
   "result": {
     "_source": {
@@ -306,6 +308,7 @@ This information is contained in the `scope` field of the notifications:
   "collection": "yellow-taxi",
   "controller": "document",
   "action": "create",
+  "event": "write",
   "protocol": "websocket",
   "scope": "in",           // Notification about a document entering the scope
   "result": {
@@ -469,6 +472,7 @@ Each client subscribing to the room will receive the following notification:
   "collection": "yellow-taxi",
   "controller": "realtime",
   "action": "publish",
+  "event": "publish",
   "protocol": "websocket",
   "scope": "in",
   "result": {
