@@ -9,8 +9,6 @@ const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
 
-global.kuzzle = null;
-
 class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
     const config = configLoader.load();
@@ -19,7 +17,10 @@ class KuzzleMock extends KuzzleEventEmitter {
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
 
-    global.kuzzle = this;
+    Reflect.defineProperty(global, 'kuzzle', {
+      value: this,
+      writable: true,
+    });
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
