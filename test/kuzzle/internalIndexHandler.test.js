@@ -31,7 +31,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
   describe('#init', () => {
     before(() => {
-      mockrequire('../../lib/util/mutex', MutexMock);
+      mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
       // the shared object "Store" also uses mutexes that we need to mock
       mockrequire.reRequire('../../lib/core/shared/store');
@@ -93,7 +93,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
       const mutex = MutexMock.__getLastMutex();
 
-      should(mutex.lockId).eql('InternalIndexBootstrap');
+      should(mutex.resource).eql('InternalIndexBootstrap');
       should(mutex.lock).calledOnce();
       should(mutex.unlock).calledOnce();
 

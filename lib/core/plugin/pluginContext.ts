@@ -58,8 +58,6 @@ import {
 
 const contextError = kerror.wrap('plugin', 'context');
 
-declare const kuzzle: any;
-
 export interface Repository {
  create(document: JSONObject, options: any): Promise<any>;
 
@@ -218,7 +216,7 @@ export class PluginContext {
   };
 
   constructor (pluginName) {
-    this.config = JSON.parse(JSON.stringify(kuzzle.config));
+    this.config = JSON.parse(JSON.stringify(global.kuzzle.config));
 
     Object.freeze(this.config);
 
@@ -246,7 +244,7 @@ export class PluginContext {
 
     /* context.secrets ====================================================== */
 
-    this.secrets = JSON.parse(JSON.stringify(kuzzle.vault.secrets));
+    this.secrets = JSON.parse(JSON.stringify(global.kuzzle.vault.secrets));
 
     Object.freeze(this.secrets);
 
@@ -289,7 +287,7 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextESClient () {
       return Elasticsearch
-        .buildClient(kuzzle.config.services.storageEngine.client);
+        .buildClient(global.kuzzle.config.services.storageEngine.client);
     }
 
     this.constructors = {
@@ -307,12 +305,12 @@ export class PluginContext {
     /* context.log ======================================================== */
 
     this.log = {
-      debug: msg => kuzzle.log.debug(`[${pluginName}] ${msg}`),
-      error: msg => kuzzle.log.error(`[${pluginName}] ${msg}`),
-      info: msg => kuzzle.log.info(`[${pluginName}] ${msg}`),
-      silly: msg => kuzzle.log.silly(`[${pluginName}] ${msg}`),
-      verbose: msg => kuzzle.log.verbose(`[${pluginName}] ${msg}`),
-      warn: msg => kuzzle.log.warn(`[${pluginName}] ${msg}`)
+      debug: msg => global.kuzzle.log.debug(`[${pluginName}] ${msg}`),
+      error: msg => global.kuzzle.log.error(`[${pluginName}] ${msg}`),
+      info: msg => global.kuzzle.log.info(`[${pluginName}] ${msg}`),
+      silly: msg => global.kuzzle.log.silly(`[${pluginName}] ${msg}`),
+      verbose: msg => global.kuzzle.log.verbose(`[${pluginName}] ${msg}`),
+      warn: msg => global.kuzzle.log.warn(`[${pluginName}] ${msg}`)
     };
 
     Object.freeze(this.log);
@@ -345,23 +343,23 @@ export class PluginContext {
             {
               connectionId: connectionId,
             });
-          return kuzzle.ask(
+          return global.kuzzle.ask(
             'core:realtime:subscribe',
             request
           );
         },
         unregister: (connectionId, roomId, notify) =>
-          kuzzle.ask(
+          global.kuzzle.ask(
             'core:realtime:unsubscribe',
             connectionId, roomId, notify
           )
       },
       trigger: (eventName, payload) => (
-        kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
+        global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
       ),
       validation: {
-        addType: kuzzle.validation.addType.bind(kuzzle.validation),
-        validate: kuzzle.validation.validate.bind(kuzzle.validation)
+        addType: global.kuzzle.validation.addType.bind(global.kuzzle.validation),
+        validate: global.kuzzle.validation.validate.bind(global.kuzzle.validation)
       },
     };
 
@@ -377,7 +375,7 @@ export class PluginContext {
 function execute (request, callback) {
   if (callback && typeof callback !== 'function') {
     const error = contextError.get('invalid_callback', typeof callback);
-    kuzzle.log.error(error);
+    global.kuzzle.log.error(error);
     return Bluebird.reject(error);
   }
 
@@ -397,7 +395,7 @@ function execute (request, callback) {
   request.clearError();
   request.status = 102;
 
-  kuzzle.funnel.executePluginRequest(request)
+  global.kuzzle.funnel.executePluginRequest(request)
     .then(result => {
       request.setResult(
         result,
@@ -502,9 +500,9 @@ function curryAddStrategy(pluginName) {
     }
 
     // @todo use Plugin.checkName to ensure format
-    kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
+    global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
 
-    return kuzzle.pipe(
+    return global.kuzzle.pipe(
       'core:auth:strategyAdded',
       {name, pluginName, strategy});
   };
@@ -522,7 +520,7 @@ function curryRemoveStrategy(pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name) {
-    kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-    return kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
+    global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
+    return global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
   };
 }
