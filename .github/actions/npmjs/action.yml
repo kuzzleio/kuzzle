@@ -11,7 +11,7 @@ runs:
   steps:
     - name: Create JS from TS files
       run: |
-        npm ci --silent
+        npm install --silent
         npm run build
       shell: bash
     - name: Deploy NPM package
