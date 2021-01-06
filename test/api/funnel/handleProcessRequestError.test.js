@@ -1,16 +1,14 @@
 'use strict';
 
-const
-  should = require('should'),
-  FunnelController = require('../../../lib/api/funnel'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    Request,
-    errors: {
-      BadRequestError,
-      PluginImplementationError
-    }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+
+const FunnelController = require('../../../lib/api/funnel');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const {
+  Request,
+  BadRequestError,
+  PluginImplementationError
+} = require('../../../index');
 
 describe('funnel.processRequest', () => {
   let
@@ -19,7 +17,7 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
+    funnel = new FunnelController();
   });
 
   it('allows plugin developer to set a new error on request:onError event', done => {

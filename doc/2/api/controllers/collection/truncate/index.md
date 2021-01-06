@@ -8,7 +8,7 @@ title: truncate
 
 Empties a collection by removing all its documents, while keeping any associated mapping.
 
-::: info
+::: warning
 Documents removed that way do not trigger real-time notifications.
 :::
 
@@ -66,6 +66,6 @@ Returns a confirmation that the collection is being emptied:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)
 

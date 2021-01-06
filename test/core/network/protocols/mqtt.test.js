@@ -5,7 +5,7 @@ const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const { errors: { BadRequestError } } = require('kuzzle-common-objects');
+const { BadRequestError } = require('../../../../index');
 const errorMatcher = require('../../../util/errorMatcher');
 
 class AedesMock {
@@ -31,7 +31,6 @@ class FakeClient {
 describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   let netMock;
   let entrypoint;
-  let kuzzle;
   let protocol;
   let MqttProtocol;
   let fakeClient;
@@ -54,10 +53,9 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
 
     entrypoint = {
-      kuzzle,
       config: {
         maxRequestSize: 42,
         protocols: {

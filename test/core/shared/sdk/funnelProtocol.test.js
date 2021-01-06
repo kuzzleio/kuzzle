@@ -2,14 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  errors: {
-    PluginImplementationError
-  }
-} = require('kuzzle-common-objects');
-
+  PluginImplementationError
+} = require('../../../../index');
 const User = require('../../../../lib/model/security/user');
 const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
@@ -28,13 +26,13 @@ describe('Test: sdk/funnelProtocol', () => {
       action: 'bar'
     };
 
-    funnelProtocol = new FunnelProtocol(kuzzle);
+    funnelProtocol = new FunnelProtocol();
   });
 
   describe('#constructor', () => {
     it('should throw if the funnel is instantiated without a valid User object', () => {
       should(() => {
-        new FunnelProtocol(kuzzle, { id: 42 });
+        new FunnelProtocol({ id: 42 });
       }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
 
@@ -43,8 +41,8 @@ describe('Test: sdk/funnelProtocol', () => {
 
       funnelProtocol.on('room-id', () => {
         try {
-          should(funnelProtocol.kuzzle.on).be.calledOnce();
-          should(funnelProtocol.kuzzle.on.getCall(0).args[0])
+          should(kuzzle.on).be.calledOnce();
+          should(kuzzle.on.getCall(0).args[0])
             .be.eql('core:network:internal:message');
 
           done();
@@ -67,7 +65,7 @@ describe('Test: sdk/funnelProtocol', () => {
   describe('#query', () => {
     beforeEach(() => {
       kuzzle.ask
-        .withArgs('core:network:internal:connectionId')
+        .withArgs('core:network:internal:connectionId:get')
         .resolves('connection-id');
     });
 
@@ -97,7 +95,7 @@ describe('Test: sdk/funnelProtocol', () => {
       const user = new User();
       user._id = 'gordon';
 
-      funnelProtocol = new FunnelProtocol(kuzzle, user);
+      funnelProtocol = new FunnelProtocol(user);
 
       return funnelProtocol.query(request)
         .then(response => {

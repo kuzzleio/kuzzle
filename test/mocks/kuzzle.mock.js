@@ -1,24 +1,28 @@
 'use strict';
 
-const _ = require('lodash');
 const sinon = require('sinon');
-const Kuzzle = require('../../lib/kuzzle');
 const Bluebird = require('bluebird');
-const config = require('../../lib/config');
-const IndexStorageMock = require('./indexStorage.mock');
-const ClientAdapterMock = require('./clientAdapter.mock');
+
+const Kuzzle = require('../../lib/kuzzle/kuzzle');
+const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
+const configLoader = require('../../lib/config');
+
 const foo = { foo: 'bar' };
 
-let _instance;
+global.kuzzle = null;
 
-class KuzzleMock extends Kuzzle {
+class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
-    super();
+    const config = configLoader.load();
 
-    _instance = this;
+    super(
+      config.plugins.common.maxConcurrentPipes,
+      config.plugins.common.pipesBufferSize);
+
+    global.kuzzle = this;
 
     // we need a deep copy here
-    this.config = _.merge({}, config);
+    this.config = JSON.parse(JSON.stringify(config));
 
     // ========== EVENTS ==========
 
@@ -60,7 +64,8 @@ class KuzzleMock extends Kuzzle {
       store: sinon.stub().returns({id: 'foobar'}),
       getCollections: sinon.stub().returns([]),
       getIndexes: sinon.stub().returns([]),
-      getFilterIds: sinon.stub().returns([])
+      getFilterIds: sinon.stub().returns([]),
+      validate: sinon.stub().resolves(),
     };
 
     this.entryPoint = {
@@ -86,85 +91,14 @@ class KuzzleMock extends Kuzzle {
       isNativeController : sinon.stub()
     };
 
-    this.hotelClerk = {
-      rooms: new Map(),
-      customers: new Map(),
-      getRealtimeCollections: sinon.stub(),
-      removeCustomerFromAllRooms: sinon.stub(),
-      addSubscription: sinon.stub().resolves(foo),
-      join: sinon.stub().resolves(foo),
-      removeSubscription: sinon.stub().resolves(foo),
-      countSubscription: sinon.stub().resolves(foo),
-      listSubscriptions: sinon.stub().resolves(foo),
-    };
-
     this.dumpGenerator = {
       dump: sinon.stub().resolves()
     };
 
     this.shutdown = sinon.stub();
 
-    this.storageEngine = {
-      init: sinon.stub().resolves(),
-      indexCache: {
-        add: sinon.stub().resolves(),
-        remove: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        listIndexes: sinon.stub().resolves(),
-        listCollections: sinon.stub().resolves()
-      },
-      public: new ClientAdapterMock(),
-      internal: new ClientAdapterMock(),
-      config: this.config.services.storageEngine
-    };
-
-    this.cacheEngine = {
-      init: sinon.stub().resolves(),
-      internal: {
-        get: sinon.stub().resolves(),
-        del: sinon.stub().resolves(),
-        exists: sinon.stub().resolves(),
-        expire: sinon.stub().resolves(),
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves(),
-        keys: sinon.stub().resolves(),
-        mget: sinon.stub().resolves(),
-        persist: sinon.stub().resolves(),
-        pexpire: sinon.stub().resolves(),
-        psetex: sinon.stub().resolves(),
-        searchKeys: sinon.stub().resolves(),
-        set: sinon.stub().resolves(),
-        setex: sinon.stub().resolves(),
-        setnx: sinon.stub().resolves(),
-      },
-      public: {
-        flushdb: sinon.stub().resolves(),
-        info: sinon.stub().resolves()
-      }
-    };
-
-    this.internalIndex = new IndexStorageMock(
-      'kuzzle',
-      this.storageEngine.internal);
-
-    this.internalIndex._bootstrap = {
-      startOrWait: sinon.stub().resolves(),
-      createInitialSecurities: sinon.stub().resolves()
-    };
-
-    this.notifier = {
-      init: sinon.spy(),
-      notifyUser: sinon.stub().resolves(),
-      notifyServer: sinon.stub().resolves(),
-      notifyDocument: sinon.stub().resolves(),
-      notifyDocumentCreate: sinon.stub().resolves(),
-      notifyDocumentMDelete: sinon.stub().resolves(),
-      notifyDocumentReplace: sinon.stub().resolves(),
-      notifyDocumentUpdate: sinon.stub().resolves(),
-      publish: sinon.stub().resolves(foo),
-      notifyDocumentMCreate: sinon.stub().resolves(),
-      notifyDocumentMChanges: sinon.stub().resolves()
-    };
+    const InternalIndexHandlerMock = require('./internalIndexHandler.mock');
+    this.internalIndex = new InternalIndexHandlerMock();
 
     this.passport = {
       use: sinon.stub(),
@@ -193,7 +127,8 @@ class KuzzleMock extends Kuzzle {
       unregisterStrategy: sinon.stub(),
       application: {
         info: sinon.stub()
-      }
+      },
+      routes: []
     };
 
     this.rootPath = '/kuzzle';
@@ -261,31 +196,12 @@ class KuzzleMock extends Kuzzle {
       set: sinon.stub()
     };
 
-    {
-      const mockProto = Object.getPrototypeOf(this);
-      const kuzzleProto = Object.getPrototypeOf(mockProto);
-
-      for (const name of Object.getOwnPropertyNames(kuzzleProto)) {
-        if (['constructor', 'adminExists'].includes(name)) {
-          continue;
-        }
-
-        if (!Object.prototype.hasOwnProperty.call(this, name)) {
-          this[name] = function() {
-            throw new Error(`Kuzzle original property ${name} is not mocked`);
-          };
-        }
-      }
-    }
-  }
-
-  static hash (input) {
-    return Kuzzle.hash(input);
-  }
-
-  static instance () {
-    return _instance;
+    this.start = sinon.stub().resolves();
+    this.hash = sinon.stub().callsFake(obj => JSON.stringify(obj));
+    this.running = sinon.stub().returns(false);
   }
 }
+
+KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;

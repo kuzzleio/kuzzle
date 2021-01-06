@@ -14,13 +14,12 @@ describe('/lib/core/network/protocols/internal', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
 
     sinon.stub(entrypoint, 'newConnection');
     sinon.stub(entrypoint, 'removeConnection');
 
     protocol = new InternalProtocol();
-    protocol._kuzzle = kuzzle;
   });
 
   describe('#init', () => {
@@ -35,7 +34,7 @@ describe('/lib/core/network/protocols/internal', () => {
 
       should(kuzzle.onAsk).be.calledOnce();
       should(kuzzle.onAsk.getCall(0).args[0])
-        .be.eql('core:network:internal:connectionId');
+        .be.eql('core:network:internal:connectionId:get');
     });
   });
 

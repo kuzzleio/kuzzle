@@ -1,8 +1,8 @@
 'use strict';
 
 const should = require('should');
-const { Request, errors } = require('kuzzle-common-objects');
 
+const { Request, InternalError, BadRequestError } = require('../../index');
 const DocumentExtractor = require('../../lib/api/documentExtractor');
 
 describe('DocumentExtractor', () => {
@@ -11,7 +11,7 @@ describe('DocumentExtractor', () => {
       action: 'ohnoes',
     });
 
-    should(() => (new DocumentExtractor(req))).throw(errors.InternalError, {
+    should(() => (new DocumentExtractor(req))).throw(InternalError, {
       id: 'core.fatal.assertion_failed'
     });
   });
@@ -1260,7 +1260,7 @@ describe('DocumentExtractor', () => {
         body: {}
       });
 
-      should(() => new DocumentExtractor(req).extract()).throw(errors.BadRequestError);
+      should(() => new DocumentExtractor(req).extract()).throw(BadRequestError);
     });
 
     it('should insert documents from request with a body', () => {

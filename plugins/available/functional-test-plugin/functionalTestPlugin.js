@@ -23,6 +23,26 @@ class FunctionalTestPlugin {
       verb: 'post',
     });
 
+    // Custom Realtime subscription related declarations =======================
+
+    this.controllers.accessors = {
+      registerSubscription: 'registerSubscription',
+      unregisterSubscription: 'unregisterSubscription',
+    };
+
+    this.routes.push({
+      action: 'registerSubscription',
+      controller: 'accessors',
+      url: '/accessors/registerSubscription',
+      verb: 'POST',
+    });
+    this.routes.push({
+      action: 'unregisterSubscription',
+      controller: 'accessors',
+      url: '/accessors/unregisterSubscription',
+      verb: 'POST',
+    });
+
     // context.secrets related declarations ====================================
 
     this.controllers.secrets = { test: 'testSecrets' };
@@ -47,18 +67,19 @@ class FunctionalTestPlugin {
     this.routes.push({
       action: 'manage',
       controller: 'pipes',
-      url: '/pipes/:event/:state',
+      path: '/pipes/:event/:state',
       verb: 'post',
     });
     this.routes.push({
       action: 'deactivateAll',
       controller: 'pipes',
-      url: '/pipes',
+      path: '/pipes',
       verb: 'delete',
     });
     this.routes.push({
       action: 'testReturn',
       controller: 'pipes',
+      // keep a route definition with "url" even if it's deprecated
       url: '/pipes/test-return/:name',
       verb: 'post',
     });
@@ -84,7 +105,7 @@ class FunctionalTestPlugin {
       async name => `Hello, ${name}`;
 
     // Pipe declared with a function name
-    this.pipes['server:afterNow'] = 'afterNowPipe';
+    this.pipes['server:afterNow'] = this.afterNowPipe;
 
     // Embedded SDK realtime
     this.hooks['kuzzle:state:live'] = async () => {
@@ -111,6 +132,44 @@ class FunctionalTestPlugin {
     this.config = config;
     this.context = context;
     this.sdk = context.accessors.sdk;
+
+    // Plugins must be able to perform API requests during their init phase.
+    // There is no test associated: this line by itself will make functional
+    // tests throw before they can even start if this premise is violated.
+    await this.sdk.server.info();
+  }
+
+  // accessors.registerSubscription related methods ============================
+
+  async registerSubscription(request) {
+    const result = await this.context.accessors.subscription.register(
+      request.context.connection.id,
+      'nyc-open-data',
+      'yellow-taxi',
+      {
+        equals: {
+          name: 'Luca'
+        }
+      },
+    );
+
+    return {
+      acknowledged: 'OK',
+      connectionId: request.context.connection.id,
+      roomId: result.roomId
+    };
+  }
+
+  async unregisterSubscription(request) {
+    const connectionId = request.input.body.connectionId ||
+            request.context.connection.id,
+      roomId = request.input.body.roomId;
+
+    await this.context.accessors.subscription.unregister(connectionId, roomId, false);
+
+    return {
+      acknowledged: 'OK'
+    };
   }
 
   // context.constructor.ESClient related methods ==============================

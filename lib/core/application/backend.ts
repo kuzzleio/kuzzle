@@ -19,38 +19,49 @@
  * limitations under the License.
  */
 
+import util from 'util';
 
-import * as fs from 'fs';
-import * as _ from 'lodash';
+import fs from 'fs';
+import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
+import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
+import PluginLogger from 'kuzzle-plugin-logger';
 
-import * as Kuzzle from '../../kuzzle';
-import * as Plugin from '../plugin/plugin';
-import * as EmbeddedSDK from '../shared/sdk/embeddedSdk';
-import * as Elasticsearch from '../../service/storage/elasticsearch';
+import Kuzzle from '../../kuzzle';
+import PluginObject from '../plugin/plugin';
+import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
+import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
-import * as kerror from '../../kerror';
-
+import kerror from '../../kerror';
+import kuzzleConfig from '../../config';
+import { JSONObject } from '../../../index';
 import {
-  JSONObject,
   ControllerDefinition,
-  BasePlugin
-} from '../../util/interfaces';
+  Plugin,
+  Controller,
+  EventHandler,
+} from '../../types';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-/* PipeManager class ======================================================== */
+class ApplicationManager {
+  protected _application: any;
 
-class PipeManager {
-  private _application: any;
-
-  constructor (application: any) {
+  constructor (application: Backend) {
     Reflect.defineProperty(this, '_application', {
       value: application
     });
   }
 
+  protected get _kuzzle () {
+    return this._application._kuzzle;
+  }
+}
+
+/* BackendPipe class ======================================================== */
+
+class BackendPipe extends ApplicationManager {
   /**
    * Registers a new pipe on an event
    *
@@ -58,7 +69,7 @@ class PipeManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any>) : void {
+  register (event: string, handler: EventHandler): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'pipe');
     }
@@ -75,17 +86,9 @@ class PipeManager {
   }
 }
 
-/* HookManager class ======================================================== */
+/* BackendHook class ======================================================== */
 
-class HookManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class BackendHook extends ApplicationManager {
   /**
    * Registers a new hook on an event
    *
@@ -93,7 +96,7 @@ class HookManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: (...args: any) => Promise<any> | void) : void {
+  register (event: string, handler: EventHandler) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }
@@ -110,39 +113,32 @@ class HookManager {
   }
 }
 
-/* ConfigManager class ====================================================== */
+/* BackendConfig class ====================================================== */
 
-class ConfigManager {
-  private _application: any;
-
+class BackendConfig extends ApplicationManager {
   /**
    * Configuration content
    */
   public content: JSONObject;
 
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
+  constructor (application: Backend) {
+    super(application);
 
-    Reflect.defineProperty(this, 'content', {
-      enumerable: true,
-      value: this._application._kuzzle.config
-    });
+    this.content = kuzzleConfig.load();
   }
 
   /**
    * Sets a configuration value
    *
    * @param path - Path to the configuration key (lodash style)
-   * @param value - Value for the configuraiton key
+   * @param value - Value for the configuration key
    */
   set (path: string, value: any) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }
 
-    _.set(this._application._kuzzle.config, path, value);
+    _.set(this.content, path, value);
   }
 
   /**
@@ -155,50 +151,110 @@ class ConfigManager {
       throw runtimeError.get('already_started', 'config');
     }
 
-    this._application._kuzzle.config = _.merge(
-      this._application._kuzzle.config,
-      config);
+    this.content = _.merge(this.content, config);
   }
 }
 
-/* ControllerManager class ================================================== */
+/* BackendController class ================================================== */
 
-class ControllerManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class BackendController extends ApplicationManager {
   /**
    * Registers a new controller.
-   *
-   * @example
-   * register('greeting', {
-   *   actions: {
-   *     sayHello: {
-   *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'POST', url: '/greeting/hello/:name' }]
-   *     }
-   *   }
-   * })
    *
    * Http routes will be auto-generated unless they are provided or an empty array
    * is provided.
    *
    * @param name - Controller name
    * @param definition - Controller definition
+   *
+   * @example
+   * app.controller.register('greeting', {
+   *   actions: {
+   *     sayHello: {
+   *       handler: async request => `Hello, ${request.input.args.name}`,
+   *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
+   *     }
+   *   }
+   * })
+   *
    */
   register (name: string, definition: ControllerDefinition) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'controller');
     }
 
+    this._add(name, definition);
+  }
+
+  /**
+   * Uses a new controller class.
+   *
+   * The controller class must:
+   *  - call the super constructor with the application instance
+   *  - extend the "Controller" class
+   *  - define the "definition" property
+   *  - (optional) define the "name" property
+   *
+   * The controller name will be inferred from the class name.
+   *   e.g. "PaymentSolutionController" will become "payment-solution"
+   *
+   * @example
+   *
+   * class EmailController extends Controller {
+   *   constructor (app) {
+   *     super(app);
+   *
+   *     this.definition = {
+   *       actions: {
+   *         send: {
+   *           handler: this.send
+   *         }
+   *       }
+   *     };
+   *   }
+   *
+   *   async send (request: Request) {
+   *     // ...
+   *   }
+   * }
+   *
+   * app.controller.use(new EmailController(app));
+   *
+   * @param controller Controller class
+   */
+  use (controller: Controller) {
+    if (this._application.started) {
+      throw runtimeError.get('already_started', 'controller');
+    }
+
+    if (! controller.name) {
+      controller.name = kebabCase(controller.constructor.name)
+        .replace('-controller', '');
+    }
+
+    for (const [action, definition] of Object.entries(controller.definition.actions)) {
+      if (typeof definition.handler !== 'function') {
+        throw assertionError.get(
+          'invalid_controller_definition',
+          controller.name,
+          `Handler for action "${action}" is not a function.`);
+      }
+
+      // if the function handler is an instance method,
+      // bind the context to the controller instance
+      const handlerName = definition.handler.name;
+      if (handlerName && typeof controller[handlerName] === 'function') {
+        definition.handler = definition.handler.bind(controller);
+      }
+    }
+
+    this._add(controller.name, controller.definition);
+  }
+
+  private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    Plugin.checkControllerDefinition(name, definition);
+    PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -207,32 +263,13 @@ class ControllerManager {
         'A controller with this name already exists');
     }
 
-    this._generateMissingRoutes(name, definition);
-
     this._application._controllers[name] = definition;
-  }
-
-  private _generateMissingRoutes (name: string, controllerDefinition: ControllerDefinition) {
-    for (const [action, definition] of Object.entries(controllerDefinition.actions)) {
-      if (! definition.http) {
-        // eslint-disable-next-line sort-keys
-        definition.http = [{ verb: 'GET', url: `/${kebabCase(name)}/${kebabCase(action)}` }];
-      }
-    }
   }
 }
 
-/* VaultManager class ======================================================= */
+/* BackendVault class ======================================================= */
 
-class VaultManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class BackendVault extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -263,35 +300,26 @@ class VaultManager {
       throw runtimeError.get('unavailable_before_start', 'vault.secrets');
     }
 
-    return this._application._kuzzle.vault.secrets;
+    return this._kuzzle.vault.secrets;
   }
 }
 
-/* PluginManager class ====================================================== */
+/* BackendPlugin class ====================================================== */
 
-interface UsePluginOptions {
-  /**
-   * Specify plugin name instead of using the class name.
-   */
-  name?: string
-}
-
-class PluginManager {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
+class BackendPlugin extends ApplicationManager {
   /**
    * Uses a plugin in this application
    *
    * @param plugin - Plugin instance
    * @param options - Additionnal options
+   *    - `name`: Specify plugin name instead of using the class name.
+   *    - `manifest`: Manually add a manifest definition
+   *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
-  use (plugin: BasePlugin, options: UsePluginOptions = {}) : void {
+  use (
+    plugin: Plugin,
+    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
+  ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }
@@ -305,7 +333,7 @@ class PluginManager {
     }
 
     const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);
     }
 
@@ -317,67 +345,101 @@ class PluginManager {
       throw assertionError.get('init_not_found', name);
     }
 
-    this._application._plugins[name] = plugin;
+    this._application._plugins[name] = { options, plugin };
   }
 }
 
-/* Logger class ============================================================= */
+/* InternalLogger class ====================================================== */
 
-class Logger {
-  private _application: any;
-
-  constructor (application: any) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
-  /**
-   * Logs a debug message
-   */
-  debug (message: string): void {
+class InternalLogger extends ApplicationManager implements InternalLogger {
+  debug (message: any): void {
     this._log('debug', message);
   }
 
   /**
    * Logs an info message
    */
-  info (message: string): void {
+  info (message: any): void {
     this._log('info', message);
   }
 
   /**
    * Logs a warn message
    */
-  warn (message: string): void {
+  warn (message: any): void {
     this._log('warn', message);
   }
 
   /**
    * Logs an error message
    */
-  error (message: string): void {
+  error (message: any): void {
     this._log('error', message);
   }
 
   /**
    * Logs a verbose message
    */
-  verbose (message: string): void {
+  verbose (message: any): void {
     this._log('verbose', message);
   }
 
-  private _log (level: string, message: string) {
+  private _log (level: string, message: any) {
     if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'log');
+      // eslint-disable-next-line no-console
+      console.log(util.inspect(message));
     }
-
-    this._application._kuzzle.log[level](`[${this._application.name}]: ${message}`);
+    else {
+      this._kuzzle.log[level](util.inspect(message));
+    }
   }
 }
 
-/* Backend class ======================================================== */
+/* BackendStorage class ===================================================== */
 
+class BackendStorage extends ApplicationManager {
+  private _client: Client = null;
+  private _Client: new (clientConfig?: any) => Client = null;
+
+  constructor (application: Backend) {
+    super(application);
+  }
+
+  /**
+   * Storage client constructor.
+   * (Currently Elasticsearch)
+   *
+   * @param clientConfig Overload configuration for the underlaying storage client
+   */
+  get StorageClient (): new (clientConfig?: any) => Client {
+    if (! this._Client) {
+      const kuzzle = this._kuzzle;
+
+      this._Client = function ESClient (clientConfig: JSONObject = {}) {
+        return Elasticsearch.buildClient({
+          ...kuzzle.config.services.storageEngine.client,
+          ...clientConfig,
+        });
+      } as any;
+    }
+
+    return this._Client;
+  }
+
+  /**
+   * Access to the underlaying storage engine client.
+   * (Currently Elasticsearch)
+   */
+  get storageClient (): Client {
+    if (! this._client) {
+      this._client = Elasticsearch
+        .buildClient(this._kuzzle.config.services.storageEngine.client);
+    }
+
+    return this._client;
+  }}
+
+/* Backend class ======================================================== */
 
 export class Backend {
   private _kuzzle: any;
@@ -399,32 +461,31 @@ export class Backend {
   public version: string;
 
   /**
+   * Current Git commit (if available)
+   */
+  public commit: string | null;
+
+  /**
    * Errors manager
-   * @todo add type
    */
   public kerror: any;
 
   /**
-   * Elasticsearch client constructor
-   */
-  public ESClient: new () => Client;
-
-  /**
-   * PipeManager definition manager
+   * Pipe definition manager
    *
    * @method register - Registers a new pipe on an event
    */
-  public pipe: PipeManager;
+  public pipe: BackendPipe;
 
   /**
-   * HookManager definition manager
+   * Hook definition manager
    *
    * @method register - Registers a new hook on an event
    */
-  public hook: HookManager;
+  public hook: BackendHook;
 
   /**
-   * VaultManager
+   * BackendVault
    *
    * By default Kuzzle will try to load the following locations:
    *  - local path: ./config/secrets.enc.json
@@ -434,7 +495,7 @@ export class Backend {
    * environment variable:
    *  - KUZZLE_VAULT_KEY
    */
-  public vault: VaultManager;
+  public vault: BackendVault;
 
   /**
    * Configuration definition manager
@@ -442,7 +503,7 @@ export class Backend {
    * @method set - Sets a configuration value
    * @method merge - Merges a configuration object into the current configuration
    */
-  public config: ConfigManager;
+  public config: BackendConfig;
 
   /**
    * Controller manager
@@ -450,17 +511,17 @@ export class Backend {
    * @method add - Adds a new controller definition
    * @method use - Uses a controller instance
    */
-  public controller: ControllerManager;
+  public controller: BackendController;
 
   /**
    * Plugin manager
    *
    * @method use - Uses a plugin instance
    */
-  public plugin: PluginManager;
+  public plugin: BackendPlugin;
 
   /**
-   * Logger
+   * InternalLogger
    *
    * @method debug
    * @method info
@@ -468,9 +529,16 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: Logger;
+  public log: InternalLogger;
 
   /**
+   * Storage manager
+   */
+  public storage: BackendStorage;
+
+  /**
+   * @deprecated
+   *
    * Support for old features available before Kuzzle as a framework
    * to avoid breaking existing deployments.
    *
@@ -485,34 +553,30 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! Plugin.checkName(name)) {
+    if (! PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
     this._name = name;
 
     Reflect.defineProperty(this, '_kuzzle', {
-      value: new Kuzzle()
+      writable: true
     });
 
     Reflect.defineProperty(this, '_sdk', {
       writable: true
     });
 
-    this.pipe = new PipeManager(this);
-    this.hook = new HookManager(this);
-    this.config = new ConfigManager(this);
-    this.vault = new VaultManager(this);
-    this.controller = new ControllerManager(this);
-    this.plugin = new PluginManager(this);
-    this.log = new Logger(this);
+    this.pipe = new BackendPipe(this);
+    this.hook = new BackendHook(this);
+    this.config = new BackendConfig(this);
+    this.vault = new BackendVault(this);
+    this.controller = new BackendController(this);
+    this.plugin = new BackendPlugin(this);
+    this.storage = new BackendStorage(this);
+    this.log = new InternalLogger(this);
 
     this.kerror = kerror;
-
-    const kuzzle = this._kuzzle;
-    this.ESClient = function ESClient () {
-      return Elasticsearch.buildClient(kuzzle.storageEngine.config.client);
-    } as any;
 
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
@@ -521,6 +585,8 @@ export class Backend {
     catch (error) {
       // Silent if no version can be found
     }
+
+    this.commit = this._readCommit();
   }
 
   /**
@@ -531,12 +597,22 @@ export class Backend {
       throw runtimeError.get('already_started', 'start');
     }
 
-    const application = new Plugin(
-      this._kuzzle,
+    this._kuzzle = new Kuzzle(this.config.content);
+
+    // we need to load the default plugins
+    this.plugin.use(
+      new PluginPassportAuthLocal(),
+      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
+    this.plugin.use(
+      new PluginLogger(),
+      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
+
+    const application = new PluginObject(
       this._instanceProxy,
       { application: true, name: this.name });
 
     application.version = this.version;
+    application.commit = this.commit;
 
     const options = {
       fixtures: this._support.fixtures,
@@ -549,7 +625,7 @@ export class Backend {
 
     await this._kuzzle.start(application, options);
 
-    this._sdk = new EmbeddedSDK(this._kuzzle);
+    this._sdk = new EmbeddedSDK();
 
     this.started = true;
   }
@@ -557,13 +633,17 @@ export class Backend {
   /**
    * Triggers an event
    *
-   * @param {String} - Event name
-   * @param {any} - Event payload
+   * @param - Event name
+   * @param - Event payload
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, payload: any): Promise<any> {
-    return this._kuzzle.pipe(event, payload);
+  trigger (event: string, ...payload): Promise<any> {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'trigger');
+    }
+
+    return this._kuzzle.pipe(event, ...payload);
   }
 
   /**
@@ -572,7 +652,7 @@ export class Backend {
   get name (): string { return this._name; }
 
   /**
-   * Internal SDK
+   * EmbeddedSDK instance
    */
   get sdk (): EmbeddedSDK {
     if (! this.started) {
@@ -592,6 +672,26 @@ export class Backend {
     };
   }
 
-}
+  /**
+   * Try to read the current commit hash.
+   */
+  private _readCommit (dir = process.cwd(), depth = 3) {
+    if (depth === 0) {
+      return null;
+    }
 
-module.exports = { Backend };
+    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+      return this._readCommit(`${dir}/..`, depth - 1);
+    }
+
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+
+    if (! fs.existsSync(refFile)) {
+      return null;
+    }
+
+    return fs.readFileSync(refFile, 'utf8').replace('\n', '');
+  }
+
+}

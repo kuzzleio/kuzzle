@@ -6,9 +6,16 @@ title: searchUsers
 
 # searchUsers
 
-
-
 Searches users.
+
+<SinceBadge version="2.8.0"/>
+
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
+Koncorde filters will be translated into an Elasticsearch query.  
+
+::: warning
+Koncorde `bool` operator and `regexp` clause are not supported for search queries.
+:::
 
 ---
 
@@ -17,7 +24,7 @@ Searches users.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/_search[?from=0][&size=42][&scroll=<time to live>]
+URL: http://kuzzle:7512/users/_search[?from=0][&size=42][&scroll=<time to live>][&lang=<query language>]
 Method: POST
 Body:
 ```
@@ -78,7 +85,8 @@ Body:
   // optional arguments
   "from": 0,
   "size": 10,
-  "scroll": "<time to live>"
+  "scroll": "<time to live>",
+  "lang": "<query language>"
 }
 ```
 
@@ -91,6 +99,7 @@ Body:
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollUsers](/core/2/api/controllers/security/scroll-users) API action
 - `size`: the maximum number of users returned in one response page
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
 
 ---
 
@@ -98,7 +107,7 @@ Body:
 
 ### Optional:
 
-The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
+The search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
 
 If the body is left empty, the result will return all available users.
 
@@ -109,7 +118,7 @@ If the body is left empty, the result will return all available users.
 Returns an object with the following properties:
 
 - `hits`: array of object. Each object describes a found user:
-  - `_id`: user [kuid](/core/2/guides/kuzzle-depth/authentication#the-kuzzle-user-identifier)
+  - `_id`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
   - `_source`: user definition
 - `total`: total number of users found. Depending on pagination options, this can be greater than the actual number of users in a single result page
 

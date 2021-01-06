@@ -74,5 +74,5 @@ If the `countCollections` argument has been set to `true`, then the object conta
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
+- [Common errors](/core/2/api/errors/types#common-errors)
 

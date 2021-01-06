@@ -9,17 +9,16 @@ const should = require('should');
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 const mockrequire = require('mock-require');
+
 const {
   Request,
-  models: { RequestContext },
-  errors: {
-    InternalError: KuzzleInternalError,
-    ServiceUnavailableError,
-    PluginImplementationError
-  }
-} = require('kuzzle-common-objects');
-
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+  RequestContext,
+  InternalError: KuzzleInternalError,
+  ServiceUnavailableError,
+  PluginImplementationError
+} = require('../../../index');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const EventEmitter = require('eventemitter3');
 
 class FakeProtocol {
   constructor (name) {
@@ -52,6 +51,7 @@ describe('lib/core/core/network/entryPoint', () => {
   let MqttMock;
   let InternalMock;
   let httpMock;
+  let httpEventEmitter;
   let EntryPoint;
   let entrypoint;
   let winstonTransportConsole;
@@ -73,18 +73,21 @@ describe('lib/core/core/network/entryPoint', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     HttpMock = FakeHttpProtocol;
     WebSocketMock = FakeWebSocketProtocol;
     MqttMock = FakeMqttProtocol;
     InternalMock = FakeInternalProtocol;
 
+    httpEventEmitter = new EventEmitter();
+    sinon.spy(httpEventEmitter, 'on');
+    httpEventEmitter.listen = sinon.spy();
+
     httpMock = {
-      createServer: sinon.stub().returns({
-        listen: sinon.spy()
-      })
+      createServer: sinon.stub().returns(httpEventEmitter)
     };
+
     winstonTransportConsole = sinon.spy();
     winstonTransportElasticsearch = sinon.spy();
     winstonTransportFile = sinon.spy();
@@ -129,7 +132,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
     EntryPoint = mockrequire.reRequire(`${network}/entryPoint`);
 
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
 
     Object.defineProperty(entrypoint, 'logger', {
       enumerable: true,
@@ -246,6 +249,7 @@ describe('lib/core/core/network/entryPoint', () => {
   describe('#startListening', () => {
     beforeEach(async () => {
       await entrypoint.init();
+      process.nextTick(() => httpEventEmitter.emit('listening'));
     });
 
     it('should call proper methods in order', async () => {
@@ -546,7 +550,7 @@ describe('lib/core/core/network/entryPoint', () => {
       });
 
       return Rewired.__with__({ require: requireStub })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
         return ep.loadMoreProtocols();
       })
         .then(() => should(requireStub).be.calledTwice());
@@ -567,7 +571,7 @@ describe('lib/core/core/network/entryPoint', () => {
         });
 
       return should(Rewired.__with__({ require: requireStub })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
         return ep.loadMoreProtocols();
       })).rejectedWith(PluginImplementationError, {
         id: 'plugin.manifest.cannot_load'
@@ -593,7 +597,7 @@ describe('lib/core/core/network/entryPoint', () => {
       return Rewired.__with__({
         require: requireStub
       })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
 
         return should(ep.loadMoreProtocols()).be.rejectedWith('test');
       });

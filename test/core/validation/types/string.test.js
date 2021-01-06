@@ -1,10 +1,10 @@
 'use strict';
 
-const
-  { errors: { PreconditionError } } = require('kuzzle-common-objects'),
-  BaseType = require('../../../../lib/core/validation/baseType'),
-  StringType = require('../../../../lib/core/validation/types/string'),
-  should = require('should');
+const should = require('should');
+
+const BaseType = require('../../../../lib/core/validation/baseType');
+const StringType = require('../../../../lib/core/validation/types/string');
+const { PreconditionError } = require('../../../../index');
 
 describe('Test: validation/types/string', () => {
   const stringType = new StringType();

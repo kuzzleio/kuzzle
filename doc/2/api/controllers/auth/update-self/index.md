@@ -16,7 +16,7 @@ This route cannot update the list of associated security profiles. To change a u
 
 ### HTTP
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.4.0"/>
 ```http
 URL: http://kuzzle:7512/_me[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT
@@ -24,7 +24,7 @@ Headers: Authorization: "Bearer <authentication token>"
 Body:
 ```
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.4.0">
 ```http
 URL: http://kuzzle:7512/_updateSelf[?refresh=wait_for][?retryOnConflict=10]
 Method: PUT
@@ -80,7 +80,7 @@ User properties that can be set or updated depend on the application hosted by K
 
 Returns the following properties:
 
-- `_id`: current user's [kuid](/core/2/guides/essentials/user-authentication#kuzzle-user-identifier-kuid)
+- `_id`: current user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 - `_source`: additional (and optional) user properties
 
 ```js

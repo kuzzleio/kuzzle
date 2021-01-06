@@ -2,16 +2,15 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const {
-  errors: { InternalError },
-  Request,
-} = require('kuzzle-common-objects');
 
+const {
+  InternalError,
+  Request,
+} = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
 const Profile = require('../../../lib/model/security/profile');
 const User = require('../../../lib/model/security/user');
 
-const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: model/security/user', () => {
   let kuzzle;
@@ -31,11 +30,10 @@ describe('Test: model/security/user', () => {
     profile2.isActionAllowed = sinon.stub().resolves(false);
 
     user = new User();
-    user[_kuzzle] = kuzzle;
     user.profileIds = ['profile', 'profile2'];
 
     kuzzle.ask
-      .withArgs('core:security:profile:mGet', sinon.match.array)
+      .withArgs('core:security:profile:mGet')
       .resolves([profile, profile2]);
   });
 
@@ -78,7 +76,7 @@ describe('Test: model/security/user', () => {
     sinon.stub(profile, 'getRights').resolves(profileRights);
     sinon.stub(profile2, 'getRights').resolves(profileRights2);
 
-    return user.getRights(kuzzle)
+    return user.getRights()
       .then(rights => {
         let filteredItem;
 
@@ -141,7 +139,7 @@ describe('Test: model/security/user', () => {
   });
 
   it('should reject if loadProfiles throws an error', () => {
-    user[_kuzzle] = null;
+    global.kuzzle = null;
 
     return should(user.isActionAllowed(new Request({}))).be.rejectedWith(
       InternalError,

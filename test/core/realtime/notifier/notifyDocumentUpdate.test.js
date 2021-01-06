@@ -2,19 +2,20 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { Request } = require('kuzzle-common-objects');
-const Kuzzle = require('../../../mocks/kuzzle.mock');
+
+const { Request } = require('../../../../index');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
 const Notifier = require('../../../../lib/core/realtime/notifier');
 
 describe('Test: notifier.notifyDocumentUpdate', () => {
-  let
-    kuzzle,
-    notifier,
-    request;
+  let kuzzle;
+  let notifier;
+  let request;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-    notifier = new Notifier(kuzzle);
+    kuzzle = new KuzzleMock();
+    notifier = new Notifier();
 
     request = new Request({
       controller: 'document',
@@ -31,90 +32,53 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     });
 
     sinon.stub(notifier, 'notifyDocument').resolves();
+
+    return notifier.init();
   });
 
-  it('should notify subscribers when an updated document entered their scope', () => {
-    const {_id, index, collection} = request.input.resource;
+  it('should notify subscribers when an updated document entered their scope', async () => {
+    const _id = request.input.resource._id;
 
     kuzzle.koncorde.test.returns(['foo']);
-    kuzzle.storageEngine.public.get.resolves({
-      _id,
-      _source: {foo: 'bar'}
-    });
 
-    kuzzle.cacheEngine.internal.get.resolves(
+    const rooms = await notifier.notifyDocumentUpdate(
+      request,
+      {
+        _id,
+        _source: { foo: 'bar' },
+        _updatedFields: ['foo'],
+      },
       JSON.stringify(['foo', 'bar']));
 
-    return notifier.notifyDocumentUpdate(request, {
-      _id,
-      _source: { foo: 'bar' },
-      _updatedFields: ['foo']
-    })
-      .then(() => {
+    should(kuzzle.koncorde.test)
+      .calledOnce()
+      .calledWith('foo', 'bar', {foo: 'bar'}, _id);
 
-        should(kuzzle.koncorde.test)
-          .calledOnce()
-          .calledWith('foo', 'bar', {foo: 'bar'}, _id);
-
-        should(notifier.notifyDocument.callCount).be.eql(2);
-        should(notifier.notifyDocument.getCall(0)).calledWith(
-          ['foo'],
-          request,
-          'in',
-          'update',
-          {
-            _id,
-            _source: { foo: 'bar' },
-            _updatedFields: ['foo']
-          });
-
-        should(notifier.notifyDocument.getCall(1)).calledWith(
-          ['bar'], request, 'out', 'update', { _id });
-
-        should(kuzzle.cacheEngine.internal.get)
-          .calledOnce()
-          .calledWith(`{notif/${index}/${collection}}/${_id}`);
-
-        should(kuzzle.cacheEngine.internal.del).not.be.called();
-
-        should(kuzzle.cacheEngine.internal.setex)
-          .calledOnce()
-          .calledWith(
-            `{notif/${index}/${collection}}/${_id}`,
-            kuzzle.config.limits.subscriptionDocumentTTL,
-            JSON.stringify(['foo']));
+    should(notifier.notifyDocument.callCount).be.eql(2);
+    should(notifier.notifyDocument.getCall(0))
+      .calledWith(['foo'], request, 'in', 'update', {
+        _id,
+        _source: { foo: 'bar' },
+        _updatedFields: ['foo'],
       });
+
+    should(notifier.notifyDocument.getCall(1))
+      .calledWith(['bar'], request, 'out', 'update', { _id });
+
+    should(rooms).match(['foo']);
   });
 
-  context('with a subscriptionDocumentTTL set to 0', () => {
-    it('should set internalCache with no TTL', () => {
-      const {_id, index, collection} = request.input.resource;
+  it('should remove the cache entry if no room matches the updated document', async () => {
+    kuzzle.koncorde.test.returns([]);
 
-      kuzzle.config.limits.subscriptionDocumentTTL = 0;
+    const rooms = await notifier.notifyDocumentUpdate(
+      request,
+      {
+        _id: request.input.resource._id,
+        _source: { foo: 'bar' }
+      },
+      JSON.stringify(['foo', 'bar']));
 
-      kuzzle.koncorde.test.returns(['foo']);
-      kuzzle.storageEngine.public.get.resolves({
-        _id,
-        _source: {foo: 'bar'}
-      });
-
-      kuzzle.cacheEngine.internal.get.resolves(
-        JSON.stringify(['foo', 'bar']));
-
-      return notifier
-        .notifyDocumentUpdate(request, {
-          _id,
-          _source: { foo: 'bar' }
-        })
-        .then(() => {
-          should(kuzzle.cacheEngine.internal.setex).not.be.called();
-
-          should(kuzzle.cacheEngine.internal.set)
-            .calledOnce()
-            .calledWith(
-              `{notif/${index}/${collection}}/${_id}`,
-              JSON.stringify(['foo']));
-        });
-    });
+    should(rooms).be.an.Array().and.be.empty();
   });
 });

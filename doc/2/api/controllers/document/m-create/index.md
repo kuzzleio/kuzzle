@@ -11,7 +11,7 @@ Creates multiple documents.
 If a document identifier already exists, the creation fails for that document.
 
 ::: info
-The number of documents that can be created by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+The number of documents that can be created by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 :::
 
 ---
@@ -130,26 +130,46 @@ Each errored document is an object of the `errors` array with the following prop
       {
         "_id": "<documentId>",
         "_source": {
+          // kuzzle metadata
+          "_kuzzle_info": {
+            "author": "<user kuid>",
+            "createdAt": <creation timestamp>,
+            "updatedAt": null,
+            "updater": null
+          },
           // document content
         },
-        "_version": 1,
-        "created": true
+        "result": "created",
+        "status": 201,
+        "_version": 1
       },
       {
         "_id": "<anotherDocumentId>",
         "_source": {
-          "// document content
-        "_version": 1,
-        "created": true
+          // kuzzle metadata
+          "_kuzzle_info": {
+            "author": "<user kuid>",
+            "createdAt": <creation timestamp>,
+            "updatedAt": null,
+            "updater": null
+          },
+          // document content
+        },
+        "result": "created",
+        "status": 201,
+        "_version": 1
       }
     ],
     "errors": [
       {
         "document": {
-          // document content
+          "_id": "<document id>",
+          "body": {
+            // document content
+          }
         },
-        "status": 400,
-        "reason": "Document already exists"
+        "reason": "document already exists",
+        "status": 400
       }
     ]
   }

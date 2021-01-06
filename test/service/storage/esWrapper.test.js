@@ -1,17 +1,21 @@
 'use strict';
 
 const should = require('should');
-const { errors: { ExternalServiceError } } = require('kuzzle-common-objects');
 
+const { ExternalServiceError } = require('../../../index');
 const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const ESWrapper = require('../../../lib/service/storage/esWrapper');
 
 describe('Test: ElasticSearch Wrapper', () => {
-  const kuzzle = new KuzzleMock();
+  let kuzzle;
   const client = new ESClientMock();
-  const esWrapper = new ESWrapper(client, kuzzle);
+  const esWrapper = new ESWrapper(client);
+
+  beforeEach(() => {
+    kuzzle = new KuzzleMock();
+  });
 
   describe('#formatESError', () => {
     it('should convert any unknown error to a ExternalServiceError instance', () => {
@@ -70,39 +74,52 @@ describe('Test: ElasticSearch Wrapper', () => {
       });
     });
 
-    it('should log the source error for easier support & debugging', () => {
-      kuzzle.log.info.resetHistory();
+    describe('logging in production', () => {
+      let nodeEnv;
 
-      const error = new Error('test');
-      error.meta = {
-        statusCode: 420,
-        meta: {
-          request: {
-            oh: 'noes',
-          }
-        }
-      };
-
-      esWrapper.formatESError(error);
-
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: error.meta,
-        stack: error.stack,
+      beforeEach(() => {
+        nodeEnv = process.env.NODE_ENV;
+        process.env.NODE_ENV = 'production';
       });
-    });
 
-    it('should be able to log errors without meta', () => {
-      kuzzle.log.info.resetHistory();
+      afterEach(() => {
+        process.env.NODE_ENV = nodeEnv;
+      });
 
-      const error = new Error('test');
+      it('should log the source error for easier support & debugging', () => {
+        kuzzle.log.info.resetHistory();
 
-      esWrapper.formatESError(error);
+        const error = new Error('test');
+        error.meta = {
+          statusCode: 420,
+          meta: {
+            request: {
+              oh: 'noes',
+            }
+          }
+        };
 
-      should(kuzzle.log.info).calledWithMatch({
-        message: `Elasticsearch Client error: ${error.message}`,
-        meta: null,
-        stack: error.stack,
+        esWrapper.formatESError(error);
+
+        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+          message: `Elasticsearch Client error: ${error.message}`,
+          meta: error.meta,
+          stack: error.stack,
+        }));
+      });
+
+      it('should be able to log errors without meta', () => {
+        kuzzle.log.info.resetHistory();
+
+        const error = new Error('test');
+
+        esWrapper.formatESError(error);
+
+        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+          message: `Elasticsearch Client error: ${error.message}`,
+          meta: null,
+          stack: error.stack,
+        }));
       });
     });
   });

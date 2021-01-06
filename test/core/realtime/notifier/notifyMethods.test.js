@@ -2,24 +2,30 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
+const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 const Notifier = require('../../../../lib/core/realtime/notifier');
 const {
   DocumentNotification,
   UserNotification,
-} = require('../../../../lib/model/notification');
+} = require('../../../../lib/core/realtime/notification');
 
 describe('notify methods', () => {
-  let
-    kuzzle,
-    request,
-    notifier;
+  let kuzzle;
+  let request;
+  let notifier;
+  let hotelClerk;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    notifier = new Notifier(kuzzle);
+
+    hotelClerk = new HotelClerk();
+    sinon.stub(hotelClerk, 'removeUser');
+
+    notifier = new Notifier({ hotelClerk });
 
     request = new Request({
       volatile: {foo: 'bar'},
@@ -29,7 +35,7 @@ describe('notify methods', () => {
       action: 'action'
     }, {protocol: 'protocol'});
 
-    kuzzle.hotelClerk.rooms.set('matchingSome', {
+    hotelClerk.rooms.set('matchingSome', {
       channels: {
         matching_all: {state: 'all', scope: 'all', users: 'all', cluster: true },
         matching_in: {state: 'all', scope: 'in', users: 'none', cluster: true },
@@ -40,27 +46,38 @@ describe('notify methods', () => {
       }
     });
 
-    kuzzle.hotelClerk.rooms.set('nonMatching', {
+    hotelClerk.rooms.set('nonMatching', {
       channels: {
         foobar: { cluster: true }
       }
     });
 
-    kuzzle.hotelClerk.rooms.set('cluster', {
+    hotelClerk.rooms.set('cluster', {
       channels: {
         clusterOn: {state: 'all', scope: 'all', users: 'all', cluster: true },
         clusterOff: {state: 'all', scope: 'all', users: 'all', cluster: false },
       }
     });
 
-    kuzzle.hotelClerk.rooms.set('alwaysMatching', {
+    hotelClerk.rooms.set('alwaysMatching', {
       channels: {
         always: {state: 'all', scope: 'all', cluster: true }
       }
     });
+
+    return notifier.init();
   });
 
   describe('#notifyDocument', () => {
+    it('should do nothing if there is no room to notify', async () => {
+      sinon.stub(notifier, '_notifyDocument');
+
+      await notifier.notifyDocument([], request, 'out', 'action', {});
+
+      should(notifier._notifyDocument).not.called();
+      should(kuzzle.emit).not.called();
+    });
+
     it('should emit the cluster sync event', async () => {
       notifier._notifyDocument = sinon.stub();
       const content = {some: 'content'};
@@ -100,7 +117,6 @@ describe('notify methods', () => {
   });
 
   describe('#_notifyDocument', () => {
-
     describe('call from the core', () => {
       it('should do nothing if the provided rooms list is empty', async () => {
         await notifier._notifyDocument(
@@ -123,7 +139,7 @@ describe('notify methods', () => {
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
           request,
           'out',
-          'action',
+          'create',
           content,
           { fromCluster: false });
 
@@ -152,10 +168,11 @@ describe('notify methods', () => {
           index: request.input.resource.index,
           collection: request.input.resource.collection,
           controller: request.input.controller,
-          action: 'action',
+          event: 'write',
+          action: 'create',
           protocol: request.context.protocol,
           scope: 'out',
-          result: content
+          result: content,
         });
 
         should(kuzzle.pipe.callCount).be.eql(2);
@@ -190,7 +207,7 @@ describe('notify methods', () => {
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
           request,
           'out',
-          'action',
+          'create',
           content);
 
         const dispatch = kuzzle.entryPoint.dispatch;
@@ -269,52 +286,57 @@ describe('notify methods', () => {
     });
   });
 
-  describe('#notifyServer', () => {
-    it('should do nothing if the provided rooms list is empty', () => {
-      return notifier.notifyServer([], 'foobar', 'type', 'message')
-        .then(() => {
-          should(kuzzle.entryPoint.dispatch).not.be.called();
-          should(kuzzle.pipe).not.be.called();
-        });
+  describe('#notifyTokenExpired', () => {
+    it('should register a "tokenExpired" event', async () => {
+      sinon.stub(notifier, 'notifyTokenExpired');
+
+      kuzzle.ask.restore();
+      await kuzzle.ask('core:realtime:tokenExpired:notify', 'connectionId');
+
+      should(notifier.notifyTokenExpired).calledWith('connectionId');
     });
 
-    it('should ignore non-existing rooms', () => {
-      return notifier.notifyServer(['IAMERROR'], 'foobar', 'type', 'message')
-        .then(() => {
-          should(kuzzle.entryPoint.dispatch).not.be.called();
-          should(kuzzle.pipe).not.be.called();
-        });
+    it('should ignore non-existing rooms', async () => {
+      hotelClerk.customers.clear();
+
+      await notifier.notifyTokenExpired('foobar');
+
+      should(kuzzle.entryPoint.dispatch).not.be.called();
+      should(kuzzle.pipe).not.be.called();
+      should(hotelClerk.removeUser).not.called();
     });
 
-    it('should notify on all subscribed channels', () => {
-      return notifier
-        .notifyServer(
-          ['nonMatching', 'alwaysMatching'], 'foobar', 'type', 'message')
-        .then(() => {
-          const dispatch = kuzzle.entryPoint.dispatch;
-          should(dispatch).calledOnce();
+    it('should notify subscribed channels', async () => {
+      hotelClerk.customers.set('foobar', new Map([
+        ['nonMatching', null],
+        ['alwaysMatching', null],
+      ]));
 
-          should(dispatch.firstCall.args[0]).be.eql('notify');
+      await notifier.notifyTokenExpired('foobar');
 
-          should(dispatch.firstCall.args[1].connectionId).be.eql('foobar');
+      const dispatch = kuzzle.entryPoint.dispatch;
+      should(dispatch).calledOnce();
 
-          should(dispatch.firstCall.args[1].channels).match(
-            ['foobar', 'always']);
+      should(dispatch.firstCall.args[0]).be.eql('notify');
 
-          const notification = dispatch.firstCall.args[1].payload;
+      should(dispatch.firstCall.args[1].connectionId).be.eql('foobar');
 
-          should(notification).match({
-            status: 200,
-            type: 'type',
-            message: 'message',
-            info: 'This is an automated server notification'
-          });
+      should(dispatch.firstCall.args[1].channels).match(
+        ['foobar', 'always']);
 
-          should(kuzzle.pipe.callCount).be.eql(2);
-          should(kuzzle.pipe)
-            .be.calledWith('notify:server', notification)
-            .be.calledWith('notify:dispatch', notification);
-        });
+      const notification = dispatch.firstCall.args[1].payload;
+
+      should(notification).match({
+        status: 200,
+        type: 'TokenExpired',
+        message: 'Authentication Token Expired',
+        info: 'This is an automated server notification',
+      });
+
+      should(kuzzle.pipe.callCount).be.eql(2);
+      should(kuzzle.pipe)
+        .be.calledWith('notify:server', notification)
+        .be.calledWith('notify:dispatch', notification);
     });
   });
 });

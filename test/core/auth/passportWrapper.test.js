@@ -1,19 +1,16 @@
 'use strict';
 
-const
-  should = require('should'),
-  Kuzzle = require('../../mocks/kuzzle.mock'),
-  sinon = require('sinon'),
-  mockrequire = require('mock-require'),
-  passport = require('passport'),
-  {
-    errors: {
-      ForbiddenError,
-      PluginImplementationError,
-      UnauthorizedError
-    }
-  } = require('kuzzle-common-objects'),
-  PassportResponse = require('../../../lib/core/auth/passportResponse');
+const should = require('should');
+const sinon = require('sinon');
+const mockrequire = require('mock-require');
+const passport = require('passport');
+
+const {
+  ForbiddenError,
+  PluginImplementationError,
+  UnauthorizedError
+} = require('../../../index');
+const PassportResponse = require('../../../lib/core/auth/passportResponse');
 
 describe('Test the passport Wrapper', () => {
   let
@@ -32,7 +29,7 @@ describe('Test the passport Wrapper', () => {
     mockrequire('passport', passportMock);
     PassportWrapper = mockrequire.reRequire('../../../lib/core/auth/passportWrapper');
 
-    passportWrapper = new PassportWrapper(new Kuzzle());
+    passportWrapper = new PassportWrapper();
   });
 
   afterEach(() => {
@@ -125,7 +122,7 @@ describe('Test the passport Wrapper', () => {
 
     mockrequire('passport', passport);
     PassportWrapper = mockrequire.reRequire('../../../lib/core/auth/passportWrapper');
-    passportWrapper = new PassportWrapper(new Kuzzle());
+    passportWrapper = new PassportWrapper();
     passportWrapper.use(new MockupStrategy('mockup', stub));
 
     return passportWrapper.authenticate('foobar', 'mockup')

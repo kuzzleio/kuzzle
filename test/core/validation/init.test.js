@@ -1,16 +1,17 @@
 'use strict';
 
-const
-  should = require('should'),
-  Bluebird = require('bluebird'),
-  sinon = require('sinon'),
-  mockRequire = require('mock-require'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  {
-    BadRequestError,
-    PluginImplementationError,
-    PreconditionError
-  } = require('kuzzle-common-objects').errors;
+const should = require('should');
+const Bluebird = require('bluebird');
+const sinon = require('sinon');
+const mockRequire = require('mock-require');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const {
+  BadRequestError,
+  PluginImplementationError,
+  PreconditionError
+} = require('../../../index');
 
 describe('Test: validation initialization', () => {
   let
@@ -21,11 +22,10 @@ describe('Test: validation initialization', () => {
   beforeEach(() => {
     sinon.reset();
 
-    mockRequire.stopAll();
     kuzzle = new KuzzleMock();
 
     Validation = mockRequire.reRequire('../../../lib/core/validation');
-    validation = new Validation(kuzzle);
+    validation = new Validation();
   });
 
   afterEach(() => {
@@ -33,7 +33,6 @@ describe('Test: validation initialization', () => {
   });
 
   it('should have the expected structure', () => {
-    should(validation.kuzzle).be.eql(kuzzle);
     should(validation.types).be.an.Object();
     should(validation.specification).be.an.Object();
     should(validation.koncorde).be.an.Object();
@@ -65,7 +64,7 @@ describe('Test: validation initialization', () => {
     });
 
     Validation = mockRequire.reRequire('../../../lib/core/validation');
-    validation = new Validation(kuzzle);
+    validation = new Validation();
 
     validation.addType = addTypeStub;
 
@@ -94,14 +93,14 @@ describe('Test: validation initialization', () => {
       };
 
     beforeEach(() => {
-      kuzzle.internalIndex.search.returns(Bluebird.resolve({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
           {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
           {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
           {_id: 'anIndex#anotherCollection', _source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
         ],
         length: 3
-      }));
+      });
     });
 
     it('should build a specification if everything goes as expected', () => {

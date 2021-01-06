@@ -4,7 +4,8 @@ const mockrequire = require('mock-require');
 const rewire = require('rewire');
 const sinon = require('sinon');
 const should = require('should');
-const { errors: { PreconditionError } } = require('kuzzle-common-objects');
+
+const { PreconditionError } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const FsMock = require('../mocks/fs.mock');
 
@@ -45,7 +46,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     mockrequire.reRequire('../../lib/kuzzle/dumpGenerator');
     DumpGenerator = rewire('../../lib/kuzzle/dumpGenerator');
-    dumpGenerator = new DumpGenerator(kuzzle);
+    dumpGenerator = new DumpGenerator();
 
     kuzzle.config.dump.enabled = true;
     dumpGenerator._dump = false;
@@ -93,7 +94,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
 
     should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 
-    should(fsStub.createReadStream.getCall(0).args[0]).be.exactly('/tmp/2020-dump-me-master/core');
+    should(fsStub.createReadStream.getCall(0).args[0].match(/\/tmp\/[0-9]+-dump-me-master\/core/g));
     should(fsStub.createWriteStream).be.calledOnce();
     should(fsStub.createReadStream().pipe).be.called(2);
 

@@ -4,15 +4,16 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
+const Bluebird = require('bluebird');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
+const config = require('../../lib/config').load();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let Kuzzle;
   let application;
-  let coreModuleStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -29,18 +30,16 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'vault',
     'log',
     'internalIndex',
-    'cacheEngine',
-    'storageEngine',
     'dumpGenerator',
-    'shutdown',
     'pipe',
     'ask',
     'tokenManager',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
+    global.kuzzle = null;
+    const k = new KuzzleConstructor(config);
     const mock = new KuzzleMock();
-    const k = new KuzzleConstructor();
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -50,18 +49,21 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
-    coreModuleStub = {
-      init: sinon.stub().resolves(),
+    const coreModuleStub = function () {
+      return { init: sinon.stub().resolves() };
     };
 
-    mockrequire('../../lib/core', coreModuleStub);
+    mockrequire('../../lib/core/cache/cacheEngine', coreModuleStub);
+    mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
+    mockrequire('../../lib/core/security', coreModuleStub);
+    mockrequire('../../lib/core/realtime', coreModuleStub);
+
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
     Kuzzle.__set__('console', { log: () => {} });
 
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
-      kuzzle,
       { init: sinon.stub() },
       { name: 'application', application: true });
   });
@@ -78,41 +80,39 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      const params = {
+      const options = {
         mappings: {},
         fixtures: {},
         securities: {}
       };
 
-      should(kuzzle.started).be.false();
+      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
 
-      await kuzzle.start(application, params);
+      await kuzzle.start(application, options);
 
       sinon.assert.callOrder(
         kuzzle.pipe, // kuzzle:state:start
-        kuzzle.cacheEngine.init,
-        kuzzle.storageEngine.init,
         kuzzle.internalIndex.init,
         kuzzle.validation.init,
         kuzzle.tokenManager.init,
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.storageEngine.public.loadMappings,
-        kuzzle.storageEngine.public.loadFixtures,
-        kuzzle.ask.withArgs('core:security:load', sinon.match.object),
-        kuzzle.ask.withArgs('core:security:verify'),
-        kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
+        kuzzle.ask.withArgs('core:storage:public:document:import'),
+        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.entryPoint.init,
+        kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
         kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart', sinon.match.any)
+        kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
-      should(kuzzle.started).be.true();
+      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
     });
 
     // @deprecated
@@ -189,6 +189,45 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       await kuzzle.dump();
 
       should(kuzzle.dumpGenerator.dump).be.calledOnce();
+    });
+  });
+
+  describe('#kuzzle/shutdown', () => {
+    it('should exit only when there is no request left in the funnel', async () => {
+      sinon.stub(process, 'exit');
+
+      // We cannot use sinon's fake timers: they do not work with async
+      // functions
+      sinon.stub(Bluebird, 'delay').callsFake(() => {
+        // we must wait a bit: if we replace with stub.resolves(), V8 converts
+        // that into a direct function call, and the event loop never rotates
+        return new Promise(resolve => setTimeout(resolve, 10));
+      });
+
+      kuzzle.funnel.remainingRequests = 1;
+
+      setTimeout(
+        () => {
+          kuzzle.funnel.remainingRequests = 0;
+        },
+        50);
+
+      try {
+        await kuzzle.shutdown();
+
+        should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
+        should(kuzzle.emit).calledWith('kuzzle:shutdown');
+        should(Bluebird.delay.callCount).approximately(5, 1);
+
+        // @deprecated
+        should(kuzzle.emit).calledWith('core:shutdown');
+
+        should(process.exit).calledOnce().calledWith(0);
+      }
+      finally {
+        process.exit.restore();
+        Bluebird.delay.restore();
+      }
     });
   });
 });

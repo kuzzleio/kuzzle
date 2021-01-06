@@ -1,26 +1,25 @@
 'use strict';
 
-const
-  should = require('should'),
-  sinon = require('sinon'),
-  KuzzleMock = require('../../mocks/kuzzle.mock'),
-  { MockNativeController } = require('../../mocks/controller.mock'),
-  FunnelController = require('../../../lib/api/funnel'),
-  {
-    Request,
-    errors: { NotFoundError }
-  } = require('kuzzle-common-objects');
+const should = require('should');
+const sinon = require('sinon');
+
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { MockNativeController } = require('../../mocks/controller.mock');
+const FunnelController = require('../../../lib/api/funnel');
+const {
+  Request,
+  NotFoundError
+} = require('../../../index');
 
 describe('funnel.executePluginRequest', () => {
-  let
-    kuzzle,
-    originalHandleErrorDump,
-    funnel;
+  let kuzzle;
+  let originalHandleErrorDump;
+  let funnel;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
-    funnel.controllers.set('testme', new MockNativeController(kuzzle));
+    funnel = new FunnelController();
+    funnel.controllers.set('testme', new MockNativeController());
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });
@@ -52,7 +51,6 @@ describe('funnel.executePluginRequest', () => {
 
   it('should dump on errors in whitelist', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.dump = sinon.stub();
     kuzzle.config.dump.enabled = true;
 
     const rq = new Request({controller: 'testme', action: 'fail'});
@@ -81,7 +79,6 @@ describe('funnel.executePluginRequest', () => {
 
   it('should not dump on errors if dump is disabled', done => {
     funnel.handleErrorDump = originalHandleErrorDump;
-    kuzzle.dump = sinon.stub();
     kuzzle.config.dump.enabled = false;
 
     const rq = new Request({controller: 'testme', action: 'fail'});

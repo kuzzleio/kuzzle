@@ -14,9 +14,9 @@ Updates a collection mapping.
 
 __Use [collection:update](/core/2/api/controllers/collection/update) instead.__
 
-You can define the collection [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) by setting the `dynamic` field to the desired value.
+You can define the collection [dynamic mapping policy](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy) by setting the `dynamic` field to the desired value.
 
-You can define [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) within the `_meta` root field.
+You can define [collection additional metadata](/core/2/guides/main-concepts/data-storage#mappings-metadata) within the `_meta` root field.
 
 ---
 
@@ -91,9 +91,9 @@ Body:
 
 ## Body properties
 
-* `dynamic`: [dynamic mapping policy](/core/2/guides/essentials/database-mappings#dynamic-mapping-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
-* `_meta`: [collection additional metadata](/core/2/guides/essentials/database-mappings#collection-metadata) stored next to the collection
-* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/2/guides/essentials/database-mappings#properties-types-definition)
+* `dynamic`: [dynamic mapping policy](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy) for new fields. Allowed values: `true` (default), `false`, `strict`
+* `_meta`: [collection additional metadata](/core/2/guides/main-concepts/data-storage#mappings-metadata) stored next to the collection
+* `properties`: object describing the data mapping to associate to the new collection, using [Elasticsearch types definitions format](/core/2/guides/main-concepts/data-storage#mappings-properties)
 
 ---
 
@@ -126,6 +126,6 @@ Body:
 
 ## Possible errors
 
-- [Common errors](/core/2/api/essentials/error-handling#common-errors)
-- [NotFoundError](/core/2/api/essentials/error-handling#notfounderror)
+- [Common errors](/core/2/api/errors/types#common-errors)
+- [NotFoundError](/core/2/api/errors/types#notfounderror)
 

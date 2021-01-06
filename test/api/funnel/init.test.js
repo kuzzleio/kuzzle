@@ -21,9 +21,9 @@ describe('funnel.init', () => {
   it('should initialize API and plugins controller', async () => {
     const kuzzle = new KuzzleMock();
 
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
-    const funnel = new Funnel(kuzzle);
+    const funnel = new Funnel();
 
     sinon.stub(funnel.rateLimiter, 'init');
     await funnel.init();

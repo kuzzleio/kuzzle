@@ -4,16 +4,14 @@ const sinon = require('sinon');
 const should = require('should');
 const jwt = require('jsonwebtoken');
 const Bluebird = require('bluebird');
+
 const {
   Request,
-  errors: {
-    UnauthorizedError,
-    BadRequestError,
-    InternalError: KuzzleInternalError,
-    PluginImplementationError
-  }
-} = require('kuzzle-common-objects');
-
+  UnauthorizedError,
+  BadRequestError,
+  InternalError: KuzzleInternalError,
+  PluginImplementationError
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controller/auth');
@@ -30,7 +28,7 @@ describe('Test the auth controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
-    kuzzle.ask.withArgs('core:security:user:anonymous').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     user = new User();
     kuzzle.passport.authenticate.returns(Bluebird.resolve(user));
@@ -45,7 +43,7 @@ describe('Test the auth controller', () => {
       foo: 'bar'
     });
 
-    authController = new AuthController(kuzzle);
+    authController = new AuthController();
 
     return authController.init();
   });
@@ -62,14 +60,53 @@ describe('Test the auth controller', () => {
     });
   });
 
+  describe('#checkRights', () => {
+    let userObject;
+
+    beforeEach(() => {
+      userObject = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      request.context.user = userObject;
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the user', async () => {
+      const response = await authController.checkRights(request);
+
+      should(userObject.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(authController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
+  });
+
   describe('#login', () => {
     let createTokenStub;
 
     beforeEach(() => {
-      createTokenStub = kuzzle.ask.withArgs(
-        'core:security:token:create',
-        sinon.match.any,
-        sinon.match.object);
+      createTokenStub = kuzzle.ask.withArgs('core:security:token:create');
     });
 
     it('should resolve to a valid jwt token if authentication succeed', async () => {
@@ -157,12 +194,8 @@ describe('Test the auth controller', () => {
         result: response,
         headers: {Location: 'http://github.com'}
       });
-      should(kuzzle.ask
-        .withArgs(
-          'core:security:token:create',
-          sinon.match.any,
-          sinon.match.any))
-        .not.be.called();
+
+      should(kuzzle.ask.withArgs('core:security:token:create')).not.be.called();
     });
 
     it('should call passport.authenticate with input body and query string', async () => {
@@ -275,9 +308,7 @@ describe('Test the auth controller', () => {
     it('should emit an error if the token cannot be expired', () => {
       const error = new Error('Mocked error');
 
-      kuzzle.ask
-        .withArgs('core:security:token:delete', sinon.match.object)
-        .rejects(error);
+      kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
     });
@@ -326,7 +357,7 @@ describe('Test the auth controller', () => {
           body: {token: 'foobar'}
         },
         {});
-      testToken = new Token({expiresAt: 42});
+      testToken = new Token({ expiresAt: 42, userId: 'durres' });
     });
 
     it('should reject an error if no token is provided', () => {
@@ -346,6 +377,7 @@ describe('Test the auth controller', () => {
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
+      should(response.kuid).be.eql('durres');
       should(response.valid).be.true();
       should(response.state).be.undefined();
       should(response.expiresAt).be.eql(testToken.expiresAt);
@@ -409,12 +441,7 @@ describe('Test the auth controller', () => {
         }
       );
 
-      kuzzle.ask
-        .withArgs(
-          'core:security:token:refresh',
-          sinon.match.any,
-          sinon.match.any)
-        .resolves(newToken);
+      kuzzle.ask.withArgs('core:security:token:refresh').resolves(newToken);
 
       const response = await authController.refreshToken(req);
 

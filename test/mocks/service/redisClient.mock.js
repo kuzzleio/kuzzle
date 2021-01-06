@@ -1,11 +1,10 @@
 'use strict';
 
-const
-  sinon = require('sinon'),
-  EventEmitter = require('eventemitter3'),
-  IORedis = require('ioredis'),
-  getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands,
-  Bluebird = require('bluebird');
+const sinon = require('sinon');
+const EventEmitter = require('eventemitter3');
+const IORedis = require('ioredis');
+
+const getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands;
 
 /**
  * @param err
@@ -18,38 +17,33 @@ class RedisClientMock extends EventEmitter {
     this.getBuiltinCommands = getBuiltinCommands;
 
     getBuiltinCommands().forEach(command => {
-      this[command] = this[command.toUpperCase()] = function (...args) {
-        return Bluebird.resolve({
-          name: command,
-          args: Array.prototype.slice.call(args)
-        });
-      };
+      this[command] = sinon.stub().resolves();
     });
 
-    this.select = this.SELECT = sinon.spy((key, callback) => key > 16
+    this.select = sinon.spy((key, callback) => key > 16
       ? callback(new Error('Unknown database'))
       : callback(null));
-
-    this.flushdb = this.FLUSHDB = sinon.spy(callback => callback(null));
 
     process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
   }
 
   scanStream (options) {
     const Stream = function () {
-      setTimeout(() => {
-        var
-          prefix = options && options.match ? options.match.replace(/[*?]/g, '') : 'k',
-          i,
-          keys = [];
+      setTimeout(
+        () => {
+          const prefix = options && options.match
+            ? options.match.replace(/[*?]/g, '')
+            : 'k';
+          const keys = [];
 
-        for (i=0; i < 10; i++) {
-          keys.push(prefix + i);
-        }
+          for (let i = 0; i < 10; i++) {
+            keys.push(prefix + i);
+          }
 
-        this.emit('data', keys);
-        this.emit('end', true);
-      }, 50);
+          this.emit('data', keys);
+          this.emit('end', true);
+        },
+        50);
     };
     Stream.prototype = new EventEmitter();
 

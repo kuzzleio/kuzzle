@@ -1,32 +1,29 @@
 'use strict';
 
 const should = require('should');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const DocumentController = require('../../../lib/api/controller/document');
+const sinon = require('sinon');
+
 const {
   Request,
-  errors: {
-    BadRequestError,
-    SizeLimitError
-  }
-} = require('kuzzle-common-objects');
+  BadRequestError,
+  SizeLimitError
+} = require('../../../index');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
+
+const DocumentController = require('../../../lib/api/controller/document');
 const { NativeController } = require('../../../lib/api/controller/base');
+const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('DocumentController', () => {
-  let
-    documentController,
-    kuzzle,
-    request,
-    index,
-    collection;
+  const index = 'festivals';
+  const collection = 'huma';
+  let documentController;
+  let kuzzle;
+  let request;
 
   beforeEach(() => {
-    index = 'festivals';
-
-    collection = 'huma';
-
     kuzzle = new KuzzleMock();
-    documentController = new DocumentController(kuzzle);
+    documentController = new DocumentController();
 
     request = new Request({
       controller: 'document',
@@ -42,14 +39,20 @@ describe('DocumentController', () => {
   });
 
   describe('#search', () => {
-    it('should call publicStorage search method', async () => {
-      documentController.publicStorage.search.resolves({
-        scrollId: 'scrollId',
-        hits: 'hits',
-        aggregations: 'aggregations',
-        total: 'total',
-        other: 'other'
-      });
+    beforeEach(() => {
+      kuzzle.ask
+        .withArgs('core:storage:public:document:search')
+        .resolves({
+          aggregations: 'aggregations',
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+    });
+
+    it('should forward to the store module', async () => {
       request.input.body = { query: { bar: 'bar '} };
       request.input.args.from = 1;
       request.input.args.size = 3;
@@ -57,97 +60,138 @@ describe('DocumentController', () => {
 
       const response = await documentController.search(request);
 
-      should(documentController.publicStorage.search).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:search',
         index,
         collection,
         { query: { bar: 'bar '} },
         { from: 1, size: 3, scroll: '10s' });
 
       should(response).match({
-        scrollId: 'scrollId',
-        hits: 'hits',
         aggregations: 'aggregations',
-        total: 'total'
+        hits: 'hits',
+        remaining: 'remaining',
+        scrollId: 'scrollId',
+        total: 'total',
       });
     });
 
-    it('should throw an error if index contains a comma', () => {
+    it('should reject if index contains a comma', () => {
       request.input.resource.index = '%test,anotherIndex';
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         BadRequestError,
         { id: 'services.storage.no_multi_indexes' });
     });
 
-    it('should throw an error if collection contains a comma', () => {
+    it('should reject if collection contains a comma', () => {
       request.input.resource.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         BadRequestError,
         { id: 'services.storage.no_multi_collections' });
     });
 
-    it('should throw an error if the size argument exceeds server configuration', () => {
+    it('should reject if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
       request.input.action = 'search';
 
-      should(() => documentController.search(request)).throw(
+      return should(documentController.search(request)).rejectedWith(
         SizeLimitError,
         { id: 'services.storage.get_limit_exceeded' });
     });
 
-    it('should reject an error in case of error', () => {
-      kuzzle.storageEngine.public.search.rejects(new Error('foobar'));
+    it('should reject in case of error', () => {
+      kuzzle.ask
+        .withArgs('core:storage:public:document:search')
+        .rejects(new Error('foobar'));
 
-      return should(documentController.search(request)).be.rejectedWith('foobar');
+      return should(documentController.search(request)).rejectedWith('foobar');
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.search(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
   describe('#scroll', () => {
-    it('should call publicStorage scroll method', async () => {
-      documentController.publicStorage.scroll.resolves({
-        scrollId: 'scrollId',
-        hits: 'hits',
-        total: 'total',
-        other: 'other'
-      });
+    it('should forward to the store module', async () => {
+      kuzzle.ask
+        .withArgs('core:storage:public:document:scroll')
+        .resolves({
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
       const response = await documentController.scroll(request);
 
-      should(documentController.publicStorage.scroll).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:scroll',
         'SomeScrollIdentifier',
         { scrollTTL: '1m' });
 
       should(response).match({
-        scrollId: 'scrollId',
         hits: 'hits',
-        total: 'total'
+        remaining: 'remaining',
+        scrollId: 'scrollId',
+        total: 'total',
       });
     });
 
-    it('should reject an error in case of error', () => {
+    it('should reject in case of error', () => {
       request.input.args.scroll = '1m';
       request.input.args.scrollId = 'SomeScrollIdentifier';
 
-      kuzzle.storageEngine.public.scroll.rejects(new Error('foobar'));
+      kuzzle.ask
+        .withArgs('core:storage:public:document:scroll')
+        .rejects(new Error('foobar'));
 
       return should(documentController.scroll(request)).be.rejectedWith('foobar');
     });
   });
 
   describe('#exists', () => {
-    it('should call publicStorage exists method', async () => {
-      documentController.publicStorage.exists.resolves(true);
+    it('should forward to the store module', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:exist').resolves(true);
       request.input.resource._id = 'foo';
 
       const response = await documentController.exists(request);
 
-      should(documentController.publicStorage.exists).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:exist',
         index,
         collection,
         'foo');
@@ -157,18 +201,20 @@ describe('DocumentController', () => {
   });
 
   describe('#get', () => {
-    it('should call publicStorage get method', async () => {
-      documentController.publicStorage.get.resolves(({
+    it('should forward to the store module', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves(({
         _id: '_id',
         _version: '_version',
         _source: '_source',
         some: 'other'
       }));
+
       request.input.resource._id = 'foo';
 
       const response = await documentController.get(request);
 
-      should(documentController.publicStorage.get).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:get',
         index,
         collection,
         'foo');
@@ -187,7 +233,7 @@ describe('DocumentController', () => {
         ids: ['foo', 'bar']
       };
 
-      documentController.publicStorage.mGet.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' },
           { _id: 'id2', _source: 'source', _version: 1, some: 'some' }
@@ -196,10 +242,11 @@ describe('DocumentController', () => {
       }));
     });
 
-    it('should call publicStorage mGet method', async () => {
+    it('should forward to the store module', async () => {
       const response = await documentController.mGet(request);
 
-      should(documentController.publicStorage.mGet).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mGet',
         index,
         collection,
         ['foo', 'bar']);
@@ -222,7 +269,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some documents are missing', async () => {
-      documentController.publicStorage.mGet.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' }
         ],
@@ -241,13 +288,14 @@ describe('DocumentController', () => {
   });
 
   describe('#count', () => {
-    it('should call publicStorage count method', async () => {
-      documentController.publicStorage.count.resolves(42);
+    it('should forward to the store module', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:count').resolves(42);
       request.input.body = { query: {} };
 
       const response = await documentController.count(request);
 
-      should(documentController.publicStorage.count).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:count',
         index,
         collection,
         { query: {} });
@@ -257,30 +305,28 @@ describe('DocumentController', () => {
   });
 
   describe('#create', () => {
-    let content;
+    const content = { foo: 'bar' };
 
     beforeEach(() => {
-      content = { foo: 'bar' };
-
       request.input.body = content;
-
       kuzzle.validation.validate.resolvesArg(0);
 
-      documentController.publicStorage.create.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:create').resolves({
         _id: '_id',
         _version: '_version',
         _source: '_source'
       });
     });
 
-    it('should call publicStorage create method and notify', async () => {
+    it('should forward to the store module and notify', async () => {
       request.input.resource._id = 'foobar';
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.create(request);
 
-      should(documentController.publicStorage.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:create',
         index,
         collection,
         content,
@@ -288,24 +334,24 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
         request,
-        {
-          _id: '_id',
-          _version: '_version',
-          _source: '_source'
-        });
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+
       should(response).match({
         _id: '_id',
+        _source: '_source',
         _version: '_version',
-        _source: '_source'
       });
     });
 
     it('should have default value for refresh, userId and id', async () => {
       await documentController.create(request);
 
-      should(documentController.publicStorage.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:create',
         index,
         collection,
         content,
@@ -314,9 +360,8 @@ describe('DocumentController', () => {
   });
 
   describe('#_mChanges', () => {
-    let
-      documents,
-      items;
+    let documents;
+    let items;
 
     beforeEach(() => {
       documents = [
@@ -333,39 +378,45 @@ describe('DocumentController', () => {
         { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
       ];
 
-      documentController.publicStorage.mCreate.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
         items,
         errors: []
       }));
     });
 
-    it('should call the right publicStorage method and notify the changes', async () => {
+    it('should forward to the store module and notify the changes', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
-      const response = await documentController._mChanges(request, 'mCreate', true);
+      const response = await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
 
-      should(documentController.publicStorage.mCreate).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreate',
         index,
         collection,
         documents,
         { userId: 'aschen', refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
         request,
-        items,
-        true);
+        actionEnum.CREATE,
+        items);
 
       should(response).match({
+        errors: [],
         successes: items,
-        errors: []
       });
     });
 
     it('should have default values for userId and refresh params', async () => {
-      await documentController._mChanges(request, 'mCreate', true);
+      await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
-      should(documentController.publicStorage.mCreate).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreate',
         index,
         collection,
         documents,
@@ -373,7 +424,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some actions failed', async () => {
-      documentController.publicStorage.mCreate.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
         items,
         errors: [
           {
@@ -384,7 +435,10 @@ describe('DocumentController', () => {
         ]
       }));
 
-      const response = await documentController._mChanges(request, 'mCreate', true);
+      const response = await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
 
       should(response).match({
         successes: items,
@@ -404,17 +458,36 @@ describe('DocumentController', () => {
         { _id: 'doc-2', _source: {} },
       ];
 
-      return should(documentController._mChanges(request, 'mCreate', true))
+      return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
         .be.rejectedWith({ id: 'api.assert.unexpected_argument' });
     });
 
     it('should reject if the number of documents to edit exceeds server configuration', () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
-      return should(documentController._mChanges(request, 'foobar'))
+      return should(documentController._mChanges(request, 'foobar', actionEnum.CREATE))
         .rejectedWith(
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
+    });
+
+    it('should return immediately if the provided payload is empty', async () => {
+      request.input.body.documents = [];
+
+      const response = await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
+
+      should(response).match({
+        errors: [],
+        successes: [],
+      });
+
+      should(kuzzle.ask.withArgs('core:storage:public:document:mCreate'))
+        .not.called();
+      should(kuzzle.ask.withArgs('core:realtime:document:mNotify'))
+        .not.called();
     });
   });
 
@@ -428,23 +501,26 @@ describe('DocumentController', () => {
 
       kuzzle.validation.validate.resolvesArg(0);
 
-      documentController.publicStorage.createOrReplace.resolves({
-        _id: '_id',
-        _version: '_version',
-        _source: '_source',
-        created: true
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:createOrReplace')
+        .resolves({
+          _id: '_id',
+          _version: '_version',
+          _source: '_source',
+          created: true
+        });
 
       request.input.resource._id = 'foobar';
     });
 
-    it('should call publicStorage createOrReplace method and notify', async () => {
+    it('should forward to the store module and notify', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.createOrReplace(request);
 
-      should(documentController.publicStorage.createOrReplace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         'foobar',
@@ -453,14 +529,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentCreate).be.calledWith(
+      should(kuzzle.ask).calledWithMatch(
+        'core:realtime:document:notify',
         request,
-        {
-          _id: '_id',
-          _version: '_version',
-          _source: '_source',
-          created: true
-        });
+        actionEnum.WRITE,
+        { _id: '_id', _source: '_source' });
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -469,24 +543,11 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should notify replace if document was replaced', async () => {
-      documentController.publicStorage.createOrReplace.resolves({
-        _id: '_id',
-        _version: '_version',
-        _source: '_source',
-        created: false
-      });
-
-      await documentController.createOrReplace(request);
-
-      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
-        request);
-    });
-
     it('should have default value for refresh and userId', async () => {
       await documentController.createOrReplace(request);
 
-      should(documentController.publicStorage.createOrReplace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
         'foobar',
@@ -505,7 +566,7 @@ describe('DocumentController', () => {
 
       kuzzle.validation.validate.resolvesArg(0);
 
-      documentController.publicStorage.update.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:update').resolves({
         _id: '_id',
         _version: '_version',
         _source: { ...content, name: 'gordon' }
@@ -514,14 +575,15 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
     });
 
-    it('should call publicStorage update method and notify', async () => {
+    it('should forward to the store module and notify', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
       request.input.args.retryOnConflict = 42;
 
       const response = await documentController.update(request);
 
-      should(documentController.publicStorage.update).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:update',
         index,
         collection,
         'foobar',
@@ -530,8 +592,16 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentUpdate).be.calledWith(
-        request);
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: content,
+          _updatedFields: Object.keys(request.input.body),
+        });
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -542,7 +612,8 @@ describe('DocumentController', () => {
     it('should have default value for refresh, userId and retryOnConflict', async () => {
       await documentController.update(request);
 
-      should(documentController.publicStorage.update).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:update',
         index,
         collection,
         'foobar',
@@ -562,18 +633,153 @@ describe('DocumentController', () => {
     });
   });
 
-  describe('#updateByQuery', () => {
+  describe('#upsert', () => {
+    let changes;
+    let defaultValues;
+
     beforeEach(() => {
-      documentController.publicStorage.updateByQuery.resolves(({
+      changes = { foo: 'bar' };
+      defaultValues = { def: 'val' };
+
+      request.input.body = { changes, default: defaultValues };
+      request.input.resource._id = 'foobar';
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on update', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: { ...changes, name: 'gordon' },
+          _updatedFields: Object.keys(changes),
+        });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: false,
+      });
+    });
+
+    it('should forward to the storage module and notify on create', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+      request.input.args.retryOnConflict = 42;
+
+      kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...defaultValues, ...changes, name: 'gordon' },
+        created: true,
+      });
+
+      const response = await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues,
+          refresh: 'wait_for',
+          retryOnConflict: 42,
+          userId: 'aschen',
+        });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { ...defaultValues, ...changes, name: 'gordon' });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+        created: true,
+      });
+    });
+
+    it('should have default value for refresh, userId and retryOnConflict', async () => {
+      request.input.body.default = undefined;
+
+      await documentController.upsert(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:upsert',
+        index,
+        collection,
+        'foobar',
+        changes,
+        {
+          defaultValues: {},
+          refresh: 'false',
+          retryOnConflict: undefined,
+          userId: null,
+        });
+    });
+
+    it('should return the entire document with source: true', async () => {
+      request.input.args.source = true;
+
+      const response = await documentController.upsert(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { ...changes, name: 'gordon' },
+        created: false,
+      });
+    });
+  });
+
+  describe('#updateByQuery', () => {
+    let esResponse;
+
+    beforeEach(() => {
+      esResponse = {
         successes: [
           { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
           { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
         ],
         errors: []
-      }));
+      };
+
+      kuzzle.ask
+        .withArgs('core:storage:public:document:updateByQuery')
+        .resolves(esResponse);
     });
 
-    it('should call publicStorage updateByQuery method and notify the changes', async () => {
+    it('should forward to the store module and notify the changes', async () => {
       request.input.body = {
         query: {
           match: { foo: 'bar' }
@@ -587,33 +793,25 @@ describe('DocumentController', () => {
 
       const response = await documentController.updateByQuery(request);
 
-      should(documentController.publicStorage.updateByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:updateByQuery',
         index,
         collection,
         { match: { foo: 'bar' } },
         { bar: 'foo'},
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
         request,
-        [
-          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
-          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
-        ]);
+        actionEnum.UPDATE,
+        esResponse.successes.map(doc => ({
+          _id: doc._id,
+          _source: doc._source,
+          _updatedFields: [ 'bar' ],
+        })));
 
-      should(response).be.eql({
-        successes: [
-          {
-            _id: 'id1',
-            _source: { foo: 'bar', bar: 'foo' }
-          },
-          {
-            _id: 'id2',
-            _source: { foo: 'bar', bar: 'foo' }
-          }
-        ],
-        errors: []
-      });
+      should(response).be.eql(esResponse);
     });
 
     it('should not include documents content in the response of updateByQuery', async () => {
@@ -628,42 +826,30 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-
-      kuzzle.notifier.notifyDocumentMChanges.callsFake((req, documents) => {
-        should(req).be.eql(request);
-        should(documents).be.eql([
-          { _id: 'id1', _source: { foo: 'bar', bar: 'foo' } },
-          { _id: 'id2', _source: { foo: 'bar', bar: 'foo' } }
-        ]);
-      });
-
       const response = await documentController.updateByQuery(request);
 
-      should(documentController.publicStorage.updateByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:updateByQuery',
         index,
         collection,
         { match: { foo: 'bar' } },
         { bar: 'foo' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledOnce();
+      should(kuzzle.ask).calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.UPDATE,
+        esResponse.successes.map(doc => ({
+          _id: doc._id,
+          _source: { foo: 'bar', bar: 'foo' },
+          _updatedFields: [ 'bar' ],
+        })));
 
-      should(response).be.eql({
-        successes: [
-          {
-            _id: 'id1',
-            _source: undefined
-          },
-          {
-            _id: 'id2',
-            _source: undefined
-          }
-        ],
-        errors: []
-      });
+      should(response).be.eql(esResponse);
     });
 
-    it('should throw if field "query" is missing', () => {
+    it('should reject if field "query" is missing', () => {
       request.input.body = {
         invalidField: {
           match: { foo: 'bar' }
@@ -675,10 +861,15 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-      should(() => documentController.updateByQuery(request).throw(BadRequestError, { message: 'Missing argument "body.changes"' }));
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        {
+          id: 'api.assert.missing_argument',
+          message: /^Missing argument "body.query"/,
+        });
     });
 
-    it('should throw if field "changes" is missing', () => {
+    it('should reject if field "changes" is missing', () => {
       request.input.body = {
         query: {
           match: { foo: 'bar' }
@@ -690,7 +881,38 @@ describe('DocumentController', () => {
       request.input.args.refresh = 'wait_for';
       request.input.args.source = false;
 
-      should(() => documentController.updateByQuery(request).throw(BadRequestError, {message: 'Missing argument "body.changes"'}));
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        {
+          id: 'api.assert.missing_argument',
+          message: /^Missing argument "body.changes"/,
+        });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.updateByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = {
+        query: { equals: { name: 'Melis' } },
+        changes: {}
+      };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.updateByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 
@@ -704,7 +926,7 @@ describe('DocumentController', () => {
 
       kuzzle.validation.validate.resolvesArg(0);
 
-      documentController.publicStorage.replace.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:replace').resolves({
         _id: '_id',
         _version: '_version',
         _source: '_source'
@@ -713,13 +935,14 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
     });
 
-    it('should call publicStorage replace method and notify', async () => {
+    it('should forward to the store module and notify', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.replace(request);
 
-      should(documentController.publicStorage.replace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:replace',
         index,
         collection,
         'foobar',
@@ -728,8 +951,12 @@ describe('DocumentController', () => {
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
 
-      should(kuzzle.notifier.notifyDocumentReplace).be.calledWith(
-        request);
+      should(kuzzle.ask).calledWith(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.REPLACE,
+        { _id: request.input.resource._id, _source: content });
+
       should(response).match({
         _id: '_id',
         _version: '_version',
@@ -740,7 +967,8 @@ describe('DocumentController', () => {
     it('should have default value for refresh and userId', async () => {
       await documentController.replace(request);
 
-      should(documentController.publicStorage.replace).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:replace',
         index,
         collection,
         'foobar',
@@ -750,9 +978,9 @@ describe('DocumentController', () => {
   });
 
   describe('#delete', () => {
-    it('should call publicStorage delete method and notify', async () => {
+    it('should forward to the store module and notify', async () => {
       request.input.args.refresh = 'wait_for';
-      documentController.publicStorage.get.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
         _source: '_source'
       });
@@ -760,21 +988,24 @@ describe('DocumentController', () => {
 
       const response = await documentController.delete(request);
 
-      should(documentController.publicStorage.delete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:delete',
         index,
         collection,
         'foobar',
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:notify',
         request,
-        [{ _id: 'foobar', _source: '_source' }]);
+        actionEnum.DELETE,
+        { _id: 'foobar', _source: '_source' });
 
       should(response).be.eql({ _id: 'foobar' });
     });
 
-    it('should call publicStorage delete method, notify and retrieve document source', async () => {
-      documentController.publicStorage.get.resolves({
+    it('should forward to the store module, notify and retrieve document source', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
         _source: '_source'
       });
@@ -783,23 +1014,25 @@ describe('DocumentController', () => {
 
       const response = await documentController.delete(request);
 
-      should(documentController.publicStorage.delete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:delete',
         index,
         collection,
         'foobar');
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:notify',
         request,
-        [{ _id: 'foobar', _source: '_source' }]);
+        actionEnum.DELETE,
+        { _id: 'foobar', _source: '_source' });
 
       should(response).be.eql({ _id: 'foobar', _source: '_source'});
     });
   });
 
   describe('#mDelete', () => {
-    let
-      ids,
-      documents;
+    let ids;
+    let documents;
 
     beforeEach(() => {
       ids = ['id1', 'id2', 'id3'];
@@ -812,25 +1045,29 @@ describe('DocumentController', () => {
         { _id: 'id3', _source: '_source3' }
       ];
 
-      documentController.publicStorage.mDelete.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
         documents,
         errors: []
       }));
     });
 
-    it('should call publicStorage mDelete method and notify the changes', async () => {
+    it('should forward to the store module and notify the changes', async () => {
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.mDelete(request);
 
-      should(documentController.publicStorage.mDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mDelete',
         index,
         collection,
         ids,
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete)
-        .be.calledWith(request, documents);
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.DELETE,
+        documents);
 
       should(response).match({
         successes: ['id1', 'id2', 'id3'],
@@ -839,7 +1076,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some actions failed', async () => {
-      documentController.publicStorage.mDelete.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
         documents,
         errors: [
           { id: 'id1', reason: 'reason' }
@@ -859,31 +1096,34 @@ describe('DocumentController', () => {
 
   describe('#deleteByQuery', () => {
     beforeEach(() => {
-      documentController.publicStorage.deleteByQuery.resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:deleteByQuery').resolves({
         documents: [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
         ],
         total: 2,
         deleted: 2,
-        failures: []
-      }));
+        failures: [],
+      });
     });
 
-    it('should call publicStorage deleteByQuery method and notify the changes', async () => {
+    it('should forward to the store module and notify the changes', async () => {
       request.input.body = { query: { foo: 'bar' } };
       request.input.args.refresh = 'wait_for';
 
       const response = await documentController.deleteByQuery(request);
 
-      should(documentController.publicStorage.deleteByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         { foo: 'bar' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
         request,
+        actionEnum.DELETE,
         [
           { _id: 'id1', _source: undefined },
           { _id: 'id2', _source: undefined }
@@ -896,21 +1136,24 @@ describe('DocumentController', () => {
         ]});
     });
 
-    it('should call publicStorage deleteByQuery method, notify the changes and retrieve all sources', async () => {
+    it('should forward to the store module, notify the changes and retrieve all sources', async () => {
       request.input.body = { query: { foo: 'bar' } };
       request.input.args.refresh = 'wait_for';
       request.input.args.source = true;
 
       const response = await documentController.deleteByQuery(request);
 
-      should(documentController.publicStorage.deleteByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         { foo: 'bar' },
         { refresh: 'wait_for' });
 
-      should(kuzzle.notifier.notifyDocumentMDelete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
         request,
+        actionEnum.DELETE,
         [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
@@ -921,6 +1164,26 @@ describe('DocumentController', () => {
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
         ]});
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.body = { query: { foo: 'bar' } };
+      request.input.args.lang = 'turkish';
+
+      return should(documentController.deleteByQuery(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { name: 'Melis' } } };
+      request.input.args.lang = 'koncorde';
+      documentController.translateKoncorde = sinon.stub().resolves();
+
+      await documentController.deleteByQuery(request);
+
+      should(documentController.translateKoncorde)
+        .be.calledWith({ equals: { name: 'Melis' } });
     });
   });
 

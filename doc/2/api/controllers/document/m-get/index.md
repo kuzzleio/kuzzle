@@ -9,7 +9,7 @@ title: mGet
 Gets multiple documents.
 
 ::: info
-The number of documents that can be fetched by a single request is limited by the `documentsFetchCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/essentials/configuration) guide).
+The number of documents that can be fetched by a single request is limited by the `documentsFetchCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 :::
 
 ---
@@ -90,7 +90,7 @@ The `errors` array contain the IDs of not found documents.
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
-    "hits": [
+    "successes": [
       {
         "_id": "<documentId>",
         "_source": {

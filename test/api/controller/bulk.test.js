@@ -1,11 +1,15 @@
 'use strict';
 
 const should = require('should');
-const BulkController = require('../../../lib/api/controller/bulk');
-const { Request } = require('kuzzle-common-objects');
+const sinon = require('sinon');
+
+const { Request } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
+
+const BulkController = require('../../../lib/api/controller/bulk');
 const { NativeController } = require('../../../lib/api/controller/base');
+const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('Test the bulk controller', () => {
   let controller;
@@ -27,7 +31,7 @@ describe('Test the bulk controller', () => {
 
     kuzzle = new KuzzleMock();
 
-    controller = mockAssertions(new BulkController(kuzzle));
+    controller = mockAssertions(new BulkController());
   });
 
   describe('#constructor', () => {
@@ -46,7 +50,7 @@ describe('Test the bulk controller', () => {
 
       request.input.body = { bulkData };
 
-      controller.publicStorage.import.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: ['fake', 'data'],
         errors: []
       });
@@ -55,8 +59,12 @@ describe('Test the bulk controller', () => {
     it('should trigger the proper methods and resolve to a valid response', async () => {
       const response = await controller.import(request);
 
-      should(controller.publicStorage.import)
-        .be.calledWith(index, collection, bulkData, { refresh: 'false', userId: null });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:bulk',
+        index,
+        collection,
+        bulkData,
+        { refresh: 'false', userId: null });
 
       should(response).match({
         successes: ['fake', 'data'],
@@ -65,7 +73,7 @@ describe('Test the bulk controller', () => {
     });
 
     it('should handle errors', async () => {
-      controller.publicStorage.import.resolves({
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
         items: [],
         errors: ['fake', 'data']
       });
@@ -80,58 +88,80 @@ describe('Test the bulk controller', () => {
   });
 
   describe('#write', () => {
-    let
-      content,
-      id;
+    let _source;
+    let _id;
+    let notifyStub;
 
     beforeEach(() => {
-      id = 'tolkien';
-      content = { name: 'Feanor', silmarils: 3 };
+      _id = 'tolkien';
+      _source = { name: 'Feanor', silmarils: 3 };
 
       request.input.action = 'write';
-      request.input.body = content;
-      request.input.resource._id = id;
+      request.input.body = _source;
+      request.input.resource._id = _id;
 
-      controller.publicStorage.createOrReplace.resolves({
-        _id: id,
-        _version: 1,
-        _source: content,
-        result: 'created'
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:createOrReplace')
+        .resolves({
+          _id,
+          _source,
+          _version: 1,
+          result: 'created',
+        });
+
+      notifyStub = kuzzle.ask.withArgs(
+        'core:realtime:document:notify',
+        sinon.match.object,
+        sinon.match.number,
+        sinon.match.object);
     });
 
     it('should createOrReplace the document without injecting meta', async () => {
       const response = await controller.write(request);
 
-      should(kuzzle.notifier.notifyDocumentCreate).not.be.called();
-      should(kuzzle.notifier.notifyDocumentReplace).not.be.called();
-      should(controller.publicStorage.createOrReplace).be.calledWith(
+      should(notifyStub).not.called();
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:createOrReplace',
         index,
         collection,
-        id,
-        content,
+        _id,
+        _source,
         { refresh: 'false', injectKuzzleMeta: false});
 
       should(response).match({
-        _id: id,
+        _id,
+        _source,
         _version: 1,
-        _source: content
       });
     });
 
-    it('should notify if its specified', async () => {
+    it('should send "document written" notifications if asked to', async () => {
       request.input.args.notify = true;
+
+      kuzzle.ask
+        .withArgs('core:storage:public:document:createOrReplace')
+        .resolves({
+          _id,
+          _source,
+          _version: 1,
+          result: 'created',
+          created: true,
+        });
 
       await controller.write(request);
 
-      should(kuzzle.notifier.notifyDocumentReplace).be.called();
+      should(notifyStub).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.WRITE,
+        { _id, _source });
     });
   });
 
   describe('#mWrite', () => {
-    let
-      documents,
-      mCreateOrReplaceResult;
+    let documents;
+    let mCreateOrReplaceResult;
+    let notifyMChangesStub;
 
     beforeEach(() => {
       documents = [
@@ -152,17 +182,26 @@ describe('Test the bulk controller', () => {
         { _id: 'magl', _source: { name: 'Maglor' }, _version: 1, created: true }
       ];
 
-      controller.publicStorage.mCreateOrReplace.resolves({
-        items: mCreateOrReplaceResult,
-        errors: []
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:mCreateOrReplace')
+        .resolves({
+          items: mCreateOrReplaceResult,
+          errors: []
+        });
+
+      notifyMChangesStub = kuzzle.ask.withArgs(
+        'core:realtime:document:mNotify',
+        sinon.match.object,
+        sinon.match.number,
+        sinon.match.every(sinon.match.object));
     });
 
     it('should mCreateOrReplace the document without injecting meta', async () => {
       const response = await controller.mWrite(request);
 
-      should(kuzzle.notifier.notifyDocumentMChanges).not.be.called();
-      should(controller.publicStorage.mCreateOrReplace).be.calledWith(
+      should(notifyMChangesStub).not.be.called();
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreateOrReplace',
         index,
         collection,
         documents,
@@ -182,8 +221,11 @@ describe('Test the bulk controller', () => {
 
       await controller.mWrite(request);
 
-      should(kuzzle.notifier.notifyDocumentMChanges).be.calledWith(
-        request, mCreateOrReplaceResult, true);
+      should(notifyMChangesStub).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.WRITE,
+        mCreateOrReplaceResult);
     });
   });
 
@@ -199,19 +241,22 @@ describe('Test the bulk controller', () => {
       request.input.args.refresh = 'wait_for';
       request.input.body = { query };
 
-      controller.publicStorage.deleteByQuery.resolves({
-        deleted: 2
-      });
+      kuzzle.ask
+        .withArgs('core:storage:public:document:deleteByQuery')
+        .resolves({
+          deleted: 2,
+        });
     });
 
-    it('should call deleteByQuery with fetch=false', async () => {
+    it('should call deleteByQuery with fetch=false and size=-1', async () => {
       const response = await controller.deleteByQuery(request);
 
-      should(controller.publicStorage.deleteByQuery).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteByQuery',
         index,
         collection,
         query,
-        { refresh: 'wait_for', fetch: false });
+        { refresh: 'wait_for', fetch: false, size: -1 });
 
       should(response.deleted).be.eql(2);
     });

@@ -3,8 +3,10 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
+
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const ClientAdapterMock = require('../../mocks/clientAdapter.mock');
+
 const BaseModel = require('../../../lib/model/storage/baseModel');
 
 class Model extends BaseModel {
@@ -36,9 +38,7 @@ describe('BaseModel', () => {
     mockrequire('../../../lib/core/storage/clientAdapter', ClientAdapterMock);
 
     StorageEngine = mockrequire.reRequire('../../../lib/core/storage/storageEngine');
-    storageEngine = new StorageEngine(kuzzle);
-
-    storageEngine._populateIndexCache = sinon.stub().resolves();
+    storageEngine = new StorageEngine();
 
     return storageEngine.init();
   });
@@ -102,7 +102,7 @@ describe('BaseModel', () => {
 
   describe('BaseModel.load', () => {
     it('should load and instantiate a model from database', async () => {
-      BaseModel.indexStorage.get.resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
         _id: 'mylehuong' ,
         _source: {
           name: 'mylehuong',
@@ -118,7 +118,11 @@ describe('BaseModel', () => {
         location: 'thehive'
       });
       should(model.__persisted).be.true();
-      should(BaseModel.indexStorage.get).be.calledWith('models', 'mylehuong');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:get',
+        kuzzle.internalIndex.index,
+        'models',
+        'mylehuong');
     });
   });
 
@@ -128,41 +132,52 @@ describe('BaseModel', () => {
     beforeEach(() => {
       documents = [
         { _id: 'mylehuong', _source: {} },
-        { _id: 'thehive', _source: {} }
+        { _id: 'thehive', _source: {} },
       ];
 
-      BaseModel.indexStorage.deleteByQuery = sinon.stub().resolves({documents});
+      kuzzle.ask
+        .withArgs('core:storage:private:document:deleteByQuery')
+        .resolves({ documents });
     });
 
     it('should call the driver\'s deleteByQuery', async () => {
       await Model.deleteByQuery({ match_all: {} });
 
-      should(BaseModel.indexStorage.deleteByQuery).be.calledOnce();
-      const [ collection, query ] = BaseModel.indexStorage.deleteByQuery.getCall(0).args;
-      should(collection).be.eql('models');
-      should(query).be.eql({ match_all: {} });
+      should(kuzzle.ask).calledWith(
+        'core:storage:private:document:deleteByQuery',
+        kuzzle.internalIndex.index,
+        'models',
+        { match_all: {} });
+
       should(Model.prototype._afterDelete).be.calledTwice();
     });
 
     it('should refresh the collection if the option.refresh is set', async () => {
       await Model.deleteByQuery({ match_all: {} }, { refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.refreshCollection).be.calledWith('models');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:collection:refresh',
+        kuzzle.internalIndex.index,
+        'models');
     });
   });
 
   describe('BaseModel.search', () => {
     it('should call search and return instantiated models', async () => {
-      BaseModel.indexStorage.search.resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
           { _id: 'mylehuong', _source: { location: 'Saigon' } },
-          { _id: 'thehive', _source: { location: 'Hanoi' } }
-        ]
+          { _id: 'thehive', _source: { location: 'Hanoi' } },
+        ],
       });
 
-      const models = await Model.search({ query: { match_all: {} } }, { scroll: '5s' });
+      const models = await Model.search(
+        { query: { match_all: {} } },
+        { scroll: '5s' });
 
-      should(BaseModel.indexStorage.search).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:search',
+        kuzzle.internalIndex.index,
         'models',
         { query: { match_all: {} } },
         { scroll: '5s' });
@@ -175,29 +190,30 @@ describe('BaseModel', () => {
 
   describe('BaseModel.truncate', () => {
     it('should call BaseModel.deleteByQuery with match_all', async () => {
-      const baseModelDeleteByQuery = BaseModel.deleteByQuery;
-      BaseModel.deleteByQuery = sinon.stub().resolves('ret');
+      sinon.stub(BaseModel, 'deleteByQuery').resolves('ret');
 
-      const ret = await BaseModel.truncate({ refresh: 'wait_for' });
+      try {
+        const ret = await BaseModel.truncate({ refresh: 'wait_for' });
 
-      should(BaseModel.deleteByQuery).be.calledWith(
-        { match_all: {} },
-        { refresh: 'wait_for' });
-      should(ret).be.eql('ret');
-
-      BaseModel.deleteByQuery = baseModelDeleteByQuery;
+        should(BaseModel.deleteByQuery).be.calledWith(
+          { match_all: {} },
+          { refresh: 'wait_for' });
+        should(ret).be.eql('ret');
+      }
+      finally {
+        BaseModel.deleteByQuery.restore();
+      }
     });
   });
 
   describe('#save', () => {
-    const
-      _id = 'mylehuong',
-      _source = { location: 'Saigon' };
+    const _id = 'mylehuong';
+    const _source = { location: 'Saigon' };
 
     beforeEach(() => {
-      BaseModel.indexStorage.create.resolves({
+      kuzzle.ask.withArgs('core:storage:private:document:create').resolves({
+        _id,
         _source,
-        _id
       });
     });
 
@@ -206,11 +222,12 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:create',
+        kuzzle.internalIndex.index,
         'models',
-        'mylehuong',
         { location: 'Saigon' },
-        { userId: 'aschen', refresh: 'wait_for' });
+        { id: 'mylehuong', userId: 'aschen', refresh: 'wait_for' });
       should(model.__persisted).be.true();
     });
 
@@ -219,11 +236,12 @@ describe('BaseModel', () => {
 
       await model.save();
 
-      should(BaseModel.indexStorage.create).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:create',
+        kuzzle.internalIndex.index,
         'models',
-        null,
         { location: 'Saigon' },
-        { userId: null, refresh: undefined });
+        { id: null, userId: null, refresh: undefined });
       should(model._id).be.eql('mylehuong');
     });
 
@@ -233,7 +251,9 @@ describe('BaseModel', () => {
 
       await model.save({ userId: 'aschen', refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.update).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:update',
+        kuzzle.internalIndex.index,
         'models',
         'mylehuong',
         { location: 'Saigon' },
@@ -242,9 +262,8 @@ describe('BaseModel', () => {
   });
 
   describe('#delete', () => {
-    const
-      _id = 'mylehuong',
-      _source = { location: 'Saigon' };
+    const _id = 'mylehuong';
+    const _source = { location: 'Saigon' };
 
     it('should delete the document and call _afterDelete hook', async () => {
       const model = new Model(_source, _id);
@@ -252,7 +271,9 @@ describe('BaseModel', () => {
 
       await model.delete({ refresh: 'wait_for' });
 
-      should(BaseModel.indexStorage.delete).be.calledWith(
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:delete',
+        kuzzle.internalIndex.index,
         'models',
         'mylehuong',
         { refresh: 'wait_for' });
@@ -265,16 +286,15 @@ describe('BaseModel', () => {
 
       await model.delete();
 
-      should(BaseModel.indexStorage.delete).not.be.called();
+      should(kuzzle.ask).not.be.calledWith('core:storage:private:document:delete');
     });
   });
 
   describe('#serialize', () => {
     it('should return an object with _id and _source', () => {
-      const
-        _id = 'mylehuong',
-        _source = { location: 'Saigon' },
-        model = new Model(_source, _id);
+      const _id = 'mylehuong';
+      const _source = { location: 'Saigon' };
+      const model = new Model(_source, _id);
 
       const serialized = model.serialize();
 

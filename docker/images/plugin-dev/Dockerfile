@@ -6,7 +6,6 @@ FROM node:12.18.1-stretch-slim as builder
 RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
-       python \
        make \
        g++ \
        python \
@@ -36,15 +35,6 @@ ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 ADD ./plugins/available/ /app/plugins/available/
 
 RUN  set -x \
-  # Link default plugins
-  && mkdir -p /app/plugins/enabled/ \
-  && ln -s /app/plugins/available/kuzzle-plugin-auth-passport-local /app/plugins/enabled/kuzzle-plugin-auth-passport-local \
-  && ln -s /app/plugins/available/kuzzle-plugin-logger /app/plugins/enabled/kuzzle-plugin-logger \
-  # Install plugins dependencies
-  && for plugin in plugins/*/*; do npm install --production --prefix "$plugin"; done \
-  # Clean Node.js related useless files
-  && clean-node \
-  && for plugin in plugins/*/*; do cd "$plugin"; echo "$plugin"; clean-node; cd /app; done \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries

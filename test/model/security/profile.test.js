@@ -1,17 +1,15 @@
 'use strict';
 
-const sinon = require('sinon');
 const should = require('should');
+
 const {
   Request,
-  errors: { BadRequestError }
-} = require('kuzzle-common-objects');
-
+  BadRequestError,
+  PreconditionError,
+} = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
 const Profile = require('../../../lib/model/security/profile');
 const Role = require('../../../lib/model/security/role');
-
-const _kuzzle = Symbol.for('_kuzzle');
 
 describe('Test: model/security/profile', () => {
   const context = {connectionId: null, userId: null};
@@ -59,17 +57,12 @@ describe('Test: model/security/profile', () => {
         }
       }
     };
-    for (const roleId of Object.keys(roles)) {
-      roles[roleId][_kuzzle] = kuzzle;
-    }
 
     profile.policies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
-
-    profile[_kuzzle] = kuzzle;
 
     should(await profile.isActionAllowed(request)).be.false();
 
@@ -130,19 +123,13 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    for (const roleId of Object.keys(roles)) {
-      roles[roleId][_kuzzle] = kuzzle;
-    }
-
-    profile.constructor._hash = kuzzle.constructor.hash;
+    profile.constructor._hash = obj => kuzzle.hash(obj);
 
     profile.policies.push({roleId: role3._id});
 
     kuzzle.ask
-      .withArgs('core:security:role:get', sinon.match.string)
+      .withArgs('core:security:role:get')
       .callsFake(async (event, id) => roles[id]);
-
-    profile[_kuzzle] = kuzzle;
 
     let rights = await profile.getRights();
     let filteredItem;
@@ -192,8 +179,9 @@ describe('Test: model/security/profile', () => {
 
     beforeEach(() => {
       profile = new Profile();
-      profile[_kuzzle] = kuzzle;
       profile._id = 'test';
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
     });
 
     it('should reject if no policies are provided', () => {
@@ -264,7 +252,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo is given an invalid attribute', () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', foo: 'bar' }]
+        restrictedTo: [{ index: 'index', foo: 'bar' }],
       }];
 
       return should(profile.validateDefinition())
@@ -273,23 +261,22 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid index name', () => {
+    it('should reject if restrictedTo points to an unknown index (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index'}]
       }];
 
-      kuzzle.storageEngine.internal.isIndexNameValid.returns(false);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_index_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isIndexNameValid)
-            .calledOnce()
-            .calledWith('index');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_index',
         });
+
+      should(kuzzle.ask).calledWith('core:storage:public:index:exist', 'index');
     });
 
     it('should reject if restrictedTo.collections is not an array', () => {
@@ -304,23 +291,22 @@ describe('Test: model/security/profile', () => {
         });
     });
 
-    it('should reject if restrictedTo points to an invalid collection name', () => {
+    it('should reject if restrictedTo points to an unknown collection (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
         restrictedTo: [{ index: 'index', collections: ['foo']}]
       }];
 
-      kuzzle.storageEngine.internal.isCollectionNameValid.returns(false);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(false);
 
-      return should(profile.validateDefinition())
-        .rejectedWith(
-          BadRequestError,
-          { id: 'services.storage.invalid_collection_name' })
-        .then(() => {
-          should(profile[_kuzzle].storageEngine.internal.isCollectionNameValid)
-            .calledOnce()
-            .calledWith('foo');
+      await profile.validateDefinition();
+
+      await should(profile.validateDefinition({ strict: true }))
+        .rejectedWith(PreconditionError, {
+          id: 'services.storage.unknown_collection',
         });
+
+      should(kuzzle.ask).calledWith('core:storage:public:collection:exist', 'index', 'foo');
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {

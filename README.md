@@ -7,25 +7,20 @@
 
 ## Why Kuzzle ?
 
-Kuzzle is a ready-to-use, **on-premises backend** that enables you to manage your persistent data and be notified in real-time on whatever happens to it. It also provides you with a flexible and powerful user-management system.
+Kuzzle is a [generic backend](https://docs.kuzzle.io/core/2/guides/introduction/general-purpose-backend/) offering **the basic building blocks common to every application**.
+
+Rather than developing the same standard features over and over again each time you create a new application, Kuzzle proposes them off the shelf, allowing you to focus on building **high-level, high-value business functionalities**.
 
 Kuzzle enables you to build modern web applications and complex IoT networks in no time.
 
-* **Persisted data**: store your data and perform advanced searches on it.
-* **Real-time notifications**: subscribe to fine-grained subsets of data.
+* **API First**: use a standardised multi-protocol API.
+* **Persisted Data**: store your data and perform advanced searches on it.
+* **Realtime Notifications**: use the pub/sub system or subscribe to database notifications.
 * **User Management**: login, logout and security rules are no more a burden.
-* **Extensible**: fit Kuzzle to your needs by leveraging the plugin system.
+* **Extensible**: develop advanced business feature directly with the integrated framework.
+* **Client SDKs**: use our SDKs to accelerate the frontend development.
 
-## Get trained by the creators of Kuzzle :zap:
-
-Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
-Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
-:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
-
-## Public Roadmap
-
-You can consult the public roadmap on Trello. Come and vote for the features you need!  
-:point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
+Learn how Kuzzle will accelerate your developments :point_right: https://docs.kuzzle.io/core/2/guides/introduction/what-is-kuzzle/
 
 ## Kuzzle in production
 
@@ -37,44 +32,81 @@ We also provide a plugin to deploy a [Kuzzle cluster](https://github.com/kuzzlei
 
 Check out our [support plans](https://kuzzle.io/pricing/).
 
-## Installation
+## Run Kuzzle
 
-### Quick install
-
-The easiest way to setup a kuzzle server for Linux-like systems without prerequisites is to download and run our installation script:
+The easiest way to start a Kuzzle application is to use [Kourou](https://github.com/kuzzleio/kourou):
 
 ```bash
-$ sudo bash -c "$(curl https://get.kuzzle.io/)"
+npx kourou app:scaffold playground
+
+ 🚀 Kourou - Scaffolds a new Kuzzle application
+ 
+  ✔ Creating playground/ directory
+  ✔ Creating and rendering application files
+  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
+ [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
 ```
 
-You can get detailed information about how to [start kuzzle with docker on docs.kuzzle.io](https://docs.kuzzle.io/core/2/guides/essentials/installing-kuzzle/#docker)
+Then you need to run Kuzzle services, Elasticsearch and Redis: `kourou app:start-services`
 
-### Manual install
+Finally you can run your application inside Docker with `npm run dev:docker`
 
-Check our [complete installation guide on docs.kuzzle.io](https://docs.kuzzle.io/core/2/guides/essentials/installing-kuzzle/#manual-installation)
+Kuzzle is now listening for requests on the port `7512`!
 
-## Quick start with Kuzzle
+## Use the framework
 
-* [Run Kuzzle server](https://docs.kuzzle.io/core/2/guides/getting-started/running-kuzzle/)
-* [Choose a SDK](https://docs.kuzzle.io/sdk/)
-* Build your application without caring about your backend !
+Your first Kuzzle application is inside the `app.ts` file.
 
-Check the [**First steps for database and realtime actions on docs.kuzzle.io**](https://docs.kuzzle.io/core/2/guides/getting-started/first-steps/)
+For example, you can add a new [API Controller](https://docs.kuzzle.io/core/2/guides/develop-on-kuzzle/api-controllers):
+
+```ts
+import { Backend } from 'kuzzle'
+
+const app = new Backend('playground')
+
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async request => `Hello, ${request.input.args.name}` 
+    }
+  }
+})
+
+app.start()
+  .then(() => {
+    app.log.info('Application started')
+  })
+  .catch(console.error)
+```
+
+Now try to call your new API action by:
+ - opening the generated URL in your browser: http://localhost:7512/_/greeting/say-hello?name=Yagmur
+ - using Kourou: `npx kourou greeting:sayHello --arg name=Yagmur`
+
+Learn how to [Write an Application](https://docs.kuzzle.io/core/2/guides/getting-started/write-application/).
 
 ### Useful links
 
-* [Basic usage examples](https://docs.kuzzle.io/core/2/guides/getting-started/first-steps/)
-* [Store and access data](https://docs.kuzzle.io/core/2/guides/essentials/store-access-data/)
-* [Define database mappings](https://docs.kuzzle.io/core/2/guides/essentials/database-mappings/)
-* [Configure roles and profiles](https://docs.kuzzle.io/core/2/guides/essentials/security/)
-* [Users and authentication](https://docs.kuzzle.io/core/2/guides/essentials/user-authentication/)
-* [Command Line Interface (CLI)](https://docs.kuzzle.io/core/2/guides/essentials/kourou-cli/)
-* [Getting started with Node.js](https://docs.kuzzle.io/sdk/js/7/getting-started/node-js/)
-* [Write core plugin](https://docs.kuzzle.io/core/2/plugins/)
-* [Realtime engine documentation](https://docs.kuzzle.io/core/2/guides/essentials/real-time/)
-* [API Documentation](https://docs.kuzzle.io/core/2/api/)  
-* [SDKs Reference](https://docs.kuzzle.io/sdk)
-* [View release notes](https://github.com/kuzzleio/kuzzle/releases)
+* [Getting Started with Kuzzle](https://docs.kuzzle.io/core/2/guides/getting-started/run-kuzzle/)
+* [API](https://docs.kuzzle.io/core/2/guides/main-concepts/api/)
+* [Data Storage](https://docs.kuzzle.io/core/2/guides/main-concepts/data-storage/)
+* [Querying](https://docs.kuzzle.io/core/2/guides/main-concepts/querying/)
+* [Permissions](https://docs.kuzzle.io/core/2/guides/main-concepts/permissions/)
+* [Authentication](https://docs.kuzzle.io/core/2/guides/main-concepts/authentication/)
+* [Realtime Engine](https://docs.kuzzle.io/core/2/guides/main-concepts/realtime-engine/)
+* [Discover our SDKs](https://docs.kuzzle.io/core/2/sdk/)
+* [Release Notes](https://github.com/kuzzleio/kuzzle/releases)
+
+## Get trained by the creators of Kuzzle :zap:
+
+Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
+Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
+:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
+
+## Public Roadmap
+
+You can consult the public roadmap on Trello. Come and vote for the features you need!  
+:point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
 
 ## Contributing to Kuzzle
 

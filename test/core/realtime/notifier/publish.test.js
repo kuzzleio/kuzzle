@@ -2,49 +2,55 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const Kuzzle = require('../../../mocks/kuzzle.mock');
+
+const { Request } = require('../../../../index');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
 const Notifier = require('../../../../lib/core/realtime/notifier');
-const { Request } = require('kuzzle-common-objects');
 
 describe('Test: notifier.publish', () => {
-  let
-    kuzzle,
-    notifier,
-    rawRequest,
-    rooms = ['foo'];
+  let kuzzle;
+  let notifier;
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-    notifier = new Notifier(kuzzle);
+    kuzzle = new KuzzleMock();
+    notifier = new Notifier();
 
-    rawRequest = {
+    sinon.stub(notifier, 'notifyDocument').resolves();
+
+    return notifier.init();
+  });
+
+  it('should register a "publish" event', async () => {
+    sinon.stub(notifier, 'publish');
+
+    kuzzle.ask.restore();
+    await kuzzle.ask('core:realtime:publish', 'request');
+
+    should(notifier.publish).calledWith('request');
+  });
+
+  it('should publish messages', async () => {
+    const rooms = ['foo'];
+    const request = new Request({
       controller: 'realtime',
       action: 'publish',
       index: 'foo',
       collection: 'bar',
       _id: 'I am fabulous',
       body: {youAre: 'fabulous too'},
-      volatile: {}
-    };
+      volatile: {},
+    });
 
-    sinon.stub(notifier, 'notifyDocument').resolves();
-  });
-
-  it('should publish messages', () => {
     kuzzle.koncorde.test.returns(rooms);
 
-    const request = new Request(rawRequest);
+    await notifier.publish(request);
 
-    return notifier.publish(request)
-      .then(() => {
-        should(notifier.notifyDocument)
-          .calledOnce()
-          .calledWith(rooms, request, 'in', rawRequest.action, {
-            _source: rawRequest.body,
-            _id: rawRequest._id
-          });
-
-        should(kuzzle.cacheEngine.internal.setex).not.be.called();
+    should(notifier.notifyDocument)
+      .calledOnce()
+      .calledWith(rooms, request, 'in', request.input.action, {
+        _source: request.input.body,
+        _id: request.input.resource._id,
       });
   });
 });

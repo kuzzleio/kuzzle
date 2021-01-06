@@ -7,15 +7,27 @@ const should = require('should');
 const sinon = require('sinon');
 const _ = require('lodash');
 const { Client: ESClient } = require('@elastic/elasticsearch');
+
 const {
   Request,
-  errors: {
-    PluginImplementationError
-  }
-} = require('kuzzle-common-objects');
-
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
-const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
+  KuzzleRequest,
+  KuzzleError,
+  UnauthorizedError,
+  TooManyRequestsError,
+  SizeLimitError,
+  ServiceUnavailableError,
+  PreconditionError,
+  PluginImplementationError,
+  PartialError,
+  NotFoundError,
+  InternalError,
+  GatewayTimeoutError,
+  ForbiddenError,
+  ExternalServiceError,
+  BadRequestError,
+} = require('../../../../index');
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
   const someCollection = 'someCollection';
@@ -24,14 +36,11 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    PluginContext = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
+    const modul = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
+    PluginContext = modul.PluginContext;
 
     kuzzle = new KuzzleMock();
-    context = new PluginContext(kuzzle, 'pluginName');
-  });
-
-  afterEach(() => {
-    mockrequire.stopAll();
+    context = new PluginContext('pluginName');
   });
 
   describe('#constructor', () => {
@@ -52,7 +61,7 @@ describe('Plugin Context', () => {
       should(context.constructors.Repository).be.a.Function();
 
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
-      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(Request);
+      should(new context.constructors.Request(new Request({}), {})).be.instanceOf(KuzzleRequest);
 
       repository = new context.constructors.Repository(someCollection);
 
@@ -79,16 +88,16 @@ describe('Plugin Context', () => {
 
     describe('#ESClient', () => {
       it('should expose the ESClient constructor', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient).be.instanceOf(ESClient);
+        should(storageClient).be.instanceOf(ESClient);
       });
 
       it('should allow to instantiate an ESClient connected to the ES cluster', () => {
-        const esClient = new context.constructors.ESClient();
+        const storageClient = new context.constructors.ESClient();
 
-        should(esClient.connectionPool.connections[0].url.origin)
-          .be.eql(kuzzle.storageEngine.config.client.node);
+        should(storageClient.connectionPool.connections[0].url.origin)
+          .be.eql(kuzzle.config.services.storageEngine.client.node);
       });
     });
 
@@ -184,14 +193,29 @@ describe('Plugin Context', () => {
       it('should allow building a request without providing another one', () => {
         const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
 
-        should(rq).be.instanceOf(Request);
+        should(rq).be.instanceOf(KuzzleRequest);
         should(rq.input.action).be.eql('bar');
         should(rq.input.controller).be.eql('foo');
       });
     });
 
     it('should expose all error objects as capitalized constructors', () => {
-      const errors = require('kuzzle-common-objects').errors;
+      const errors = {
+        KuzzleError,
+        UnauthorizedError,
+        TooManyRequestsError,
+        SizeLimitError,
+        ServiceUnavailableError,
+        PreconditionError,
+        PluginImplementationError,
+        PartialError,
+        NotFoundError,
+        InternalError,
+        GatewayTimeoutError,
+        ForbiddenError,
+        ExternalServiceError,
+        BadRequestError,
+      };
 
       should(context.errors).be.an.Object().and.not.be.empty();
 
@@ -203,7 +227,6 @@ describe('Plugin Context', () => {
 
     it('should expose the right accessors', () => {
       [
-        'silly',
         'verbose',
         'info',
         'debug',
@@ -221,18 +244,23 @@ describe('Plugin Context', () => {
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties(
-        ['execute', 'validation', 'storage', 'trigger', 'strategies', 'sdk']);
+        ['execute', 'validation', 'storage', 'trigger', 'subscription', 'strategies', 'sdk']);
     });
 
-    it('should adds the plugin name in logs', done => {
+    it('should add the plugin name in logs', done => {
       context.log.info('foobar');
 
       process.nextTick(() => {
-        should(kuzzle.log.info)
-          .be.calledOnce()
-          .be.calledWith('[pluginName] foobar');
+        try {
+          should(kuzzle.log.info)
+            .be.calledOnce()
+            .be.calledWith('[pluginName] foobar');
 
-        done();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
       });
     });
 
@@ -275,6 +303,60 @@ describe('Plugin Context', () => {
       const sdk = context.accessors.sdk;
 
       should(sdk).be.instanceOf(EmbeddedSDK);
+    });
+
+    it('should expose a realtime accessor', () => {
+      const subscription = context.accessors.subscription;
+
+      should(subscription.register).be.a.Function();
+      should(subscription.unregister).be.a.Function();
+    });
+
+    describe('#accessors.subscription functions', () => {
+      it('should call register with the right ask and argument', async () => {
+        const customRequest = new Request(
+          {
+            action: 'subscribe',
+            body: {
+              equals: {
+                name: 'Luca'
+              }
+            },
+            collection: 'yellow-taxi',
+            controller: 'realtime',
+            index: 'nyc-open-data',
+          },
+          {
+            connectionId: 'superid',
+          });
+
+        await context.accessors.subscription.register(
+          customRequest.context.connection.id,
+          customRequest.input.index,
+          customRequest.input.collection,
+          customRequest.input.body
+        );
+
+        should(kuzzle.ask).be.calledWith('core:realtime:subscribe', sinon.match(
+          {
+            context: {
+              connection: {
+                id: customRequest.context.connection.id
+              }
+            },
+            input: {
+              body: customRequest.input.body,
+              collection: customRequest.input.collection,
+              index: customRequest.input.index
+            }
+          }
+        ));
+      });
+
+      it('should call unregister with the right ask and argument', async () => {
+        await context.accessors.subscription.unregister('connectionId', 'roomId', false);
+        should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', false);
+      });
     });
 
     describe('#trigger', () => {

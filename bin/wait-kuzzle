@@ -23,52 +23,44 @@
 
 'use strict';
 
-const net = require('net');
+/* eslint-disable no-console */
 
-const sleep = seconds => new Promise(resolve => setTimeout(() => resolve(), seconds * 1000))
+const { Kuzzle, WebSocket } = require('kuzzle-sdk');
+
+const sleep = seconds => {
+  return new Promise(resolve => setTimeout(() => resolve(), seconds * 1000));
+};
 
 const kuzzleHost = process.env.KUZZLE_HOST || 'localhost';
 const kuzzlePort = process.env.KUZZLE_PORT || 7512;
 const maxTries = process.env.MAX_TRIES || 60;
 
-let client = null;
-
-function tryConnect (host, port) {
-  return new Promise(resolve => {
-    client = new net.Socket();
-
-    client.on('error', () => resolve(false));
-
-    client.connect(port, host, () => resolve(true));
-  });
-}
-
-async function waitKuzzle (host, port, maxTries) {
+async function waitKuzzle (host, port, timeout) {
   const spinner = '|/-\\';
-  let i = 0;
-  let seconds = 0;
+  const protocol = new WebSocket(host, { port });
+  const kuzzle = new Kuzzle(protocol);
+  let connected = false;
+
+  kuzzle.on('connected', () => (connected = true));
+  kuzzle.connect().catch(() => {});
 
   console.log(`[ℹ] Trying to connect to Kuzzle at "${kuzzleHost}:${kuzzlePort}"`);
 
-  while (seconds < maxTries) {
-    const connected = await tryConnect(host, port);
+  for (let seconds = 0; seconds < timeout; seconds++) {
+    const message = `[${spinner.charAt(seconds % spinner.length)}] Still trying to connect to Kuzzle (${seconds}s)...`;
 
     if (connected) {
-      console.log(`[✔] Kuzzle is up`);
-
+      console.log(`${' '.repeat(message.length)}\r[✔] Kuzzle is up`);
+      kuzzle.disconnect();
       return;
     }
 
-    process.stdout.write(`[${spinner.charAt(i)}] Still trying to connect to Kuzzle (${seconds}s)...`);
-    process.stdout.write('\r');
+    process.stdout.write(`${message}\r`);
 
     await sleep(1);
-
-    i = i === 3 ? 0 : i + 1;
-    seconds++;
   }
 
-  console.log(`Timeout after ${seconds}s: cannot connect to Kuzzle at "${kuzzleHost}:${kuzzlePort}"`);
+  console.log(`Timeout after ${timeout}s: cannot connect to Kuzzle at "${host}:${port}"`);
   process.exit(1);
 }
 
@@ -79,11 +71,6 @@ const run = async () => {
   catch (error) {
     console.error(`[x] ${error.message}`);
     process.exit(1);
-  }
-  finally {
-    if (client) {
-      client.unref();
-    }
   }
 };
 

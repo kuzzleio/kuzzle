@@ -6,9 +6,7 @@ title: update
 
 # update
 
-
-
-Updates a document content.
+Applies partial changes to a document. The document must exist in the storage layer.
 
 ---
 
@@ -17,7 +15,7 @@ Updates a document content.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source]
+URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source]
 Method: PUT
 Body:
 ```
@@ -47,15 +45,16 @@ Body:
 
 ## Arguments
 
+- `_id`: unique identifier of the document to update
 - `collection`: collection name
-- `documentId`: unique identifier of the document to update
 - `index`: index name
 
-### Optional:
+### Optional
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
 - `source`: if set to `true` Kuzzle will return the entire updated document body in the response.
+
 ---
 
 ## Body properties
@@ -66,7 +65,7 @@ Partial changes to apply to the document.
 
 ## Response
 
-Returns information about the updated documents:
+Returns information about the updated document:
 
 - `_id`: document unique identifier
 - `_version`: updated document version

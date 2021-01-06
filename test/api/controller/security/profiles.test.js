@@ -2,14 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   Request,
-  errors: {
-    BadRequestError,
-    SizeLimitError,
-  }
-} = require('kuzzle-common-objects');
-
+  BadRequestError,
+  SizeLimitError,
+} = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Profile = require('../../../../lib/model/security/profile');
 const SecurityController = require('../../../../lib/api/controller/security');
@@ -25,8 +23,8 @@ describe('Test: security controller - profiles', () => {
       {controller: 'security'},
       {user: {_id: 'userId'}});
     kuzzle = new KuzzleMock();
-    kuzzle.internalIndex.get.resolves({});
-    kuzzle.internalIndex.getMapping.resolves({
+    kuzzle.ask.withArgs('core:storage:private:document:get').resolves({});
+    kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
       internalIndex: {
         mappings: {
           profiles: {
@@ -35,7 +33,7 @@ describe('Test: security controller - profiles', () => {
         }
       }
     });
-    securityController = new SecurityController(kuzzle);
+    securityController = new SecurityController();
 
     fakeProfile = new Profile();
     fakeProfile._id = 'fakeProfile';
@@ -53,34 +51,38 @@ describe('Test: security controller - profiles', () => {
       }).throw(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should update the profile mapping', () => {
-      kuzzle.internalIndex.updateMapping.resolves(foo);
+    it('should update the profile mapping', async () => {
+      kuzzle.ask.withArgs('core:storage:private:mappings:update').resolves(foo);
       request.input.body = foo;
 
-      return securityController.updateProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.updateMapping).be.calledOnce();
-          should(kuzzle.internalIndex.updateMapping).be.calledWith('profiles', request.input.body);
+      const response = await securityController.updateProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:mappings:update',
+        kuzzle.internalIndex.index,
+        'profiles',
+        request.input.body);
+
+      should(response).be.instanceof(Object);
+      should(response).match(foo);
     });
   });
 
   describe('#getProfileMapping', () => {
-    it('should fulfill with a response object', () => {
-      kuzzle.internalIndex.getMapping.resolves({ properties: { foo: 'bar' } });
+    it('should fulfill with a response object', async () => {
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
 
-      return securityController.getProfileMapping(request)
-        .then(response => {
-          should(kuzzle.internalIndex.getMapping)
-            .be.calledOnce()
-            .be.calledWith('profiles');
+      const response = await securityController.getProfileMapping(request);
 
-          should(response).be.instanceof(Object);
-          should(response).match({ mapping: { foo: 'bar' } });
-        });
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'profiles');
+
+      should(response).be.instanceof(Object);
+      should(response).match({ mapping: { foo: 'bar' } });
     });
   });
 
@@ -90,11 +92,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       createOrReplaceStub = kuzzle.ask
-        .withArgs(
-          createOrReplaceEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(createOrReplaceEvent)
         .resolves(fakeProfile);
 
       request.input.resource._id = 'test';
@@ -145,6 +143,29 @@ describe('Test: security controller - profiles', () => {
       }
     });
 
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createOrReplaceProfile(request);
+
+        should(createOrReplaceStub).calledWithMatch(
+          createOrReplaceEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createOrReplaceProfile(request);
+
+      should(createOrReplaceStub).calledWithMatch(
+        createOrReplaceEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
+    });
+
     it('should throw if an invalid profile format is provided', async () => {
       request.input.body = null;
       await should(securityController.createOrReplaceProfile(request))
@@ -183,11 +204,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       createStub = kuzzle.ask
-        .withArgs(
-          createEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
+        .withArgs(createEvent)
         .resolves(fakeProfile);
 
       request.input.resource._id = 'test';
@@ -267,6 +284,29 @@ describe('Test: security controller - profiles', () => {
       }
     });
 
+    it('should forward the strict option', async () => {
+      for (const strict of [ null, undefined, false ]) {
+        request.input.args.strict = strict;
+
+        await securityController.createProfile(request);
+
+        should(createStub).calledWithMatch(
+          createEvent,
+          request.input.resource._id,
+          request.input.body,
+          { strict: false, userId: 'userId' });
+      }
+
+      request.input.args.strict = true;
+      await securityController.createProfile(request);
+
+      should(createStub).calledWithMatch(
+        createEvent,
+        request.input.resource._id,
+        request.input.body,
+        { strict: true, userId: 'userId' });
+    });
+
     it('should reject if an invalid profile format is provided', async () => {
       request.input.body = null;
       await should(securityController.createProfile(request))
@@ -301,7 +341,7 @@ describe('Test: security controller - profiles', () => {
     let getStub;
 
     beforeEach(() => {
-      getStub = kuzzle.ask.withArgs(getEvent, sinon.match.string);
+      getStub = kuzzle.ask.withArgs(getEvent);
       request.input.resource._id = 'foobar';
     });
 
@@ -348,7 +388,7 @@ describe('Test: security controller - profiles', () => {
     let mGetStub;
 
     beforeEach(() => {
-      mGetStub = kuzzle.ask.withArgs(mGetEvent, sinon.match.array);
+      mGetStub = kuzzle.ask.withArgs(mGetEvent);
       request.input.body = {ids: 'ids'.split('')};
     });
 
@@ -399,7 +439,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       searchStub = kuzzle.ask
-        .withArgs(searchEvent, sinon.match.array, sinon.match.object)
+        .withArgs(searchEvent)
         .resolves({
           hits: [ fakeProfile, fakeProfile, fakeProfile ],
           total: 3,
@@ -472,7 +512,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       scrollStub = kuzzle.ask
-        .withArgs(scrollEvent, sinon.match.string, sinon.match.any)
+        .withArgs(scrollEvent)
         .resolves({
           hits: [fakeProfile, fakeProfile, fakeProfile],
           scrollId: 'foobar',
@@ -525,13 +565,7 @@ describe('Test: security controller - profiles', () => {
     let updateStub;
 
     beforeEach(() => {
-      updateStub = kuzzle.ask
-        .withArgs(
-          updateEvent,
-          sinon.match.string,
-          sinon.match.object,
-          sinon.match.any)
-        .resolves(fakeProfile);
+      updateStub = kuzzle.ask.withArgs(updateEvent).resolves(fakeProfile);
 
       request.input.resource._id = 'profileId';
       request.input.body = {
@@ -585,6 +619,7 @@ describe('Test: security controller - profiles', () => {
     it('should forward provided options', async () => {
       request.input.args.refresh = false;
       request.input.args.retryOnConflict = 123;
+      request.input.args.strict = true;
 
       await securityController.updateProfile(request);
 
@@ -595,6 +630,7 @@ describe('Test: security controller - profiles', () => {
         {
           refresh: 'false',
           retryOnConflict: 123,
+          strict: true,
           userId: request.context.user._id,
         });
     });
@@ -613,9 +649,7 @@ describe('Test: security controller - profiles', () => {
     let deleteStub;
 
     beforeEach(() => {
-      deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, sinon.match.string, sinon.match.any)
-        .resolves();
+      deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
       request.input.resource._id = 'profileId';
     });
@@ -659,7 +693,7 @@ describe('Test: security controller - profiles', () => {
     let getStub;
 
     beforeEach(() => {
-      getStub = kuzzle.ask.withArgs(getEvent, sinon.match.string);
+      getStub = kuzzle.ask.withArgs(getEvent);
       request.input.resource._id = 'test';
     });
 

@@ -3,23 +3,23 @@
 const root = '../../../..';
 
 const mockrequire = require('mock-require');
-const HttpFormDataStream = require(`${root}/lib/core/network/service/httpFormDataStream`);
-const EntryPoint = require(`${root}/lib/core/network/entryPoint`);
-const ClientConnection = require(`${root}/lib/core/network/clientConnection`);
-const { HttpMessage } = require(`${root}/lib/core/network/protocols/http`);
-const KuzzleMock = require(`${root}/test/mocks/kuzzle.mock`);
+
+const HttpFormDataStream = require('../../../../lib/core/network/service/httpFormDataStream');
+const EntryPoint = require('../../../../lib/core/network/entryPoint');
+const ClientConnection = require('../../../../lib/core/network/clientConnection');
+const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
+const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
 const should = require('should');
 const sinon = require('sinon');
 const { Writable } = require('stream');
-const errorMatcher = require(`${root}/test/util/errorMatcher`);
-const kerror = require(`${root}/lib/kerror`).wrap('network', 'http');
+const errorMatcher = require('../../../../test/util/errorMatcher');
 const {
   Request,
-  errors: {
-    SizeLimitError,
-    BadRequestError
-  }
-} = require('kuzzle-common-objects');
+  SizeLimitError,
+  BadRequestError
+} = require('../../../../index');
+
+const kerror = require('../../../../lib/kerror').wrap('network', 'http');
 
 describe('/lib/core/network/protocols/http', () => {
   const gunzipMock = sinon.stub();
@@ -62,7 +62,7 @@ describe('/lib/core/network/protocols/http', () => {
 
     kuzzle = new KuzzleMock();
 
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
     sinon.stub(entrypoint, 'execute');
     sinon.stub(entrypoint, 'newConnection');
     sinon.stub(entrypoint, 'removeConnection');
@@ -205,7 +205,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Maximum HTTP request size exceeded.'});
       });
@@ -262,7 +262,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Too many encodings.'});
       });
@@ -275,7 +275,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {message: 'Unsupported compression algorithm "foobar".'});
       });
@@ -396,7 +396,7 @@ describe('/lib/core/network/protocols/http', () => {
 
             should(protocol._replyWithError)
               .be.calledWithMatch(
-                { url: request.url, method: request.method },
+                { path: request.url, url: request.url, method: request.method },
                 response,
                 { message: 'Maximum HTTP request size exceeded.' });
             done();
@@ -417,7 +417,7 @@ describe('/lib/core/network/protocols/http', () => {
         should(protocol._replyWithError)
           .be.calledOnce()
           .be.calledWithMatch(
-            { url: request.url, method: request.method },
+            { path: request.url, url: request.url, method: request.method },
             response,
             {
               id: 'network.http.unexpected_error',
@@ -486,15 +486,15 @@ describe('/lib/core/network/protocols/http', () => {
           .be.calledWithMatch(444, { 'x-foo': 'bar' });
 
         const expected = {
-          requestId: 'requestId',
-          status: 444,
-          error: null,
-          controller: null,
           action: null,
           collection: null,
+          controller: null,
+          error: null,
           index: null,
+          requestId: 'requestId',
+          result: 'content',
+          status: 444,
           volatile: null,
-          result: 'content'
         };
 
         should(response.end)

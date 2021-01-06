@@ -2,8 +2,8 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const { Request } = require('kuzzle-common-objects');
 
+const { Request } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 const RateLimiter = require('../../lib/api/rateLimiter');
@@ -19,7 +19,7 @@ describe('#api.rateLimiter', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    rateLimiter = new RateLimiter(kuzzle);
+    rateLimiter = new RateLimiter();
     clock = sinon.useFakeTimers();
 
     request = new Request({}, {
@@ -38,7 +38,7 @@ describe('#api.rateLimiter', () => {
     ];
 
     mGetProfilesStub = kuzzle.ask
-      .withArgs(mGetProfilesEvent, sinon.match.array)
+      .withArgs(mGetProfilesEvent)
       .resolves(profiles);
   });
 

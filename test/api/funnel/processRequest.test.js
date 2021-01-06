@@ -2,30 +2,29 @@
 
 const sinon = require('sinon');
 const should = require('should');
-const Funnel = require('../../../lib/api/funnel');
-const DocumentController = require('../../../lib/api/controller/document');
 const mockrequire = require('mock-require');
+
+const {
+  Request,
+  NotFoundError,
+  PluginImplementationError,
+  InternalError: KuzzleInternalError,
+  BadRequestError
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const {
   MockBaseController,
-  MockNativeController
+  MockNativeController,
 } = require('../../mocks/controller.mock');
 const ElasticsearchClientMock = require('../../mocks/service/elasticsearchClient.mock');
-const {
-  Request,
-  errors: {
-    NotFoundError,
-    PluginImplementationError,
-    InternalError: KuzzleInternalError,
-    BadRequestError
-  }
-} = require('kuzzle-common-objects');
+
+const Funnel = require('../../../lib/api/funnel');
+const DocumentController = require('../../../lib/api/controller/document');
 
 describe('funnel.processRequest', () => {
-  let
-    kuzzle,
-    funnel,
-    pluginsManager;
+  let kuzzle;
+  let funnel;
+  let pluginsManager;
 
   beforeEach(() => {
     mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
@@ -34,18 +33,18 @@ describe('funnel.processRequest', () => {
     const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginsManager');
 
     kuzzle = new KuzzleMock();
-    funnel = new Funnel(kuzzle);
+    funnel = new Funnel();
 
     kuzzle.emit.restore();
-    pluginsManager = new PluginsManager(kuzzle);
+    pluginsManager = new PluginsManager();
     kuzzle.pluginsManager = pluginsManager;
 
     // inject fake controllers for unit tests
-    funnel.controllers.set('fakeController', new MockNativeController(kuzzle));
-    funnel.controllers.set('document', new DocumentController(kuzzle));
+    funnel.controllers.set('fakeController', new MockNativeController());
+    funnel.controllers.set('document', new DocumentController());
     pluginsManager.controllers.set(
       'fakePlugin/controller',
-      new MockBaseController(kuzzle));
+      new MockBaseController());
   });
 
   afterEach(() => {
@@ -214,59 +213,49 @@ describe('funnel.processRequest', () => {
       });
   });
 
-  it('should wrap a Node error on a plugin action failure', done => {
-    const
-      controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'fail'});
+  it('should wrap a Node error on a plugin action failure', async () => {
+    const controller = 'fakePlugin/controller';
+    const request = new Request({controller, action: 'fail'});
 
     pluginsManager.controllers.get(controller).fail.rejects(new Error('foobar'));
 
-    funnel.processRequest(request)
-      .then(() => done(new Error('Expected test to fail')))
-      .catch(e => {
-        try {
-          should(e).be.instanceOf(PluginImplementationError);
-          should(e.message).startWith('Caught an unexpected plugin error: foobar');
-          should(e.id).eql('plugin.runtime.unexpected_error');
-          should(kuzzle.pipe)
-            .calledWith(`${controller}:beforeFail`);
-          should(kuzzle.pipe)
-            .not.be.calledWith(`${controller}:afterFail`);
-          should(kuzzle.pipe)
-            .not.calledWith('request:onSuccess', request);
-          should(kuzzle.pipe)
-            .calledWith('request:onError', request);
-          should(kuzzle.pipe)
-            .calledWith('fakePlugin/controller:errorFail', request);
-          should(kuzzle.statistics.startRequest).be.called();
-          should(kuzzle.statistics.completedRequest).not.be.called();
-          should(kuzzle.statistics.failedRequest).be.called();
-          done();
-        }
-        catch(err) {
-          done(err);
-        }
+    await should(funnel.processRequest(request))
+      .rejectedWith(PluginImplementationError, {
+        id: 'plugin.runtime.unexpected_error',
+        message: /Caught an unexpected plugin error: foobar.*/,
       });
+
+    should(kuzzle.pipe).calledWith(`${controller}:beforeFail`);
+    should(kuzzle.pipe).not.be.calledWith(`${controller}:afterFail`);
+    should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
+    should(kuzzle.pipe).calledWith('request:onError', request);
+    should(kuzzle.pipe).calledWith('fakePlugin/controller:errorFail', request);
+    should(kuzzle.statistics.startRequest).be.called();
+    should(kuzzle.statistics.completedRequest).not.be.called();
+    should(kuzzle.statistics.failedRequest).be.called();
   });
 
-  it('should update the query documents with alias pipe', done => {
+  it('should update the query documents with alias pipe', async () => {
     kuzzle.pipe.restore();
+    kuzzle.ask.withArgs('core:storage:public:document:create').resolves({
+      _id: 'foobar',
+      _source: 'src',
+    });
+
     const plugin = {
       instance: {
         init: () => {},
         pipes: {
-          'generic:document:beforeWrite': function hello(documents) {
+          'generic:document:beforeWrite': async function hello(documents) {
             should(documents[0]._id).equal(null);
 
             documents[0]._id = 'foobar';
 
-            return Promise.resolve(documents);
+            return documents;
           },
-          'document:beforeCreate': (request) => {
+          'document:beforeCreate': async (request) => {
             should(request.input.resource._id).equal('foobar');
-
-            done();
-            return Promise.resolve(request);
+            return request;
           },
         },
       },
@@ -290,8 +279,7 @@ describe('funnel.processRequest', () => {
 
     pluginsManager._initPipes(plugin);
 
-    funnel.processRequest(request)
-      .catch(e => done(e));
+    return funnel.processRequest(request);
   });
 
   describe('_checkSdkVersion', () => {

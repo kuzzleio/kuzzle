@@ -81,6 +81,12 @@
           "code": 13,
           "message": "Application name \"%s\" is invalid. Application names must be in kebab-case.",
           "class": "PluginImplementationError"
+        },
+        "duplicated_api_definition": {
+          "description": "You cannot use the \"api\" and the \"controllers\" objects at the same time. Use the \"api\" object to define controllers.",
+          "code": 14,
+          "message": "Cannot define new controllers in the \"api\" and the \"controllers\" objects at the same time",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -115,7 +121,7 @@
         "already_started": {
           "description": "Features definition cannot be changed after startup.",
           "code": 5,
-          "message": "Cannot use Backend.%s when application is already running",
+          "message": "Cannot use property \"%s\" when application is already running",
           "class": "PluginImplementationError"
         },
         "unavailable_before_start": {
@@ -368,7 +374,7 @@
           "class": "PluginImplementationError"
         },
         "missing_version": {
-          "description": "Plugin manifest files must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions",
+          "description": "Plugin manifest must provide a kuzzleVersion parameter, with the range of compatible Kuzzle versions",
           "code": 10,
           "message": "[%s] A \"kuzzleVersion\" property is required",
           "class": "PluginImplementationError"

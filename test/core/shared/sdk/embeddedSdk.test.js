@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const EmbeddedSDK = require('../../../../lib/core/shared/sdk/embeddedSdk');
+const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('EmbeddedSDK', () => {
@@ -12,9 +12,9 @@ describe('EmbeddedSDK', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.started = true;
+    kuzzle.state = KuzzleMock.states.RUNNING;
 
-    embeddedSdk = new EmbeddedSDK(kuzzle);
+    embeddedSdk = new EmbeddedSDK();
   });
 
   describe('#as', () => {

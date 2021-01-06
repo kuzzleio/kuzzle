@@ -9,12 +9,10 @@ const { NativeController } = require('../../../../lib/api/controller/base');
 const SecurityController = rewire('../../../../lib/api/controller/security');
 const {
   Request,
-  errors: {
-    BadRequestError,
-    PartialError,
-    SizeLimitError
-  }
-} = require('kuzzle-common-objects');
+  BadRequestError,
+  PartialError,
+  SizeLimitError
+} = require('../../../../index');
 const kerror = require('../../../../lib/kerror');
 
 describe('/api/controller/security', () => {
@@ -25,7 +23,7 @@ describe('/api/controller/security', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     sinon.spy(kerror, 'get');
-    securityController = new SecurityController(kuzzle);
+    securityController = new SecurityController();
     request = new Request({ controller: 'security' });
   });
 
@@ -35,7 +33,7 @@ describe('/api/controller/security', () => {
 
   describe('#constructor', () => {
     it('should inherit the base constructor', () => {
-      should(new SecurityController(kuzzle)).instanceOf(NativeController);
+      should(new SecurityController()).instanceOf(NativeController);
     });
   });
 
@@ -47,8 +45,9 @@ describe('/api/controller/security', () => {
         const response = await securityController.refresh(request);
 
         should(response).be.null();
-        should(kuzzle.storageEngine.internal.refreshCollection).calledWith(
-          kuzzle.config.services.storageEngine.internalIndex.name,
+        should(kuzzle.ask).calledWith(
+          'core:storage:private:collection:refresh',
+          kuzzle.internalIndex.index,
           collection);
       }
     });
@@ -59,7 +58,7 @@ describe('/api/controller/security', () => {
       await should(securityController.refresh(request))
         .rejectedWith({ id: 'api.assert.unexpected_argument' });
 
-      should(securityController.publicStorage.refreshCollection)
+      should(kuzzle.ask.withArgs('core:storage:private:collection:refresh'))
         .not.be.called();
     });
   });

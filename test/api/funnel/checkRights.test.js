@@ -2,14 +2,12 @@
 
 const should = require('should');
 const sinon = require('sinon');
+
 const {
   Request,
-  errors: {
-    ForbiddenError,
-    UnauthorizedError
-  }
-} = require('kuzzle-common-objects');
-
+  ForbiddenError,
+  UnauthorizedError
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = require('../../../lib/api/funnel');
@@ -29,7 +27,7 @@ describe('funnel.checkRights', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
+    funnel = new FunnelController();
 
     request = new Request({
       controller: 'document',

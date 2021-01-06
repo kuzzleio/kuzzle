@@ -24,7 +24,39 @@
 const path = require('path');
 const fs = require('fs');
 const { domains } = require(`${__dirname}/../lib/kerror/codes/`);
-const { errors } = require('kuzzle-common-objects');
+const {
+  BadRequestError,
+  ExternalServiceError,
+  ForbiddenError,
+  GatewayTimeoutError,
+  InternalError,
+  KuzzleError,
+  NotFoundError,
+  PartialError,
+  PluginImplementationError,
+  PreconditionError,
+  ServiceUnavailableError,
+  SizeLimitError,
+  TooManyRequestsError,
+  UnauthorizedError,
+} = require('../lib/kerror/errors');
+
+const errors = {
+  BadRequestError,
+  ExternalServiceError,
+  ForbiddenError,
+  GatewayTimeoutError,
+  InternalError,
+  KuzzleError,
+  NotFoundError,
+  PartialError,
+  PluginImplementationError,
+  PreconditionError,
+  ServiceUnavailableError,
+  SizeLimitError,
+  TooManyRequestsError,
+  UnauthorizedError,
+};
 
 function getHeader(title) {
   return `---
@@ -101,7 +133,7 @@ function buildErrorCodes (name) {
       buffer.writeUInt32BE(
         domain.code << 24 | subdomain.code << 16 | error.code,
         0);
-      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/essentials/error-handling#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
+      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/errors/error-codes#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
     }
     doc += '\n---\n';
     if (subdomain.deprecated) {
@@ -115,7 +147,7 @@ function buildErrorCodes (name) {
 function run () {
   const output = process.argv[2] === '-o' || process.argv[2] === '--output'
     ? process.argv[3]
-    : `${__dirname}/2/api/essentials/error-codes`;
+    : `${__dirname}/2/api/errors/error-codes`;
 
   clearCodeDirectories(output);
 
