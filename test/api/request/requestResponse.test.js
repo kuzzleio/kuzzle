@@ -5,14 +5,15 @@ const should = require('should');
 const { BadRequestError } = require('../../../lib/kerror/errors');
 const { Request } = require('../../../lib/api/request');
 const { RequestResponse } = require('../../../lib/api/request');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('#RequestResponse', () => {
   let req;
+  let kuzzle;
 
   beforeEach(() => {
-    global.kuzzle = {
-      id: 'nasty-author-4242'
-    };
+    // eslint-disable-next-line no-unused-vars
+    kuzzle = new KuzzleMock();
 
     req = new Request({
       index: 'index',

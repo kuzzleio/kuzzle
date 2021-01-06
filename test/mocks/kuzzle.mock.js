@@ -47,8 +47,8 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
-    // ============================
 
+    // ============================
 
     this.log = {
       error: sinon.stub(),
@@ -196,7 +196,10 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     this.asyncStore = {
       run: sinon.stub().yields(),
-      set: sinon.stub()
+      set: sinon.stub(),
+      exists: sinon.stub(),
+      has: sinon.stub(),
+      get: sinon.stub(),
     };
 
     this.start = sinon.stub().resolves();
