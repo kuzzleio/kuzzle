@@ -8,7 +8,7 @@ const { When, Then } = require('cucumber');
 
 Then('I send the crafted HTTP multipart request', function (done) {
   const socket = net.createConnection(7512, () => {
-    const rq = fs.readFileSync('./features/fixtures/bad-multipart.req');
+    const rq = fs.readFileSync('./features-legacy/fixtures/bad-multipart.req');
 
     socket.write(rq.toString(), error => {
       socket.end();

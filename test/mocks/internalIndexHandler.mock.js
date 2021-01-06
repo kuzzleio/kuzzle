@@ -5,8 +5,8 @@ const sinon = require('sinon');
 const InternalIndexHandler = require('../../lib/kuzzle/internalIndexHandler');
 
 class InternalIndexHandlerMock extends InternalIndexHandler {
-  constructor (kuzzle) {
-    super(kuzzle);
+  constructor () {
+    super();
 
     sinon.stub(this, 'init');
     sinon.stub(this, 'createInitialSecurities').resolves();

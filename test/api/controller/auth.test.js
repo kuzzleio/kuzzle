@@ -43,7 +43,7 @@ describe('Test the auth controller', () => {
       foo: 'bar'
     });
 
-    authController = new AuthController(kuzzle);
+    authController = new AuthController();
 
     return authController.init();
   });

@@ -23,7 +23,7 @@ describe('Test: security controller - users', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    securityController = new SecurityController(kuzzle);
+    securityController = new SecurityController();
     request = new Request(
       {controller: 'security'},
       {user: new User()});

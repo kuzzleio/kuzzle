@@ -24,7 +24,7 @@ describe('Test: hotelClerk.join', () => {
       },
     };
 
-    hotelClerk = new HotelClerk(kuzzle, realtimeModule);
+    hotelClerk = new HotelClerk(realtimeModule);
 
     await hotelClerk.init();
 

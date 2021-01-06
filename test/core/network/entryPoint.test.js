@@ -132,7 +132,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
     EntryPoint = mockrequire.reRequire(`${network}/entryPoint`);
 
-    entrypoint = new EntryPoint(kuzzle);
+    entrypoint = new EntryPoint();
 
     Object.defineProperty(entrypoint, 'logger', {
       enumerable: true,
@@ -550,7 +550,7 @@ describe('lib/core/core/network/entryPoint', () => {
       });
 
       return Rewired.__with__({ require: requireStub })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
         return ep.loadMoreProtocols();
       })
         .then(() => should(requireStub).be.calledTwice());
@@ -571,7 +571,7 @@ describe('lib/core/core/network/entryPoint', () => {
         });
 
       return should(Rewired.__with__({ require: requireStub })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
         return ep.loadMoreProtocols();
       })).rejectedWith(PluginImplementationError, {
         id: 'plugin.manifest.cannot_load'
@@ -597,7 +597,7 @@ describe('lib/core/core/network/entryPoint', () => {
       return Rewired.__with__({
         require: requireStub
       })(() => {
-        const ep = new Rewired(kuzzle);
+        const ep = new Rewired();
 
         return should(ep.loadMoreProtocols()).be.rejectedWith('test');
       });

@@ -35,8 +35,8 @@ describe('#core/storage/ClientAdapter', () => {
     kuzzle = new KuzzleMock();
     kuzzle.ask.restore();
 
-    publicAdapter = new ClientAdapter(kuzzle, scopeEnum.PUBLIC);
-    privateAdapter = new ClientAdapter(kuzzle, scopeEnum.PRIVATE);
+    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
 
     return Promise.all([publicAdapter, privateAdapter].map(adapter => {
       sinon.stub(adapter.cache);
@@ -60,7 +60,7 @@ describe('#core/storage/ClientAdapter', () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
-      uninitializedAdapter = new ClientAdapter(kuzzle, scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();

@@ -16,7 +16,7 @@ describe('Test: security controller - credentials', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    securityController = new SecurityController(kuzzle);
+    securityController = new SecurityController();
     kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
   });
 

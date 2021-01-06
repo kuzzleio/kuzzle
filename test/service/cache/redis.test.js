@@ -10,12 +10,11 @@ const RedisClientMock = require('../../mocks/service/redisClient.mock');
 const Redis = rewire('../../../lib/service/cache/redis');
 
 describe('Redis', () => {
-  let kuzzle;
   let redis;
   let config;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
 
     sinon
       .stub(Redis.prototype, '_buildClient')
@@ -31,7 +30,7 @@ describe('Redis', () => {
       }
     };
 
-    redis = new Redis(kuzzle, config);
+    redis = new Redis( config);
   });
 
   afterEach(() => {
@@ -59,7 +58,7 @@ describe('Redis', () => {
     Redis.prototype._buildClient
       .returns(new RedisClientMock(new Error('connection error')));
 
-    const testredis = new Redis(kuzzle, config);
+    const testredis = new Redis(config);
 
     return should(testredis.init()).be.rejected();
   });
@@ -218,7 +217,7 @@ db5:keys=1,expires=0,avg_ttl=0
         { host: 'foobar', port: 6379 }
       ]
     };
-    redis = new Redis(kuzzle, config);
+    redis = new Redis(config);
 
     await redis.init();
 
@@ -230,7 +229,7 @@ db5:keys=1,expires=0,avg_ttl=0
       node: { host: 'foobar', port: 6379 },
     };
 
-    redis = new Redis(kuzzle, config);
+    redis = new Redis(config);
 
     await redis.init();
 

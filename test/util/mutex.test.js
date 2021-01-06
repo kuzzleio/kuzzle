@@ -25,7 +25,7 @@ describe('#mutex', () => {
     it('should be able to lock a ressource', async () => {
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(true);
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0, ttl: 123 });
+      const mutex = new Mutex('foo', { timeout: 0, ttl: 123 });
 
       await should(mutex.lock()).be.fulfilledWith(true);
 
@@ -37,14 +37,14 @@ describe('#mutex', () => {
     });
 
     it('should use random values for different mutex instances', async () => {
-      const mutex1 = new Mutex(kuzzle, 'foo');
-      const mutex2 = new Mutex(kuzzle, 'foo');
+      const mutex1 = new Mutex('foo');
+      const mutex2 = new Mutex('foo');
 
       should(mutex1.mutexId).not.eql(mutex2.mutexId);
     });
 
     it('should throw if already locking/locked', async () => {
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0 });
+      const mutex = new Mutex('foo', { timeout: 0 });
 
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(true);
 
@@ -58,7 +58,7 @@ describe('#mutex', () => {
     it('should return immediately if failing to acquire a lock (timeout = 0)', async () => {
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(false);
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0, ttl: 123 });
+      const mutex = new Mutex('foo', { timeout: 0, ttl: 123 });
 
       await should(mutex.lock()).be.fulfilledWith(false);
 
@@ -73,7 +73,7 @@ describe('#mutex', () => {
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(false);
       const resolvedPromise = Promise.resolve('pending');
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 10000 });
+      const mutex = new Mutex('foo', { timeout: 10000 });
 
       const mutexPromise = mutex.lock();
 
@@ -90,7 +90,7 @@ describe('#mutex', () => {
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(false);
       const resolvedPromise = Promise.resolve('pending');
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 10000 });
+      const mutex = new Mutex('foo', { timeout: 10000 });
 
       const mutexPromise = mutex.lock();
 
@@ -109,7 +109,7 @@ describe('#mutex', () => {
       kuzzle.ask.withArgs('core:cache:internal:store').resolves(false);
       const resolvedPromise = Promise.resolve('pending');
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: -1 });
+      const mutex = new Mutex('foo', { timeout: -1 });
 
       const mutexPromise = mutex.lock();
 
@@ -133,7 +133,7 @@ describe('#mutex', () => {
     });
 
     it('should unlock an acquired lock', async () => {
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0 });
+      const mutex = new Mutex('foo', { timeout: 0 });
 
       await mutex.lock();
 
@@ -150,7 +150,7 @@ describe('#mutex', () => {
     });
 
     it('should reject if trying to unlock a non-locked ressource', () => {
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0 });
+      const mutex = new Mutex('foo', { timeout: 0 });
 
       return should(mutex.unlock()).rejectedWith(KuzzleInternalError, {
         id: 'core.fatal.assertion_failed',
@@ -161,7 +161,7 @@ describe('#mutex', () => {
       // clear cached dependency
       Mutex = mockRequire.reRequire('../../lib/util/mutex');
 
-      const mutex = new Mutex(kuzzle, 'foo', { timeout: 0 });
+      const mutex = new Mutex('foo', { timeout: 0 });
 
       await mutex.lock();
       await mutex.unlock();
@@ -174,7 +174,7 @@ describe('#mutex', () => {
 
       kuzzle.ask.resetHistory();
 
-      const anotherMutex = new Mutex(kuzzle, 'bar', { timeout: 0 });
+      const anotherMutex = new Mutex('bar', { timeout: 0 });
 
       await anotherMutex.lock();
       await anotherMutex.unlock();

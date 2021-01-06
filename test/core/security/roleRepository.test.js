@@ -30,7 +30,7 @@ describe('Test: security/roleRepository', () => {
       searchProfiles: sinon.stub(),
     };
 
-    roleRepository = new RoleRepository(kuzzle, {
+    roleRepository = new RoleRepository({
       profile: profileRepositoryMock,
     });
 
@@ -485,7 +485,7 @@ describe('Test: security/roleRepository', () => {
 
     beforeEach(() => {
       kuzzle.state = KuzzleMock.states.RUNNING;
-      kuzzle.funnel.controllers.set('document', new NativeController(kuzzle, [
+      kuzzle.funnel.controllers.set('document', new NativeController([
         'create',
         'delete'
       ]));

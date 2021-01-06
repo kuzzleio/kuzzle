@@ -26,7 +26,7 @@ describe('Test: repositories/repository', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    repository = new Repository(kuzzle, {
+    repository = new Repository({
       cache: cacheDbEnum.INTERNAL,
       store: kuzzle.internalIndex,
     });

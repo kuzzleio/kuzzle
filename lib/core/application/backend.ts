@@ -386,10 +386,12 @@ class InternalLogger extends ApplicationManager implements InternalLogger {
 
   private _log (level: string, message: any) {
     if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'log');
+      // eslint-disable-next-line no-console
+      console.log(util.inspect(message));
     }
-
-    this._kuzzle.log[level](util.inspect(message));
+    else {
+      this._kuzzle.log[level](util.inspect(message));
+    }
   }
 }
 
@@ -606,7 +608,6 @@ export class Backend {
       { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
 
     const application = new PluginObject(
-      this._kuzzle,
       this._instanceProxy,
       { application: true, name: this.name });
 
@@ -624,7 +625,7 @@ export class Backend {
 
     await this._kuzzle.start(application, options);
 
-    this._sdk = new EmbeddedSDK(this._kuzzle);
+    this._sdk = new EmbeddedSDK();
 
     this.started = true;
   }

@@ -26,7 +26,7 @@ describe('Test: router.httpRequest', () => {
 
     kuzzle.config.http.accessControlAllowOrigin = 'foobar';
 
-    routeController = new Router(kuzzle);
+    routeController = new Router();
     routeController.init();
 
     httpRequest = new HttpMessage(

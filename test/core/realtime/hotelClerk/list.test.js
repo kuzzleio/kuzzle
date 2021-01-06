@@ -16,7 +16,7 @@ describe('Test: hotelClerk.list', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    hotelClerk = new HotelClerk(kuzzle, {});
+    hotelClerk = new HotelClerk({});
 
     user = {
       _id: 'user',

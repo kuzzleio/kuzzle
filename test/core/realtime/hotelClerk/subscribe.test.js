@@ -27,7 +27,7 @@ describe('Test: hotelClerk.subscribe', () => {
       },
     };
 
-    hotelClerk = new HotelClerk(kuzzle, realtimeModule);
+    hotelClerk = new HotelClerk(realtimeModule);
 
     await hotelClerk.init();
 

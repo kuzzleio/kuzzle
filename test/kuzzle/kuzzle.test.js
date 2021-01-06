@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
+const Bluebird = require('bluebird');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const Plugin = require('../../lib/core/plugin/plugin');
@@ -30,15 +31,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     'log',
     'internalIndex',
     'dumpGenerator',
-    'shutdown',
     'pipe',
     'ask',
     'tokenManager',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
-    const mock = new KuzzleMock();
+    global.kuzzle = null;
     const k = new KuzzleConstructor(config);
+    const mock = new KuzzleMock();
 
     mockedProperties.forEach(p => {
       k[p] = mock[p];
@@ -63,7 +64,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
-      kuzzle,
       { init: sinon.stub() },
       { name: 'application', application: true });
   });
@@ -189,6 +189,45 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       await kuzzle.dump();
 
       should(kuzzle.dumpGenerator.dump).be.calledOnce();
+    });
+  });
+
+  describe('#kuzzle/shutdown', () => {
+    it('should exit only when there is no request left in the funnel', async () => {
+      sinon.stub(process, 'exit');
+
+      // We cannot use sinon's fake timers: they do not work with async
+      // functions
+      sinon.stub(Bluebird, 'delay').callsFake(() => {
+        // we must wait a bit: if we replace with stub.resolves(), V8 converts
+        // that into a direct function call, and the event loop never rotates
+        return new Promise(resolve => setTimeout(resolve, 10));
+      });
+
+      kuzzle.funnel.remainingRequests = 1;
+
+      setTimeout(
+        () => {
+          kuzzle.funnel.remainingRequests = 0;
+        },
+        50);
+
+      try {
+        await kuzzle.shutdown();
+
+        should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
+        should(kuzzle.emit).calledWith('kuzzle:shutdown');
+        should(Bluebird.delay.callCount).approximately(5, 1);
+
+        // @deprecated
+        should(kuzzle.emit).calledWith('core:shutdown');
+
+        should(process.exit).calledOnce().calledWith(0);
+      }
+      finally {
+        process.exit.restore();
+        Bluebird.delay.restore();
+      }
     });
   });
 });

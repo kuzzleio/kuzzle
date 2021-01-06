@@ -22,12 +22,12 @@ describe('Service', () => {
 
     kuzzle = new KuzzleMock();
 
-    service = new Service(name, kuzzle, config);
+    service = new Service(name, config);
   });
 
   describe('#constructor', () => {
     it('should use provided timeout or service default timeout', () => {
-      const service2 = new Service(name, kuzzle, { initTimeout: 1000 });
+      const service2 = new Service(name, { initTimeout: 1000 });
 
       should(service._initTimeout)
         .be.eql(kuzzle.config.services.common.defaultInitTimeout);

@@ -25,27 +25,28 @@ Real-time notifications are also sent when documents, previously in the subscrip
 
 A document notification contains the following fields:
 
-| Property     | Type   | Description                                                                                                              |
-| ------------ | ------ | ------------------------------------------------------------------------------------------------------------------------ |
-| `action`     | string | API controller's action                                                                                                  |
-| `collection` | string | Data collection                                                                                                          |
-| `controller` | string | API controller                                                                                                           |
-| `index`      | string | Data index                                                                                                               |
-| `protocol`   | string | Network protocol used to modify the document                                                                             |
-| `result`     | object | Notification content                                                                                                     |
-| `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription                    |
-| `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                                       |
-| `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                                           |
-| `type`       | string | `document`: the notification type                                                                                        |
-| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                                           |
+| Property     | Type   | Description                                                                                           |
+|--------------|--------|-------------------------------------------------------------------------------------------------------|
+| `action`     | string | API controller's action                                                                               |
+| `collection` | string | Data collection                                                                                       |
+| `controller` | string | API controller                                                                                        |
+| `event`      | string | Event type (`write`, `delete` or `publish`)                                                           |
+| `index`      | string | Data index                                                                                            |
+| `protocol`   | string | Network protocol used to modify the document                                                          |
+| `result`     | object | Notification content                                                                                  |
+| `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription |
+| `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                    |
+| `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
+| `type`       | string | `document`: the notification type                                                                     |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                         |
 
 The `result` object is the notification content, and it has the following structure:
 
-| Property  | Type   | Description                                                                                                                      |
-| --------- | ------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `_id`     | string | Document unique ID<br/>`null` if the notification is from a real-time message                                                    |
-| `_source` | object | The message or full document content. Not present if the event is about a document deletion                                      |
-| `_updatedFields` | string[] | List of fields that have been updated (only available on document partial updates) |
+| Property         | Type     | Description                                                                                 |
+|------------------|----------|---------------------------------------------------------------------------------------------|
+| `_id`            | string   | Document unique ID<br/>`null` if the notification is from a real-time message               |
+| `_source`        | object   | The message or full document content. Not present if the event is about a document deletion |
+| `_updatedFields` | string[] | List of fields that have been updated (only available on document partial updates)          |
 
 ### Example
 
@@ -87,7 +88,7 @@ These notifications are sent only if the `users` argument is set to any other va
 ### Format
 
 | Property     | Type   | Description                                                                                           |
-| ------------ | ------ | ----------------------------------------------------------------------------------------------------- |
+|--------------|--------|-------------------------------------------------------------------------------------------------------|
 | `action`     | string | API controller's action                                                                               |
 | `collection` | string | Data collection                                                                                       |
 | `controller` | string | API controller                                                                                        |
@@ -98,12 +99,12 @@ These notifications are sent only if the `users` argument is set to any other va
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                                        |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                         |
 
 The `result` object is the notification content, and it has the following structure:
 
 | Property | Type   | Description                                        |
-| -------- | ------ | -------------------------------------------------- |
+|----------|--------|----------------------------------------------------|
 | `count`  | number | Updated users count sharing that same subscription |
 
 ### Example
@@ -141,7 +142,7 @@ Other events may be added in the future.
 ### Format
 
 | Property  | Type   | Value                                                              |
-| --------- | ------ | ------------------------------------------------------------------ |
+|-----------|--------|--------------------------------------------------------------------|
 | `message` | string | Server message explaining why this notification has been triggered |
 | `type`    | string | `TokenExpired`: notification type                                  |
 
