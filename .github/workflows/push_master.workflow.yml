@@ -239,7 +239,7 @@ jobs:
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
 
   npm-deploy:
-    name: Build and deploy images to Dockerhub
+    name: Build and deploy release on NPM.js
     needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
     runs-on: ubuntu-18.04
     steps:

@@ -15,7 +15,8 @@ runs:
         npm run build
       shell: bash
     - name: Deploy NPM package
-      run: npm publish
+      run: |
+        npm publish
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
       shell: bash
