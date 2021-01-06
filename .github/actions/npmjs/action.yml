@@ -10,14 +10,10 @@ runs:
   using: "composite"
   steps:
     - name: Create JS from TS files
-      run: |
-        npm install --silent
-        npm run build
+      run: npm install --silent
       shell: bash
     - name: Deploy NPM package
-      run: |
-        npm login
-        npm publish
+      run: npm publish
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
       shell: bash

@@ -261,6 +261,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: 12
+          registry-url: 'https://registry.npmjs.org'
       - uses: ./.github/actions/npmjs
         with:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
