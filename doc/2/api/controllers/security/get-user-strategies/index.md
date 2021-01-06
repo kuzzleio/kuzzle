@@ -41,14 +41,18 @@ Method: GET
 
 ## Response
 
-Returns a `hits` array containing all the available authentication strategies for that user
+Returns an object with the following properties:
+
+- `hits`: array containing all the available authentication strategies on the requested user.
+- `total`: total number of strategies found for that user.
 
 ```js
 {
   "status": 200,
   "error": null,
   "result": {
-    "hits": ["local"]
+    "hits": ["local"],
+    "total": 1
   }
 }
 ```
