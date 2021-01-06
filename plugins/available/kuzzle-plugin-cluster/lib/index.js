@@ -29,6 +29,7 @@ const debug = require('debug')('kuzzle:cluster');
 const ip = require('ip');
 const { v4: uuid } = require('uuid');
 const IORedis = require('ioredis');
+const EventEmitter = require('eventemitter3');
 
 const { Request } = require('../../../../index');
 const Node = require('./node');
@@ -101,6 +102,9 @@ class KuzzleCluster {
     };
 
     this._shutdown = false;
+
+    // cross node events
+    this.eventEmitter = new EventEmitter();
   }
 
   /**
@@ -165,6 +169,26 @@ class KuzzleCluster {
       lua: fs.readFileSync(path.resolve(__dirname, 'redis/suboff.lua'))
     });
 
+    this.kuzzle.onAsk(
+      'cluster:event:broadcast',
+      (event, payload) => this.broadcast(event, payload));
+
+    this.kuzzle.onAsk(
+      'cluster:event:on',
+      (event, fn) => this.eventEmitter.on(event, fn));
+
+    this.kuzzle.onAsk(
+      'cluster:event:once',
+      (event, fn) => this.eventEmitter.once(event, fn));
+
+    this.kuzzle.onAsk(
+      'cluster:event:off',
+      (event, fn) => this.eventEmitter.removeListener(event, fn));
+
+    this.kuzzle.onAsk(
+      'cluster:event:removeAllListeners',
+      event => this.eventEmitter.removeAllListeners(event));
+
     this.node = new Node(this);
   }
 
@@ -201,6 +225,21 @@ class KuzzleCluster {
     setTimeout(
       () => this.beforeJoin(request, cb, attempts + 1),
       this.config.timers.joinAttemptInterval);
+  }
+
+  /**
+   * Broadcasts an event to other nodes
+   *
+   * @param {string} event name
+   * @param {payload} [payload] - event payload
+   */
+  broadcast (event, payload) {
+    if (!this.node.ready) {
+      debug('[%s][warning] could not broadcast "index cache added" action: node not connected to cluster', this.uuid);
+      return;
+    }
+
+    this.node.broadcast('cluster:event', { event, payload });
   }
 
   /**
