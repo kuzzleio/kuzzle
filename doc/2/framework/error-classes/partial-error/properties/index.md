@@ -15,3 +15,4 @@ description: PartialError class properties
 | `message`      | <pre>string</pre> | Error message  |
 | `stack`        | <pre>string</pre> | Error stack trace |
 | `status`       | <pre>number</pre> | Error status code (`206`) |
+| `errors`       | <pre>Array&lt;KuzzleError&gt;</pre> | List of errors encountered when executing the action |
