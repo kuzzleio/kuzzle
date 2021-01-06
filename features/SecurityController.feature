@@ -388,14 +388,14 @@ Feature: Security Controller
   Scenario: Get user strategies
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |
-    When I successfully call the route "security":"getUserStrategies" with args:
+    When I successfully execute the action "security":"getUserStrategies" with args:
       | _id | "test-user" |
     Then I should receive a "hits" array matching:
       | "local" |
-    When I successfully call the route "security":"getUserStrategies" with args:
+    When I successfully execute the action "security":"getUserStrategies" with args:
       | _id | "-1" |
     Then I should receive a empty "hits" array
-    When I call the route "security":"getUserStrategies" with args:
+    When I execute the action "security":"getUserStrategies" with args:
       | _id | "fake-user-id" |
     Then I should receive an error matching:
       | id | "security.user.not_found" |
