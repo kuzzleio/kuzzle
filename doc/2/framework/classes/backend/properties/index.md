@@ -10,6 +10,15 @@ description: Backend class properties
 
 # Properties
 
+## `cluster`
+
+This property is an instance of the [BackendCluster](/core/2/framework/classes/backend-cluster) class that allows to interact with cluster nodes.
+
+| Type                                                                         | Description                |
+|------------------------------------------------------------------------------|----------------------------|
+| <pre>[BackendCluster](/core/2/framework/classes/backend-cluster)</pre> | BackendCluster instance |
+
+
 ## `commit`
 
 | Type              | Description                       |
