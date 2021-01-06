@@ -10,6 +10,8 @@ export * from './lib/api/request';
 
 export * from './lib/kerror/errors';
 
+export * from './lib/util/mutex';
+
 export * from 'koncorde';
 
 export * from 'kuzzle-sdk';

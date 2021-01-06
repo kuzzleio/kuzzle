@@ -37,7 +37,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
-    global.kuzzle = null;
+    Reflect.deleteProperty(global, 'kuzzle');
     const k = new KuzzleConstructor(config);
     const mock = new KuzzleMock();
 
@@ -60,6 +60,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
+    Kuzzle.__set__('console', { log: () => {} });
 
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(

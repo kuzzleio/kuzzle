@@ -6,7 +6,7 @@ const assert = require('assert');
 
 const sinon = require('sinon');
 
-const Mutex = require('../../lib/util/mutex');
+const { Mutex } = require('../../lib/util/mutex');
 
 // allow unit tests to control the result of "lock"
 let lockResult = true;
@@ -15,8 +15,8 @@ let lockResult = true;
 let lastMutex = null;
 
 class MutexMock extends Mutex {
-  constructor (kuzzle, id, options) {
-    super(kuzzle, id, options);
+  constructor (id, options) {
+    super(id, options);
 
     sinon.stub(this, 'lock').resolves(lockResult);
     sinon.stub(this, 'unlock').resolves();
