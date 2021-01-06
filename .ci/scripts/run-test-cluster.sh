@@ -31,4 +31,4 @@ KUZZLE_PORT=17512 ./bin/wait-kuzzle
 
 trap - err
 
-npm run test:functional:legacy:cluster
+npm run $KUZZLE_FUNCTIONAL_TESTS
