@@ -9,7 +9,7 @@ description: PluginImplementationError class constructor
 
 Inherits from [KuzzleError](/core/2/framework/abstract-classes/kuzzle-error/constructor).
 
-This error object is used on unexpected plugin errors.
+This error object is used on unexpected plugin or application errors.
 
 
 ```ts
