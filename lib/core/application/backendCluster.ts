@@ -21,6 +21,7 @@
 
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
+import { EventHandler } from '../../types';
 
 export class BackendCluster {
   /**
@@ -44,10 +45,10 @@ export class BackendCluster {
    * Registers a listener to the provided event name.
    *
    * @param  {string}        event
-   * @param  {Function}      listener
+   * @param  {EventHandler}      listener
    * @return {Promise<void>}       [description]
    */
-  async on (event: string, listener: Function): Promise<void> {
+  async on (event: string, listener: EventHandler): Promise<void> {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:on')) {
@@ -62,10 +63,10 @@ export class BackendCluster {
    * invoked only once, after which it will be removed from the listeners list.
    *
    * @param  {string}        event
-   * @param  {Function}      listener
+   * @param  {EventHandler}      listener
    * @return {Promise<void>}
    */
-  async once (event: string, listener: Function): Promise<void> {
+  async once (event: string, listener: EventHandler): Promise<void> {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:once')) {
@@ -81,10 +82,10 @@ export class BackendCluster {
    * one is removed.
    *
    * @param  {string}        event
-   * @param  {Function}      listener
+   * @param  {EventHandler}      listener
    * @return {Promise<void>}
    */
-  async off (event: string, listener: Function): Promise<void> {
+  async off (event: string, listener: EventHandler): Promise<void> {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:off')) {
