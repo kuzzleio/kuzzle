@@ -23,7 +23,7 @@ The **collections have mappings** that define the way Elasticsearch will index t
 ::: info
 By default Elasticsearch will try to infer the type of the fields introduced by documents.  
 It is recommended that you define your own mappings in order to specify the desired types for your collections and avoid default types that may be imprecise.
-Learn more about [mappings dynamic policy](/core/2/guides/main-concepts/data-storage#some-anchor)
+Learn more about [mappings dynamic policy](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy)
 :::
 
 If you're more familiar with the way relational databases store data, here is an analogy. Bear in mind that this is only to give you a rough point of comparison with a relational database, the similarities end here:
@@ -39,7 +39,7 @@ If you're more familiar with the way relational databases store data, here is an
 ::: info
 Kuzzle uses Elasticsearch as a NoSQL document storage.  
 Elasticsearch is primarily designed to be a search engine, so there are limitations when using it as a database.  
-Learn more about those limitations in our in-depth guides: [Database mappings](/core/2/guides/main-concepts/data-storage#some-anchor) and [Querying Elasticsearch](/core/2/guides/main-concepts/querying)
+Learn more about those limitations in our in-depth guides: [Collection Mappings](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy) and [Querying Elasticsearch](/core/2/guides/main-concepts/querying)
 ::: 
 
 ### Prepare the database
