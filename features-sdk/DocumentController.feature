@@ -173,6 +173,25 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
 
+  # document:deleteFields ===========================================================
+  @mappings
+  Scenario: Update document with and without returning updated document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the document "document-1" with content:
+      | name | "document-1" |
+      | age  | 42           |
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"        |
+      | collection | "yellow-taxi"          |
+      | _id        | "document-1"           |
+      | body       | { "fields": ["name"] } |
+      | source     | true                   |
+    Then I should receive a result matching:
+      | _id     | "document-1"  |
+      | _source | { "age": 42 } |
+    And The document "document-1" content match:
+      | age  | 42 |
+
   # document:exists ============================================================
 
   @mappings
