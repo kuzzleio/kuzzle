@@ -8,7 +8,7 @@ const { InternalError: KuzzleInternalError } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
 describe('#mutex', () => {
-  let Mutex = require('../../lib/util/mutex');
+  let { Mutex } = require('../../lib/util/mutex');
   let kuzzle;
   let clock;
 
@@ -159,7 +159,7 @@ describe('#mutex', () => {
 
     it('should register a dedicated script the 1st time a mutex is unlocked', async () => {
       // clear cached dependency
-      Mutex = mockRequire.reRequire('../../lib/util/mutex');
+      ({ Mutex } = mockRequire.reRequire('../../lib/util/mutex'));
 
       const mutex = new Mutex('foo', { timeout: 0 });
 

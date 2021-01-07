@@ -22,7 +22,7 @@ describe('#core/storage/ClientAdapter', () => {
   let kuzzle;
 
   before(() => {
-    mockRequire('../../../lib/util/mutex', MutexMock);
+    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
     mockRequire('../../../lib/service/storage/elasticsearch', ElasticsearchMock);
     ClientAdapter = mockRequire.reRequire('../../../lib/core/storage/clientAdapter');
   });
@@ -433,7 +433,7 @@ describe('#core/storage/ClientAdapter', () => {
           should(adapter.cache.addCollection).calledWith('index', 'collection');
 
           const mutex = MutexMock.__getLastMutex();
-          should(mutex.lockId).eql('loadMappings');
+          should(mutex.resource).eql('loadMappings');
           should(mutex.lock).calledOnce();
           should(mutex.unlock).calledOnce();
         }
