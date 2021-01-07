@@ -6,15 +6,17 @@ const sinon = require('sinon');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const {
   Request,
-  PluginImplementationError
+  PluginImplementationError,
+  ForbiddenError
 } = require('../../../../index');
 const User = require('../../../../lib/model/security/user');
 const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
-describe('Test: sdk/funnelProtocol', () => {
+describe.only('Test: sdk/funnelProtocol', () => {
   let request;
   let kuzzle;
   let funnelProtocol;
+  let exampleUser;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -27,6 +29,9 @@ describe('Test: sdk/funnelProtocol', () => {
     };
 
     funnelProtocol = new FunnelProtocol();
+
+    exampleUser = new User();
+    exampleUser._id = 'gordon';
   });
 
   describe('#constructor', () => {
@@ -67,6 +72,9 @@ describe('Test: sdk/funnelProtocol', () => {
       kuzzle.ask
         .withArgs('core:network:internal:connectionId:get')
         .resolves('connection-id');
+      kuzzle.ask
+        .withArgs('core:security:user:get', exampleUser._id)
+        .resolves(exampleUser);
     });
 
     it('should call executePluginRequest with the constructed request', () => {
@@ -92,14 +100,25 @@ describe('Test: sdk/funnelProtocol', () => {
 
     it('should execute the request with the provided User if present', () => {
       kuzzle.funnel.executePluginRequest.resolvesArg(0);
-      const user = new User();
-      user._id = 'gordon';
 
-      funnelProtocol = new FunnelProtocol(user);
+      funnelProtocol = new FunnelProtocol(exampleUser);
+      exampleUser.isActionAllowed = sinon.stub().resolves(true);
 
       return funnelProtocol.query(request)
         .then(response => {
-          should(response.result.context.user).be.eql(user);
+          should(kuzzle.ask.withArgs('core:security:user:get', exampleUser._id))
+            .be.calledOnce();
+          should(exampleUser.isActionAllowed).be.calledOnce();
+          should(response.result.context.user).be.eql(exampleUser);
+        });
+    });
+
+    it('should throw if the provided User is not allowed to execute a request', async () => {
+      funnelProtocol = new FunnelProtocol(exampleUser);
+
+      await should(funnelProtocol.query(request))
+        .rejectedWith(ForbiddenError, {
+          id: 'security.rights.forbidden'
         });
     });
   });
