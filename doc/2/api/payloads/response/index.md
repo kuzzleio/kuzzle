@@ -19,9 +19,10 @@ The Response Payload is a standardized response sent by Kuzzle in JSON format.
 | `_id`        | string       | Document unique identifier                                                |
 | `error`      | [ErrorPayload](/core/2/api/payloads/error) | API error                                   |
 | `jwt`        | string       | Authentication token                                                      |
+| `node`       | string       | Unique identifier of the node who processed the request                   |
 | `result`     | any          | API action result                                                         |
 | `status`     | number       | HTTP status code                                                          |
-| `requestId`  | string       | KuzzleRequest unique identifier                                                 |
+| `requestId`  | string       | KuzzleRequest unique identifier                                           |
 | `volatile`   | object       | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data) |
 | `room`       | string       | Room unique identifier                                                    |
 

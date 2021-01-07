@@ -5,11 +5,16 @@ const should = require('should');
 const { BadRequestError } = require('../../../lib/kerror/errors');
 const { Request } = require('../../../lib/api/request');
 const { RequestResponse } = require('../../../lib/api/request');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('#RequestResponse', () => {
   let req;
+  let kuzzle;
 
   beforeEach(() => {
+    // eslint-disable-next-line no-unused-vars
+    kuzzle = new KuzzleMock();
+
     req = new Request({
       index: 'index',
       collection: 'collection',
@@ -30,8 +35,11 @@ describe('#RequestResponse', () => {
       should(response.collection).be.exactly(req.input.resource.collection);
       should(response.index).be.exactly(req.input.resource.index);
       should(response.volatile).be.exactly(req.input.volatile);
-      should(response.headers).be.an.Object().and.be.empty();
+      should(response.headers).match({
+        'X-Kuzzle-Node': 'nasty-author-4242'
+      });
       should(response.result).be.exactly(req.result);
+      should(response.node).be.eql(global.kuzzle.id);
       should(response.deprecations).be.undefined();
     });
 
@@ -161,7 +169,9 @@ describe('#RequestResponse', () => {
     it('should do nothing if a null header is provided', () => {
       response.setHeaders(null);
 
-      should(response.headers).be.empty();
+      should(response.headers).match({
+        'X-Kuzzle-Node': 'nasty-author-4242'
+      });
     });
 
     it('should merge duplicates when injecting properties directly into the object', () => {
@@ -187,7 +197,9 @@ describe('#RequestResponse', () => {
       [ null, undefined ].forEach(name => {
         should(() => response.setHeader(name, 'foo')).not.throw();
 
-        should(response.headers).be.empty();
+        should(response.headers).match({
+          'X-Kuzzle-Node': 'nasty-author-4242'
+        });
       });
     });
 
