@@ -311,7 +311,7 @@ The `result` object is the notification content, and it has the following struct
 
 Server notifications are triggered by global events, and they are sent to all of a client's subscriptions at the same time.
 
-Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/authentication#some-anchor) has expired, closing the subscription.
+Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/authentication#authentication-token) has expired, closing the subscription.
 
 ::: info
 The `TokenExpired` server notification is only sent if the client has an active realtime subscription.
