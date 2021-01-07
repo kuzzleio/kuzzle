@@ -2,11 +2,10 @@
 code: true
 type: page
 title: delete-fields
+description: Delete fields of an existing document.
 ---
 
 # deleteFields
-
-
 
 Delete fields of an existing document.
 
@@ -19,7 +18,7 @@ Delete fields of an existing document.
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_fields[?refresh=wait_for]
 Method: DELETE
-Body: {}
+Body:
 ```
 
 ```js
@@ -37,7 +36,7 @@ Body: {}
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "replace",
+  "action": "deleteFields",
   "_id": "<documentId>",
   "refresh": "wait_for",
   "body": {
@@ -53,7 +52,7 @@ Body: {}
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: unique ID of the document to replace
+- `documentId`: unique ID of the document where the fields should be removed
 - `index`: index name
 
 ### Optional:
