@@ -28,7 +28,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
       }
     };
 
-    hotelClerk = new HotelClerk(kuzzle, realtimeModule);
+    hotelClerk = new HotelClerk(realtimeModule);
 
     hotelClerk.customers.clear();
     hotelClerk.rooms.set(roomId, {

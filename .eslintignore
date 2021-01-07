@@ -42,4 +42,4 @@ lib/types/StrategyDefinition.js
 lib/types/Token.js
 lib/types/User.js
 lib/util/interfaces.js
-features-sdk/support/application/functional-tests-app.js
+features/support/application/functional-tests-app.js

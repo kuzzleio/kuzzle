@@ -18,7 +18,7 @@ describe('Privileged Plugin Context', () => {
     it('should expose kuzzle and new constructors', () => {
       const
         kuzzle = new KuzzleMock(),
-        privilegedContext = new PrivilegedPluginContext(kuzzle, 'pluginName');
+        privilegedContext = new PrivilegedPluginContext('pluginName');
 
       should(privilegedContext.accessors.kuzzle).be.exactly(kuzzle);
     });

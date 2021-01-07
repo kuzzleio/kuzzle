@@ -19,7 +19,7 @@ describe('#api.rateLimiter', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    rateLimiter = new RateLimiter(kuzzle);
+    rateLimiter = new RateLimiter();
     clock = sinon.useFakeTimers();
 
     request = new Request({}, {

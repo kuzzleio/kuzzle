@@ -26,13 +26,13 @@ describe('Test: sdk/funnelProtocol', () => {
       action: 'bar'
     };
 
-    funnelProtocol = new FunnelProtocol(kuzzle);
+    funnelProtocol = new FunnelProtocol();
   });
 
   describe('#constructor', () => {
     it('should throw if the funnel is instantiated without a valid User object', () => {
       should(() => {
-        new FunnelProtocol(kuzzle, { id: 42 });
+        new FunnelProtocol({ id: 42 });
       }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
 
@@ -41,8 +41,8 @@ describe('Test: sdk/funnelProtocol', () => {
 
       funnelProtocol.on('room-id', () => {
         try {
-          should(funnelProtocol.kuzzle.on).be.calledOnce();
-          should(funnelProtocol.kuzzle.on.getCall(0).args[0])
+          should(kuzzle.on).be.calledOnce();
+          should(kuzzle.on.getCall(0).args[0])
             .be.eql('core:network:internal:message');
 
           done();
@@ -95,7 +95,7 @@ describe('Test: sdk/funnelProtocol', () => {
       const user = new User();
       user._id = 'gordon';
 
-      funnelProtocol = new FunnelProtocol(kuzzle, user);
+      funnelProtocol = new FunnelProtocol(user);
 
       return funnelProtocol.query(request)
         .then(response => {

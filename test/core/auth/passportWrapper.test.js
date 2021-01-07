@@ -11,7 +11,6 @@ const {
   UnauthorizedError
 } = require('../../../index');
 const PassportResponse = require('../../../lib/core/auth/passportResponse');
-const Kuzzle = require('../../mocks/kuzzle.mock');
 
 describe('Test the passport Wrapper', () => {
   let
@@ -30,7 +29,7 @@ describe('Test the passport Wrapper', () => {
     mockrequire('passport', passportMock);
     PassportWrapper = mockrequire.reRequire('../../../lib/core/auth/passportWrapper');
 
-    passportWrapper = new PassportWrapper(new Kuzzle());
+    passportWrapper = new PassportWrapper();
   });
 
   afterEach(() => {
@@ -123,7 +122,7 @@ describe('Test the passport Wrapper', () => {
 
     mockrequire('passport', passport);
     PassportWrapper = mockrequire.reRequire('../../../lib/core/auth/passportWrapper');
-    passportWrapper = new PassportWrapper(new Kuzzle());
+    passportWrapper = new PassportWrapper();
     passportWrapper.use(new MockupStrategy('mockup', stub));
 
     return passportWrapper.authenticate('foobar', 'mockup')

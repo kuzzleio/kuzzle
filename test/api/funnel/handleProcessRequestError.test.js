@@ -17,7 +17,7 @@ describe('funnel.processRequest', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    funnel = new FunnelController(kuzzle);
+    funnel = new FunnelController();
   });
 
   it('allows plugin developer to set a new error on request:onError event', done => {

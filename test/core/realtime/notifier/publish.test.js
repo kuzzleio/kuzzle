@@ -14,7 +14,7 @@ describe('Test: notifier.publish', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    notifier = new Notifier(kuzzle);
+    notifier = new Notifier();
 
     sinon.stub(notifier, 'notifyDocument').resolves();
 

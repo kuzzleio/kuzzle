@@ -35,7 +35,7 @@ describe('funnelController.execute', () => {
       token: null
     });
 
-    funnel = new FunnelController(kuzzle);
+    funnel = new FunnelController();
     funnel.controllers = new Map([
       ['foo', { bar: sinon.spy() } ]
     ]);

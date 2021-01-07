@@ -27,14 +27,14 @@ describe('Test: security/tokenRepository', () => {
     kuzzle = new KuzzleMock();
     kuzzle.secret = 'test-secret';
 
-    tokenRepository = new TokenRepository(kuzzle);
+    tokenRepository = new TokenRepository();
 
     return tokenRepository.init();
   });
 
   describe('#constructor', () => {
     it('should take into account the options given', () => {
-      const repository = new TokenRepository(kuzzle, { ttl: 1000 });
+      const repository = new TokenRepository({ ttl: 1000 });
 
       should(repository.ttl).be.exactly(1000);
     });
@@ -222,7 +222,7 @@ describe('Test: security/tokenRepository', () => {
 
       const MockedTokenRepository = mockrequire.reRequire('../../../lib/core/security/tokenRepository');
 
-      tokenRepository = new MockedTokenRepository(kuzzle);
+      tokenRepository = new MockedTokenRepository();
 
       try {
         await should(tokenRepository.generateToken(user))
