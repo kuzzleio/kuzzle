@@ -175,7 +175,7 @@ Feature: Document Controller
 
   # document:deleteFields ===========================================================
   @mappings
-  Scenario: Update document with and without returning updated document
+  Scenario: Delete fields of a document returning the new document without the specified fields
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the document "document-1" with content:
       | name | "document-1" |
