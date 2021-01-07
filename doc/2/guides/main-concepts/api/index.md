@@ -158,7 +158,8 @@ A Kuzzle Response is a **JSON object** with the following format:
 | `controller` | API controller                                                                                      |
 | `error`      | [KuzzleError](/core/2/guides/main-concepts#handling-errors) object, or `null` if there was no error |
 | `index`      | Index name, or `null` if no index was involved                                                      |
-| `requestId`  | KuzzleRequest unique identifier                                                                           |
+| `node`       | Unique identifier of the node who processed the request                                             |
+| `requestId`  | KuzzleRequest unique identifier                                                                     |
 | `result`     | Action result, or `null` if an error occured                                                        |
 | `status`     | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
 | `volatile`   | Arbitrary data repeated from the initial request                                                    |
@@ -176,6 +177,7 @@ kourou sdk:request server:now --display ""
 #   "action": "now",
 #   "collection": null,
 #   "index": null,
+#   "node": "nasty-author-4242",
 #   "volatile": {
 #     "sdkInstanceId": "d301a7c7-ed99-4ede-94c4-fb1dc2156789",
 #     "sdkName": "js@7.4.1"
@@ -207,13 +209,14 @@ A document notification contains the following fields:
 | `collection` | string | Collection name                                                                                       |
 | `controller` | string | API controller                                                                                        |
 | `index`      | string | Index name                                                                                            |
+| `node`       | string | Unique identifier of the node who generated the notification                                          |
 | `protocol`   | string | Network protocol used to modify the document                                                          |
 | `result`     | object | Notification content                                                                                  |
 | `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription |
 | `scope`      | string | `in`: document enters (or stays) in the scope<br/>`out`: document leaves the scope                    |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `document`: the notification type                                                                     |
-| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                         |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -234,6 +237,7 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
+  "node": "nasty-author-4242",
   "result":{
     "_source":{
       "some": "document content",
@@ -265,13 +269,14 @@ A user notification contains the following fields:
 | `collection` | string | Collection name                                                                                       |
 | `controller` | string | API controller                                                                                        |
 | `index`      | string | Index name                                                                                            |
+| `node`       | string | Unique identifier of the node who generated the notification                                          |
 | `protocol`   | string | Network protocol used by the entering/leaving user                                                    |
 | `result`     | object | Notification content                                                                                  |
 | `room`       | string | Subscription channel identifier. Can be used to link a notification to its corresponding subscription |
 | `timestamp`  | number | Timestamp of the event, in Epoch-millis format                                                        |
 | `type`       | string | `user`: the notification type                                                                         |
 | `user`       | string | `in`: a new user has subscribed to the same filters<br/>`out`: a user cancelled a shared subscription |
-| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                             |
+| `volatile`   | object | KuzzleRequest [volatile data](/core/2/guides/main-concepts/api#volatile-data)                         |
 
 The `result` object is the notification content, and it has the following structure:
 
@@ -290,6 +295,7 @@ The `result` object is the notification content, and it has the following struct
   "protocol": "websocket",
   "timestamp": 1497517009931,
   "user": "in",
+  "node": "nasty-author-4242",
   "result": {
     "count": 42
   },
@@ -305,7 +311,7 @@ The `result` object is the notification content, and it has the following struct
 
 Server notifications are triggered by global events, and they are sent to all of a client's subscriptions at the same time.
 
-Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/authentication#some-anchor) has expired, closing the subscription.
+Currently, the only event generating a server notification is when an [authentication token](/core/2/guides/main-concepts/authentication#authentication-token) has expired, closing the subscription.
 
 ::: info
 The `TokenExpired` server notification is only sent if the client has an active realtime subscription.
@@ -316,6 +322,7 @@ A server notification contains the following fields:
 | Property  | Type   | Value                                                              |
 |-----------|--------|--------------------------------------------------------------------|
 | `message` | string | Server message explaining why this notification has been triggered |
+| `node`    | string | Unique identifier of the node who generated the notification       |
 | `type`    | string | `TokenExpired`: notification type                                  |
 
 **Example:** _Server Notification_
