@@ -238,7 +238,7 @@ jobs:
           BRANCH: ${{ steps.extract_branch.outputs.branch }}
 
   npm-deploy:
-    name: Build and deploy images to Dockerhub
+    name: Build and deploy release on NPM.js
     needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
     runs-on: ubuntu-18.04
     steps:
@@ -259,7 +259,9 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
-      - uses: ./.github/actions/npmjs
-        with:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          node-version: '12.x'
+          registry-url: 'https://registry.npmjs.org'
+      - run: npm install
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
