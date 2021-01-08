@@ -1,12 +1,17 @@
 coverage:
   range: "80...100"
-
   status:
     project:
       default:
-        threshold: 1
-
-    patch:
-      default:
-        branches:
-          - master
+        threshold: 1%
+    patch: off
+github_checks:
+  annotations: false
+ignore:
+  - "features"
+  - "features-legacy"
+  - "bin"
+  - "test"
+  - ".ci"
+  - "doc"
+  - "docker"
