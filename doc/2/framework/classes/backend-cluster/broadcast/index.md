@@ -28,5 +28,5 @@ broadcast (event: string, payload: JSONObject): Promise<void>
 ## Usage
 
 ```js
-app.cluster.broadcast('some:event', { payload: 'information' })
+await app.cluster.broadcast('some:event', { payload: 'information' })
 ```
