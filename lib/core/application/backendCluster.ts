@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { EventHandler } from '../../types';
 
