@@ -63,7 +63,7 @@ Body:
 
 ## Body properties
 
-- `fields`: an array of string. Each string represent a path (see lodash path) to a specific field to remove
+- `fields`: an array of string. Each string represents a path (see [lodash path](https://lodash.com/docs/4.17.15#toPath)) to a specific field to remove
 
 ---
 
