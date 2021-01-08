@@ -35,7 +35,7 @@ export class BackendCluster {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:broadcast')) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', 'Cannot use cluster methods in a single-node environment');
+      return;
     }
 
     await global.kuzzle.ask('cluster:event:broadcast', event, payload);
@@ -52,7 +52,7 @@ export class BackendCluster {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:on')) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', 'Cannot use cluster methods in a single-node environment');
+      return;
     }
 
     await global.kuzzle.ask('cluster:event:on', event, listener);
@@ -70,7 +70,7 @@ export class BackendCluster {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:once')) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', 'Cannot use cluster methods in a single-node environment');
+      return;
     }
 
     await global.kuzzle.ask('cluster:event:once', event, listener);
@@ -89,7 +89,7 @@ export class BackendCluster {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:off')) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', 'Cannot use cluster methods in a single-node environment');
+      return;
     }
 
     await global.kuzzle.ask('cluster:event:off', event, listener);
@@ -105,7 +105,7 @@ export class BackendCluster {
     // @deprecated - to be removed with the new cluster (that event will
     // always have an answerer)
     if (!global.kuzzle.hasAskAnswerer('cluster:event:removeAllListeners')) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', 'Cannot use cluster methods in a single-node environment');
+      return;
     }
 
     await global.kuzzle.ask('cluster:event:removeAllListeners', event);
