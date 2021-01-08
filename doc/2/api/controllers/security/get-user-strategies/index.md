@@ -43,7 +43,7 @@ Method: GET
 
 Returns an object with the following properties:
 
-- `hits`: array containing all the available authentication strategies on the requested user.
+- `strategies`: array containing all the available authentication strategies on the requested user.
 - `total`: total number of strategies found for that user.
 
 ```js
@@ -51,7 +51,7 @@ Returns an object with the following properties:
   "status": 200,
   "error": null,
   "result": {
-    "hits": ["local"],
+    "strategies": ["local"],
     "total": 1
   }
 }

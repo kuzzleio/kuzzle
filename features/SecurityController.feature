@@ -390,11 +390,11 @@ Feature: Security Controller
       | profileIds | ["default"] |
     When I successfully execute the action "security":"getUserStrategies" with args:
       | _id | "test-user" |
-    Then I should receive a "hits" array matching:
+    Then I should receive a "strategies" array matching:
       | "local" |
     When I successfully execute the action "security":"getUserStrategies" with args:
       | _id | "-1" |
-    Then I should receive a empty "hits" array
+    Then I should receive a empty "strategies" array
     When I execute the action "security":"getUserStrategies" with args:
       | _id | "fake-user-id" |
     Then I should receive an error matching:

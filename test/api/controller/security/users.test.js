@@ -961,8 +961,8 @@ describe('Test: security controller - users', () => {
       const response = await securityController.getUserStrategies(request);
 
       should(response).be.an.Object().and.not.empty();
-      should(response.hits).be.an.Array().and.have.length(1);
-      should(response.hits.includes(exampleStrategy)).be.true();
+      should(response.strategies).be.an.Array().and.have.length(1);
+      should(response.strategies.includes(exampleStrategy)).be.true();
       should(response.total).eql(1);
     });
 
@@ -972,7 +972,7 @@ describe('Test: security controller - users', () => {
       const response = await securityController.getUserStrategies(request);
 
       should(response).be.an.Object().and.not.empty();
-      should(response.hits).be.an.Array().and.have.length(1);
+      should(response.strategies).be.an.Array().and.have.length(1);
       should(response.total).eql(1);
     });
 
