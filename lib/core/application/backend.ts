@@ -41,6 +41,7 @@ import {
   Controller,
   EventHandler,
 } from '../../types';
+import { BackendCluster } from './backendCluster';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -537,6 +538,11 @@ export class Backend {
   public storage: BackendStorage;
 
   /**
+   * Cluster manager
+   */
+  public cluster: BackendCluster;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -575,6 +581,7 @@ export class Backend {
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
     this.log = new InternalLogger(this);
+    this.cluster = new BackendCluster();
 
     this.kerror = kerror;
 

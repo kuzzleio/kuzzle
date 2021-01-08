@@ -84,7 +84,6 @@ jobs:
           node-version: 12
       - uses: ./.github/actions/functional-tests
         with:
-          docker-compose-test-file: ./.ci/test.yml
           test-set: test:functional:legacy:${{ matrix.test_set }}
           node-version: ${{ matrix.node-version }}
 
@@ -116,7 +115,6 @@ jobs:
           node-version: 12
       - uses: ./.github/actions/functional-tests
         with:
-          docker-compose-test-file: ./.ci/test.yml
           test-set: test:functional:${{ matrix.test_set }}
           node-version: ${{ matrix.node-version }}
 
@@ -146,10 +144,11 @@ jobs:
         with:
           node-version: 12
       - name: Cluster legacy tests
-        env:
-          NODE_VERSION: ${{ matrix.node-version }}
-        run: ./.ci/scripts/run-test-cluster.sh
-          
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:legacy:cluster
+          node-version: ${{ matrix.node-version }}
+
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-18.04
@@ -200,6 +199,6 @@ jobs:
           REGION: us-west-2
           S3_BUCKET: docs-next.kuzzle.io
           CLOUDFRONT_ID: E2ZCCEK9GRB49U
-          FRAMEWORK_BRANCH: dev
+          FRAMEWORK_BRANCH: develop
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

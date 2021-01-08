@@ -121,7 +121,7 @@
     //        Maximum number of pipes that can be delayed. If full, new pipes
     //        are rejected.
     "common": {
-      "bootstrapLockTimeout": 5000,
+      "bootstrapLockTimeout": 30000,
       "pipeWarnTime": 40,
       "initTimeout": 2000,
       "maxConcurrentPipes": 50,

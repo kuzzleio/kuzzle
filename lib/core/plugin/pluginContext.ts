@@ -56,6 +56,7 @@ import {
   KuzzleRequest,
   Request,
 } from '../../../index';
+import { BackendCluster } from '../application/backendCluster';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -147,7 +148,13 @@ export class PluginContext {
        * Creates a collection in the plugin storage
        */
       createCollection: (collection: string, mappings: any) => Promise<void>
-    }
+    },
+
+    /**
+     * Cluster accessor
+     * @type {BackendCluster}
+     */
+    cluster: BackendCluster,
   };
 
   public config: JSONObject;
@@ -319,6 +326,7 @@ export class PluginContext {
     /* context.accessors ================================================== */
 
     this.accessors = {
+      cluster: new BackendCluster(),
       execute: (request, callback) => execute(request, callback),
       sdk: new EmbeddedSDK(),
       storage: {

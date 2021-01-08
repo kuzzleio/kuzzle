@@ -160,3 +160,8 @@ message IndexCacheRemove {
   optional string collection = 4;
 }
 
+message ClusterWideEvent {
+  uint64 messageId = 1;
+  string event = 2;
+  string payload = 3;
+}
