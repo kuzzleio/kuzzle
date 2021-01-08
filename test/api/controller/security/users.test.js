@@ -972,8 +972,8 @@ describe('Test: security controller - users', () => {
       const response = await securityController.getUserStrategies(request);
 
       should(response).be.an.Object().and.not.empty();
-      should(response.strategies).be.an.Array().and.have.length(1);
-      should(response.total).eql(1);
+      should(response.strategies).be.an.Array().and.have.length(0);
+      should(response.total).eql(0);
     });
 
     it('should reject if user is not found', async () => {
