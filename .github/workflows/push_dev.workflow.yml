@@ -173,7 +173,7 @@ jobs:
 
   documentation-staging:
     name: Deploy Documentation to staging
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [error-codes-check]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
