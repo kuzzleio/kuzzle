@@ -34,6 +34,8 @@ const EventEmitter = require('eventemitter3');
 const { Request } = require('../../../../index');
 const Node = require('./node');
 
+const NODE_ENV = process.env.NODE_ENV;
+
 IORedis.Promise = Bluebird;
 
 class KuzzleCluster {
@@ -839,7 +841,7 @@ class KuzzleCluster {
     // Crashing on an unhandled rejection is a good idea during development
     // as it helps spotting code errors. And according to the warning messages,
     // this is what Node.js will do automatically in future versions anyway.
-    if (process.env.NODE_ENV === 'development') {
+    if (NODE_ENV === 'development') {
       process.on('unhandledRejection', () => {
         this.log('error', 'Kuzzle caught an unhandled rejected promise and will shutdown.');
         this.log('error', 'This behavior is only triggered if NODE_ENV is set to "development"');
