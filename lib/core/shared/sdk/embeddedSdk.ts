@@ -32,6 +32,7 @@ import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';
+import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -109,7 +110,7 @@ export class EmbeddedSDK extends Kuzzle {
       throw contextError.get('invalid_user');
     }
 
-    return new EmbeddedSDK(user);
+    return new ImpersonatedSDK(user._id) as EmbeddedSDK;
   }
 
   /**
