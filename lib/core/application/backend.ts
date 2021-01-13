@@ -567,6 +567,10 @@ export class Backend {
       writable: true
     });
 
+    Reflect.defineProperty(global, 'app', {
+      value: this,
+    });
+
     this.pipe = new BackendPipe(this);
     this.hook = new BackendHook(this);
     this.config = new BackendConfig(this);
