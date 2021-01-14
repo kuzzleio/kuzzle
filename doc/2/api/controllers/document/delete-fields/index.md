@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: delete-fields
+title: deleteFields
 description: Delete fields of an existing document.
 ---
 
@@ -58,7 +58,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the new document content is indexed
-
+- `source`: if set to `true`, the response will contain the new updated document
 ---
 
 ## Body properties
@@ -72,7 +72,7 @@ Body:
 Returns an object containing updated document information, with the following properties:
 
 - `_id`: document unique identifier
-- `_source`: new document content
+- `_source`: the new document content, if `source` is set to `true`
 - `_version`: updated document version number
 
 ```js
