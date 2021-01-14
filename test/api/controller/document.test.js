@@ -1030,7 +1030,6 @@ describe('DocumentController', () => {
     });
   });
 
-  //TODO
   describe('#deleteFields', () => {
     let content;
 
