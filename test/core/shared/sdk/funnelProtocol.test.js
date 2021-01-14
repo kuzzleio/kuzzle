@@ -12,7 +12,7 @@ const {
 const User = require('../../../../lib/model/security/user');
 const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
-describe.only('Test: sdk/funnelProtocol', () => {
+describe('Test: sdk/funnelProtocol', () => {
   let request;
   let kuzzle;
   let funnelProtocol;
