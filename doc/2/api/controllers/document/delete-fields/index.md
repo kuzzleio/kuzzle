@@ -2,12 +2,12 @@
 code: true
 type: page
 title: deleteFields
-description: Delete fields of an existing document.
+description: Deletes fields of an existing document.
 ---
 
 # deleteFields
 
-Delete fields of an existing document.
+Deletes fields of an existing document.
 
 ---
 
@@ -63,7 +63,7 @@ Body:
 
 ## Body properties
 
-- `fields`: an array of string. Each string represents a path (see [lodash path](https://lodash.com/docs/4.17.15#toPath)) to a specific field to remove
+- `fields`: an array of strings. Each string represents a path (see [lodash path](https://lodash.com/docs/4.17.15#toPath)) to a specific field to remove
 
 ---
 
