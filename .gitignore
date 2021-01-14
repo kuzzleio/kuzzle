@@ -71,10 +71,12 @@ upgrade-*.report
 
 # JS generated files from TS
 *.d.ts
+!lib/types/Global.d.ts
 *.js.map
 
 /index.js
 lib/core/application/backend.js
+lib/core/application/backendCluster.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js
@@ -111,4 +113,5 @@ lib/types/Token.js
 lib/types/User.js
 lib/types/index.js
 lib/util/interfaces.js
+lib/util/mutex.js
 features-sdk/support/application/functional-tests-app.js

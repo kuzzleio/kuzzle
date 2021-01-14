@@ -24,14 +24,14 @@ Body:
 
 ```js
 {
-  "request": {
-    "controller": "document",
-    "action": "create",
-    "index": "nyc-open-data",
-    "collection": "yellow-taxi",
-    "body": {
-      "name": "Melis"
-    }
+  // RequestPayload
+  "controller": "document",
+  "action": "create",
+  "index": "nyc-open-data",
+  "collection": "yellow-taxi",
+  "body": {
+    "controller": "server",
+    "action": "info"
   }
 }
 ```
@@ -44,14 +44,13 @@ Body:
   "action": "checkRights",
   "_id": "<kuid>",
   "body": {
-    "request": {
-      "controller": "document",
-      "action": "create",
-      "index": "nyc-open-data",
-      "collection": "yellow-taxi",
-      "body": {
-        "name": "Melis"
-      }
+    // RequestPayload
+    "controller": "document",
+    "action": "create",
+    "index": "nyc-open-data",
+    "collection": "yellow-taxi",
+    "body": {
+      "name": "melis"
     }
   }
 }
@@ -67,7 +66,10 @@ Body:
 
 ## Body properties
 
-- `request`: API request to check
+The body must contain a [RequestPayload](/core/2/api/payloads/request) with at least the following properties:
+
+- `controller`: API controller
+- `action`: API action
 
 ---
 

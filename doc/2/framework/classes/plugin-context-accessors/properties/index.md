@@ -11,9 +11,18 @@ The `PluginContextAccessors` instance is available through the [PluginContext.ac
 
 It contains various instantiated classes and methods that allow to interact with Kuzzle.
 
+## `cluster`
+
+This property is an instance of the [BackendCluster](/core/2/framework/classes/backend-cluster) class, handling interactions with cluster nodes.
+
+| Type     | Description            |
+|----------|------------------------|
+| <pre>[BackendCluster](/core/2/framework/classes/backend-cluster)</pre> | BackendCluster instance |
+
+
 ## `sdk`
 
-This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk).  
+This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) class.  
 
 | Type     | Description            |
 |----------|------------------------|

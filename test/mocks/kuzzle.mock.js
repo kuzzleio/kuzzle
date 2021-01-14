@@ -9,8 +9,6 @@ const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
 
-global.kuzzle = null;
-
 class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
     const config = configLoader.load();
@@ -19,7 +17,12 @@ class KuzzleMock extends KuzzleEventEmitter {
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
 
-    global.kuzzle = this;
+    Reflect.defineProperty(global, 'kuzzle', {
+      value: this,
+      writable: true,
+    });
+
+    this.id = 'nasty-author-4242';
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -44,8 +47,8 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
-    // ============================
 
+    // ============================
 
     this.log = {
       error: sinon.stub(),
@@ -193,7 +196,10 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     this.asyncStore = {
       run: sinon.stub().yields(),
-      set: sinon.stub()
+      set: sinon.stub(),
+      exists: sinon.stub(),
+      has: sinon.stub(),
+      get: sinon.stub(),
     };
 
     this.start = sinon.stub().resolves();

@@ -10,12 +10,17 @@ const {
 const { Request } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
 const { RequestInput } = require('../../../lib/api/request');
+const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 describe('#Request', () => {
   let rq;
   let nodeEnv;
+  let kuzzle;
 
   beforeEach(() => {
+    // eslint-disable-next-line no-unused-vars
+    kuzzle = new KuzzleMock();
+
     nodeEnv = process.env.NODE_ENV;
     rq = new Request({});
   });
