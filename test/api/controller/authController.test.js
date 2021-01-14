@@ -14,10 +14,10 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const AuthController = require('../../../lib/api/controller/auth');
+const AuthController = require('../../../lib/api/controllers/authController');
 const Token = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
-const { NativeController } = require('../../../lib/api/controller/base');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('Test the auth controller', () => {
   let request;

@@ -3,9 +3,9 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const IndexController = require('../../../lib/api/controller/index');
+const IndexController = require('../../../lib/api/controllers/indexController');
 const { Request } = require('../../../index');
-const { NativeController } = require('../../../lib/api/controller/base');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 const mockAssertions = require('../../mocks/mockAssertions');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 

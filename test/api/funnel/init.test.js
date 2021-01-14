@@ -6,16 +6,16 @@ const sinon = require('sinon');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Funnel = require('../../../lib/api/funnel');
-const AuthController = require('../../../lib/api/controller/auth');
-const BulkController = require('../../../lib/api/controller/bulk');
-const CollectionController = require('../../../lib/api/controller/collection');
-const DocumentController = require('../../../lib/api/controller/document');
-const IndexController = require('../../../lib/api/controller/index');
-const MSController = require('../../../lib/api/controller/memoryStorage');
-const RealtimeController = require('../../../lib/api/controller/realtime');
-const SecurityController = require('../../../lib/api/controller/security');
-const ServerController = require('../../../lib/api/controller/server');
-const AdminController = require('../../../lib/api/controller/admin');
+const AuthController = require('../../../lib/api/controllers/authController');
+const BulkController = require('../../../lib/api/controllers/bulkController');
+const CollectionController = require('../../../lib/api/controllers/collectionController');
+const DocumentController = require('../../../lib/api/controllers/documentController');
+const IndexController = require('../../../lib/api/controllers/indexController');
+const MSController = require('../../../lib/api/controllers/memoryStorageController');
+const RealtimeController = require('../../../lib/api/controllers/realtimeController');
+const SecurityController = require('../../../lib/api/controllers/securityController');
+const ServerController = require('../../../lib/api/controllers/serverController');
+const AdminController = require('../../../lib/api/controllers/adminController');
 
 describe('funnel.init', () => {
   it('should initialize API and plugins controller', async () => {

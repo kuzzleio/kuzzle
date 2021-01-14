@@ -5,8 +5,8 @@ const sinon = require('sinon');
 const should = require('should');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const { NativeController } = require('../../../../lib/api/controller/base');
-const SecurityController = rewire('../../../../lib/api/controller/security');
+const { NativeController } = require('../../../../lib/api/controllers/baseController');
+const SecurityController = rewire('../../../../lib/api/controllers/securityController');
 const {
   Request,
   BadRequestError,
@@ -15,7 +15,7 @@ const {
 } = require('../../../../index');
 const kerror = require('../../../../lib/kerror');
 
-describe('/api/controller/security', () => {
+describe('/api/controllers/securityController', () => {
   let kuzzle;
   let request;
   let securityController;
