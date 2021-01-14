@@ -54,12 +54,6 @@ describe('Test the auth controller', () => {
     });
   });
 
-  describe('#constructor', () => {
-    it('should inherit the base constructor', () => {
-      should(authController).instanceOf(NativeController);
-    });
-  });
-
   describe('#checkRights', () => {
     let userObject;
 
