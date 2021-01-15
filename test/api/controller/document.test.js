@@ -1090,7 +1090,7 @@ describe('DocumentController', () => {
         { userId: null, refresh: 'false' });
     });
 
-    it('should returns the entire document with source: true', async () => {
+    it('should return the entire document with source: true', async () => {
       request.input.args.source = true;
       const response = await documentController.deleteFields(request);
 
