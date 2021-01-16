@@ -1,8 +1,5 @@
-'use strict';
-
-const
-  _ = require('lodash'),
-  should = require('should');
+const _ = require('lodash');
+const should = require('should');
 
 should.Assertion.add(
   'matchObject',
@@ -27,10 +24,28 @@ should.Assertion.add(
       else if (expectedValue === '_UNDEFINED_') {
         should(objectValue).be.undefined();
       }
+      else if (expectedValue === '_DATE_NOW_') {
+        should(objectValue).be.approximately(Date.now(), 1000);
+      }
+      else if (expectedValue === '_DATE_NOW_SEC_') {
+        should(objectValue).be.approximately(Date.now() / 1000, 1000);
+      }
+      else if (_.isPlainObject(objectValue)) {
+        should(objectValue).matchObject(
+          expectedValue,
+          `"${keyPath}" does not match. Expected "${JSON.stringify(expectedValue)}" have "${JSON.stringify(objectValue)}"`);
+      }
+      else if (_.isArray(objectValue)) {
+        for (let i = 0; i < objectValue.length; i++) {
+          should(objectValue[i]).matchObject(
+            expectedValue[i],
+            `"${keyPath}[${i}]" does not match. Expected "${JSON.stringify(expectedValue[i])}" have "${JSON.stringify(objectValue[i])}"`);
+        }
+      }
       else {
         should(objectValue).match(
           expectedValue,
-          `${keyPath} does not match. Expected "${JSON.stringify(expectedValue)}" have "${JSON.stringify(objectValue)}"`);
+          `"${keyPath}" does not match. Expected "${JSON.stringify(expectedValue)}" have "${JSON.stringify(objectValue)}"`);
       }
     }
   },
