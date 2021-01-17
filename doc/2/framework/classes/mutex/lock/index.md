@@ -7,7 +7,7 @@ description: Mutex class lock() method
 
 # lock
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.9.0" />
 
 Tries to lock a resource.
 
