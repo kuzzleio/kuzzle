@@ -24,8 +24,6 @@ import util from 'util';
 import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
-import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
-import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
 import PluginObject from '../plugin/plugin';
@@ -41,6 +39,7 @@ import {
   Controller,
   EventHandler,
 } from '../../types';
+import { BackendCluster } from './backendCluster';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -537,6 +536,11 @@ export class Backend {
   public storage: BackendStorage;
 
   /**
+   * Cluster manager
+   */
+  public cluster: BackendCluster;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -575,6 +579,7 @@ export class Backend {
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
     this.log = new InternalLogger(this);
+    this.cluster = new BackendCluster();
 
     this.kerror = kerror;
 
@@ -600,12 +605,13 @@ export class Backend {
     this._kuzzle = new Kuzzle(this.config.content);
 
     // we need to load the default plugins
-    this.plugin.use(
-      new PluginPassportAuthLocal(),
-      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(
-      new PluginLogger(),
-      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
+    for (const plugin of this.config.content.plugins.common.include) {
+      const { default: PluginClass } = await import(plugin);
+      this.plugin.use(new PluginClass(), {
+        deprecationWarning: false,
+        name: plugin,
+      });
+    }
 
     const application = new PluginObject(
       this._instanceProxy,

@@ -37,7 +37,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
-    global.kuzzle = null;
+    Reflect.deleteProperty(global, 'kuzzle');
     const k = new KuzzleConstructor(config);
     const mock = new KuzzleMock();
 

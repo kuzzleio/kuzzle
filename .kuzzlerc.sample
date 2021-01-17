@@ -99,9 +99,13 @@
   // (see https://docs.kuzzle.io/core/2/guides/write-plugins)
   "plugins": {
     // [Common]
-    //  * bootstrapLockTimeout
+    //   * bootstrapLockTimeout
     //        Maximum amount of time (in milliseconds)
     //        to wait for a concurrent plugin bootstrap
+    //   * include
+    //        List of Kuzzle's embedded plugins to be activated.
+    //        Edit this list to deactivate one or more of those plugins.
+    //        NOTE: this list does not control plugins installed manually.
     //   * pipeWarnTime:
     //        Warning time threshold (in milliseconds)
     //        on a pipe plugin action
@@ -121,11 +125,15 @@
     //        Maximum number of pipes that can be delayed. If full, new pipes
     //        are rejected.
     "common": {
-      "bootstrapLockTimeout": 5000,
+      "bootstrapLockTimeout": 30000,
       "pipeWarnTime": 40,
       "initTimeout": 2000,
       "maxConcurrentPipes": 50,
-      "pipesBufferSize": 50000
+      "pipesBufferSize": 50000,
+      "include": [
+        "kuzzle-plugin-logger",
+        "kuzzle-plugin-auth-passport-local"
+      ]
     },
 
     // plugin logger configuration.

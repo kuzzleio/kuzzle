@@ -30,7 +30,6 @@ const {
   Request,
   InternalError: KuzzleInternalError,
 } = require('../../../../index');
-
 const RedisStateManager = require('./redis/manager');
 
 class Node {
@@ -430,6 +429,9 @@ class Node {
     else if (room === 'cluster:admin:resetSecurity') {
       await this.kuzzle.ask('core:security:profile:invalidate');
       await this.kuzzle.ask('core:security:role:invalidate');
+    }
+    else if (room === 'cluster:event') {
+      this.context.eventEmitter.emit(data.event, data.payload);
     }
   }
 

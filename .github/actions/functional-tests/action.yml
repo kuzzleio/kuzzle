@@ -13,8 +13,8 @@ inputs:
 
 runs:
   using: "composite"
-  steps: 
-    - run: docker-compose -f ${{ inputs.docker-compose-test-file }} run kuzzle
+  steps:
+    - run: ./.ci/scripts/run-test-cluster.sh
       env:
         KUZZLE_FUNCTIONNAL_TESTS: ${{ inputs.test-set}}
         NODE_VERSION: ${{ inputs.node-version }}

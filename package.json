@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.8.1",
+  "version": "2.9.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
@@ -94,15 +94,15 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.167",
-    "@typescript-eslint/eslint-plugin": "^4.12.0",
-    "@typescript-eslint/parser": "^4.12.0",
+    "@typescript-eslint/eslint-plugin": "^4.13.0",
+    "@typescript-eslint/parser": "^4.13.0",
     "async": "^3.2.0",
-    "chokidar": "^3.5.0",
+    "chokidar": "^3.5.1",
     "codecov": "^3.8.1",
     "cucumber": "^6.0.5",
-    "eslint": "^7.17.0",
+    "eslint": "^7.18.0",
     "js-yaml": "^4.0.0",
-    "kuzdoc": "^1.4.2",
+    "kuzdoc": "^1.4.3",
     "mocha": "^8.2.1",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.6",

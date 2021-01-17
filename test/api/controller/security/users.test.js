@@ -24,6 +24,7 @@ describe('Test: security controller - users', () => {
     kuzzle = new KuzzleMock();
 
     securityController = new SecurityController();
+    securityController.anonymousId = '-1';
     request = new Request(
       {controller: 'security'},
       {user: new User()});
@@ -933,6 +934,70 @@ describe('Test: security controller - users', () => {
           refresh: 'false',
           userId: request.context.user._id,
         });
+    });
+  });
+
+  describe('#getUserStrategies', () => {
+    const getEvent = 'core:security:user:get';
+    const exampleStrategy = 'someStrategy';
+    const returnedUser = new User();
+    let getStub;
+
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+      returnedUser._id = request.input.resource._id;
+      getStub = kuzzle.ask
+        .withArgs(getEvent, request.input.resource._id)
+        .resolves(returnedUser);
+
+      kuzzle.pluginsManager.listStrategies.returns([exampleStrategy]);
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs(exampleStrategy, 'exists')
+        .returns(sinon.stub().resolves(true));
+    });
+
+    it('should return a list of strategies', async () => {
+      const response = await securityController.getUserStrategies(request);
+
+      should(response).be.an.Object().and.not.empty();
+      should(response.strategies).be.an.Array().and.have.length(1);
+      should(response.strategies.includes(exampleStrategy)).be.true();
+      should(response.total).eql(1);
+    });
+
+    it('should return empty when anonymous id is provided', async () => {
+      request.input.resource._id = '-1';
+
+      const response = await securityController.getUserStrategies(request);
+
+      should(response).be.an.Object().and.not.empty();
+      should(response.strategies).be.an.Array().and.have.length(0);
+      should(response.total).eql(0);
+    });
+
+    it('should reject if user is not found', async () => {
+      const error = new Error('foo');
+      request.input.resource._id = 'alyx';
+
+      getStub
+        .withArgs(getEvent, request.input.resource._id)
+        .rejects(error);
+
+      await should(securityController.getUserStrategies(request))
+        .rejectedWith(error);
+    });
+
+    it('should reject if no id is provided', async () => {
+      request.input.resource._id = null;
+
+      await should(securityController.getUserStrategies(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(getStub).not.called();
     });
   });
 
