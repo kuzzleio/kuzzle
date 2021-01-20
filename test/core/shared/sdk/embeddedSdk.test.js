@@ -22,7 +22,7 @@ describe('EmbeddedSDK', () => {
     embeddedSdk = new EmbeddedSDK();
   });
 
-  describe.only('#as', () => {
+  describe('#as', () => {
     it('should return a new instance of an ImpersonatedSDK', () => {
       const SpyImpersonatedSdk = sinon.spy();
       mockrequire('../../../../lib/core/shared/sdk/impersonatedSdk', SpyImpersonatedSdk);
