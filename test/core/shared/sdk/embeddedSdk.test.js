@@ -2,6 +2,11 @@
 
 const should = require('should');
 const sinon = require('sinon');
+const mockrequire = require('mock-require');
+
+const {
+  PluginImplementationError,
+} = require('../../../../index');
 
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
@@ -17,13 +22,26 @@ describe('EmbeddedSDK', () => {
     embeddedSdk = new EmbeddedSDK();
   });
 
-  describe('#as', () => {
-    it('should instantiate the SDK with the user', () => {
+  describe.only('#as', () => {
+    it('should return a new instance of an ImpersonatedSDK', () => {
+      const SpyImpersonatedSdk = sinon.spy();
+      mockrequire('../../../../lib/core/shared/sdk/impersonatedSdk', SpyImpersonatedSdk);
+      const { EmbeddedSDK: MockEmbeddedSDK } = mockrequire.reRequire('../../../../lib/core/shared/sdk/embeddedSdk');
       const user = { _id: 'gordon' };
 
-      const impersonatedSdk = embeddedSdk.as(user);
+      embeddedSdk = new MockEmbeddedSDK();
+      const returnedInstance = embeddedSdk.as(user);
 
-      should(impersonatedSdk.protocol.user).be.eql(user);
+      should(SpyImpersonatedSdk).be.calledWith(user._id);
+      should(returnedInstance).be.instanceOf(SpyImpersonatedSdk);
+      mockrequire.stopAll();
+    });
+
+    it('should throw if the required user object is invalid', () => {
+      should(() => embeddedSdk.as({ }))
+        .throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
+      should(() => embeddedSdk.as({ _id: 123 }))
+        .throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
     });
   });
 
