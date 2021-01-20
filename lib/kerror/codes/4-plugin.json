@@ -87,12 +87,6 @@
           "code": 14,
           "message": "Cannot define new controllers in the \"api\" and the \"controllers\" objects at the same time",
           "class": "PluginImplementationError"
-        },
-        "global_app_instance_already_exists": {
-          "description": "There should not be two backend instances running at the same time.",
-          "code": 15,
-          "message": "There's already a backend (app) instance in the global context.",
-          "class": "PluginImplementationError"
         }
       }
     },
