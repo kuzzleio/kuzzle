@@ -20,7 +20,7 @@ const User = require('../../../lib/model/security/user');
 const Repository = require('../../../lib/core/shared/repository');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 
-describe.only('Test: security/tokenRepository', () => {
+describe('Test: security/tokenRepository', () => {
   let kuzzle;
   let TokenRepository;
   let tokenRepository;
