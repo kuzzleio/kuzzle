@@ -571,6 +571,9 @@ export class Backend {
       writable: true
     });
 
+    if (global.app) {
+      throw assertionError.get('global_app_instance_already_exists');
+    }
     Reflect.defineProperty(global, 'app', {
       value: this,
     });
