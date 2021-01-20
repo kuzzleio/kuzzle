@@ -7,7 +7,7 @@ description: Mutex class constructor
 
 # Mutex
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.9.0" />
 
 Instantiates a new mutex, allowing to lock a resource.  
 Works both with single-node and cluster environments.
