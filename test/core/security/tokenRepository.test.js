@@ -13,23 +13,35 @@ const {
   UnauthorizedError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+const MutexMock = require('../../mocks/mutex.mock');
 
 const Token = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
-const TokenRepository = require('../../../lib/core/security/tokenRepository');
 const Repository = require('../../../lib/core/shared/repository');
+const ApiKey = require('../../../lib/model/storage/apiKey');
 
-describe('Test: security/tokenRepository', () => {
+describe.only('Test: security/tokenRepository', () => {
   let kuzzle;
+  let TokenRepository;
   let tokenRepository;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.secret = 'test-secret';
 
+    mockrequire('../../../lib/util/mutex', { Mutex: MutexMock });
+    TokenRepository = mockrequire.reRequire('../../../lib/core/security/tokenRepository');
+
     tokenRepository = new TokenRepository();
+    sinon.stub(tokenRepository, '_loadApiKeys');
+    sinon.stub(ApiKey, 'batchExecute');
 
     return tokenRepository.init();
+  });
+
+  afterEach(() => {
+    ApiKey.batchExecute.restore();
+    mockrequire.stopAll();
   });
 
   describe('#constructor', () => {
@@ -557,6 +569,48 @@ describe('Test: security/tokenRepository', () => {
 
       should(tokenRepository.generateToken).not.called();
       should(tokenRepository.persistToCache).not.called();
+    });
+  });
+
+  describe('#_loadApiKeys', () => {
+    beforeEach(() => {
+      tokenRepository._loadApiKeys.restore();
+      sinon.stub(tokenRepository, 'persistForUser');
+
+      kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
+
+      ApiKey.batchExecute.callsArgWith(1, [
+        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
+        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
+      ]);
+    });
+
+    it('should load API key tokens to Redis cache', async () => {
+      await tokenRepository._loadApiKeys();
+
+      should(ApiKey.batchExecute).be.calledWith({ match_all: {} });
+
+      should(tokenRepository.persistForUser)
+        .be.calledWith('encoded-token-1', 'user-id-1', 42)
+        .be.calledWith('encoded-token-2', 'user-id-2', -1);
+
+      should(kuzzle.ask)
+        .be.calledWith('core:cache:internal:get', 'token/bootstrap');
+
+      should(kuzzle.ask)
+        .be.calledWith('core:cache:internal:store', 'token/bootstrap', 1);
+    });
+
+    it('should not load API keys if the bootstrap key exists', async () => {
+      kuzzle.ask.withArgs('core:cache:internal:get').returns('1');
+      await tokenRepository._loadApiKeys();
+
+      should(ApiKey.batchExecute).not.called();
+
+      should(kuzzle.ask)
+        .be.calledWith('core:cache:internal:get', 'token/bootstrap');
+
+      should(kuzzle.ask.withArgs('core:cache:internal:store')).not.called();
     });
   });
 });
