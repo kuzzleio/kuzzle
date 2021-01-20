@@ -113,12 +113,50 @@ describe('Test: sdk/funnelProtocol', () => {
         });
     });
 
+    it('should execute the request with the provided request.__kuid__ if present', () => {
+      const customUserRequest = {
+        controller: 'foo',
+        action: 'bar',
+        __kuid__: 'alyx'
+      };
+      exampleUser._id = customUserRequest.__kuid__;
+      kuzzle.funnel.executePluginRequest.resolvesArg(0);
+
+      funnelProtocol = new FunnelProtocol();
+      kuzzle.ask
+        .withArgs('core:security:user:get', customUserRequest.__kuid__)
+        .resolves(exampleUser);
+      exampleUser.isActionAllowed = sinon.stub().resolves(true);
+
+      return funnelProtocol.query(customUserRequest)
+        .then(response => {
+          should(kuzzle.ask.withArgs('core:security:user:get', customUserRequest.__kuid__))
+            .be.calledOnce();
+          should(response.result.context.user._id).be.eql(customUserRequest.__kuid__);
+        });
+    });
+
     it('should throw if the provided User is not allowed to execute a request', async () => {
       funnelProtocol = new FunnelProtocol(exampleUser);
 
       await should(funnelProtocol.query(request))
         .rejectedWith(ForbiddenError, {
           id: 'security.rights.forbidden'
+        });
+    });
+
+    it('should throw if the provided request.__kuid__ is invalid', async () => {
+      const badlyFormattedRequest = {
+        controller: 'foo',
+        action: 'bar',
+        __kuid__: 1
+      };
+      kuzzle.funnel.executePluginRequest.resolvesArg(0);
+      funnelProtocol = new FunnelProtocol();
+
+      await should(funnelProtocol.query(badlyFormattedRequest))
+        .rejectedWith(PluginImplementationError, {
+          id: 'plugin.context.invalid_user'
         });
     });
   });
