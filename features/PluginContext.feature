@@ -60,5 +60,27 @@ Feature: Plugin context
     Then I should receive a result matching:
       | acknowledged | "OK" |
 
+  # impersonate ====================================================================
+
+  Scenario: Create a document as a specific user
+    Given a collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | userId | "default-user" |
+    Then I should receive a result matching:
+      | _source._kuzzle_info.author | "default-user" |
+    When I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | userId | "test-admin" |
+    Then I should receive a result matching:
+      | _source._kuzzle_info.author | "test-admin" |
+
+  @security
+  Scenario: Verify if a specific user is authorized to execute an action
+    Given a collection "nyc-open-data":"yellow-taxi"
+    Given I update the role "default" with:
+      | document | { "create": false } |
+    When I execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | userId | "default-user" |
+    Then I should receive an error matching:
+      | id | "security.rights.forbidden" |
 
 # @todo add cluster tests
