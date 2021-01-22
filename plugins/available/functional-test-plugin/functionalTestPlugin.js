@@ -125,7 +125,7 @@ class FunctionalTestPlugin {
     this.routes.push({
       action: 'createDocumentAs',
       controller: 'impersonate',
-      path: '/impersonate/createDocumentAs/:userId',
+      path: '/impersonate/createDocumentAs/:kuid',
       verb: 'post',
     });
 
@@ -276,7 +276,7 @@ class FunctionalTestPlugin {
    * ImpersonatedSDK wrapper
    */
   async createDocumentAs (request) {
-    const sdkInstance = await this.sdk.as({ _id: request.input.args.userId });
+    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid });
 
     return sdkInstance.document.create(
       'nyc-open-data',
