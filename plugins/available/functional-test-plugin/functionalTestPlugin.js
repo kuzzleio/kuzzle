@@ -281,7 +281,7 @@ class FunctionalTestPlugin {
     return sdkInstance.document.create(
       'nyc-open-data',
       'yellow-taxi',
-      { shouldBeCreatedBy: request.input.args.userId },
+      { shouldBeCreatedBy: request.input.args.kuid },
     );
   }
 }
