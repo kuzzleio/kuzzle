@@ -5,9 +5,9 @@
 *.js.map
 
 /index.js
-lib/core/application/index.js
-lib/core/application/backend.js
-lib/core/application/backendCluster.js
+lib/core/backend/index.js
+lib/core/backend/backend.js
+lib/core/backend/backendCluster.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js

@@ -1,4 +1,4 @@
-export * from './lib/core/application/';
+export * from './lib/core/backend';
 
 export * from './lib/types';
 
