@@ -80,7 +80,7 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
-  describe.only('#stats', () => {
+  describe('#stats', () => {
     beforeEach(() => {
       elasticsearch._client.indices.stats.resolves({
         body: {
