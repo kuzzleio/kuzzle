@@ -80,6 +80,55 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe.only('#stats', () => {
+    beforeEach(() => {
+      elasticsearch._client.indices.stats.resolves({
+        body: {
+          indices: {
+            '%kuzzle.users': {
+              total: { docs: { count: 1 }, store: { size_in_bytes: 10 } }
+            },
+            '&test-index._kuzzle_keep': {
+              total: { docs: { count: 0 }, store: { size_in_bytes: 10 } }
+            },
+            '&test-index.test-collection': {
+              total: { docs: { count: 2 }, store: { size_in_bytes: 20 } }
+            }
+          }
+        }
+      });
+    });
+
+    it('should only request required stats from underlying client', async () => {
+      const esRequest = {
+        metric: ['docs', 'store'],
+      };
+
+      await elasticsearch.stats();
+
+      should(elasticsearch._client.indices.stats)
+        .calledOnce()
+        .calledWithMatch(esRequest);
+    });
+
+    it('should as default ignore private and hidden indices', async () => {
+      const result = await elasticsearch.stats();
+
+      should(result).be.match({
+        size_in_bytes: 20,
+        indexes: [{
+          name: 'test-index',
+          size_in_bytes: 20,
+          collections: [{
+            name: 'test-collection',
+            documentCount: 2,
+            size_in_bytes: 20,
+          }]
+        }]
+      });
+    });
+  });
+
   describe('#scroll', () => {
     it('should be able to scroll an old search', async () => {
       const cacheStub = kuzzle.ask
