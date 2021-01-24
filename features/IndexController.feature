@@ -63,3 +63,23 @@ Feature: Index Controller
     Then I should receive a result matching:
       | indexes | ["nyc-open-data", "mtp-open-data"] |
       | collections | { "nyc-open-data": 2, "mtp-open-data": 1 } |
+
+  # index:stats =================================================================
+
+  Scenario: Check storage stats
+    Given an index "nyc-open-data"
+    And a collection "nyc-open-data":"yellow-taxi"
+    And a collection "nyc-open-data":"green-taxi"
+    And an index "mtp-open-data"
+    And a collection "mtp-open-data":"red-taxi"
+    And I "create" the following documents:
+      | _id          | body                                  |
+      | "document-1" | { "name": "document1", "test": true } |
+    And I refresh the collection
+    When I successfully execute the action "index":"stats"
+    And I should receive a result matching:
+      | size_in_bytes | 5030 |
+    Then I should receive a "indexes" array of objects matching:
+      | name            | size_in_bytes | collections                                                                                 |
+      | "nyc-open-data" | 460           | [ { name: "green-taxi", size_in_bytes: 230 }, { name: "yellow-taxi", size_in_bytes: 230 } ] |
+      | "mtp-open-data" | 4570          | [ { name: "red-taxi", size_in_bytes: 4570, documentCount: 1 } ]                             |
