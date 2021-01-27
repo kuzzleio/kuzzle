@@ -179,6 +179,17 @@ describe('#core/storage/ClientAdapter', () => {
       }
     });
 
+    it('should register an "index:stats" event', async () => {
+      for (const adapter of [publicAdapter, privateAdapter]) {
+        adapter.client.stats.resolves('bar');
+
+        const res = await kuzzle.ask(`core:storage:${adapter.scope}:index:stats`);
+
+        should(res).eql('bar');
+        should(adapter.cache.stats).calledOnce();
+      }
+    });
+
     describe('#index:mDelete', () => {
       it('should register an "index:mDelete" event', async () => {
         const indexes = ['foo', 'bar', 'baz'];
