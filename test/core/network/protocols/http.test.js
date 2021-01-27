@@ -503,7 +503,7 @@ describe('/lib/core/network/protocols/http', () => {
           .be.calledWith(Buffer.from(JSON.stringify(expected, undefined, 2)));
       });
 
-      it('should remove error stack traces if not in development', () => {
+      it.only('should remove error stack traces if not in development', () => {
         const nodeEnv = process.env.NODE_ENV;
 
         for (const env of ['production', '', 'development']) {
@@ -534,6 +534,7 @@ describe('/lib/core/network/protocols/http', () => {
             'unexpected_error',
             'foobar');
 
+            console.log(response.end.getCall(0).args[0].toString())
           should(response.end)
             .be.calledOnce()
             .be.calledWith(sinon.match(matcher));

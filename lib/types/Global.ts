@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-namespace */
+
 declare global {
   namespace NodeJS {
     interface Global {
@@ -7,3 +9,5 @@ declare global {
 }
 
 export {};
+
+/* eslint-enable @typescript-eslint/no-namespace */

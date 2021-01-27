@@ -4,6 +4,7 @@ const stableStringify = require('json-stable-stringify');
 
 const kerror = require('../../lib/kerror');
 const { Request } = require('../../index');
+const { hilightUserCode } = require('../../lib/util/stackTrace');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending
@@ -74,6 +75,8 @@ ${comparedStr}
 
 function fromMessage (domain, subdomain, id, message) {
   const error = kerror.get(domain, subdomain, id, message);
+
+  error.stack = error.stack.split('\n').map(hilightUserCode).join('\n');
 
   return fromError(error);
 }
