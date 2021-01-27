@@ -21,7 +21,7 @@ The number of documents that can be created by a single request is limited by th
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mCreate[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_mCreate[?refresh=wait_for][&silent]
 Method: POST
 Body:
 ```
@@ -86,6 +86,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created documents are indexed
+- `silent`: if set, then Kuzzle will not generate notifications
 
 ---
 

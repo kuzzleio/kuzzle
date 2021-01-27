@@ -19,7 +19,7 @@ The number of documents that can be replaced by a single request is limited by t
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mReplace[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_mReplace[?refresh=wait_for][&silent]
 Method: PUT
 Body:
 ```
@@ -76,6 +76,7 @@ Body:
 
 - `collection`: collection name
 - `index`: index name
+- `silent`: if set, then Kuzzle will not generate notifications
 
 ### Optional:
 

@@ -19,7 +19,7 @@ The number of documents that can be created or replaced by a single request is l
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mCreateOrReplace[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_mCreateOrReplace[?refresh=wait_for][&silent]
 Method: PUT
 Body:
 ```
@@ -80,6 +80,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
+- `silent`: if set, then Kuzzle will not generate notifications
 
 ---
 

@@ -17,7 +17,7 @@ Deletes a document.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>[?refresh=wait_for][&source]
+URL: http://kuzzle:7512/<index>/<collection>/<documentId>[?refresh=wait_for][&source][&silent]
 Method: DELETE
 ```
 
@@ -45,6 +45,8 @@ Method: DELETE
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deletion has been indexed
 - `source`: if set to `true` Kuzzle will return the deleted document body in the response.
+- `silent`: if set, then Kuzzle will not generate notifications
+
 ---
 
 ## Response

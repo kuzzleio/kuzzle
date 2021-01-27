@@ -32,7 +32,7 @@ To update a greater number of documents, either change the server configuration,
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source][&lang=<query language>]
+URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source][&lang=<query language>][&silent]
 Method: PUT
 Body:
 ```
@@ -81,6 +81,7 @@ Body:
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
+- `silent`: if set, then Kuzzle will not generate notifications
 
 ## Body properties
 
