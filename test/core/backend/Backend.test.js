@@ -24,7 +24,7 @@ describe('Backend', () => {
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
-    ({ Backend } = mockrequire.reRequire('../../../lib/core/application/backend'));
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
 
     application = new Backend('black-mesa');
   });
@@ -94,6 +94,23 @@ describe('Backend', () => {
       should(options.mappings).be.eql(application._support.mappings);
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
+    });
+
+    it('should only submit the configured embedded plugins', async () => {
+      application.config.content.plugins.common.include = ['foo'];
+
+      await should(application.start()).rejectedWith(/Cannot find module 'foo'.*/);
+
+      application.config.content.plugins.common.include = ['kuzzle-plugin-logger'];
+
+      await application.start();
+
+      should(global.kuzzle.start).be.calledOnce();
+
+      const [, options] = global.kuzzle.start.getCall(0).args;
+
+      should(options.plugins).have.keys('kuzzle-plugin-logger');
+      should(options.plugins).not.have.keys('kuzzle-plugin-auth-passport-local');
     });
   });
 

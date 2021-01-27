@@ -69,10 +69,10 @@ Kuzzle also exposes an endpoint to **send requests using the standard JSON reque
 
 This makes it possible to avoid the use of the REST API and to send requests via the HTTP protocol the same way as for any other protocols.
 
-This endpoint is accessible with the route `POST /_request`:
+This endpoint is accessible with the route `POST /_query`:
 
 ```bash
-curl -X POST -H  "Content-Type: application/json" "http://localhost:7512/_request" --data '{
+curl -X POST -H  "Content-Type: application/json" "http://localhost:7512/_query" --data '{
   "controller":"server", 
   "action":"now" 
 }'

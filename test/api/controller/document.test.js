@@ -1030,6 +1030,78 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#deleteFields', () => {
+    let content;
+
+    beforeEach(() => {
+      content = { fields: ['garbage'] };
+
+      request.input.body = content;
+
+      kuzzle.validation.validate.resolvesArg(0);
+
+      kuzzle.ask.withArgs('core:storage:public:document:deleteFields').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { foo: 'bar' }
+      });
+
+      request.input.resource._id = 'foobar';
+    });
+
+    it('should forward to the store module and notify', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+
+      const response = await documentController.deleteFields(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteFields',
+        index,
+        collection,
+        'foobar',
+        content.fields,
+        { userId: 'aschen', refresh: 'wait_for'});
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: { foo: 'bar' },
+        });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+      });
+    });
+
+    it('should have default value for refresh, userId', async () => {
+      await documentController.deleteFields(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteFields',
+        index,
+        collection,
+        'foobar',
+        content.fields,
+        { userId: null, refresh: 'false' });
+    });
+
+    it('should return the entire document with source: true', async () => {
+      request.input.args.source = true;
+      const response = await documentController.deleteFields(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { foo: 'bar' }
+      });
+    });
+  });
+
   describe('#mDelete', () => {
     let ids;
     let documents;
