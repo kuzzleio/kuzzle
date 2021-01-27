@@ -68,3 +68,11 @@ Feature: Application
     And I successfully execute the action "tests":"mutex"
     Then I should receive a result matching:
       | locked | true |
+
+  # Stacktrace enhancement
+  Scenario: API Error enhanced stacktrace
+    When I execute the action "stacktrace":"apiError"
+    Then I should receive a stacktrace matching
+    """
+      Salut
+    """

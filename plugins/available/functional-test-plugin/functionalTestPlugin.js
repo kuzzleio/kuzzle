@@ -126,6 +126,12 @@ class FunctionalTestPlugin {
         'hooks',
         { event: 'server:afterNow' });
     };
+
+    // stacktrace enhancement declarations =====================================
+    this.controllers.stacktrace = {
+      apiError: 'stacktraceApiError',
+      jsError: 'stacktraceJsError',
+    } ;
   }
 
   async init (config, context) {
@@ -259,6 +265,14 @@ class FunctionalTestPlugin {
       request.input.args.name);
 
     return { result: helloName };
+  }
+
+  async stacktraceApiError () {
+    throw new BadRequestError('houston we have problem');
+  }
+
+  async stacktraceJsError () {
+    houstonWeHaveAProblem();
   }
 }
 
