@@ -186,7 +186,7 @@ describe('#core/storage/ClientAdapter', () => {
         const res = await kuzzle.ask(`core:storage:${adapter.scope}:index:stats`);
 
         should(res).eql('bar');
-        should(adapter.cache.stats).calledOnce();
+        should(adapter.client.stats).calledOnce();
       }
     });
 
