@@ -115,14 +115,14 @@ describe('Test: ElasticSearch service', () => {
       const result = await elasticsearch.stats();
 
       should(result).be.match({
-        size_in_bytes: 20,
+        sizeInBytes: 20,
         indexes: [{
           name: 'test-index',
-          size_in_bytes: 20,
+          sizeInBytes: 20,
           collections: [{
             name: 'test-collection',
             documentCount: 2,
-            size_in_bytes: 20,
+            sizeInBytes: 20,
           }]
         }]
       });
