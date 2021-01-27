@@ -61,25 +61,25 @@ Feature: Index Controller
     When I successfully execute the action "index":"list" with args:
       | countCollection | true |
     Then I should receive a result matching:
-      | indexes | ["nyc-open-data", "mtp-open-data"] |
+      | indexes     | ["nyc-open-data", "mtp-open-data"]         |
       | collections | { "nyc-open-data": 2, "mtp-open-data": 1 } |
 
   # index:stats =================================================================
 
   Scenario: Check storage stats
-    Given an index "nyc-open-data"
-    And a collection "nyc-open-data":"yellow-taxi"
-    And a collection "nyc-open-data":"green-taxi"
-    And an index "mtp-open-data"
-    And a collection "mtp-open-data":"red-taxi"
+    Given an index "index-storage-data"
+    And a collection "index-storage-data":"yellow-taxi"
+    And a collection "index-storage-data":"green-taxi"
+    And an index "index-stats-data"
+    And a collection "index-stats-data":"red-taxi"
     And I "create" the following documents:
-      | _id          | body                                  |
-      | "document-1" | { "name": "document1", "test": true } |
+      | _id          | body             |
+      | "document-1" | { "test": true } |
     And I refresh the collection
     When I successfully execute the action "index":"stats"
     And I should receive a result matching:
-      | size_in_bytes | 5030 |
+      | sizeInBytes | 4122 |
     Then I should receive a "indexes" array of objects matching:
-      | name            | size_in_bytes | collections                                                                                 |
-      | "nyc-open-data" | 460           | [ { name: "green-taxi", size_in_bytes: 230 }, { name: "yellow-taxi", size_in_bytes: 230 } ] |
-      | "mtp-open-data" | 4570          | [ { name: "red-taxi", size_in_bytes: 4570, documentCount: 1 } ]                             |
+      | name                 | sizeInBytes | collections                                                                             |
+      | "index-storage-data" | 460         | [ { name: "green-taxi", sizeInBytes: 230 }, { name: "yellow-taxi", sizeInBytes: 230 } ] |
+      | "index-stats-data"   | 3662        | [ { name: "red-taxi", sizeInBytes: 3662, documentCount: 1 } ]                           |
