@@ -93,6 +93,30 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
 
 Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/event-system#pipe).
 
+**Example:** Basic Kuzzle application
+```js
+import { Backend } from 'kuzzle';
+
+// Instantiate a new application
+const app = new Backend('playground');
+
+// Declare a "greeting" controller
+app.controller.register('greeting', {
+  actions: {
+    // Declare a "sayHello" action
+    sayHello: {
+      handler: request => `Hello, ${request.input.args.name}`
+    }
+  }
+});
+
+// Start the application
+app.start()
+  .then(() => {
+    app.log.info('Application started');
+  });
+```
+
 ## Complete ecosystem
 
 In addition to Kuzzle, we are developing many other projects to facilitate the use of our backend.   

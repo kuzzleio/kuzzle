@@ -1546,6 +1546,128 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#deleteFields', () => {
+    beforeEach(() => {
+      elasticsearch._client.get.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          _source: { city: 'Kathmandu', useless: 'somevalue' }
+        }
+      });
+
+      elasticsearch._client.index.resolves({
+        body: {
+          _id: 'liia',
+          _version: 2,
+          _source: { city: 'Kathmandu' }
+        }
+      });
+    });
+
+    it('should support field removal capability', () => {
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.get).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+          });
+
+          should(elasticsearch._client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                updatedAt: timestamp,
+                updater: null
+              }
+            },
+            refresh: undefined
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 2,
+            _source: { city: 'Kathmandu' }
+          });
+        });
+    });
+
+    it('should accept additional options', () => {
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless'],
+        { refresh: 'wait_for', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.get).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+          });
+
+          should(elasticsearch._client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                updatedAt: timestamp,
+                updater: 'aschen'
+              }
+            },
+            refresh: 'wait_for'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 2,
+            _source: { city: 'Kathmandu' }
+          });
+        });
+    });
+
+    it('should throw a NotFoundError Exception if document does not exists', () => {
+      elasticsearch._client.get.rejects(esClientError);
+
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+          should(elasticsearch._client.index).not.be.called();
+        });
+    });
+
+    it('should return a rejected promise if client.index fails', () => {
+      elasticsearch._client.index.rejects(esClientError);
+
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+        });
+    });
+  });
+
   describe('#mExecute', () => {
     it('should call the callback method with each batch returned by ES', async () => {
       const hits1 = {

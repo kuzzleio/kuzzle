@@ -7,7 +7,7 @@ description: BackendCluster.once method
 
 # `once()`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.9.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Listens to an event emitted with [BackendCluster.broadcast](/core/2/framework/classes/backend-cluster/broadcast).
