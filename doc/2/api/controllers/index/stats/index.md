@@ -8,7 +8,7 @@ title: stats
 
 
 
-Returns detailed storage stats: Overall index/collection sizes and the number of documents per collection.
+Returns detailed storage usage statistics: overall index/collection sizes and the number of documents per collection.
 
 ---
 
