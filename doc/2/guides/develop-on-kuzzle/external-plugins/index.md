@@ -55,7 +55,7 @@ app.plugin.use(new PluginS3())
 ```
 
 ::: info
-The plugin default name will be infered from the class name:
+The plugin default name will be inferred from the class name:
   - class name will be converted to `kebab-case`
   - the string `Plugin` will be removed
 

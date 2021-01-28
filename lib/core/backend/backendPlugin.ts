@@ -11,7 +11,7 @@ export class BackendPlugin extends ApplicationManager {
   /**
    * Uses a plugin in this application.
    *
-   * Plugin name will be infered from the class name.
+   * Plugin name will be inferred from the class name.
    * e.g. `DeviceManagerPlugin` => `device-manager`
    *
    * @param plugin - Plugin instance
