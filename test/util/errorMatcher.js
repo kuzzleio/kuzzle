@@ -8,7 +8,7 @@ const { hilightUserCode } = require('../../lib/util/stackTrace');
 
 /**
  * Returns a sinon matcher tailored-made to match error API responses depending
- * on the current process.env.NODE_ENV environment variable.
+ * on the current global.NODE_ENV environment variable.
  */
 function fromError (error) {
   let expectedError = new Request(
@@ -19,7 +19,7 @@ function fromError (error) {
 
   delete expectedError.requestId;
 
-  expectedError.error.stack = process.env.NODE_ENV === 'development'
+  expectedError.error.stack = global.NODE_ENV === 'development'
     ? 'stacktrace'
     : undefined;
 
@@ -60,7 +60,7 @@ function fromError (error) {
     // object
     if (!res) {
       // eslint-disable-next-line no-console
-      console.error(`Error: error objects do not match (env = ${process.env.NODE_ENV})
+      console.error(`Error: error objects do not match (env = ${global.NODE_ENV})
 Expected:
 ${expectedStr}
 ===
