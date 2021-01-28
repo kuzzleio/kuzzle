@@ -40,7 +40,7 @@ To remove all documents from a collection, use [collection:truncate](/core/2/api
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source][&lang=<query language>]
+URL: http://kuzzle:7512/<index>/<collection>/_query[?refresh=wait_for][&source][&lang=<query language>][&silent]
 Method: DELETE
 Body:
 ```
@@ -82,6 +82,7 @@ Body:
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 - `source`: if set to `true` Kuzzle will return each deleted document body in the response.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

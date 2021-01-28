@@ -53,7 +53,7 @@ describe('DocumentController', () => {
     });
 
     it('should forward to the store module', async () => {
-      request.input.body = { query: { bar: 'bar '} };
+      request.input.body = { query: { bar: 'bar ' } };
       request.input.args.from = 1;
       request.input.args.size = 3;
       request.input.args.scroll = '10s';
@@ -64,7 +64,7 @@ describe('DocumentController', () => {
         'core:storage:public:document:search',
         index,
         collection,
-        { query: { bar: 'bar '} },
+        { query: { bar: 'bar ' } },
         { from: 1, size: 3, scroll: '10s' });
 
       should(response).match({
@@ -318,6 +318,18 @@ describe('DocumentController', () => {
       });
     });
 
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.create(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
     it('should forward to the store module and notify', async () => {
       request.input.resource._id = 'foobar';
       request.context.user = { _id: 'aschen' };
@@ -382,6 +394,21 @@ describe('DocumentController', () => {
         items,
         errors: []
       }));
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController._mChanges(
+        request,
+        'mCreate',
+        actionEnum.CREATE);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
     });
 
     it('should forward to the store module and notify the changes', async () => {
@@ -513,6 +540,18 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
     });
 
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.createOrReplace(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
     it('should forward to the store module and notify', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
@@ -573,6 +612,18 @@ describe('DocumentController', () => {
       });
 
       request.input.resource._id = 'foobar';
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.update(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
     });
 
     it('should forward to the store module and notify', async () => {
@@ -650,6 +701,18 @@ describe('DocumentController', () => {
         _source: { ...changes, name: 'gordon' },
         created: false,
       });
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.upsert(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
     });
 
     it('should forward to the storage module and notify on update', async () => {
@@ -779,6 +842,26 @@ describe('DocumentController', () => {
         .resolves(esResponse);
     });
 
+    it('should not notify with "silent" argument', async () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.silent = true;
+
+      await documentController.updateByQuery(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
     it('should forward to the store module and notify the changes', async () => {
       request.input.body = {
         query: {
@@ -798,7 +881,7 @@ describe('DocumentController', () => {
         index,
         collection,
         { match: { foo: 'bar' } },
-        { bar: 'foo'},
+        { bar: 'foo' },
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).be.calledWith(
@@ -808,7 +891,7 @@ describe('DocumentController', () => {
         esResponse.successes.map(doc => ({
           _id: doc._id,
           _source: doc._source,
-          _updatedFields: [ 'bar' ],
+          _updatedFields: ['bar'],
         })));
 
       should(response).be.eql(esResponse);
@@ -843,7 +926,7 @@ describe('DocumentController', () => {
         esResponse.successes.map(doc => ({
           _id: doc._id,
           _source: { foo: 'bar', bar: 'foo' },
-          _updatedFields: [ 'bar' ],
+          _updatedFields: ['bar'],
         })));
 
       should(response).be.eql(esResponse);
@@ -935,6 +1018,18 @@ describe('DocumentController', () => {
       request.input.resource._id = 'foobar';
     });
 
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.replace(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
     it('should forward to the store module and notify', async () => {
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
@@ -978,13 +1073,29 @@ describe('DocumentController', () => {
   });
 
   describe('#delete', () => {
-    it('should forward to the store module and notify', async () => {
-      request.input.args.refresh = 'wait_for';
+    beforeEach(() => {
+      request.input.resource._id = 'foobar';
+
       kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
         _source: '_source'
       });
-      request.input.resource._id = 'foobar';
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.delete(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
+    it('should forward to the store module and notify', async () => {
+      request.input.args.refresh = 'wait_for';
 
       const response = await documentController.delete(request);
 
@@ -1005,11 +1116,6 @@ describe('DocumentController', () => {
     });
 
     it('should forward to the store module, notify and retrieve document source', async () => {
-      kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
-        _id: 'foobar',
-        _source: '_source'
-      });
-      request.input.resource._id = 'foobar';
       request.input.args.source = true;
 
       const response = await documentController.delete(request);
@@ -1026,7 +1132,91 @@ describe('DocumentController', () => {
         actionEnum.DELETE,
         { _id: 'foobar', _source: '_source' });
 
-      should(response).be.eql({ _id: 'foobar', _source: '_source'});
+      should(response).be.eql({ _id: 'foobar', _source: '_source' });
+    });
+  });
+
+  describe('#deleteFields', () => {
+    let content;
+
+    beforeEach(() => {
+      content = { fields: ['garbage'] };
+
+      request.input.body = content;
+
+      kuzzle.validation.validate.resolvesArg(0);
+
+      kuzzle.ask.withArgs('core:storage:public:document:deleteFields').resolves({
+        _id: '_id',
+        _version: '_version',
+        _source: { foo: 'bar' }
+      });
+
+      request.input.resource._id = 'foobar';
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.deleteFields(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
+    it('should forward to the store module and notify', async () => {
+      request.context.user = { _id: 'aschen' };
+      request.input.args.refresh = 'wait_for';
+
+      const response = await documentController.deleteFields(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteFields',
+        index,
+        collection,
+        'foobar',
+        content.fields,
+        { userId: 'aschen', refresh: 'wait_for' });
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.UPDATE,
+        {
+          _id: '_id',
+          _source: { foo: 'bar' },
+        });
+
+      should(response).match({
+        _id: '_id',
+        _version: '_version',
+      });
+    });
+
+    it('should have default value for refresh, userId', async () => {
+      await documentController.deleteFields(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteFields',
+        index,
+        collection,
+        'foobar',
+        content.fields,
+        { userId: null, refresh: 'false' });
+    });
+
+    it('should return the entire document with source: true', async () => {
+      request.input.args.source = true;
+      const response = await documentController.deleteFields(request);
+
+      should(response).be.eql({
+        _id: '_id',
+        _version: '_version',
+        _source: { foo: 'bar' }
+      });
     });
   });
 
@@ -1049,6 +1239,18 @@ describe('DocumentController', () => {
         documents,
         errors: []
       }));
+    });
+
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.mDelete(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
     });
 
     it('should forward to the store module and notify the changes', async () => {
@@ -1107,6 +1309,18 @@ describe('DocumentController', () => {
       });
     });
 
+    it('should not notify with "silent" argument', async () => {
+      request.input.args.silent = true;
+
+      await documentController.deleteByQuery(request);
+
+      should(kuzzle.ask).not.be.calledWithMatch(
+        'core:realtime:document:notify',
+        request,
+        actionEnum.CREATE,
+        { _id: '_id', _source: '_source' });
+    });
+
     it('should forward to the store module and notify the changes', async () => {
       request.input.body = { query: { foo: 'bar' } };
       request.input.args.refresh = 'wait_for';
@@ -1133,7 +1347,8 @@ describe('DocumentController', () => {
         documents: [
           { _id: 'id1', _source: undefined },
           { _id: 'id2', _source: undefined }
-        ]});
+        ]
+      });
     });
 
     it('should forward to the store module, notify the changes and retrieve all sources', async () => {
@@ -1163,7 +1378,8 @@ describe('DocumentController', () => {
         documents: [
           { _id: 'id1', _source: '_source1' },
           { _id: 'id2', _source: '_source2' }
-        ]});
+        ]
+      });
     });
 
     it('should reject if the "lang" is not supported', () => {

@@ -7,7 +7,7 @@ description: Mutex class properties
 
 # Properties
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.9.0" />
 
 ## `attemptDelay`
 

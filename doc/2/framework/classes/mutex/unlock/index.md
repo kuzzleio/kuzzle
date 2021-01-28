@@ -7,7 +7,7 @@ description: Mutex class unlock() method
 
 # unlock
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.9.0" />
 
 Frees the locked resource, making it available again.
 
