@@ -168,7 +168,7 @@ The entire realtime engine is used exclusively from a client (frontend or backen
 
 ## Integrated Cluster Mode
 
-Kuzzle is a backend designed to **scall horizontally to millions of users**.  
+Kuzzle is a backend designed to **scale horizontally to millions of users**.  
 
 With its integrated [masterless cluster mode](/core/2/guides/advanced/cluster-scalability), it allows hot-starting new application instances to handle the load.
 
