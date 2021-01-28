@@ -36,12 +36,12 @@ Returns an object with the following properties:
 
 - `indexes`: an array of indexes. Each index is an object with the following properties:
   - `name`: index name
-  - `sizeInBytes`: total index size in bytes
+  - `size`: total index size in bytes
   - `collections`: an array of collections. Each collection is an object with the following properties:
     - `name`: collection name
     - `documentCount`: total number of documents
-    - `sizeInBytes`: total collection size in bytes
-- `sizeInBytes`: total size in bytes
+    - `size`: total collection size in bytes
+- `size`: total size in bytes
 
 ```js
 {
@@ -58,30 +58,30 @@ Returns an object with the following properties:
           {
             "documentCount": 0,
             "name": "collection-1",
-            "sizeInBytes": 230
+            "size": 230
           },
           {
             "documentCount": 0,
             "name": "collection-2",
-            "sizeInBytes": 230
+            "size": 230
           }
         ],
         "name": "index-1",
-        "sizeInBytes": 460
+        "size": 460
       },
       {
         "collections": [
           {
             "documentCount": 1,
             "name": "collection-1",
-            "sizeInBytes": 3662
+            "size": 3662
           }
         ],
         "name": "index-2",
-        "sizeInBytes": 3662
+        "size": 3662
       }
     ],
-    "sizeInBytes": 4122
+    "size": 4122
   }
 }
 ```
