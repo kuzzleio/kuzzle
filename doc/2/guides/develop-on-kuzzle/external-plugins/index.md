@@ -54,6 +54,14 @@ import PluginS3 from 'kuzzle-plugin-s3'
 app.plugin.use(new PluginS3())
 ```
 
+::: info
+The plugin default name will be infered from the class name:
+  - class name will be converted to `kebab-case`
+  - the string `Plugin` will be removed
+
+E.g. `PluginDeviceManager` => `device-manager`
+:::
+
 It's possible to override the original plugin name by passing a new one in the option object:
 
 ```js
