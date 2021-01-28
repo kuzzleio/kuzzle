@@ -30,7 +30,7 @@ describe('BackendPlugin', () => {
       application.plugin.use(plugin);
 
       should(application._plugins).has.property('dummy');
-      should(application._plugins['dummy'])
+      should(application._plugins.dummy)
         .be.eql({ plugin, options: {} });
     });
 
