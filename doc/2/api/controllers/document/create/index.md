@@ -57,7 +57,7 @@ Body:
 
 - `documentId`: set the document unique ID to the provided value, instead of auto-generating a random ID
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created document is indexed
-- `silent`: if set, then Kuzzle will not generate notifications
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

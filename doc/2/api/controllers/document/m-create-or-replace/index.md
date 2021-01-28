@@ -80,7 +80,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
-- `silent`: if set, then Kuzzle will not generate notifications
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

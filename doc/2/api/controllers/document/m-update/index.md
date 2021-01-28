@@ -81,7 +81,7 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the updates are indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
-- `silent`: if set, then Kuzzle will not generate notifications
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 
