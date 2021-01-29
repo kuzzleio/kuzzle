@@ -78,12 +78,12 @@ describe('Test: ElasticSearch Wrapper', () => {
       let nodeEnv;
 
       beforeEach(() => {
-        nodeEnv = process.env.NODE_ENV;
-        process.env.NODE_ENV = 'production';
+        nodeEnv = global.NODE_ENV;
+        global.NODE_ENV = 'production';
       });
 
       afterEach(() => {
-        process.env.NODE_ENV = nodeEnv;
+        global.NODE_ENV = nodeEnv;
       });
 
       it('should log the source error for easier support & debugging', () => {

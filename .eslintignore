@@ -43,6 +43,8 @@ lib/types/ResponsePayload.js
 lib/types/StrategyDefinition.js
 lib/types/Token.js
 lib/types/User.js
+lib/types/Global.d.ts
+lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
 features/support/application/functional-tests-app.js
