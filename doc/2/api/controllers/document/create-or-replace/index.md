@@ -17,7 +17,7 @@ Creates a new document in the persistent data storage, or replaces its content i
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/<documentId>[?refresh=wait_for][&silent]
 Method: PUT
 Body:
 ```
@@ -54,6 +54,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced document is indexed
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

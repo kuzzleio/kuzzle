@@ -376,10 +376,10 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
     });
 
     it('should respond with an error if the payload cannot be parsed', () => {
-      const nodeEnv = process.env.NODE_ENV;
+      const nodeEnv = global.NODE_ENV;
 
       for (const env of ['production', '', 'development']) {
-        process.env.NODE_ENV = env;
+        global.NODE_ENV = env;
         protocol._respond = sinon.spy();
 
         const client = new FakeClient(env);
@@ -405,7 +405,7 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
         protocol._respond.resetHistory();
       }
 
-      process.env.NODE_ENV = nodeEnv;
+      global.NODE_ENV = nodeEnv;
     });
 
     it('should respond with an error if the requestId is not a string', () => {
@@ -438,14 +438,14 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
     });
 
     it('should broadcast if in development mode', () => {
-      const currentEnv = process.env.NODE_ENV;
-      process.env.NODE_ENV = 'development';
+      const currentEnv = global.NODE_ENV;
+      global.NODE_ENV = 'development';
 
       protocol.broadcast = sinon.spy();
       protocol.config.developmentMode = true;
 
       protocol._respond(fakeClient, {content: 'response'});
-      process.env.NODE_ENV = currentEnv;
+      global.NODE_ENV = currentEnv;
 
       should(protocol.broadcast)
         .be.calledOnce()
