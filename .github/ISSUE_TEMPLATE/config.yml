@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 🗣 Ask a Question
+    url: https://stackoverflow.com/questions/ask?tags=kuzzle
+    about: How does X work 🤔?
+  - name: 👋 Join us on Discord
+    url: http://join.discord.kuzzle.io/
+    about: I made this! I have an idea...
+  - name: 📖 Read our Documentation
+    url: https://docs.kuzzle.io
+    about: How to use Kuzzle?
