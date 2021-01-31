@@ -20,7 +20,7 @@ describe('BackendPlugin', () => {
       constructor () {}
     }
 
-    it('should allows to use a plugin and infer the name', () => {
+    it('should allow to use a plugin and infer the name', () => {
       const plugin = new DummyPlugin();
 
       application.plugin.use(plugin);
@@ -30,7 +30,7 @@ describe('BackendPlugin', () => {
         .be.eql({ plugin, options: {} });
     });
 
-    it('should allows to specify the plugin name and options', () => {
+    it('should allow to specify the plugin's name and options', () => {
       const plugin = new DummyPlugin();
 
       application.plugin.use(
@@ -41,7 +41,7 @@ describe('BackendPlugin', () => {
         .be.eql({ plugin, options: { name: 'not-dummy', manifest: 'manifest' } });
     });
 
-    it('should throws an error if the plugin is invalid', () => {
+    it('should throw an error if the plugin is invalid', () => {
       should(() => {
         application.plugin.use({ init: () => {} });
       }).throwError({ id: 'plugin.assert.no_name_provided' });
