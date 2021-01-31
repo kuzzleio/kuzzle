@@ -8,11 +8,7 @@ describe('BackendPlugin', () => {
   let application;
 
   beforeEach(() => {
-
     application = new Backend('black-mesa');
-  });
-
-  afterEach(() => {
   });
 
   describe('#use', () => {
@@ -62,14 +58,6 @@ describe('BackendPlugin', () => {
       should(() => {
         application.plugin.use(new WrongPlugin());
       }).throwError({ id: 'plugin.assert.init_not_found' });
-    });
-
-    it('should throws an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.vault.file = 'xen.bmp';
-      }).throwError({ id: 'plugin.runtime.already_started' });
     });
   });
 });
