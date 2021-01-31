@@ -16,7 +16,7 @@ Deletes fields of an existing document.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_fields[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/<documentId>/_fields[?refresh=wait_for][&silent]
 Method: DELETE
 Body:
 ```
@@ -59,6 +59,8 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the new document content is indexed
 - `source`: if set to `true`, the response will contain the new updated document
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+
 ---
 
 ## Body properties

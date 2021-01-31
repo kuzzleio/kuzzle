@@ -43,7 +43,7 @@ export type ResponseErrorPayload = {
   status: number;
 
   /**
-   * Error stacktrace (only if NODE_ENV=development)
+   * Error stacktrace (only if global.NODE_ENV=development)
    */
   stack?: string;
 };

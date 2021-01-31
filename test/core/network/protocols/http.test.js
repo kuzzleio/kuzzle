@@ -504,10 +504,10 @@ describe('/lib/core/network/protocols/http', () => {
       });
 
       it('should remove error stack traces if not in development', () => {
-        const nodeEnv = process.env.NODE_ENV;
+        const nodeEnv = global.NODE_ENV;
 
         for (const env of ['production', '', 'development']) {
-          process.env.NODE_ENV = env;
+          global.NODE_ENV = env;
 
           protocol._sendRequest({id: 'connectionId'}, response, payload);
 
@@ -542,7 +542,7 @@ describe('/lib/core/network/protocols/http', () => {
           response.end.resetHistory();
         }
 
-        process.env.NODE_ENV = nodeEnv;
+        global.NODE_ENV = nodeEnv;
       });
 
       it('should output buffer raw result', () => {
@@ -790,10 +790,10 @@ describe('/lib/core/network/protocols/http', () => {
       const
         connectionId = 'connectionId',
         payload = new HttpMessage({id: 'connectionId'}, {}),
-        nodeEnv = process.env.NODE_ENV;
+        nodeEnv = global.NODE_ENV;
 
       for (const env of ['production', '', 'development']) {
-        process.env.NODE_ENV = env;
+        global.NODE_ENV = env;
 
         const
           kerr = kerror.get('unexpected_error', 'foobar'),
@@ -830,7 +830,7 @@ describe('/lib/core/network/protocols/http', () => {
         response.end.resetHistory();
       }
 
-      process.env.NODE_ENV = nodeEnv;
+      global.NODE_ENV = nodeEnv;
     });
 
     it('should remove pending request from clients', () => {

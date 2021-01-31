@@ -113,6 +113,8 @@ lib/types/StrategyDefinition.js
 lib/types/Token.js
 lib/types/User.js
 lib/types/index.js
+lib/types/Global.d.ts
+lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
 features-sdk/support/application/functional-tests-app.js

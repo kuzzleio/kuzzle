@@ -19,7 +19,7 @@ The number of documents that can be deleted by a single request is limited by th
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mDelete[?refresh=wait_for]
+URL: http://kuzzle:7512/<index>/<collection>/_mDelete[?refresh=wait_for][&silent]
 Method: DELETE
 Body:
 ```
@@ -54,6 +54,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deletions are indexed
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

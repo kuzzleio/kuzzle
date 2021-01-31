@@ -15,7 +15,7 @@ Applies partial changes to a document. The document must exist in the storage la
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source]
+URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
 Method: PUT
 Body:
 ```
@@ -54,6 +54,7 @@ Body:
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
 - `source`: if set to `true` Kuzzle will return the entire updated document body in the response.
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
 
 ---
 

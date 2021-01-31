@@ -21,7 +21,7 @@
 
 /**
  * Deprecation warning about a specific feature.
- * Only available in developement mode (NODE_ENV=development)
+ * Only available in developement mode (global.NODE_ENV=development)
  */
 export type Deprecation = {
   /**
