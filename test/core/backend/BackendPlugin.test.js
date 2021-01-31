@@ -30,7 +30,7 @@ describe('BackendPlugin', () => {
         .be.eql({ plugin, options: {} });
     });
 
-    it('should allow to specify the plugin's name and options', () => {
+    it('should allow to specify the plugin\'s name and options', () => {
       const plugin = new DummyPlugin();
 
       application.plugin.use(
