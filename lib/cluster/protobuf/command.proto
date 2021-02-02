@@ -28,8 +28,18 @@ message FullStateResponse {
     repeated NodeSubscribers nodes = 5;
   }
 
+  // Describes a cluster activity event
+  message Activity {
+    string id = 1;
+    string date = 2;
+    string address = 3;
+    uint32 event = 4;
+    optional string reason = 5;
+  }
+
   repeated RealtimeRoom rooms = 1;
   repeated sync.NewAuthStrategy authStrategies = 2;
+  repeated Activity activity = 3;
 }
 
 // Handshake Request

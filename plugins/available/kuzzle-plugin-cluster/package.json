@@ -1,0 +1,18 @@
+{
+  "name": "cluster-compat",
+  "version": "1.0.0",
+  "description": "Legacy cluster compatibility plugin",
+  "main": "./lib/index.js",
+  "scripts": {
+  },
+  "repository": {
+  },
+  "author": "Kuzzle",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/kuzzleio/kuzzle/issues"
+  },
+  "homepage": "https://github.com/kuzzleio/kuzzle",
+  "dependencies": {
+  }
+}

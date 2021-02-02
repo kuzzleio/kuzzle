@@ -744,7 +744,10 @@
   },
 
   // [cluster]
-  // Kuzzle Cluster confiugration
+  // Kuzzle Cluster configuration
+  //   * activityHistory:
+  //       Depth of nodes activity (addition or removal) to keep in memory for
+  //       the cluster:status API action
   //   * heartbeat:
   //       Delay between 2 heartbeat frames. A higher value means less
   //       reactivity for detecting dead nodes, while a lower value might mean
@@ -774,6 +777,7 @@
   //          one-way port to propagate sync information from a node to the
   //          other ones
   "cluster": {
+    "activityDepth": 50,
     "heartbeat": 2000,
     "ipv6": false,
     "joinTimeout": 60000,
