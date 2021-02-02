@@ -29,3 +29,4 @@ export * from './EventHandler';
 export * from './User';
 export * from './Token';
 export * from './InternalLogger';
+export * from './Global';

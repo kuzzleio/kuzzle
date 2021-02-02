@@ -258,7 +258,7 @@ export class KuzzleRequest {
    * @param message message displayed in the warning
    */
   addDeprecation (version: string, message: string) {
-    if (process.env.NODE_ENV !== 'development') {
+    if (global.NODE_ENV !== 'development') {
       return;
     }
 

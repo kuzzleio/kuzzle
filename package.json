@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.9.1",
+  "version": "2.9.2",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
@@ -67,8 +67,8 @@
     "koncorde": "^3.0.0",
     "kuzzle-plugin-auth-passport-local": "^6.2.0",
     "kuzzle-plugin-logger": "^2.0.7",
-    "kuzzle-sdk": "^7.4.9",
-    "kuzzle-vault": "^2.0.0",
+    "kuzzle-sdk": "^7.5.3",
+    "kuzzle-vault": "^2.0.4",
     "lodash": "4.17.20",
     "long": "^4.0.0",
     "moment": "^2.29.1",
@@ -95,9 +95,9 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.167",
-    "@typescript-eslint/eslint-plugin": "^4.13.0",
-    "@typescript-eslint/parser": "^4.13.0",
+    "@types/lodash": "^4.14.168",
+    "@typescript-eslint/eslint-plugin": "^4.14.1",
+    "@typescript-eslint/parser": "^4.14.1",
     "async": "^3.2.0",
     "chokidar": "^3.5.1",
     "codecov": "^3.8.1",
@@ -114,7 +114,7 @@
     "rewire": "^5.0.0",
     "should": "13.2.3",
     "should-sinon": "0.0.6",
-    "sinon": "^9.2.3",
+    "sinon": "^9.2.4",
     "strip-json-comments": "^3.1.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.1.3"
