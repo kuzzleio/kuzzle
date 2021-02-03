@@ -24,7 +24,7 @@ describe('Backend', () => {
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
-    ({ Backend } = mockrequire.reRequire('../../../lib/core/application/backend'));
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
 
     application = new Backend('black-mesa');
   });
@@ -94,6 +94,23 @@ describe('Backend', () => {
       should(options.mappings).be.eql(application._support.mappings);
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
+    });
+
+    it('should only submit the configured embedded plugins', async () => {
+      application.config.content.plugins.common.include = ['foo'];
+
+      await should(application.start()).rejectedWith(/Cannot find module 'foo'.*/);
+
+      application.config.content.plugins.common.include = ['kuzzle-plugin-logger'];
+
+      await application.start();
+
+      should(global.kuzzle.start).be.calledOnce();
+
+      const [, options] = global.kuzzle.start.getCall(0).args;
+
+      should(options.plugins).have.keys('kuzzle-plugin-logger');
+      should(options.plugins).not.have.keys('kuzzle-plugin-auth-passport-local');
     });
   });
 
@@ -346,63 +363,6 @@ describe('Backend', () => {
         /* eslint-disable-next-line no-unused-expressions */
         application.vault.secrets;
       }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
-    });
-  });
-
-  describe('PluginManager#use', () => {
-    class DummyPlugin {
-      constructor () {}
-      init () {}
-    }
-    class WrongPlugin {
-      constructor () {}
-    }
-
-    it('should allows to use a plugin and infer the name', () => {
-      const plugin = new DummyPlugin();
-
-      application.plugin.use(plugin);
-
-      should(application._plugins['dummy-plugin'])
-        .be.eql({ plugin, options: {} });
-    });
-
-    it('should allows to specify the plugin name and options', () => {
-      const plugin = new DummyPlugin();
-
-      application.plugin.use(
-        plugin,
-        { name: 'not-dummy', manifest: 'manifest' });
-
-      should(application._plugins['not-dummy'])
-        .be.eql({ plugin, options: { name: 'not-dummy', manifest: 'manifest' } });
-    });
-
-    it('should throws an error if the plugin is invalid', () => {
-      should(() => {
-        application.plugin.use({ init: () => {} });
-      }).throwError({ id: 'plugin.assert.no_name_provided' });
-
-      should(() => {
-        application.plugin.use(new DummyPlugin(), { name: 'DummyPlugin' });
-      }).throwError({ id: 'plugin.assert.invalid_plugin_name' });
-
-      should(() => {
-        application.plugin.use(new DummyPlugin());
-        application.plugin.use(new DummyPlugin());
-      }).throwError({ id: 'plugin.assert.name_already_exists' });
-
-      should(() => {
-        application.plugin.use(new WrongPlugin());
-      }).throwError({ id: 'plugin.assert.init_not_found' });
-    });
-
-    it('should throws an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.vault.file = 'xen.bmp';
-      }).throwError({ id: 'plugin.runtime.already_started' });
     });
   });
 

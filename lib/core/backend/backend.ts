@@ -24,11 +24,8 @@ import util from 'util';
 import fs from 'fs';
 import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
-import PluginPassportAuthLocal from 'kuzzle-plugin-auth-passport-local';
-import PluginLogger from 'kuzzle-plugin-logger';
 
 import Kuzzle from '../../kuzzle';
-import PluginObject from '../plugin/plugin';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
@@ -37,15 +34,15 @@ import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
 import {
   ControllerDefinition,
-  Plugin,
   Controller,
   EventHandler,
 } from '../../types';
+import { BackendCluster, BackendPlugin } from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-class ApplicationManager {
+export class ApplicationManager {
   protected _application: any;
 
   constructor (application: Backend) {
@@ -254,7 +251,7 @@ class BackendController extends ApplicationManager {
   private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    PluginObject.checkControllerDefinition(name, definition, { application: true });
+    this._application.PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -301,51 +298,6 @@ class BackendVault extends ApplicationManager {
     }
 
     return this._kuzzle.vault.secrets;
-  }
-}
-
-/* BackendPlugin class ====================================================== */
-
-class BackendPlugin extends ApplicationManager {
-  /**
-   * Uses a plugin in this application
-   *
-   * @param plugin - Plugin instance
-   * @param options - Additionnal options
-   *    - `name`: Specify plugin name instead of using the class name.
-   *    - `manifest`: Manually add a manifest definition
-   *    - `deprecationWarning`: If false, does not display deprecation warnings
-   */
-  use (
-    plugin: Plugin,
-    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
-  ) : void {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'plugin');
-    }
-
-    // Avoid plain objects
-    if ((typeof plugin.constructor !== 'function'
-      || plugin.constructor.name === 'Object')
-      && ! options.name
-    ) {
-      throw assertionError.get('no_name_provided');
-    }
-
-    const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! PluginObject.checkName(name)) {
-      throw assertionError.get('invalid_plugin_name', name);
-    }
-
-    if (this._application._plugins[name]) {
-      throw assertionError.get('name_already_exists', name);
-    }
-
-    if (typeof plugin.init !== 'function') {
-      throw assertionError.get('init_not_found', name);
-    }
-
-    this._application._plugins[name] = { options, plugin };
   }
 }
 
@@ -456,6 +408,11 @@ export class Backend {
   protected _secretsFile?: string;
 
   /**
+   * Requiring the PluginObject on module top level creates cyclic dependency
+   */
+  protected PluginObject: any;
+
+  /**
    * Application version
    */
   public version: string;
@@ -537,6 +494,11 @@ export class Backend {
   public storage: BackendStorage;
 
   /**
+   * Cluster manager
+   */
+  public cluster: BackendCluster;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -553,7 +515,14 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! PluginObject.checkName(name)) {
+    /**
+     * Requiring the PluginObject on module top level creates cyclic dependency
+     */
+    Reflect.defineProperty(this, 'PluginObject', {
+      value: require('../plugin/plugin')
+    });
+
+    if (! this.PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -575,6 +544,7 @@ export class Backend {
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
     this.log = new InternalLogger(this);
+    this.cluster = new BackendCluster();
 
     this.kerror = kerror;
 
@@ -600,14 +570,15 @@ export class Backend {
     this._kuzzle = new Kuzzle(this.config.content);
 
     // we need to load the default plugins
-    this.plugin.use(
-      new PluginPassportAuthLocal(),
-      { deprecationWarning: false, name: 'kuzzle-plugin-auth-passport-local' });
-    this.plugin.use(
-      new PluginLogger(),
-      { deprecationWarning: false, name: 'kuzzle-plugin-logger' });
+    for (const plugin of this.config.content.plugins.common.include) {
+      const { default: PluginClass } = await import(plugin);
+      this.plugin.use(new PluginClass(), {
+        deprecationWarning: false,
+        name: plugin,
+      });
+    }
 
-    const application = new PluginObject(
+    const application = new this.PluginObject(
       this._instanceProxy,
       { application: true, name: this.name });
 

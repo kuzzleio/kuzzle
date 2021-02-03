@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Backend } from '../core/application/backend';
+import { Backend } from '../core/backend';
 import { ControllerDefinition } from './ControllerDefinition';
 import { EmbeddedSDK } from '../core/shared/sdk/embeddedSdk';
 

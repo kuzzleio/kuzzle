@@ -42,6 +42,8 @@ export class Headers {
       get: (target, name) => this.getHeader(name as string),
       set: (target, name, value) => this.setHeader(name as string, value),
     });
+
+    this.setHeader('X-Kuzzle-Node', (global as any).kuzzle.id);
   }
 
   /**
@@ -257,6 +259,12 @@ export class RequestResponse {
   }
 
   /**
+   * Node identifier
+   */
+  get node (): string {
+    return (global as any).kuzzle.id;
+  }
+  /**
    * Gets a header value (case-insensitive)
    */
   getHeader (name: string): string | null {
@@ -311,6 +319,7 @@ export class RequestResponse {
         deprecations: this.deprecations,
         error: this.error,
         index: this.index,
+        node: this.node,
         requestId: this.requestId,
         result: this.result,
         status: this.status,

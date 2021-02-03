@@ -1,9 +1,22 @@
-[![Build Status](https://travis-ci.org/kuzzleio/kuzzle.svg?branch=master)](https://travis-ci.org/kuzzleio/kuzzle)
-[![codecov.io](http://codecov.io/github/kuzzleio/kuzzle/coverage.svg?branch=master)](http://codecov.io/github/kuzzleio/kuzzle?branch=master)
-[![Code Quality: Javascript](https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/kuzzle/context:javascript)
-[![Total Alerts](https://img.shields.io/lgtm/alerts/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18)](https://lgtm.com/projects/g/kuzzleio/kuzzle/alerts)
-
-![logo](https://kuzzle.io/static/public/images/logo_black.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/7868838/103797784-32337580-5049-11eb-8917-3fcf4487644c.png"/>
+</p>
+<p align="center">
+  <img alt="GitHub branch checks state" src="https://img.shields.io/github/checks-status/kuzzleio/kuzzle/master">
+  <img alt="Sonarcloud" src="https://sonarcloud.io/api/project_badges/measure?project=kuzzleio_kuzzle&metric=alert_status&branch=master">
+  <a href="https://codecov.io/gh/kuzzleio/kuzzle">
+    <img src="https://codecov.io/gh/kuzzleio/kuzzle/branch/master/graph/badge.svg?token=jOrGhzslSM"/>
+  </a>
+  <a href="https://lgtm.com/projects/g/kuzzleio/kuzzle/context:javascript">
+    <img src="https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18" />
+  </a>
+  <a href="https://lgtm.com/projects/g/kuzzleio/kuzzle/alerts">
+    <img src="https://img.shields.io/lgtm/alerts/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18" />
+  </a>
+  <a href="https://github.com/kuzzleio/kuzzle/blob/master/LICENSE">
+    <img alt="undefined" src="https://img.shields.io/github/license/kuzzleio/kuzzle.svg?style=flat">
+  </a>
+</p>
 
 ## Why Kuzzle ?
 

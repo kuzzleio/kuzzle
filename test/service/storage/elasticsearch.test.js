@@ -80,6 +80,55 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#stats', () => {
+    beforeEach(() => {
+      elasticsearch._client.indices.stats.resolves({
+        body: {
+          indices: {
+            '%kuzzle.users': {
+              total: { docs: { count: 1 }, store: { size_in_bytes: 10 } }
+            },
+            '&test-index._kuzzle_keep': {
+              total: { docs: { count: 0 }, store: { size_in_bytes: 10 } }
+            },
+            '&test-index.test-collection': {
+              total: { docs: { count: 2 }, store: { size_in_bytes: 20 } }
+            }
+          }
+        }
+      });
+    });
+
+    it('should only request required stats from underlying client', async () => {
+      const esRequest = {
+        metric: ['docs', 'store'],
+      };
+
+      await elasticsearch.stats();
+
+      should(elasticsearch._client.indices.stats)
+        .calledOnce()
+        .calledWithMatch(esRequest);
+    });
+
+    it('should as default ignore private and hidden indices', async () => {
+      const result = await elasticsearch.stats();
+
+      should(result).be.match({
+        size: 20,
+        indexes: [{
+          name: 'test-index',
+          size: 20,
+          collections: [{
+            name: 'test-collection',
+            documentCount: 2,
+            size: 20,
+          }]
+        }]
+      });
+    });
+  });
+
   describe('#scroll', () => {
     it('should be able to scroll an old search', async () => {
       const cacheStub = kuzzle.ask
@@ -1494,6 +1543,128 @@ describe('Test: ElasticSearch service', () => {
         .rejectedWith(
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
+    });
+  });
+
+  describe('#deleteFields', () => {
+    beforeEach(() => {
+      elasticsearch._client.get.resolves({
+        body: {
+          _id: 'liia',
+          _version: 1,
+          _source: { city: 'Kathmandu', useless: 'somevalue' }
+        }
+      });
+
+      elasticsearch._client.index.resolves({
+        body: {
+          _id: 'liia',
+          _version: 2,
+          _source: { city: 'Kathmandu' }
+        }
+      });
+    });
+
+    it('should support field removal capability', () => {
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.get).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+          });
+
+          should(elasticsearch._client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                updatedAt: timestamp,
+                updater: null
+              }
+            },
+            refresh: undefined
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 2,
+            _source: { city: 'Kathmandu' }
+          });
+        });
+    });
+
+    it('should accept additional options', () => {
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless'],
+        { refresh: 'wait_for', userId: 'aschen' });
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.get).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+          });
+
+          should(elasticsearch._client.index).be.calledWithMatch({
+            index: esIndexName,
+            id: 'liia',
+            body: {
+              city: 'Kathmandu',
+              _kuzzle_info: {
+                updatedAt: timestamp,
+                updater: 'aschen'
+              }
+            },
+            refresh: 'wait_for'
+          });
+
+          should(result).match({
+            _id: 'liia',
+            _version: 2,
+            _source: { city: 'Kathmandu' }
+          });
+        });
+    });
+
+    it('should throw a NotFoundError Exception if document does not exists', () => {
+      elasticsearch._client.get.rejects(esClientError);
+
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+          should(elasticsearch._client.index).not.be.called();
+        });
+    });
+
+    it('should return a rejected promise if client.index fails', () => {
+      elasticsearch._client.index.rejects(esClientError);
+
+      const promise = elasticsearch.deleteFields(
+        index,
+        collection,
+        'liia',
+        ['useless']);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+        });
     });
   });
 

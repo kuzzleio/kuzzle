@@ -6,6 +6,7 @@ const requestPromise = require('request-promise');
 const _ = require('lodash');
 const should = require('should');
 const { Then } = require('cucumber');
+const Bluebird = require('bluebird');
 
 
 Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
@@ -198,4 +199,8 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
 
   this.props.result = response.result;
   this.props.response = response;
+});
+
+Then('I wait {int} milliseconds', async function (ms) {
+  await Bluebird.delay(ms);
 });

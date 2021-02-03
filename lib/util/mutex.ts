@@ -19,15 +19,14 @@
  * limitations under the License.
  */
 
-'use strict';
+import { randomBytes } from 'crypto';
 
-const { randomBytes } = require('crypto');
+import Bluebird from 'bluebird';
 
-const Bluebird = require('bluebird');
+import kerror from '../kerror';
+import buildDebug from './debug';
 
-const kerror = require('../kerror');
-const debug = require('./debug')('kuzzle:mutex');
-
+const debug = buildDebug('kuzzle:mutex');
 const fatal = kerror.wrap('core', 'fatal');
 
 // LUA script for Redis: we want our mutexes to only delete the lock they
@@ -47,6 +46,28 @@ end
 let delScriptRegistered = false;
 
 /**
+ * Mutex class options
+ */
+export interface MutexOptions {
+  /**
+   * Delay between 2 lock attempts (default: 200)
+   */
+  attemptDelay?: number,
+
+  /**
+   * Mutex lock acquisition timeout, in milliseconds (default: -1)
+   *   If `-1`, will try to acquire the lock indefinitely.
+   *   If `0`, locking will fail immediately if it cannot lock with its 1st attempt
+   */
+  timeout?: number,
+
+  /**
+   * Lock TTL in milliseconds (default: 5000)
+   */
+  ttl?: number,
+}
+
+/**
  * Mutex meant to work across a kuzzle cluster.
  *
  * Allow to have a process played on only 1 node, with the other ones waiting
@@ -62,24 +83,30 @@ let delScriptRegistered = false;
  * Redis servers, then this class needs to implement redlock to properly handle
  * synchronization between servers (see https://redis.io/topics/distlock)
  */
-class Mutex {
+export class Mutex {
+  readonly resource: string;
+  readonly mutexId: string;
+  readonly attemptDelay: number;
+  readonly timeout: number;
+  readonly ttl: number;
+  private _locked = false;
+
   /**
-   * @param {Kuzzle} kuzzle
-   * @param {string} id - lock unique id (must be identical across all nodes)
+   * @param {string} resource - resource identifier to be locked (must be identical across all nodes)
    * @param {Object} [options] - mutex options
-   * @param {Number} [options.attemptDelay] - delay between 2 lock attempts
-   * @param {Number} [options.timeout] - mutex lock acquisition timeout in
-   *                                  milliseconds
-   *                                 if 0, locking will fail immediately if it
-   *                                 cannot lock with its 1st attempt
-   *                                 (default) if -1, will try to acquire the
-   *                                 lock indefinitely
-   * @param {Number} [options.ttl] - lock TTL in milliseconds (default: 5000)
+   *    - `attemptDelay`: delay between 2 lock attempts (default: 200)
+   *    - `timeout`: mutex lock acquisition timeout, in milliseconds (default: -1)
+   *                 If -1, will try to acquire the lock indefinitely.
+   *                 If 0, locking will fail immediately if it cannot lock with
+   *                 its 1st attempt.
+   *    - `ttl`: lock TTL in milliseconds (default: 5000)
    */
-  constructor (id, { attemptDelay = 200, timeout = -1, ttl = 5000 } = {}) {
-    this.lockId = id;
+  constructor (
+    resource: string,
+    { attemptDelay = 200, timeout = -1, ttl = 5000 }: MutexOptions = {}
+  ) {
+    this.resource = resource;
     this.mutexId = `${global.kuzzle.id}/${randomBytes(16).toString('hex')}`;
-    this.locked = false;
     this.attemptDelay = attemptDelay;
     this.timeout = timeout;
     this.ttl = ttl;
@@ -92,34 +119,34 @@ class Mutex {
    *
    * @return {Promise.<boolean>}
    */
-  async lock () {
-    if (this.locked) {
-      throw fatal.get('assertion_failed', `resource "${this.lockId}" already locked by this mutex (id: ${this.mutexId})`);
+  async lock () : Promise<boolean> {
+    if (this._locked) {
+      throw fatal.get('assertion_failed', `resource "${this.resource}" already locked by this mutex (id: ${this.mutexId})`);
     }
 
     let duration = 0;
 
     do {
-      this.locked = await global.kuzzle.ask(
+      this._locked = await global.kuzzle.ask(
         'core:cache:internal:store',
-        this.lockId,
+        this.resource,
         this.mutexId,
         { onlyIfNew: true, ttl: this.ttl });
 
       duration += this.attemptDelay;
 
-      if (!this.locked && (this.timeout === -1 || duration <= this.timeout)) {
+      if (!this._locked && (this.timeout === -1 || duration <= this.timeout)) {
         await Bluebird.delay(this.attemptDelay);
       }
     }
-    while (!this.locked && (this.timeout === -1 || duration <= this.timeout));
+    while (!this._locked && (this.timeout === -1 || duration <= this.timeout));
 
-    if (!this.locked) {
-      debug('Failed to lock %s (mutex id: %s)', this.lockId, this.mutexId);
+    if (!this._locked) {
+      debug('Failed to lock %s (mutex id: %s)', this.resource, this.mutexId);
       return false;
     }
 
-    debug('Resource %s locked (mutex id: %s)', this.lockId, this.mutexId);
+    debug('Resource %s locked (mutex id: %s)', this.resource, this.mutexId);
 
     return true;
   }
@@ -129,9 +156,9 @@ class Mutex {
    *
    * @return {Promise}
    */
-  async unlock () {
-    if (!this.locked) {
-      throw fatal.get('assertion_failed', `tried to unlock the resource "${this.lockId}", which is not locked (mutex id: ${this.mutexId})`);
+  async unlock () : Promise<void> {
+    if (!this._locked) {
+      throw fatal.get('assertion_failed', `tried to unlock the resource "${this.resource}", which is not locked (mutex id: ${this.mutexId})`);
     }
 
     if (!delScriptRegistered) {
@@ -146,13 +173,15 @@ class Mutex {
     await global.kuzzle.ask(
       'core:cache:internal:script:execute',
       'delIfValueEqual',
-      this.lockId,
+      this.resource,
       this.mutexId);
 
-    this.locked = false;
+    this._locked = false;
 
-    debug('Resource %s freed (mutex id: %s)', this.lockId, this.mutexId);
+    debug('Resource %s freed (mutex id: %s)', this.resource, this.mutexId);
+  }
+
+  get locked () {
+    return this._locked;
   }
 }
-
-module.exports = Mutex;

@@ -6,7 +6,7 @@
 import should from 'should'
 import { omit } from 'lodash'
 
-import { Backend, Request } from '../../index';
+import { Backend, Request, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
@@ -105,6 +105,8 @@ app.hook.register('custom:event', async name => {
     { event: 'custom:event', name });
 });
 
+let syncedHello = 'World';
+
 app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition
@@ -113,6 +115,20 @@ app.controller.register('tests', {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
       http: [{ verb: 'post', path: '/hello/:name' }]
+    },
+
+    getSyncedHello: {
+      handler: async (request: Request) => `Hello, ${syncedHello}`,
+      http: [ { verb: 'get', path: '/hello' } ],
+    },
+
+    syncHello: {
+      handler: async (request: Request) => {
+        syncedHello = request.input.args.name;
+        await app.cluster.broadcast('sync:hello', { name: syncedHello });
+        return 'OK';
+      },
+      http: [ { verb: 'put', path: '/syncHello/:name' } ],
     },
 
     // Trigger custom event
@@ -150,7 +166,24 @@ app.controller.register('tests', {
       http: [
         { verb: 'post', path: '/tests/storage-client/:index' }
       ]
-    }
+    },
+
+    mutex: {
+      handler: async (request: Request) => {
+        const ttl = 5000;
+        const mutex = new Mutex('functionalTestMutexHandler', {
+          timeout: 0,
+          ttl,
+        });
+
+        const locked = await mutex.lock();
+
+        return { locked };
+      },
+      http: [
+        { verb: 'get', path: '/tests/mutex/acquire' }
+      ],
+    },
   }
 });
 
@@ -163,6 +196,13 @@ app.vault.key = 'secret-password';
 
 loadAdditionalPlugins()
   .then(() => app.start())
+  .then(() => {
+    // post-start methods here
+
+    app.cluster.on('sync:hello', payload => {
+      syncedHello = payload.name;
+    });
+  })
   .catch(error => {
     console.error(error);
     process.exit(1);

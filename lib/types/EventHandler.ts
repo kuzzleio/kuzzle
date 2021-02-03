@@ -22,4 +22,4 @@
 /**
  * Type for handler attached to Kuzzle events. Either hooks or pipes.
  */
-export type EventHandler = (...payload: any) => Promise<any>
+export type EventHandler = (...payload: any) => any

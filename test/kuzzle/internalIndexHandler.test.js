@@ -9,8 +9,6 @@ const { InternalError: KuzzleInternalError } = require('../../index');
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const MutexMock = require('../mocks/mutex.mock');
 
-const ApiKey = require('../../lib/model/storage/apiKey');
-
 describe('#kuzzle/InternalIndexHandler', () => {
   let InternalIndexHandler;
   let internalIndexHandler;
@@ -20,18 +18,13 @@ describe('#kuzzle/InternalIndexHandler', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     internalIndexHandler = new InternalIndexHandler();
-    sinon.stub(ApiKey, 'batchExecute');
 
     internalIndexName = kuzzle.config.services.storageEngine.internalIndex.name;
   });
 
-  afterEach(() => {
-    ApiKey.batchExecute.restore();
-  });
-
   describe('#init', () => {
     before(() => {
-      mockrequire('../../lib/util/mutex', MutexMock);
+      mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
       // the shared object "Store" also uses mutexes that we need to mock
       mockrequire.reRequire('../../lib/core/shared/store');
@@ -93,7 +86,7 @@ describe('#kuzzle/InternalIndexHandler', () => {
 
       const mutex = MutexMock.__getLastMutex();
 
-      should(mutex.lockId).eql('InternalIndexBootstrap');
+      should(mutex.resource).eql('InternalIndexBootstrap');
       should(mutex.lock).calledOnce();
       should(mutex.unlock).calledOnce();
 
@@ -164,14 +157,12 @@ describe('#kuzzle/InternalIndexHandler', () => {
       sinon.stub(internalIndexHandler, 'createInitialSecurities');
       sinon.stub(internalIndexHandler, 'createInitialValidations');
       sinon.stub(internalIndexHandler, '_persistSecret');
-      sinon.stub(internalIndexHandler, '_loadApiKeys');
 
       await internalIndexHandler._bootstrapSequence();
 
       should(internalIndexHandler.createInitialSecurities).called();
       should(internalIndexHandler.createInitialValidations).called();
       should(internalIndexHandler._persistSecret).called();
-      should(internalIndexHandler._loadApiKeys).called();
 
       should(kuzzle.ask).calledWith(
         'core:storage:private:document:create',
@@ -363,25 +354,6 @@ describe('#kuzzle/InternalIndexHandler', () => {
         internalIndexName,
         'config',
         internalIndexHandler._JWT_SECRET_ID);
-    });
-  });
-
-  describe('#_loadApiKeys', () => {
-    it('should load API key tokens to Redis cache', async () => {
-      ApiKey.batchExecute.callsArgWith(1, [
-        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
-        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
-      ]);
-
-      await internalIndexHandler._loadApiKeys();
-
-      should(ApiKey.batchExecute).be.calledWith({ match_all: {} });
-
-      const tokenAssignEvent = 'core:security:token:assign';
-
-      should(kuzzle.ask)
-        .be.calledWith(tokenAssignEvent, 'encoded-token-1', 'user-id-1', 42)
-        .be.calledWith(tokenAssignEvent, 'encoded-token-2', 'user-id-2', -1);
     });
   });
 });

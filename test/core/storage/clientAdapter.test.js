@@ -22,7 +22,7 @@ describe('#core/storage/ClientAdapter', () => {
   let kuzzle;
 
   before(() => {
-    mockRequire('../../../lib/util/mutex', MutexMock);
+    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
     mockRequire('../../../lib/service/storage/elasticsearch', ElasticsearchMock);
     ClientAdapter = mockRequire.reRequire('../../../lib/core/storage/clientAdapter');
   });
@@ -176,6 +176,17 @@ describe('#core/storage/ClientAdapter', () => {
 
         should(res).eql('bar');
         should(adapter.cache.listIndexes).calledOnce();
+      }
+    });
+
+    it('should register an "index:stats" event', async () => {
+      for (const adapter of [publicAdapter, privateAdapter]) {
+        adapter.client.stats.resolves('bar');
+
+        const res = await kuzzle.ask(`core:storage:${adapter.scope}:index:stats`);
+
+        should(res).eql('bar');
+        should(adapter.client.stats).calledOnce();
       }
     });
 
@@ -433,7 +444,7 @@ describe('#core/storage/ClientAdapter', () => {
           should(adapter.cache.addCollection).calledWith('index', 'collection');
 
           const mutex = MutexMock.__getLastMutex();
-          should(mutex.lockId).eql('loadMappings');
+          should(mutex.resource).eql('loadMappings');
           should(mutex.lock).calledOnce();
           should(mutex.unlock).calledOnce();
         }
@@ -736,6 +747,42 @@ describe('#core/storage/ClientAdapter', () => {
         await should(result).rejectedWith(err);
 
         should(publicAdapter.client.deleteByQuery).not.called();
+      });
+    });
+
+    describe('#document:deleteFields', () => {
+      it('should register a "document:deleteFields" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:document:deleteFields`,
+            'index',
+            'collection',
+            ['query'],
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index', 'collection');
+
+          should(adapter.client.deleteFields)
+            .calledWith('index', 'collection', ['query'], 'options');
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:document:deleteFields',
+          'index',
+          'collection',
+          'query',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.deleteFields).not.called();
       });
     });
 

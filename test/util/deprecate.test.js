@@ -1,30 +1,19 @@
 'use strict';
 
-const
-  should = require('should'),
-  rewire = require('rewire'),
-  Kuzzle = require('../mocks/kuzzle.mock');
+const should = require('should');
+
+const Kuzzle = require('../mocks/kuzzle.mock');
+const Deprecate = require('../../lib/util/deprecate');
 
 describe('Test: Deprecate util', () => {
-  let
-    Deprecate,
-    object,
-    kuzzle,
-    deprecatedObject,
-    processStub;
+  let object;
+  let kuzzle;
+  let deprecatedObject;
 
   beforeEach(() => {
-    processStub = Object.assign(process, {
-      env: Object.assign(process.env, {
-        NODE_ENV: 'development'
-      })
-    });
+    global.NODE_ENV = 'development';
 
     kuzzle = new Kuzzle();
-
-    Deprecate = rewire('../../lib/util/deprecate');
-
-    Deprecate.__set__('process', processStub);
 
     object = {
       foo: 'bar',
@@ -42,7 +31,7 @@ describe('Test: Deprecate util', () => {
 
   describe('#deprecateProperties', () => {
     it('should return original object when not in development environment', () => {
-      processStub.env.NODE_ENV = 'production';
+      global.NODE_ENV = 'production';
 
       deprecatedObject = Deprecate.deprecateProperties(object, {
         foo: 'FOO',

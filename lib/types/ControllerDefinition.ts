@@ -59,20 +59,24 @@ export type ControllerDefinition = {
        * Declare HTTP routes (optional).
        * Http routes will be auto-generated unless at least one is provided
        * or an empty array is provided.
-       *
        */
-      http?: Array<{
-        /**
-         * HTTP verb.
-         */
-        verb: 'get' | 'post' | 'put' | 'delete' | 'head',
-        /**
-         * Route path.
-         * A route starting with `/` will be prefixed by `/_` otherwise the route
-         * will be prefixed by `/_/<application-name>/`.
-         */
-        path: string
-      }>
+      http?: HttpRoute[]
     }
   }
-}
+};
+
+/**
+ * Http route definition
+ */
+export type HttpRoute = {
+  /**
+   * HTTP verb.
+   */
+  verb: 'get' | 'post' | 'put' | 'delete' | 'head',
+  /**
+   * Route path.
+   * A route starting with `/` will be prefixed by `/_` otherwise the route
+   * will be prefixed by `/_/<application-name>/`.
+   */
+  path: string
+};
