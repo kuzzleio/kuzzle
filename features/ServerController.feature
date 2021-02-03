@@ -63,7 +63,8 @@ Feature: Server Controller
   @http
   Scenario: Get our API in OpenApi format as a raw response
     When I successfully execute the action "server":"openapi"
-    Then The property "openapi" of the response should be equal to: "3.0.1"
+    Then I should receive a response matching:
+      | openapi | "3.0.1" |
 
   # server:publicApi ========================================================================
   @development @http

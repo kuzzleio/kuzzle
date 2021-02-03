@@ -92,6 +92,14 @@ Then('I should receive a result matching:', function (dataTable) {
   should(this.props.result).matchObject(expectedResult);
 });
 
+Then('I should receive a response matching:', function (dataTable) {
+  const expectedResult = this.parseObject(dataTable);
+
+  should(this.props.response).not.be.undefined();
+
+  should(this.props.response).matchObject(expectedResult);
+});
+
 Then('The property {string} of the result should match:', function (path, dataTable) {
   const expectedProperty = this.parseObject(dataTable);
 
@@ -179,10 +187,6 @@ Then('The response should contains an array of {string} in the response matching
 
 Then('The response should contains a {string} equals to undefined', async function (key) {
   should(this.props.response[key]).equal(undefined);
-});
-
-Then('The property {string} of the response should be equal to: {string}', async function (key, value) {
-  should(this.props.response[key]).equal(value);
 });
 
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
