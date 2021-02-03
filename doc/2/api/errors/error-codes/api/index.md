@@ -46,5 +46,6 @@ description: Error codes definitions
 | api.process.shutting_down<br/><pre>0x02020007</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this node is shutting down. | This Kuzzle node is shutting down and refuses new requests |
 | api.process.too_many_requests<br/><pre>0x02020008</pre>  | [TooManyRequestsError](/core/2/api/errors/error-codes#toomanyrequestserror) <pre>(429)</pre> | Rejected: requests rate limit exceeded for this user. | The request has been refused because a rate limit has been exceeded for this user |
 | api.process.admin_exists<br/><pre>0x02020009</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Admin user is already set. | Attempted to create the first administrator, when one already exists |
+| api.process.not_enough_nodes<br/><pre>0x0202000a</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this cluster is disabled because there aren't enough nodes connected. | The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added |
 
 ---
