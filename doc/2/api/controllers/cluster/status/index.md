@@ -2,6 +2,7 @@
 code: true
 type: page
 title: status
+description: cluster:status API action
 ---
 
 # status
