@@ -180,6 +180,10 @@ Then('The response should contains a {string} equals to undefined', async functi
   should(this.props.response[key]).equal(undefined);
 });
 
+Then('The property {string} of the response should be equal to: {string}', async function (key, value) {
+  should(this.props.response[key]).equal(value);
+});
+
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
   const body = this.parseObject(dataTable);
 
