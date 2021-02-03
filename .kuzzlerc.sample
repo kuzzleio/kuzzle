@@ -561,7 +561,7 @@
     //       The value of this configuration will change Elasticsearch behavior
     //       on fields that are not declared in the collection mapping.
     //         - "true": Stores document and update the collection mapping with
-    //           infered type
+    //           inferred type
     //         - "false": Stores document and does not update the collection
     //           mapping (field are not indexed)
     //         - "strict": Rejects document
