@@ -6,7 +6,7 @@ const KuzzleMock = require('../mocks/kuzzle.mock');
 
 const generateOpenApi = require('../../lib/api/openApiGenerator');
 
-describe.only('OpenApiGenerator', () => {
+describe('OpenApiGenerator', () => {
   let kuzzle;
   let generatedApi;
 
