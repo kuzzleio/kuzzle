@@ -1,13 +1,15 @@
 'use strict';
 
 const should = require('should');
-
-const { Backend } = require('../../../lib/core/backend');
+const mockrequire = require('mock-require');
 
 describe('BackendPlugin', () => {
   let application;
+  let Backend;
 
   beforeEach(() => {
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
+
     application = new Backend('black-mesa');
   });
 
