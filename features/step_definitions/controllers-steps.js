@@ -95,7 +95,7 @@ Then('I should receive a result matching:', function (dataTable) {
 Then('I should receive a response matching:', function (dataTable) {
   const expectedResult = this.parseObject(dataTable);
 
-  should(this.props.response).not.be.undefined();
+  should(this.props).have.property('response');
 
   should(this.props.response).matchObject(expectedResult);
 });
