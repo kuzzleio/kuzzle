@@ -2,7 +2,7 @@
 
 const should = require('should');
 
-const { Backend} = require('../../../lib/core/backend');
+const { Backend } = require('../../../lib/core/backend');
 
 describe('BackendPlugin', () => {
   let application;
