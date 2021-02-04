@@ -14,4 +14,4 @@ global.NODE_ENV = process.env.NODE_ENV;
 
 export {};
 
-/* eslint-enabl2e @typescript-eslint/no-namespace */
+/* eslint-enable @typescript-eslint/no-namespace */
