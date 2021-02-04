@@ -468,7 +468,7 @@
     //       Maximum amount of time (in milliseconds)
     //       to wait for a concurrent database bootstrap
     "internalIndex": {
-      "bootstrapLockTimeout": 5000
+      "bootstrapLockTimeout": 60000
     },
 
     // [internalCache]
