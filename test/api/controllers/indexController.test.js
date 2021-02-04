@@ -121,4 +121,16 @@ describe('IndexController', () => {
       should(response).be.eql(true);
     });
   });
+
+  describe('#stats', () => {
+    it('should trigger the proper methods and return a valid response', async () => {
+      kuzzle.ask.withArgs('core:storage:public:index:stats').resolves(true);
+
+      const response = await indexController.stats(request);
+
+      should(kuzzle.ask).be.calledWith('core:storage:public:index:stats');
+
+      should(response).be.eql(true);
+    });
+  });
 });

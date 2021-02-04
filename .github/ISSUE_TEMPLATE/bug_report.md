@@ -1,16 +1,19 @@
 ---
-name: Bug report
+name: "\U0001F41B Bug Report"
 about: Create a bug report to help us improve
 title: ''
 labels: bug
 assignees: ''
 ---
 
-<!--- If you have a question about Kuzzle usage, please use Stackoverflow instead >
-<!--- Post here and we will respond https://stackoverflow.com/questions/ask >
-<!--- Don't hesitate to ping us on Gitter when your question is posted >
-<!--- Github issues are limited to bugs and features requests >
-
+<!--
+  IMPORTANT - Github issues are limited to bugs and feature requests, >
+  If you have any questions on how to use Kuzzle >
+  Please use the following resources instead: >
+    - Look for / ask questions on https://stackoverflow.com/questions/ask?tags=kuzzle >
+    - Refer to our docs at https://docs.kuzzle.io >
+    - Join us on Discord (We are active!) >
+-->
 
 <!--- Provide a general summary of the issue in the Title above -->
 
@@ -21,7 +24,7 @@ assignees: ''
 <!--- Tell us what happens instead of the expected behavior -->
 
 ## Possible Solution
-<!--- Not obligatory, but suggest a fix/reason for the bug, -->
+<!--- Not mandatory, but suggest a fix/reason for the bug -->
 
 ## Steps to Reproduce
 <!--- Provide a link to a live example, or an unambiguous set of steps to -->
@@ -31,7 +34,6 @@ assignees: ''
 1.
 2.
 3.
-4.
 
 ## Context (Environment)
 <!--- How has this issue affected you? What are you trying to accomplish? -->

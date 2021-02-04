@@ -5,7 +5,6 @@
 
 import should from 'should'
 import { omit } from 'lodash'
-import Bluebird from 'bluebird';
 
 import { Backend, Request, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';

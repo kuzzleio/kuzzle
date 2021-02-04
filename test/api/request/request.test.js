@@ -21,12 +21,12 @@ describe('#Request', () => {
     // eslint-disable-next-line no-unused-vars
     kuzzle = new KuzzleMock();
 
-    nodeEnv = process.env.NODE_ENV;
+    nodeEnv = global.NODE_ENV;
     rq = new Request({});
   });
 
   afterEach(() => {
-    process.env.NODE_ENV = nodeEnv;
+    global.NODE_ENV = nodeEnv;
   });
 
   it('should defaults other properties correctly', () => {
@@ -308,7 +308,7 @@ describe('#Request', () => {
   });
 
   it('should add a deprecation when kuzzle is in development', () => {
-    process.env.NODE_ENV = 'development';
+    global.NODE_ENV = 'development';
     rq.addDeprecation('1.0.0', 'You should now use Kuzzle v2');
 
     should(rq.deprecations).be.Array();
@@ -317,7 +317,7 @@ describe('#Request', () => {
   });
 
   it('should not add a deprecation when kuzzle is in production', () => {
-    process.env.NODE_ENV = 'production';
+    global.NODE_ENV = 'production';
     rq.addDeprecation('1.0.0', 'You should now use Kuzzle v2');
 
     should(rq.deprecations).be.undefined();

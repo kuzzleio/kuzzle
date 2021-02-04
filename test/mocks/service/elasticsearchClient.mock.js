@@ -55,7 +55,8 @@ class ElasticsearchClientMock {
       existsType: sinon.stub().resolves(),
       getMapping: sinon.stub().resolves(),
       putMapping: sinon.stub().resolves(),
-      refresh: sinon.stub().resolves()
+      refresh: sinon.stub().resolves(),
+      stats: sinon.stub().resolves()
     };
 
     this.mcreate = sinon.stub().resolves();

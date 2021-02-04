@@ -24,7 +24,7 @@ describe('Backend', () => {
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
-    ({ Backend } = mockrequire.reRequire('../../../lib/core/application/backend'));
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
 
     application = new Backend('black-mesa');
   });
