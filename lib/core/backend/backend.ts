@@ -567,6 +567,25 @@ export class Backend {
       throw runtimeError.get('already_started', 'start');
     }
 
+    // When the support of cookie as jwt is enabled
+    // we need to perform some checks before starting Kuzzle
+    if (this.config.content.security.supportBrowserCookieAsJwt) {
+      if (this.config.content.http.accessControlAllowOrigin === '*') {
+        if (process.env.NODE_ENV === 'development') {
+          // In development we throw to show that Kuzzle is configured with incompatible options
+          // this will block the start of Kuzzle until the resolution of incompatibilities in the config
+          // reducing the chances of using wrong configuration in production
+          throw kerror.get('core', 'configuration', 'incompatible_config', 'Option [security.supportBrowserCookieAsJwt] is incompatible with [http.accessControlAllowOrigin] set to \'*\'')
+        } else {
+          // In production kuzzle should be running, even if the configuration has some incompatibilities
+          // We it's the case we disable the support of browser cookie as jwt
+          // and print a warning explaining why this option has been disabled
+          this.config.content.security.supportBrowserCookieAsJwt = false;
+          this.log.warn('Option [security.supportBrowserCookieAsJwt] has been set to false since it\'s incompatible with [http.accessControlAllowOrigin] set to \'*\'')
+        }
+      }
+    }
+
     this._kuzzle = new Kuzzle(this.config.content);
 
     // we need to load the default plugins
