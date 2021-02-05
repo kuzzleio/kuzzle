@@ -55,7 +55,7 @@ import {
   KuzzleRequest,
   Request,
 } from '../../../index';
-import { BackendCluster } from '../application/backendCluster';
+import { BackendCluster } from '../backend';
 
 const contextError = kerror.wrap('plugin', 'context');
 

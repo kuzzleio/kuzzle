@@ -287,10 +287,10 @@ describe('/lib/core/network/protocols/websocket', () => {
     });
 
     it('should handle invalid messages format', () => {
-      const nodeEnv = process.env.NODE_ENV;
+      const nodeEnv = global.NODE_ENV;
       // depending on NODE_ENV, errors can have a stacktrace or not
       ['development', '', 'production'].forEach(env => {
-        process.env.NODE_ENV = env;
+        global.NODE_ENV = env;
 
         protocol.onClientMessage(connection, 'ohnoes');
 
@@ -308,7 +308,7 @@ describe('/lib/core/network/protocols/websocket', () => {
         protocol._send.resetHistory();
       });
 
-      process.env.NODE_ENV = nodeEnv;
+      global.NODE_ENV = nodeEnv;
     });
 
     it('should call entrypoint execute', () => {

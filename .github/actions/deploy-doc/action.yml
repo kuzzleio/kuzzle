@@ -22,7 +22,7 @@ inputs:
     description: Documentation framework branch to use
     required: true
     default: 'master'
-  
+
 runs:
   using: "composite"
   steps:
@@ -40,6 +40,7 @@ runs:
         npm run doc-build
       env:
         NODE_ENV: production
+        NODE_OPTIONS: --max-old-space-size=4096
         FRAMEWORK_BRANCH: ${{ inputs.FRAMEWORK_BRANCH }}
       shell: bash
     - name: Deploy documentation
