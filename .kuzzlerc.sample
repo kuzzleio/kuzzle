@@ -215,7 +215,6 @@
     // [supportBrowserCookieAsJwt]
     // Enable Kuzzle secure support of Jwt in Cookie for the browser
     // This option however is not compatible with [http.accessControlAllowOrigin] set to '*'
-    //
     "supportBrowserCookieAsJwt": false,
     // [jwt]
     // configuration for the npm package jsonwebtoken
