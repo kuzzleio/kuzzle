@@ -21,7 +21,7 @@ We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) 
 
 * If you plan to add new features to Kuzzle, make sure that this is for a general improvement to benefit a majority of Kuzzle users. If not, consider making a plugin instead (check our [plugin documentation](https://docs.kuzzle.io/plugins/1))
 * Follow the [KISS Principle](https://en.wikipedia.org/wiki/KISS_principle)
-* Follow [The Boy Scout Rule](https://deviq.com/boy-scout-rule)
+* Follow [The Boy Scout Rule](https://deviq.com/principles/boy-scout-rule)
 
 ## Tools
 
