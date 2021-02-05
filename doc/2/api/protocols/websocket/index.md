@@ -63,3 +63,11 @@ The listening port can be modified under the `server.port` section of the [confi
 HTTP and WebSocket protocols share the same underlying server instance.  
 Modifying the listening port will impact these two protocols.
 :::
+
+<SinceBadge version="2.10.0"/>
+:::info
+We needed the client to be able to ping Kuzzle to have a keep-alive system.
+Through the browser, that was not possible to send real formatted pings websocket frames since there is no API implemented for that unlike the one of Node.
+We needed something higher level.
+That is the reason why when you are using the SDK Javascript, the ping/pong between Kuzzle and your client is a custom message interpreter.
+:::

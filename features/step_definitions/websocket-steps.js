@@ -4,12 +4,15 @@ const should = require('should');
 const { Given, Then, When } = require('cucumber');
 const ws = require('ws');
 
-Given('I open a new local websocket connection', async function () {
-  this.props.client = new ws('ws://localhost:7512');
-  const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
-  await delay(1000);
-  this.props.client.on('message', data => {
-    this.props.result = JSON.parse(data);
+Given('I open a new local websocket connection', function () {
+  return new Promise((resolve) => {
+    this.props.client = new ws('ws://localhost:7512');
+    this.props.client.on('message', data => {
+      this.props.result = JSON.parse(data);
+    });
+    this.props.client.on('open', () =>{
+      return resolve();
+    });
   });
 });
 
