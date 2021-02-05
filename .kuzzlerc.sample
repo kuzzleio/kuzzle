@@ -212,6 +212,11 @@
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"
     "restrictedProfileIds": ["default"],
+    // [supportBrowserCookieAsJwt]
+    // Enable Kuzzle secure support of Jwt in Cookie for the browser
+    // This option however is not compatible with [http.accessControlAllowOrigin] set to '*'
+    //
+    "supportBrowserCookieAsJwt": false,
     // [jwt]
     // configuration for the npm package jsonwebtoken
     // (see https://github.com/auth0/node-jsonwebtoken)
