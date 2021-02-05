@@ -347,13 +347,13 @@ describe('/lib/core/network/protocols/websocket', () => {
     });
 
     it('should send a custom pong message', () => {
-      const data = JSON.stringify({p: '1'});
+      const data = JSON.stringify({p: 1});
 
       protocol.onClientMessage(connection, data);
 
       should(protocol._send)
         .be.calledOnce()
-        .be.calledWith(connection.id, '{"p":"1"}');
+        .be.calledWith(connection.id, '{"p":1}');
     });
   });
 
