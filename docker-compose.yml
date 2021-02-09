@@ -36,6 +36,7 @@ x-kuzzle-config: &kuzzle-config
     - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features/fixtures/secrets.enc.json}
     # Variables used by the development scripts
     - NODE_12_VERSION=12.13.0
+    - NODE_14_VERSION=14.15.4
     - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
     - REBUILD # Force a rebuild of npm modules
     # cluster

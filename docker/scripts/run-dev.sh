@@ -6,6 +6,12 @@ if [ -n "$WITHOUT_KUZZLE" ]; then
   exit 0
 fi
 
+if [ -z "$NODE_VERSION" ];
+then
+  echo "Missing NODE_VERSION, use default NODE_14_VERSION"
+  n $NODE_14_VERSION
+fi
+
 if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
