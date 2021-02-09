@@ -29,7 +29,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.15.4', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -55,7 +55,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket, mqtt]
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.15.4', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -84,7 +84,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.15.4', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -113,7 +113,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.15.4', '12.16.3', '12.20.0']
     steps:
       - uses: actions/checkout@v2
       - name: Cache node modules
