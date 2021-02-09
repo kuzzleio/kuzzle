@@ -1283,39 +1283,37 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should allow additional options', () => {
-      const promise = elasticsearch.updateByQuery(
+    it('should allow additional options', async () => {
+      const result = await elasticsearch.updateByQuery(
         index,
         collection,
         { filter: 'term' },
         { name: 'bar'},
-        { refresh: 'wait_for', size: 3 });
+        { refresh: 'wait_for', size: 3, userId: 'aschen' });
 
-      return promise
-        .then(result => {
-          should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { filter: 'term'} },
-            scroll: '5s',
-            size: 3
-          });
+      should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term'} },
+        scroll: '5s',
+        size: 3
+      });
 
-          should(elasticsearch.mUpdate).be.calledWithMatch(
-            index,
-            collection,
-            documents,
-            {
-              refresh: 'wait_for'
-            });
-
-          should(result).match({
-            successes: [
-              { _id: '_id1', _source: { name: 'bar' }, status: 200 },
-              { _id: '_id2', _source: { name: 'bar' }, status: 200 },
-            ],
-            errors: []
-          });
+      should(elasticsearch.mUpdate).be.calledWithMatch(
+        index,
+        collection,
+        documents,
+        {
+          refresh: 'wait_for',
+          userId: 'aschen',
         });
+
+      should(result).match({
+        successes: [
+          { _id: '_id1', _source: { name: 'bar' }, status: 200 },
+          { _id: '_id2', _source: { name: 'bar' }, status: 200 },
+        ],
+        errors: []
+      });
     });
 
     it('should reject if the number of impacted documents exceeds the configured limit', () => {

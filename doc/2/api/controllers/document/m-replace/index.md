@@ -76,7 +76,7 @@ Body:
 
 - `collection`: collection name
 - `index`: index name
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ### Optional:
 
