@@ -918,7 +918,7 @@ describe('DocumentController', () => {
         collection,
         { match: { foo: 'bar' } },
         { bar: 'foo' },
-        { refresh: 'wait_for' });
+        { refresh: 'wait_for', userId: null });
 
       should(kuzzle.ask).calledWith(
         'core:realtime:document:mNotify',
