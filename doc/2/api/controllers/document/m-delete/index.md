@@ -54,7 +54,7 @@ Body:
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deletions are indexed
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 
