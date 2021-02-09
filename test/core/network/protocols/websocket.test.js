@@ -353,7 +353,7 @@ describe('/lib/core/network/protocols/websocket', () => {
 
       should(protocol._send)
         .be.calledOnce()
-        .be.calledWith(connection.id, '{"p":1}');
+        .be.calledWith(connection.id, '{"p":2}');
     });
   });
 
