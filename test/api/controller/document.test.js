@@ -873,6 +873,7 @@ describe('DocumentController', () => {
       };
       request.input.args.refresh = 'wait_for';
       request.input.args.source = true;
+      request.context.user = { _id: 'aschen' };
 
       const response = await documentController.updateByQuery(request);
 
@@ -882,7 +883,7 @@ describe('DocumentController', () => {
         collection,
         { match: { foo: 'bar' } },
         { bar: 'foo' },
-        { refresh: 'wait_for' });
+        { refresh: 'wait_for', userId: 'aschen' });
 
       should(kuzzle.ask).be.calledWith(
         'core:realtime:document:mNotify',
