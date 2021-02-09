@@ -26,7 +26,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -81,7 +81,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:legacy:${{ matrix.test_set }}
@@ -112,7 +112,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -142,7 +142,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - name: Cluster legacy tests
         uses: ./.github/actions/functional-tests
         with:
@@ -193,7 +193,7 @@ jobs:
             ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/deploy-doc
         with:
           REGION: us-west-2
