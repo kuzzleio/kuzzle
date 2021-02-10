@@ -9,6 +9,7 @@ class ElasticsearchMock extends Elasticsearch {
 
     sinon.stub(this, 'init').resolves();
     sinon.stub(this, 'info').resolves();
+    sinon.stub(this, 'stats').resolves();
     sinon.stub(this, 'scroll').resolves();
     sinon.stub(this, 'search').resolves();
     sinon.stub(this, 'get').resolves();
