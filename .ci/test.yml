@@ -43,7 +43,7 @@ services:
       - TRAVIS_REPO_SLUG
 
   redis:
-    image: redis:5
+    image: redis:6
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

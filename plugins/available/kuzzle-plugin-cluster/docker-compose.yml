@@ -22,7 +22,7 @@ services:
       DEBUG_COLORS: ${DEBUG_COLORS:-on}
 
   redis:
-    image: redis:5
+    image: redis:6
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7.3.0

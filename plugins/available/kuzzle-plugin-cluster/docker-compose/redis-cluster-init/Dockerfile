@@ -1,4 +1,4 @@
-FROM redis:5.0-alpine
+FROM redis:6.0-alpine
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 
