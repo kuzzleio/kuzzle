@@ -276,7 +276,12 @@ class FunctionalTestPlugin {
    * ImpersonatedSDK wrapper
    */
   async createDocumentAs (request) {
-    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid });
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid }, options);
 
     return sdkInstance.document.create(
       'nyc-open-data',

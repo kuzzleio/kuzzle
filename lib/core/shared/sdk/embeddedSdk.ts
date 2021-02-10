@@ -104,13 +104,14 @@ export class EmbeddedSDK extends Kuzzle {
    * Returns a new SDK impersonated with the provided user.
    *
    * @param user - User to impersonate the SDK with
+   * @param options - Optional sdk arguments
    */
-  as (user: { _id: string }): EmbeddedSDK {
+  as (user: { _id: string }, options = {}): EmbeddedSDK {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
 
-    return new ImpersonatedSDK(user._id) as EmbeddedSDK;
+    return new ImpersonatedSDK(user._id, options) as EmbeddedSDK;
   }
 
   /**
