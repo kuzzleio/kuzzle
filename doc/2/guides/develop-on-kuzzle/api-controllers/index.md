@@ -108,7 +108,7 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 The handler is the function that will **be called each time our API action is executed**.
 
-This function **takes a [KuzzleRequest](/core/2/framework/classes/kuzzle-request object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
+This function **takes a [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
 This function is defined in the `handler` property of an action. Its signature is: `(request: KuzzleRequest) => Promise<any>`.
 
@@ -223,7 +223,7 @@ By doing this, the action will only be available through the HTTP protocol with 
 
 ## KuzzleRequest Input
 
-The `handler` of an API action receives an instance of [KuzzleRequest](/core/2/framework/classes/kuzzle-request object. This object represents an API request and **contains both the client input and client contextual information**.
+The `handler` of an API action receives an instance of [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object. This object represents an API request and **contains both the client input and client contextual information**.
 
 The arguments of requests sent to the Kuzzle API are available in the [KuzzleRequest.input](/core/2/framework/classes/request-input) property.
 
@@ -262,7 +262,7 @@ curl \
   }'
 ```
 
-We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
 import assert from 'assert'
@@ -307,7 +307,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 }'
 ```
 
-We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
 import assert from 'assert'

@@ -103,7 +103,7 @@ app.pipe.register(
 ```
 
 ::: info
-[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [KuzzleRequest](/core/2/framework/classes/kuzzle-request object
+[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object
 :::
 
 ## Hooks
