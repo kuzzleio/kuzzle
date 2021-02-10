@@ -8,7 +8,7 @@ const rewire = require('rewire');
 describe('ImpersonatedSDK', () => {
   let ImpersonatedSdk;
   let impersonatedSdk;
-  let impersonatedUserId = 'alyx';
+  const impersonatedUserId = 'alyx';
 
   const fakeNativeControllers = {
     DocumentController: sinon.stub().resolves(),
