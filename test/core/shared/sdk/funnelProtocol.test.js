@@ -108,7 +108,6 @@ describe('Test: sdk/funnelProtocol', () => {
         .then(response => {
           should(kuzzle.ask.withArgs('core:security:user:get', exampleUser._id))
             .be.calledOnce();
-          should(exampleUser.isActionAllowed).be.calledOnce();
           should(response.result.context.user).be.eql(exampleUser);
         });
     });
@@ -137,9 +136,22 @@ describe('Test: sdk/funnelProtocol', () => {
     });
 
     it('should throw if the provided User is not allowed to execute a request', async () => {
-      funnelProtocol = new FunnelProtocol(exampleUser);
+      const customUserRequest = {
+        controller: 'foo',
+        action: 'bar',
+        __kuid__: 'leo',
+        __checkRights__: true
+      };
+      exampleUser._id = customUserRequest.__kuid__;
+      kuzzle.funnel.executePluginRequest.resolvesArg(0);
 
-      await should(funnelProtocol.query(request))
+      funnelProtocol = new FunnelProtocol();
+      kuzzle.ask
+        .withArgs('core:security:user:get', customUserRequest.__kuid__)
+        .resolves(exampleUser);
+      exampleUser.isActionAllowed = sinon.stub().resolves(false);
+
+      await should(funnelProtocol.query(customUserRequest))
         .rejectedWith(ForbiddenError, {
           id: 'security.rights.forbidden'
         });
