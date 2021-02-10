@@ -100,10 +100,10 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide for more in
 **Example:** _Change configuration values_
 ```js
 // Read a configuration value
-console.log(`Kuzzle will listen on port ${app.config.content.server.port}`)
+console.log(`Kuzzle will listen on port ${app.config.content.server.port}`);
 
 // Set log level to verbose
 app.config.set(
   'plugins.kuzzle-plugin-logger.services.stdout.level', 
-  'verbose')
+  'verbose');
 ```

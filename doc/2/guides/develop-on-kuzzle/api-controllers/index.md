@@ -46,7 +46,7 @@ app.controller.register('greeting', {
       handler: async request => /* ... */
     },
   }
-})
+});
 ```
 
 This is faster to develop but maintenance can be costly in the long run for larger applications with many controllers and actions.
@@ -65,7 +65,7 @@ The controller name will be inferred from the class name (unless the `name` prop
 :::
 
 ```js
-import { Controller, KuzzleRequest } from 'kuzzle'
+import { Controller, KuzzleRequest } from 'kuzzle';
 
 class GreetingController extends Controller {
   constructor (app: Backend) {
@@ -81,7 +81,7 @@ class GreetingController extends Controller {
           handler: this.sayGoodbye
         }
       }
-    }
+    };
   }
 
   async sayHello (request: KuzzleRequest) { /* ... */ }
@@ -97,9 +97,9 @@ If the handler function is an instance method of the controller then the context
 Once you have defined your controller class, you can instantiate it and pass it to the `Backend.controller.use` method:
 
 ```js
-const greetingController = new GreetingController(app)
+const greetingController = new GreetingController(app);
 
-app.controller.use(greetingController)
+app.controller.use(greetingController);
 ```
 
 This way of doing things takes longer to develop but it allows you to have a better code architecture while respecting OOP concepts.
@@ -118,11 +118,11 @@ app.controller.register('greeting', {
     sayHello: {
       // Handler function for the "greeting:sayHello" action
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       }
     }
   }
-})
+});
 ```
 
 The result returned by our `handler` will be **converted to JSON format** and integrated into the standard Kuzzle response in the `result` property.
@@ -172,7 +172,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       },
       http: [
         // generated route: "GET http://<host>:<port>/greeting/hello"
@@ -182,7 +182,7 @@ app.controller.register('greeting', {
       ]
     }
   }
-})
+});
 ```
 
 ::: warning
@@ -197,14 +197,14 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         // "name" comes from the url parameter
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       },
       http: [
         { verb: 'get', path: '/email/send/:name' },
       ]
     }
   }
-})
+});
 ```
 
 ### Default route
@@ -265,23 +265,23 @@ curl \
 We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA')
-        assert(request.input.args.name === 'aschen')
-        assert(request.input.args.age === '27')
-        assert(request.input.body.city === 'Antalya')
+        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args.name === 'aschen');
+        assert(request.input.args.age === '27');
+        assert(request.input.body.city === 'Antalya');
       },
       http: [
         { verb: 'POST', path: 'greeting/hello/:name' }
       ]
     }
   }
-})
+});
 ```
 
 ::: info
@@ -310,20 +310,20 @@ npx wscat -c ws://localhost:7512 --execute '{
 We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA')
-        assert(request.input.args.name === 'aschen')
-        assert(request.input.args.age === '27')
-        assert(request.input.body.city === 'Antalya')
+        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args.name === 'aschen');
+        assert(request.input.args.age === '27');
+        assert(request.input.body.city === 'Antalya');
       },
     }
   }
-})
+});
 ```
 
 ::: warning
@@ -346,7 +346,7 @@ The available properties are as follows:
 
 Example:
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
@@ -354,12 +354,12 @@ app.controller.register('greeting', {
       handler: async (request: KuzzleRequest) => {
         // Unauthenticated users are anonymous 
         // and the anonymous user ID is "-1"
-        assert(request.context.user._id === '-1')
-        assert(request.context.connection.protocol === 'http')
+        assert(request.context.user._id === '-1');
+        assert(request.context.connection.protocol === 'http');
       },
     }
   }
-})
+});
 ```
 
 ::: info
@@ -394,11 +394,11 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       }
     }
   }
-})
+});
 ```
 
 The following response will be sent:
@@ -439,7 +439,7 @@ app.controller.register('files', {
   actions: {
     csv: {
       handler: async request => {
-        const csv = 'name,age\naschen,27\ncaner,28\n'
+        const csv = 'name,age\naschen,27\ncaner,28\n';
 
         request.setResult(null, {
           raw: true,
@@ -448,13 +448,13 @@ app.controller.register('files', {
             'Content-Type': 'text/csv',
             'Content-Disposition': 'attachment; filename="export.csv"'
           }
-        })
+        });
 
-        return csv
+        return csv;
       }
     }
   }
-})
+});
 ```
 
 The response will only contain the CSV document:
@@ -483,13 +483,13 @@ app.controller.register('redirect', {
           headers: {
             'Location': 'http://kuzzle.io'
           }
-        })
+        });
         
-        return null
+        return null;
       }
     }
   }
-})
+});
 ```
 
 ## Use a custom Controller Action
@@ -503,11 +503,11 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       }
     }
   }
-})
+});
 ```
 
 ### HTTP
@@ -563,7 +563,7 @@ const response = await kuzzle.query({
   controller: 'greeting',
   action: 'sayHello',
   name: 'Yagmur'
-})
+});
 ```
 
 :::

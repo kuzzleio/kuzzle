@@ -42,7 +42,7 @@ How the response is returned depends whether a callback argument is provided:
 ## Example
 
 ```ts
-import { KuzzleRequest } from 'kuzzle'
+import { KuzzleRequest } from 'kuzzle';
 
 const request = new KuzzleRequest({
   index: 'index',
@@ -50,9 +50,9 @@ const request = new KuzzleRequest({
   controller: 'document',
   action: 'get',
   _id: 'documentID'
-})
+});
 
 // Mutates the provided KuzzleRequest object by updating the response part of
 // it (accessible through the "request.response" property).
-await context.accessors.execute(request)
+await context.accessors.execute(request);
 ```

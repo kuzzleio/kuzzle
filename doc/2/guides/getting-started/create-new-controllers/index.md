@@ -34,7 +34,7 @@ app.controller.register('greeting', {
       }
     }
   }
-})
+});
 ```
 
 The code above will register a `greeting` controller with a `sayHello` action.  
