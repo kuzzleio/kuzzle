@@ -56,7 +56,7 @@ BeforeAll(function () {
     .then(() => bootstrapDatabase());
 });
 
-Before({ timeout: 10 * 1000 }, function () {
+Before({ timeout: 10 * 2000 }, function () {
   const world = new World({ parameters: parseWorldParameters() });
 
   return this.api.truncateCollection(world.fakeIndex, world.fakeCollection)
@@ -66,7 +66,7 @@ Before({ timeout: 10 * 1000 }, function () {
     .then(() => this.api.resetSecurity());
 });
 
-Before({ timeout: 10 * 1000, tags: '@resetDatabase' }, async function () {
+Before({ timeout: 10 * 2000, tags: '@resetDatabase' }, async function () {
   await cleanDatabase();
   await bootstrapDatabase();
 });

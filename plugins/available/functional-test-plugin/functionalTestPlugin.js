@@ -56,8 +56,6 @@ class FunctionalTestPlugin {
 
     // pipes related declarations ==============================================
 
-    this.activatedPipes = {};
-
     this.controllers.pipes = {
       deactivateAll: 'pipesDeactivateAll',
       manage: 'pipesManage',
@@ -204,25 +202,30 @@ class FunctionalTestPlugin {
     const payload = request.input.body;
     const state = request.input.args.state;
     const event = request.input.args.event;
-
-    this.activatedPipes[event] = {
-      payload,
-      state,
-    };
+    await this.sdk.ms.set(
+      `plugin:pipes:${event}`, 
+      JSON.stringify({
+        payload,
+        state,
+      })
+    );
 
     return null;
   }
 
   async pipesDeactivateAll () {
-    for (const pipe of Object.values(this.activatedPipes)) {
+    const names = await this.sdk.ms.keys('plugin:pipes:*');
+    for (const name of names) {
+      const pipe = JSON.parse(await this.sdk.ms.get(name));
       pipe.state = 'off';
+      await this.sdk.ms.set(name, JSON.stringify(pipe));
     }
 
     return null;
   }
 
   async genericDocumentEvent (event, documents) {
-    const pipe = this.activatedPipes[`generic:document:${event}`];
+    const pipe = JSON.parse(await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`));
 
     if (!pipe || pipe.state === 'off') {
       return documents;
@@ -234,12 +237,11 @@ class FunctionalTestPlugin {
         _.set(document, field, eval(value));
       }
     }
-
     return documents;
   }
 
   async afterNowPipe (request) {
-    const pipe = this.activatedPipes['server:afterNow'];
+    const pipe = JSON.parse(await this.sdk.ms.get('plugin:pipes:server:afterNow'));
 
     if (pipe && pipe.state !== 'off') {
       const response = request.response.result;
