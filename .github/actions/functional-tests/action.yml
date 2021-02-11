@@ -16,6 +16,6 @@ runs:
   steps:
     - run: ./.ci/scripts/run-test-cluster.sh
       env:
-        KUZZLE_FUNCTIONNAL_TESTS: ${{ inputs.test-set}}
+        KUZZLE_FUNCTIONNAL_TESTS: ${{ inputs.test-set }}
         NODE_VERSION: ${{ inputs.node-version }}
       shell: bash
