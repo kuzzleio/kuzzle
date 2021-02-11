@@ -119,3 +119,5 @@ lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
 features-sdk/support/application/functional-tests-app.js
+docker/scripts/functional-tests-controller.js
+docker/scripts/start-kuzzle-dev.js
