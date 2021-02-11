@@ -79,10 +79,10 @@ In this example, we are going to change the return value of the `server:now` act
 
 ```js
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
-  request.result.now = (new Date()).toUTCString()
+  request.result.now = (new Date()).toUTCString();
 
-  return request
-})
+  return request;
+});
 ```
 
 ::: info

@@ -73,9 +73,9 @@ Your first Kuzzle application is inside the `app.ts` file.
 For example, you can add a new [API Controller](https://docs.kuzzle.io/core/2/guides/develop-on-kuzzle/api-controllers):
 
 ```ts
-import { Backend } from 'kuzzle'
+import { Backend } from 'kuzzle';
 
-const app = new Backend('playground')
+const app = new Backend('playground');
 
 app.controller.register('greeting', {
   actions: {
@@ -83,13 +83,13 @@ app.controller.register('greeting', {
       handler: async request => `Hello, ${request.input.args.name}` 
     }
   }
-})
+});
 
 app.start()
   .then(() => {
-    app.log.info('Application started')
+    app.log.info('Application started');
   })
-  .catch(console.error)
+  .catch(console.error);
 ```
 
 Now try to call your new API action by:

@@ -278,12 +278,12 @@ This plugin is not shipped by default with Kuzzle and must be installed via NPM:
 
 Then you need to instantiate it and use it within your application:
 ```js
-import PluginOAuth from 'kuzzle-plugin-auth-passport-oauth' 
-import { Backend } from 'kuzzle'
+import PluginOAuth from 'kuzzle-plugin-auth-passport-oauth';
+import { Backend } from 'kuzzle';
 
-const app = new Backend('tirana')
+const app = new Backend('tirana');
 
-app.plugin.use(new PluginOAuth())
+app.plugin.use(new PluginOAuth());
 ```
 
 This strategy allows to create users in Kuzzle if they don't already exist when they login for the first time.
