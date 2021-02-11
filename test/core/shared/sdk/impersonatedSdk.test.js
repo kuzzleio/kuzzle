@@ -82,6 +82,20 @@ describe('ImpersonatedSDK', () => {
       should(fakeInjectedSdk.query).be.calledWith({
         ...fakeRequest,
         __kuid__: impersonatedUserId,
+        __checkRights__: false,
+      });
+    });
+
+    it('should call the global sdk and add __kuid__ and __checkRights__ to the request', async () => {
+      const fakeRequest = { controller: 'document', action: 'create' };
+
+      impersonatedSdk = new ImpersonatedSdk(impersonatedUserId, { checkRights: true });
+      await impersonatedSdk.query(fakeRequest);
+
+      should(fakeInjectedSdk.query).be.calledWith({
+        ...fakeRequest,
+        __kuid__: impersonatedUserId,
+        __checkRights__: true,
       });
     });
   });

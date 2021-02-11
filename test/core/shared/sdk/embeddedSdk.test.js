@@ -34,6 +34,9 @@ describe('EmbeddedSDK', () => {
 
       should(SpyImpersonatedSdk).be.calledWith(user._id);
       should(returnedInstance).be.instanceOf(SpyImpersonatedSdk);
+
+      embeddedSdk.as(user, { checkRights: true });
+      should(SpyImpersonatedSdk).be.calledWith(user._id, { checkRights: true });
       mockrequire.stopAll();
     });
 
