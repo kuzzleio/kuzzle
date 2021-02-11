@@ -119,7 +119,7 @@ When this action is successfully called, the following answer will be returned b
 
 ## Query normalization
 
-Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [KuzzleRequest](/core/2/framework/classes/kuzzle-request objects.
+Kuzzle normalizes [request payloads](/core/2/api/payloads/request) into [KuzzleRequest](/core/2/framework/classes/kuzzle-request) objects.
 
 Quick summary of how queries are normalized:
 

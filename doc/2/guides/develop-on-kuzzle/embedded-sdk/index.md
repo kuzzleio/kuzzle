@@ -49,7 +49,7 @@ Learn more about [Backend Realtime Subscriptions](/core/2/guides/develop-on-kuzz
 await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
   age: 27
-})
+});
 ```
 
 ## Query method
@@ -69,7 +69,7 @@ await app.sdk.query({
   controller: 'greeting',
   action: 'sayHello',
   name: 'Aschen'
-})
+});
 ```
 
 ## User impersonation
@@ -86,16 +86,16 @@ app.controller.register('drivers', {
   actions: {
     create: {
       handler: async request => {
-        const originalUser = request.context.user
+        const originalUser = request.context.user;
 
         return app.sdk.as(originalUser).document.create(
           'nyc-open-data',
           'yellow-taxi',
-          { name: 'Aschen' })
+          { name: 'Aschen' });
        }
     }
   }
-})
+});
 ```
 
 ::: warning
@@ -135,8 +135,8 @@ app.start()
       {},
       notification => {
         // This callback will be executed only on the node generating a notification
-      })
-  })
+      });
+  });
 ```
 
 ### propagate: true
@@ -159,6 +159,6 @@ app.start()
       notification => {
         // This callback will be executed on each nodes
       },
-      { propagate: true })
-  })
+      { propagate: true });
+  });
 ```

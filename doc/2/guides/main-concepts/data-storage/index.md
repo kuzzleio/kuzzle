@@ -646,14 +646,14 @@ const esRequest =  {
   // Internal name of the index "nyc-open-data" and the collection "yellow-taxi"
   index: '&nyc-open-data.yellow-taxi',
   op_type: 'create'
-}
+};
 
 // Use directly an Elasticsearch client instance
-await app.storage.client.index(esRequest)
+await app.storage.client.index(esRequest);
 
 // Instantiate and use a new client
-const storageClient = new app.storage.Client()
-await storageClient.index(esRequest)
+const storageClient = new app.storage.Client();
+await storageClient.index(esRequest);
 ```
 
 ::: warning

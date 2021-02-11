@@ -23,7 +23,7 @@ execute(request: KuzzleRequest, callback?: any): Promise<KuzzleRequest>;
 
 | Arguments  | Type                                                           | Description                                    |
 | ---------- | -------------------------------------------------------------- | ---------------------------------------------- |
-| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | The API action to execute                       |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | The API action to execute                       |
 | `callback` | <pre>function</pre>                                            | Callback to call with the API execution result <DeprecatedBadge version="2.8.0"/> |
 
 ---
@@ -42,7 +42,7 @@ How the response is returned depends whether a callback argument is provided:
 ## Example
 
 ```ts
-import { KuzzleRequest } from 'kuzzle'
+import { KuzzleRequest } from 'kuzzle';
 
 const request = new KuzzleRequest({
   index: 'index',
@@ -50,9 +50,9 @@ const request = new KuzzleRequest({
   controller: 'document',
   action: 'get',
   _id: 'documentID'
-})
+});
 
 // Mutates the provided KuzzleRequest object by updating its response part
 // (accessible through the "request.response" property).
-await context.accessors.execute(request)
+await context.accessors.execute(request);
 ```
