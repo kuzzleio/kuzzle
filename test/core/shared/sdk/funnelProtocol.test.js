@@ -35,12 +35,6 @@ describe('Test: sdk/funnelProtocol', () => {
   });
 
   describe('#constructor', () => {
-    it('should throw if the funnel is instantiated without a valid User object', () => {
-      should(() => {
-        new FunnelProtocol({ id: 42 });
-      }).throw(PluginImplementationError, { id: 'plugin.context.invalid_user' });
-    });
-
     it('should forward messages received from the internalProtocol to the SDK', done => {
       const payload = { room: 'room-id', hello: 'Gordon' };
 
@@ -95,20 +89,6 @@ describe('Test: sdk/funnelProtocol', () => {
       return funnelProtocol.query(request)
         .then(res => {
           should(res.result).be.exactly('sdk result');
-        });
-    });
-
-    it('should execute the request with the provided User if present', () => {
-      kuzzle.funnel.executePluginRequest.resolvesArg(0);
-
-      funnelProtocol = new FunnelProtocol(exampleUser);
-      exampleUser.isActionAllowed = sinon.stub().resolves(true);
-
-      return funnelProtocol.query(request)
-        .then(response => {
-          should(kuzzle.ask.withArgs('core:security:user:get', exampleUser._id))
-            .be.calledOnce();
-          should(response.result.context.user).be.eql(exampleUser);
         });
     });
 

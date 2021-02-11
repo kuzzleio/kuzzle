@@ -93,11 +93,8 @@ interface EmbeddedRealtime extends RealtimeController {
 export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
-  /**
-   * @param user - User to impersonate the SDK with
-   */
-  constructor (user?) {
-    super(new FunnelProtocol(user), { autoResubscribe: false });
+  constructor () {
+    super(new FunnelProtocol(), { autoResubscribe: false });
   }
 
   /**
