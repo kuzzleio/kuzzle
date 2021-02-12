@@ -183,7 +183,6 @@ Then('The response should contains a {string} equals to undefined', async functi
 
 Then('The raw response should match:', function(dataTable) {
   const expectedResult = this.parseObject(dataTable);
-  console.log(JSON.stringify(this.props.rawResponse, null, 4));
 
   should(this.props.rawResponse).not.be.undefined();
 

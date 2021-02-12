@@ -99,11 +99,35 @@ Feature: Auth Controller
       | expiresAt | "_NUMBER_"     |
       | ttl       | "_NUMBER_"     |
       | jwt       |  "_UNDEFINED_" |
+  
+  # auth:logout ================================================================
+
+  @security @http
+  Scenario: Auth logout with cookies
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                               |
+      | action     | "login"                                              |
+      | strategy   | "local"                                              |
+      | body       | { "username": "test-admin", "password": "password" } |
+      | cookieOnly | true                                                 |
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                                      |
+      | action     | "logout"                                                    |
+      | cookieOnly | true                                                        |
+      | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
+    Then The raw response should match:
+      | headers.set-cookie | [ /authToken=null;.*/ ] |
+    And I send a HTTP "POST" request with:
+      | controller | "auth"                                               |
+      | action     | "login"                                              |
+      | strategy   | "local"                                              |
+      | body       | { "username": "test-admin", "password": "password" } |
+      | cookieOnly | true                                                 |
 
   # auth:refreshToken ==========================================================
 
   @security @http
-  Scenario: Auth login with cookies
+  Scenario: Auth refreshToken with cookies
     Given I send a HTTP "POST" request with:
       | controller | "auth"                                               |
       | action     | "login"                                              |
