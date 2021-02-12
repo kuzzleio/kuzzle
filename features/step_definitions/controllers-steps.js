@@ -121,12 +121,6 @@ Then('The result should contain a property {string} of type {string}', function 
   should(typeof property).be.eql(type);
 });
 
-Then('The result should not contain a property {string}', function (path) {
-  const property = _.get(this.props.result, path);
-
-  should(property).be.undefined();
-});
-
 Then('I should receive a {string} result equals to {string}', function (type, rawResult) {
   let expectedResult;
 
