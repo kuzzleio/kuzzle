@@ -94,7 +94,7 @@ description: Error codes definitions
 
 ---
 
-### Subdomain: 0x0707: token
+### Subdomain: 0x0707: cookie
 
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
