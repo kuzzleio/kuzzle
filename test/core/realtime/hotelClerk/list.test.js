@@ -8,8 +8,6 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.list', () => {
-  const index = '%test';
-  const collection = 'user';
   let kuzzle;
   let hotelClerk;
   let user;
