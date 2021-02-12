@@ -47,21 +47,29 @@ Plugins must be used before starting the application.
 This method takes an instance of the plugin as a parameter:
 
 ```js
-import PluginS3 from 'kuzzle-plugin-s3'
+import PluginS3 from 'kuzzle-plugin-s3';
 
 // [...]
 
-app.plugin.use(new PluginS3())
+app.plugin.use(new PluginS3());
 ```
+
+::: info
+The plugin's default name will be inferred from the class name:
+  - Class name will be converted to `kebab-case`
+  - The word `Plugin` will be removed
+
+E.g. `PluginDeviceManager` => `device-manager`
+:::
 
 It's possible to override the original plugin name by passing a new one in the option object:
 
 ```js
-import PluginS3 from 'kuzzle-plugin-s3'
+import PluginS3 from 'kuzzle-plugin-s3';
 
 // [...]
 
-app.plugin.use(new PluginS3(), { name: 'minio' })
+app.plugin.use(new PluginS3(), { name: 'minio' });
 ```
 
 ::: info

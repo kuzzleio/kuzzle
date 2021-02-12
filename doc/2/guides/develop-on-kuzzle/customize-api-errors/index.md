@@ -37,21 +37,21 @@ If a non-standard error is thrown, Kuzzle will instead return a standard `Plugin
 
 **Example:** _Throw a PreconditionError when an action parameter is missing_
 ```js
-import { Backend, PreconditionError } from 'kuzzle'
+import { Backend, PreconditionError } from 'kuzzle';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async request => {
         if (request.input.args.name === undefined) {
-          throw new PreconditionError('Missing "name" argument.')
+          throw new PreconditionError('Missing "name" argument.');
         }
 
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       }
     }
   }
-})
+});
 ```
 
 <!-- 

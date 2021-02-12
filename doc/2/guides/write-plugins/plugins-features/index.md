@@ -25,7 +25,7 @@ The `PluginApiDefinition` is an object which each key is a controller name and e
 ```ts
 class EmailPlugin extends Plugin {
   constructor () {
-    super({ kuzzleVersion: '>=2.8 <3' })
+    super({ kuzzleVersion: '>=2.8 <3' });
 
     this.api = {
       greeting: {
@@ -35,7 +35,7 @@ class EmailPlugin extends Plugin {
           }
         }
       }
-    }
+    };
   }
 }
 ```
@@ -61,15 +61,15 @@ Hooks and pipes registration must be done in the constructor or in the plugin [i
 ```ts
 class MyPlugin extends Plugin {
   constructor () {
-    super({ kuzzleVersion: '>=2.8 <3' })
+    super({ kuzzleVersion: '>=2.8 <3' });
 
     this.hooks = {
       'document:beforeCreate': async request => {}
-    }
+    };
 
     this.pipes = {
       'server:afterNow': async request => request
-    }
+    };
   }
 }
 ```

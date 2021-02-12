@@ -80,6 +80,7 @@ lib/kerror/errors/*.js
 lib/core/backend/index.js
 lib/core/backend/backend.js
 lib/core/backend/backendCluster.js
+lib/core/backend/backendPlugin.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js

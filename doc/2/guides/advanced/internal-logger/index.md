@@ -45,15 +45,15 @@ const app = new Backend('black-mesa');
 // Set log level to verbose
 app.config.set(
   'plugins.kuzzle-plugin-logger.services.stdout.level', 
-  'verbose')
+  'verbose');
 
 app.start()
   .then(() => {
-    app.log.debug('debug')
-    app.log.verbose('verbose')
-    app.log.info('info')
-    app.log.warn('warn')
-  })
+    app.log.debug('debug');
+    app.log.verbose('verbose');
+    app.log.info('info');
+    app.log.warn('warn');
+  });
 ```
 
 <!-- 

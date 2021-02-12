@@ -164,3 +164,7 @@ After({ tags: '@realtime' }, function () {
 
   return Promise.all(promises);
 });
+
+After({ tags: '@websocket' }, function () {
+  this.props.client.terminate();
+});
