@@ -56,7 +56,7 @@ Feature: Auth Controller
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"          |
 
-  # auth:login
+  # auth:login =================================================================
 
   @security
   Scenario: Login with cookieOnly
@@ -65,10 +65,10 @@ Feature: Auth Controller
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieOnly | true                                                 |
     Then I should receive a result matching:
-      | _id       | "_STRING_"  |
-      | expiresAt | "_NUMBER_"  |
-      | ttl       | "_NUMBER_"  |
-    And The result should not contain a property "jwt"
+      | _id       | "_STRING_"     |
+      | expiresAt | "_NUMBER_"     |
+      | ttl       | "_NUMBER_"     |
+      | jwt       |  "_UNDEFINED_" |
 
   # auth:searchApiKeys =========================================================
 
