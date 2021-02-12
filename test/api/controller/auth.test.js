@@ -308,7 +308,7 @@ describe('Test the auth controller', () => {
       });
 
       should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie'])
+      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
       should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
@@ -346,7 +346,7 @@ describe('Test the auth controller', () => {
       should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
 
       should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie'])
+      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
       should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
@@ -432,7 +432,7 @@ describe('Test the auth controller', () => {
       const response = await authController.login(requestCookieOnly);
 
       should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie'])
+      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
       should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
@@ -798,7 +798,7 @@ describe('Test the auth controller', () => {
   describe('#refreshToken with cookies', () => {
     beforeEach(() => {
       kuzzle.config.http.supportCookieAuthentication = true;
-    })
+    });
 
     it('should reject if the user is not authenticated', () => {
       return should(authController.refreshToken(new Request(
@@ -847,7 +847,7 @@ describe('Test the auth controller', () => {
       });
 
       should.exists(req.response.headers);
-      should.exists(req.response.headers['Set-Cookie'])
+      should.exists(req.response.headers['Set-Cookie']);
       should(req.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=new-token; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
