@@ -92,6 +92,14 @@ Then('I should receive a result matching:', function (dataTable) {
   should(this.props.result).matchObject(expectedResult);
 });
 
+Then('I should receive a response matching:', function (dataTable) {
+  const expectedResult = this.parseObject(dataTable);
+
+  should(this.props).have.property('response');
+
+  should(this.props.response).matchObject(expectedResult);
+});
+
 Then('The property {string} of the result should match:', function (path, dataTable) {
   const expectedProperty = this.parseObject(dataTable);
 
