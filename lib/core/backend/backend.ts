@@ -567,16 +567,6 @@ export class Backend {
       throw runtimeError.get('already_started', 'start');
     }
 
-    // When the support of cookie as jwt is enabled
-    // we need to perform some checks before starting Kuzzle
-    if (this.config.content.security.supportCookieAuthentication) {
-      if (this.config.content.http.accessControlAllowOrigin === '*') {
-        throw kerror.get('core', 'configuration', 'incompatible_config', 'Option [security.supportCookieAuthentication] is incompatible with [http.accessControlAllowOrigin] set to \'*\'');
-      }
-      // Mandatory to enable cookie transmission
-      this.config.content.http.accessControlAllowCredentials = true;
-    }
-
     this._kuzzle = new Kuzzle(this.config.content);
 
     // we need to load the default plugins

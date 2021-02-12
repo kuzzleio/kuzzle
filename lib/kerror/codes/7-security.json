@@ -243,6 +243,17 @@
           "class": "InternalError"
         }
       }
+    },
+    "cookie": {
+      "code": 7,
+      "errors": {
+        "invalid": {
+          "description": "Invalid authentication cookie.",
+          "code": 1,
+          "message": "Invalid cookie.",
+          "class": "UnauthorizedError"
+        }
+      }
     }
   }
 }
