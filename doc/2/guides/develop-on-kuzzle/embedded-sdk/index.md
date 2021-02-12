@@ -105,7 +105,7 @@ If a request is authorized, then all subsequent calls to the API performed with 
 
 <SinceBadge version="auto-version" />
 ::: info
-  If you need to verify if an User is authorized to execute any given API actions, you can do so by using the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) `checkRights` option.
+  If you need to verify if a User is authorized to execute any given API actions, you can do so by using the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) `checkRights` option.
 :::
 
 **Example:** _Execute an impersonated action only if the required User is allowed to do so_
