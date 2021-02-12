@@ -7,13 +7,10 @@ const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 describe('EmbeddedSDK', () => {
-  let kuzzle;
   let embeddedSdk;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
-    kuzzle.state = KuzzleMock.states.RUNNING;
-
+    new KuzzleMock();
     embeddedSdk = new EmbeddedSDK();
   });
 

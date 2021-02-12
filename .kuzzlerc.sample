@@ -784,7 +784,7 @@
     "minimumNodes": 2,
     "ports": {
       "command": 7510,
-      "sync": 7511,
+      "sync": 7511
     }
   }
 }

@@ -72,8 +72,6 @@ describe('Test: hotelClerk.removeUser', () => {
   it('should clean up customers, rooms object', async () => {
     await hotelClerk.removeUser(connectionId);
 
-    should(kuzzle.koncorde.remove).be.calledOnce();
-
     should(hotelClerk.rooms).have.value('foo', {
       customers: new Set(['a', 'b']),
       index,

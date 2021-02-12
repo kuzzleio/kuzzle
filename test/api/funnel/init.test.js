@@ -8,6 +8,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Funnel = require('../../../lib/api/funnel');
 const AuthController = require('../../../lib/api/controller/auth');
 const BulkController = require('../../../lib/api/controller/bulk');
+const ClusterController = require('../../../lib/api/controller/cluster');
 const CollectionController = require('../../../lib/api/controller/collection');
 const DocumentController = require('../../../lib/api/controller/document');
 const IndexController = require('../../../lib/api/controller/index');
@@ -29,9 +30,10 @@ describe('funnel.init', () => {
     await funnel.init();
 
     should(funnel.rateLimiter.init).calledOnce();
-    should(funnel.controllers.size).be.eql(11);
+    should(funnel.controllers.size).be.eql(12);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
     should(funnel.controllers.get('bulk')).be.instanceOf(BulkController);
+    should(funnel.controllers.get('cluster')).be.instanceOf(ClusterController);
     should(funnel.controllers.get('collection')).be.instanceOf(CollectionController);
     should(funnel.controllers.get('document')).be.instanceOf(DocumentController);
     should(funnel.controllers.get('index')).be.instanceOf(IndexController);

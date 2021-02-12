@@ -93,14 +93,12 @@ describe('#core/storage/ClientAdapter', () => {
 
       await uninitializedAdapter.init();
 
-      const opts = { notify: false };
-
-      should(uninitializedAdapter.cache.addCollection).calledWith('foo', 'foo1', opts);
-      should(uninitializedAdapter.cache.addCollection).calledWith('foo', 'foo2', opts);
-      should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar1', opts);
-      should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar2', opts);
-      should(uninitializedAdapter.cache.addCollection).calledWith('alias1', 'qux', opts);
-      should(uninitializedAdapter.cache.addCollection).calledWith('alias2', 'qux', opts);
+      should(uninitializedAdapter.cache.addCollection).calledWith('foo', 'foo1');
+      should(uninitializedAdapter.cache.addCollection).calledWith('foo', 'foo2');
+      should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar1');
+      should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar2');
+      should(uninitializedAdapter.cache.addCollection).calledWith('alias1', 'qux');
+      should(uninitializedAdapter.cache.addCollection).calledWith('alias2', 'qux');
     });
   });
 
@@ -1374,7 +1372,7 @@ describe('#core/storage/ClientAdapter', () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(`core:storage:${adapter.scope}:cache:add`, 'index');
 
-          should(adapter.cache.addIndex).calledWith('index', { notify: false });
+          should(adapter.cache.addIndex).calledWith('index');
           should(adapter.cache.addCollection).not.called();
         }
       });
@@ -1387,9 +1385,7 @@ describe('#core/storage/ClientAdapter', () => {
             'collection');
 
           should(adapter.cache.addIndex).not.called();
-          should(adapter.cache.addCollection).calledWith('index', 'collection', {
-            notify: false,
-          });
+          should(adapter.cache.addCollection).calledWith('index', 'collection');
         }
       });
     });
@@ -1399,9 +1395,7 @@ describe('#core/storage/ClientAdapter', () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(`core:storage:${adapter.scope}:cache:remove`, 'index');
 
-          should(adapter.cache.removeIndex).calledWith('index', {
-            notify: false,
-          });
+          should(adapter.cache.removeIndex).calledWith('index');
           should(adapter.cache.removeCollection).not.called();
         }
       });
@@ -1414,9 +1408,7 @@ describe('#core/storage/ClientAdapter', () => {
             'collection');
 
           should(adapter.cache.removeIndex).not.called();
-          should(adapter.cache.removeCollection).calledWith('index', 'collection', {
-            notify: false,
-          });
+          should(adapter.cache.removeCollection).calledWith('index', 'collection');
         }
       });
     });

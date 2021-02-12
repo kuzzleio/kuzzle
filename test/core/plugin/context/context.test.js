@@ -27,6 +27,7 @@ const {
   BadRequestError,
 } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const MutexMock = require('../../../mocks/mutex.mock');
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
@@ -36,11 +37,14 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    const modul = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
-    PluginContext = modul.PluginContext;
-
+    mockrequire('../../../../lib/util/mutex', { Mutex: MutexMock });
+    ({ PluginContext } = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`));
     kuzzle = new KuzzleMock();
     context = new PluginContext('pluginName');
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   describe('#constructor', () => {

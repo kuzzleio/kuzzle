@@ -3,8 +3,8 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const Kuzzle = require('../../lib/kuzzle/kuzzle');
 const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
+const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
@@ -23,6 +23,7 @@ class KuzzleMock extends KuzzleEventEmitter {
     });
 
     this.id = 'nasty-author-4242';
+    this.state = kuzzleStateEnum.RUNNING;
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -207,7 +208,5 @@ class KuzzleMock extends KuzzleEventEmitter {
     this.running = sinon.stub().returns(false);
   }
 }
-
-KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;
