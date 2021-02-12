@@ -139,11 +139,7 @@ Feature: Auth Controller
       | action     | "refreshToken"                                              |
       | cookieOnly | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
-    Then I should receive a result matching:
-      | valid     | true         |
-      | kuid      | "test-admin" |
-      | expiresAt | "_NUMBER_"   |
-    And The raw response should match:
+    Then The raw response should match:
       | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
 
   # auth:searchApiKeys =========================================================

@@ -5,7 +5,7 @@ const assert = require('assert');
 const requestPromise = require('request-promise');
 const _ = require('lodash');
 const should = require('should');
-const { Then, When } = require('cucumber');
+const { Then } = require('cucumber');
 const Bluebird = require('bluebird');
 
 
