@@ -4,7 +4,7 @@ x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
   command: >
     sh -c "n $NODE_VERSION &&
-           ./bin/start-kuzzle-server --enable-plugins kuzzle-plugin-cluster"
+           node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin"
   volumes:
     - "..:/var/app"
   cap_add:
@@ -58,6 +58,7 @@ services:
     container_name: kuzzle_node_1
     ports:
       - "17510:7512" # Kuzzle API port, used to check if it is up
+      - "1883:1883" # TCP load balancing is hard with nginx
 
   kuzzle_node_2:
     <<: *kuzzle-config

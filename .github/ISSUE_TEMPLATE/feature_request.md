@@ -13,15 +13,15 @@ assignees: ''
     - Public roadmap: https://trello.com/b/za9vOgRh/kuzzle-public-roadmap
 -->
 
-## Feature description
+## Feature Description
 
 <!--- Describe the functionality as you would need it -->
 
-## Example usecase
+## Example Use Case
 
 <!--- Give a concrete case example or this feature would help you develop a better application or solve a problem -->
 
-## Possible solution (optional)
+## Possible Solution (optional)
 
 <!--- Give an example of how you would like to use the feature -->
 <!--- You can put a sample Kuzzle query, sample code, etc. -->
