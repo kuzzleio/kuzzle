@@ -5,7 +5,7 @@ const assert = require('assert');
 const requestPromise = require('request-promise');
 const _ = require('lodash');
 const should = require('should');
-const { Then } = require('cucumber');
+const { Then, When } = require('cucumber');
 const Bluebird = require('bluebird');
 
 
@@ -181,20 +181,34 @@ Then('The response should contains a {string} equals to undefined', async functi
   should(this.props.response[key]).equal(undefined);
 });
 
+Then('The raw response should match:', function(dataTable) {
+  const expectedResult = this.parseObject(dataTable);
+  console.log(JSON.stringify(this.props.rawResponse, null, 4));
+
+  should(this.props.rawResponse).not.be.undefined();
+
+  should(this.props.rawResponse).matchObject(expectedResult);
+});
+
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
   const body = this.parseObject(dataTable);
 
   const options = {
     url: `http://${this._host}:${this._port}/_query`,
     json: true,
+    resolveWithFullResponse: true,
     method,
     body,
+    headers: body.headers,
   };
+
+  delete body.headers;
 
   const response = await requestPromise(options);
 
-  this.props.result = response.result;
-  this.props.response = response;
+  this.props.result = response.body.result;
+  this.props.response = response.body;
+  this.props.rawResponse = response;
 });
 
 Then('I wait {int} milliseconds', async function (ms) {

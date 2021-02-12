@@ -19,6 +19,32 @@ Feature: Auth Controller
       | valid | false      |
       | state | "_STRING_" |
 
+  @security @http
+  Scenario: Check if a token in the cookie is valid
+    Given I send a HTTP "POST" request with:
+      | controller | "auth"                                               |
+      | action     | "login"                                              |
+      | strategy   | "local"                                              |
+      | body       | { "username": "test-admin", "password": "password" } |
+      | cookieOnly | true                                                 |
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                                      |
+      | action     | "checkToken"                                                |
+      | cookieOnly | true                                                        |
+      | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
+    Then I should receive a result matching:
+      | valid     | true         |
+      | kuid      | "test-admin" |
+      | expiresAt | "_NUMBER_"   |
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                                      |
+      | action     | "checkToken"                                                |
+      | cookieOnly | true                                                        |
+      | headers    | { cookie: 'authToken=wrongtoken' }                                              |
+    Then I should receive a result matching:
+      | valid | false      |
+      | state | "_STRING_" |
+
   # auth:checkRights ===========================================================
 
   @security @login
@@ -58,17 +84,43 @@ Feature: Auth Controller
 
   # auth:login =================================================================
 
-  @security
-  Scenario: Login with cookieOnly
-    When I successfully execute the action "auth":"login" with args:
+  @security @http
+  Scenario: Auth login with cookies
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                               |
+      | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieOnly | true                                                 |
+    Then The raw response should match:
+      | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
     Then I should receive a result matching:
       | _id       | "_STRING_"     |
       | expiresAt | "_NUMBER_"     |
       | ttl       | "_NUMBER_"     |
       | jwt       |  "_UNDEFINED_" |
+
+  # auth:refreshToken ==========================================================
+
+  @security @http
+  Scenario: Auth login with cookies
+    Given I send a HTTP "POST" request with:
+      | controller | "auth"                                               |
+      | action     | "login"                                              |
+      | strategy   | "local"                                              |
+      | body       | { "username": "test-admin", "password": "password" } |
+      | cookieOnly | true                                                 |
+    When I send a HTTP "POST" request with:
+      | controller | "auth"                                                      |
+      | action     | "refreshToken"                                              |
+      | cookieOnly | true                                                        |
+      | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
+    Then I should receive a result matching:
+      | valid     | true         |
+      | kuid      | "test-admin" |
+      | expiresAt | "_NUMBER_"   |
+    And The raw response should match:
+      | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
 
   # auth:searchApiKeys =========================================================
 
