@@ -202,19 +202,18 @@ class FunctionalTestPlugin {
     const payload = request.input.body;
     const state = request.input.args.state;
     const event = request.input.args.event;
-    await this.sdk.ms.set(
-      `plugin:pipes:${event}`, 
-      JSON.stringify({
-        payload,
-        state,
-      })
-    );
+
+    await this.sdk.ms.set(`plugin:pipes:${event}`, JSON.stringify({
+      payload,
+      state,
+    }));
 
     return null;
   }
 
   async pipesDeactivateAll () {
     const names = await this.sdk.ms.keys('plugin:pipes:*');
+
     for (const name of names) {
       const pipe = JSON.parse(await this.sdk.ms.get(name));
       pipe.state = 'off';
@@ -227,7 +226,7 @@ class FunctionalTestPlugin {
   async genericDocumentEvent (event, documents) {
     const pipe = JSON.parse(await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`));
 
-    if (!pipe || pipe.state === 'off') {
+    if (! pipe || pipe.state === 'off') {
       return documents;
     }
 
