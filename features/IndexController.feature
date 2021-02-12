@@ -78,8 +78,8 @@ Feature: Index Controller
     And I refresh the collection
     When I successfully execute the action "index":"stats"
     And I should receive a result matching:
-      | size | 4122 |
-    Then I should receive a "indexes" array of objects matching:
-      | name                 | size | collections                                                               |
-      | "index-storage-data" | 460  | [ { name: "green-taxi", size: 230 }, { name: "yellow-taxi", size: 230 } ] |
-      | "index-stats-data"   | 3662 | [ { name: "red-taxi", size: 3662, documentCount: 1 } ]                    |
+      | size | "_NUMBER_" |
+    Then I should receive a result matching:
+      | indexes[0].collections[0].size | "_NUMBER_" |
+      | indexes[0].collections[1].size | "_NUMBER_" |
+      | indexes[1].collections[0].size | "_NUMBER_" |
