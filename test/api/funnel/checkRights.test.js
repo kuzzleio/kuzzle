@@ -130,4 +130,56 @@ describe('funnel.checkRights', () => {
     should(kuzzle.pipe).calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
   });
+
+  it('should use the token in the cookie when cookieOnly is true and supportCookieAuthentication is enabled', async () => {
+    kuzzle.config.http.supportCookieAuthentication = true;
+
+    request.input.jwt = 'foobar';
+    request.input.args.cookieOnly = true;
+    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should not use the token in the cookie when cookieOnly is true and supportCookieAuthentication is disabled', async () => {
+    kuzzle.config.http.supportCookieAuthentication = false;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieOnly = true;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should not use the token in the cookie when cookieOnly is false and supportCookieAuthentication is enabled', async () => {
+    kuzzle.config.http.supportCookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieOnly = false;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should not use the token in the cookie when cookieOnly is false and supportCookieAuthentication is disabled', async () => {
+    kuzzle.config.http.supportCookieAuthentication = false;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieOnly = false;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
 });
