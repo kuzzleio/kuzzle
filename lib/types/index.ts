@@ -30,3 +30,7 @@ export * from './User';
 export * from './Token';
 export * from './InternalLogger';
 export * from './Global';
+export * from './PasswordPolicy';
+export * from './KuzzleConfiguration';
+export * from './RoleDefinition';
+export * from './ProfileDefinition';
