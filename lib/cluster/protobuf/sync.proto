@@ -146,18 +146,30 @@ message InvalidateRole {
   string roleId = 2;
 }
 
-message IndexCacheAdd {
+message AddIndex {
   uint64 messageId = 1;
   string scope = 2;
   string index = 3;
-  optional string collection = 4;
 }
 
-message IndexCacheRemove {
+message AddCollection {
   uint64 messageId = 1;
   string scope = 2;
   string index = 3;
-  optional string collection = 4;
+  string collection = 4;
+}
+
+message RemoveIndexes {
+  uint64 messageId = 1;
+  string scope = 2;
+  repeated string indexes = 3;
+}
+
+message RemoveCollection {
+  uint64 messageId = 1;
+  string scope = 2;
+  string index = 3;
+  string collection = 4;
 }
 
 message ClusterWideEvent {

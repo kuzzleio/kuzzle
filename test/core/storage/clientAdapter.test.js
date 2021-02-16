@@ -1367,10 +1367,10 @@ describe('#core/storage/ClientAdapter', () => {
   });
 
   describe('#cache handling events', () => {
-    describe('#cache:add', () => {
+    describe('#cache:addIndex', () => {
       it('should handle adding a single index', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:storage:${adapter.scope}:cache:add`, 'index');
+          await kuzzle.ask(`core:storage:${adapter.scope}:cache:addIndex`, 'index');
 
           should(adapter.cache.addIndex).calledWith('index');
           should(adapter.cache.addCollection).not.called();
@@ -1380,30 +1380,34 @@ describe('#core/storage/ClientAdapter', () => {
       it('should handle adding an index/collection pair', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:storage:${adapter.scope}:cache:add`,
+            `core:storage:${adapter.scope}:cache:addCollection`,
             'index',
             'collection');
 
-          should(adapter.cache.addIndex).not.called();
           should(adapter.cache.addCollection).calledWith('index', 'collection');
         }
       });
     });
 
     describe('#cache:remove', () => {
-      it('should handle removing a single index', async () => {
+      it('should handle removing indexes', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
-          await kuzzle.ask(`core:storage:${adapter.scope}:cache:remove`, 'index');
+          await kuzzle.ask(`core:storage:${adapter.scope}:cache:removeIndexes`, [
+            'index1',
+            'index2',
+            'index3',
+          ]);
 
-          should(adapter.cache.removeIndex).calledWith('index');
-          should(adapter.cache.removeCollection).not.called();
+          should(adapter.cache.removeIndex).calledWith('index1');
+          should(adapter.cache.removeIndex).calledWith('index2');
+          should(adapter.cache.removeIndex).calledWith('index3');
         }
       });
 
-      it('should handle removing an index/collection pair', async () => {
+      it('should handle removing a collection pair', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
-            `core:storage:${adapter.scope}:cache:remove`,
+            `core:storage:${adapter.scope}:cache:removeCollection`,
             'index',
             'collection');
 
