@@ -3,19 +3,19 @@
 // Starts a Kuzzle Backend application tailored for development
 // This loads a special plugin dedicated to functional tests
 
-import should from 'should/as-function'
-import { omit } from 'lodash'
+import should from 'should/as-function';
+import { omit } from 'lodash';
 
 import { Backend, Request, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
 
-async function loadAdditionalPlugins () {
+async function loadAdditionalPlugins() {
   const additionalPluginsIndex = process.argv.indexOf('--enable-plugins');
   const additionalPlugins = additionalPluginsIndex > -1
-    ? process.argv[additionalPluginsIndex + 1].split(',')
-    : [];
+      ? process.argv[additionalPluginsIndex + 1].split(',')
+      : [];
 
   for (const name of additionalPlugins) {
     const path = `../../plugins/available/${name}`;
@@ -30,9 +30,7 @@ async function loadAdditionalPlugins () {
       // do nothing
     }
 
-    const options = manifest !== null
-      ? { manifest, name: manifest.name }
-      : null;
+    const options = manifest !== null ? { manifest, name: manifest.name } : null;
 
     app.plugin.use(new Plugin(), options);
   }
@@ -43,6 +41,7 @@ if (! process.env.TRAVIS) {
   app.hook.register('request:onError', async (request: Request) => {
     app.log.error(request.error);
   });
+
   app.hook.register('hook:onError', async (request: Request) => {
     app.log.error(request.error);
   });
@@ -52,20 +51,20 @@ if (! process.env.TRAVIS) {
 app.controller.use(new FunctionalTestsController(app));
 
 // Pipe management
-const activatedPipes: any = {};
-
 app.controller.register('pipes', {
   actions: {
     deactivateAll: {
       handler: async () => {
-        const values: any = Object.values(activatedPipes);
+        const names: any = await app.sdk.ms.keys('app:pipes:*');
 
-        for (const pipe of values) {
+        for (const name of names) {
+          const pipe = JSON.parse(await app.sdk.ms.get(name));
           pipe.state = 'off';
+          await app.sdk.ms.set(name, JSON.stringify(pipe));
         }
 
         return null;
-      }
+      },
     },
     manage: {
       handler: async (request: Request) => {
@@ -73,22 +72,22 @@ app.controller.register('pipes', {
         const state = request.input.args.state;
         const event = request.input.args.event;
 
-        activatedPipes[event] = {
+        await app.sdk.ms.set(`app:pipes:${event}`, JSON.stringify({
           payload,
           state,
-        };
+        }));
 
         return null;
-      }
-    }
-  }
+      },
+    },
+  },
 });
 
 /* Actual code for tests start here */
 
 // Pipe registration
-app.pipe.register('server:afterNow', async request => {
-  const pipe = activatedPipes['server:afterNow'];
+app.pipe.register('server:afterNow', async (request) => {
+  const pipe = JSON.parse(await app.sdk.ms.get('app:pipes:server:afterNow'));
 
   if (pipe && pipe.state !== 'off') {
     request.response.result = { coworking: 'Spiced' };
@@ -98,11 +97,11 @@ app.pipe.register('server:afterNow', async request => {
 });
 
 // Hook registration and embedded SDK realtime publish
-app.hook.register('custom:event', async name => {
-  await app.sdk.realtime.publish(
-    'app-functional-test',
-    'hooks',
-    { event: 'custom:event', name });
+app.hook.register('custom:event', async (name) => {
+  await app.sdk.realtime.publish('app-functional-test', 'hooks', {
+    event: 'custom:event',
+    name,
+  });
 });
 
 let syncedHello = 'World';
@@ -114,12 +113,12 @@ app.controller.register('tests', {
       handler: async (request: Request) => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: 'post', path: '/hello/:name' }]
+      http: [{ verb: 'post', path: '/hello/:name' }],
     },
 
     getSyncedHello: {
       handler: async (request: Request) => `Hello, ${syncedHello}`,
-      http: [ { verb: 'get', path: '/hello' } ],
+      http: [{ verb: 'get', path: '/hello' }],
     },
 
     syncHello: {
@@ -128,7 +127,7 @@ app.controller.register('tests', {
         await app.cluster.broadcast('sync:hello', { name: syncedHello });
         return 'OK';
       },
-      http: [ { verb: 'put', path: '/syncHello/:name' } ],
+      http: [{ verb: 'put', path: '/syncHello/:name' }],
     },
 
     // Trigger custom event
@@ -136,13 +135,13 @@ app.controller.register('tests', {
       handler: async (request: Request) => {
         await app.trigger('custom:event', request.input.args.name);
 
-        return { trigger: 'custom:event', payload: request.input.args.name }
-      }
+        return { trigger: 'custom:event', payload: request.input.args.name };
+      },
     },
 
     // Access Vault secrets
     vault: {
-      handler: async () => app.vault.secrets
+      handler: async () => app.vault.secrets,
     },
 
     // access storage client
@@ -158,14 +157,13 @@ app.controller.register('tests', {
         const response = await client.index(esRequest);
         const response2 = await app.storage.storageClient.index(esRequest);
 
-        should(omit(response.body, ['_version', 'result', '_seq_no']))
-          .match(omit(response2.body, ['_version', 'result', '_seq_no']));
+        should(omit(response.body, ['_version', 'result', '_seq_no'])).match(
+          omit(response2.body, ['_version', 'result', '_seq_no'])
+        );
 
         return response.body;
       },
-      http: [
-        { verb: 'post', path: '/tests/storage-client/:index' }
-      ]
+      http: [{ verb: 'post', path: '/tests/storage-client/:index' }],
     },
 
     mutex: {
@@ -180,11 +178,9 @@ app.controller.register('tests', {
 
         return { locked };
       },
-      http: [
-        { verb: 'get', path: '/tests/mutex/acquire' }
-      ],
+      http: [{ verb: 'get', path: '/tests/mutex/acquire' }],
     },
-  }
+  },
 });
 
 let vaultfile = 'features/fixtures/secrets.enc.json';
@@ -199,7 +195,7 @@ loadAdditionalPlugins()
   .then(() => {
     // post-start methods here
 
-    app.cluster.on('sync:hello', payload => {
+    app.cluster.on('sync:hello', (payload) => {
       syncedHello = payload.name;
     });
   })

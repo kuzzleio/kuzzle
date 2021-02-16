@@ -61,7 +61,7 @@ jobs:
     needs: [unit-tests]
     strategy:
       matrix:
-        test_set: ['http', 'websocket', 'mqtt']
+        test_set: [http, websocket, mqtt, cluster]
         node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
@@ -116,37 +116,6 @@ jobs:
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
-          node-version: ${{ matrix.node-version }}
-
-  functional-tests-cluster:
-    name: Functional Tests - Cluster - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        node-version: ['12.16.3', '12.20.0']
-    steps:
-      - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
-      - uses: actions/setup-node@v1
-        with:
-          node-version: 12
-      - name: Cluster legacy tests
-        uses: ./.github/actions/functional-tests
-        with:
-          test-set: test:functional:legacy:cluster
           node-version: ${{ matrix.node-version }}
 
   error-codes-check:
