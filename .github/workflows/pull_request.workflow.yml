@@ -127,7 +127,7 @@ jobs:
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
- cluster-monkey-tests:
+  cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
