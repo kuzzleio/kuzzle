@@ -1,0 +1,14 @@
+name: Cluster Monkey Tests
+description: Run monkey tests on a Kuzzle Cluster
+inputs:
+  node-version:
+    description: Node version to use in the Kuzzle Docker image
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - run: ./.ci/scripts/run-test-cluster.sh
+      env:
+        NODE_VERSION: ${{ inputs.node-version }}
+      shell: bash
