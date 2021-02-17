@@ -54,7 +54,7 @@ jobs:
     needs: [unit-tests]
     strategy:
       matrix:
-        test_set: [http, websocket, mqtt, cluster]
+        test_set: [http, websocket, mqtt]
         node-version: ['12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
