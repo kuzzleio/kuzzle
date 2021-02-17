@@ -78,6 +78,7 @@ message UserNotification {
 
   // serialized JSON
   string volatile = 11;
+  string result = 12;
 }
 
 message NewAuthStrategy {
