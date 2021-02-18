@@ -23,7 +23,7 @@
     // [supportCookieAuthentication]
     // Enables Kuzzle secure support for authentication tokens in cookies for browsers
     // If activated, [http.accessControlAllowOrigin] must be set to a value different than '*'
-    "supportCookieAuthentication": false,
+    "supportCookieAuthentication": false
   },
 
   // Kuzzle configured limits

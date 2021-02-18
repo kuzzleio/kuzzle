@@ -14,7 +14,7 @@ describe('.kuzzlerc.sample', () => {
     }
     catch(e) {
       // eslint-disable-next-line
-      console.log(stripped);
+      console.error(stripped);
       throw e;
     }
   });
