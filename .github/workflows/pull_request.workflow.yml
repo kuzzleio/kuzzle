@@ -5,7 +5,6 @@ on: [pull_request]
 jobs:
   lint:
     name: Lint
-    needs: [cluster-monkey-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -130,7 +129,7 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    # needs: [functional-tests-legacy, functional-tests]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
