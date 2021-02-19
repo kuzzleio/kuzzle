@@ -14,9 +14,9 @@ Handlers attached to this event will receive the following arguments:
 
 | Arguments    | Type     | Description                                   |
 |--------------|----------|-----------------------------------------------|
-| `pluginName` | `String` | Application or plugin name                    |
-| `event`      | `String` | Original event to which the hook was attached |
-| `error`      | `Error`  | Error object                                  |
+| `pluginName` | <pre>String</pre> | Application or plugin name                    |
+| `event`      | <pre>String</pre> | Original event to which the hook was attached |
+| `error`      | <pre>Error</pre>  | Error object                                  |
 
 ::: info
 To prevent infinite loops, if a hook attached to the `hook:onError` event fails, it won't trigger any other events.

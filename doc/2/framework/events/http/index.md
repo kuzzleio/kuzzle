@@ -14,7 +14,7 @@ order: 100
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP DELETE methods.
 
@@ -24,7 +24,7 @@ Triggered whenever a request has been submitted through HTTP DELETE methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP GET methods.
 
@@ -34,7 +34,7 @@ Triggered whenever a request has been submitted through HTTP GET methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP HEAD methods.
 
@@ -44,7 +44,7 @@ Triggered whenever a request has been submitted through HTTP HEAD methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
@@ -54,7 +54,7 @@ Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/roperties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP PATCH methods.
 
@@ -64,7 +64,7 @@ Triggered whenever a request has been submitted through HTTP PATCH methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP POST methods.
 
@@ -74,6 +74,6 @@ Triggered whenever a request has been submitted through HTTP POST methods.
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre>KuzzleRequest</pre> | The normalized API [request](/core/2/framework/classes/kuzzle-request) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Triggered whenever a request has been submitted through HTTP PUT methods.
