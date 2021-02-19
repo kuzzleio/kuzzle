@@ -19,7 +19,7 @@ const {
 const ElasticsearchClientMock = require('../../mocks/service/elasticsearchClient.mock');
 
 const Funnel = require('../../../lib/api/funnel');
-const DocumentController = require('../../../lib/api/controller/document');
+const DocumentController = require('../../../lib/api/controllers/documentController');
 
 describe('funnel.processRequest', () => {
   let kuzzle;

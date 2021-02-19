@@ -5,7 +5,7 @@ const sinon = require('sinon');
 
 const { BadRequestError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const { NativeController } = require('../../../lib/api/controller/base');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('#base/native controller', () => {
   let kuzzle;

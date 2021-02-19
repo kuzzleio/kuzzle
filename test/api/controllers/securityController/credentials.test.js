@@ -7,7 +7,7 @@ const sinon = require('sinon');
 const { Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const SecurityController = rewire('../../../../lib/api/controller/security');
+const SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - credentials', () => {
   let kuzzle;
