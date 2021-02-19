@@ -79,10 +79,9 @@ describe('core/network/httpRouter', () => {
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'gzip,deflate,identity',
-        'Access-Control-Allow-Origin': 'localhost',
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
-        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile',
-        'Access-Control-Allow-Credentials': 'true'
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
       });
     });
 
@@ -93,10 +92,9 @@ describe('core/network/httpRouter', () => {
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'identity',
-        'Access-Control-Allow-Origin': 'localhost',
+        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,DELETE,OPTIONS,HEAD',
-        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile',
-        'Access-Control-Allow-Credentials': 'true'
+        'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
       });
     });
 
