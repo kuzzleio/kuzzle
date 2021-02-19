@@ -171,12 +171,12 @@ kourou auth:login -a strategy=local --body '{
 
 ### Authentication Token in the Browser
 
-When you're making `HTTP request` from a Browser you can instruct Kuzzle
+When you're sending HTTP requests from a browser you can instruct Kuzzle
 to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
-This is possible thanks to the [HTTP-only](../../../api/protocols/http/index.md#http-only-options) option [cookieOnly](../../../api/protocols/http/index.md#cookieonly)
+This is possible thanks to the [HTTP-only](/core/2/api/protocols/http/index.md#http-only-options) option [cookieOnly](../../../api/protocols/http/index.md#cookieonly)
 
 ::: warning
-For this to work you should enable the option `supportCookieAuthentication` in the [Kuzzle Configuration](../../advanced/configuration/index.md)
+This only works if the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](/core/2/guides/advanced/configuration)
 :::
 
 

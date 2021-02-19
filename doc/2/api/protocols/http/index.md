@@ -67,11 +67,12 @@ Modifying the listening port will impact these two protocols.
 
 ### HTTP-only options
 
-Only the HTTP protocol does support the following options in a [KuzzleRequest](../../payloads/request/index.md)
+Only the HTTP protocol does support the following options in a [KuzzleRequest](/core/2/api/payloads/request)
 
-| Property         | Type        | Description                                                                 |
-| ---------------- | ----------- | --------------------------------------------------------------------------- |
-| **`cookieOnly`** | **boolean** | **Instruct Kuzzle to store / use authentication token within HTTP Cookies** |
+| Property     | Type               | Description                                                                           |
+| ------------ | ------------------ | ------------------------------------------------------------------------------------- |
+| `cookieOnly` | <pre>boolean</pre> | Instructs Kuzzle to store / use authentication tokens within secured HTTP Cookies     |
+| `pretty`     | <pre>boolean</pre> | Prettify the JSON response, making it more readable for humans                        |
 
 #### cookieOnly
 
@@ -80,6 +81,6 @@ Kuzzle will `store` or `load` the authentication token directly from an [HTTP Co
 and will not use the `jwt` property.
 
 ::: warning
-The property `cookieOnly` is only supported when the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](../../../guides/advanced/configuration/index.md).
-Otherwise Kuzzle will treat the request as if `cookieOnly` wasn't set.
+The property `cookieOnly` is only supported when the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](/core/2/guides/advanced/configuration).
+Otherwise Kuzzle will ignore the `cookieOnly` option.
 :::
