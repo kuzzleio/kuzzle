@@ -169,6 +169,17 @@ kourou auth:login -a strategy=local --body '{
 }'
 ```
 
+### Authentication Token in the Browser
+
+When you're making `HTTP request` from a Browser you can instruct Kuzzle
+to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
+This is possible thanks to the [HTTP-only](../../../api/protocols/http/index.md#http-only-options) option [cookieOnly](../../../api/protocols/http/index.md#cookieonly)
+
+::: warning
+For this to work you should enable the option `supportCookieAuthentication` in the [Kuzzle Configuration](../../advanced/configuration/index.md)
+:::
+
+
 ### `local` Strategy Configuration
 
 The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-local` configuration key.

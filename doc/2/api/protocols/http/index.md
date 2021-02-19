@@ -64,3 +64,22 @@ The listening port can be modified under the `server.port` section of the [confi
 HTTP and WebSocket protocols share the same underlying server instance.  
 Modifying the listening port will impact these two protocols.
 :::
+
+### HTTP-only options
+
+Only the HTTP protocol does support the following options in a [KuzzleRequest](../../payloads/request/index.md)
+
+| Property         | Type        | Description                                                                 |
+| ---------------- | ----------- | --------------------------------------------------------------------------- |
+| **`cookieOnly`** | **boolean** | **Instruct Kuzzle to store / use authentication token within HTTP Cookies** |
+
+#### cookieOnly
+
+When the property `cookieOnly` is set to `true` in an HTTP request,
+Kuzzle will `store` or `load` the authentication token directly from an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies),
+and will not use the `jwt` property.
+
+::: warning
+The property `cookieOnly` is only supported when the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](../../../guides/advanced/configuration/index.md).
+Otherwise Kuzzle will treat the request as if `cookieOnly` wasn't set.
+:::
