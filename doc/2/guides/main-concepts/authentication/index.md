@@ -169,6 +169,7 @@ kourou auth:login -a strategy=local --body '{
 }'
 ```
 
+<SinceBadge version="auto-version"/>
 ### Authentication Token in the Browser
 
 When you're sending HTTP requests from a browser you can instruct Kuzzle

@@ -65,6 +65,7 @@ HTTP and WebSocket protocols share the same underlying server instance.
 Modifying the listening port will impact these two protocols.
 :::
 
+<SinceBadge version="auto-version"/>
 ### HTTP-only options
 
 Only the HTTP protocol does support the following options in a [KuzzleRequest](/core/2/api/payloads/request)
