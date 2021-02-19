@@ -257,7 +257,7 @@
           "description": "Cookie authentication not supported.",
           "code": 2,
           "message": "Cookie authentication not supported.",
-          "class": "UnauthorizedError"
+          "class": "InternalError"
         }
       }
     }
