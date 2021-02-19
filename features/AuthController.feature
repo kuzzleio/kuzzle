@@ -26,11 +26,11 @@ Feature: Auth Controller
       | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
-      | cookieOnly | true                                                 |
+      | cookieAuth | true                                                 |
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "checkToken"                                                |
-      | cookieOnly | true                                                        |
+      | cookieAuth | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
     Then I should receive a result matching:
       | valid     | true         |
@@ -39,7 +39,7 @@ Feature: Auth Controller
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "checkToken"                                                |
-      | cookieOnly | true                                                        |
+      | cookieAuth | true                                                        |
       | headers    | { cookie: 'authToken=wrongtoken' }                                              |
     Then I should receive a result matching:
       | valid | false      |
@@ -91,7 +91,7 @@ Feature: Auth Controller
       | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
-      | cookieOnly | true                                                 |
+      | cookieAuth | true                                                 |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
     Then I should receive a result matching:
@@ -109,11 +109,11 @@ Feature: Auth Controller
       | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
-      | cookieOnly | true                                                 |
+      | cookieAuth | true                                                 |
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "logout"                                                    |
-      | cookieOnly | true                                                        |
+      | cookieAuth | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=null;.*/ ] |
@@ -122,7 +122,7 @@ Feature: Auth Controller
       | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
-      | cookieOnly | true                                                 |
+      | cookieAuth | true                                                 |
 
   # auth:refreshToken ==========================================================
 
@@ -133,11 +133,11 @@ Feature: Auth Controller
       | action     | "login"                                              |
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
-      | cookieOnly | true                                                 |
+      | cookieAuth | true                                                 |
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "refreshToken"                                              |
-      | cookieOnly | true                                                        |
+      | cookieAuth | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |

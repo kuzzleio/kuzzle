@@ -71,16 +71,16 @@ Only the HTTP protocol does support the following options in a [KuzzleRequest](/
 
 | Property     | Type               | Description                                                                           |
 | ------------ | ------------------ | ------------------------------------------------------------------------------------- |
-| `cookieOnly` | <pre>boolean</pre> | Instructs Kuzzle to store / use authentication tokens within secured HTTP Cookies     |
+| `cookieAuth` | <pre>boolean</pre> | Instructs Kuzzle to store / use authentication tokens within secured HTTP Cookies     |
 | `pretty`     | <pre>boolean</pre> | Prettify the JSON response, making it more readable for humans                        |
 
-#### cookieOnly
+#### cookieAuth
 
-When the property `cookieOnly` is set to `true` in an HTTP request,
+When the property `cookieAuth` is set to `true` in an HTTP request,
 Kuzzle will `store` or `load` the authentication token directly from an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies),
 and will not use the `jwt` property.
 
 ::: warning
-The property `cookieOnly` is only supported when the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](/core/2/guides/advanced/configuration).
-Otherwise Kuzzle will ignore the `cookieOnly` option.
+The property `cookieAuth` is only supported when the option `supportCookieAuthentication` is enabled in the [Kuzzle Configuration](/core/2/guides/advanced/configuration).
+Otherwise Kuzzle will ignore the `cookieAuth` option.
 :::

@@ -23,7 +23,6 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_services__memoryStorage__node__host=redis
     - kuzzle_server__protocols__mqtt__enabled=true
     - kuzzle_server__protocols__mqtt__developmentMode=false
-    - kuzzle_http__supportCookieAuthentication=true
     - kuzzle_http__accessControlAllowOrigin=localhost
     - kuzzle_limits__loginsPerSecond=50
     - NODE_ENV=development

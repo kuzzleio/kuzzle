@@ -21,7 +21,7 @@ const { NativeController } = require('../../../lib/api/controllers/baseControlle
 
 describe('Test the auth controller', () => {
   let request;
-  let requestCookieOnly;
+  let requestcookieAuth;
   let kuzzle;
   let user;
   let authController;
@@ -29,7 +29,7 @@ describe('Test the auth controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
-    kuzzle.config.http.supportCookieAuthentication = false;
+    kuzzle.config.http.accessControlAllowOrigin = '*';
     kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     user = new User();
@@ -45,7 +45,7 @@ describe('Test the auth controller', () => {
       foo: 'bar'
     });
 
-    requestCookieOnly = new Request({
+    requestcookieAuth = new Request({
       controller: 'auth',
       action: 'login',
       strategy: 'mockup',
@@ -53,10 +53,10 @@ describe('Test the auth controller', () => {
         username: 'jdoe'
       },
       foo: 'bar',
-      cookieOnly: true
+      cookieAuth: true
     });
 
-    requestCookieOnly.input.headers = {cookie: 'authToken=;'};
+    requestcookieAuth.input.headers = {cookie: 'authToken=;'};
 
     authController = new AuthController();
 
@@ -278,7 +278,7 @@ describe('Test the auth controller', () => {
     let createTokenStub;
 
     beforeEach(() => {
-      kuzzle.config.http.supportCookieAuthentication = true;
+      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
       createTokenStub = kuzzle.ask.withArgs('core:security:token:create');
     });
 
@@ -294,16 +294,16 @@ describe('Test the auth controller', () => {
       createTokenStub.resolves(token);
       kuzzle.tokenManager.getConnectedUserToken.resolves(null);
 
-      const response = await authController.login(requestCookieOnly);
+      const response = await authController.login(requestcookieAuth);
 
       should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
         strategy: 'mockup',
         content: user
       });
 
-      should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
-      should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
+      should.exists(requestcookieAuth.response.headers);
+      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
+      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
       should(response).be.deepEqual({
@@ -334,14 +334,14 @@ describe('Test the auth controller', () => {
       createTokenStub.resolves(token);
       kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
 
-      const response = await authController.login(requestCookieOnly);
+      const response = await authController.login(requestcookieAuth);
 
       should(kuzzle.tokenManager.getConnectedUserToken).be.called();
       should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
 
-      should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
-      should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
+      should.exists(requestcookieAuth.response.headers);
+      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
+      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
       should(response).be.deepEqual({
@@ -357,7 +357,7 @@ describe('Test the auth controller', () => {
         .withArgs('auth:strategyAuthenticated')
         .resolves({strategy: 'foobar', content: {foo: 'bar'}});
 
-      const response = await authController.login(requestCookieOnly);
+      const response = await authController.login(requestcookieAuth);
 
       should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
         strategy: 'mockup',
@@ -372,13 +372,13 @@ describe('Test the auth controller', () => {
 
       kuzzle.passport.authenticate.resolves(redir);
 
-      const response = await authController.login(requestCookieOnly);
+      const response = await authController.login(requestcookieAuth);
 
       should(kuzzle.pipe).not.be.called();
       should(response.headers.Location).be.equal('http://github.com');
       should(response.statusCode).be.equal(302);
-      should(requestCookieOnly.status).be.equal(302);
-      should(requestCookieOnly.response).match({
+      should(requestcookieAuth.status).be.equal(302);
+      should(requestcookieAuth.response).match({
         status: 302,
         result: response,
         headers: {Location: 'http://github.com'}
@@ -389,7 +389,7 @@ describe('Test the auth controller', () => {
 
     it('should call passport.authenticate with input body and query string', async () => {
       createTokenStub.resolves(new Token());
-      await authController.login(requestCookieOnly);
+      await authController.login(requestcookieAuth);
 
       should(kuzzle.passport.authenticate)
         .be.calledOnce()
@@ -400,9 +400,9 @@ describe('Test the auth controller', () => {
     });
 
     it('should reject if no strategy is specified', () => {
-      delete requestCookieOnly.input.args.strategy;
+      delete requestcookieAuth.input.args.strategy;
 
-      return should(authController.login(requestCookieOnly))
+      return should(authController.login(requestcookieAuth))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "strategy".'
@@ -421,13 +421,13 @@ describe('Test the auth controller', () => {
       createTokenStub.resolves(token);
       kuzzle.passport.authenticate.resolves(user);
 
-      requestCookieOnly.input.args.expiresIn = '1s';
+      requestcookieAuth.input.args.expiresIn = '1s';
 
-      const response = await authController.login(requestCookieOnly);
+      const response = await authController.login(requestcookieAuth);
 
-      should.exists(requestCookieOnly.response.headers);
-      should.exists(requestCookieOnly.response.headers['Set-Cookie']);
-      should(requestCookieOnly.response.headers['Set-Cookie']).be.an.Array()
+      should.exists(requestcookieAuth.response.headers);
+      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
+      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
         .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
 
       should(response).be.deepEqual({
@@ -445,13 +445,13 @@ describe('Test the auth controller', () => {
     it('should reject if authentication fails', () => {
       kuzzle.passport.authenticate.rejects(new Error('error'));
 
-      return should(authController.login(requestCookieOnly)).be.rejected();
+      return should(authController.login(requestcookieAuth)).be.rejected();
     });
 
     it('should reject in case of unknown strategy', () => {
-      requestCookieOnly.input.args.strategy = 'foobar';
+      requestcookieAuth.input.args.strategy = 'foobar';
 
-      return should(authController.login(requestCookieOnly))
+      return should(authController.login(requestcookieAuth))
         .rejectedWith(BadRequestError, {
           id: 'security.credentials.unknown_strategy'
         });
@@ -517,7 +517,7 @@ describe('Test the auth controller', () => {
 
   describe('#logout with cookies', () => {
     beforeEach(() => {
-      kuzzle.config.http.supportCookieAuthentication = true;
+      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
 
       const signedToken = jwt.sign(
         {_id: 'admin'},
@@ -532,7 +532,7 @@ describe('Test the auth controller', () => {
       request = new Request({
         controller: 'auth',
         action: 'logout',
-        cookieOnly: true,
+        cookieAuth: true,
       }, {
         connectionId: 'papagaya',
         token: t,
@@ -574,14 +574,6 @@ describe('Test the auth controller', () => {
       kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
-    });
-
-    it('should reject if invoked by an anonymous user', () => {
-      request.context.user._id = '-1';
-
-      return should(authController.logout(request)).rejectedWith(
-        UnauthorizedError,
-        {id: 'security.rights.unauthorized'});
     });
   });
 
@@ -674,14 +666,14 @@ describe('Test the auth controller', () => {
     let testToken;
 
     beforeEach(() => {
-      kuzzle.config.http.supportCookieAuthentication = true;
+      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
 
       request = new Request(
         {
           action: 'checkToken',
           controller: 'auth',
           body: {},
-          cookieOnly: true,
+          cookieAuth: true,
         },
         {});
       
@@ -791,12 +783,12 @@ describe('Test the auth controller', () => {
 
   describe('#refreshToken with cookies', () => {
     beforeEach(() => {
-      kuzzle.config.http.supportCookieAuthentication = true;
+      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
     });
 
     it('should reject if the user is not authenticated', () => {
       return should(authController.refreshToken(new Request(
-        {cookieOnly: true},
+        {cookieAuth: true},
         {token: {userId: 'anonymous', _id: '-1'}, user: {_id: '-1'}}
       )))
         .rejectedWith(
@@ -815,7 +807,7 @@ describe('Test the auth controller', () => {
       const req = new Request(
         {
           expiresIn: '42h',
-          cookieOnly: true
+          cookieAuth: true
         },
         {
           token: {

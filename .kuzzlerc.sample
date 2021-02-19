@@ -19,11 +19,7 @@
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
     "accessControlAllowOrigin": "*",
     "accessControlAllowMethods": "GET,POST,PUT,DELETE,OPTIONS,HEAD",
-    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
-    // [supportCookieAuthentication]
-    // Enables Kuzzle secure support for authentication tokens in cookies for browsers
-    // If activated, [http.accessControlAllowOrigin] must be set to a value different than '*'
-    "supportCookieAuthentication": false
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
   },
 
   // Kuzzle configured limits
