@@ -84,7 +84,7 @@ Pipes cannot listen to that event, only hooks can.
 
 | Arguments | Type              | Description                    |
 | --------- | ----------------- | ------------------------------ |
-| `fill`    | <pre>number</pre> | KuzzleRequest buffer fill percentage |
+| `fill`    | <pre>number</pre> | Request buffer fill percentage |
 
 Triggered when the requests buffer fills up more quickly than requests can be processed.
 

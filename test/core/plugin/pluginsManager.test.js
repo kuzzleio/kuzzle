@@ -11,7 +11,7 @@ const {
 } = require('../../../index');
 const Plugin = require('../../../lib/core/plugin/plugin');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const { BaseController } = require('../../../lib/api/controller/base');
+const { BaseController } = require('../../../lib/api/controllers/baseController');
 
 describe('Plugin', () => {
   let kuzzle;

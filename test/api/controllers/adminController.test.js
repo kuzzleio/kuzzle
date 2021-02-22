@@ -12,7 +12,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const MutexMock = require('../../mocks/mutex.mock.js');
 
-const { NativeController } = require('../../../lib/api/controller/base');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('AdminController', () => {
   let AdminController;
@@ -22,7 +22,7 @@ describe('AdminController', () => {
 
   before(() => {
     mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
-    AdminController = mockRequire.reRequire('../../../lib/api/controller/admin');
+    AdminController = mockRequire.reRequire('../../../lib/api/controllers/adminController');
   });
 
   after(() => {

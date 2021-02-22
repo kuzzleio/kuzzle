@@ -32,6 +32,7 @@ import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';
+import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -92,24 +93,22 @@ interface EmbeddedRealtime extends RealtimeController {
 export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
-  /**
-   * @param user - User to impersonate the SDK with
-   */
-  constructor (user?) {
-    super(new FunnelProtocol(user), { autoResubscribe: false });
+  constructor () {
+    super(new FunnelProtocol(), { autoResubscribe: false });
   }
 
   /**
    * Returns a new SDK impersonated with the provided user.
    *
    * @param user - User to impersonate the SDK with
+   * @param options - Optional sdk arguments
    */
-  as (user: { _id: string }): EmbeddedSDK {
+  as (user: { _id: string }, options = { checkRights: false }): EmbeddedSDK {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
 
-    return new EmbeddedSDK(user);
+    return new ImpersonatedSDK(user._id, options) as EmbeddedSDK;
   }
 
   /**

@@ -7,8 +7,8 @@ const { Request } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
 
-const BulkController = require('../../../lib/api/controller/bulk');
-const { NativeController } = require('../../../lib/api/controller/base');
+const BulkController = require('../../../lib/api/controllers/bulkController');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('Test the bulk controller', () => {

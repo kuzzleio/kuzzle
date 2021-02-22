@@ -393,6 +393,27 @@ class BackendStorage extends ApplicationManager {
 
 /* Backend class ======================================================== */
 
+let _app = null;
+
+Reflect.defineProperty(global, 'app', {
+  configurable: true,
+  enumerable: false,
+  get () {
+    if (_app === null) {
+      throw new Error('App instance not found. Are you sure you have already started your application?');
+    }
+
+    return _app;
+  },
+  set (value) {
+    if (_app !== null) {
+      throw new Error('Cannot build an App instance: another one already exists');
+    }
+
+    _app = value;
+  },
+});
+
 export class Backend {
   private _kuzzle: any;
   private _name: string;
@@ -535,6 +556,8 @@ export class Backend {
     Reflect.defineProperty(this, '_sdk', {
       writable: true
     });
+
+    global.app = this;
 
     this.pipe = new BackendPipe(this);
     this.hook = new BackendHook(this);
