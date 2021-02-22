@@ -21,12 +21,13 @@
 
 'use strict';
 
-const
-  { formatWithOptions } = require('util'),
-  { Client } = require('@elastic/elasticsearch'),
-  ConnectorContext = require('../lib/connectorContext'),
-  validator = require('validator'),
-  _ = require('lodash');
+const { formatWithOptions } = require('util');
+
+const { Client } = require('@elastic/elasticsearch');
+const validator = require('validator');
+const _ = require('lodash');
+
+const ConnectorContext = require('../lib/connectorContext');
 
 let promise = null;
 
@@ -57,14 +58,23 @@ async function getEsClient(context) {
       message: ({ current }) => `Enter the URL for the ${current === 'source' ? 'target': 'source'} instance:`,
       name: 'url',
       type: 'input',
-      validate: url => validator.isURL(url) || 'A valid URL must be provided',
+      validate: url => {
+        const opts = {
+          protocols: ['http', 'https'],
+          require_port: true,
+          require_protocol: true,
+          require_tld: false,
+          require_valid_protocol: true,
+        };
+
+        return validator.isURL(url, opts) || 'A valid URL must be provided. Example: http://<server>:<port>';
+      },
       when: ({ current }) => current !== 'source and target'
     }
   ]);
 
-  const
-    current = new Client(currentConfiguration),
-    next = answers.url ? new Client({ node: answers.url }) : current;
+  const current = new Client(currentConfiguration);
+  const next = answers.url ? new Client({ node: answers.url }) : current;
 
   return answers.current === 'source'
     ? new ConnectorContext(context, current, next)
