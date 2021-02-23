@@ -21,7 +21,7 @@ Example: After document creation you will have `document:afterCreate` then `docu
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `*` | `*` | Depends on the event type |
+| `*` | <pre>*</pre> | Depends on the event type |
 
 You can catch all the actions of a controller by using a wildcard instead of the action name.
 
@@ -49,7 +49,7 @@ this.pipes =
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | <pre><a href=/plugins/1/constructors/request>KuzzleRequest</a></pre> | The normalized API request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 Wildcards permit listening templated events.
 
