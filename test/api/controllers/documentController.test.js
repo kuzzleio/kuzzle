@@ -650,7 +650,7 @@ describe('DocumentController', () => {
         {
           _id: '_id',
           _source: content,
-          _updatedFields: Object.keys(request.input.body),
+          _updatedFields: ['foo'],
         });
 
       should(response).match({
@@ -742,7 +742,7 @@ describe('DocumentController', () => {
         {
           _id: '_id',
           _source: { ...changes, name: 'gordon' },
-          _updatedFields: Object.keys(changes),
+          _updatedFields: ['foo'],
         });
 
       should(response).match({
@@ -1416,6 +1416,33 @@ describe('DocumentController', () => {
         true);
 
       should(response).match({ ok: 'ok' });
+    });
+  });
+
+  describe('#_extractUpdatedFields', () => {
+    it('should extract full paths to values and ignore _kuzzle_info', () => {
+      const document = {
+        reference: 'tito',
+        measures: {
+          temp: {
+            degree: 21
+          }
+        },
+        metadata: {
+          color: 'red'
+        },
+        _kuzzle_info: {
+          creator: 'aschen'
+        }
+      };
+
+      const updatedFields = documentController._extractUpdatedFields(document);
+
+      should(updatedFields).be.eql([
+        'reference',
+        'measures.temp.degree',
+        'metadata.color'
+      ]);
     });
   });
 });
