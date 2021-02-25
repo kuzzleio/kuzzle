@@ -56,12 +56,12 @@ describe('EmbeddedSDK', () => {
       await embeddedSdk.query(request);
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, propagate: false });
+        .be.calledWithMatch({ ...request, propagate: false });
 
       await embeddedSdk.query({ ...request }, { propagate: true });
 
       should(embeddedSdk.protocol.query)
-        .be.calledWith({ ...request, propagate: true });
+        .be.calledWithMatch({ ...request, propagate: true });
     });
   });
 });
