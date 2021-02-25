@@ -169,6 +169,18 @@ kourou auth:login -a strategy=local --body '{
 }'
 ```
 
+<SinceBadge version="auto-version"/>
+### Authentication Token in the Browser
+
+When you're sending HTTP requests from a browser you can instruct Kuzzle
+to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
+This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/login), [auth:logout](/core/2/api/controllers/logout), [auth:checkToken](/core/2/api/controllers/checkToken), [auth:refreshToken](/core/2/api/controllers/refreshToken)
+
+::: warning
+This only works if the option `http.accessControlAllowOrigin` is not defined to `*` in the [Kuzzle Configuration](/core/2/guides/advanced/configuration)
+:::
+
+
 ### `local` Strategy Configuration
 
 The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-local` configuration key.

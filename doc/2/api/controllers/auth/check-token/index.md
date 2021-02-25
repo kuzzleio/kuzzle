@@ -46,6 +46,13 @@ Body:
 
 ---
 
+### Optional:
+
+- `cookieAuth`: Enable the validation of the token in an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+  - This only works in a Browser and only if Kuzzle CORS is properly configured. see [Authentication Token in the Browser](/core/2/guides/main-concepts/authentication)
+
+---
+
 ## Response
 
 The returned result contains the following properties:

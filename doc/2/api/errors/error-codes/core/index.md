@@ -58,6 +58,7 @@ description: Error codes definitions
 | core.configuration.invalid_type<br/><pre>0x00030001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Invalid type for the configuration parameter "%s" (expected: %s) | Wrong configuration parameter type |
 | core.configuration.out_of_range<br/><pre>0x00030002</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | The configuration value set for "%s" is outside the allowed range (allowed: %s) | A configuration value exceeds the allowed range |
 | core.configuration.cannot_parse<br/><pre>0x00030003</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Unable to read kuzzlerc configuration file: %s | The kuzzlerc configuration file is badly formatted. |
+| core.configuration.incompatible<br/><pre>0x00030004</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Incompatible configuration: %s | The kuzzlerc configuration file has incompatible configurations |
 
 ---
 

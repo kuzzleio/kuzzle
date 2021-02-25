@@ -64,3 +64,11 @@ The listening port can be modified under the `server.port` section of the [confi
 HTTP and WebSocket protocols share the same underlying server instance.  
 Modifying the listening port will impact these two protocols.
 :::
+
+### HTTP-only options
+
+Only the HTTP protocol does support the following options in a [KuzzleRequest](/core/2/api/payloads/request)
+
+| Property     | Type               | Description                                                                           |
+| ------------ | ------------------ | ------------------------------------------------------------------------------------- |
+| `pretty`     | <pre>boolean</pre> | Prettify the JSON response, making it more readable for humans                        |

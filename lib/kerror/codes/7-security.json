@@ -243,6 +243,23 @@
           "class": "InternalError"
         }
       }
+    },
+    "cookie": {
+      "code": 7,
+      "errors": {
+        "invalid": {
+          "description": "Invalid authentication cookie.",
+          "code": 1,
+          "message": "Invalid cookie.",
+          "class": "UnauthorizedError"
+        },
+        "unsupported": {
+          "description": "Cookie authentication not supported.",
+          "code": 2,
+          "message": "Cookie authentication not supported.",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
