@@ -45,6 +45,9 @@ Method: POST
 * if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
 * if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
 
+* `cookieAuth`: Enable the refresh of the token stored in the [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+  - This only works in a Browser and only if Kuzzle CORS is properly configured. see [Authentication Token in the Browser](/core/2/guides/main-concepts/authentication)
+
 ---
 
 ## Response
