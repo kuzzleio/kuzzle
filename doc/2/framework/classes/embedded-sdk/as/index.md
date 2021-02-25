@@ -24,7 +24,7 @@ as (user: { _id: string }, options = { checkRights: false }): EmbeddedSDK;
 
 **options:**
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.10.0" />
 
 | Property      | Type (default)     | Description                                                                              |
 | ------------- | ------------------ | ---------------------------------------------------------------------------------------- |
