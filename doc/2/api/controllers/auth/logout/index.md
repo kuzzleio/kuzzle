@@ -45,7 +45,7 @@ Headers: Authorization: "Bearer <authentication token>"
 
 * `global`: if `true`, also revokes all other active sessions instead of just the current one (default: `false`)
 
-* `cookieAuth`: Enable the erase of the token in the [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
+* `cookieAuth`: Erase of the token in the [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
   - This only works in a Browser and only if Kuzzle CORS is properly configured. see [Authentication Token in the Browser](/core/2/guides/main-concepts/authentication)
 
 
