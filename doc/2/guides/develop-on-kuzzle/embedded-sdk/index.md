@@ -78,7 +78,7 @@ By default, when using the Embedded SDK, requests **don't have the same context 
 
 Typically, the `request.context.user` property is not set and thus **[Kuzzle metadata](/core/2/guides/main-concepts/data-storage#kuzzle-metadata) will not be set when creating or updating documents**.
 
-It is possible to use the same user context as the original request with the Embedded SDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) method.
+It is possible to use the same user context as the original request with the EmbeddedSDK, for this purpose it is necessary to use the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) method.
 
 **Example:** _Creating a document as the original API user to preserve Kuzzle metadata_
 ```js
@@ -98,14 +98,9 @@ app.controller.register('drivers', {
 });
 ```
 
-::: warning
-User permissions are applied only once, when a request is received by Kuzzle through the exposed API.
-If a request is authorized, then all subsequent calls to the API performed with [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) are always authorized, even if they are made to execute API actions that a user is normally forbidden from.
-:::
-
-<SinceBadge version="2.10.0" />
 ::: info
-  If you need to verify if a User is authorized to execute any given API actions, you can do so by using the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) `checkRights` option.
+<SinceBadge version="2.10.0" />
+If you need to verify if a User is authorized to execute any given API actions, you can do so by using the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) `checkRights` option.
 :::
 
 **Example:** _Execute an impersonated action only if the required User is allowed to do so_
@@ -127,7 +122,6 @@ app.controller.register('drivers', {
   }
 });
 ```
-
 
 ## Backend Realtime Subscriptions
 
