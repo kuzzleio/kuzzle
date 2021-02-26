@@ -8,8 +8,9 @@ const {
   PluginImplementationError,
 } = require('../../../../index');
 
-const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
+const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('EmbeddedSDK', () => {
   let kuzzle;
@@ -27,17 +28,21 @@ describe('EmbeddedSDK', () => {
       const SpyImpersonatedSdk = sinon.spy();
       mockrequire('../../../../lib/core/shared/sdk/impersonatedSdk', SpyImpersonatedSdk);
       const { EmbeddedSDK: MockEmbeddedSDK } = mockrequire.reRequire('../../../../lib/core/shared/sdk/embeddedSdk');
-      const user = { _id: 'gordon' };
 
-      embeddedSdk = new MockEmbeddedSDK();
-      const returnedInstance = embeddedSdk.as(user);
+      try {
+        const user = { _id: 'gordon' };
+        embeddedSdk = new MockEmbeddedSDK();
+        const returnedInstance = embeddedSdk.as(user);
 
-      should(SpyImpersonatedSdk).be.calledWith(user._id);
-      should(returnedInstance).be.instanceOf(SpyImpersonatedSdk);
+        should(SpyImpersonatedSdk).be.calledWith(user._id);
+        should(returnedInstance).be.instanceOf(SpyImpersonatedSdk);
 
-      embeddedSdk.as(user, { checkRights: true });
-      should(SpyImpersonatedSdk).be.calledWith(user._id, { checkRights: true });
-      mockrequire.stopAll();
+        embeddedSdk.as(user, { checkRights: true });
+        should(SpyImpersonatedSdk).be.calledWith(user._id, { checkRights: true });
+      }
+      finally {
+        mockrequire.stopAll();
+      }
     });
 
     it('should throw if the required user object is invalid', () => {
