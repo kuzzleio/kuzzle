@@ -93,3 +93,13 @@ description: Error codes definitions
 | security.profile.uninitialized<br/><pre>0x07060006</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cannot get roles for uninitialized profile "%s" | Attempted to access to an unitialized Profile object |
 
 ---
+
+
+### Subdomain: 0x0707: cookie
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| security.cookie.invalid<br/><pre>0x07070001</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Invalid cookie. | Invalid authentication cookie. |
+| security.cookie.unsupported<br/><pre>0x07070002</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cookie authentication not supported. | Cookie authentication not supported. |
+
+---

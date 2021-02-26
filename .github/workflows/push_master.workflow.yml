@@ -142,7 +142,7 @@ jobs:
 
   documentation-production:
     name: Deploy Documentation to production
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -174,7 +174,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -208,7 +208,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2

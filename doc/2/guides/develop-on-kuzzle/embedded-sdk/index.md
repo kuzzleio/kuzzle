@@ -103,7 +103,7 @@ User permissions are applied only once, when a request is received by Kuzzle thr
 If a request is authorized, then all subsequent calls to the API performed with [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) are always authorized, even if they are made to execute API actions that a user is normally forbidden from.
 :::
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.10.0" />
 ::: info
   If you need to verify if a User is authorized to execute any given API actions, you can do so by using the [EmbeddedSDK.as](/core/2/framework/classes/embedded-sdk/as) `checkRights` option.
 :::

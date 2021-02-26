@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.9.3",
+  "version": "2.10.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "./bin/start-kuzzle-server"
@@ -47,19 +47,20 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^7.10.0",
-    "aedes": "^0.44.1",
+    "@elastic/elasticsearch": "^7.11.0",
+    "aedes": "^0.44.2",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.3",
     "busboy": "^0.3.1",
     "cli-color": "^2.0.0",
+    "cookie": "^0.4.1",
     "debug": "^4.3.1",
     "denque": "^1.5.0",
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
     "inquirer": "^7.3.3",
-    "ioredis": "^4.19.4",
+    "ioredis": "^4.23.0",
     "ip": "^1.1.5",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
@@ -67,9 +68,9 @@
     "koncorde": "^3.0.0",
     "kuzzle-plugin-auth-passport-local": "^6.2.0",
     "kuzzle-plugin-logger": "^3.0.2",
-    "kuzzle-sdk": "^7.5.3",
+    "kuzzle-sdk": "7.5.6",
     "kuzzle-vault": "^2.0.4",
-    "lodash": "4.17.20",
+    "lodash": "4.17.21",
     "moment": "^2.29.1",
     "ms": "^2.1.3",
     "murmurhash-native": "^3.5.0",
@@ -81,10 +82,10 @@
     "uuid": "^8.3.2",
     "validator": "^13.5.2",
     "winston": "^3.3.3",
-    "winston-elasticsearch": "0.12.3",
+    "winston-elasticsearch": "0.14.0",
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
-    "ws": "^7.4.2",
+    "ws": "^7.4.3",
     "yargs": "^16.2.0",
     "zeromq": "^5.2.0"
   },
@@ -94,16 +95,16 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
-    "@typescript-eslint/eslint-plugin": "^4.14.1",
-    "@typescript-eslint/parser": "^4.14.1",
+    "@typescript-eslint/eslint-plugin": "^4.15.2",
+    "@typescript-eslint/parser": "^4.15.2",
     "async": "^3.2.0",
     "chokidar": "^3.5.1",
     "codecov": "^3.8.1",
     "cucumber": "^6.0.5",
-    "eslint": "^7.18.0",
+    "eslint": "^7.20.0",
     "js-yaml": "^4.0.0",
     "kuzdoc": "^1.4.5",
-    "mocha": "^8.2.1",
+    "mocha": "^8.3.0",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.6",
     "nyc": "^15.1.0",
@@ -115,7 +116,7 @@
     "sinon": "^9.2.4",
     "strip-json-comments": "^3.1.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.1.3"
+    "typescript": "^4.2.2"
   },
   "engines": {
     "node": ">= 12.13.0"
