@@ -29,6 +29,7 @@ import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
+import vault from '../../kuzzle/vault';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
@@ -267,6 +268,9 @@ class BackendController extends ApplicationManager {
 /* BackendVault class ======================================================= */
 
 class BackendVault extends ApplicationManager {
+  private decrypted = false;
+  private _secrets: JSONObject;
+
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -293,11 +297,18 @@ class BackendVault extends ApplicationManager {
    * Decrypted secrets
    */
   get secrets () : JSONObject {
-    if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'vault.secrets');
+    // We need to load the secrets before Kuzzle start so when can use them
+    // in the configuration (e.g. configure ES X-Pack credentials)
+    if (! this._application.started && ! this.decrypted) {
+      const kuzzleVault = vault.load(this._application._vaultKey, this._application._secretsFile);
+      this._secrets = kuzzleVault.secrets;
     }
 
-    return this._kuzzle.vault.secrets;
+    if (this._application.started) {
+      return this._kuzzle.vault.secrets;
+    }
+
+    return this._secrets;
   }
 }
 

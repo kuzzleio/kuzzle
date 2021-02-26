@@ -318,7 +318,7 @@ describe('Backend', () => {
     });
   });
 
-  describe('VaultManager#key', () => {
+  describe('BackendVault#key', () => {
     it('should sets the vault key', () => {
       application.vault.key = 'unforeseen-consequences';
 
@@ -334,7 +334,7 @@ describe('Backend', () => {
     });
   });
 
-  describe('VaultManager#file', () => {
+  describe('BackendVault#file', () => {
     it('should sets the vault file', () => {
       application.vault.file = 'xen.bmp';
 
@@ -350,19 +350,12 @@ describe('Backend', () => {
     });
   });
 
-  describe('VaultManager.secrets', () => {
-    it('should exposes Kuzzle vault secrets', () => {
+  describe('BackendVault.secrets', () => {
+    it('should exposes Kuzzle vault secrets when application is started', () => {
       application.started = true;
       _.set(application, '_kuzzle.vault.secrets', { beware: 'vortigaunt' });
 
       should(application.vault.secrets).be.eql({ beware: 'vortigaunt' });
-    });
-
-    it('should throw an error if the application is not started', () => {
-      should(() => {
-        /* eslint-disable-next-line no-unused-expressions */
-        application.vault.secrets;
-      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });
 
