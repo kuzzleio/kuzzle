@@ -481,7 +481,7 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#checkRoleNativeRights', () => {
-    const { NativeController } = require('../../../lib/api/controller/base');
+    const { NativeController } = require('../../../lib/api/controllers/baseController');
 
     beforeEach(() => {
       kuzzle.state = KuzzleMock.states.RUNNING;

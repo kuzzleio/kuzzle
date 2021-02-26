@@ -21,6 +21,7 @@ Elasticsearch supports many keywords in a search query root level. For security 
   - `explain`
   - `from`
   - `highlight`
+  - `inner_hits`
   - `query`
   - `search_after`
   - `search_timeout`

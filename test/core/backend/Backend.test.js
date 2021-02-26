@@ -34,7 +34,7 @@ describe('Backend', () => {
   });
 
   describe('#_instanceProxy', () => {
-    it('should returns plugin definition and an init function', () => {
+    it('should return plugin definition and an init function', () => {
       application._pipes = 'pipes';
       application._hooks = 'hooks';
       application._controllers = 'controllers';
@@ -49,13 +49,13 @@ describe('Backend', () => {
   });
 
   describe('#sdk', () => {
-    it('should returns the embedded sdk', async () => {
+    it('should return the embedded sdk', async () => {
       await application.start();
 
       should(application.sdk).be.instanceOf(EmbeddedSDK);
     });
 
-    it('should throws an error if the application is not started', () => {
+    it('should throw an error if the application is not started', () => {
       should(() => {
         /* eslint-disable-next-line no-unused-expressions */
         application.sdk;
@@ -64,7 +64,7 @@ describe('Backend', () => {
   });
 
   describe('#start', () => {
-    it('should calls kuzzle.start with an instantiated plugin and options', async () => {
+    it('should call kuzzle.start with an instantiated plugin and options', async () => {
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
@@ -127,13 +127,13 @@ describe('Backend', () => {
       should(application._pipes['kuzzle:state:ready'][1]).be.eql(handler_bis);
     });
 
-    it('should throws an error if the pipe handler is invalid', () => {
+    it('should throw an error if the pipe handler is invalid', () => {
       should(() => {
         application.pipe.register('kuzzle:state:ready', {});
       }).throwError({ id: 'plugin.assert.invalid_pipe' });
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -155,13 +155,13 @@ describe('Backend', () => {
       should(application._hooks['kuzzle:state:ready'][1]).be.eql(handler_bis);
     });
 
-    it('should throws an error if the hook handler is invalid', () => {
+    it('should throw an error if the hook handler is invalid', () => {
       should(() => {
         application.hook.register('kuzzle:state:ready', {});
       }).throwError({ id: 'plugin.assert.invalid_hook' });
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -177,7 +177,7 @@ describe('Backend', () => {
       should(application.config.content.server.http.enabled).be.false();
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -195,7 +195,7 @@ describe('Backend', () => {
       should(application.config.content.server.http.enabled).be.false();
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -325,7 +325,7 @@ describe('Backend', () => {
       should(application._vaultKey).be.eql('unforeseen-consequences');
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -341,7 +341,7 @@ describe('Backend', () => {
       should(application._secretsFile).be.eql('xen.bmp');
     });
 
-    it('should throws an error if the application is already started', () => {
+    it('should throw an error if the application is already started', () => {
       application.started = true;
 
       should(() => {
@@ -358,68 +358,11 @@ describe('Backend', () => {
       should(application.vault.secrets).be.eql({ beware: 'vortigaunt' });
     });
 
-    it('should throws an error if the application is not started', () => {
+    it('should throw an error if the application is not started', () => {
       should(() => {
         /* eslint-disable-next-line no-unused-expressions */
         application.vault.secrets;
       }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
-    });
-  });
-
-  describe('PluginManager#use', () => {
-    class DummyPlugin {
-      constructor () {}
-      init () {}
-    }
-    class WrongPlugin {
-      constructor () {}
-    }
-
-    it('should allows to use a plugin and infer the name', () => {
-      const plugin = new DummyPlugin();
-
-      application.plugin.use(plugin);
-
-      should(application._plugins['dummy-plugin'])
-        .be.eql({ plugin, options: {} });
-    });
-
-    it('should allows to specify the plugin name and options', () => {
-      const plugin = new DummyPlugin();
-
-      application.plugin.use(
-        plugin,
-        { name: 'not-dummy', manifest: 'manifest' });
-
-      should(application._plugins['not-dummy'])
-        .be.eql({ plugin, options: { name: 'not-dummy', manifest: 'manifest' } });
-    });
-
-    it('should throws an error if the plugin is invalid', () => {
-      should(() => {
-        application.plugin.use({ init: () => {} });
-      }).throwError({ id: 'plugin.assert.no_name_provided' });
-
-      should(() => {
-        application.plugin.use(new DummyPlugin(), { name: 'DummyPlugin' });
-      }).throwError({ id: 'plugin.assert.invalid_plugin_name' });
-
-      should(() => {
-        application.plugin.use(new DummyPlugin());
-        application.plugin.use(new DummyPlugin());
-      }).throwError({ id: 'plugin.assert.name_already_exists' });
-
-      should(() => {
-        application.plugin.use(new WrongPlugin());
-      }).throwError({ id: 'plugin.assert.init_not_found' });
-    });
-
-    it('should throws an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.vault.file = 'xen.bmp';
-      }).throwError({ id: 'plugin.runtime.already_started' });
     });
   });
 
@@ -463,7 +406,7 @@ describe('Backend', () => {
       should(result).be.eql('resonance cascade');
     });
 
-    it('should throws an error if the application is not started', () => {
+    it('should throw an error if the application is not started', () => {
       return should(() => {
         application.trigger('xen:crystal', 'payload');
       })

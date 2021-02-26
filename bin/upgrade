@@ -23,36 +23,40 @@
 
 'use strict';
 
-const
-  yargs = require('yargs'),
-  Context = require('./.upgrades/lib/context');
+const yargs = require('yargs');
+const Context = require('./.upgrades/lib/context');
 
-const
-  args = yargs
-    .usage('USAGE: $0 [OPTIONS]')
-    .options({
-      C: {
-        type: 'boolean',
-        group: 'Optional',
-        default: false,
-        describe: 'Disable colored messages in the terminal'
-      },
-      output: {
-        type: 'string',
-        alias: 'o',
-        group: 'Optional',
-        default: `upgrade-${Date.now()}.report`,
-        describe: 'Upgrade logs file name',
-      },
-      R: {
-        type: 'boolean',
-        group: 'Optional',
-        default: false,
-        describe: 'Disable upgrades report in a log file',
-      }
-    })
-    .strict(true)
-    .parse();
+const args = yargs
+  .usage('USAGE: $0 [OPTIONS]')
+  .options({
+    C: {
+      default: false,
+      describe: 'Disable colored messages in the terminal',
+      group: 'General',
+      type: 'boolean',
+    },
+    R: {
+      default: false,
+      describe: 'Disable upgrades report in a log file',
+      group: 'General',
+      type: 'boolean',
+    },
+    output: {
+      alias: 'o',
+      default: `upgrade-${Date.now()}.report`,
+      describe: 'Upgrade logs file name',
+      group: 'General',
+      type: 'string',
+    },
+    'storage-page-size': {
+      default: 50,
+      describe: 'Size of a storage page when moving data around',
+      group: 'Advanced',
+      type: 'number',
+    },
+  })
+  .strict(true)
+  .parse();
 
 const context = new Context(args);
 
@@ -61,7 +65,8 @@ process.on('unhandledRejection', reason => {
   if (reason !== undefined) {
     context.log.error(reason.message);
     context.log.error(reason.stack);
-  } else {
+  }
+  else {
     context.log.error('FATAL: unexpected unhandled promise rejection');
   }
 

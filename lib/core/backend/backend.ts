@@ -26,7 +26,6 @@ import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 
 import Kuzzle from '../../kuzzle';
-import PluginObject from '../plugin/plugin';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
@@ -35,16 +34,15 @@ import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
 import {
   ControllerDefinition,
-  Plugin,
   Controller,
   EventHandler,
 } from '../../types';
-import { BackendCluster } from './backendCluster';
+import { BackendCluster, BackendPlugin } from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-class ApplicationManager {
+export class ApplicationManager {
   protected _application: any;
 
   constructor (application: Backend) {
@@ -253,7 +251,7 @@ class BackendController extends ApplicationManager {
   private _add (name: string, definition: ControllerDefinition) {
     // Check definition here to throw error early
     // with the corresponding line number
-    PluginObject.checkControllerDefinition(name, definition, { application: true });
+    this._application.PluginObject.checkControllerDefinition(name, definition, { application: true });
 
     if (this._application._controllers[name]) {
       throw assertionError.get(
@@ -300,51 +298,6 @@ class BackendVault extends ApplicationManager {
     }
 
     return this._kuzzle.vault.secrets;
-  }
-}
-
-/* BackendPlugin class ====================================================== */
-
-class BackendPlugin extends ApplicationManager {
-  /**
-   * Uses a plugin in this application
-   *
-   * @param plugin - Plugin instance
-   * @param options - Additionnal options
-   *    - `name`: Specify plugin name instead of using the class name.
-   *    - `manifest`: Manually add a manifest definition
-   *    - `deprecationWarning`: If false, does not display deprecation warnings
-   */
-  use (
-    plugin: Plugin,
-    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
-  ) : void {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'plugin');
-    }
-
-    // Avoid plain objects
-    if ((typeof plugin.constructor !== 'function'
-      || plugin.constructor.name === 'Object')
-      && ! options.name
-    ) {
-      throw assertionError.get('no_name_provided');
-    }
-
-    const name: string = options.name || kebabCase(plugin.constructor.name);
-    if (! PluginObject.checkName(name)) {
-      throw assertionError.get('invalid_plugin_name', name);
-    }
-
-    if (this._application._plugins[name]) {
-      throw assertionError.get('name_already_exists', name);
-    }
-
-    if (typeof plugin.init !== 'function') {
-      throw assertionError.get('init_not_found', name);
-    }
-
-    this._application._plugins[name] = { options, plugin };
   }
 }
 
@@ -440,6 +393,27 @@ class BackendStorage extends ApplicationManager {
 
 /* Backend class ======================================================== */
 
+let _app = null;
+
+Reflect.defineProperty(global, 'app', {
+  configurable: true,
+  enumerable: false,
+  get () {
+    if (_app === null) {
+      throw new Error('App instance not found. Are you sure you have already started your application?');
+    }
+
+    return _app;
+  },
+  set (value) {
+    if (_app !== null) {
+      throw new Error('Cannot build an App instance: another one already exists');
+    }
+
+    _app = value;
+  },
+});
+
 export class Backend {
   private _kuzzle: any;
   private _name: string;
@@ -453,6 +427,11 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
+
+  /**
+   * Requiring the PluginObject on module top level creates cyclic dependency
+   */
+  protected PluginObject: any;
 
   /**
    * Application version
@@ -557,7 +536,14 @@ export class Backend {
    * @param name - Your application name
    */
   constructor (name: string) {
-    if (! PluginObject.checkName(name)) {
+    /**
+     * Requiring the PluginObject on module top level creates cyclic dependency
+     */
+    Reflect.defineProperty(this, 'PluginObject', {
+      value: require('../plugin/plugin')
+    });
+
+    if (! this.PluginObject.checkName(name)) {
       throw assertionError.get('invalid_application_name', name);
     }
 
@@ -570,6 +556,8 @@ export class Backend {
     Reflect.defineProperty(this, '_sdk', {
       writable: true
     });
+
+    global.app = this;
 
     this.pipe = new BackendPipe(this);
     this.hook = new BackendHook(this);
@@ -613,7 +601,7 @@ export class Backend {
       });
     }
 
-    const application = new PluginObject(
+    const application = new this.PluginObject(
       this._instanceProxy,
       { application: true, name: this.name });
 

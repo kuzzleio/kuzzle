@@ -21,10 +21,9 @@
 
 'use strict';
 
-const
-  checkConfiguration = require('./checkConfiguration'),
-  upgradeStorage = require('./upgradeStorage'),
-  upgradeCache = require('./upgradeCache');
+const checkConfiguration = require('./checkConfiguration');
+const upgradeStorage = require('./upgradeStorage');
+const upgradeCache = require('./upgradeCache');
 
 module.exports = async function upgrade (context) {
   context.log.notice('\n\n=== CONFIGURATION FILES ===');

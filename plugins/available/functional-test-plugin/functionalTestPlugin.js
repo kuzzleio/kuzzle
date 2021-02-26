@@ -56,8 +56,6 @@ class FunctionalTestPlugin {
 
     // pipes related declarations ==============================================
 
-    this.activatedPipes = {};
-
     this.controllers.pipes = {
       deactivateAll: 'pipesDeactivateAll',
       manage: 'pipesManage',
@@ -104,10 +102,10 @@ class FunctionalTestPlugin {
     this.pipes['plugin-functional-test-plugin:testPipesReturn'] =
       async name => `Hello, ${name}`;
 
-    // Pipe declared with a function name
+    // Pipe declared with a function name ======================================
     this.pipes['server:afterNow'] = this.afterNowPipe;
 
-    // Embedded SDK realtime
+    // Embedded SDK realtime ===================================================
     this.hooks['kuzzle:state:live'] = async () => {
       const roomId = await this.sdk.realtime.subscribe(
         'test',
@@ -118,6 +116,16 @@ class FunctionalTestPlugin {
           await this.sdk.realtime.unsubscribe(roomId);
         });
     };
+
+    // Embedded SDK.as() Impersonation =========================================
+    this.controllers.impersonate = { createDocumentAs: 'createDocumentAs' };
+
+    this.routes.push({
+      action: 'createDocumentAs',
+      controller: 'impersonate',
+      path: '/impersonate/createDocumentAs/:kuid',
+      verb: 'post',
+    });
 
     // hooks related declarations ==============================================
     this.hooks['server:afterNow'] = async () => {
@@ -205,26 +213,30 @@ class FunctionalTestPlugin {
     const state = request.input.args.state;
     const event = request.input.args.event;
 
-    this.activatedPipes[event] = {
+    await this.sdk.ms.set(`plugin:pipes:${event}`, JSON.stringify({
       payload,
       state,
-    };
+    }));
 
     return null;
   }
 
   async pipesDeactivateAll () {
-    for (const pipe of Object.values(this.activatedPipes)) {
+    const names = await this.sdk.ms.keys('plugin:pipes:*');
+
+    for (const name of names) {
+      const pipe = JSON.parse(await this.sdk.ms.get(name));
       pipe.state = 'off';
+      await this.sdk.ms.set(name, JSON.stringify(pipe));
     }
 
     return null;
   }
 
   async genericDocumentEvent (event, documents) {
-    const pipe = this.activatedPipes[`generic:document:${event}`];
+    const pipe = JSON.parse(await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`));
 
-    if (!pipe || pipe.state === 'off') {
+    if (! pipe || pipe.state === 'off') {
       return documents;
     }
 
@@ -234,12 +246,11 @@ class FunctionalTestPlugin {
         _.set(document, field, eval(value));
       }
     }
-
     return documents;
   }
 
   async afterNowPipe (request) {
-    const pipe = this.activatedPipes['server:afterNow'];
+    const pipe = JSON.parse(await this.sdk.ms.get('plugin:pipes:server:afterNow'));
 
     if (pipe && pipe.state !== 'off') {
       const response = request.response.result;
@@ -259,6 +270,25 @@ class FunctionalTestPlugin {
       request.input.args.name);
 
     return { result: helloName };
+  }
+
+  /**
+   * Tests the EmbeddedSDK's impersonating feature using the new
+   * ImpersonatedSDK wrapper
+   */
+  async createDocumentAs (request) {
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance.document.create(
+      'nyc-open-data',
+      'yellow-taxi',
+      { shouldBeCreatedBy: request.input.args.kuid },
+    );
   }
 }
 
