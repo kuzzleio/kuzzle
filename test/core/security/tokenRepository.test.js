@@ -580,8 +580,8 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
-        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
+        new ApiKey({ _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } }),
+        new ApiKey({ _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } }),
       ]);
     });
 
