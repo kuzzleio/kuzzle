@@ -86,7 +86,7 @@ describe('#base/native controller', () => {
         { id: 'api.assert.koncorde_restricted_keyword' });
     });
 
-    it('should return an empty object of the filters are empty', async () => {
+    it('should return an empty object if the filters are empty', async () => {
       const esQuery = await nativeController.translateKoncorde({});
 
       should(kuzzle.ask).not.be.called();
