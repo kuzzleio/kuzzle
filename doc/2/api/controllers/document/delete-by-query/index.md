@@ -70,6 +70,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:deleteByQuery <index> <collection> <body>
+kourou document:deleteByQuery <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments

@@ -44,12 +44,19 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:replace <index> <collection> <id> <body>
+kourou document:replace <index> <collection> <id> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: unique ID of the document to replace
+- `_id`: unique ID of the document to replace
 - `index`: index name
 
 ### Optional:

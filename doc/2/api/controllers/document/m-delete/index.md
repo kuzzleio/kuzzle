@@ -44,6 +44,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mDelete <index> <collection> <body>
+kourou document:mDelete <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
