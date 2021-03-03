@@ -80,13 +80,12 @@ class BackendPipe extends ApplicationManager {
         event,
         handler);
     }
-    else {
-      if (! this._application._pipes[event]) {
-        this._application._pipes[event] = [];
-      }
 
-      this._application._pipes[event].push(handler);
+    if (! this._application._pipes[event]) {
+      this._application._pipes[event] = [];
     }
+
+    this._application._pipes[event].push(handler);
   }
 
   unregister (pipeId: string): void {
