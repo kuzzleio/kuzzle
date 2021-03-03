@@ -64,10 +64,9 @@ class BackendPipe extends ApplicationManager {
    *
    * @param event - Event name
    * @param handler - Function to execute when the event is triggered
-   *
    */
-  register (event: string, handler: EventHandler): void {
-    if (this._application.started) {
+  register (event: string, handler: EventHandler, options: any = {}): string | void {
+    if (this._application.started && options.dynamic !== true) {
       throw runtimeError.get('already_started', 'pipe');
     }
 
@@ -75,11 +74,23 @@ class BackendPipe extends ApplicationManager {
       throw assertionError.get('invalid_pipe', event);
     }
 
-    if (! this._application._pipes[event]) {
-      this._application._pipes[event] = [];
+    if (this._application.started) {
+      return global.kuzzle.pluginsManager.registerPipe(
+        global.kuzzle.pluginsManager.application,
+        event,
+        handler);
     }
+    else {
+      if (! this._application._pipes[event]) {
+        this._application._pipes[event] = [];
+      }
 
-    this._application._pipes[event].push(handler);
+      this._application._pipes[event].push(handler);
+    }
+  }
+
+  unregister (pipeId: string): void {
+    global.kuzzle.pluginsManager.unregisterPipe(pipeId);
   }
 }
 

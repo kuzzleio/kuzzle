@@ -129,6 +129,12 @@
           "code": 6,
           "message": "Cannot use property \"%s\" before application startup",
           "class": "PluginImplementationError"
+        },
+        "unknown_pipe": {
+          "description": "The provided pipe identifier is unknown.",
+          "code": 7,
+          "message": "Unknown pipe ID \"%s\"",
+          "class": "PluginImplementationError"
         }
       }
     },
