@@ -67,7 +67,7 @@ class BackendPipe extends ApplicationManager {
    */
   register (event: string, handler: EventHandler, options: any = {}): string | void {
     if (this._application.started && options.dynamic !== true) {
-      throw runtimeError.get('already_started', 'pipe');
+      throw runtimeError.get('already_started', 'pipe.register');
     }
 
     if (typeof handler !== 'function') {
@@ -90,6 +90,10 @@ class BackendPipe extends ApplicationManager {
   }
 
   unregister (pipeId: string): void {
+    if (! this._application.started) {
+      throw runtimeError.get('unavailable_before_start', 'pipe.unregister');
+    }
+
     global.kuzzle.pluginsManager.unregisterPipe(pipeId);
   }
 }

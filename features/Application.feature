@@ -74,8 +74,8 @@ Feature: Application
     When I successfully execute the action "tests":"register-pipe"
     And I successfully execute the action "server":"now"
     Then I should receive a result matching:
-      | dynamicPipe | true |
+      | name | "Ugo" |
     When I successfully execute the action "tests":"unregister-pipe"
     And I successfully execute the action "server":"now"
     Then I should receive a result matching:
-      | dynamicPipe | "_UNDEFINED_" |
+      | name | "_UNDEFINED_" |

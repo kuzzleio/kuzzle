@@ -189,7 +189,7 @@ app.controller.register('tests', {
         dynamicPipeId = app.pipe.register(
           'server:afterNow',
           async request => {
-            request.result.dynamicPipe = true;
+            request.result.name = 'Ugo';
 
             return request;
           },
