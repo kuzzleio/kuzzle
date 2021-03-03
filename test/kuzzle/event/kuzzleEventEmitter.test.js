@@ -378,7 +378,7 @@ describe('#KuzzleEventEmitter', () => {
         pipeId,
         handler,
       });
-    })
+    });
   });
 
   describe('unregisterPluginPipe', () => {
@@ -398,6 +398,6 @@ describe('#KuzzleEventEmitter', () => {
       }).throwError({
         id: 'plugin.runtime.unknown_pipe'
       });
-    })
+    });
   });
 });
