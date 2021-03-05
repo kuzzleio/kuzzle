@@ -10,6 +10,7 @@ const {
   AdminController,
   AuthController,
   BulkController,
+  ClusterController,
   CollectionController,
   DocumentController,
   IndexController,
