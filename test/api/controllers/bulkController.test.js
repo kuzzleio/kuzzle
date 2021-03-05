@@ -10,6 +10,7 @@ const mockAssertions = require('../../mocks/mockAssertions');
 const BulkController = require('../../../lib/api/controllers/bulkController');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
+const { PartialError } = require('../../../lib/kerror/errors');
 
 describe('Test the bulk controller', () => {
   let controller;
@@ -84,6 +85,19 @@ describe('Test the bulk controller', () => {
         successes: [],
         errors: ['fake', 'data']
       });
+    });
+
+    it('should throw an error in strict mode if at least one import has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
+        items: [],
+        errors: ['fake', 'data']
+      });
+
+      should(() => controller.import(request)).throw(
+        PartialError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -226,6 +240,18 @@ describe('Test the bulk controller', () => {
         request,
         actionEnum.WRITE,
         mCreateOrReplaceResult);
+    });
+
+    it('should throw an error in strict mode if at least one createOrReplace has failed', () => {
+      request.input.args.strict = true;
+      kuzzle.ask.withArgs('core:storage:public:document:mCreateOrReplace').resolves({
+        items: [],
+        errors: [{ name: 'Maedhros' }, { name: 'Maglor' }]
+      });
+
+      should(() => controller.import(request)).throw(
+        PartialError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
