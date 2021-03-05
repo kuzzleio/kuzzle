@@ -61,14 +61,15 @@ class KuzzleMock extends KuzzleEventEmitter {
     };
 
     this.koncorde = {
-      test: sinon.stub().returns([]),
+      getCollections: sinon.stub().returns([]),
+      getFilterIds: sinon.stub().returns([]),
+      getIndexes: sinon.stub().returns([]),
+      hasFilter: sinon.stub().returns(false),
+      normalize: sinon.stub().resolves({id: 'foobar'}),
       register: sinon.stub().resolves(),
       remove: sinon.stub().resolves(),
-      normalize: sinon.stub().resolves({id: 'foobar'}),
       store: sinon.stub().returns({id: 'foobar'}),
-      getCollections: sinon.stub().returns([]),
-      getIndexes: sinon.stub().returns([]),
-      getFilterIds: sinon.stub().returns([]),
+      test: sinon.stub().returns([]),
       validate: sinon.stub().resolves(),
     };
 
