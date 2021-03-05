@@ -418,9 +418,12 @@ describe('Plugin', () => {
       plugin.instance.functionName = () => {};
       plugin.instance.foo = () => {};
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.invalid_action',
+        message: /Did you mean "foo"/,
+      });
     });
 
     it('should not add an invalid route to the API', () => {
@@ -430,47 +433,53 @@ describe('Plugin', () => {
         }
       };
 
+      global.NODE_ENV = 'development';
+
       plugin.instance.functionName = () => {};
 
       plugin.instance.routes = [
         {vert: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "verb"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.unexpected_route_property',
+        message: /Did you mean "verb"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError(PluginImplementationError);
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.invalid_route_property',
+      });
 
       plugin.instance.routes = [
         {verb: 'posk', url: '/bar', controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "post"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.unsupported_verb',
+        message: /Did you mean "post"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'baz'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "bar"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.undefined_action',
+        message: /Did you mean "bar"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.undefined_controller',
+        message: /Did you mean "foo"/,
+      });
 
       plugin.instance.routes = [
         { verb: 'get', url: '/bar/:name', controler: 'foo', action: 'bar' }
@@ -1113,10 +1122,11 @@ describe('Plugin', () => {
 
       plugin.instance.foo = () => {};
 
-      return should(() => {
-        pluginsManager._initHooks(plugin);
-      })
-        .be.throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+      should(() => pluginsManager._initHooks(plugin)).throw({
+        id: 'plugin.assert.invalid_hook',
+        message: /Did you mean "foo"/,
+      });
     });
   });
 
@@ -1227,9 +1237,11 @@ describe('Plugin', () => {
 
       plugin.instance.foo = () => {};
 
-      return should(() => {
-        pluginsManager._initPipes(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+      should(() => pluginsManager._initPipes(plugin)).throw({
+        id: 'plugin.assert.invalid_pipe',
+        message: /Did you mean "foo"/,
+      });
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {
