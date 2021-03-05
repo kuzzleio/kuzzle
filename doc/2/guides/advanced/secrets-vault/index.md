@@ -104,7 +104,7 @@ Kuzzle start sequence ends in failure if:
 
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
 
-Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property after startup.  
+Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property.  
 
 ## Accessing secrets in your plugin
 
