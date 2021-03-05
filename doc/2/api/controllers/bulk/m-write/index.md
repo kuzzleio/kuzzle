@@ -87,6 +87,7 @@ Body:
 
 - `notify`: if set to true, Kuzzle will trigger realtime notifications
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
+- `strict`: if set, an error will occur if at least one document has not been created/replaced <SinceBadge version="auto-version" />
 
 ---
 
@@ -113,6 +114,8 @@ Each errored document is an object of the `errors` array with the following prop
 - `document`: original document that caused the error
 - `status`: HTTP error status code
 - `reason`: human readable reason
+
+If `strict` mode is enabled, will rather return an error if at least one document has not been created/replaced.
 
 ### Example
 
