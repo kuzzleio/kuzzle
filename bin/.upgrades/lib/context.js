@@ -47,12 +47,14 @@ class UpgradeContext {
       this.log = args.log;
       this.inquire = args.inquire;
       this.version = args.version;
+      this.argv = args.argv;
     }
     else {
       this.config = null;
       this.log = new Logger(args);
       this.inquire = inquirer;
       this.version = null;
+      this.argv = args;
     }
   }
 

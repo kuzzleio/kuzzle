@@ -21,15 +21,14 @@
 
 'use strict';
 
-const
-  _ = require('lodash'),
-  getESConnector = require('../../connectors/es'),
-  ProgressBar = require('../../lib/progressBar');
+const _ = require('lodash');
 
-const
-  INTERNAL_PREFIX = '%',
-  PUBLIC_PREFIX = '&',
-  NAME_SEPARATOR = '.';
+const getESConnector = require('../../connectors/es');
+const ProgressBar = require('../../lib/progressBar');
+
+const INTERNAL_PREFIX = '%';
+const PUBLIC_PREFIX = '&';
+const NAME_SEPARATOR = '.';
 
 function transformProfile (profile) {
   if (!Array.isArray(profile.policies)) {
@@ -67,16 +66,15 @@ async function moveData (context, index, collection, newIndex, transform) {
     body: { sort: [ '_doc' ] },
     index,
     scroll: '1m',
-    size: 1000,
+    size: context.argv.storagePageSize,
     type: collection
   });
 
-  const
-    total = page.body.hits.total,
-    progressBar = new ProgressBar(
-      context,
-      `Importing: ${index}/${collection}`,
-      total);
+  const total = page.body.hits.total;
+  const progressBar = new ProgressBar(
+    context,
+    `Importing: ${index}/${collection}`,
+    total);
   let moved = 0;
 
   while (moved < total) {
@@ -123,18 +121,18 @@ async function moveData (context, index, collection, newIndex, transform) {
 }
 
 async function upgradeMappings (context, index, collection, newIndex) {
-  const
-    mappingsResponse = await context.source.indices.getMapping({
-      index,
-      type: collection
-    }),
-    mappings = mappingsResponse.body[index].mappings[collection];
+  const mappingsResponse = await context.source.indices.getMapping({
+    index,
+    type: collection
+  });
+  const mappings = mappingsResponse.body[index].mappings[collection];
 
   // replace obsolete mapping properties
   if (mappings.properties && mappings.properties._kuzzle_info) {
     mappings.properties._kuzzle_info =
       context.config.services.storageEngine.commonMapping.properties._kuzzle_info;
   }
+
   await context.target.indices.putMapping({
     body: {
       _meta: mappings._meta,
@@ -142,7 +140,7 @@ async function upgradeMappings (context, index, collection, newIndex) {
       properties: mappings.properties
     },
     index: newIndex,
-    type: context._type
+    type: context._type,
   });
 }
 
@@ -161,21 +159,21 @@ async function upgrade (context, index, collection, newIndex) {
 
   await createNewIndex(context, fixedIndexName);
   await upgradeMappings(context, index, collection, fixedIndexName);
+
   return await moveData(context, index, collection, fixedIndexName);
 }
 
 async function upgradeInternalStorage (context) {
-  const
-    config = context.config.services.storageEngine.internalIndex,
-    index = `${INTERNAL_PREFIX}${config.name}`,
-    mapconfig = config.collections,
-    collections = {
-      config: mapconfig.config,
-      profiles: mapconfig.profiles,
-      roles: mapconfig.roles,
-      users: null,
-      validations: mapconfig.validations
-    };
+  const config = context.config.services.storageEngine.internalIndex;
+  const index = `${INTERNAL_PREFIX}${config.name}`;
+  const mapconfig = config.collections;
+  const collections = {
+    config: mapconfig.config,
+    profiles: mapconfig.profiles,
+    roles: mapconfig.roles,
+    users: null,
+    validations: mapconfig.validations,
+  };
 
   for (const [collection, mappings] of Object.entries(collections)) {
     const newIndex = getNewIndexName(index, collection);
@@ -208,28 +206,26 @@ async function upgradeInternalStorage (context) {
     body: { version: '2.0.0' },
     id: 'internalIndex.dataModelVersion',
     index: `${index}.config`,
-    type: context._type
+    type: context._type,
   });
 
   await context.target.create({
     body: { timestamp: Date.now() },
     id: `${config.name}.done`,
     index: `${index}.config`,
-    type: context._type
+    type: context._type,
   });
 }
 
 async function upgradePluginsStorage (context) {
-  const
-    { body } = await context.source.cat.indices({ format: 'json' }),
-    indexes = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
+  const { body } = await context.source.cat.indices({ format: 'json' });
+  const indexes = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
 
   for (const index of indexes) {
-    const
-      plugin = index.split(':')[1],
-      newIndexBase = `%plugin-${plugin}${NAME_SEPARATOR}`,
-      mappings = await context.source.indices.getMapping({ index }),
-      collections = Object.keys(mappings.body[index].mappings);
+    const plugin = index.split(':')[1];
+    const newIndexBase = `%plugin-${plugin}${NAME_SEPARATOR}`;
+    const mappings = await context.source.indices.getMapping({ index });
+    const collections = Object.keys(mappings.body[index].mappings);
 
     for (const collection of collections) {
       const newIndex = newIndexBase + collection;
@@ -279,7 +275,7 @@ be duplicated across all of an index upgraded collections.`);
         _type: context._type,
         body,
         index,
-        name
+        name,
       });
       context.log.ok(`...... alias ${name} on index ${index} upgraded`);
     }
@@ -287,9 +283,8 @@ be duplicated across all of an index upgraded collections.`);
 }
 
 async function upgradeDataStorage (context) {
-  const
-    { body } = await context.source.cat.indices({ format: 'json' }),
-    upgraded = {};
+  const { body } = await context.source.cat.indices({ format: 'json' });
+  const upgraded = {};
   let indexes = body
     .map(b => b.index)
     .filter(n => !n.startsWith(INTERNAL_PREFIX));
@@ -322,9 +317,8 @@ async function upgradeDataStorage (context) {
   }
 
   for (const index of indexes) {
-    const
-      mappings = await context.source.indices.getMapping({ index }),
-      allCollections = Object.keys(mappings.body[index].mappings);
+    const mappings = await context.source.indices.getMapping({ index });
+    const allCollections = Object.keys(mappings.body[index].mappings);
     let collections = allCollections;
 
     if (action === choices.askCollection) {
@@ -342,9 +336,8 @@ async function upgradeDataStorage (context) {
     };
 
     for (const collection of collections) {
-      const
-        newIndex = getNewIndexName(index, collection),
-        total = await upgrade(context, index, collection, newIndex);
+      const newIndex = getNewIndexName(index, collection);
+      const total = await upgrade(context, index, collection, newIndex);
 
       upgraded[index].targets.push(newIndex);
       context.log.ok(`... migrated data index ${index}: ${collection} (${total} documents)`);
@@ -363,27 +356,25 @@ async function destroyPreviousStructure (context, upgraded) {
     return;
   }
 
-  const
-    { body } = await context.source.cat.indices({ format: 'json' }),
-    plugins = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
+  const { body } = await context.source.cat.indices({ format: 'json' });
+  const plugins = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
 
   let indexes = [
     '%kuzzle',
     ...plugins,
-    ...Object.keys(upgraded).filter(i => upgraded[i].canBeRemoved)
+    ...Object.keys(upgraded).filter(i => upgraded[i].canBeRemoved),
   ];
 
 
   context.log.notice('Since this is an in-place migration, the previous structure can be removed.');
   context.log.notice('(only data indexes with ALL their collections upgraded can be deleted)');
 
-  const
-    choices = {
-      everything: 'Yes - remove all upgraded structures',
-      internal: 'Remove only Kuzzle internal data',
-      kuzzleAndPlugins: 'Remove Kuzzle internal data and plugins storages',
-      no: 'No - keep everything as is'
-    };
+  const choices = {
+    everything: 'Yes - remove all upgraded structures',
+    internal: 'Remove only Kuzzle internal data',
+    kuzzleAndPlugins: 'Remove Kuzzle internal data and plugins storages',
+    no: 'No - keep everything as is'
+  };
 
   const action = await context.inquire.direct({
     choices: Object.values(choices),
@@ -409,10 +400,9 @@ async function destroyPreviousStructure (context, upgraded) {
 }
 
 module.exports = async function upgradeStorage (context) {
-  const
-    storageContext = await getESConnector(context),
-    targetInfo = await storageContext.target.info(),
-    targetMajor = targetInfo.body.version.number.split('.')[0];
+  const storageContext = await getESConnector(context);
+  const targetInfo = await storageContext.target.info();
+  const targetMajor = targetInfo.body.version.number.split('.')[0];
 
   storageContext._type = storageContext.inPlace && targetMajor === '5'
     ? 'default'
@@ -457,5 +447,4 @@ overwritten without notice.`);
     storageContext.log.error('Aborted.');
     process.exit(1);
   }
-
 };

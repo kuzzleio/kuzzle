@@ -1,7 +1,7 @@
 'use strict';
 
 const should = require('should');
-const RealtimeController = require('../../../lib/api/controller/realtime');
+const RealtimeController = require('../../../lib/api/controllers/realtimeController');
 
 const {
   Request,
@@ -9,7 +9,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const { NativeController } = require('../../../lib/api/controller/base');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
 
 describe('RealtimeController', () => {
   let kuzzle;

@@ -102,10 +102,10 @@ class FunctionalTestPlugin {
     this.pipes['plugin-functional-test-plugin:testPipesReturn'] =
       async name => `Hello, ${name}`;
 
-    // Pipe declared with a function name
+    // Pipe declared with a function name ======================================
     this.pipes['server:afterNow'] = this.afterNowPipe;
 
-    // Embedded SDK realtime
+    // Embedded SDK realtime ===================================================
     this.hooks['kuzzle:state:live'] = async () => {
       const roomId = await this.sdk.realtime.subscribe(
         'test',
@@ -116,6 +116,16 @@ class FunctionalTestPlugin {
           await this.sdk.realtime.unsubscribe(roomId);
         });
     };
+
+    // Embedded SDK.as() Impersonation =========================================
+    this.controllers.impersonate = { createDocumentAs: 'createDocumentAs' };
+
+    this.routes.push({
+      action: 'createDocumentAs',
+      controller: 'impersonate',
+      path: '/impersonate/createDocumentAs/:kuid',
+      verb: 'post',
+    });
 
     // hooks related declarations ==============================================
     this.hooks['server:afterNow'] = async () => {
@@ -260,6 +270,25 @@ class FunctionalTestPlugin {
       request.input.args.name);
 
     return { result: helloName };
+  }
+
+  /**
+   * Tests the EmbeddedSDK's impersonating feature using the new
+   * ImpersonatedSDK wrapper
+   */
+  async createDocumentAs (request) {
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance.document.create(
+      'nyc-open-data',
+      'yellow-taxi',
+      { shouldBeCreatedBy: request.input.args.kuid },
+    );
   }
 }
 

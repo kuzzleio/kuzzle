@@ -127,6 +127,12 @@
           "code": 3,
           "message": "Unable to read kuzzlerc configuration file: %s",
           "class": "InternalError"
+        },
+        "incompatible": {
+          "description": "The kuzzlerc configuration file has incompatible configurations",
+          "code": 4,
+          "message": "Incompatible configuration: %s",
+          "class": "InternalError"
         }
       }
     },

@@ -28,7 +28,7 @@ describe('QueryTranslator', () => {
       const esClause = translator._translateClause(...Object.entries(clause)[0]);
 
       should(esClause).be.eql({
-        term: { city: ['Istanbul', 'Tirana'] }
+        terms: { city: ['Istanbul', 'Tirana'] }
       });
     });
 

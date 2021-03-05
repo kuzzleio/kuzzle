@@ -9,8 +9,8 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const { NativeController } = require('../../../lib/api/controller/base');
-const MemoryStorageController = rewire('../../../lib/api/controller/memoryStorage.js');
+const { NativeController } = require('../../../lib/api/controllers/baseController');
+const MemoryStorageController = rewire('../../../lib/api/controllers/memoryStorageController.js');
 
 describe('MemoryStorageController', () => {
   let msController;

@@ -107,3 +107,14 @@ app.config.set(
   'plugins.kuzzle-plugin-logger.services.stdout.level', 
   'verbose');
 ```
+
+**Example:** _Use a secret from the Vault in the configuration_
+```js
+app.config.set('services.storageEngine.client', {
+  node: 'http://elasticsearch:9200',
+  auth: {
+    username: 'elastic',
+    password: app.vault.secrets.xpack.password,
+  }
+});
+```

@@ -110,7 +110,8 @@ describe('core/network/httpRouter', () => {
         'Accept-Encoding': 'gzip,deflate,identity',
         'Access-Control-Allow-Origin': 'foobar',
         'Access-Control-Allow-Methods': 'METHOD',
-        'Access-Control-Allow-Headers': 'headers'
+        'Access-Control-Allow-Headers': 'headers',
+        'Access-Control-Allow-Credentials': 'true'
       });
     });
   });
