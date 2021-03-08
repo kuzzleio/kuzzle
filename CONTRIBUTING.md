@@ -4,7 +4,7 @@ Here are a few rules and guidelines to follow if you want to contribute to Kuzzl
 
 ## Coding style
 
-We use most of the [NPM Coding Style](https://docs.npmjs.com/misc/coding-style) rules, except for these ones:
+We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-style.php) rules, except for these ones:
 
 * Semicolons at the end of lines
 * 'Comma first' rule is not followed
