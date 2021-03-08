@@ -200,13 +200,14 @@ describe('Test: security/tokenRepository', () => {
 
     it('should resolve to a token signed with the provided username', async () => {
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -307,13 +308,14 @@ describe('Test: security/tokenRepository', () => {
       // milliseconds received by 1000 without precaution, making jwt.sign
       // throw an error when generating the token
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: 123,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -585,8 +587,9 @@ describe('Test: security/tokenRepository', () => {
       ]);
     });
 
-    it('should load API key tokens to Redis cache', async () => {
+    it.only('should load API key tokens to Redis cache', async () => {
       await tokenRepository._loadApiKeys();
+      console.log(new ApiKey({ _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } }))
 
       should(ApiKey.batchExecute).be.calledWith({ match_all: {} });
 
