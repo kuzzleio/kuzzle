@@ -69,7 +69,8 @@ Feature: Application
     Then I should receive a result matching:
       | locked | true |
 
-  # Dynamic pipe registration
+  # Dynamic pipe registration (only websocket to avoid to develop a cluster sync mechanism)
+  @not-http
   Scenario: Register and unregister pipe dynamically
     When I successfully execute the action "tests":"register-pipe"
     And I successfully execute the action "server":"now"
