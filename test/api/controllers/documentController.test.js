@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
+  PartialError,
   SizeLimitError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -13,7 +14,6 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const DocumentController = require('../../../lib/api/controllers/documentController');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
-const { PartialError } = require('../../../lib/kerror/errors');
 
 describe('DocumentController', () => {
   const index = 'festivals';
@@ -264,7 +264,7 @@ describe('DocumentController', () => {
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      should(() => documentController.mGet(request)).throw(
+      should(documentController.mGet(request)).be.rejectedWith(
         SizeLimitError,
         { id: 'services.storage.get_limit_exceeded' });
     });
@@ -297,7 +297,7 @@ describe('DocumentController', () => {
         errors: ['id2']
       }));
 
-      should(() => documentController.mGet(request)).throw(
+      return should(documentController.mGet(request)).be.rejectedWith(
         PartialError,
         { id: 'api.process.incomplete_multiple_request' });
     });
@@ -547,7 +547,7 @@ describe('DocumentController', () => {
         ]
       }));
 
-      return should(documentController._mChanges(request, 'foobar', actionEnum.CREATE))
+      return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
         .rejectedWith(
           PartialError,
           { id: 'api.process.incomplete_multiple_request' });
@@ -1342,7 +1342,7 @@ describe('DocumentController', () => {
         ]
       }));
 
-      should(() => documentController.mDelete(request)).throw(
+      should(documentController.mDelete(request)).be.rejectedWith(
         PartialError,
         { id: 'api.process.incomplete_multiple_request' });
     });

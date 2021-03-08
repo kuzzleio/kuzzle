@@ -95,7 +95,7 @@ describe('Test the bulk controller', () => {
         errors: ['fake', 'data']
       });
 
-      should(() => controller.import(request)).throw(
+      should(controller.import(request)).be.rejectedWith(
         PartialError,
         { id: 'api.process.incomplete_multiple_request' });
     });
@@ -249,7 +249,7 @@ describe('Test the bulk controller', () => {
         errors: [{ name: 'Maedhros' }, { name: 'Maglor' }]
       });
 
-      should(() => controller.import(request)).throw(
+      should(controller.import(request)).be.rejectedWith(
         PartialError,
         { id: 'api.process.incomplete_multiple_request' });
     });
