@@ -22,4 +22,4 @@ export class Koncorde extends KoncordeJS {
   }
 
   [key: string]: any;
-};
+}
