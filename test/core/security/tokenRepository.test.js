@@ -259,6 +259,18 @@ describe('Test: security/tokenRepository', () => {
       should(token).be.an.instanceOf(Token);
     });
 
+    it('should prefix the token', async () => {
+      const user = new User();
+      user._id = 'id';
+      const tokenAuth = await tokenRepository.generateToken(user);
+      const tokenApiKey = await tokenRepository.generateToken(user, {
+        type: 'apiKey',
+      });
+
+      should(tokenAuth.jwt).be.startWith('kauth-');
+      should(tokenApiKey.jwt).be.startWith('kapikey-');
+    });
+
     it('should allow a ttl lower than the maxTTL', async () => {
       const user = new User();
       user._id = 'id';
@@ -582,14 +594,13 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        new ApiKey({ _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } }),
-        new ApiKey({ _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } }),
+        { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 },
+        { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 },
       ]);
     });
 
-    it.only('should load API key tokens to Redis cache', async () => {
+    it('should load API key tokens to Redis cache', async () => {
       await tokenRepository._loadApiKeys();
-      console.log(new ApiKey({ _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } }))
 
       should(ApiKey.batchExecute).be.calledWith({ match_all: {} });
 
