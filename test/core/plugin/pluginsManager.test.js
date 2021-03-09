@@ -165,7 +165,7 @@ describe('Plugin', () => {
 
       should(pluginsManager._initApi).be.calledWith(application);
       should(pluginsManager._initHooks).be.calledWith(application);
-      should(pluginsManager._initPipes).be.calledWith(application, 42);
+      should(pluginsManager._initPipes).be.calledWith(application);
       should(pluginsManager._initControllers).be.calledWith(plugin);
       should(pluginsManager._initAuthenticators).be.calledWith(plugin);
       should(pluginsManager._initStrategies).be.calledWith(plugin);
@@ -1276,17 +1276,16 @@ describe('Plugin', () => {
     });
 
     it('should log a warning in case a pipe plugin exceeds the warning delay', async () => {
-      plugin.instance.pipes = {
-        'foo:bar': 'foo',
-      };
-
-      plugin.instance.foo = () => {};
-
-      const fooStub = sinon.stub(plugin.instance, 'foo').callsFake((ev, cb) => {
+      const fooStub = sinon.stub().callsFake((ev, cb) => {
         setTimeout(() => cb(null), 15);
       });
+      plugin.instance.pipes = {
+        'foo:bar': fooStub,
+      };
 
-      await pluginsManager._initPipes(plugin, 10);
+      plugin.config.pipeWarnTime = 10;
+
+      await pluginsManager._initPipes(plugin);
       await kuzzle.pipe('foo:bar');
 
       should(fooStub).be.calledOnce();

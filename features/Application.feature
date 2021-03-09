@@ -52,9 +52,9 @@ Feature: Application
   # Controller class usage
   Scenario: Check if Kuzzle can use a controller class
     When I successfully execute the action "functional-tests":"helloWorld" with args:
-    | name | "Martial" |
+      | name | "Martial" |
     Then I should receive a result matching:
-    | greeting | "Hello, Martial" |
+      | greeting | "Hello, Martial" |
 
   # Mutex
   Scenario: Check mutexes
@@ -68,3 +68,15 @@ Feature: Application
     And I successfully execute the action "tests":"mutex"
     Then I should receive a result matching:
       | locked | true |
+
+  # Dynamic pipe registration (only websocket to avoid to develop a cluster sync mechanism)
+  @not-http
+  Scenario: Register and unregister pipe dynamically
+    When I successfully execute the action "tests":"register-pipe"
+    And I successfully execute the action "server":"now"
+    Then I should receive a result matching:
+      | name | "Ugo" |
+    When I successfully execute the action "tests":"unregister-pipe"
+    And I successfully execute the action "server":"now"
+    Then I should receive a result matching:
+      | name | "_UNDEFINED_" |
