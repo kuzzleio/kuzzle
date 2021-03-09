@@ -67,7 +67,7 @@ describe('ApiKey', () => {
       should(createTokenStub).be.calledWith(
         createTokenEvent,
         user,
-        { expiresIn: 'expiresIn', bypassMaxTTL: true });
+        { expiresIn: 'expiresIn', bypassMaxTTL: true, type: 'apiKey' });
 
       should(saveStub)
         .be.calledWith({ userId: 'aschen', refresh: 'wait_for' });
