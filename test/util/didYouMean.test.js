@@ -55,7 +55,7 @@ describe('Test: Deprecate util', () => {
     it('should return a string with the item returned by the library', () => {
       didYouMeanLibraryStub.returns('foo');
 
-      should(didYouMean(item, list)).be.eql(' Did you mean "foo" ?');
+      should(didYouMean(item, list)).be.eql(' Did you mean "foo"?');
     });
   });
 });
