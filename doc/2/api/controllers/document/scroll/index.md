@@ -42,13 +42,17 @@ Method: GET
 
 ## Arguments
 
-- `collection`: collection name
-- `index`: index name
 - `scrollId`: cursor unique identifier, obtained by either a search or a scroll query
 
 ### Optional:
 
 - `scroll`: refresh the cursor duration, using the [time to live](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units) syntax.
+
+### Kourou
+
+```bash
+kourou document:scroll -a scrollId=<scrollId> -a scroll=<time to live>
+```
 
 ---
 

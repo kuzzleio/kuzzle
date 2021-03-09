@@ -55,6 +55,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:upsert <index> <collection> <id> <body>
+kourou document:upsert <index> <collection> <id> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
