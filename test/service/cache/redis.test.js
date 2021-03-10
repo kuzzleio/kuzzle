@@ -46,15 +46,6 @@ describe('Redis', () => {
     should(redis.client.select).not.be.called();
   });
 
-  it('should select the good database at init if > 0', async () => {
-    config.database = 1;
-
-    await redis.init();
-
-    should(redis.client).be.an.Object();
-    should(redis.client.select).be.calledWith(1);
-  });
-
   it('should raise an error if unable to connect', () => {
     Redis.prototype._buildClient
       .returns((new RedisClientMock()).emitError(new Error('connection error')));
@@ -62,12 +53,6 @@ describe('Redis', () => {
     const testredis = new Redis(config);
 
     return should(testredis.init()).be.rejected();
-  });
-
-  it('should raise an error if unable to select the database', () => {
-    config.database = 17;
-
-    return should(redis.init()).be.rejected();
   });
 
   it('should allow listing keys using pattern matching', async () => {

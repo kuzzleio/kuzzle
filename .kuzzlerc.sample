@@ -482,8 +482,10 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //     * (optional) database:
+    //     * (optional) database (DEPRECATED):
     //         ID of the redis database (default: 0)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Considere using of options.db as a replacement.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -512,8 +514,10 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //     * (optional) database:
+    //     * (optional) database (DEPRECATED):
     //         ID of the redis database (default: 0)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Considere using of options.db as a replacement.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -576,6 +580,10 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
+    //     * (optional) database (DEPRECATED):
+    //         ID of the redis database (default: 0)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Considere using of options.db as a replacement.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -604,6 +612,10 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
+    //     * (optional) database (DEPRECATED):
+    //         ID of the redis database (default: 5)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Considere using of options.db as a replacement.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
