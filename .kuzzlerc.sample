@@ -419,9 +419,15 @@
         //    a PING request before closing the socket.
         //    Minimum value: 1000 (but it's strongly advised to not set a value
         //    this low to forcibly close idle client sockets)
+        // * rateLimit:
+        //    The maximum number of messages per second a single socket can
+        //    submit to the server.
+        //    Requests exceeding that rate limit are rejected.
+        //    Disabled if set to 0.
         "compression": false,
         "enabled": true,
-        "idleTimeout": 60000
+        "idleTimeout": 60000,
+        "rateLimit": 0
       }
     }
   },
