@@ -84,6 +84,29 @@ describe('lib/config/index.js', () => {
       should(result.bar).be.exactly(0.25);
     });
 
+    it('should convert JSON strings', () => {
+      mockedConfigContent = {
+        bar: '*json:["foo", null, 123, 123.45, true]',
+        baz: '*json:{"this": { "goes": ["to", 11] } }',
+      };
+
+      const result = config.load();
+
+      should(result.bar).match(['foo', null, 123, 123.45, true]);
+      should(result.baz).match({this: { goes: [ 'to', 11 ] } });
+    });
+
+    it('should throw if an invalid JSON string is provided for parsing', () => {
+      mockedConfigContent = {
+        foo: '*json:{ ahah: "I am using teh internet", nothing = to see here}',
+      };
+
+      should(() => config.load()).throw({
+        id: 'core.configuration.cannot_parse',
+        message: /the key "foo" does not contain a valid stringified JSON/,
+      });
+    });
+
     it('should be recursive', () => {
       mockedConfigContent = {
         foo: '42',
