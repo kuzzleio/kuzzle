@@ -156,15 +156,28 @@ describe('funnel.checkRights', () => {
     should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
   });
 
-  it('should throw security.token.verification_error when cookieAuth is true and accessControlAllowOrigin is not a wildcard and both cookie and token are present', async () => {
+  it('should throw security.token.verification_error when cookieAuth is true and accessControlAllowOrigin is not a wildcard and both cookie that belongs to kuzzle and token are present', async () => {
     kuzzle.config.http.accessControlAllowOrigin = 'localhost';
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    request.input.headers = {cookie: 'authToken=foobar; randomToken=test' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.token.verification_error' });
+  });
+
+  it('should not throw security.token.verification_error when cookieAuth is true and accessControlAllowOrigin is not a wildcard and both cookie that does not belongs to kuzzle and token are present', async () => {
+    kuzzle.config.http.accessControlAllowOrigin = 'localhost';
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'randomToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.token.verification_error' });
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
   });
 
   it('should use the token when cookieAuth is true and accessControlAllowOrigin is not a wildcard and both cookie and token are present, but cookie is set to null', async () => {
@@ -190,6 +203,32 @@ describe('funnel.checkRights', () => {
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
 
+  });
+
+  it('should not throw security.cookie.unsupported and use the token when cookieAuth is true and accessControlAllowOrigin is a wildcard and cookies are present but none of them belongs to kuzzle', async () => {
+    kuzzle.config.http.accessControlAllowOrigin = '*';
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'randomToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.cookie.unsupported' });
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should not throw security.cookie.unsupported and use the token when cookieAuth is false and accessControlAllowOrigin is a wildcard and cookies are present but none of them belongs to kuzzle', async () => {
+    kuzzle.config.http.accessControlAllowOrigin = '*';
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'randomToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.cookie.unsupported' });
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
   });
 
   it('should throw security.cookie.unsupported when cookieAuth is true and accessControlAllowOrigin is a wildcard and only the cookie is present', async () => {

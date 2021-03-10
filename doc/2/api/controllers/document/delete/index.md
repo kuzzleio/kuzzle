@@ -6,8 +6,6 @@ title: delete
 
 # delete
 
-
-
 Deletes a document.
 
 ---
@@ -33,12 +31,19 @@ Method: DELETE
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:delete <index> <collection> <id>
+kourou document:delete <index> <collection> <id> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: document unique identifier
+- `_id`: document unique identifier
 - `index`: index name
 
 ### Optional:

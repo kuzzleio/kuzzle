@@ -31,6 +31,12 @@ Method: GET
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:get <index> <collection> <id>
+```
+
 ---
 
 ## Arguments
@@ -47,7 +53,7 @@ Returns an object with the following properties:
 
 - `_id`: document unique identifier
 - `_source`: document content
-- `_version`: version of the created document (should be `1`)
+- `_version`: document version
 
 ```js
 {

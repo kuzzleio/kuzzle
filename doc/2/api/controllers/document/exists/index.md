@@ -33,6 +33,12 @@ Method: GET
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:exists <index> <collection> <id>
+```
+
 ---
 
 ## Arguments

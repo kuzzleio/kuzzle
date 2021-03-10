@@ -1,10 +1,10 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.10.0",
+  "version": "2.10.2",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
-    "kuzzle": "./bin/start-kuzzle-server"
+    "kuzzle": "bin/start-kuzzle-server"
   },
   "scripts": {
     "file": "node docker/scripts/reloader.js --inspect=0.0.0.0:9229 -r ts-node/register ",
@@ -48,7 +48,7 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.11.0",
-    "aedes": "^0.44.2",
+    "aedes": "^0.45.0",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.3",
     "busboy": "^0.3.1",
@@ -59,7 +59,7 @@
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
-    "inquirer": "^7.3.3",
+    "inquirer": "^8.0.0",
     "ioredis": "^4.23.0",
     "ip": "^1.1.5",
     "json-stable-stringify": "^1.0.1",
@@ -82,10 +82,10 @@
     "uuid": "^8.3.2",
     "validator": "^13.5.2",
     "winston": "^3.3.3",
-    "winston-elasticsearch": "0.14.0",
+    "winston-elasticsearch": "0.15.2",
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
-    "ws": "^7.4.3",
+    "ws": "^7.4.4",
     "yargs": "^16.2.0",
     "zeromq": "^5.2.0"
   },
@@ -95,16 +95,16 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
-    "@typescript-eslint/eslint-plugin": "^4.15.2",
-    "@typescript-eslint/parser": "^4.15.2",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
     "async": "^3.2.0",
     "chokidar": "^3.5.1",
     "codecov": "^3.8.1",
     "cucumber": "^6.0.5",
-    "eslint": "^7.20.0",
+    "eslint": "^7.21.0",
     "js-yaml": "^4.0.0",
     "kuzdoc": "^1.4.5",
-    "mocha": "^8.3.0",
+    "mocha": "^8.3.1",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.6",
     "nyc": "^15.1.0",
@@ -116,7 +116,7 @@
     "sinon": "^9.2.4",
     "strip-json-comments": "^3.1.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.2"
+    "typescript": "^4.2.3"
   },
   "engines": {
     "node": ">= 12.13.0"
