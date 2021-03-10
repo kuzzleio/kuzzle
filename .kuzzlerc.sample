@@ -376,23 +376,8 @@
         //    Set to "false" to disable HTTP support
         // * maxFormFileSize:
         //    Maximum size of requests sent via http forms
-        // * maxEncodingLayers:
-        //    Maximum number of encoding layers that can be applied
-        //    to an http message, using the Content-Encoding header.
-        //    This parameter is meant to prevent abuses by setting an
-        //    abnormally large number of encodings, forcing Kuzzle to
-        //    allocate as many decoders to handle the incoming request.
-        // * allowCompression:
-        //    Enable support for compressed requests, using the
-        //    Content-Encoding header
-        //    Currently supported compression algorithms:
-        //      gzip, deflate, identity
-        //    Note: "identity" is always an accepted value, even if
-        //    compression support is disabled
         "enabled": true,
-        "maxFormFileSize": "1mb",
-        "maxEncodingLayers": 3,
-        "allowCompression": true
+        "maxFormFileSize": "1mb"
       },
       "mqtt": {
         // * enabled:
@@ -422,28 +407,21 @@
         }
       },
       "websocket": {
+        // * compression:
+        //    Enable/Disable per message compression
         // * enabled:
         //    Set to true to enable WebSocket support
         // * idleTimeout:
         //    The maximum time (in milliseconds) without sending or receiving a
         //    message from a client. Once reached, the client's socket is
         //    forcibly closed.
-        //    Contrary to heartbeats (see below), this is a passive check,
-        //    forcing all clients to actively send either PINGs or messages to
-        //    maintain their connection active.
-        //    Set the value to 0 to disable this feature (should only be
-        //    activated if heartbeat is disabled)
-        // * heartbeat:
-        //    The time, in milliseconds, between the server's PING requests to
-        //    clients, to make sure they are still active.
-        //    Setting this value to 0 disables PING requests from the server
-        //    (it will still respond with a PONG to PING requests from clients).
-        //    If heartbeat is deactivated, then setting a non-zero value to
-        //    idleTimeout is strongly recommended to detect and remove
-        //    dead sockets.
+        //    If a client socket is inactive for too long, the server will send
+        //    a PING request before closing the socket.
+        //    Minimum value: 1000 (but it's strongly advised to not set a value
+        //    this low to forcibly close idle client sockets)
+        "compression": false,
         "enabled": true,
-        "idleTimeout": 0,
-        "heartbeat": 60000
+        "idleTimeout": 60000
       }
     }
   },
