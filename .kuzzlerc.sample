@@ -476,7 +476,7 @@
     // (see also https://github.com/luin/ioredis)
     //
     // 1. using a single Redis database:
-    //   node:
+    //   * node:
     //     * host:
     //         The host on which Redis can be reached.
     //         Can take an IP address, an URI or a hostname
@@ -484,11 +484,19 @@
     //         The port on which Redis is running its database:
     //     * (optional) database:
     //         ID of the redis database (default: 0)
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
     "internalCache": {
       "backend": "redis",
+      "database": 0,
       "node": {
         "host": "localhost",
         "port": 6379
+      },
+      "options": {
+        "db": 0
       }
     },
     // 2. using a master/slaves Redis instance with Redis sentinels
@@ -506,8 +514,13 @@
     //         or more slaves
     //     * (optional) database:
     //         ID of the redis database (default: 0)
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
     //"internalCache": {
     //  "backend": "redis",
+    //  "database": 0,
     //  "node": {
     //    "sentinels": [
     //      {"host": "sentinel-host-1", "port": 26379},
@@ -515,6 +528,9 @@
     //      {"host": "sentinel-host-3", "port": 26379}
     //    ],
     //    "name": "kuzzle"
+    //  },
+    //  "options": {
+    //    "db": 0
     //  }
     //},
     // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
@@ -524,13 +540,27 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
+    //   * (optional) clusterOptions: 
+    //       Redis Cluster specific options compatible with IORedis.
+    //       See Redis Cluster client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#cluster--eventemitter
     //"internalCache": {
     //  "backend": "redis",
     //  "nodes": [
     //    {"host": "redis-1", "port": 6379},
     //    {"host": "redis-2", "port": 6379},
     //    {"host": "redis-3", "port": 6379}
-    //  ]
+    //  ],
+    //  "options": {
+    //    "db": 0
+    //  },
+    //  "clusterOptions": {
+    //    "enableReadyCheck": true
+    //  }
     //},
 
     // [memoryStorage]
@@ -538,14 +568,92 @@
     // (see "internalCache" above for sample settings)
     // By default, the memoryStorage engine uses the same Redis server
     // as internalCache, on database ID "5"
+    //
+    // 1. using a single Redis database:
+    //   * node:
+    //     * host:
+    //         The host on which Redis can be reached.
+    //         Can take an IP address, an URI or a hostname
+    //     * port:
+    //         The port on which Redis is running its database:
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
     "memoryStorage": {
       "backend": "redis",
       "database": 5,
       "node": {
         "host": "localhost",
         "port": 6379
+      },
+      "options": {
+        "db": 5
       }
     },
+    // 2. using a master/slaves Redis instance with Redis sentinels
+    //    (cf. http://redis.io/topics/sentinel):
+    //   * node:
+    //     * sentinels:
+    //         array of sentinels instances:
+    //           * host:
+    //               Host name/address of the sentinel server
+    //               Can be an IP address, an URI or a hostname
+    //           * port:
+    //               Network port opened by Redis on the sentinel server
+    //     * name:
+    //         Group of Redis instances composed of a master and one
+    //         or more slaves
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
+    //"memoryStorage": {
+    //  "backend": "redis",
+    //  "database": 5,
+    //  "node": {
+    //    "sentinels": [
+    //      {"host": "sentinel-host-1", "port": 26379},
+    //      {"host": "sentinel-host-2", "port": 26379},
+    //      {"host": "sentinel-host-3", "port": 26379}
+    //    ],
+    //    "name": "kuzzle"
+    //  },
+    //  "options": {
+    //    "db": 5
+    //  }
+    //},
+    // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
+    //   * nodes: array of master nodes of the cluster
+    //     * host:
+    //         Host name/address of a redis cluster node
+    //         Can be an IP address, an URI or a hostname
+    //     * port:
+    //        Network port opened by the redis cluster node
+    //   * (optional) options: 
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
+    //   * (optional) clusterOptions: 
+    //       Redis Cluster specific options compatible with IORedis.
+    //       See Redis Cluster client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#cluster--eventemitter
+    //"memoryStorage": {
+    //  "backend": "redis",
+    //  "database": 5,
+    //  "nodes": [
+    //    {"host": "redis-1", "port": 6379},
+    //    {"host": "redis-2", "port": 6379},
+    //    {"host": "redis-3", "port": 6379}
+    //  ],
+    //  "options": {
+    //    "db": 5
+    //  },
+    //  "clusterOptions": {
+    //    "enableReadyCheck": true
+    //  }
+    //},
+
     // [storageEngine]
     // The default storage layer is Elasticsearch and it is
     // currently the only storage layer we support.

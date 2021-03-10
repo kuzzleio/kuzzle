@@ -11,8 +11,9 @@ const getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands
  * @constructor
  */
 class RedisClientMock extends EventEmitter {
-  constructor (err) {
+  constructor (options) {
     super();
+    this.options = options;
 
     this.getBuiltinCommands = getBuiltinCommands;
 

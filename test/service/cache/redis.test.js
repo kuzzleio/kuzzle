@@ -19,10 +19,10 @@ describe('Redis', () => {
 
     sinon
       .stub(Redis.prototype, '_buildClient')
-      .callsFake(() => new RedisClientMock());
+      .callsFake((options) => new RedisClientMock(options));
     sinon
       .stub(Redis.prototype, '_buildClusterClient')
-      .callsFake(() => new RedisClusterClientMock());
+      .callsFake((options) => new RedisClusterClientMock(options));
 
     config = {
       node: {
@@ -31,7 +31,7 @@ describe('Redis', () => {
       }
     };
 
-    redis = new Redis( config);
+    redis = new Redis(config);
   });
 
   afterEach(() => {
@@ -225,6 +225,28 @@ db5:keys=1,expires=0,avg_ttl=0
     should(redis._buildClusterClient).be.called();
   });
 
+  it('should pass redis and cluster options to a client instance of Cluster', async () => {
+    config = {
+      nodes: [
+        { host: 'foobar', port: 6379 }
+      ],
+      clusterOptions: {
+        overrideDnsValidation: true
+      },
+      options: {
+        username: 'foo',
+        password: 'bar'
+      }
+    };
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClusterClient).be.called();
+    should(redis.client.options).match({ overrideDnsValidation: true, redisOptions: { username: 'foo', password: 'bar' } });
+    should(redis.client.options.dnsLookup).be.Function();
+  });
+
   it('should build a client instance of Redis if only one node is defined', async () => {
     config = {
       node: { host: 'foobar', port: 6379 },
@@ -235,6 +257,22 @@ db5:keys=1,expires=0,avg_ttl=0
     await redis.init();
 
     should(redis._buildClient).be.called();
+  });
+
+  it('should pass redis options to a client instance of Redis', async () => {
+    config = {
+      node: { host: 'foobar', port: 6379 },
+      options: {
+        username: 'foo',
+        password: 'bar'
+      }
+    };
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClient).be.called();
+    should(redis.client.options).match({ username: 'foo', password: 'bar' });
   });
 
   describe('#store', () => {
