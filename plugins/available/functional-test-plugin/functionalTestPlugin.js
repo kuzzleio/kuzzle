@@ -106,16 +106,17 @@ class FunctionalTestPlugin {
     this.pipes['server:afterNow'] = this.afterNowPipe;
 
     // Embedded SDK realtime ===================================================
-    this.hooks['kuzzle:state:live'] = async () => {
-      const roomId = await this.sdk.realtime.subscribe(
-        'test',
-        'question',
-        {},
-        async () => {
-          await this.sdk.realtime.publish('test', 'answer', {});
-          await this.sdk.realtime.unsubscribe(roomId);
-        });
+    this.controllers.realtime = {
+      subscribeOnce: 'subscribeOnce',
     };
+
+    this.routes.push({
+      action: 'subscribeOnce',
+      controller: 'realtime',
+      path: '/realtime/subscribeOnce',
+      verb: 'post',
+    });
+
 
     // Embedded SDK.as() Impersonation =========================================
     this.controllers.impersonate = { createDocumentAs: 'createDocumentAs' };
@@ -258,6 +259,18 @@ class FunctionalTestPlugin {
     }
 
     return request;
+  }
+
+  // realtime related methods =====================================================
+  async subscribeOnce () {
+    const roomId = await this.sdk.realtime.subscribe(
+      'test',
+      'question',
+      {},
+      async () => {
+        await this.sdk.realtime.publish('test', 'answer', {});
+        await this.sdk.realtime.unsubscribe(roomId);
+      });
   }
 
   /**

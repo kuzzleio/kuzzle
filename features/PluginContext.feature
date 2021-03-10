@@ -32,14 +32,15 @@ Feature: Plugin context
 
   @realtime
   Scenario: Subscribe and unsubscribe to realtime notifications
+    Given a plugin realtime subscription
     Given I subscribe to "test":"answer" notifications
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |
       | collection | "question" |
       | body       | {}         |
     Then I should have receive "1" notifications for "test":"answer"
-    # should not be subscribed anymore
-    # (see the hook 'kuzzle:state:live' in the plugin)
+    # should not be subscribed anymore: the plugin unsubscribes after sending
+    # a single notification
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |
       | collection | "question" |
