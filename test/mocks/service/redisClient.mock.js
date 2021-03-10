@@ -24,7 +24,12 @@ class RedisClientMock extends EventEmitter {
       ? callback(new Error('Unknown database'))
       : callback(null));
 
-    process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
+    process.nextTick(() => this.emit('ready'));
+  }
+
+  emitError(err) {
+    process.nextTick(() => this.emit('error', err));
+    return this;
   }
 
   scanStream (options) {

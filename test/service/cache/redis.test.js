@@ -6,6 +6,7 @@ const sinon = require('sinon');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const RedisClientMock = require('../../mocks/service/redisClient.mock');
+const RedisClusterClientMock = require('../../mocks/service/redisClusterClient.mock');
 
 const Redis = rewire('../../../lib/service/cache/redis');
 
@@ -21,7 +22,7 @@ describe('Redis', () => {
       .callsFake(() => new RedisClientMock());
     sinon
       .stub(Redis.prototype, '_buildClusterClient')
-      .callsFake(() => new RedisClientMock());
+      .callsFake(() => new RedisClusterClientMock());
 
     config = {
       node: {
@@ -56,7 +57,7 @@ describe('Redis', () => {
 
   it('should raise an error if unable to connect', () => {
     Redis.prototype._buildClient
-      .returns(new RedisClientMock(new Error('connection error')));
+      .returns((new RedisClientMock()).emitError(new Error('connection error')));
 
     const testredis = new Redis(config);
 
