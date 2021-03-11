@@ -261,6 +261,20 @@ db5:keys=1,expires=0,avg_ttl=0
     should(redis._buildClient).be.called();
   });
 
+  it('should use old database option and put it in redis client options when provided', async () => {
+    config = {
+      node: { host: 'foobar', port: 6379 },
+      database: 4
+    };
+
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClient).be.called();
+    should(redis.client.options.db).be.Number().and.eql(4);
+  });
+
   it('should pass redis options to a client instance of Redis', async () => {
     config = {
       node: { host: 'foobar', port: 6379 },
