@@ -489,7 +489,7 @@
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
-    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     "internalCache": {
       "backend": "redis",
       "database": 0,
