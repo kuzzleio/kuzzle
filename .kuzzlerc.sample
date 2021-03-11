@@ -654,7 +654,7 @@
     //   * (optional) clusterOptions: 
     //       Redis Cluster specific options compatible with IORedis.
     //       See Redis Cluster client constructor available options:
-    //       https://github.com/luin/ioredis/blob/master/API.md#cluster--eventemitter
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
     //   * (optional) overrideDnsLookup: 
     //       Only available when using a Redis Cluster config.
     //       Use with caution, if set to true override DNS validation for TLS certificates
