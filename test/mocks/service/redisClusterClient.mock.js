@@ -11,8 +11,8 @@ const getBuiltinCommands = (new IORedis.Cluster({redisOptions: { lazyConnect: tr
  * @constructor
  */
 class RedisClusterClientMock extends RedisClientMock {
-  constructor (options) {
-    super(options);
+  constructor (options, err) {
+    super(options, err);
 
     this.getBuiltinCommands = getBuiltinCommands;
 

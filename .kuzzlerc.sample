@@ -482,17 +482,17 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //     * (optional) database (DEPRECATED):
+    //     * (optional, deprecated) database: 
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Considere using of options.db as a replacement.
+    //               Please consider to use 'options.db' as a replacement. If both 
+    //               options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     "internalCache": {
       "backend": "redis",
-      "database": 0,
       "node": {
         "host": "localhost",
         "port": 6379
@@ -514,17 +514,17 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //     * (optional) database (DEPRECATED):
+    //     * (optional, deprecated) database: 
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Considere using of options.db as a replacement.
+    //               Please consider to use 'options.db' as a replacement. If both 
+    //               options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
     //"internalCache": {
     //  "backend": "redis",
-    //  "database": 0,
     //  "node": {
     //    "sentinels": [
     //      {"host": "sentinel-host-1", "port": 26379},
@@ -544,6 +544,11 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
+    //   * (optional, deprecated) database: 
+    //       ID of the redis database (default: 0)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Please consider to use 'options.db' as a replacement. If both 
+    //             options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -554,7 +559,7 @@
     //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
     //   * (optional) overrideDnsLookup: 
     //       Only available when using a Redis Cluster config.
-    //       Use with caution, if set to true override DNS validation for TLS certificates
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates 
     //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
     //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     //"internalCache": {
@@ -585,17 +590,17 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //     * (optional) database (DEPRECATED):
-    //         ID of the redis database (default: 0)
-    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Considere using of options.db as a replacement.
+    //   * (optional, deprecated) database: 
+    //       ID of the redis database (default: 0)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Please consider to use 'options.db' as a replacement. If both 
+    //             options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     "memoryStorage": {
       "backend": "redis",
-      "database": 5,
       "node": {
         "host": "localhost",
         "port": 6379
@@ -617,17 +622,17 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //     * (optional) database (DEPRECATED):
-    //         ID of the redis database (default: 5)
-    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Considere using of options.db as a replacement.
+    //   * (optional, deprecated) database: 
+    //       ID of the redis database (default: 0)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Please consider to use 'options.db' as a replacement. If both 
+    //             options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     //"memoryStorage": {
     //  "backend": "redis",
-    //  "database": 5,
     //  "node": {
     //    "sentinels": [
     //      {"host": "sentinel-host-1", "port": 26379},
@@ -647,6 +652,11 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
+    //   * (optional, deprecated) database: 
+    //       ID of the redis database (default: 0)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Please consider to use 'options.db' as a replacement. If both 
+    //             options are set, then "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -657,12 +667,11 @@
     //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
     //   * (optional) overrideDnsLookup: 
     //       Only available when using a Redis Cluster config.
-    //       Use with caution, if set to true override DNS validation for TLS certificates
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates 
     //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
     //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     //"memoryStorage": {
     //  "backend": "redis",
-    //  "database": 5,
     //  "nodes": [
     //    {"host": "redis-1", "port": 6379},
     //    {"host": "redis-2", "port": 6379},

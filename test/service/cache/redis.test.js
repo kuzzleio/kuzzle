@@ -48,7 +48,7 @@ describe('Redis', () => {
 
   it('should raise an error if unable to connect', () => {
     Redis.prototype._buildClient
-      .returns((new RedisClientMock()).emitError(new Error('connection error')));
+      .returns((new RedisClientMock(undefined, new Error('connection error'))));
 
     const testredis = new Redis(config);
 
@@ -212,6 +212,9 @@ db5:keys=1,expires=0,avg_ttl=0
 
   it('should override DNS validation on a client instance of Cluster if option is enabled', async () => {
     config = {
+      clusterOptions: {
+        enableReadyCheck: true
+      },
       nodes: [
         { host: 'foobar', port: 6379 }
       ],

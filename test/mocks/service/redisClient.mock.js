@@ -11,7 +11,7 @@ const getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands
  * @constructor
  */
 class RedisClientMock extends EventEmitter {
-  constructor (options) {
+  constructor (options, err) {
     super();
     this.options = options;
 
@@ -25,12 +25,7 @@ class RedisClientMock extends EventEmitter {
       ? callback(new Error('Unknown database'))
       : callback(null));
 
-    process.nextTick(() => this.emit('ready'));
-  }
-
-  emitError(err) {
-    process.nextTick(() => this.emit('error', err));
-    return this;
+    process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
   }
 
   scanStream (options) {
