@@ -85,6 +85,14 @@ describe('#base/native controller', () => {
         BadRequestError,
         { id: 'api.assert.koncorde_restricted_keyword' });
     });
+
+    it('should return an empty object if the filters are empty', async () => {
+      const esQuery = await nativeController.translateKoncorde({});
+
+      should(kuzzle.ask).not.be.called();
+
+      should(esQuery).be.eql({});
+    });
   });
 
   describe('#getLangParam', () => {

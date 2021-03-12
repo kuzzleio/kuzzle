@@ -67,6 +67,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:updateByQuery <index> <collection> <body>
+kourou document:updateByQuery <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments

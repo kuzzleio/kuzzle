@@ -94,6 +94,13 @@ Method: GET
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:search <index> <collection> <query>
+kourou document:search <index> <collection> <query> --sort <sort> --size <size> 
+```
+
 ---
 
 ## Arguments

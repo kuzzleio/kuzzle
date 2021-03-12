@@ -70,6 +70,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mUpdate <index> <collection> <body>
+kourou document:mUpdate <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments

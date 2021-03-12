@@ -364,4 +364,40 @@ describe('#KuzzleEventEmitter', () => {
       should(listener3).calledOnce().calledWith('foo', 'bar');
     });
   });
+
+  describe('registerPluginPipe', () => {
+    it('should register the pipe handler and pipe description', () => {
+      const handler = () => {};
+
+      const pipeId = emitter.registerPluginPipe('event', handler);
+
+      should(pipeId).be.a.String();
+      should(emitter.pluginPipes.get('event')).be.eql([handler]);
+      should(emitter.pluginPipeDefinitions.get(pipeId)).match({
+        event: 'event',
+        pipeId,
+        handler,
+      });
+    });
+  });
+
+  describe('unregisterPluginPipe', () => {
+    it('should unregister the pipe handler and remove pipe description', () => {
+      const handler = () => {};
+      const pipeId = emitter.registerPluginPipe('event', handler);
+
+      emitter.unregisterPluginPipe(pipeId);
+
+      should(emitter.pluginPipes.get('event')).be.undefined();
+      should(emitter.pluginPipeDefinitions.get(pipeId)).be.undefined();
+    });
+
+    it('should throw an error if the pipeId does not exists', () => {
+      should(() => {
+        emitter.unregisterPluginPipe('unknown-pipe-id');
+      }).throwError({
+        id: 'plugin.runtime.unknown_pipe'
+      });
+    });
+  });
 });
