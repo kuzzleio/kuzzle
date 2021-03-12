@@ -485,8 +485,8 @@
     //     * (optional, deprecated) database: 
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Please consider to use 'options.db' as a replacement. If both 
-    //               options are set, then "options.db" will take precedence.
+    //               Use 'options.db' instead. If both options are set, then 
+    //               "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -517,8 +517,8 @@
     //     * (optional, deprecated) database: 
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Please consider to use 'options.db' as a replacement. If both 
-    //               options are set, then "options.db" will take precedence.
+    //               Use 'options.db' instead. If both options are set, then 
+    //               "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -547,8 +547,8 @@
     //   * (optional, deprecated) database: 
     //       ID of the redis database (default: 0)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Please consider to use 'options.db' as a replacement. If both 
-    //             options are set, then "options.db" will take precedence.
+    //             Use 'options.db' instead. If both options are set, then 
+    //             "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -593,8 +593,8 @@
     //   * (optional, deprecated) database: 
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Please consider to use 'options.db' as a replacement. If both 
-    //             options are set, then "options.db" will take precedence.
+    //             Use 'options.db' instead. If both options are set, then 
+    //             "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -625,8 +625,8 @@
     //   * (optional, deprecated) database: 
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Please consider to use 'options.db' as a replacement. If both 
-    //             options are set, then "options.db" will take precedence.
+    //             Use 'options.db' instead. If both options are set, then 
+    //             "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
@@ -655,8 +655,8 @@
     //   * (optional, deprecated) database: 
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Please consider to use 'options.db' as a replacement. If both 
-    //             options are set, then "options.db" will take precedence.
+    //             Use 'options.db' instead. If both options are set, then 
+    //             "options.db" will take precedence.
     //   * (optional) options: 
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
