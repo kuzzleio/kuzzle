@@ -271,7 +271,7 @@ describe('#RequestResponse', () => {
     });
   });
 
-  describe.only('makeRaw', () => {
+  describe('makeRaw', () => {
     it('should set the raw property to true', () => {
       const response = new RequestResponse(req);
 
