@@ -271,6 +271,16 @@ describe('#RequestResponse', () => {
     });
   });
 
+  describe.only('makeRaw', () => {
+    it('should set the raw property to true', () => {
+      const response = new RequestResponse(req);
+
+      should(response.raw).be.false();
+      response.makeRaw();
+      should(response.raw).be.true();
+    });
+  });
+
   describe('toJSON', () => {
     it('should return a valid JSON object in Kuzzle format', () => {
       let response = new RequestResponse(req);
