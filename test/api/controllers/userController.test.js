@@ -83,6 +83,244 @@ describe('UserController', () => {
     });
   });
 
+  describe('#createRestricted', () => {
+    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
+
+    beforeEach(() => {
+      sinon.stub(userController, '_persistUser').resolves(createdUser);
+      request.input.resource._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe' }
+      };
+
+      kuzzle.config.security.restrictedProfileIds = [ 'foo', 'bar' ];
+    });
+
+    it('should return a valid response', async () => {
+      const response = await userController.createRestricted(request);
+
+      should(userController._persistUser)
+        .calledOnce()
+        .calledWithMatch(
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          { name: 'John Doe' });
+
+      should(userController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
+    });
+
+    it('should reject if profileIds are given', async () => {
+      request.input.body.content.profileIds = [ 'ohnoes' ];
+
+      await should(userController.createRestricted(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.forbidden_argument',
+          message: 'The argument "body.content.profileIds" is not allowed by this API action.'
+        });
+
+      should(userController._persistUser).not.called();
+    });
+
+    it('should allow the request to not have a body content', async () => {
+      request.input.body = null;
+
+      const response = await userController.createRestricted(request);
+
+      should(userController._persistUser)
+        .calledOnce()
+        .calledWithMatch(
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          {});
+
+      should(userController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
+    });
+  });
+
+  describe('#delete', () => {
+    const deleteEvent = 'core:security:user:delete';
+    let deleteStub;
+
+    beforeEach(() => {
+      deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
+
+      request.input.resource._id = 'test';
+    });
+
+    it('should return a valid response', async () => {
+      const response = await userController.delete(request);
+
+      should(deleteStub).calledWithMatch(deleteEvent, 'test', {
+        refresh: 'wait_for',
+      });
+
+      should(response._id).be.exactly('test');
+    });
+
+    it('should reject if no id is given', async () => {
+      request.input.resource._id = null;
+
+      await should(userController.delete(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(deleteStub).not.called();
+    });
+
+    it('should forward exceptions from the security module', () => {
+      const error = new Error('Mocked error');
+      deleteStub.rejects(error);
+
+      return should(userController.delete(new Request({_id: 'test'})))
+        .be.rejectedWith(error);
+    });
+
+    it('should handle the refresh option', async () => {
+      request.input.args.refresh = false;
+
+      await userController.delete(request);
+
+      should(deleteStub).calledWithMatch(deleteEvent, 'test', {
+        refresh: 'false',
+      });
+    });
+  });
+
+  describe('#get', () => {
+    it('should reject if no id is given', () => {
+      return should(userController.get(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+    });
+
+    it('should load and return the requested user', async () => {
+      const user = new User();
+
+      user._id = 'foo';
+      user.bar = 'baz';
+
+      request.input.resource._id = 'foo';
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', request.input.resource._id)
+        .resolves(user);
+
+      const response = await userController.get(request);
+
+      should(response).match({
+        _id: 'foo',
+        _source: {bar: 'baz'},
+      });
+    });
+
+    it('should forward errors from the security module', () => {
+      request.input.resource._id = 'foo';
+
+      const error = new Error('oh noes');
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', request.input.resource._id)
+        .rejects(error);
+
+      return should(userController.get(request)).rejectedWith(error);
+    });
+  });
+
+  describe('#rights', () => {
+    const getEvent = 'core:security:user:get';
+    let getStub;
+    let returnedUser;
+
+    beforeEach(() => {
+      request.input.resource._id = 'test';
+
+      returnedUser = new User();
+      returnedUser._id = request.input.resource._id;
+      sinon.stub(returnedUser, 'getRights');
+
+      getStub = kuzzle.ask
+        .withArgs(getEvent, request.input.resource._id)
+        .resolves(returnedUser);
+    });
+
+    it('should resolve to an object on a rights call', async () => {
+      const rights = {
+        rights1: {
+          action: 'action',
+          collection: 'foo',
+          controller: 'controller',
+          index: 'index',
+          value: true,
+        },
+        rights2: {
+          action: 'action',
+          collection: 'collection',
+          controller: 'bar',
+          index: 'index',
+          value: false,
+        }
+      };
+
+      returnedUser.getRights.returns(rights);
+
+      const response = await userController.rights(request);
+
+      should(getStub).calledWith(getEvent, request.input.resource._id);
+
+      should(response).be.an.Object().and.not.empty();
+      should(response.hits).be.an.Array().and.have.length(2);
+      should(response.total).eql(2);
+
+      should(response.hits.includes(rights.rights1)).be.true();
+      should(response.hits.includes(rights.rights2)).be.true();
+    });
+
+    it('should reject if no id is provided', async () => {
+      request.input.resource._id = null;
+
+      await should(userController.rights(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "_id".'
+        });
+
+      should(getStub).not.called();
+    });
+
+    it('should forward a security module exception', () => {
+      const error = new Error('foo');
+
+      getStub.rejects(error);
+
+      return should(userController.rights(request))
+        .rejectedWith(error);
+    });
+  });
+
+  describe('#mapping', () => {
+    it('should fulfill with a response object', async () => {
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
+        properties: { foo: 'bar' },
+      });
+
+      const response = await userController.mapping(request);
+
+      should(kuzzle.ask).calledWith(
+        'core:storage:private:mappings:get',
+        kuzzle.internalIndex.index,
+        'users');
+
+      should(response).match({ mapping: { foo: 'bar' } });
+    });
+  });
+
   describe('#_persistUser', () => {
     const createEvent = 'core:security:user:create';
     const deleteEvent = 'core:security:user:delete';
