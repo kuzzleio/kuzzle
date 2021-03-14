@@ -264,6 +264,15 @@ export class RequestResponse {
   get node (): string {
     return (global as any).kuzzle.id;
   }
+
+  /**
+   * Makes the response to be a raw one
+   * With no Kuzzle wrapping
+   */
+  makeRaw (): void {
+    this.raw = true;
+  }
+
   /**
    * Gets a header value (case-insensitive)
    */
