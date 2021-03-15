@@ -13,7 +13,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const UserController = require('../../../lib/api/controllers/userController');
 const User = require('../../../lib/model/security/user');
 
-describe.only('UserController', () => {
+describe('UserController', () => {
   let kuzzle;
   let request;
   let userController;
