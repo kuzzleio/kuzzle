@@ -266,11 +266,24 @@ export class RequestResponse {
   }
 
   /**
-   * Makes the response to be a raw one
-   * With no Kuzzle wrapping
+   * Configure the response
    */
-  makeRaw (): void {
-    this.raw = true;
+  configure (
+    options: {
+      headers?: JSONObject | null;
+      status?: number;
+      raw?: boolean;
+    } = {}
+  ): void {
+    if (options.headers) {
+      this.setHeaders(options.headers);
+    }
+
+    this.status = options.status || 200;
+
+    if (options.raw !== undefined) {
+      this.raw = options.raw;
+    }
   }
 
   /**
