@@ -304,13 +304,13 @@ describe('UserController', () => {
     });
   });
 
-  describe('#mapping', () => {
+  describe('#mappings', () => {
     it('should fulfill with a response object', async () => {
       kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
         properties: { foo: 'bar' },
       });
 
-      const response = await userController.mapping(request);
+      const response = await userController.mappings(request);
 
       should(kuzzle.ask).calledWith(
         'core:storage:private:mappings:get',
@@ -685,11 +685,11 @@ describe('UserController', () => {
     });
   });
 
-  describe('#updateMapping', () => {
+  describe('#updateMappings', () => {
     const foo = { foo: 'bar' };
 
     it('should reject if the body is missing', () => {
-      return should(userController.updateMapping(request))
+      return should(userController.updateMappings(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required'});
     });
 
@@ -697,7 +697,7 @@ describe('UserController', () => {
       request.input.body = foo;
       kuzzle.ask.withArgs('core:storage:private:mappings:update').resolves(foo);
 
-      const response = await userController.updateMapping(request);
+      const response = await userController.updateMappings(request);
 
       should(kuzzle.ask).be.calledWith(
         'core:storage:private:mappings:update',
