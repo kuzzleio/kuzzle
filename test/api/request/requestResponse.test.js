@@ -271,12 +271,27 @@ describe('#RequestResponse', () => {
     });
   });
 
-  describe('makeRaw', () => {
-    it('should set the raw property to true', () => {
-      const response = new RequestResponse(req);
+  describe.only('configure', () => {
+    let response;
 
-      should(response.raw).be.false();
-      response.makeRaw();
+    beforeEach(() => {
+      response = new RequestResponse(req);
+    });
+
+    it('should allow the user to configure the headers of the response', () => {
+      const testHeader = { 'X-Foo': 'foo' };
+
+      response.configure({ headers: testHeader });
+      should(response.getHeader('X-Foo')).eql('foo');
+    });
+
+    it('should allow the user to configure the status of the response', () => {
+      response.configure({ status: 402 });
+      should(response.status).eql(402);
+    });
+
+    it('should allow the user to configure the raw status of the response', () => {
+      response.configure({ raw: true });
       should(response.raw).be.true();
     });
   });
