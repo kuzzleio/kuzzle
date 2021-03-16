@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
-  PartialError,
+  MultipleErrorsError,
   SizeLimitError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -298,7 +298,7 @@ describe('DocumentController', () => {
       }));
 
       return should(documentController.mGet(request)).be.rejectedWith(
-        PartialError,
+        MultipleErrorsError,
         { id: 'api.process.incomplete_multiple_request' });
     });
   });
@@ -541,7 +541,7 @@ describe('DocumentController', () => {
         errors: [
           {
             document: { _id: '_id42', _source: '_source' },
-            status: 206,
+            status: 400,
             reason: 'reason'
           }
         ]
@@ -549,7 +549,7 @@ describe('DocumentController', () => {
 
       return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
         .rejectedWith(
-          PartialError,
+          MultipleErrorsError,
           { id: 'api.process.incomplete_multiple_request' });
     });
   });
@@ -1343,7 +1343,7 @@ describe('DocumentController', () => {
       }));
 
       should(documentController.mDelete(request)).be.rejectedWith(
-        PartialError,
+        MultipleErrorsError,
         { id: 'api.process.incomplete_multiple_request' });
     });
   });

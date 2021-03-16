@@ -151,7 +151,7 @@
           "description": "Failed to execute some or all actions requested",
           "code": 10,
           "message": "At least one of the %s actions failed.",
-          "class": "PartialError"
+          "class": "MultipleErrorsError"
         }
       }
     }

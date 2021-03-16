@@ -19,18 +19,34 @@
  * limitations under the License.
  */
 
-export * from './badRequestError';
-export * from './externalServiceError';
-export * from './forbiddenError';
-export * from './gatewayTimeoutError';
-export * from './internalError';
-export * from './kuzzleError';
-export * from './multipleErrorsError';
-export * from './notFoundError';
-export * from './partialError';
-export * from './pluginImplementationError';
-export * from './serviceUnavailableError';
-export * from './sizeLimitError';
-export * from './unauthorizedError';
-export * from './preconditionError';
-export * from './tooManyRequestsError';
+import { KuzzleError } from './kuzzleError';
+
+export class MultipleErrorsError extends KuzzleError {
+  public errors: Array<KuzzleError>;
+  public count: number;
+
+  constructor(message, body, id, code) {
+    if (code === undefined && typeof id === 'number') {
+      code = id;
+      id = body;
+      body = [];
+    }
+    else if (body === undefined) {
+      body = [];
+    }
+
+    super(message, 400, id, code);
+
+    this.errors = body;
+    this.count = body.length;
+  }
+
+  toJSON () {
+    const serialized = super.toJSON();
+
+    serialized.errors = this.errors;
+    serialized.count = this.count;
+
+    return serialized;
+  }
+}

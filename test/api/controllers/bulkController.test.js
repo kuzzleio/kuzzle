@@ -3,14 +3,13 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const { Request } = require('../../../index');
+const { Request, MultipleErrorsError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
 
 const BulkController = require('../../../lib/api/controllers/bulkController');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
-const { PartialError } = require('../../../lib/kerror/errors');
 
 describe('Test the bulk controller', () => {
   let controller;
@@ -96,7 +95,7 @@ describe('Test the bulk controller', () => {
       });
 
       should(controller.import(request)).be.rejectedWith(
-        PartialError,
+        MultipleErrorsError,
         { id: 'api.process.incomplete_multiple_request' });
     });
   });
@@ -250,7 +249,7 @@ describe('Test the bulk controller', () => {
       });
 
       should(controller.import(request)).be.rejectedWith(
-        PartialError,
+        MultipleErrorsError,
         { id: 'api.process.incomplete_multiple_request' });
     });
   });
