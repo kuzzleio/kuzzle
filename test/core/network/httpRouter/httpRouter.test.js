@@ -7,26 +7,24 @@ const sinon = require('sinon');
 const httpsRoutes = require('../../../../lib/config/httpRoutes');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const Router = require('../../../../lib/core/network/httpRouter');
-const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
+const HttpMessage = require('../../../../lib/core/network/protocols/httpMessage');
 const {
   Request,
   InternalError
 } = require('../../../../index');
 
+const UWSHttpRequestMock = require('../../../mocks/uWS_http_request.mock');
+
 describe('core/network/httpRouter', () => {
-  let
-    router,
-    handler,
-    kuzzleMock,
-    rq;
+  const connection = { id: 'requestId' };
+  let router;
+  let handler;
+  let kuzzleMock;
 
   beforeEach(() => {
     kuzzleMock = new KuzzleMock();
     router = new Router();
     handler = sinon.stub().yields();
-    rq = new HttpMessage(
-      { id: 'requestId' },
-      { url: '', method: '', headers: {} });
   });
 
   afterEach(() => {
@@ -120,10 +118,10 @@ describe('core/network/httpRouter', () => {
     it('should invoke the registered handler on a known route', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
+      const req = new UWSHttpRequestMock('post', '/foo/bar');
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
           should(handler.firstCall.args[0]).be.instanceOf(Request);
@@ -138,13 +136,14 @@ describe('core/network/httpRouter', () => {
     it('should init request.context with the right values', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.headers.foo = 'bar';
-      rq.headers.Authorization = 'Bearer jwtFoobar';
-      rq.headers['X-Kuzzle-Volatile'] = '{"modifiedBy": "John Doe", "reason": "foobar"}';
-      rq.method = 'POST';
+      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+        Authorization: 'Bearer jwtFoobar',
+        foo: 'bar',
+        'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}',
+      });
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
 
@@ -176,10 +175,10 @@ describe('core/network/httpRouter', () => {
     it('should properly handle querystrings (w/o url trailing slash)', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar?foo=bar';
-      rq.method = 'POST';
+      const req = new UWSHttpRequestMock('post', '/foo/bar', 'foo=bar');
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
 
@@ -198,16 +197,17 @@ describe('core/network/httpRouter', () => {
     it('should properly handle querystrings (w/ url trailing slash)', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar/?foo=bar';
-      rq.method = 'POST';
+      const req = new UWSHttpRequestMock('post', '/foo/bar/', 'foo=bar&baz=qux');
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
-
           const payload = handler.firstCall.args[0];
+
           should(payload).be.instanceOf(Request);
           should(payload.input.args.foo).eql('bar');
+          should(payload.input.args.baz).eql('qux');
 
           done();
         }
@@ -220,18 +220,19 @@ describe('core/network/httpRouter', () => {
     it('should amend the request object if a body is found in the content', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+        'content-type': 'application/json',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = {foo: 'bar'};
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
 
           const apiRequest = handler.firstCall.args[0];
 
-          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json');
           done();
@@ -245,18 +246,19 @@ describe('core/network/httpRouter', () => {
     it('should return dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
-      rq.url = '/foo/hello/world';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('post', '/foo/hello/world', '', {
+        'content-type': 'application/json',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = { foo: 'bar' };
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
 
           const apiRequest = handler.firstCall.args[0];
 
-          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json');
           should(apiRequest.input.args.bar).eql('hello');
@@ -272,18 +274,19 @@ describe('core/network/httpRouter', () => {
     it('should unnescape dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
-      rq.url = '/foo/hello/%25world';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json; charset=utf-8';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('post', '/foo/hello/%25world', '', {
+        'content-type': 'application/json; charset=utf-8',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = { foo: 'bar' };
 
-      router.route(rq, () => {
+      router.route(httpMessage, () => {
         try {
           should(handler).be.calledOnce();
 
           const apiRequest = handler.firstCall.args[0];
 
-          should(apiRequest.id).match(rq.requestId);
+          should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: 'bar' });
           should(apiRequest.input.headers['content-type']).eql('application/json; charset=utf-8');
           should(apiRequest.input.args.bar).eql('hello');
@@ -297,21 +300,21 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
-      rq.url = '/';
-      rq.method = 'OPTIONS';
-      rq.headers = {
+      const req = new UWSHttpRequestMock('options', '/', '', {
         'content-type': 'application/json',
         foo: 'bar'
-      };
+      });
 
-      router.route(rq, result => {
+      const httpMessage = new HttpMessage(connection, req);
+
+      router.route(httpMessage, result => {
         try {
           should(handler).not.be.called();
 
           should(result.response.toJSON()).match({
             raw: false,
             status: 200,
-            requestId: rq.requestId,
+            requestId: httpMessage.requestId,
             content: {
               error: null,
               requestId: 'requestId',
@@ -320,7 +323,7 @@ describe('core/network/httpRouter', () => {
             headers: router.defaultHeaders
           });
 
-          should(result.input.headers).match(rq.headers);
+          should(result.input.headers).match(httpMessage.headers);
           should(kuzzleMock.pipe)
             .be.calledOnce()
             .be.calledWith('http:options', sinon.match.instanceOf(Request));
@@ -335,21 +338,20 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should register a default / route with the HEAD verb', done => {
-      rq.url = '/';
-      rq.method = 'HEAD';
-      rq.headers = {
+      const req = new UWSHttpRequestMock('head', '/', '', {
         'content-type': 'application/json',
-        foo: 'bar'
-      };
+        foo: 'bar',
+      });
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, result => {
+      router.route(httpMessage, result => {
         try {
           should(handler).not.be.called();
 
           should(result.response.toJSON()).match({
             raw: false,
             status: 200,
-            requestId: rq.requestId,
+            requestId: httpMessage.requestId,
             content: {
               error: null,
               requestId: 'requestId',
@@ -358,7 +360,7 @@ describe('core/network/httpRouter', () => {
             headers: router.defaultHeaders
           });
 
-          should(result.input.headers).match(rq.headers);
+          should(result.input.headers).match(httpMessage.headers);
           done();
         }
         catch (e) {
@@ -370,12 +372,13 @@ describe('core/network/httpRouter', () => {
     it('should return an error if the HTTP method is unknown', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'FOOBAR';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('foobar', '/foo/bar', '', {
+        'content-type': 'application/json',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = { foo: 'bar' };
 
-      router.route(rq, result => {
+      router.route(httpMessage, result => {
         try {
           should(handler).have.callCount(0);
 
@@ -383,7 +386,7 @@ describe('core/network/httpRouter', () => {
             .match({
               raw: false,
               status: 400,
-              requestId: rq.requestId,
+              requestId: httpMessage.requestId,
               content: {
                 error: {
                   status: 400,
@@ -402,57 +405,23 @@ describe('core/network/httpRouter', () => {
       });
     });
 
-    it('should return an error if unable to parse the incoming JSON content', done => {
-      router.post('/foo/bar', handler);
-
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{bad JSON syntax}');
-
-      router.route(rq, result => {
-        try {
-          should(handler).not.be.called();
-
-          should(result.response.toJSON()).be.match({
-            raw: false,
-            status: 400,
-            requestId: rq.requestId,
-            content: {
-              error: {
-                status: 400,
-                id: 'network.http.body_parse_failed'
-              },
-              requestId: 'requestId',
-              result: null
-            },
-            headers: router.defaultHeaders
-          });
-
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-    });
-
     it('should return an error if unable to parse x-kuzzle-volatile header', done => {
       router.get('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'GET';
-      rq.headers['content-type'] = 'application/json';
-      rq.headers['x-kuzzle-volatile'] = '{bad JSON syntax}';
+      const req = new UWSHttpRequestMock('get', '/foo/bar', '', {
+        'content-type': 'application/json',
+        'x-kuzzle-volatile':  '{bad JSON syntax}',
+      });
+      const httpMessage = new HttpMessage(connection, req);
 
-      router.route(rq, result => {
+      router.route(httpMessage, result => {
         try {
           should(handler).not.be.called();
 
           should(result.response.toJSON()).be.match({
             raw: false,
             status: 400,
-            requestId: rq.requestId,
+            requestId: httpMessage.requestId,
             content: {
               error: {
                 status: 400,
@@ -472,92 +441,23 @@ describe('core/network/httpRouter', () => {
       });
     });
 
-    it('should return an error if the content-type is not JSON', done => {
-      router.post('/foo/bar', handler);
-
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/foobar';
-      rq.addChunk('{"foo": "bar"}');
-
-      router.route(rq, result => {
-        try {
-          should(handler).not.be.called();
-
-          should(result.response.toJSON()).match({
-            raw: false,
-            status: 400,
-            requestId: rq.requestId,
-            content: {
-              error: {
-                status: 400,
-                id: 'network.http.unsupported_content'
-              },
-              requestId: 'requestId',
-              result: null
-            },
-            headers: router.defaultHeaders
-          });
-
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-    });
-
-    it('should send an error if the charset is not utf-8', done => {
-      router.post('/foo/bar', handler);
-
-      rq.url = '/foo/bar';
-      rq.method = 'POST';
-      rq.headers['content-type'] = 'application/json; charset=iso8859-1';
-      rq.addChunk('{"foo": "bar"}');
-
-      router.route(rq, result => {
-        try {
-          should(handler).not.be.called();
-
-          should(result.response.toJSON()).match({
-            raw: false,
-            status: 400,
-            requestId: rq.requestId,
-            content: {
-              error: {
-                status: 400,
-                id: 'network.http.unsupported_charset'
-              },
-              requestId: 'requestId',
-              result: null
-            },
-            headers: router.defaultHeaders
-          });
-
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-    });
-
     it('should return an error if the route does not exist', done => {
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'PUT';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('put', '/foo/bar', '', {
+        'content-type': 'application/json',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = { foo: 'bar' };
 
-      router.route(rq, result => {
+      router.route(httpMessage, result => {
         try {
           should(handler).not.be.called();
 
           should(result.response.toJSON()).match({
             raw: false,
             status: 404,
-            requestId: rq.requestId,
+            requestId: httpMessage.requestId,
             content: {
               error: {
                 status: 404,
@@ -596,19 +496,20 @@ describe('core/network/httpRouter', () => {
 
       router.post('/foo/bar', handler);
 
-      rq.url = '/foo/bar';
-      rq.method = 'PUT';
-      rq.headers['content-type'] = 'application/json';
-      rq.addChunk('{"foo": "bar"}');
+      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+        'content-type': 'application/json',
+      });
+      const httpMessage = new HttpMessage(connection, req);
+      httpMessage.content = { foo: 'bar' };
 
-      router.route(rq, result => {
+      router.route(httpMessage, result => {
         try {
           should(handler).not.be.called();
 
           should(result.response.toJSON()).match({
             raw: false,
             status: 500,
-            requestId: rq.requestId,
+            requestId: httpMessage.requestId,
             content: {
               error: {
                 status: 500,
