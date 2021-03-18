@@ -198,7 +198,7 @@ You can use the `term` clause to find documents based on a precise value such as
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   term: { name: "Jenow" }
-}'
+}' --lang elasticsearch
 ```
 
 ::: info
@@ -226,7 +226,7 @@ The `match` clause as well as the content of a `text` fields are [analyzed](http
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   match: { description: "java" }
-}'
+}' --lang elasticsearch
 ```
 
 ### `range` clause
@@ -246,7 +246,7 @@ kourou document:search ktm-open-data thamel-taxi '{
       lte: 42
     }
   }
-}'
+}' --lang elasticsearch
 ```
 
 ### `ids` clause
@@ -259,7 +259,7 @@ kourou document:search ktm-open-data thamel-taxi '{
   ids: {
     values: ["aschen", "liia"]
   }
-}'
+}' --lang elasticsearch
 ```
 
 ::: info
@@ -297,7 +297,7 @@ kourou document:search ktm-open-data thamel-taxi '{
       { term: { city: "Kathmandu" } },
     ]
   }
-}'
+}' --lang elasticsearch
 ```
 
 ## Koncorde Query
@@ -321,7 +321,7 @@ kourou document:search ktm-open-data thamel-taxi '{
     { equals: { city: "Tirana" } },
     { range: { age: { gte: 32 } } }
   ]
-}' --arg lang=koncorde
+}'
 ```
 
 ## Sorting
