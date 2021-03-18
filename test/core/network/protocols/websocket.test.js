@@ -526,8 +526,6 @@ describe.only('core/network/protocols/websocket', () => {
   });
 
   describe('#broadcast', () => {
-    let socket;
-
     beforeEach(async () => {
       await httpWs.init(entryPoint);
       httpWs.server._mockTriggerOnOpen();
