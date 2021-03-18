@@ -19,9 +19,11 @@
  * limitations under the License.
  */
 
+import { JSONObject } from 'kuzzle-sdk';
+
 import { InternalError } from '../../kerror/errors/internalError';
 import * as assert from '../../util/assertType';
-import { JSONObject } from 'kuzzle-sdk';
+import { deprecateProperties } from '../../util/deprecate';
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
@@ -43,9 +45,6 @@ const resourceProperties = new Set([
   'body',
   'controller',
   'action',
-  'index',
-  'collection',
-  '_id'
 ]);
 
 export class RequestResource {
@@ -97,23 +96,20 @@ export class RequestResource {
  * Common arguments are accessible at the root level:
  * "jwt", "volatile", "body", "controller", "action"
  *
- * Resource arguments are accessible under the "resource" property:
- * "_id", "index", "collection"
- *
  * Every other arguments are accessible under the "args" property. E.g:
- * "refresh", "onExistingUser", "foobar", etc.
+ * "_id", "index", "collection", "refresh", "onExistingUser", "foobar", etc.
  */
 export class RequestInput {
   /**
-   * Others arguments (e.g: "refresh").
+   * Request arguments (e.g: "refresh").
    * @example
    * // original JSON request sent to Kuzzle
    * {
    *   controller
    *   action,
-   *   _id,
-   *   index,
-   *   collection,
+   *   _id,         <== that
+   *   index,       <== that
+   *   collection,  <== that
    *   jwt,
    *   refresh,     <== that
    *   foobar,      <== that
@@ -126,6 +122,7 @@ export class RequestInput {
   /**
    * Common arguments that identify Kuzzle resources.
    * (e.g: "_id", "index", "collection")
+   * @deprecated Use directly`request.input.args.<_id|index|collection>` instead
    * @example
    * // original JSON request sent to Kuzzle
    * {
@@ -186,9 +183,13 @@ export class RequestInput {
     this.body = data.body;
     this.controller = data.controller;
     this.action = data.action;
+
+    // @deprecated those input are in input.args now
     this.resource.index = data.index;
     this.resource.collection = data.collection;
     this.resource._id = data._id;
+
+    this.resource = deprecateProperties(console.log, this.resource, )
   }
 
   /**
