@@ -81,6 +81,12 @@
           "code": 13,
           "message": "The %s \"%s\" of Koncorde DSL is not supported for search queries.",
           "class": "BadRequestError"
+        },
+        "koncorde_dsl_error": {
+          "description": "Provided filters contains an error",
+          "code": 14,
+          "message": "%s",
+          "class": "BadRequestError"
         }
       }
     },
