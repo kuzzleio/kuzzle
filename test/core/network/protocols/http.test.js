@@ -487,10 +487,8 @@ describe('/lib/core/network/protocols/http', () => {
 
         const expected = {
           action: null,
-          collection: null,
           controller: null,
           error: null,
-          index: null,
           node: 'knode-nasty-author-4242',
           requestId: 'requestId',
           result: 'content',

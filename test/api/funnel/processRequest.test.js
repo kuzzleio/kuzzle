@@ -247,7 +247,7 @@ describe('funnel.processRequest', () => {
         init: () => {},
         pipes: {
           'generic:document:beforeWrite': async function hello(documents) {
-            should(documents[0]._id).equal(null);
+            should(documents[0]._id).be.undefined();
 
             documents[0]._id = 'foobar';
 
