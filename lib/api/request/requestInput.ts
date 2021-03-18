@@ -26,9 +26,6 @@ import * as assert from '../../util/assertType';
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
-const __id = '_id\u200b';
-const _index = 'index\u200b';
-const _collection = 'collection\u200b';
 const _jwt = 'jwt\u200b';
 const _volatile = 'volatile\u200b';
 const _body = 'body\u200b';
@@ -46,46 +43,47 @@ const resourceProperties = new Set([
   'action',
 ]);
 
+/**
+ * @deprecated
+ */
 export class RequestResource {
-  constructor() {
-    this[__id] = null;
-    this[_index] = null;
-    this[_collection] = null;
+  private args: JSONObject;
 
-    Object.seal(this);
+  constructor (args: JSONObject) {
+    this.args = args;
   }
 
   /**
    * Document ID
    */
   get _id (): string | null {
-    return this[__id];
+    return this.args._id;
   }
 
   set _id (str: string) {
-    this[__id] = assert.assertString('_id', str);
+    this.args._id = str;
   }
 
   /**
    * Index name
    */
   get index (): string | null {
-    return this[_index];
+    return this.args.index;
   }
 
   set index (str: string) {
-    this[_index] = assert.assertString('index', str);
+    this.args.index = str;
   }
 
   /**
    * Collection name
    */
   get collection (): string | null {
-    return this[_collection];
+    return this.args.collection;
   }
 
   set collection (str: string) {
-    this[_collection] = assert.assertString('collection', str);
+    this.args.collection = str;
   }
 }
 
@@ -158,8 +156,9 @@ export class RequestInput {
     this[_controller] = null;
     this[_action] = null;
 
+    // default value to null for former "resources" to avoid breaking
     this.args = {};
-    this.resource = new RequestResource();
+    this.resource = new RequestResource(this.args);
 
     // copy into this.args only unrecognized properties
     for (const k of Object.keys(data)) {
@@ -182,11 +181,6 @@ export class RequestInput {
     this.body = data.body;
     this.controller = data.controller;
     this.action = data.action;
-
-    // @deprecated those input are in input.args now
-    this.resource.index = data.index;
-    this.resource.collection = data.collection;
-    this.resource._id = data._id;
   }
 
   /**
