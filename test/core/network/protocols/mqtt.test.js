@@ -4,9 +4,12 @@ const Bluebird = require('bluebird');
 const mockrequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+
 const { BadRequestError } = require('../../../../index');
 const errorMatcher = require('../../../util/errorMatcher');
+
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const EntryPointMock = require('../../../mocks/entrypoint.mock');
 
 class AedesMock {
   constructor (config) {
@@ -55,20 +58,15 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
   beforeEach(() => {
     new KuzzleMock();
 
-    entrypoint = {
-      config: {
-        maxRequestSize: 42,
-        protocols: {
-          mqtt: {
-            enabled: true,
-            foo: 'bar'
-          }
+    entrypoint = new EntryPointMock({
+      maxRequestSize: 42,
+      protocols: {
+        mqtt: {
+          enabled: true,
+          foo: 'bar',
         }
-      },
-      execute: sinon.spy(),
-      newConnection: sinon.spy(),
-      removeConnection: sinon.spy()
-    };
+      }
+    });
 
     protocol = new MqttProtocol();
     fakeClient = new FakeClient('foo');
@@ -338,6 +336,8 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
     });
 
     it('should forward the client payload to kuzzle and respond the client back', () => {
+      entrypoint.execute.yields({ content: 'response' });
+
       protocol.connections.set(fakeClient, {
         id: fakeClient.id,
         protocol: 'mqtt',
@@ -365,8 +365,6 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
         }
       });
 
-      const cb = entrypoint.execute.firstCall.args[1];
-      cb({content: 'response'});
       should(fakeClient.publish)
         .be.calledOnce()
         .be.calledWithMatch({
