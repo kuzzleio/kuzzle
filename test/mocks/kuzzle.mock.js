@@ -22,7 +22,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       writable: true,
     });
 
-    this.id = 'nasty-author-4242';
+    this.id = 'knode-nasty-author-4242';
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
