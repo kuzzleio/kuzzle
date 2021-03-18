@@ -254,7 +254,7 @@ describe('funnel.processRequest', () => {
             return documents;
           },
           'document:beforeCreate': async (request) => {
-            should(request.input.resource._id).equal('foobar');
+            should(request.input.args._id).equal('foobar');
             return request;
           },
         },

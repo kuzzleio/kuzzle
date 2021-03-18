@@ -32,8 +32,8 @@ describe('#RequestResponse', () => {
       should(response.requestId).be.exactly(req.id);
       should(response.controller).be.exactly(req.input.controller);
       should(response.action).be.exactly(req.input.action);
-      should(response.collection).be.exactly(req.input.resource.collection);
-      should(response.index).be.exactly(req.input.resource.index);
+      should(response.collection).be.exactly(req.input.args.collection);
+      should(response.index).be.exactly(req.input.args.index);
       should(response.volatile).be.exactly(req.input.volatile);
       should(response.headers).match({
         'X-Kuzzle-Node': 'knode-nasty-author-4242'

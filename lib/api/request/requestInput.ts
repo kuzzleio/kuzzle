@@ -23,7 +23,6 @@ import { JSONObject } from 'kuzzle-sdk';
 
 import { InternalError } from '../../kerror/errors/internalError';
 import * as assert from '../../util/assertType';
-import { deprecateProperties } from '../../util/deprecate';
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
@@ -188,8 +187,6 @@ export class RequestInput {
     this.resource.index = data.index;
     this.resource.collection = data.collection;
     this.resource._id = data._id;
-
-    this.resource = deprecateProperties(console.log, this.resource, )
   }
 
   /**

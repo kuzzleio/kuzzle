@@ -40,14 +40,14 @@ describe('RealtimeController', () => {
 
   describe('#subscribe', () => {
     it('should reject if no index is provided',() => {
-      request.input.resource.index = null;
+      request.input.args.index = null;
 
       should(realtimeController.subscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should reject if no collection is provided',() => {
-      request.input.resource.collection = null;
+      request.input.args.collection = null;
 
       should(realtimeController.subscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -188,8 +188,8 @@ describe('RealtimeController', () => {
 
   describe('#publish', () => {
     beforeEach(() => {
-      request.input.resource.index = '%test';
-      request.input.resource.collection = 'test-collection';
+      request.input.args.index = '%test';
+      request.input.args.collection = 'test-collection';
     });
 
     it('should resolve to a valid response', async () => {
