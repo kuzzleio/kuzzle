@@ -49,6 +49,9 @@ describe('#RequestInput', () => {
       foo: 'bar',
       bar: 'foo',
       headers: {foo: 'args.header'},
+      _id: 'id',
+      index: 'index',
+      collection: 'collection',
     });
     should(input.headers).match({foo: 'input.header'});
   });
