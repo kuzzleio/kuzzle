@@ -531,7 +531,6 @@ describe.only('core/network/protocols/websocket', () => {
     beforeEach(async () => {
       await httpWs.init(entryPoint);
       httpWs.server._mockTriggerOnOpen();
-      socket = httpWs.server._mockSocket;
     });
 
     it('should broadcast a notification for each channel', () => {
