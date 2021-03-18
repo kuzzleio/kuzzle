@@ -27,7 +27,7 @@ description: Error codes definitions
 | api.assert.unexpected_type_assertion<br/><pre>0x02010009</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | An unexepected type assertion "%s" has been invoked on attribute "%s". | Unexpected type assertion |
 | api.assert.invalid_id<br/><pre>0x0201000a</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Invalid "_id" value: cannot start with an underscore | _id values cannot start with an underscore |
 | api.assert.forbidden_argument<br/><pre>0x0201000b</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The argument "%s" is not allowed by this API action. | A forbidden argument has been provided |
-| api.assert.koncorde_unknown_keyword<br/><pre>0x0201000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not one of the Koncorde filters DSL keywords. | An unknown keyword has been provided in filters |
+| api.assert.koncorde_unknown_keyword<br/><pre>0x0201000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not part of Koncorde filters DSL keywords. Are you trying to use an Elasticsearch query? | An unknown keyword has been provided in filters |
 | api.assert.koncorde_restricted_keyword<br/><pre>0x0201000d</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The %s "%s" of Koncorde DSL is not supported for search queries. | A restricted keyword has been provided in filters |
 
 ---
