@@ -709,6 +709,54 @@ describe('UserController', () => {
     });
   });
 
+  describe('#checkRights', () => {
+    let user;
+
+    beforeEach(() => {
+      user = {
+        isActionAllowed: sinon.stub().resolves(true)
+      };
+
+      kuzzle.ask
+        .withArgs('core:security:user:get')
+        .resolves(user);
+
+      request.input.args.userId = 'melis';
+
+      request.input.body = {
+        controller: 'document',
+        action: 'create'
+      };
+    });
+
+    it('should check if the action is allowed for the provided userId', async () => {
+      const response = await userController.checkRights(request);
+
+      should(kuzzle.ask).be.calledWith('core:security:user:get', 'melis');
+
+      should(user.isActionAllowed).be.calledWithMatch({
+        input: {
+          controller: 'document',
+          action: 'create',
+        }
+      });
+      should(response).be.eql({ allowed: true });
+    });
+
+    it('should reject if the provided request is not valid', async () => {
+      request.input.body.controller = null;
+
+      await should(userController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+
+      request.input.body.controller = 'document';
+      request.input.body.action = null;
+
+      await should(userController.checkRights(request))
+        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
+  });
+
   describe('#_persistUser', () => {
     const createEvent = 'core:security:user:create';
     const deleteEvent = 'core:security:user:delete';
