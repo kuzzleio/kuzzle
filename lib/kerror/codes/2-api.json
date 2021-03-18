@@ -114,7 +114,7 @@
         "action_not_found": {
           "description": "API controller action not found",
           "code": 5,
-          "message": "Controller action \"%s\" not found.",
+          "message": "API action \"%s\":\"%s\" not found",
           "class": "NotFoundError"
         },
         "incompatible_sdk_version": {
