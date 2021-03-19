@@ -230,9 +230,8 @@ The arguments of requests sent to the Kuzzle API are available in the [KuzzleReq
 The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
- - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: additional arguments
- - `body`: body content
+ - `args`: Action arguments
+ - `body`: Body content
 
 ### HTTP
 
@@ -241,7 +240,7 @@ With HTTP, there are 3 types of input parameters:
  - Query arguments (__e.g. `/greeting/hello?name=aschen`__)
  - KuzzleRequest body
 
-URL parameters and query arguments can be found in the `request.input.args` property **unless it is a Kuzzle specific argument** (`_id`, `index` and `collection`), in that case they can be found in the `request.input.resource` property.
+URL parameters and query arguments can be found in the `request.input.args` property.
 
 The content of the query body can be found in the `request.input.body` property 
 
@@ -271,7 +270,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args._id === 'JkkZN62jLSA');
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
@@ -316,7 +315,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args._id === 'JkkZN62jLSA');
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
@@ -325,10 +324,6 @@ app.controller.register('greeting', {
   }
 });
 ```
-
-::: warning
-`_id`, `index` and `collection` are **specific Kuzzle inputs** and are available in the `request.input.resource` property.
-:::
 
 ::: info
 See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.

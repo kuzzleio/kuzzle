@@ -588,7 +588,7 @@ describe('#base/native controller', () => {
 
   describe('#getIndex', () => {
     beforeEach(() => {
-      request.input.resource = {
+      request.input.args = {
         index: 'index'
       };
     });
@@ -600,7 +600,7 @@ describe('#base/native controller', () => {
     });
 
     it('should throw if the index is missing', () => {
-      request.input.resource = {};
+      request.input.args = {};
 
       should(() => {
         nativeController.getIndex(request);
@@ -610,7 +610,7 @@ describe('#base/native controller', () => {
 
   describe('#getIndexAndCollection', () => {
     beforeEach(() => {
-      request.input.resource = {
+      request.input.args = {
         index: 'index',
         collection: 'collection'
       };
@@ -624,7 +624,7 @@ describe('#base/native controller', () => {
     });
 
     it('should throw if the index is missing', () => {
-      request.input.resource = {
+      request.input.args = {
         collection: 'collection'
       };
 
@@ -637,7 +637,7 @@ describe('#base/native controller', () => {
     });
 
     it('should throw if the collection is missing', () => {
-      request.input.resource = {
+      request.input.args = {
         index: 'index'
       };
 
@@ -652,7 +652,7 @@ describe('#base/native controller', () => {
 
   describe('#getId', () => {
     beforeEach(() => {
-      request.input.resource = {
+      request.input.args = {
         _id: 'id'
       };
     });
@@ -664,7 +664,7 @@ describe('#base/native controller', () => {
     });
 
     it('should throw if the id is missing', () => {
-      request.input.resource = {};
+      request.input.args = {};
 
       should(() => {
         nativeController.getId(request);
@@ -672,7 +672,7 @@ describe('#base/native controller', () => {
     });
 
     it('should throw if the id is wrong type', () => {
-      request.input.resource = {
+      request.input.args = {
         _id: 42
       };
 

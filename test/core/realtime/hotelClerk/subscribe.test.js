@@ -135,14 +135,14 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should reject if no index is provided', () => {
-    request.input.resource.index = null;
+    request.input.args.index = null;
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',
     });
   });
 
   it('should reject with an error if no collection is provided', () => {
-    request.input.resource.collection = null;
+    request.input.args.collection = null;
 
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',
