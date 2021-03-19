@@ -25,16 +25,12 @@ export class MultipleErrorsError extends KuzzleError {
   public errors: Array<KuzzleError>;
   public count: number;
 
-  constructor(message, body, id, code) {
-    if (code === undefined && typeof id === 'number') {
-      code = id;
-      id = body;
-      body = [];
-    }
-    else if (body === undefined) {
-      body = [];
-    }
-
+  constructor(
+    message: string,
+    body: Array<KuzzleError>,
+    id?: string,
+    code?: number
+  ) {
     super(message, 400, id, code);
 
     this.errors = body;
@@ -44,7 +40,7 @@ export class MultipleErrorsError extends KuzzleError {
   toJSON () {
     const serialized = super.toJSON();
 
-    serialized.errors = this.errors;
+    serialized.errors = this.errors.map(error => error.toJSON());
     serialized.count = this.count;
 
     return serialized;
