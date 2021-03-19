@@ -27,6 +27,7 @@ Elasticsearch supports many keywords in a search query root level. For security 
   - `search_timeout`
   - `size`
   - `sort`
+  - `suggest`
   - `_name`
   - `_source`
   - `_source_excludes`
