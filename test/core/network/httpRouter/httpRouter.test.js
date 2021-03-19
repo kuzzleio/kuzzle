@@ -13,7 +13,7 @@ const {
   InternalError
 } = require('../../../../index');
 
-const UWSHttpRequestMock = require('../../../mocks/uWS_http_request.mock');
+const { MockHttpRequest } = require('../../../mocks/uWS.mock');
 
 describe('core/network/httpRouter', () => {
   const connection = { id: 'requestId' };
@@ -118,7 +118,7 @@ describe('core/network/httpRouter', () => {
     it('should invoke the registered handler on a known route', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar');
+      const req = new MockHttpRequest('post', '/foo/bar');
       const httpMessage = new HttpMessage(connection, req);
 
       router.route(httpMessage, () => {
@@ -136,7 +136,7 @@ describe('core/network/httpRouter', () => {
     it('should init request.context with the right values', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+      const req = new MockHttpRequest('post', '/foo/bar', '', {
         Authorization: 'Bearer jwtFoobar',
         foo: 'bar',
         'X-Kuzzle-Volatile': '{"modifiedBy": "John Doe", "reason": "foobar"}',
@@ -175,7 +175,7 @@ describe('core/network/httpRouter', () => {
     it('should properly handle querystrings (w/o url trailing slash)', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar', 'foo=bar');
+      const req = new MockHttpRequest('post', '/foo/bar', 'foo=bar');
       const httpMessage = new HttpMessage(connection, req);
 
       router.route(httpMessage, () => {
@@ -197,7 +197,7 @@ describe('core/network/httpRouter', () => {
     it('should properly handle querystrings (w/ url trailing slash)', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar/', 'foo=bar&baz=qux');
+      const req = new MockHttpRequest('post', '/foo/bar/', 'foo=bar&baz=qux');
       const httpMessage = new HttpMessage(connection, req);
 
       router.route(httpMessage, () => {
@@ -220,7 +220,7 @@ describe('core/network/httpRouter', () => {
     it('should amend the request object if a body is found in the content', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+      const req = new MockHttpRequest('post', '/foo/bar', '', {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);
@@ -246,7 +246,7 @@ describe('core/network/httpRouter', () => {
     it('should return dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/hello/world', '', {
+      const req = new MockHttpRequest('post', '/foo/hello/world', '', {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);
@@ -274,7 +274,7 @@ describe('core/network/httpRouter', () => {
     it('should unnescape dynamic values for parametric routes', done => {
       router.post('/foo/:bar/:baz', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/hello/%25world', '', {
+      const req = new MockHttpRequest('post', '/foo/hello/%25world', '', {
         'content-type': 'application/json; charset=utf-8',
       });
       const httpMessage = new HttpMessage(connection, req);
@@ -300,7 +300,7 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
-      const req = new UWSHttpRequestMock('options', '/', '', {
+      const req = new MockHttpRequest('options', '/', '', {
         'content-type': 'application/json',
         foo: 'bar'
       });
@@ -338,7 +338,7 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should register a default / route with the HEAD verb', done => {
-      const req = new UWSHttpRequestMock('head', '/', '', {
+      const req = new MockHttpRequest('head', '/', '', {
         'content-type': 'application/json',
         foo: 'bar',
       });
@@ -372,7 +372,7 @@ describe('core/network/httpRouter', () => {
     it('should return an error if the HTTP method is unknown', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('foobar', '/foo/bar', '', {
+      const req = new MockHttpRequest('foobar', '/foo/bar', '', {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);
@@ -408,7 +408,7 @@ describe('core/network/httpRouter', () => {
     it('should return an error if unable to parse x-kuzzle-volatile header', done => {
       router.get('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('get', '/foo/bar', '', {
+      const req = new MockHttpRequest('get', '/foo/bar', '', {
         'content-type': 'application/json',
         'x-kuzzle-volatile':  '{bad JSON syntax}',
       });
@@ -444,7 +444,7 @@ describe('core/network/httpRouter', () => {
     it('should return an error if the route does not exist', done => {
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('put', '/foo/bar', '', {
+      const req = new MockHttpRequest('put', '/foo/bar', '', {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);
@@ -496,7 +496,7 @@ describe('core/network/httpRouter', () => {
 
       router.post('/foo/bar', handler);
 
-      const req = new UWSHttpRequestMock('post', '/foo/bar', '', {
+      const req = new MockHttpRequest('post', '/foo/bar', '', {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);

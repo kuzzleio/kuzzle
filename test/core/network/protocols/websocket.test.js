@@ -167,7 +167,7 @@ describe.only('core/network/protocols/websocket', () => {
     beforeEach(() => httpWs.init(entryPoint));
 
     it('should declare the connection to the entry point', () => {
-      httpWs.server._mockTriggerOnOpen();
+      httpWs.server._wsOnOpen();
 
       should(entryPoint.newConnection).calledWithMatch({
         protocol: 'websocket',
@@ -176,17 +176,17 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should initialize the structure needed to keep track of the socket', () => {
-      httpWs.server._mockTriggerOnOpen();
+      httpWs.server._wsOnOpen();
 
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
       should(httpWs.connectionBySocket)
-        .have.value(httpWs.server._mockSocket, clientConnection);
+        .have.value(httpWs.server._wsSocket, clientConnection);
 
       should(httpWs.socketByConnectionId)
-        .have.value(clientConnection.id, httpWs.server._mockSocket);
+        .have.value(clientConnection.id, httpWs.server._wsSocket);
 
-      should(httpWs.backpressureBuffer).have.value(httpWs.server._mockSocket, []);
+      should(httpWs.backpressureBuffer).have.value(httpWs.server._wsSocket, []);
     });
   });
 
@@ -198,16 +198,16 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should clean up the memory associated to the closed connection', () => {
-      httpWs.server._mockTriggerOnOpen();
-      const openedSocket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      const openedSocket = httpWs.server._wsSocket;
       const openedClientConnection = entryPoint.newConnection.firstCall.args[0];
 
-      httpWs.server._mockCreateNewSocket();
-      httpWs.server._mockTriggerOnOpen();
-      const closedSocket = httpWs.server._mockSocket;
+      httpWs.server._wsNewSocket();
+      httpWs.server._wsOnOpen();
+      const closedSocket = httpWs.server._wsSocket;
       const closedClientConnection = entryPoint.newConnection.secondCall.args[0];
 
-      httpWs.server._mockTriggerOnClose();
+      httpWs.server._wsOnClose();
 
       should(httpWs.connectionBySocket)
         .have.value(openedSocket, openedClientConnection);
@@ -229,8 +229,8 @@ describe.only('core/network/protocols/websocket', () => {
 
     beforeEach(async () => {
       await httpWs.init(entryPoint);
-      httpWs.server._mockTriggerOnOpen();
-      socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      socket = httpWs.server._wsSocket;
     });
 
     it('should discard the message if the socket is unknown', () => {
@@ -239,17 +239,17 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should discard the message if no data is provided', () => {
-      httpWs.server._mockTriggerOnMessage(null);
+      httpWs.server._wsOnMessage(null);
       should(entryPoint.execute).not.be.called();
 
-      httpWs.server._mockTriggerOnMessage(Buffer.from(''));
+      httpWs.server._wsOnMessage(Buffer.from(''));
       should(entryPoint.execute).not.be.called();
     });
 
     it('should forward an error immediately if the payload cannot be parsed', () => {
-      httpWs.server._mockTriggerOnMessage('{ohnoes}');
+      httpWs.server._wsOnMessage('{ohnoes}');
 
-      should(httpWs.server._mockSocket.send).calledOnce();
+      should(httpWs.server._wsSocket.send).calledOnce();
 
       const payload = socket.send.firstCall.args[0];
       should(payload).be.instanceof(Buffer);
@@ -263,7 +263,7 @@ describe.only('core/network/protocols/websocket', () => {
 
     it('should execute a standardized Request if a valid payload is provided', () => {
       entryPoint.execute.yields({ requestId: 'foobar', content: { } });
-      httpWs.server._mockTriggerOnMessage('{"controller":"foo","action":"bar"}');
+      httpWs.server._wsOnMessage('{"controller":"foo","action":"bar"}');
 
       should(entryPoint.execute).calledOnce().calledWithMatch({
         input: {
@@ -288,7 +288,7 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should respond with an error if it cannot cast to a KuzzleRequest object', () => {
-      httpWs.server._mockTriggerOnMessage('{"controller": 123}');
+      httpWs.server._wsOnMessage('{"controller": 123}');
 
       should(entryPoint.execute).not.called();
 
@@ -307,18 +307,18 @@ describe.only('core/network/protocols/websocket', () => {
     it('should enforce the rate limit if one is set', () => {
       httpWs.wsConfig.rateLimit = 2;
 
-      httpWs.server._mockTriggerOnMessage('{"controller":"foo", "action":"bar"}');
+      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(1);
       should(socket.last).eql(httpWs.now);
       should(entryPoint.execute).calledOnce();
 
       entryPoint.execute.resetHistory();
-      httpWs.server._mockTriggerOnMessage('{"controller":"foo", "action":"bar"}');
+      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(2);
       should(entryPoint.execute).calledOnce();
 
       entryPoint.execute.resetHistory();
-      httpWs.server._mockTriggerOnMessage('{"controller":"foo", "action":"bar"}');
+      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(3);
       should(entryPoint.execute).not.called();
 
@@ -335,7 +335,7 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should send an applicative PONG response to an applicative PING request', () => {
-      httpWs.server._mockTriggerOnMessage('{"p":1}');
+      httpWs.server._wsOnMessage('{"p":1}');
 
       should(entryPoint.execute).not.called();
 
@@ -343,7 +343,7 @@ describe.only('core/network/protocols/websocket', () => {
       should(payload).be.instanceof(Buffer);
       should(payload.toString()).eql('{"p":2}');
 
-      httpWs.server._mockTriggerOnMessage('{"p":1, "controller": "foo", "action":"bar"}');
+      httpWs.server._wsOnMessage('{"p":1, "controller": "foo", "action":"bar"}');
       should(entryPoint.execute).calledOnce();
 
       payload = socket.send.secondCall.args[0];
@@ -357,8 +357,8 @@ describe.only('core/network/protocols/websocket', () => {
 
     beforeEach(async () => {
       await httpWs.init(entryPoint);
-      httpWs.server._mockTriggerOnOpen();
-      socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      socket = httpWs.server._wsSocket;
     });
 
     it('should discard the response if the socket is unknown (i.e. it no longer exists)', () => {
@@ -418,7 +418,7 @@ describe.only('core/network/protocols/websocket', () => {
       socket.getBufferedAmount.returns(0);
       socket.getBufferedAmount.onThirdCall().returns(8096);
 
-      httpWs.server._mockTriggerOnDrain();
+      httpWs.server._wsOnDrain();
 
       should(socket.cork).calledOnce();
 
@@ -437,8 +437,8 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should forcibly end the client socket with a default message', () => {
-      httpWs.server._mockTriggerOnOpen();
-      const socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      const socket = httpWs.server._wsSocket;
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
       httpWs.disconnect(clientConnection.id);
@@ -447,8 +447,8 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should forcibly end the client socket with the provided message', () => {
-      httpWs.server._mockTriggerOnOpen();
-      const socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      const socket = httpWs.server._wsSocket;
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
       httpWs.disconnect(clientConnection.id, 'message');
@@ -465,8 +465,8 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should make the socket subscribe on the provided channel name', () => {
-      httpWs.server._mockTriggerOnOpen();
-      const socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      const socket = httpWs.server._wsSocket;
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
       httpWs.joinChannel('foobar', clientConnection.id);
@@ -483,8 +483,8 @@ describe.only('core/network/protocols/websocket', () => {
     });
 
     it('should make the socket unsubscribe from the provided channel name', () => {
-      httpWs.server._mockTriggerOnOpen();
-      const socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      const socket = httpWs.server._wsSocket;
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
       httpWs.leaveChannel('foobar', clientConnection.id);
@@ -498,8 +498,8 @@ describe.only('core/network/protocols/websocket', () => {
 
     beforeEach(async () => {
       await httpWs.init(entryPoint);
-      httpWs.server._mockTriggerOnOpen();
-      socket = httpWs.server._mockSocket;
+      httpWs.server._wsOnOpen();
+      socket = httpWs.server._wsSocket;
     });
 
     it('should ignore an unknown connection ID', () => {
@@ -528,7 +528,7 @@ describe.only('core/network/protocols/websocket', () => {
   describe('#broadcast', () => {
     beforeEach(async () => {
       await httpWs.init(entryPoint);
-      httpWs.server._mockTriggerOnOpen();
+      httpWs.server._wsOnOpen();
     });
 
     it('should broadcast a notification for each channel', () => {

@@ -9,6 +9,7 @@ class EntryPointMock {
     this.execute = sinon.stub().yields();
     this.newConnection = sinon.stub();
     this.removeConnection = sinon.stub();
+    this.logAccess = sinon.stub();
   }
 }
 

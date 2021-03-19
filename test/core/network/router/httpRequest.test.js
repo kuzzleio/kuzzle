@@ -7,7 +7,7 @@ const Router = require('../../../../lib/core/network/router');
 const HttpMessage = require('../../../../lib/core/network/protocols/httpMessage');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const UWSHttpMessageMock = require('../../../mocks/uWS_http_request.mock');
+const { MockHttpRequest } = require('../../../mocks/uWS.mock');
 
 describe('Test: router.httpRequest', () => {
   const connection = { id: 'requestId' };
@@ -33,7 +33,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register GET routes from the config/httpRoutes file', done => {
-    const req = new UWSHttpMessageMock(
+    const req = new MockHttpRequest(
       'GET',
       '/ms/_getrange/someId?start=start&end=end');
     const httpMessage = new HttpMessage(connection, req);
@@ -60,7 +60,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    const req = new UWSHttpMessageMock('post', '/my-index/my-collection/_count');
+    const req = new MockHttpRequest('post', '/my-index/my-collection/_count');
     const httpMessage = new HttpMessage(connection, req);
     httpMessage.content = { filter: 'foobar' };
 
@@ -84,7 +84,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register PUT routes from the config/httpRoutes file', done => {
-    const req = new UWSHttpMessageMock('put', '/_updateSelf');
+    const req = new MockHttpRequest('put', '/_updateSelf');
     const httpMessage = new HttpMessage(connection, req);
     httpMessage.content = {foo: 'bar'};
 
@@ -107,7 +107,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register DELETE routes from the config/httpRoutes file', done => {
-    const req = new UWSHttpMessageMock('delete', '/foobar');
+    const req = new MockHttpRequest('delete', '/foobar');
     const httpMessage = new HttpMessage(connection, req);
 
     routeController.http.route(httpMessage, request => {
@@ -129,7 +129,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register the base route /_serverInfo', done => {
-    const req = new UWSHttpMessageMock('get', '/_serverInfo');
+    const req = new MockHttpRequest('get', '/_serverInfo');
     const httpMessage = new HttpMessage(connection, req);
 
     routeController.http.route(httpMessage, request => {
@@ -148,7 +148,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register plugins HTTP routes', done => {
-    const req = new UWSHttpMessageMock('get', '/foo/bar/baz');
+    const req = new MockHttpRequest('get', '/foo/bar/baz');
     const httpMessage = new HttpMessage(connection, req);
 
     routeController.http.route(httpMessage, request => {
@@ -167,7 +167,7 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should return a 404 if the requested route does not exist', done => {
-    const req = new UWSHttpMessageMock('get', '/a/b/c/d');
+    const req = new MockHttpRequest('get', '/a/b/c/d');
     const httpMessage = new HttpMessage(connection, req);
 
     routeController.http.route(httpMessage, result => {
