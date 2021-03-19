@@ -312,6 +312,14 @@ describe('Test: ElasticSearch service', () => {
             ],
             total: { value: 1 },
           },
+          suggest: {
+            'some-suggestion': {
+              text: 'snowflake',
+              term: {
+                field: 'matter'
+              }
+            }
+          },
           _scroll_id: 'i-am-scroll-id',
         }
       });
@@ -323,6 +331,7 @@ describe('Test: ElasticSearch service', () => {
         body: { query: { match_all: {} } },
         from: undefined,
         size: undefined,
+        suggest: undefined,
         scroll: undefined,
         trackTotalHits: true,
       });
@@ -343,6 +352,14 @@ describe('Test: ElasticSearch service', () => {
           },
         ],
         remaining: 0,
+        suggest: {
+          'some-suggestion': {
+            text: 'snowflake',
+            term: {
+              field: 'matter'
+            }
+          }
+        },
         scrollId: 'i-am-scroll-id',
         total: 1,
       });
