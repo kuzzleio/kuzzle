@@ -429,7 +429,6 @@ describe('Backend', () => {
     should(application.kerror.get).be.a.Function();
     should(application.kerror.reject).be.a.Function();
     should(application.kerror.getFrom).be.a.Function();
-    should(application.kerror.rejectFrom).be.a.Function();
     should(application.kerror.wrap).be.a.Function();
   });
 

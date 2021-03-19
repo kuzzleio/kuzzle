@@ -73,13 +73,19 @@
         "koncorde_unknown_keyword": {
           "description": "An unknown keyword has been provided in filters",
           "code": 12,
-          "message": "The keyword \"%s\" is not one of the Koncorde filters DSL keywords.",
+          "message": "The keyword \"%s\" is not part of Koncorde filters DSL keywords. Are you trying to use an Elasticsearch query?",
           "class": "BadRequestError"
         },
         "koncorde_restricted_keyword": {
           "description": "A restricted keyword has been provided in filters",
           "code": 13,
           "message": "The %s \"%s\" of Koncorde DSL is not supported for search queries.",
+          "class": "BadRequestError"
+        },
+        "koncorde_dsl_error": {
+          "description": "Provided filters contains an error",
+          "code": 14,
+          "message": "%s",
           "class": "BadRequestError"
         }
       }

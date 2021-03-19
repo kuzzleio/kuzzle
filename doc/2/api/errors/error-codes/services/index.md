@@ -57,6 +57,7 @@ description: Error codes definitions
 | services.storage.invalid_collection_name<br/><pre>0x0101002a</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The collection name "%s" is invalid | A provided collection name is invalid |
 | services.storage.strict_mapping_rejection<br/><pre>0x0101002b</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Cannot create document. Field "%s" is not present in collection "%s:%s" strict mapping | Document rejected because it contains a field that is not declared in the strict mapping. |
 | services.storage.scroll_duration_too_great<br/><pre>0x0101002c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Scroll duration "%s" is too great. | The scroll duration exceed the configured maxium value. (See config.services.storageEngine.maxScrollDuration) |
+| services.storage.unknown_query_keyword<br/><pre>0x0101002d</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not part of Elasticsearch Query DSL. Are you trying to use a Koncorde query? | An unknown keyword has been provided in the search query |
 
 ---
 

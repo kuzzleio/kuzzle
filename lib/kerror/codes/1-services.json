@@ -251,6 +251,12 @@
           "code": 44,
           "message": "Scroll duration \"%s\" is too great.",
           "class": "BadRequestError"
+        },
+        "unknown_query_keyword": {
+          "description": "An unknown keyword has been provided in the search query",
+          "code": 45,
+          "message": "The keyword \"%s\" is not part of Elasticsearch Query DSL. Are you trying to use a Koncorde query?",
+          "class": "BadRequestError"
         }
       }
     },
