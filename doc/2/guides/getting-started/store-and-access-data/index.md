@@ -105,7 +105,7 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-Kuzzle directly exposes directly the data through the API by allowing client to express a query to match documents they need. 
+Kuzzle allows to search for documents through its API, with different query languages depending on your needs.
 
 We'll now use that to search for the documents we're interested in.
 
