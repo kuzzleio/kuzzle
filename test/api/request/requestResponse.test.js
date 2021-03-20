@@ -271,7 +271,7 @@ describe('#RequestResponse', () => {
     });
   });
 
-  describe.only('configure', () => {
+  describe('configure', () => {
     let response;
 
     beforeEach(() => {
