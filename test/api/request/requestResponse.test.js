@@ -271,7 +271,7 @@ describe('#RequestResponse', () => {
     });
   });
 
-  describe('configure', () => {
+  describe.only('configure', () => {
     let response;
 
     beforeEach(() => {
@@ -290,9 +290,11 @@ describe('#RequestResponse', () => {
       should(response.status).eql(402);
     });
 
-    it('should allow the user to configure the raw status of the response', () => {
-      response.configure({ raw: true });
+    it('should allow the user to configure the format of the response', () => {
+      response.configure({ format: 'raw' });
       should(response.raw).be.true();
+      response.configure({ format: 'standard' });
+      should(response.raw).be.false();
     });
   });
 

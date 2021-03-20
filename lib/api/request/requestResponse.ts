@@ -270,9 +270,9 @@ export class RequestResponse {
    */
   configure (
     options: {
-      headers?: JSONObject | null;
+      headers?: JSONObject;
       status?: number;
-      raw?: boolean;
+      format?: 'standard' | 'raw';
     } = {}
   ): void {
     if (options.headers) {
@@ -281,8 +281,13 @@ export class RequestResponse {
 
     this.status = options.status || 200;
 
-    if (options.raw !== undefined) {
-      this.raw = options.raw;
+    switch (options.format) {
+      case 'raw':
+        this.raw = true;
+        break;
+      case 'standard':
+        this.raw = false;
+        break;
     }
   }
 
