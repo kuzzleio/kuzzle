@@ -16,9 +16,9 @@ Allows to directly set internal configuration options.
 ```ts
 configure(
   options: {
-    headers?: JSONObject;
-    status?: number;
-    raw?: boolean;
+    headers?: JSONObject,
+    status?: number,
+    format?: 'standard' | 'raw'
   }): void;
 ```
 
@@ -30,16 +30,16 @@ The `options` object may contain the following properties:
 |------|------|----------------------------------|---------|
 | `headers` | <pre>JSONObject</pre> | Additional response protocol headers | `null` |
 | `status` | <pre>integer</pre> | KuzzleRequest status code, following the HTTP standard | `200` |
-| `raw` | <pre>boolean</pre> | Instead of a Kuzzle response, forward the result directly to the client, without being converted to an API response payload (can be used to answer in a different format than JSON) | `false` |
+| `format` | <pre>string</pre> | The response format, as a `standard` Kuzzle response or in a unwrapped `raw` format instead | `null` |
 
 ### Example
 
 ```js
-request.response.configure(
+request.response.configure({
   headers: {
     'Location': 'http://kuzzle.io'
   },
   status: 302,
-  raw: true,
-);
+  format: 'raw',
+});
 ```
