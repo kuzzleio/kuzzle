@@ -26,11 +26,11 @@ configure(
 
 The `options` object may contain the following properties:
 
-| Name | Type | Description                      | Default |
-|------|------|----------------------------------|---------|
-| `headers` | <pre>JSONObject</pre> | Additional response protocol headers | `null` |
-| `status` | <pre>integer</pre> | KuzzleRequest status code, following the HTTP standard | `200` |
-| `format` | <pre>string</pre> | The response format, as a `standard` Kuzzle response or in a unwrapped `raw` format instead | `null` |
+| Name | Type | Description<br/>(default)        |
+|------|------|----------------------------------|
+| `headers` | <pre>JSONObject</pre>(`null`) | Additional response protocol headers |
+| `status` | <pre>integer</pre>(`200`) | KuzzleRequest status code, following the HTTP standard |
+| `format` | <pre>string</pre>(`null`) | The response format, as a `standard` Kuzzle response or in a unwrapped `raw` format instead |
 
 ### Example
 
