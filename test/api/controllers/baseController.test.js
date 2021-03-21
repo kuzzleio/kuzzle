@@ -682,7 +682,7 @@ describe('#base/native controller', () => {
     });
   });
 
-  describe('#getUserId', () => {
+  describe('#getKuid', () => {
     beforeEach(() => {
       request.context = {
         user: {
@@ -692,7 +692,7 @@ describe('#base/native controller', () => {
     });
 
     it('should extract an user id', () => {
-      const param = nativeController.getUserId(request);
+      const param = nativeController.getKuid(request);
 
       should(param).be.eql('id');
     });
