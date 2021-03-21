@@ -7,6 +7,8 @@ description: KuzzleRequest class getBodyBoolean() method
 
 # getBodyBoolean
 
+<SinceBadge version="auto-version" />
+
 Gets a parameter from the request body and checks that it is a boolean.
 
 Contrary to other parameter types, an unset boolean does not trigger an

@@ -7,6 +7,8 @@ description: KuzzleRequest class getCollection() method
 
 # getCollection
 
+<SinceBadge version="auto-version" />
+
 Returns the collection specified in the request.
 
 ### Arguments

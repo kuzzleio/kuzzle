@@ -235,6 +235,8 @@ The main available properties are the following:
 
 ### Extract parameters from request
 
+<SinceBadge version="auto-version" />
+
 The request object expose methods to extract parameters from the request in a standardized way.
 
 Each of those method will check for the parameter presence and type. In case of a validation failure, corresponding errors will be returned.

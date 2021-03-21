@@ -7,6 +7,8 @@ description: KuzzleRequest class getUser() method
 
 # getUser
 
+<SinceBadge version="auto-version" />
+
 Returns the current user.
 
 ### Arguments

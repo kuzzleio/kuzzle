@@ -7,6 +7,8 @@ description: KuzzleRequest class getArray() method
 
 # getArray
 
+<SinceBadge version="auto-version" />
+
 Gets a parameter from a request arguments and checks that it is an array.
 
 ### Arguments

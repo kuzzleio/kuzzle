@@ -7,6 +7,8 @@ description: KuzzleRequest class getObject() method
 
 # getObject
 
+<SinceBadge version="auto-version" />
+
 Gets a parameter from a request arguments and checks that it is an object.
 
 ### Arguments

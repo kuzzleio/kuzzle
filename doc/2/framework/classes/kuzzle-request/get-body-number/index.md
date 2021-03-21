@@ -7,6 +7,8 @@ description: KuzzleRequest class getBodyNumber() method
 
 # getBodyNumber
 
+<SinceBadge version="auto-version" />
+
 Gets a parameter from a request body and checks that it is a number.
 
 ### Arguments

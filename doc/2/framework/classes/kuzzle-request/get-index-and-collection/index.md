@@ -7,6 +7,8 @@ description: KuzzleRequest class getIndexAndCollection() method
 
 # getIndexAndCollection
 
+<SinceBadge version="auto-version" />
+
 Returns the index and collection specified in the request.
 
 ### Arguments

@@ -7,6 +7,8 @@ description: KuzzleRequest class getBodyInteger() method
 
 # getBodyInteger
 
+<SinceBadge version="auto-version" />
+
 Gets a parameter from a request body and checks that it is an integer.
 
 ### Arguments
