@@ -827,7 +827,7 @@ export class KuzzleRequest {
     options: {
       ifMissing?: 'error' | 'generate' | 'ignore',
       generator?: () => string,
-    } = { generator: uuid.v4, ifMissing: 'error',  }
+    } = { generator: uuid.v4, ifMissing: 'error' }
   ): string {
     const id = this.input.args._id;
 
