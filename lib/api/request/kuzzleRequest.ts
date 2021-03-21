@@ -682,7 +682,7 @@ export class KuzzleRequest {
     return null;
   }
 
- /**
+  /**
   * Returns the search body query according to the http method
   */
   getSearchBody (): JSONObject {
@@ -711,7 +711,7 @@ export class KuzzleRequest {
     scrollTTL: string,
     searchBody: JSONObject,
     size: number,
-  } {
+    } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
     const scrollTTL = this.getScrollTTLParam();
@@ -772,7 +772,7 @@ export class KuzzleRequest {
    * @param name parameter name
    * @param errorName name to use in error messages
    */
-   private _getBoolean (obj: JSONObject, name: string, errorName: string): boolean {
+  private _getBoolean (obj: JSONObject, name: string, errorName: string): boolean {
     let value = get(obj, name);
 
     // In HTTP, booleans are flags: if it's in the querystring, it's set,
