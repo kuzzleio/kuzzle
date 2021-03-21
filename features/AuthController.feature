@@ -95,6 +95,7 @@ Feature: Auth Controller
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieAuth | true                                                 |
+      | jwt        | null                                                 |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
     Then I should receive a result matching:
@@ -113,11 +114,13 @@ Feature: Auth Controller
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieAuth | true                                                 |
+      | jwt        | null                                                 |
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "logout"                                                    |
       | cookieAuth | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
+      | jwt        | null                                                        |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=null;.*/ ] |
     And I send a HTTP "POST" request with:
@@ -126,6 +129,7 @@ Feature: Auth Controller
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieAuth | true                                                 |
+      | jwt        | null                                                 |
 
   # auth:refreshToken ==========================================================
 
@@ -137,11 +141,13 @@ Feature: Auth Controller
       | strategy   | "local"                                              |
       | body       | { "username": "test-admin", "password": "password" } |
       | cookieAuth | true                                                 |
+      | jwt        | null                                                 |
     When I send a HTTP "POST" request with:
       | controller | "auth"                                                      |
       | action     | "refreshToken"                                              |
       | cookieAuth | true                                                        |
       | headers    | { cookie: this.props.rawResponse.headers['set-cookie'][0] } |
+      | jwt        | null                                                        |
     Then The raw response should match:
       | headers.set-cookie | [ /authToken=[^;]+;.*/ ] |
 
