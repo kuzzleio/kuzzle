@@ -118,7 +118,7 @@ app.controller.register('greeting', {
     sayHello: {
       // Handler function for the "greeting:sayHello" action
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
@@ -172,7 +172,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         // generated route: "GET http://<host>:<port>/greeting/hello"
@@ -197,7 +197,7 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         // "name" comes from the url parameter
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         { verb: 'get', path: '/email/send/:name' },
@@ -232,6 +232,14 @@ The main available properties are the following:
  - `action`: API action name
  - `args`: Action arguments
  - `body`: Body content
+
+### Extract parameters from request
+
+The request object expose methods to extract parameters from the request in a standardized way.
+
+Each of those method will check for the parameter presence and type. In case of a validation failure, corresponding errors will be returned.
+
+All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc. 
 
 ### HTTP
 
@@ -274,6 +282,11 @@ app.controller.register('greeting', {
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
       http: [
         { verb: 'POST', path: 'greeting/hello/:name' }
@@ -319,6 +332,11 @@ app.controller.register('greeting', {
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
     }
   }
@@ -347,10 +365,12 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
+        assert(request.context.connection.protocol === 'http');
         // Unauthenticated users are anonymous 
         // and the anonymous user ID is "-1"
         assert(request.context.user._id === '-1');
-        assert(request.context.connection.protocol === 'http');
+        // equivalent to
+        assert(request.getKuid() === '-1');
       },
     }
   }
@@ -389,7 +409,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
@@ -498,7 +518,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }

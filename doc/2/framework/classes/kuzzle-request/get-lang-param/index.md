@@ -7,7 +7,7 @@ description: KuzzleRequest class getLangParam() method
 
 # getLangParam
 
-Sets the request result and status
+Returns the `lang` param of the request.
 
 ### Arguments
 
