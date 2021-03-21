@@ -1,0 +1,32 @@
+---
+code: true
+type: page
+title: getBodyString
+description: KuzzleRequest class getBodyString() method
+---
+
+# getBodyString
+
+Gets a parameter from a request body and checks that it is a string.
+
+### Arguments
+
+```ts
+getBodyString (name: string, def: string = null): string
+```
+
+</br>
+
+| Name   | Type              | Description    |
+|--------|-------------------|----------------|
+| `name` | <pre>string</pre> | Parameter name |
+| `def` | <pre>string</pre> | Default value to return if the parameter is not set |
+
+
+### Example
+
+```ts
+const name = request.getBodyString('name');
+// equivalent
+const name = request.input.body.name;
+```

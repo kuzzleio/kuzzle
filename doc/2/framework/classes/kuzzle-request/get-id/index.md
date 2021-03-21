@@ -1,0 +1,41 @@
+---
+code: true
+type: page
+title: getId
+description: KuzzleRequest class getId() method
+---
+
+# getId
+
+Returns the `_id` specified in the request.
+
+### Arguments
+
+```ts
+getId (
+    options: {
+      ifMissing?: 'error' | 'generate' | 'ignore',
+      generator?: () => string,
+    } = { generator: uuid.v4, ifMissing: 'error' }
+  ): string
+```
+
+</br>
+
+**Options:**
+| Name   | Type              | Description    |
+|--------|-------------------|----------------|
+| `ifMissing` | <pre>'error' | 'generate' | 'ignore'</pre> | Method behavior if the ID is missing |
+| `generator` | <pre>() => string</pre> | Function used to generate an ID |
+
+
+### Example
+
+```ts
+const id = request.getId();
+// equivalent
+const id = request.input.args._id;
+
+// generate a default ID if it's missing 
+const id = request.getId({ ifMissing: 'generate' });
+```
