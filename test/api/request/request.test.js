@@ -323,7 +323,7 @@ describe('#Request', () => {
     should(rq.deprecations).be.undefined();
   });
 
-  describe('param extraction methods',  () => {
+  describe('param extraction methods', () => {
     let request;
 
     beforeEach(() => {

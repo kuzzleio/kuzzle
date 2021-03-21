@@ -334,7 +334,7 @@ export class KuzzleRequest {
   }
 
   /**
-   * Gets a parameter from a request body and checks that it is a boolean
+   * Gets a parameter from a request body and checks that it is a boolean.
    * Contrary to other parameter types, an unset boolean does not trigger an
    * error, instead it's considered as 'false'
    *
