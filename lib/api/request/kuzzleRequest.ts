@@ -872,23 +872,24 @@ export class KuzzleRequest {
     return null;
   }
 
-  /**
+ /**
   * Returns the search body query according to the http method
   */
   getSearchBody (): JSONObject {
-    if ( this.context.connection.protocol === 'http'
-      && this.context.connection.misc.verb === 'GET'
+    if ( this.context.connection.protocol !== 'http'
+      || this.context.connection.misc.verb !== 'GET'
     ) {
-      const searchBody = this.getString('searchBody', '{}');
-
-      try {
-        return JSON.parse(searchBody);
-      }
-      catch (err) {
-        throw assertionError.get('invalid_argument', err.message);
-      }
+      return this.getBody({});
     }
-    return this.getBody({});
+
+    const searchBody = this.getString('searchBody', '{}');
+
+    try {
+      return JSON.parse(searchBody);
+    }
+    catch (err) {
+      throw assertionError.get('invalid_argument', err.message);
+    }
   }
 
   getSearchParams (): {
