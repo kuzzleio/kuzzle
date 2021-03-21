@@ -790,8 +790,8 @@ export class KuzzleRequest {
     }
 
     return {
-      index: this.input.args.index,
       collection: this.input.args.collection,
+      index: this.input.args.index,
     };
   }
 
@@ -820,14 +820,14 @@ export class KuzzleRequest {
    *
    * @param options Additional options
    *    - `ifMissing`: method behavior if the ID is missing (default: 'error')
-   *    - `generator`: function used to generate an ID (default: 'uuid')
+   *    - `generator`: function used to generate an ID (default: 'uuid.v4')
    *
    */
   getId (
     options: {
       ifMissing?: 'error' | 'generate' | 'ignore',
       generator?: () => string,
-    } = { ifMissing: 'error', generator: uuid }
+    } = { generator: uuid.v4, ifMissing: 'error',  }
   ): string {
     const id = this.input.args._id;
 
@@ -897,7 +897,7 @@ export class KuzzleRequest {
     scrollTTL: string,
     searchBody: JSONObject,
     size: number,
-  } {
+    } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
     const scrollTTL = this.getScrollTTLParam();
