@@ -11,9 +11,9 @@ describe('#RequestInput', () => {
     should(input.body).be.null();
     should(input.controller).be.null();
     should(input.action).be.null();
-    should(input.resource.index).be.null();
-    should(input.resource.collection).be.null();
-    should(input.resource._id).be.null();
+    should(input.resource.index).be.undefined();
+    should(input.resource.collection).be.undefined();
+    should(input.resource._id).be.undefined();
     should(input.args).be.an.Object().and.be.empty();
     should(input.jwt).be.null();
     should(input.headers).be.null();
@@ -49,6 +49,9 @@ describe('#RequestInput', () => {
       foo: 'bar',
       bar: 'foo',
       headers: {foo: 'args.header'},
+      _id: 'id',
+      index: 'index',
+      collection: 'collection',
     });
     should(input.headers).match({foo: 'input.header'});
   });
@@ -72,7 +75,7 @@ describe('#RequestInput', () => {
     });
 
     // testing string-only parameters
-    ['controller', 'action', 'index', 'collection', '_id', 'jwt'].forEach(k => {
+    ['controller', 'action', 'jwt'].forEach(k => {
       should(function () { new RequestInput({[k]: []}); }).throw(`Attribute ${k} must be of type "string"`);
       should(function () { new RequestInput({[k]: 123}); }).throw(`Attribute ${k} must be of type "string"`);
       should(function () { new RequestInput({[k]: false}); }).throw(`Attribute ${k} must be of type "string"`);

@@ -32,11 +32,11 @@ describe('#RequestResponse', () => {
       should(response.requestId).be.exactly(req.id);
       should(response.controller).be.exactly(req.input.controller);
       should(response.action).be.exactly(req.input.action);
-      should(response.collection).be.exactly(req.input.resource.collection);
-      should(response.index).be.exactly(req.input.resource.index);
+      should(response.collection).be.exactly(req.input.args.collection);
+      should(response.index).be.exactly(req.input.args.index);
       should(response.volatile).be.exactly(req.input.volatile);
       should(response.headers).match({
-        'X-Kuzzle-Node': 'nasty-author-4242'
+        'X-Kuzzle-Node': 'knode-nasty-author-4242'
       });
       should(response.result).be.exactly(req.result);
       should(response.node).be.eql(global.kuzzle.id);
@@ -170,7 +170,7 @@ describe('#RequestResponse', () => {
       response.setHeaders(null);
 
       should(response.headers).match({
-        'X-Kuzzle-Node': 'nasty-author-4242'
+        'X-Kuzzle-Node': 'knode-nasty-author-4242'
       });
     });
 
@@ -198,7 +198,7 @@ describe('#RequestResponse', () => {
         should(() => response.setHeader(name, 'foo')).not.throw();
 
         should(response.headers).match({
-          'X-Kuzzle-Node': 'nasty-author-4242'
+          'X-Kuzzle-Node': 'knode-nasty-author-4242'
         });
       });
     });

@@ -188,8 +188,8 @@ class FunctionalTestPlugin {
       client = new this.context.constructors.ESClient(),
       esRequest = {
         body: request.input.body,
-        id: request.input.resource._id,
-        index: request.input.resource.index,
+        id: request.input.args._id,
+        index: request.input.args.index,
       };
 
     const { body } = await client.index(esRequest);

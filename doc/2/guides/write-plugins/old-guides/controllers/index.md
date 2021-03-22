@@ -127,12 +127,10 @@ Quick summary of how queries are normalized:
 
   - dynamic arguments provided in the URL, and query string arguments are stored in `request.input.args`
   - the body content is made available in `request.input.body`
-  - if the URL contains an `index`, a `collection` or a `_id` argument, it will be stored in `request.input.resource`
   - request headers can be found in `request.context.connection.misc.headers`
 
 - Other protocols:
   - the `body` property is stored in `request.input.body`
-  - these root properties are available in `request.input.resource`: `index`, `collection`, `_id`
   - any other properties at the root of the query object will be stored in `request.input.args`
 
 ---

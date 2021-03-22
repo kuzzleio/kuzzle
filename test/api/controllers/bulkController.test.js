@@ -98,7 +98,7 @@ describe('Test the bulk controller', () => {
 
       request.input.action = 'write';
       request.input.body = _source;
-      request.input.resource._id = _id;
+      request.input.args._id = _id;
 
       kuzzle.ask
         .withArgs('core:storage:public:document:createOrReplace')

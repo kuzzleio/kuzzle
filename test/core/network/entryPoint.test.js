@@ -727,7 +727,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(entrypoint.logger.info)
         .be.calledOnce()
-        .be.calledWithMatch(/^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 345 "http:\/\/referer.com" "user agent"$/);
+        .be.calledWithMatch(/^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 357 "http:\/\/referer.com" "user agent"$/);
     });
 
     it('should extract the user from Basic auth header', () => {
@@ -810,7 +810,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(entrypoint.logger.info)
         .be.calledOnce()
-        .be.calledWithMatch(/^ip - - \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "GET url HTTP\/1.0" 300 148 - -$/);
+        .be.calledWithMatch(/^ip - - \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "GET url HTTP\/1.0" 300 154 - -$/);
     });
 
     it('should handle the case of a user that cannot be extracted from a jwt', () => {
@@ -847,7 +847,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(entrypoint.logger.info)
         .be.calledOnce()
-        .be.calledWithMatch(/^ip - - \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection\/id\?timestamp=timestamp&requestId=requestId&foo=bar WEBSOCKET" 200 121 - -$/);
+        .be.calledWithMatch(/^ip - - \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection\/id\?timestamp=timestamp&requestId=requestId&foo=bar WEBSOCKET" 200 127 - -$/);
     });
 
     it('should use the already verified user from the request, if available', () => {
@@ -871,7 +871,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(entrypoint.logger.info)
         .be.calledOnce()
-        .be.calledWithMatch(/^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 357 - -$/);
+        .be.calledWithMatch(/^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 369 - -$/);
     });
   });
 

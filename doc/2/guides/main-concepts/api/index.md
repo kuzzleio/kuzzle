@@ -26,7 +26,7 @@ Kuzzle is able to integrate to its API any protocol operating on [IP](https://en
 More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/start-writing-protocols).  
 :::
 
-## KuzzleRequest Format
+## Request Format
 
 Except for HTTP, Kuzzle expects the exact same request format for all communication protocols.
 
@@ -177,7 +177,7 @@ kourou sdk:request server:now --display ""
 #   "action": "now",
 #   "collection": null,
 #   "index": null,
-#   "node": "nasty-author-4242",
+#   "node": "knode-nasty-author-4242",
 #   "volatile": {
 #     "sdkInstanceId": "d301a7c7-ed99-4ede-94c4-fb1dc2156789",
 #     "sdkName": "js@7.4.1"
@@ -237,7 +237,7 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result":{
     "_source":{
       "some": "document content",
@@ -295,7 +295,7 @@ The `result` object is the notification content, and it has the following struct
   "protocol": "websocket",
   "timestamp": 1497517009931,
   "user": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result": {
     "count": 42
   },

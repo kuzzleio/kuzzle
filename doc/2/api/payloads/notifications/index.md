@@ -61,7 +61,7 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result":{
     "_source":{
       "some": "document content",
@@ -121,7 +121,7 @@ The `result` object is the notification content, and it has the following struct
   "protocol": "websocket",
   "timestamp": 1497517009931,
   "user": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result": {
     "count": 42
   },

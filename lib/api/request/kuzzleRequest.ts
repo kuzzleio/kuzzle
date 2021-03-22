@@ -283,12 +283,12 @@ export class KuzzleRequest {
   serialize (): { data: JSONObject, options: JSONObject } {
     const serialized = {
       data: {
-        _id: this[_input].resource._id,
+        _id: this[_input].args._id,
         action: this[_input].action,
         body: this[_input].body,
-        collection: this[_input].resource.collection,
+        collection: this[_input].args.collection,
         controller: this[_input].controller,
-        index: this[_input].resource.index,
+        index: this[_input].args.index,
         jwt: this[_input].jwt,
         requestId: this.id,
         timestamp: this[_timestamp],

@@ -418,7 +418,7 @@ describe('Test: collection controller', () => {
 
       should(kuzzle.ask).calledWith(
         'core:realtime:collections:get',
-        request.input.resource.index);
+        request.input.args.index);
 
       should(kuzzle.ask).calledWith('core:storage:public:collection:list', index);
 
@@ -587,8 +587,8 @@ describe('Test: collection controller', () => {
       should(response).match(true);
       should(kuzzle.ask).calledWith(
         'core:storage:public:collection:exist',
-        request.input.resource.index,
-        request.input.resource.collection);
+        request.input.args.index,
+        request.input.args.collection);
     });
   });
 

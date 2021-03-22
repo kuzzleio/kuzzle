@@ -312,6 +312,7 @@ describe('Test: ElasticSearch service', () => {
             ],
             total: { value: 1 },
           },
+          suggest: { some: 'suggest' },
           _scroll_id: 'i-am-scroll-id',
         }
       });
@@ -343,6 +344,7 @@ describe('Test: ElasticSearch service', () => {
           },
         ],
         remaining: 0,
+        suggest: { some: 'suggest' },
         scrollId: 'i-am-scroll-id',
         total: 1,
       });
