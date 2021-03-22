@@ -83,7 +83,6 @@
     "winston-elasticsearch": "0.15.2",
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
-    "ws": "^7.4.3",
     "yargs": "^16.2.0",
     "zeromq": "^5.2.0"
   },
