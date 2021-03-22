@@ -651,20 +651,20 @@ describe('core/network/protocols/http', () => {
         gzip: sinon.stub().yields(new Error('foo')),
       });
       HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
-      httpWs = new HttpWs();
-      await httpWs.init(entryPoint);
+      const protocol = new HttpWs();
+      await protocol.init(entryPoint);
 
       try {
         const result = new KuzzleRequest({});
         result.setResult('yo');
         kuzzle.router.http.route.yields(result);
 
-        httpWs.server._httpOnMessage('get', '/', '', {
+        protocol.server._httpOnMessage('get', '/', '', {
           'accept-encoding': 'gzip',
         });
-        httpWs.server._httpResponse._onData('', true);
+        protocol.server._httpResponse._onData('', true);
 
-        const response = httpWs.server._httpResponse;
+        const response = protocol.server._httpResponse;
 
         // the response is processed in background tasks, need to wait for it
         // to finish
@@ -686,6 +686,7 @@ describe('core/network/protocols/http', () => {
       finally {
         mockRequire.stop('zlib');
         HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+        clearInterval(protocol.nowInterval);
       }
     });
 
@@ -694,20 +695,20 @@ describe('core/network/protocols/http', () => {
         deflate: sinon.stub().yields(new Error('foo')),
       });
       HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
-      httpWs = new HttpWs();
-      await httpWs.init(entryPoint);
+      const protocol = new HttpWs();
+      await protocol.init(entryPoint);
 
       try {
         const result = new KuzzleRequest({});
         result.setResult('yo');
         kuzzle.router.http.route.yields(result);
 
-        httpWs.server._httpOnMessage('get', '/', '', {
+        protocol.server._httpOnMessage('get', '/', '', {
           'accept-encoding': 'deflate',
         });
-        httpWs.server._httpResponse._onData('', true);
+        protocol.server._httpResponse._onData('', true);
 
-        const response = httpWs.server._httpResponse;
+        const response = protocol.server._httpResponse;
 
         // the response is processed in background tasks, need to wait for it
         // to finish
@@ -729,6 +730,7 @@ describe('core/network/protocols/http', () => {
       finally {
         mockRequire.stop('zlib');
         HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+        clearInterval(protocol.nowInterval);
       }
     });
 
