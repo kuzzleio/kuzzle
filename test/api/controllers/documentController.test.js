@@ -77,7 +77,7 @@ describe('DocumentController', () => {
     });
 
     it('should reject if index contains a comma', () => {
-      request.input.resource.index = '%test,anotherIndex';
+      request.input.args.index = '%test,anotherIndex';
       request.input.action = 'search';
 
       return should(documentController.search(request)).rejectedWith(
@@ -86,7 +86,7 @@ describe('DocumentController', () => {
     });
 
     it('should reject if collection contains a comma', () => {
-      request.input.resource.collection = 'unit-test-documentController,anotherCollection';
+      request.input.args.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
 
       return should(documentController.search(request)).rejectedWith(
@@ -186,7 +186,7 @@ describe('DocumentController', () => {
   describe('#exists', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:exist').resolves(true);
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       const response = await documentController.exists(request);
 
@@ -209,7 +209,7 @@ describe('DocumentController', () => {
         some: 'other'
       }));
 
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       const response = await documentController.get(request);
 
@@ -331,7 +331,7 @@ describe('DocumentController', () => {
     });
 
     it('should forward to the store module and notify', async () => {
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
@@ -537,7 +537,7 @@ describe('DocumentController', () => {
           created: true
         });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -611,7 +611,7 @@ describe('DocumentController', () => {
         _source: { ...content, name: 'gordon' }
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -693,7 +693,7 @@ describe('DocumentController', () => {
       defaultValues = { def: 'val' };
 
       request.input.body = { changes, default: defaultValues };
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
 
       kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
         _id: '_id',
@@ -1016,7 +1016,7 @@ describe('DocumentController', () => {
         _source: '_source'
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -1051,7 +1051,7 @@ describe('DocumentController', () => {
         'core:realtime:document:notify',
         request,
         actionEnum.REPLACE,
-        { _id: request.input.resource._id, _source: content });
+        { _id: request.input.args._id, _source: content });
 
       should(response).match({
         _id: '_id',
@@ -1075,7 +1075,7 @@ describe('DocumentController', () => {
 
   describe('#delete', () => {
     beforeEach(() => {
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
 
       kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
@@ -1153,7 +1153,7 @@ describe('DocumentController', () => {
         _source: { foo: 'bar' }
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {

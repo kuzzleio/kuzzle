@@ -40,7 +40,7 @@ describe('/api/controllers/securityController', () => {
   describe('#refresh', () => {
     it('should refresh the allowed collections', async () => {
       for (const collection of ['users', 'roles', 'profiles']) {
-        request.input.resource.collection = collection;
+        request.input.args.collection = collection;
 
         const response = await securityController.refresh(request);
 
@@ -53,7 +53,7 @@ describe('/api/controllers/securityController', () => {
     });
 
     it('should raise an error with unknown collection', async () => {
-      request.input.resource.collection = 'frontend-security';
+      request.input.args.collection = 'frontend-security';
 
       await should(securityController.refresh(request))
         .rejectedWith({ id: 'api.assert.unexpected_argument' });

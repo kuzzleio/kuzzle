@@ -77,15 +77,15 @@ describe('Test: security controller - roles', () => {
     let createdRole;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { foo: 'bar' };
 
       createdRole = new Role();
-      createdRole._id = request.input.resource._id;
+      createdRole._id = request.input.args._id;
       Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createOrReplaceStub = kuzzle.ask
-        .withArgs(createOrReplaceEvent, request.input.resource._id)
+        .withArgs(createOrReplaceEvent, request.input.args._id)
         .resolves(createdRole);
     });
 
@@ -94,7 +94,7 @@ describe('Test: security controller - roles', () => {
 
       should(createOrReplaceStub).calledWithMatch(
         createOrReplaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: false,
@@ -129,7 +129,7 @@ describe('Test: security controller - roles', () => {
 
       should(createOrReplaceStub).calledWithMatch(
         createOrReplaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: true,
@@ -139,7 +139,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.createOrReplaceRole(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -163,15 +163,15 @@ describe('Test: security controller - roles', () => {
     let createdRole;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { foo: 'bar' };
 
       createdRole = new Role();
-      createdRole._id = request.input.resource._id;
+      createdRole._id = request.input.args._id;
       Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
 
       createStub = kuzzle.ask
-        .withArgs(createEvent, request.input.resource._id)
+        .withArgs(createEvent, request.input.args._id)
         .resolves(createdRole);
     });
 
@@ -180,7 +180,7 @@ describe('Test: security controller - roles', () => {
 
       should(createStub).calledWithMatch(
         createEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: false,
@@ -215,7 +215,7 @@ describe('Test: security controller - roles', () => {
 
       should(createStub).calledWithMatch(
         createEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: true,
@@ -225,7 +225,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.createRole(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -248,8 +248,8 @@ describe('Test: security controller - roles', () => {
     let getStub;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
-      getStub = kuzzle.ask.withArgs(getEvent, request.input.resource._id);
+      request.input.args._id = 'test';
+      getStub = kuzzle.ask.withArgs(getEvent, request.input.args._id);
     });
 
     it('should resolve to an object on a getRole call', async () => {
@@ -282,7 +282,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.getRole(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -478,7 +478,7 @@ describe('Test: security controller - roles', () => {
     let updatedRole;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { foo: 'bar' };
 
       updatedRole = new Role();
@@ -493,7 +493,7 @@ describe('Test: security controller - roles', () => {
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: false,
@@ -513,7 +513,7 @@ describe('Test: security controller - roles', () => {
     });
 
     it('should reject if no id is given', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.updateRole(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -547,7 +547,7 @@ describe('Test: security controller - roles', () => {
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           force: true,
@@ -563,7 +563,7 @@ describe('Test: security controller - roles', () => {
     let deleteStub;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
 
       deleteStub = kuzzle.ask.withArgs(deleteEvent);
     });
@@ -573,14 +573,14 @@ describe('Test: security controller - roles', () => {
 
       should(deleteStub).calledWithMatch(
         deleteEvent,
-        request.input.resource._id,
+        request.input.args._id,
         { refresh: 'wait_for' });
 
-      should(response).match({ _id: request.input.resource._id });
+      should(response).match({ _id: request.input.args._id });
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.deleteRole(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -595,7 +595,7 @@ describe('Test: security controller - roles', () => {
 
       should(deleteStub).calledWithMatch(
         deleteEvent,
-        request.input.resource._id,
+        request.input.args._id,
         { refresh: 'false' });
     });
   });

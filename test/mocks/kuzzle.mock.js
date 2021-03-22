@@ -22,7 +22,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       writable: true,
     });
 
-    this.id = 'nasty-author-4242';
+    this.id = 'knode-nasty-author-4242';
     this.state = kuzzleStateEnum.RUNNING;
 
     // we need a deep copy here

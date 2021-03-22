@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.10.1",
+  "version": "2.10.3",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -17,8 +17,8 @@
     "dev": "node docker/scripts/reloader.js --inspect=0.0.0.0:9229 -r ts-node/register ",
     "dev:test": "npm run dev -- docker/scripts/start-kuzzle-dev.ts --enable-plugins functional-test-plugin",
     "test": "npm run --silent test:lint && npm run test:unit:coverage && npm run test:functional",
-    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha",
-    "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha",
+    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
+    "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha --exit",
     "test:functional": "npm run test:functional:http && npm run test:functional:websocket",
     "test:functional:http": "KUZZLE_PROTOCOL=http npx cucumber-js --profile http",
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket npx cucumber-js --profile websocket",
@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.11.0",
-    "aedes": "^0.44.2",
+    "aedes": "^0.45.0",
     "bluebird": "^3.7.2",
     "bufferutil": "^4.0.3",
     "busboy": "^0.3.1",
@@ -58,7 +58,7 @@
     "didyoumean": "^1.2.1",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
-    "inquirer": "^7.3.3",
+    "inquirer": "^8.0.0",
     "ioredis": "^4.23.0",
     "ip": "^1.1.5",
     "json-stable-stringify": "^1.0.1",
@@ -83,10 +83,10 @@
     "uuid": "^8.3.2",
     "validator": "^13.5.2",
     "winston": "^3.3.3",
-    "winston-elasticsearch": "0.14.0",
+    "winston-elasticsearch": "0.15.2",
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
-    "ws": "^7.4.3",
+    "ws": "^7.4.4",
     "yargs": "^16.2.0",
     "zeromq": "^6.0.0-beta.5"
   },
@@ -96,16 +96,16 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.168",
-    "@typescript-eslint/eslint-plugin": "^4.15.2",
-    "@typescript-eslint/parser": "^4.15.2",
+    "@typescript-eslint/eslint-plugin": "^4.17.0",
+    "@typescript-eslint/parser": "^4.17.0",
     "async": "^3.2.0",
     "chokidar": "^3.5.1",
     "codecov": "^3.8.1",
     "cucumber": "^6.0.5",
-    "eslint": "^7.20.0",
+    "eslint": "^7.21.0",
     "js-yaml": "^4.0.0",
     "kuzdoc": "^1.4.5",
-    "mocha": "^8.3.0",
+    "mocha": "^8.3.2",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.6",
     "nyc": "^15.1.0",
@@ -117,7 +117,7 @@
     "sinon": "^9.2.4",
     "strip-json-comments": "^3.1.1",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.2"
+    "typescript": "^4.2.3"
   },
   "engines": {
     "node": ">= 12.13.0"

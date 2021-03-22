@@ -97,7 +97,7 @@ describe('Test: security controller - users', () => {
 
     beforeEach(() => {
       profileIds = ['foo' ];
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = {
         content: {name: 'John Doe', profileIds},
         credentials: {someStrategy: {some: 'credentials'}}
@@ -106,10 +106,10 @@ describe('Test: security controller - users', () => {
 
       fakeUser = new User();
       createStub = kuzzle.ask
-        .withArgs(createEvent, request.input.resource._id, profileIds, content)
+        .withArgs(createEvent, request.input.args._id, profileIds, content)
         .resolves(fakeUser);
       deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, request.input.resource._id, sinon.match.object)
+        .withArgs(deleteEvent, request.input.args._id, sinon.match.object)
         .resolves();
 
       strategyCreateStub = sinon.stub().resolves();
@@ -163,14 +163,14 @@ describe('Test: security controller - users', () => {
 
       should(kuzzle.ask).calledWithMatch(
         createEvent,
-        request.input.resource._id,
+        request.input.args._id,
         profileIds,
         content,
         { refresh: 'wait_for' });
 
       should(kuzzle.ask).calledWithMatch(
         deleteEvent,
-        request.input.resource._id,
+        request.input.args._id,
         { refresh: 'false' });
     });
 
@@ -184,7 +184,7 @@ describe('Test: security controller - users', () => {
 
       should(kuzzle.ask).calledWithMatch(
         deleteEvent,
-        request.input.resource._id,
+        request.input.args._id,
         { refresh: 'false' });
     });
 
@@ -230,7 +230,7 @@ describe('Test: security controller - users', () => {
 
       should(strategyDeleteStub).calledWithMatch(
         request,
-        request.input.resource._id,
+        request.input.args._id,
         'someStrategy');
     });
 
@@ -303,10 +303,10 @@ describe('Test: security controller - users', () => {
       user._id = 'foo';
       user.bar = 'baz';
 
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       kuzzle.ask
-        .withArgs('core:security:user:get', request.input.resource._id)
+        .withArgs('core:security:user:get', request.input.args._id)
         .resolves(user);
 
       const response = await securityController.getUser(request);
@@ -318,12 +318,12 @@ describe('Test: security controller - users', () => {
     });
 
     it('should forward errors from the security module', () => {
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       const error = new Error('oh noes');
 
       kuzzle.ask
-        .withArgs('core:security:user:get', request.input.resource._id)
+        .withArgs('core:security:user:get', request.input.args._id)
         .rejects(error);
 
       return should(securityController.getUser(request)).rejectedWith(error);
@@ -583,7 +583,7 @@ describe('Test: security controller - users', () => {
     beforeEach(() => {
       deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
     });
 
     it('should return a valid response', async () => {
@@ -597,7 +597,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no id is given', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.deleteUser(request))
         .rejectedWith(BadRequestError, {
@@ -633,7 +633,7 @@ describe('Test: security controller - users', () => {
 
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser').resolves(createdUser);
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = {
         content: { name: 'John Doe', profileIds: ['default'] }
       };
@@ -689,7 +689,7 @@ describe('Test: security controller - users', () => {
 
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser').resolves(createdUser);
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = {
         content: { name: 'John Doe' }
       };
@@ -750,14 +750,14 @@ describe('Test: security controller - users', () => {
     let updatedUser;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { foo: 'bar' };
 
       updatedUser = new User();
-      updatedUser._id = request.input.resource._id;
+      updatedUser._id = request.input.args._id;
 
       updateStub = kuzzle.ask
-        .withArgs(updateEvent, request.input.resource._id)
+        .withArgs(updateEvent, request.input.args._id)
         .resolves(updatedUser);
     });
 
@@ -787,7 +787,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no id is given', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.updateUser(request))
         .rejectedWith(BadRequestError, {
@@ -839,13 +839,13 @@ describe('Test: security controller - users', () => {
     let replacedUser;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { foo: 'bar', profileIds: ['qux'] };
 
       replacedUser = new User();
 
       replaceStub = kuzzle.ask
-        .withArgs(replaceEvent, request.input.resource._id)
+        .withArgs(replaceEvent, request.input.args._id)
         .resolves(replacedUser);
     });
 
@@ -859,7 +859,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if there is no id provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.replaceUser(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -898,14 +898,14 @@ describe('Test: security controller - users', () => {
 
       Object.assign(
         replacedUser,
-        {_id: request.input.resource._id},
+        {_id: request.input.args._id},
         replacedUserContent);
 
       const response = await securityController.replaceUser(request);
 
       should(replaceStub).calledWithMatch(
         replaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body.profileIds,
         request.input.body,
         {
@@ -915,7 +915,7 @@ describe('Test: security controller - users', () => {
 
       should(response).be.an.Object().and.not.instanceof(User);
       should(response).match({
-        _id: request.input.resource._id,
+        _id: request.input.args._id,
         _source: replacedUserContent
       });
     });
@@ -927,7 +927,7 @@ describe('Test: security controller - users', () => {
 
       should(replaceStub).calledWithMatch(
         replaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body.profileIds,
         request.input.body,
         {
@@ -944,10 +944,10 @@ describe('Test: security controller - users', () => {
     let getStub;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
-      returnedUser._id = request.input.resource._id;
+      request.input.args._id = 'test';
+      returnedUser._id = request.input.args._id;
       getStub = kuzzle.ask
-        .withArgs(getEvent, request.input.resource._id)
+        .withArgs(getEvent, request.input.args._id)
         .resolves(returnedUser);
 
       kuzzle.pluginsManager.listStrategies.returns([exampleStrategy]);
@@ -967,7 +967,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should return empty when anonymous id is provided', async () => {
-      request.input.resource._id = '-1';
+      request.input.args._id = '-1';
 
       const response = await securityController.getUserStrategies(request);
 
@@ -978,10 +978,10 @@ describe('Test: security controller - users', () => {
 
     it('should reject if user is not found', async () => {
       const error = new Error('foo');
-      request.input.resource._id = 'alyx';
+      request.input.args._id = 'alyx';
 
       getStub
-        .withArgs(getEvent, request.input.resource._id)
+        .withArgs(getEvent, request.input.args._id)
         .rejects(error);
 
       await should(securityController.getUserStrategies(request))
@@ -989,7 +989,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.getUserStrategies(request))
         .rejectedWith(BadRequestError, {
@@ -1007,14 +1007,14 @@ describe('Test: security controller - users', () => {
     let returnedUser;
 
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
 
       returnedUser = new User();
-      returnedUser._id = request.input.resource._id;
+      returnedUser._id = request.input.args._id;
       sinon.stub(returnedUser, 'getRights');
 
       getStub = kuzzle.ask
-        .withArgs(getEvent, request.input.resource._id)
+        .withArgs(getEvent, request.input.args._id)
         .resolves(returnedUser);
     });
 
@@ -1040,7 +1040,7 @@ describe('Test: security controller - users', () => {
 
       const response = await securityController.getUserRights(request);
 
-      should(getStub).calledWith(getEvent, request.input.resource._id);
+      should(getStub).calledWith(getEvent, request.input.args._id);
 
       should(response).be.an.Object().and.not.empty();
       should(response.hits).be.an.Array().and.have.length(2);
@@ -1051,7 +1051,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.getUserRights(request))
         .rejectedWith(BadRequestError, {
@@ -1087,7 +1087,7 @@ describe('Test: security controller - users', () => {
 
   describe('#revokeTokens', () => {
     beforeEach(() => {
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
     });
 
     it('should revoke all tokens related to a given user', async () => {
@@ -1095,11 +1095,11 @@ describe('Test: security controller - users', () => {
 
       should(kuzzle.ask).calledWithMatch(
         'core:security:token:deleteByKuid',
-        request.input.resource._id);
+        request.input.args._id);
     });
 
     it('should reject if no id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.revokeTokens(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -1109,7 +1109,7 @@ describe('Test: security controller - users', () => {
       const error = new Error('foo');
 
       kuzzle.ask
-        .withArgs('core:security:token:deleteByKuid', request.input.resource._id)
+        .withArgs('core:security:token:deleteByKuid', request.input.args._id)
         .rejects(error);
 
       return should(securityController.revokeTokens(request))
@@ -1128,7 +1128,7 @@ describe('Test: security controller - users', () => {
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser');
 
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
 
       createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
 

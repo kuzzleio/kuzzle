@@ -44,6 +44,16 @@ For example, the `.kuzzlerc` parameter `services.storageEngine.host` in example 
 export kuzzle_services__storageEngine__host="http://localhost:9200"
 ```
 
+You can also pass stringified JSON values this way to override non-scalar values such as objects or arrays.  
+To do so, prefix a valid stringified JSON with `*json:` to instruct Kuzzle to parse the content of the value as JSON.
+
+Examples:
+
+```bash
+export kuzzle_security__restrictedProfileIds='*json:["default","foo","bar"]'
+export kuzzle_services__common='*json:{"defaultInitTimeout":120000, "retryInterval":1000}'
+```
+
 ### Docker Compose
 
 Environment variables are particularly handy when running Kuzzle in a **Docker** container. Using **Docker Compose**, they can easily be configured in the `environment` section of the `docker-compose.yml` file. For example, here's how we pass environment variables to Kuzzle in our default docker-compose file:

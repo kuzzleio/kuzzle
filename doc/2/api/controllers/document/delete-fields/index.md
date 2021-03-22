@@ -47,12 +47,19 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:deleteFields <index> <collection> <body>
+kourou document:deleteFields <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: unique ID of the document where the fields should be removed
+- `_id`: unique ID of the document where the fields should be removed
 - `index`: index name
 
 ### Optional:

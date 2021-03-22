@@ -6,7 +6,7 @@
 import should from 'should/as-function';
 import { omit } from 'lodash';
 
-import { Backend, Request, Mutex } from '../../index';
+import { Backend, KuzzleRequest, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 
 const app = new Backend('functional-tests-app');
@@ -38,11 +38,11 @@ async function loadAdditionalPlugins() {
 
 if (! process.env.TRAVIS) {
   // Easier debug
-  app.hook.register('request:onError', async (request: Request) => {
+  app.hook.register('request:onError', async (request: KuzzleRequest) => {
     app.log.error(request.error);
   });
 
-  app.hook.register('hook:onError', async (request: Request) => {
+  app.hook.register('hook:onError', async (request: KuzzleRequest) => {
     app.log.error(request.error);
   });
 }
@@ -67,7 +67,7 @@ app.controller.register('pipes', {
       },
     },
     manage: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         const payload = request.input.body;
         const state = request.input.args.state;
         const event = request.input.args.event;
@@ -105,24 +105,25 @@ app.hook.register('custom:event', async (name) => {
 });
 
 let syncedHello = 'World';
+let dynamicPipeId;
 
 app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition
     sayHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
       http: [{ verb: 'post', path: '/hello/:name' }],
     },
 
     getSyncedHello: {
-      handler: async (request: Request) => `Hello, ${syncedHello}`,
+      handler: async (request: KuzzleRequest) => `Hello, ${syncedHello}`,
       http: [{ verb: 'get', path: '/hello' }],
     },
 
     syncHello: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         syncedHello = request.input.args.name;
         await app.cluster.broadcast('sync:hello', { name: syncedHello });
         return 'OK';
@@ -132,7 +133,7 @@ app.controller.register('tests', {
 
     // Trigger custom event
     triggerEvent: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         await app.trigger('custom:event', request.input.args.name);
 
         return { trigger: 'custom:event', payload: request.input.args.name };
@@ -144,14 +145,14 @@ app.controller.register('tests', {
       handler: async () => app.vault.secrets,
     },
 
-    // access storage client
+    // Access storage client
     storageClient: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         const client = new app.storage.StorageClient();
         const esRequest = {
           body: request.input.body,
-          id: request.input.resource._id,
-          index: request.input.resource.index,
+          id: request.input.args._id,
+          index: request.input.args.index,
         };
 
         const response = await client.index(esRequest);
@@ -166,8 +167,9 @@ app.controller.register('tests', {
       http: [{ verb: 'post', path: '/tests/storage-client/:index' }],
     },
 
+    // Mutex class
     mutex: {
-      handler: async (request: Request) => {
+      handler: async (request: KuzzleRequest) => {
         const ttl = 5000;
         const mutex = new Mutex('functionalTestMutexHandler', {
           timeout: 0,
@@ -179,6 +181,27 @@ app.controller.register('tests', {
         return { locked };
       },
       http: [{ verb: 'get', path: '/tests/mutex/acquire' }],
+    },
+
+    // Dynamic pipe registration
+    'register-pipe': {
+      handler: async () => {
+        dynamicPipeId = app.pipe.register(
+          'server:afterNow',
+          async request => {
+            request.result.name = 'Ugo';
+
+            return request;
+          },
+          { dynamic: true });
+
+        return dynamicPipeId;
+      }
+    },
+    'unregister-pipe': {
+      handler: async () => {
+        app.pipe.unregister(dynamicPipeId);
+      }
     },
   },
 });
@@ -195,6 +218,7 @@ loadAdditionalPlugins()
   .then(() => {
     // post-start methods here
 
+    // Cluster synchronization
     app.cluster.on('sync:hello', (payload) => {
       syncedHello = payload.name;
     });

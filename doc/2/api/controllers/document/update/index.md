@@ -41,6 +41,14 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:update <index> <collection> <id> <body>
+kourou document:update <index> <collection> <id> <body> -a silent=true
+```
+
+
 ---
 
 ## Arguments

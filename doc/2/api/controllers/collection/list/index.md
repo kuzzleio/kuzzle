@@ -42,10 +42,8 @@ Method: GET
 
 ### Optional:
 
-<DeprecatedBadge version="2.1.4" />
-
-- `from` and `size`: response pagination
-- `type`: filters the returned collections. Allowed values: `all`, `stored` and `realtime` (default : `all`).
+- `from` and `size`: response pagination <DeprecatedBadge version="2.1.4" />
+- `type`: filters the returned collections. Allowed values: `all`, `stored` and `realtime` (default : `all`). <DeprecatedBadge version="2.10.2" />
 
 ---
 

@@ -6,6 +6,7 @@ const sinon = require('sinon');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const RedisClientMock = require('../../mocks/service/redisClient.mock');
+const RedisClusterClientMock = require('../../mocks/service/redisClusterClient.mock');
 
 const Redis = rewire('../../../lib/service/cache/redis');
 
@@ -18,10 +19,10 @@ describe('Redis', () => {
 
     sinon
       .stub(Redis.prototype, '_buildClient')
-      .callsFake(() => new RedisClientMock());
+      .callsFake((options) => new RedisClientMock(options));
     sinon
       .stub(Redis.prototype, '_buildClusterClient')
-      .callsFake(() => new RedisClientMock());
+      .callsFake((options) => new RedisClusterClientMock(options));
 
     config = {
       node: {
@@ -30,7 +31,7 @@ describe('Redis', () => {
       }
     };
 
-    redis = new Redis( config);
+    redis = new Redis(config);
   });
 
   afterEach(() => {
@@ -45,28 +46,13 @@ describe('Redis', () => {
     should(redis.client.select).not.be.called();
   });
 
-  it('should select the good database at init if > 0', async () => {
-    config.database = 1;
-
-    await redis.init();
-
-    should(redis.client).be.an.Object();
-    should(redis.client.select).be.calledWith(1);
-  });
-
   it('should raise an error if unable to connect', () => {
     Redis.prototype._buildClient
-      .returns(new RedisClientMock(new Error('connection error')));
+      .returns((new RedisClientMock(undefined, new Error('connection error'))));
 
     const testredis = new Redis(config);
 
     return should(testredis.init()).be.rejected();
-  });
-
-  it('should raise an error if unable to select the database', () => {
-    config.database = 17;
-
-    return should(redis.init()).be.rejected();
   });
 
   it('should allow listing keys using pattern matching', async () => {
@@ -224,6 +210,45 @@ db5:keys=1,expires=0,avg_ttl=0
     should(redis._buildClusterClient).be.called();
   });
 
+  it('should override DNS validation on a client instance of Cluster if option is enabled', async () => {
+    config = {
+      clusterOptions: {
+        enableReadyCheck: true
+      },
+      nodes: [
+        { host: 'foobar', port: 6379 }
+      ],
+      overrideDnsLookup: true
+    };
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis.config.clusterOptions.dnsLookup).be.Function();
+    should(redis._buildClusterClient).be.called();
+  });
+
+  it('should pass redis and cluster options to a client instance of Cluster', async () => {
+    config = {
+      nodes: [
+        { host: 'foobar', port: 6379 }
+      ],
+      clusterOptions: {
+        enableReadyCheck: false
+      },
+      options: {
+        username: 'foo',
+        password: 'bar'
+      }
+    };
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClusterClient).be.called();
+    should(redis.client.options).match({ enableReadyCheck: false, redisOptions: { username: 'foo', password: 'bar' } });
+  });
+
   it('should build a client instance of Redis if only one node is defined', async () => {
     config = {
       node: { host: 'foobar', port: 6379 },
@@ -234,6 +259,36 @@ db5:keys=1,expires=0,avg_ttl=0
     await redis.init();
 
     should(redis._buildClient).be.called();
+  });
+
+  it('should use old database option and put it in redis client options when provided', async () => {
+    config = {
+      node: { host: 'foobar', port: 6379 },
+      database: 4
+    };
+
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClient).be.called();
+    should(redis.client.options.db).be.Number().and.eql(4);
+  });
+
+  it('should pass redis options to a client instance of Redis', async () => {
+    config = {
+      node: { host: 'foobar', port: 6379 },
+      options: {
+        username: 'foo',
+        password: 'bar'
+      }
+    };
+    redis = new Redis(config);
+
+    await redis.init();
+
+    should(redis._buildClient).be.called();
+    should(redis.client.options).match({ username: 'foo', password: 'bar' });
   });
 
   describe('#store', () => {

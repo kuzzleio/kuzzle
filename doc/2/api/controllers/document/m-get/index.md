@@ -51,6 +51,12 @@ Method: GET
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mGet <index> <collection> <body>
+```
+
 ---
 
 ## Arguments
