@@ -268,10 +268,10 @@ export class RequestResponse {
   /**
    * Configure the response
    *
-   * @param {Object} [options]
-   * @param {JSONObject} [options.headers] - Additional protocol headers
-   * @param {Number} [options.status=200] - HTTP status code
-   * @param {String} [options.format] - Response format, standard or raw
+   * @param [options]
+   * @param [options.headers] - Additional protocol headers
+   * @param [options.status=200] - HTTP status code
+   * @param [options.format] - Response format, standard or raw
    * @returns void
    */
   configure (
