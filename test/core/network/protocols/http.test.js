@@ -15,7 +15,7 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
 const EntryPointMock = require('../../../mocks/entrypoint.mock');
 
-describe.only('core/network/protocols/http', () => {
+describe('core/network/protocols/http', () => {
   let HttpWs;
   let kuzzle;
   let entryPoint;
@@ -23,7 +23,7 @@ describe.only('core/network/protocols/http', () => {
 
   before(() => {
     mockRequire('uWebSockets.js', uWSMock);
-    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http_websocket');
+    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
   });
 
   after(() => {
@@ -396,6 +396,26 @@ describe.only('core/network/protocols/http', () => {
         });
     });
 
+    it('should reject multipart/form-data requests with too large files', () => {
+      httpWs.maxFormFileSize = 2;
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'multipart/form-data; boundary=foo',
+      });
+
+      httpWs.server._httpResponse._onData(
+        Buffer.from('--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'),
+        true);
+
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.file_too_large',
+        });
+    });
+
+
     it('should be able to handle application/x-www-form-urlencoded requests', () => {
       sinon.stub(httpWs, 'httpProcessRequest');
 
@@ -462,6 +482,339 @@ describe.only('core/network/protocols/http', () => {
       });
 
       should(entryPoint.removeConnection).calledOnce();
+    });
+
+    it('should compress the response with gzip if asked to', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'gzip',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.gunzipSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('gzip'));
+    });
+
+    it('should compress the response with deflate if asked to', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.inflateSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('deflate'));
+    });
+
+    it('should choose to compress the response with gzip if multiple algorithms are possible', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate, deflate, deflate, identity, gzip, deflate',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.gunzipSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('gzip'));
+    });
+
+    it('should comply to the provided algorithm priorities provided in the headers', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate;q=0.8, gzip;q=0.25, *=0',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.inflateSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('deflate'));
+    });
+
+    it('should fall back to not compressing if no suitable algorithm is found', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'br;q=0.8, compress;q=0.25',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
+    });
+
+    it('should fall back to not compressing if the payload could not be compressed with gzip', async () => {
+      mockRequire('zlib', {
+        gzip: sinon.stub().yields(new Error('foo')),
+      });
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      httpWs = new HttpWs();
+      await httpWs.init(entryPoint);
+
+      try {
+        const result = new KuzzleRequest({});
+        result.setResult('yo');
+        kuzzle.router.http.route.yields(result);
+
+        httpWs.server._httpOnMessage('get', '/', '', {
+          'accept-encoding': 'gzip',
+        });
+        httpWs.server._httpResponse._onData('', true);
+
+        const response = httpWs.server._httpResponse;
+
+        // the response is processed in background tasks, need to wait for it
+        // to finish
+        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        should(response.tryEnd).calledOnce();
+
+        should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+          error: null,
+          result: 'yo',
+          status: 200,
+        });
+
+        should(response.writeHeader)
+          .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
+      }
+      finally {
+        mockRequire.stop('zlib');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      }
+    });
+
+    it('should fall back to not compressing if the payload could not be compressed with deflate', async () => {
+      mockRequire('zlib', {
+        deflate: sinon.stub().yields(new Error('foo')),
+      });
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      httpWs = new HttpWs();
+      await httpWs.init(entryPoint);
+
+      try {
+        const result = new KuzzleRequest({});
+        result.setResult('yo');
+        kuzzle.router.http.route.yields(result);
+
+        httpWs.server._httpOnMessage('get', '/', '', {
+          'accept-encoding': 'deflate',
+        });
+        httpWs.server._httpResponse._onData('', true);
+
+        const response = httpWs.server._httpResponse;
+
+        // the response is processed in background tasks, need to wait for it
+        // to finish
+        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        should(response.tryEnd).calledOnce();
+
+        should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+          error: null,
+          result: 'yo',
+          status: 200,
+        });
+
+        should(response.writeHeader)
+          .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
+      }
+      finally {
+        mockRequire.stop('zlib');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      }
+    });
+
+    it('should not wrap a raw response to a standard Kuzzle Response object', () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo', { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('yo');
+    });
+
+    it('should be able to handle empty raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(null, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('');
+    });
+
+    it('should be able to handle JSON objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult({foo: 'bar'}, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('{"foo":"bar"}');
+    });
+
+    it('should be able to handle Buffer objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(Buffer.from('foobar'), { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('foobar');
+    });
+
+    it('should be able to handle stringified Buffer objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(JSON.stringify(Buffer.from('foobar')), { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString())
+        .eql(JSON.stringify(Buffer.from('foobar')));
+    });
+
+    it('should be able to handle scalars as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(123.45, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('123.45');
     });
   });
 });

@@ -83,7 +83,7 @@ describe('lib/core/core/network/entryPoint', () => {
     winstonTransportSyslog = sinon.spy();
 
     const network = `${root}/lib/core/network`;
-    mockrequire(`${network}/protocols/http_websocket`, HttpWebSocketMock);
+    mockrequire(`${network}/protocols/http+websocket`, HttpWebSocketMock);
     mockrequire(`${network}/protocols/mqtt`, MqttMock);
     mockrequire(`${network}/protocols/internal`, InternalMock);
 

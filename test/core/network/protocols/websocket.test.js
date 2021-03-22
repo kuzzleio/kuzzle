@@ -11,7 +11,7 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
 const EntryPointMock = require('../../../mocks/entrypoint.mock');
 
-describe.only('core/network/protocols/websocket', () => {
+describe('core/network/protocols/websocket', () => {
   let HttpWs;
   let kuzzle;
   let entryPoint;
@@ -19,7 +19,7 @@ describe.only('core/network/protocols/websocket', () => {
 
   before(() => {
     mockRequire('uWebSockets.js', uWSMock);
-    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http_websocket');
+    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
   });
 
   after(() => {
