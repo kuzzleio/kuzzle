@@ -68,38 +68,6 @@ describe('core/network/protocols/http', () => {
       should(httpWs.server.any).not.called();
       should(kuzzle.log.warn).calledWith('[http] no configuration found for http: disabling it');
     });
-
-    it('should throw if "enabled" is not a boolean', async () => {
-      for (const bad of [null, undefined, 'true', 123, 0, [], {}] ) {
-        entryPoint.config.protocols.http.enabled = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[http] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
-      }
-    });
-
-    it('should throw if "allowCompression" is not a boolean', async () => {
-      for (const bad of [null, undefined, 'true', 123, 0, [], {}] ) {
-        entryPoint.config.protocols.http.allowCompression = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[http] "allowCompression" parameter: invalid value "${bad}" (boolean expected)`);
-      }
-    });
-
-    it('should throw if "maxEncodingLayers" holds an invalid value', async () => {
-      for (const bad of [null, undefined, '1', 0, true, [], {}]) {
-        entryPoint.config.protocols.http.maxEncodingLayers = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[http] "maxEncodingLayers" parameter: invalid value "${bad}" (integer >= 1 expected)`);
-      }
-    });
-
-    it('should throw if "maxFormFileSize" holds an invalid value', async () => {
-      for (const bad of [null, undefined, -1, true, [], {}, 'foobar']) {
-        entryPoint.config.protocols.http.maxFormFileSize = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[http] "maxFormFileSize" parameter: cannot parse "${bad}"`);
-      }
-    });
   });
 
   describe('http errors (not request ones)', () => {

@@ -65,38 +65,6 @@ describe('core/network/protocols/websocket', () => {
       should(kuzzle.log.warn).calledWith('[websocket] no configuration found for websocket: disabling it');
     });
 
-    it('should throw if "enabled" is not a boolean', async () => {
-      for (const bad of [null, undefined, 'true', 123, 0, [], {}] ) {
-        entryPoint.config.protocols.websocket.enabled = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
-      }
-    });
-
-    it('should throw if "idleTimeout" holds an invalid value', async () => {
-      for (const bad of [null, undefined, '60000', -1, [], {}, true]) {
-        entryPoint.config.protocols.websocket.idleTimeout = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`);
-      }
-    });
-
-    it('should throw if "compression" holds an invalid value', async () => {
-      for (const bad of [null, undefined, 'true', 123, 0, [], {}] ) {
-        entryPoint.config.protocols.websocket.compression = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[websocket] "compression" parameter: invalid value "${bad}" (boolean value expected)`);
-      }
-    });
-
-    it('should throw if "rateLimit" holds an invalid value', async () => {
-      for (const bad of [null, undefined, '60000', -1, [], {}, true]) {
-        entryPoint.config.protocols.websocket.rateLimit = bad;
-
-        await should(httpWs.init(entryPoint)).rejectedWith(`[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`);
-      }
-    });
-
     it('should set a minimum value to "idleTimeout" if set too low', async () => {
       for (const tooLow of [0, 999]) {
         kuzzle.log.warn.resetHistory();
@@ -231,11 +199,6 @@ describe('core/network/protocols/websocket', () => {
       await httpWs.init(entryPoint);
       httpWs.server._wsOnOpen();
       socket = httpWs.server._wsSocket;
-    });
-
-    it('should discard the message if the socket is unknown', () => {
-      should(() => httpWs.wsOnMessageHandler({}, 'foo')).not.throw();
-      should(entryPoint.execute).not.be.called();
     });
 
     it('should discard the message if no data is provided', () => {
