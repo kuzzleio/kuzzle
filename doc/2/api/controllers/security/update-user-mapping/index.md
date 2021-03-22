@@ -6,7 +6,7 @@ title: updateUserMapping
 
 # updateUserMapping
 
-
+<DeprecatedBadge version="auto-version">
 
 Updates the internal user storage mapping.
 

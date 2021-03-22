@@ -6,7 +6,7 @@ title: mGetUsers
 
 # mGetUsers
 
-
+<DeprecatedBadge version="auto-version">
 
 Gets multiple users.
 
@@ -76,7 +76,7 @@ Returns a `hits` array of objects. Each object is a user object with the followi
         "_source": {
           "profileIds": [
             "profile1"
-          ]          
+          ]
       },
       {
         "_id": "user2",

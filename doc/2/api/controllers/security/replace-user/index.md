@@ -6,7 +6,7 @@ title: replaceUser
 
 # replaceUser
 
-
+<DeprecatedBadge version="auto-version">
 
 Replaces a user with new configuration.
 

@@ -6,7 +6,7 @@ title: revokeTokens
 
 # revokeTokens
 
-
+<DeprecatedBadge version="auto-version">
 
 Revokes every token of a given user.
 

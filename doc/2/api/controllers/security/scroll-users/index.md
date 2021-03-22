@@ -6,7 +6,7 @@ title: scrollUsers
 
 # scrollUsers
 
-
+<DeprecatedBadge version="auto-version">
 
 Moves a result set cursor forward, created by a [searchUsers](/core/2/api/controllers/security/search-users) query with the `scroll` argument provided.
 

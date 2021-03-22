@@ -6,6 +6,8 @@ title: updateUser
 
 # updateUser
 
+<DeprecatedBadge version="auto-version">
+
 Updates a user definition.
 
 ---

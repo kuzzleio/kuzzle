@@ -6,7 +6,7 @@ title: getUserMapping
 
 # getUserMapping
 
-
+<DeprecatedBadge version="auto-version">
 
 Gets the mapping of the internal users collection.
 

@@ -6,7 +6,7 @@ title: mDeleteUsers
 
 # mDeleteUsers
 
-
+<DeprecatedBadge version="auto-version">
 
 Deletes multiple users.
 

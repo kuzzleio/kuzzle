@@ -6,7 +6,7 @@ title: getUserRights
 
 # getUserRights
 
-
+<DeprecatedBadge version="auto-version">
 
 Gets the detailed rights granted to a user.
 

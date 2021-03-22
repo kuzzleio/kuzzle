@@ -6,7 +6,7 @@ title: getUser
 
 # getUser
 
-
+<DeprecatedBadge version="auto-version">
 
 Gets a user.
 

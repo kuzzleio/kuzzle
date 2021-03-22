@@ -7,6 +7,7 @@ title: checkRights
 # checkRights
 
 <SinceBadge version="2.8.0"/>
+<DeprecatedBadge version="auto-version">
 
 Checks if the provided API request can be executed by a user.
 
@@ -40,7 +41,7 @@ Body:
 
 ```js
 {
-  "controller": "auth",
+  "controller": "security",
   "action": "checkRights",
   "_id": "<kuid>",
   "body": {

@@ -6,7 +6,7 @@ title: deleteUser
 
 # deleteUser
 
-
+<DeprecatedBadge version="auto-version">
 
 Deletes a user and all their associate credentials.
 

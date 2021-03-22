@@ -6,12 +6,13 @@ title: searchUsers
 
 # searchUsers
 
+<SinceBadge version="2.8.0"/>
+<DeprecatedBadge version="auto-version">
+
 Searches users.
 
-<SinceBadge version="2.8.0"/>
-
-This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
-Koncorde filters will be translated into an Elasticsearch query.  
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.
+Koncorde filters will be translated into an Elasticsearch query.
 
 ::: warning
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
