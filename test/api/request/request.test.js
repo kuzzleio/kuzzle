@@ -7,7 +7,7 @@ const {
   InternalError,
   BadRequestError
 } = require('../../../lib/kerror/errors');
-const { Request } = require('../../../lib/api/request');
+const { Request, KuzzleRequest } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
 const { RequestInput } = require('../../../lib/api/request');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -321,5 +321,736 @@ describe('#Request', () => {
     rq.addDeprecation('1.0.0', 'You should now use Kuzzle v2');
 
     should(rq.deprecations).be.undefined();
+  });
+
+  describe('param extraction methods', () => {
+    let request;
+
+    beforeEach(() => {
+      request = new KuzzleRequest({});
+    });
+
+    describe('#getLangParam', () => {
+      beforeEach(() => {
+        request.input.args = {};
+      });
+
+      it('should have "elasticsearch" has default value', () => {
+        const lang = request.getLangParam();
+
+        should(lang).be.eql('elasticsearch');
+      });
+
+      it('should retrieve the "lang" param', () => {
+        request.input.args.lang = 'koncorde';
+
+        const lang = request.getLangParam();
+
+        should(lang).be.eql('koncorde');
+      });
+
+      it('should throw an error if "lang" is invalid', () => {
+        request.input.args.lang = 'turkish';
+
+        should(() => request.getLangParam())
+          .throwError({ id: 'api.assert.invalid_argument'});
+      });
+    });
+
+    describe('#getBoolean', () => {
+      beforeEach(() => {
+        request = new Request({ doha: 0 }, {
+          connection: {
+            protocol: 'http'
+          }
+        });
+      });
+
+      it('sets the flag value to true if present in http', () => {
+        should(request.getBoolean('doha')).be.true();
+      });
+
+      it('sets the flag value to false if not present in http', () => {
+        delete request.input.args.doha;
+
+        should(request.getBoolean('doha')).be.false();
+      });
+
+      it('does nothing if the flag is already a boolean with other protocols', () => {
+        request.context.connection.protocol = 'ws';
+        request.input.args.doha = false;
+
+        should(request.getBoolean('doha')).be.false();
+      });
+
+      it('throw an error if flag is not a boolean with other protocols', () => {
+        request.context.connection.protocol = 'ws';
+
+        should(() => request.getBoolean('doha')).throw(
+          BadRequestError,
+          { id: 'api.assert.invalid_type'});
+      });
+
+      it('returns "false" if the flag is not set (not HTTP)', () => {
+        request.context.connection.protocol = 'ws';
+        should(request.getBoolean('ohnoes')).be.false();
+      });
+    });
+
+    describe('#getBodyBoolean', () => {
+      beforeEach(() => {
+        request = new KuzzleRequest({ body: { doha: true } });
+      });
+
+      it('returns the value of the body boolean', () => {
+        should(request.getBodyBoolean('doha')).be.true();
+
+        request.input.body.doha = false;
+
+        should(request.getBodyBoolean('doha')).be.false();
+      });
+    });
+
+    describe('#request body getters', () => {
+      beforeEach(() => {
+        request.input.body = {
+          fullname: 'Andrew Wiggin',
+          names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
+          age: 3011.5,
+          relatives: {
+            Peter: 'brother',
+            Valentine: 'sister'
+          },
+          year: '5270',
+          defeatedBugsAt: 11
+        };
+      });
+
+      describe('#getBodyArray', () => {
+        it('extracts the required parameter', () => {
+          should(request.getBodyArray('names'))
+            .exactly(request.input.body.names);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getBodyArray('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = ['foo'];
+
+          should(request.getBodyArray('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an array', () => {
+          should(() => request.getBodyArray('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the request does not have a body', () => {
+          request.input.body = null;
+
+          should(() => request.getBodyArray('names'))
+            .throw(BadRequestError, { id: 'api.assert.body_required' });
+        });
+
+        it('should return the default value if one is provided, and if the request has no body', () => {
+          const def = ['foo'];
+
+          request.input.body = null;
+
+          should(request.getBodyArray('names', def))
+            .exactly(def);
+        });
+      });
+
+      describe('#getBodyString', () => {
+        it('extracts the required parameter', () => {
+          should(request.getBodyString('fullname'))
+            .exactly(request.input.body.fullname);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getBodyString('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 'foo';
+
+          should(request.getBodyString('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not a string', () => {
+          should(() => request.getBodyString('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the request does not have a body', () => {
+          request.input.body = null;
+
+          should(() => request.getBodyString('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.body_required' });
+        });
+
+        it('should return the default value if one is provided, and if the request has no body', () => {
+          const def = 'foo';
+
+          request.input.body = null;
+
+          should(request.getBodyString('fullname', def))
+            .exactly(def);
+        });
+      });
+
+      describe('#getBodyObject', () => {
+        it('extracts the required parameter', () => {
+          should(request.getBodyObject('relatives'))
+            .exactly(request.input.body.relatives);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getBodyObject('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = { foo: 'bar' };
+
+          should(request.getBodyObject('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an object', () => {
+          should(() => request.getBodyObject('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the request does not have a body', () => {
+          request.input.body = null;
+
+          should(() => request.getBodyObject('relatives'))
+            .throw(BadRequestError, { id: 'api.assert.body_required' });
+        });
+
+        it('should return the default value if one is provided, and if the request has no body', () => {
+          const def = { foo: 'bar' };
+
+          request.input.body = null;
+
+          should(request.getBodyObject('relatives', def))
+            .exactly(def);
+        });
+      });
+
+      describe('#getBodyNumber', () => {
+        it('extracts the required parameter and convert it', () => {
+          should(request.getBodyNumber('age'))
+            .exactly(3011.5);
+
+          should(request.getBodyNumber('year'))
+            .exactly(5270);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getBodyNumber('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 123;
+
+          should(request.getBodyNumber('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not a number', () => {
+          should(() => request.getBodyNumber('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the request does not have a body', () => {
+          request.input.body = null;
+
+          should(() => request.getBodyNumber('age'))
+            .throw(BadRequestError, { id: 'api.assert.body_required' });
+        });
+
+        it('should return the default value if one is provided, and if the request has no body', () => {
+          const def = 123;
+
+          request.input.body = null;
+
+          should(request.getBodyNumber('age', def))
+            .exactly(def);
+        });
+      });
+
+      describe('#getBodyInteger', () => {
+        it('extracts the required parameter and convert it', () => {
+          should(request.getBodyInteger('year'))
+            .exactly(5270);
+
+          should(request.getBodyInteger('defeatedBugsAt'))
+            .exactly(11);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getBodyInteger('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 123;
+
+          should(request.getBodyInteger('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an integer', () => {
+          should(() => request.getBodyInteger('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+
+          should(() => request.getBodyInteger('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the request does not have a body', () => {
+          request.input.body = null;
+
+          should(() => request.getBodyInteger('year'))
+            .throw(BadRequestError, { id: 'api.assert.body_required' });
+        });
+
+        it('should return the default value if one is provided, and if the request has no body', () => {
+          const def = 123;
+
+          request.input.body = null;
+
+          should(request.getBodyInteger('year', def))
+            .exactly(def);
+        });
+      });
+    });
+
+    describe('#request argument getters', () => {
+      beforeEach(() => {
+        request.input.args = {
+          fullname: 'Andrew Wiggin',
+          names: ['Ender', 'Speaker for the Dead', 'Xenocide'],
+          age: 3011.5,
+          relatives: {
+            Peter: 'brother',
+            Valentine: 'sister'
+          },
+          year: '5270',
+          defeatedBugsAt: 11
+        };
+      });
+
+      describe('#getArray', () => {
+        it('extracts the required parameter', () => {
+          should(request.getArray('names'))
+            .exactly(request.input.args.names);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getArray('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = ['foo'];
+
+          should(request.getArray('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an array', () => {
+          should(() => request.getArray('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getString', () => {
+        it('extracts the required parameter', () => {
+          should(request.getString('fullname'))
+            .exactly(request.input.args.fullname);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getString('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 'foo';
+
+          should(request.getString('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not a string', () => {
+          should(() => request.getString('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getObject', () => {
+        it('extracts the required parameter', () => {
+          should(request.getObject('relatives'))
+            .exactly(request.input.args.relatives);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getObject('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = { foo: 'bar' };
+
+          should(request.getObject('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an object', () => {
+          should(() => request.getObject('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getNumber', () => {
+        it('extracts the required parameter and convert it', () => {
+          should(request.getNumber('age'))
+            .exactly(3011.5);
+
+          should(request.getNumber('year'))
+            .exactly(5270);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getNumber('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 123;
+
+          should(request.getNumber('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not a number', () => {
+          should(() => request.getNumber('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getInteger', () => {
+        it('extracts the required parameter and convert it', () => {
+          should(request.getInteger('year'))
+            .exactly(5270);
+
+          should(request.getInteger('defeatedBugsAt'))
+            .exactly(11);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getInteger('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = 123;
+
+          should(request.getInteger('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an integer', () => {
+          should(() => request.getInteger('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+
+          should(() => request.getInteger('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+    });
+
+    describe('#getIndex', () => {
+      beforeEach(() => {
+        request.input.args = {
+          index: 'index'
+        };
+      });
+
+      it('should extract an index', () => {
+        const param = request.getIndex();
+
+        should(param).be.eql('index');
+      });
+
+      it('should throw if the index is missing', () => {
+        request.input.args = {};
+
+        should(() => {
+          request.getIndex();
+        }).throw({ id: 'api.assert.missing_argument' });
+      });
+    });
+
+    describe('#getIndexAndCollection', () => {
+      beforeEach(() => {
+        request.input.args = {
+          index: 'index',
+          collection: 'collection'
+        };
+      });
+
+      it('should extract an index and a collection', () => {
+        const { index, collection } = request.getIndexAndCollection();
+
+        should(index).be.eql('index');
+        should(collection).be.eql('collection');
+      });
+
+      it('should throw if the index is missing', () => {
+        request.input.args = {
+          collection: 'collection'
+        };
+
+        should(() => {
+          request.getIndexAndCollection();
+        }).throw(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "index".'
+        });
+      });
+
+      it('should throw if the collection is missing', () => {
+        request.input.args = {
+          index: 'index'
+        };
+
+        should(() => {
+          request.getIndexAndCollection();
+        }).throw(BadRequestError, {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "collection".'
+        });
+      });
+    });
+
+    describe('#getId', () => {
+      beforeEach(() => {
+        request.input.args = {
+          _id: 'id'
+        };
+      });
+
+      it('should extract an id', () => {
+        const param = request.getId();
+
+        should(param).be.eql('id');
+      });
+
+      it('should throw if the id is missing', () => {
+        request.input.args = {};
+
+        should(() => {
+          request.getId();
+        }).throw({ id: 'api.assert.missing_argument' });
+      });
+
+      it('should throw if the id is wrong type', () => {
+        request.input.args = {
+          _id: 42
+        };
+
+        should(() => {
+          request.getId();
+        }).throw({ id: 'api.assert.invalid_type' });
+      });
+    });
+
+    describe('#getKuid', () => {
+      beforeEach(() => {
+        request = new KuzzleRequest({}, {
+          user: {
+            _id: 'id'
+          }
+        });
+      });
+
+      it('should extract an user id', () => {
+        const param = request.getKuid();
+
+        should(param).be.eql('id');
+      });
+    });
+
+    describe('#getSearchParams', () => {
+      let input;
+
+      beforeEach(() => {
+        input = {
+          from: 1,
+          size: 11,
+          scroll: '10m',
+          searchBody: '{"query":{"foo":"bar"}}',
+          body: { query: { foo: 'bar' } }
+        };
+      });
+
+      it('should extract search params', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        const { from, size, scrollTTL, query, searchBody } = request.getSearchParams();
+
+        should(from).be.eql(1);
+        should(size).be.eql(11);
+        should(scrollTTL).be.eql('10m');
+        should(query).be.eql({ foo: 'bar' });
+        should(searchBody).be.eql({ query: { foo: 'bar' } });
+      });
+
+      it('should extract search params when invoking the route with GET', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'GET' }
+        });
+        request.input.body = null;
+
+        const { from, query, scrollTTL, searchBody, size } = request.getSearchParams();
+
+        should(from).be.eql(1);
+        should(size).be.eql(11);
+        should(scrollTTL).be.eql('10m');
+        should(query).be.eql({});
+        should(searchBody).be.eql({ query: { foo: 'bar' } });
+      });
+
+      it('should extract searchBody param when the route is invoked using GET', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'GET' }
+        });
+        request.input.body = null;
+
+        const searchBody = request.getSearchBody();
+
+        should(searchBody).be.eql({ query: { foo: 'bar' } });
+      });
+
+      it('should extract searchBody param', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        const searchBody = request.getSearchBody();
+
+        should(searchBody).be.eql({ query: { foo: 'bar' } });
+      });
+
+      it('should throw when the route is invoked with GET and invalid search body is provided', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'GET' }
+        });
+        request.input.body = null;
+        request.input.args.searchBody = {};
+
+        should(() => {
+          request.getSearchBody();
+        }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: string)' });
+      });
+
+      it('should provide empty body when the route is invoked with GET and no search body is provided', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'GET' }
+        });
+        request.input.body = null;
+        delete request.input.args.searchBody;
+
+        const searchBody = request.getSearchBody();
+
+        should(searchBody).be.eql({});
+      });
+
+      it('should provide empty body when the route is invoked with GET with a null search body is provided', () => {
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'GET' }
+        });
+        request.input.body = null;
+        request.input.args.searchBody = null;
+
+        const searchBody = request.getSearchBody();
+
+        should(searchBody).be.eql({});
+      });
+
+      it('should have have default value', () => {
+        request = new KuzzleRequest({}, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        const { from, size, scrollTTL, query, searchBody } = request.getSearchParams();
+
+        should(from).be.eql(0);
+        should(size).be.eql(10);
+        should(scrollTTL).be.undefined();
+        should(query).be.eql({});
+        should(searchBody).be.eql({});
+      });
+    });
+
+    describe('#getScrollTTLParam', () => {
+      beforeEach(() => {
+        request.input.args = {
+          scroll: '10s'
+        };
+      });
+
+      it('should extract scroll param', () => {
+        const param = request.getScrollTTLParam();
+
+        should(param).be.eql('10s');
+      });
+
+      it('should throw if the index is missing', () => {
+        request.input.args.scroll = 32;
+
+        should(() => {
+          request.getScrollTTLParam();
+        }).throw({ id: 'api.assert.invalid_type' });
+      });
+    });
+
+    describe('#getBody', () => {
+      it('should throw if the request does not have a body', () => {
+        request.input.body = null;
+
+        should(() => request.getBody()).throw(BadRequestError, {
+          id: 'api.assert.body_required'
+        });
+      });
+
+      it('should return the default value instead of throwing if one is provided', () => {
+        request.input.body = null;
+
+        should(request.getBody('foo')).eql('foo');
+      });
+
+      it('should return the request body', () => {
+        const body = {foo: 'bar'};
+
+        request.input.body = body;
+
+        should(request.getBody()).exactly(body);
+      });
+    });
   });
 });
