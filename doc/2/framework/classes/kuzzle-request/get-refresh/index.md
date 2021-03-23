@@ -30,4 +30,6 @@ getRefresh (defaultValue: string = 'false'): string
 const refresh = request.getRefresh();
 // equivalent
 const refresh = request.input.args.refresh;
+//+ checks to make sure that "refresh" is of the right type
+// and throw standard API error when it's not the case
 ```

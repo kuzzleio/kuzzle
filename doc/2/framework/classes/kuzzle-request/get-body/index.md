@@ -31,4 +31,6 @@ getBody (def: JSONObject = null): JSONObject
 const body = request.getBody();
 // equivalent
 const body = request.input.body;
+//+ checks to make sure that the body is of the right type
+// and throw standard API error when it's not the case
 ```

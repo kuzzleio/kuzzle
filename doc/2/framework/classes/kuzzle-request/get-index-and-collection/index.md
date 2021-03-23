@@ -25,4 +25,6 @@ getIndexAndCollection (): { index: string, collection: string }
 const { index, collection } = request.getIndexAndCollection();
 // equivalent
 const { index, collection } = request.input.args;
+//+ checks to make sure that "index" and "collection" are of the right type
+// and throw standard API error when it's not the case
 ```

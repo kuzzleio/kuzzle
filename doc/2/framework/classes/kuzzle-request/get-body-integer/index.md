@@ -31,4 +31,6 @@ getBodyInteger (name: string, def: number = null): number
 const age = request.getBodyInteger('age');
 // equivalent
 const age = request.input.body.age;
+//+ checks to make sure that "age" is of the right type
+// and throw standard API error when it's not the case
 ```

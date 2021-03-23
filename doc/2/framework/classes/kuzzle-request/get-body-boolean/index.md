@@ -33,4 +33,6 @@ getBodyBoolean (name: string): boolean;
 const disabled = request.getBodyBoolean('disabled');
 // equivalent
 const disabled = request.input.body.disabled;
+//+ checks to make sure that "disabled" is of the right type
+// and throw standard API error when it's not the case
 ```

@@ -37,6 +37,8 @@ getId (
 const id = request.getId();
 // equivalent
 const id = request.input.args._id;
+//+ checks to make sure that "_id" is of the right type
+// and throw standard API error when it's not the case
 
 // generate a default ID if it's missing 
 const id = request.getId({ ifMissing: 'generate' });

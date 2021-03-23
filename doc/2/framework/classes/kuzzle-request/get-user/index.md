@@ -14,7 +14,7 @@ Returns the current user.
 ### Arguments
 
 ```ts
-getUser (): string | null
+getUser (): User | null
 ```
 
 </br>

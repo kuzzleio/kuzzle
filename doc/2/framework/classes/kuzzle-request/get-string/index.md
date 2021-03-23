@@ -31,4 +31,6 @@ getString (name: string, def: string = null): string
 const name = request.getString('name');
 // equivalent
 const name = request.input.args.name;
+//+ checks to make sure that "name" is of the right type
+// and throw standard API error when it's not the case
 ```

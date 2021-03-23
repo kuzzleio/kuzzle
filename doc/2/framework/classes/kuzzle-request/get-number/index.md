@@ -31,4 +31,6 @@ getNumber (name: string, def: number = null): number
 const age = request.getNumber('age');
 // equivalent
 const age = request.input.args.age;
+//+ checks to make sure that "age" is of the right type
+// and throw standard API error when it's not the case
 ```

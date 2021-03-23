@@ -25,4 +25,6 @@ getIndex (): string
 const index = request.getIndex();
 // equivalent
 const index = request.input.args.index;
+//+ checks to make sure that "index" is of the right type
+// and throw standard API error when it's not the case
 ```

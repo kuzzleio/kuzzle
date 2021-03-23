@@ -31,4 +31,6 @@ getArray (name: string, def: [] = null): any[]
 const cities = request.getArray('cities');
 // equivalent
 const cities = request.input.args.cities;
+//+ checks to make sure that "cities" is of the right type
+// and throw standard API error when it's not the case
 ```

@@ -31,4 +31,6 @@ getObject (name: string, def: JSONObject = null): JSONObject
 const metadata = request.getObject('metadata');
 // equivalent
 const metadata = request.input.args.metadata;
+//+ checks to make sure that "metadata" is of the right type
+// and throw standard API error when it's not the case
 ```

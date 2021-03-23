@@ -31,4 +31,6 @@ getBodyString (name: string, def: string = null): string
 const name = request.getBodyString('name');
 // equivalent
 const name = request.input.body.name;
+//+ checks to make sure that "name" is of the right type
+// and throw standard API error when it's not the case
 ```
