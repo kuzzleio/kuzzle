@@ -9,7 +9,7 @@ description: KuzzleRequest class getNumber() method
 
 <SinceBadge version="auto-version" />
 
-Gets a parameter from a request arguments and checks that it is a number.
+Gets a parameter from the request arguments and checks that it is a number.
 
 ### Arguments
 

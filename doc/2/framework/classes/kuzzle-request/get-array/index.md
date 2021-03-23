@@ -9,7 +9,7 @@ description: KuzzleRequest class getArray() method
 
 <SinceBadge version="auto-version" />
 
-Gets a parameter from a request arguments and checks that it is an array.
+Gets a parameter from the request arguments and checks that it is an array.
 
 ### Arguments
 
