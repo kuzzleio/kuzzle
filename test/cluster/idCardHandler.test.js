@@ -114,7 +114,7 @@ describe('ClusterIdCardHandler', () => {
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:mget',
         ['redis/id2', 'redis/id3']);
-      should(remoteCards).be.eql([idCard2, idCard3])
+      should(remoteCards).be.eql([idCard2, idCard3]);
     });
   });
 

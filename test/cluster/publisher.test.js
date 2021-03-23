@@ -4,8 +4,6 @@ const should = require('should');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
 
-const Kuzzle = require('../mocks/kuzzle.mock');
-
 class ZeroMQPublisherMock {
   constructor () {
     this.bind = sinon.stub().resolves();
@@ -15,7 +13,6 @@ class ZeroMQPublisherMock {
 }
 
 describe('ClusterPublisher', () => {
-  let kuzzle;
   let ClusterPublisher;
   let publisher;
   let node = { config: { ports: { sync: 7511 } } };
@@ -30,8 +27,6 @@ describe('ClusterPublisher', () => {
   });
 
   beforeEach(() => {
-    kuzzle = new Kuzzle();
-
     publisher = new ClusterPublisher(node);
   });
 
