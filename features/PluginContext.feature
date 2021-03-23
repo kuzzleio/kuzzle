@@ -32,7 +32,7 @@ Feature: Plugin context
 
   @realtime
   Scenario: Subscribe and unsubscribe to realtime notifications
-    Given a plugin realtime subscription
+    Given I successfully execute the action "functional-test-plugin/realtime":"subscribeOnce"
     Given I subscribe to "test":"answer" notifications
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |

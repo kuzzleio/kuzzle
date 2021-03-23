@@ -26,10 +26,3 @@ Given('I {string} the {string} pipe on {string} without changes', async function
     event
   });
 });
-
-Given('a plugin realtime subscription', async function () {
-  await this.sdk.query({
-    controller: 'functional-test-plugin/realtime',
-    action: 'subscribeOnce',
-  });
-});
