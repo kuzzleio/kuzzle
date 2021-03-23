@@ -393,20 +393,30 @@ describe('DocumentController', () => {
 
     beforeEach(() => {
       documents = [
-        { _id: '_id1', body: '_source' },
-        { _id: '_id2', body: '_source' },
-        { _id: '_id3', body: '_source' }
+        { _id: '_id1', body: { field: '_source' } },
+        { _id: '_id2', body: { field: '_source' } },
+        { _id: '_id3', body: { field: '_source' } }
       ];
 
       request.input.body = { documents };
 
       items = [
-        { _id: '_id1', _source: '_source', _version: '_version', created: true, result: 'created' },
-        { _id: '_id2', _source: '_source', _version: '_version', created: true, result: 'created' },
-        { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
+        { _id: '_id1', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' },
+        { _id: '_id2', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' },
+        { _id: '_id3', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' }
       ];
 
       kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
+        items,
+        errors: []
+      }));
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpdate').resolves(({
+        items,
+        errors: []
+      }));
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpsert').resolves(({
         items,
         errors: []
       }));
@@ -441,7 +451,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: 'aschen', refresh: 'wait_for' });
+        { userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
 
       should(kuzzle.ask).be.calledWith(
         'core:realtime:document:mNotify',
@@ -455,7 +465,7 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should have default values for userId and refresh params', async () => {
+    it('should have default values for userId, refresh and retryOnConflict params', async () => {
       await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(kuzzle.ask).be.calledWith(
@@ -463,7 +473,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false' });
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should handle errors if some actions failed', async () => {
@@ -551,6 +561,106 @@ describe('DocumentController', () => {
         .rejectedWith(
           MultipleErrorsError,
           { id: 'api.process.incomplete_multiple_request' });
+    });
+
+    it('should retrieve retryOnConflict param when updating ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mUpdate', actionEnum.UPDATE);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mUpdate',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: 2 });
+    });
+
+    it('should retrieve retryOnConflict param doing an upsert ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mUpsert',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: 2 });
+    });
+
+    it('should not check retryOnConflict param when not performing an update/upsert ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreate',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
+    });
+
+    it('should notify with _updatedFields when updating ', async () => {
+      items[0].created = false;
+      items[1].created = false;
+      items[2].created = false;
+
+      await documentController._mChanges(request, 'mUpdate', actionEnum.UPDATE);
+
+      items[0]._updatedFields = ['field'];
+      items[1]._updatedFields = ['field'];
+      items[2]._updatedFields = ['field'];
+
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.UPDATE,
+        items);
+    });
+
+    it('should notify with _updatedFields when doing an upsert ', async () => {
+      request.input.body.documents = [
+        { _id: '_id1', body: { changes: { field: '_source'}, default: 'default' } },
+        { _id: '_id2', body: { changes: { field: '_source'}, default: 'default' } },
+        { _id: '_id3', body: { changes: { field: '_source'}, default: 'default' } }
+      ];
+
+      items[0].created = false;
+      items[1].created = false;
+
+      await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
+
+      const updatedItems = [
+        { 
+          _id: '_id1',
+          _source: { field: '_source' },
+          _version: '_version',
+          _updatedFields: ['field'],
+          created: false,
+          result: 'created'
+        },
+        { 
+          _id: '_id2',
+          _source: { field: '_source' },
+          _version: '_version',
+          _updatedFields: ['field'],
+          created: false,
+          result: 'created' },
+        { 
+          _id: '_id3',
+          _source: { field: '_source' },
+          _version: '_version',
+          created: true,
+          result: 'created' }
+      ];
+
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.UPSERT,
+        updatedItems);
     });
   });
 

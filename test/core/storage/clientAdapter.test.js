@@ -1093,6 +1093,42 @@ describe('#core/storage/ClientAdapter', () => {
       });
     });
 
+    describe('#document:mUpsert', () => {
+      it('should register a "document:mUpsert" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:document:mUpsert`,
+            'index',
+            'collection',
+            'documents',
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index', 'collection');
+
+          should(adapter.client.mUpsert)
+            .calledWith('index', 'collection', 'documents', 'options');
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:document:mUpsert',
+          'index',
+          'collection',
+          'documents',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.mUpsert).not.called();
+      });
+    });
+
     describe('#document:mExecute', () => {
       it('should register a "document:mExecute" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {

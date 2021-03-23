@@ -18,7 +18,7 @@
     //    sets the default Access-Control-Allow-Headers
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
     "accessControlAllowOrigin": "*",
-    "accessControlAllowMethods": "GET,POST,PUT,DELETE,OPTIONS,HEAD",
+    "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
     "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
   },
 
