@@ -9,7 +9,7 @@ description: KuzzleRequest class getSearchParams() method
 
 <SinceBadge version="auto-version" />
 
-Returns the search params.
+Returns the parameters associated to a standardized search query.
 
 ### Arguments
 

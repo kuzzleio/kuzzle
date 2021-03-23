@@ -237,9 +237,9 @@ The main available properties are the following:
 
 <SinceBadge version="auto-version" />
 
-The request object expose methods to extract parameters from the request in a standardized way.
+The request object exposes methods to safely extract parameters from the request in a standardized way.
 
-Each of those method will check for the parameter presence and type. In case of a validation failure, corresponding errors will be returned.
+Each of those methods will check for the parameter presence and type. In case of a validation failure, the corresponding API error will be thrown.
 
 All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc. 
 
