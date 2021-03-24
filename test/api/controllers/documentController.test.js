@@ -622,13 +622,18 @@ describe('DocumentController', () => {
 
     it('should notify with _updatedFields when doing an upsert ', async () => {
       request.input.body.documents = [
-        { _id: '_id1', body: { changes: { field: '_source'}, default: 'default' } },
-        { _id: '_id2', body: { changes: { field: '_source'}, default: 'default' } },
-        { _id: '_id3', body: { changes: { field: '_source'}, default: 'default' } }
+        { _id: '_id1', changes: { field: '_source'}, default: { field2: 'default'} },
+        { _id: '_id2', changes: { field: '_source'}, default: { field2: 'default'} },
+        { _id: '_id3', changes: { field: '_source'}, default: { field2: 'default'} }
       ];
 
       items[0].created = false;
       items[1].created = false;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpsert').resolves(({
+        items,
+        errors: []
+      }));
 
       await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
 
