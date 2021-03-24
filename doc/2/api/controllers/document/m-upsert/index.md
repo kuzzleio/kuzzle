@@ -8,7 +8,7 @@ title: mUpsert
 
 <SinceBadge version="auto-version"/>
 
-Applies partial changes to multiple document. If a document doesn't already exist, a new document is created.
+Applies partial changes to multiple documents. If a document doesn't already exist, a new document is created.
 
 ::: info
 The number of documents that can be updated by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
