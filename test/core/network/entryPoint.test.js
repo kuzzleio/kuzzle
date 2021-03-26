@@ -28,10 +28,6 @@ class FakeProtocol {
   }
 }
 
-class FakeHttpProtocol extends FakeProtocol {
-  constructor () { super('http'); }
-}
-
 class FakeWebSocketProtocol extends FakeProtocol {
   constructor () { super('websocket'); }
 }
@@ -46,11 +42,9 @@ class FakeInternalProtocol extends FakeProtocol {
 
 describe('lib/core/core/network/entryPoint', () => {
   let kuzzle;
-  let HttpMock;
-  let WebSocketMock;
+  let HttpWebSocketMock;
   let MqttMock;
   let InternalMock;
-  let httpMock;
   let httpEventEmitter;
   let EntryPoint;
   let entrypoint;
@@ -75,8 +69,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
     kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
-    HttpMock = FakeHttpProtocol;
-    WebSocketMock = FakeWebSocketProtocol;
+    HttpWebSocketMock = FakeWebSocketProtocol;
     MqttMock = FakeMqttProtocol;
     InternalMock = FakeInternalProtocol;
 
@@ -84,22 +77,16 @@ describe('lib/core/core/network/entryPoint', () => {
     sinon.spy(httpEventEmitter, 'on');
     httpEventEmitter.listen = sinon.spy();
 
-    httpMock = {
-      createServer: sinon.stub().returns(httpEventEmitter)
-    };
-
     winstonTransportConsole = sinon.spy();
     winstonTransportElasticsearch = sinon.spy();
     winstonTransportFile = sinon.spy();
     winstonTransportSyslog = sinon.spy();
 
     const network = `${root}/lib/core/network`;
-    mockrequire(`${network}/protocols/http`, { HttpProtocol: HttpMock});
-    mockrequire(`${network}/protocols/websocket`, WebSocketMock);
-    mockrequire(`${network}/protocols/mqtt`, MqttMock);
-    mockrequire(`${network}/protocols/internal`, InternalMock);
+    mockrequire(`${network}/protocols/httpwsProtocol`, HttpWebSocketMock);
+    mockrequire(`${network}/protocols/mqttProtocol`, MqttMock);
+    mockrequire(`${network}/protocols/internalProtocol`, InternalMock);
 
-    mockrequire('http', httpMock);
     mockrequire('winston', {
       createLogger: sinon.stub(),
       transports: {
@@ -143,7 +130,7 @@ describe('lib/core/core/network/entryPoint', () => {
       }
     });
 
-    for (const Class of [HttpMock, WebSocketMock, MqttMock, InternalMock]) {
+    for (const Class of [HttpWebSocketMock, MqttMock, InternalMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
 
@@ -261,17 +248,10 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(entrypoint.initLogger).be.calledOnce();
 
-      should(entrypoint.httpServer).be.an.Object();
-      should(httpMock.createServer).be.calledOnce();
-      should(httpMock.createServer.firstCall.returnValue.listen)
-        .be.calledOnce()
-        .be.calledWith(kuzzle.config.server.port, kuzzle.config.server.host);
-
-      should(entrypoint.protocols.get('http').init).be.calledOnce();
       should(entrypoint.protocols.get('websocket').init).be.calledOnce();
       should(entrypoint.protocols.get('mqtt').init).be.calledOnce();
       should(entrypoint.loadMoreProtocols).be.calledOnce();
-      should(Array.from(entrypoint.protocols.keys())).be.length(4);
+      should(Array.from(entrypoint.protocols.keys())).be.length(3);
     });
 
     it('should not load disabled protocols', () => {
@@ -279,10 +259,9 @@ describe('lib/core/core/network/entryPoint', () => {
 
       return entrypoint.startListening()
         .then(() => {
-          should(entrypoint.protocols.get('http').init).be.calledOnce();
           should(entrypoint.protocols.get('websocket').init).be.calledOnce();
           should(entrypoint.protocols.get('internal').init).be.calledTwice();
-          should(Array.from(entrypoint.protocols.keys())).be.length(3);
+          should(Array.from(entrypoint.protocols.keys())).be.length(2);
           should(entrypoint.protocols.get('mqtt')).be.undefined();
         });
     });
