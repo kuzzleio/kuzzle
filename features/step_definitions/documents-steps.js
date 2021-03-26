@@ -48,6 +48,21 @@ Then('I {string} the following documents:', async function (action, dataTable) {
     documents);
 });
 
+Then(/I execute the "(.*?)" action on the following documents:$/, async function (action, dataTable) {
+  action = `m${action[0].toUpperCase() + action.slice(1)}`;
+
+  const documents = this.parseObjectArray(dataTable);
+
+  const response = await this.sdk.query({
+    controller: 'document',
+    action,
+    index: this.props.index,
+    collection: this.props.collection,
+    body: { documents } });
+
+  this.props.result = response.result;
+});
+
 Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {
   const body = this.parseObject(dataTable);
 
