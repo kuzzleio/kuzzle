@@ -481,12 +481,12 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //     * (optional, deprecated) database: 
+    //     * (optional, deprecated) database:
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Use 'options.db' instead. If both options are set, then 
+    //               Use 'options.db' instead. If both options are set, then
     //               "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
@@ -513,12 +513,12 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //     * (optional, deprecated) database: 
+    //     * (optional, deprecated) database:
     //         ID of the redis database (default: 0)
     //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //               Use 'options.db' instead. If both options are set, then 
+    //               Use 'options.db' instead. If both options are set, then
     //               "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
@@ -543,22 +543,22 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
-    //   * (optional, deprecated) database: 
+    //   * (optional, deprecated) database:
     //       ID of the redis database (default: 0)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Use 'options.db' instead. If both options are set, then 
+    //             Use 'options.db' instead. If both options are set, then
     //             "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
-    //   * (optional) clusterOptions: 
+    //   * (optional) clusterOptions:
     //       Redis Cluster specific options compatible with IORedis.
     //       See Redis Cluster client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
-    //   * (optional) overrideDnsLookup: 
+    //   * (optional) overrideDnsLookup:
     //       Only available when using a Redis Cluster config.
-    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates 
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
     //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
     //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     //"internalCache": {
@@ -589,12 +589,12 @@
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //   * (optional, deprecated) database: 
+    //   * (optional, deprecated) database:
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Use 'options.db' instead. If both options are set, then 
+    //             Use 'options.db' instead. If both options are set, then
     //             "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
@@ -621,12 +621,12 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //   * (optional, deprecated) database: 
+    //   * (optional, deprecated) database:
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Use 'options.db' instead. If both options are set, then 
+    //             Use 'options.db' instead. If both options are set, then
     //             "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
@@ -651,22 +651,22 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
-    //   * (optional, deprecated) database: 
+    //   * (optional, deprecated) database:
     //       ID of the redis database (default: 5)
     //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
-    //             Use 'options.db' instead. If both options are set, then 
+    //             Use 'options.db' instead. If both options are set, then
     //             "options.db" will take precedence.
-    //   * (optional) options: 
+    //   * (optional) options:
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
-    //   * (optional) clusterOptions: 
+    //   * (optional) clusterOptions:
     //       Redis Cluster specific options compatible with IORedis.
     //       See Redis Cluster client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
-    //   * (optional) overrideDnsLookup: 
+    //   * (optional) overrideDnsLookup:
     //       Only available when using a Redis Cluster config.
-    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates 
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
     //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
     //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     //"memoryStorage": {
@@ -898,7 +898,7 @@
   //   * minimumNodes:
   //       The minimum number of nodes required by the cluster. It should be set
   //       to AT LEAST to ((total number of nodes / 2) + 1), to ensure that the
-  //       cluster continues to work correctly even in the face of a networok
+  //       cluster continues to work correctly even in the face of a network
   //       split. If there are fewer nodes available than the configured
   //       minimum, the entire cluster stops accepting requests, until there are
   //       enough nodes available again.
@@ -914,6 +914,11 @@
   //       * sync:
   //          one-way port to propagate sync information from a node to the
   //          other ones
+  //  * syncTimeout:
+  //      The maximum time (in milliseconds) for a new node to receive a
+  //      fullstate from another node. If the cluster holds a very large number
+  //      of realtime subscriptions, it might be necessary to allow more time
+  //      for a fullstate to be sent to new nodes.
   "cluster": {
     "activityDepth": 50,
     "heartbeat": 2000,
@@ -923,6 +928,7 @@
     "ports": {
       "command": 7510,
       "sync": 7511
-    }
+    },
+    "syncTimeout": 5000
   }
 }
