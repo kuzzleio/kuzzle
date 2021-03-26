@@ -372,6 +372,58 @@ Feature: Document Controller
     And The document "document-2" content match:
       | name | "document2" |
 
+  # document:mUpsert ===========================================================
+
+  @mappings
+  Scenario: Upsert multiple documents
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+    When I execute the "upsert" action on the following documents:
+      | _id          | changes                | default                |
+      | "document-1" | { "name": "updated1" } | -                      |
+      | "document-2" | { "age": 21 }          | { "name": "created2" } |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                            | _version | status | created |
+      | "document-1" | { "name": "updated1", "age": 42 }  | 2        | 200    | false   |
+      | "document-2" | { "name": "created2", "age": 21 }  | 1        | 201    | true    |
+    And I should receive a empty "errors" array
+    And The document "document-1" content match:
+      | name | "updated1" |
+      | age  | 42         |
+    And The document "document-2" content match:
+      | name | "created2" |
+      | age  | 21          |
+
+  @mappings
+  Scenario: Upsert multiple documents with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+      | "document-2" | { "name": "document2" }            |
+    When I execute the "upsert" action on the following documents:
+      | _id           | changes                 | default                 |
+      | -             | { "name": "updated0" }  | -                       |
+      | "document-42" | { "name": "updated42" } | { "name": "created42" } |
+      | "document-1"  | { "name": "updated1" }  | "not an object"         |
+      | "document-2"  | "not an object"         | -                       |
+    Then I should receive a "successes" array of objects matching:
+      | _id           | _source                 | _version | status | created |
+      | "document-42" | { "name": "created42" } | 1        | 201    | true    |
+    And I should receive a "errors" array of objects matching:
+      | reason                               | status | document                                                    |
+      | "document _id must be a string"      | 400    | { "changes": { "name": "updated0" } }                       |
+      | "document default must be an object" | 400    | { "_id": "document-1", "changes": { "name": "updated1" } }  |
+      | "document changes must be an object" | 400    | { "_id": "document-2", "changes": "not an object" }         |
+    And The document "document-1" content match:
+      | name | "document1" |
+      | age  | 42         |
+    And The document "document-2" content match:
+      | name | "document2" |
+    And The document "document-42" content match:
+      | name | "created42" |
 
   # document:mReplace ==========================================================
 
