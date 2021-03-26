@@ -86,7 +86,7 @@ app.controller.register('drivers', {
   actions: {
     create: {
       handler: async request => {
-        const originalUser = request.context.user;
+        const originalUser = request.getUser();
 
         return app.sdk.as(originalUser).document.create(
           'nyc-open-data',
@@ -109,7 +109,7 @@ app.controller.register('drivers', {
   actions: {
     create: {
       handler: async request => {
-        const originalUser = request.context.user;
+        const originalUser = request.getUser();
         const impersonatedSdk = app.sdk.as(originalUser, { checkRights: true });
 
         // Will fail if "originalUser" is not allowed to create documents

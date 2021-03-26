@@ -84,6 +84,7 @@ lib/core/backend/backendPlugin.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js
+lib/api/request/kuzzleRequest.js
 lib/api/request/kuzzle-request.js
 lib/api/request/requestContext.js
 lib/api/request/requestInput.js

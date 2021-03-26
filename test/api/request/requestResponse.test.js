@@ -271,6 +271,33 @@ describe('#RequestResponse', () => {
     });
   });
 
+  describe('configure', () => {
+    let response;
+
+    beforeEach(() => {
+      response = new RequestResponse(req);
+    });
+
+    it('should allow the user to configure the headers of the response', () => {
+      const testHeader = { 'X-Foo': 'foo' };
+
+      response.configure({ headers: testHeader });
+      should(response.getHeader('X-Foo')).eql('foo');
+    });
+
+    it('should allow the user to configure the status of the response', () => {
+      response.configure({ status: 402 });
+      should(response.status).eql(402);
+    });
+
+    it('should allow the user to configure the format of the response', () => {
+      response.configure({ format: 'raw' });
+      should(response.raw).be.true();
+      response.configure({ format: 'standard' });
+      should(response.raw).be.false();
+    });
+  });
+
   describe('toJSON', () => {
     it('should return a valid JSON object in Kuzzle format', () => {
       let response = new RequestResponse(req);
