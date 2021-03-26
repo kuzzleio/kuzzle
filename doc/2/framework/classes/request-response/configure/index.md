@@ -9,7 +9,8 @@ description: RequestResponse class configure() method
 
 <SinceBadge version="auto-version" />
 
-Allows to directly set internal configuration options.
+Allows to configure how the API response should be sent to the requesting client.
+
 
 ### Arguments
 
