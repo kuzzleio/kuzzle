@@ -3551,13 +3551,15 @@ describe('Test: ElasticSearch service', () => {
           {
             _id: 'mehry',
             _source: { city: 'Kathmandu' },
-            created: 'updated',
+            created: false,
+            result: 'updated',
             get: { _source: { age: 26, city: 'Kathmandu' } }
           },
           {
             _id: 'liia',
             _source: { city: 'Ho Chi Minh City' },
-            created: 'updated',
+            created: false,
+            result: 'updated',
             get: { _source: { age: 29, city: 'Ho Chi Minh City' } }
           }
         ],
@@ -3663,7 +3665,7 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should return the right "_created" result on a document creation', async () => {
-      mExecuteResult.items[1].created = 'created';
+      mExecuteResult.items[1].result = 'created';
       elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
 
       const result = await elasticsearch.mUpsert(index, collection, documents);
