@@ -19,7 +19,7 @@ describe('core/network/protocols/websocket', () => {
 
   before(() => {
     mockRequire('uWebSockets.js', uWSMock);
-    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
   });
 
   after(() => {

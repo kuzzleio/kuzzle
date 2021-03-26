@@ -31,7 +31,7 @@ class FakeClient {
   }
 }
 
-describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
+describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
   let netMock;
   let entrypoint;
   let protocol;
@@ -48,7 +48,7 @@ describe('/lib/core/network/entryPoint/protocols/mqtt', () => {
     mockrequire('net', netMock);
     mockrequire('aedes', {Server: AedesMock});
 
-    MqttProtocol = mockrequire.reRequire('../../../../lib/core/network/protocols/mqtt');
+    MqttProtocol = mockrequire.reRequire('../../../../lib/core/network/protocols/mqttProtocol');
   });
 
   after(() => {

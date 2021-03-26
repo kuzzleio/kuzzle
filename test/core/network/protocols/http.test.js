@@ -23,7 +23,7 @@ describe('core/network/protocols/http', () => {
 
   before(() => {
     mockRequire('uWebSockets.js', uWSMock);
-    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
   });
 
   after(() => {
@@ -618,7 +618,7 @@ describe('core/network/protocols/http', () => {
       mockRequire('zlib', {
         gzip: sinon.stub().yields(new Error('foo')),
       });
-      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
       const protocol = new HttpWs();
       await protocol.init(entryPoint);
 
@@ -653,7 +653,7 @@ describe('core/network/protocols/http', () => {
       }
       finally {
         mockRequire.stop('zlib');
-        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
         clearInterval(protocol.nowInterval);
       }
     });
@@ -662,7 +662,7 @@ describe('core/network/protocols/http', () => {
       mockRequire('zlib', {
         deflate: sinon.stub().yields(new Error('foo')),
       });
-      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
       const protocol = new HttpWs();
       await protocol.init(entryPoint);
 
@@ -697,7 +697,7 @@ describe('core/network/protocols/http', () => {
       }
       finally {
         mockRequire.stop('zlib');
-        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/http+websocket');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
         clearInterval(protocol.nowInterval);
       }
     });

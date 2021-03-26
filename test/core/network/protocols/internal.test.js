@@ -4,10 +4,10 @@ const should = require('should');
 const sinon = require('sinon');
 
 const EntryPoint = require('../../../../lib/core/network/entryPoint');
-const InternalProtocol = require('../../../../lib/core/network/protocols/internal');
+const InternalProtocol = require('../../../../lib/core/network/protocols/internalProtocol');
 const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
 
-describe('/lib/core/network/protocols/internal', () => {
+describe('/lib/core/network/protocols/internalProtocol', () => {
   let kuzzle;
   let entrypoint;
   let protocol;
