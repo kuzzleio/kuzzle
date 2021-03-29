@@ -38,11 +38,16 @@ export class MultipleErrorsError extends KuzzleError {
   }
 
   toJSON () {
-    const serialized = super.toJSON();
+    const serialized = super.toJSON();    
 
-    serialized.errors = this.errors.map(error => error.toJSON());
     serialized.count = this.count;
 
+    try {
+      serialized.errors = this.errors.map(error => error.toJSON());
+    } catch (error) {
+      serialized.errors = this.errors;
+    }
+    
     return serialized;
   }
 }
