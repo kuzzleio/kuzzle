@@ -44,7 +44,8 @@ export class MultipleErrorsError extends KuzzleError {
 
     try {
       serialized.errors = this.errors.map(error => error.toJSON());
-    } catch (error) {
+    }
+    catch (error) {
       serialized.errors = this.errors;
     }
     
