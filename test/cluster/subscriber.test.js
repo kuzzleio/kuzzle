@@ -225,7 +225,7 @@ describe('ClusterSubscriber', () => {
         scope: 'scope',
         index: 'sensors'
       };
-      const encodedMessage = Buffer.from('0800120573636f70651a0773656e736f7273', 'hex')
+      const encodedMessage = Buffer.from('0800120573636f70651a0773656e736f7273', 'hex');
 
       beforeEach(() => {
         addIndexHandler = sinon.stub().resolves();
