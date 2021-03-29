@@ -3,9 +3,16 @@
 const mockRequire = require('mock-require');
 const should = require('should');
 const sinon = require('sinon');
+const { merge } = require('lodash');
 
 const { InternalError: KuzzleInternalError } = require('../../index');
 const defaultConfig = require('../../lib/config/default.config');
+
+function getcfg (cfg) {
+  const defaults = JSON.parse(JSON.stringify(defaultConfig));
+
+  return merge(defaults, cfg);
+}
 
 describe('lib/config/index.js', () => {
   let config;
@@ -127,15 +134,6 @@ describe('lib/config/index.js', () => {
   });
 
   describe('#checkLimits', () => {
-    // checkLimits normally receives a defaulted version of Kuzzle configuration
-    const getcfg = cfg => {
-      const defaults = JSON.parse(JSON.stringify(defaultConfig.limits));
-
-      cfg.limits = Object.assign(defaults, cfg.limits);
-
-      return cfg;
-    };
-
     it('should throw if an invalid limits configuration is submitted', () => {
       mockedConfigContent = { limits: true };
 
@@ -231,6 +229,154 @@ describe('lib/config/index.js', () => {
       });
       should(() => config.load())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
+    });
+  });
+
+  describe('#checkHttpOptions', () => {
+    it('should throw if "enabled" is not a boolean', () => {
+      for (const bad of [null, 'foo', 123, 0, [], {}] ) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              http: {
+                enabled: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[http] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
+      }
+    });
+
+    it('should throw if "allowCompression" is not a boolean', async () => {
+      for (const bad of [null, 'foo', 123, 0, [], {}] ) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              http: {
+                allowCompression: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[http] "allowCompression" parameter: invalid value "${bad}" (boolean expected)`);
+      }
+    });
+
+    it('should throw if "maxEncodingLayers" holds an invalid value', async () => {
+      for (const bad of [null, 'foo', 0, true, [], {}]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              http: {
+                maxEncodingLayers: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[http] "maxEncodingLayers" parameter: invalid value "${bad}" (integer >= 1 expected)`);
+      }
+    });
+
+    it('should throw if "maxFormFileSize" holds an invalid value', async () => {
+      for (const bad of [null, -1, true, [], {}, 'foobar']) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              http: {
+                maxFormFileSize: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[http] "maxFormFileSize" parameter: cannot parse "${bad}"`);
+      }
+    });
+  });
+
+  describe('#checkWebSocketOptions', () => {
+    it('should throw if "enabled" is not a boolean', async () => {
+      for (const bad of [null, 'foo', 123, 0, [], {}] ) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                enabled: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
+      }
+    });
+
+    it('should throw if "idleTimeout" holds an invalid value', async () => {
+      for (const bad of [null, 'foo', -1, [], {}, true]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                idleTimeout: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`);
+      }
+    });
+
+    it('should throw if "compression" holds an invalid value', async () => {
+      for (const bad of [null, 'foo', 123, 0, [], {}] ) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                compression: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[websocket] "compression" parameter: invalid value "${bad}" (boolean value expected)`);
+      }
+    });
+
+    it('should throw if "rateLimit" holds an invalid value', async () => {
+      for (const bad of [null, 'foo', -1, [], {}, true]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                rateLimit: bad,
+              }
+            }
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`);
+      }
     });
   });
 });

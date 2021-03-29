@@ -30,7 +30,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async request => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`
       }
     }
   }

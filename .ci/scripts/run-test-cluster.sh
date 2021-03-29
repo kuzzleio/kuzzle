@@ -12,7 +12,7 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 echo "Installing dependencies..."
-npm ci --silent --unsafe-perm
+npm install --unsafe-perm
 
 ./.ci/scripts/install-plugins.sh
 

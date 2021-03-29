@@ -96,7 +96,7 @@ describe('notify methods', () => {
         'update',
         content);
 
-      const expectedNotification = new DocumentNotification(
+      const expectedNotification = DocumentNotification.fromRequest(
         request,
         'out',
         'update',
@@ -136,7 +136,7 @@ describe('notify methods', () => {
       it('should notify the right channels', async () => {
         sinon.spy(notifier, '_notifyDocument');
         const content = {some: 'content'};
-        const documentNotification = new DocumentNotification(
+        const documentNotification = DocumentNotification.fromRequest(
           request,
           'out',
           'update',
@@ -204,7 +204,7 @@ describe('notify methods', () => {
     describe('call from the cluster', () => {
       it('should notify every channels', async () => {
         const content = {some: 'content'};
-        const documentNotification = new DocumentNotification(
+        const documentNotification = DocumentNotification.fromRequest(
           request,
           'out',
           'create',
