@@ -38,7 +38,7 @@ export class MultipleErrorsError extends KuzzleError {
   }
 
   toJSON () {
-    const serialized = super.toJSON();    
+    const serialized = super.toJSON();
 
     serialized.count = this.count;
 
