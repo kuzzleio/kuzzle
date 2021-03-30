@@ -148,3 +148,22 @@ A `SizeLimitError` error is thrown by Kuzzle if the request size exceeds the lim
 **status**: 401
 
 An `UnauthorizedError` error is thrown by Kuzzle when an authentication attempt failed, or if a requested resource needs an authentication to be accessed.
+
+---
+
+## MultipleErrorsError
+
+
+
+**status**: 400
+
+A `MultipleErrorsError` error is thrown when Kuzzle encouter several errors while processing an action. This is likely to happen when Kuzzle handles multi-action request.
+
+The detail of each error can be retrieved in the `errors` property of the error object.
+
+**Additional Properties:**
+
+| property | type             | description                    |
+| -------- | ---------------- | ------------------------------ |
+| `count`  | integer          | Number of errors encountered |
+| `errors` | array of objects | Each error detailed           |

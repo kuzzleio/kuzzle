@@ -74,6 +74,10 @@ Body:
 - `collection`: collection name
 - `index`: index name
 
+### Optional:
+
+- `strict`: if set, an error will occur if at least one document has not been created/updated/deleted <SinceBadge version="auto-version" />
+
 ---
 
 ## Body properties
@@ -99,6 +103,8 @@ Each item is an object containing the action name as key and the corresponding o
   - `error`: 
     - `type`: elasticsearch client error type
     - `reason`: human readable error message
+
+If `strict` mode is enabled, will rather return an error if at least one document has not been created/updated/deleted.
 
 ```js
 {

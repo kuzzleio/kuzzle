@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
+  MultipleErrorsError,
   SizeLimitError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -230,7 +231,7 @@ describe('DocumentController', () => {
   describe('#mGet', () => {
     beforeEach(() => {
       request.input.body = {
-        ids: ['foo', 'bar']
+        ids: ['id', 'id2']
       };
 
       kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
@@ -249,7 +250,7 @@ describe('DocumentController', () => {
         'core:storage:public:document:mGet',
         index,
         collection,
-        ['foo', 'bar']);
+        ['id', 'id2']);
 
       should(response).match({
         errors: [],
@@ -263,7 +264,7 @@ describe('DocumentController', () => {
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      should(() => documentController.mGet(request)).throw(
+      should(documentController.mGet(request)).be.rejectedWith(
         SizeLimitError,
         { id: 'services.storage.get_limit_exceeded' });
     });
@@ -284,6 +285,21 @@ describe('DocumentController', () => {
           { _id: 'id', _source: 'source', _version: 1 }
         ]
       });
+    });
+
+    it('should throw an error in strict mode if at least one document is missing', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
+        items: [
+          { _id: 'id', _source: 'source', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      return should(documentController.mGet(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -515,6 +531,26 @@ describe('DocumentController', () => {
         .not.called();
       should(kuzzle.ask.withArgs('core:realtime:document:mNotify'))
         .not.called();
+    });
+
+    it('should throw an error in strict mode if at least one action has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
+        items,
+        errors: [
+          {
+            document: { _id: '_id42', _source: '_source' },
+            status: 400,
+            reason: 'reason'
+          }
+        ]
+      }));
+
+      return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
+        .rejectedWith(
+          MultipleErrorsError,
+          { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -1294,6 +1330,21 @@ describe('DocumentController', () => {
           { id: 'id1', reason: 'reason' }
         ]
       });
+    });
+
+    it('should throw an error in strict mode if at least one deletion has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
+        documents,
+        errors: [
+          { id: 'id1', reason: 'reason' }
+        ]
+      }));
+
+      should(documentController.mDelete(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 

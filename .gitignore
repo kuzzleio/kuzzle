@@ -96,6 +96,7 @@ lib/kerror/errors/gatewayTimeoutError.js
 lib/kerror/errors/index.js
 lib/kerror/errors/internalError.js
 lib/kerror/errors/kuzzleError.js
+lib/kerror/errors/multipleErrorsError.js
 lib/kerror/errors/notFoundError.js
 lib/kerror/errors/partialError.js
 lib/kerror/errors/pluginImplementationError.js
