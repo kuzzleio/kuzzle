@@ -147,9 +147,15 @@
           "message": "Admin user is already set.",
           "class": "PreconditionError"
         },
+        "incomplete_multiple_request": {
+          "description": "Failed to execute some or all actions requested",
+          "code": 10,
+          "message": "At least one of the %s actions failed.",
+          "class": "MultipleErrorsError"
+        },
         "not_enough_nodes": {
           "description": "The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added",
-          "code": 10,
+          "code": 11,
           "message": "Rejected: this cluster is disabled because there aren't enough nodes connected.",
           "class": "ServiceUnavailableError"
         }

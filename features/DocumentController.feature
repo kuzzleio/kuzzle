@@ -513,6 +513,21 @@ Feature: Document Controller
       | "214284"      |
       | "document-42" |
 
+  @mappings
+  Scenario: Get multiple documents in strict mode with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    When I execute the action "document":"mGet" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { ids: [ "document-1", "document-42" ] } |
+    Then I should receive an error matching:
+      | id     | "api.process.incomplete_multiple_request" |
+
   # document:count =============================================================
 
   @mappings
