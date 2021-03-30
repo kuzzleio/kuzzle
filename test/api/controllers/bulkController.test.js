@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const { Request } = require('../../../index');
+const { Request, MultipleErrorsError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
 
@@ -84,6 +84,19 @@ describe('Test the bulk controller', () => {
         successes: [],
         errors: ['fake', 'data']
       });
+    });
+
+    it('should throw an error in strict mode if at least one import has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:bulk').resolves({
+        items: [],
+        errors: ['fake', 'data']
+      });
+
+      should(controller.import(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -226,6 +239,18 @@ describe('Test the bulk controller', () => {
         request,
         actionEnum.WRITE,
         mCreateOrReplaceResult);
+    });
+
+    it('should throw an error in strict mode if at least one createOrReplace has failed', () => {
+      request.input.args.strict = true;
+      kuzzle.ask.withArgs('core:storage:public:document:mCreateOrReplace').resolves({
+        items: [],
+        errors: [{ name: 'Maedhros' }, { name: 'Maglor' }]
+      });
+
+      should(controller.import(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
