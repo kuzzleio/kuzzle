@@ -5,6 +5,8 @@ const sinon = require('sinon');
 const mockRequire = require('mock-require');
 const Long = require('long');
 
+const KuzzleMock = require('../mocks/kuzzle.mock');
+
 class ZeroMQSubscriberMock {
   constructor () {
     this.connect = sinon.stub().resolves();
@@ -17,6 +19,7 @@ class ClusterNodeMock {
   constructor () {
     this.bind = sinon.stub().resolves();
     this.evictNode = sinon.stub().resolves();
+    this.evictSelf = sinon.stub().resolves();
 
     this.fullState = {
       addRealtimeRoom: sinon.stub(),
@@ -43,6 +46,7 @@ describe('ClusterSubscriber', () => {
   let ClusterSubscriber;
   let subscriber;
   let localNode;
+  let kuzzle;
 
   before(() => {
     mockRequire('zeromq', { Subscriber: ZeroMQSubscriberMock });
@@ -54,24 +58,7 @@ describe('ClusterSubscriber', () => {
   });
 
   beforeEach(() => {
-    global.kuzzle = {
-      log: {
-        error: sinon.stub(),
-        warn: sinon.stub(),
-      },
-      shutdown: sinon.stub(),
-      ask: sinon.stub(),
-      pluginsManager: {
-        registerStrategy: sinon.stub(),
-        unregisterStrategy: sinon.stub(),
-      },
-      janitor: {
-        dump: sinon.stub(),
-      },
-      validation: {
-        curateSpecification: sinon.stub(),
-      },
-    };
+    kuzzle = new KuzzleMock();
     localNode = new ClusterNodeMock();
     subscriber = new ClusterSubscriber(localNode, remoteNodeId, remoteNodeIP);
   });
@@ -255,8 +242,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.processData(topic, encodedMessage);
 
-        should(global.kuzzle.log.error).be.calledTwice();
-        should(global.kuzzle.shutdown).be.called();
+        should(localNode.evictSelf).calledOnce();
       });
 
       it('should evict the node if an incorrect message is received', async () => {
@@ -382,7 +368,7 @@ describe('ClusterSubscriber', () => {
         const ret = await subscriber.validateMessage(message);
 
         should(ret).be.false();
-        should(global.kuzzle.shutdown).be.called();
+        should(localNode.evictSelf).calledOnce();
       });
     });
 
@@ -413,7 +399,7 @@ describe('ClusterSubscriber', () => {
         await subscriber.handleNodeEviction(message);
 
         should(subscriber.localNode.evictNode).not.be.called();
-        should(global.kuzzle.shutdown).be.calledOnce();
+        should(kuzzle.shutdown).be.calledOnce();
       });
 
       it('should evict the remote node', async () => {
@@ -425,7 +411,7 @@ describe('ClusterSubscriber', () => {
             broadcast: false,
             reason: 'you are a very very bad node'
           });
-        should(global.kuzzle.shutdown).not.be.called();
+        should(kuzzle.shutdown).not.be.called();
       });
     });
 
@@ -550,7 +536,7 @@ describe('ClusterSubscriber', () => {
 
         // @todo check that the method is called with the notification
         // when the Notification.from method is reay
-        should(global.kuzzle.ask).be.called();
+        should(kuzzle.ask).be.called();
       });
     });
 
@@ -575,7 +561,7 @@ describe('ClusterSubscriber', () => {
 
         // @todo check that the method is called with the notification
         // when the Notification.from method is reay
-        should(global.kuzzle.ask).be.called();
+        should(kuzzle.ask).be.called();
       });
     });
 
@@ -590,7 +576,7 @@ describe('ClusterSubscriber', () => {
         await subscriber.handleNewAuthStrategy(message);
 
         should(localNode.fullState.addAuthStrategy).be.calledWith(message);
-        should(global.kuzzle.pluginsManager.registerStrategy).be.calledWith(
+        should(kuzzle.pluginsManager.registerStrategy).be.calledWith(
           'pluginName',
           'strategyName',
           'strategy');
@@ -607,7 +593,7 @@ describe('ClusterSubscriber', () => {
         await subscriber.handleAuthStrategyRemoval(message);
 
         should(localNode.fullState.removeAuthStrategy).be.calledWith('strategyName');
-        should(global.kuzzle.pluginsManager.unregisterStrategy).be.calledWith(
+        should(kuzzle.pluginsManager.unregisterStrategy).be.calledWith(
           'pluginName',
           'strategyName');
       });
@@ -617,7 +603,7 @@ describe('ClusterSubscriber', () => {
       it('should handle the message', async () => {
         await subscriber.handleResetSecurity();
 
-        should(global.kuzzle.ask)
+        should(kuzzle.ask)
           .be.calledWith('core:security:profile:invalidate')
           .be.calledWith('core:security:role:invalidate');
       });
@@ -631,7 +617,7 @@ describe('ClusterSubscriber', () => {
 
         subscriber.handleDumpRequest(message);
 
-        should(global.kuzzle.janitor.dump).be.calledWith('suffix');
+        should(kuzzle.dump).be.calledWith('suffix');
       });
     });
 
@@ -639,7 +625,7 @@ describe('ClusterSubscriber', () => {
       it('should handle the message', () => {
         subscriber.handleShutdown();
 
-        should(global.kuzzle.shutdown).be.called();
+        should(kuzzle.shutdown).be.called();
       });
     });
 
@@ -647,7 +633,7 @@ describe('ClusterSubscriber', () => {
       it('should handle the message', () => {
         subscriber.handleRefreshValidators();
 
-        should(global.kuzzle.validation.curateSpecification).be.called();
+        should(kuzzle.validation.curateSpecification).be.called();
       });
     });
 
@@ -659,7 +645,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.handleProfileInvalidation(message);
 
-        should(global.kuzzle.ask).be.calledWith(
+        should(kuzzle.ask).be.calledWith(
           'core:security:profile:invalidate',
           'profileId');
       });
@@ -673,7 +659,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.handleRoleInvalidation(message);
 
-        should(global.kuzzle.ask).be.calledWith(
+        should(kuzzle.ask).be.calledWith(
           'core:security:role:invalidate',
           'roleId');
       });
@@ -688,7 +674,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.handleIndexAddition(message);
 
-        should(global.kuzzle.ask).be.calledWith(
+        should(kuzzle.ask).be.calledWith(
           'core:storage:scope:cache:addIndex',
           'index');
       });
@@ -704,7 +690,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.handleCollectionAddition(message);
 
-        should(global.kuzzle.ask).be.calledWith(
+        should(kuzzle.ask).be.calledWith(
           'core:storage:scope:cache:addCollection',
           'index',
           'collection');
@@ -721,7 +707,7 @@ describe('ClusterSubscriber', () => {
 
         await subscriber.handleCollectionRemoval(message);
 
-        should(global.kuzzle.ask).be.calledWith(
+        should(kuzzle.ask).be.calledWith(
           'core:storage:scope:cache:removeCollection',
           'index',
           'collection');
