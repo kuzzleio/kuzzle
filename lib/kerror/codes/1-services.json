@@ -257,6 +257,12 @@
           "code": 45,
           "message": "The keyword \"%s\" is not part of Elasticsearch Query DSL. Are you trying to use a Koncorde query?",
           "class": "BadRequestError"
+        },
+        "incomplete_update": {
+          "description": "Couldn't update all the requested documents",
+          "code": 46,
+          "message": "%s documents were successfully updated before an error occured",
+          "class": "MultipleErrorsError"
         }
       }
     },

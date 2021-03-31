@@ -65,3 +65,33 @@ Feature: Bulk Controller
     Then I should receive a result matching:
       | deleted | 2 |
     And I count 1 documents
+
+  # bulk:updateByQuery =========================================================
+
+  @mappings
+  Scenario: Bulk update by query
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                              |
+      | "document-1" | { "name": "Sylvanas Windrunner" } |
+      | "document-2" | { "name": "Tirion Fordring" }     |
+      | "document-3" | { "name": "Tirion Fordring" }     |
+      | "document-4" | { "name": "Sylvanas Windrunner" } |
+    And I refresh the collection
+    When I successfully execute the action "bulk":"updateByQuery" with args:
+      | index      | "nyc-open-data"                                                                                   |
+      | collection | "yellow-taxi"                                                                                     |
+      | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
+    Then I should receive a result matching:
+      | updated | 2 |
+    When I "get" the following document ids:
+      | "document-1" |
+      | "document-2" |
+      | "document-3" |
+      | "document-4" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                                                     |
+      | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+      | "document-2" | { "name": "Tirion Fordring" }                               |
+      | "document-3" | { "name": "Tirion Fordring" }                               |
+      | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |

@@ -1364,6 +1364,44 @@ describe('#core/storage/ClientAdapter', () => {
       });
     });
 
+    describe('#bulk:updateByQuery', () => {
+      it('should register a "bulk:updateByQuery" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:bulk:updateByQuery`,
+            'index',
+            'collection',
+            'query',
+            'changes',
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index', 'collection');
+
+          should(adapter.client.bulkUpdateByQuery)
+            .calledWith('index', 'collection', 'query', 'changes', 'options');
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:bulk:updateByQuery',
+          'index',
+          'collection',
+          'query',
+          'changes',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.bulkUpdateByQuery).not.be.called();
+      });
+    });
+
     describe('#document:upsert', () => {
       it('should register a "document:upsert" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
