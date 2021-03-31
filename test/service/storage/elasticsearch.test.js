@@ -6,6 +6,7 @@ const ms = require('ms');
 
 const {
   BadRequestError,
+  MultipleErrorsError,
   PreconditionError,
   SizeLimitError,
 } = require('../../../index');
@@ -1388,6 +1389,108 @@ describe('Test: ElasticSearch service', () => {
         .rejectedWith(
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
+    });
+  });
+
+  describe('#bulkUpdateByQuery', () => {
+    let query;
+    let changes;
+    let request;
+  
+    beforeEach(() => {
+      query = {
+        match: { foo: 'bar' }
+      };
+      changes = {
+        bar: 'foo'
+      };
+
+      request = {
+        body: {
+          query,
+          script: {
+            params: { bar: 'foo'},
+            source: 'ctx._source.bar = params[\'bar\'];'
+          }
+        },
+        index: esIndexName,
+        refresh: 'false'
+      };
+
+      elasticsearch._client.updateByQuery.resolves({
+        body: {
+          total: 42,
+          updated: 42,
+          failures: []
+        }
+      });
+
+    });
+
+    it('should have updateByQuery capabilities', async () => {
+      const result = await elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch(request);
+
+      should(result).match({
+        updated: 42
+      });
+    });
+
+    it('should allow additonnal option', async () => {
+      request.refresh = 'wait_for';
+
+      await elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes,
+        {refresh: 'wait_for'});
+
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch(request);
+    });
+
+    it('should reject if client.updateByQuery fails', () => {
+      elasticsearch._client.updateByQuery.rejects(esClientError);
+
+      const promise = elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+        });
+    });
+
+    it('should reject if some failures occur', () => {
+      elasticsearch._client.updateByQuery.resolves({
+        body: {
+          total: 3,
+          updated: 2,
+          failures: [{ shardId: 42, reason: 'error', foo: 'bar' }]
+        }
+      });
+
+      const promise = elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      return should(promise).be.rejectedWith(
+        MultipleErrorsError,
+        {
+          id: 'services.storage.incomplete_update',
+          message: '2 documents were successfully updated before an error occured',
+        }
+      );
     });
   });
 
