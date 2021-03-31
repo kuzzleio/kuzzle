@@ -23,7 +23,7 @@ This is a low level route intended to bypass Kuzzle actions on document update, 
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_bulk/_query[?refresh=wait_for]
-Method: PUT
+Method: PATCH
 Body:
 ```
 
