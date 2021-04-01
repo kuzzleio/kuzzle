@@ -48,6 +48,7 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
+    sinon.spy(this, 'onPipe');
 
     // ============================
 

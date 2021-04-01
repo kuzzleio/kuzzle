@@ -8,7 +8,7 @@ const Kuzzle = require('../mocks/kuzzle.mock');
 
 const State = require('../../lib/cluster/state');
 
-describe.only('#Cluster Full State', () => {
+describe('#Cluster Full State', () => {
   let kuzzle;
   let state;
 
