@@ -75,6 +75,8 @@ upgrade-*.report
 *.js.map
 
 /index.js
+lib/api/request/*.js
+lib/kerror/errors/*.js
 lib/core/backend/index.js
 lib/core/backend/backend.js
 lib/core/backend/backendCluster.js

@@ -3,8 +3,8 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const Kuzzle = require('../../lib/kuzzle/kuzzle');
 const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
+const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
@@ -23,6 +23,7 @@ class KuzzleMock extends KuzzleEventEmitter {
     });
 
     this.id = 'knode-nasty-author-4242';
+    this.state = kuzzleStateEnum.RUNNING;
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -47,6 +48,7 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
+    sinon.spy(this, 'onPipe');
 
     // ============================
 
@@ -60,14 +62,15 @@ class KuzzleMock extends KuzzleEventEmitter {
     };
 
     this.koncorde = {
-      test: sinon.stub().returns([]),
+      getCollections: sinon.stub().returns([]),
+      getFilterIds: sinon.stub().returns([]),
+      getIndexes: sinon.stub().returns([]),
+      hasFilter: sinon.stub().returns(false),
+      normalize: sinon.stub().resolves({id: 'foobar'}),
       register: sinon.stub().resolves(),
       remove: sinon.stub().resolves(),
-      normalize: sinon.stub().resolves({id: 'foobar'}),
       store: sinon.stub().returns({id: 'foobar'}),
-      getCollections: sinon.stub().returns([]),
-      getIndexes: sinon.stub().returns([]),
-      getFilterIds: sinon.stub().returns([]),
+      test: sinon.stub().returns([]),
       validate: sinon.stub().resolves(),
     };
 
@@ -207,7 +210,5 @@ class KuzzleMock extends KuzzleEventEmitter {
     this.running = sinon.stub().returns(false);
   }
 }
-
-KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;

@@ -31,12 +31,6 @@ export class BackendCluster {
    * @return {Promise<void>}
    */
   async broadcast (event: string, payload: JSONObject): Promise<void> {
-    // @deprecated - to be removed with the new cluster (that event will
-    // always have an answerer)
-    if (!global.kuzzle.hasAskAnswerer('cluster:event:broadcast')) {
-      return;
-    }
-
     await global.kuzzle.ask('cluster:event:broadcast', event, payload);
   }
 
@@ -48,12 +42,6 @@ export class BackendCluster {
    * @return {Promise<void>}       [description]
    */
   async on (event: string, listener: EventHandler): Promise<void> {
-    // @deprecated - to be removed with the new cluster (that event will
-    // always have an answerer)
-    if (!global.kuzzle.hasAskAnswerer('cluster:event:on')) {
-      return;
-    }
-
     await global.kuzzle.ask('cluster:event:on', event, listener);
   }
 
@@ -66,12 +54,6 @@ export class BackendCluster {
    * @return {Promise<void>}
    */
   async once (event: string, listener: EventHandler): Promise<void> {
-    // @deprecated - to be removed with the new cluster (that event will
-    // always have an answerer)
-    if (!global.kuzzle.hasAskAnswerer('cluster:event:once')) {
-      return;
-    }
-
     await global.kuzzle.ask('cluster:event:once', event, listener);
   }
 
@@ -85,12 +67,6 @@ export class BackendCluster {
    * @return {Promise<void>}
    */
   async off (event: string, listener: EventHandler): Promise<void> {
-    // @deprecated - to be removed with the new cluster (that event will
-    // always have an answerer)
-    if (!global.kuzzle.hasAskAnswerer('cluster:event:off')) {
-      return;
-    }
-
     await global.kuzzle.ask('cluster:event:off', event, listener);
   }
 
@@ -101,12 +77,6 @@ export class BackendCluster {
    * @return {Promise<void>}
    */
   async removeAllListeners (event: string): Promise<void> {
-    // @deprecated - to be removed with the new cluster (that event will
-    // always have an answerer)
-    if (!global.kuzzle.hasAskAnswerer('cluster:event:removeAllListeners')) {
-      return;
-    }
-
     await global.kuzzle.ask('cluster:event:removeAllListeners', event);
   }
 }

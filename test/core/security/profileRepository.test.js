@@ -251,7 +251,7 @@ describe('Test: security/profileRepository', () => {
       }
     });
 
-    it('should call deleteFromDatabase, remove the profile from memory and trigger a "core:profileRepository:delete" event', async () => {
+    it('should call deleteFromDatabase and remove the profile from memory', async () => {
       profileRepository.profiles.set(testProfile._id, true);
 
       await profileRepository.deleteById(testProfile._id);
@@ -261,10 +261,6 @@ describe('Test: security/profileRepository', () => {
         .be.calledWithMatch(testProfile._id, { refresh: 'false' });
 
       should(profileRepository.profiles).not.have.key(testProfile._id);
-
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('core:profileRepository:delete', {_id: testProfile._id});
     });
 
     it('should be able to handle the refresh option', async () => {
@@ -306,10 +302,6 @@ describe('Test: security/profileRepository', () => {
         .be.calledWithMatch(testProfile._id, { refresh: 'false' });
 
       should(profileRepository.profiles).not.have.key(testProfile._id);
-
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('core:profileRepository:delete', {_id: testProfile._id});
     });
   });
 
@@ -385,7 +377,7 @@ describe('Test: security/profileRepository', () => {
         .be.rejectedWith(error);
     });
 
-    it('should properly persist the profile and trigger a "core:profileRepository:save" event when ok', async () => {
+    it('should properly persist the profile', async () => {
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
       profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
       kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
@@ -395,12 +387,6 @@ describe('Test: security/profileRepository', () => {
 
       should(result).be.exactly(testProfile);
       should(profileRepository.profiles).have.value('foo', testProfile);
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('core:profileRepository:save', {
-          _id: testProfile._id,
-          policies: testProfile.policies,
-        });
     });
 
     it('should reject if we try to remove the anonymous role from the anonymous profile', () => {

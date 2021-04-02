@@ -10,6 +10,7 @@ const {
   AdminController,
   AuthController,
   BulkController,
+  ClusterController,
   CollectionController,
   DocumentController,
   IndexController,
@@ -31,9 +32,10 @@ describe('funnel.init', () => {
     await funnel.init();
 
     should(funnel.rateLimiter.init).calledOnce();
-    should(funnel.controllers.size).be.eql(11);
+    should(funnel.controllers.size).be.eql(12);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
     should(funnel.controllers.get('bulk')).be.instanceOf(BulkController);
+    should(funnel.controllers.get('cluster')).be.instanceOf(ClusterController);
     should(funnel.controllers.get('collection')).be.instanceOf(CollectionController);
     should(funnel.controllers.get('document')).be.instanceOf(DocumentController);
     should(funnel.controllers.get('index')).be.instanceOf(IndexController);

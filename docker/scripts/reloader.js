@@ -137,4 +137,10 @@ watcher.on('change', async file => {
   }
 });
 
+process.on('SIGUSR1', async () => {
+  console.log(clc.green('[RELOADER] Caught signal SIGUSR1. Restarting...'));
+  await stopProcess();
+  startProcess();
+});
+
 startProcess();
