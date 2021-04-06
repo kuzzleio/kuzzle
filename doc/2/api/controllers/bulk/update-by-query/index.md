@@ -11,9 +11,9 @@ title: updateByQuery
 Updates documents matching the provided search query. 
 
 This is a low level route intended to bypass Kuzzle actions on document update, notably:
-  - check document write limit
-  - add [Kuzzle metadata](/core/2/guides/main-concepts/data-storage/#kuzzle-metadata)
-  - trigger [realtime notifications](/core/2/guides/main-concepts/realtime-engine)
+  - Check document write limit
+  - Add [Kuzzle metadata](/core/2/guides/main-concepts/data-storage/#kuzzle-metadata)
+  - Trigger [realtime notifications](/core/2/guides/main-concepts/realtime-engine)
 
 ---
 
