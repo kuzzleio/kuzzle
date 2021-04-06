@@ -27,8 +27,8 @@ To update a greater number of documents:
 
 - Change the server configuration
 - Split the search query
-- use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mUpdate](/core/2/api/controllers/document/m-update)
-- use [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query)
+- Use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mUpdate](/core/2/api/controllers/document/m-update)
+- Use [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query)
 
 ---
 

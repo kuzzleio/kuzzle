@@ -317,6 +317,7 @@ describe('Test the bulk controller', () => {
 
     it('should forward to the store module', async () => {
       request.input.args.refresh = 'wait_for';
+
       const response = await controller.updateByQuery(request);
 
       should(kuzzle.ask).be.calledWith(
@@ -326,7 +327,6 @@ describe('Test the bulk controller', () => {
         query,
         changes,
         { refresh: 'wait_for'});
-
       should(response).be.eql(esResponse);
     });
 
@@ -342,7 +342,7 @@ describe('Test the bulk controller', () => {
         { refresh: 'false'});
     });
 
-    it('should throw an error if body.query is malformed', async () => {
+    it('should throw an error if body.query is malformed', () => {
       request.input.body = { query: 'not an object', changes };
 
       return should(controller.updateByQuery(request)).be.rejectedWith(
@@ -354,7 +354,7 @@ describe('Test the bulk controller', () => {
       );
     });
 
-    it('should throw an error if body.changes is malformed', async () => {
+    it('should throw an error if body.changes is malformed', () => {
       request.input.body = { query, missingProperty: 'changes' };
 
       return should(controller.updateByQuery(request)).be.rejectedWith(
