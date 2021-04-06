@@ -15,6 +15,10 @@ This is a low level route intended to bypass Kuzzle actions on document update, 
   - Inject [Kuzzle metadata](/core/2/guides/main-concepts/data-storage/#kuzzle-metadata)
   - Trigger [realtime notifications](/core/2/guides/main-concepts/realtime-engine)
 
+::: info
+Under the hood, this action uses Elastic Search [scripting feature](https://www.elastic.co/guide/en/elasticsearch/reference/current/modules-scripting-using.html).
+:::
+
 ---
 
 ## Query Syntax
@@ -81,6 +85,10 @@ kourou document:updateByQuery <index> <collection> <body>
 
 - `query`: documents matching this search query will be updated. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
 - `changes`: partial changes to apply to the documents
+
+::: warning
+Even though `changes` supports deeply nested fields, there are some limitations. Therefore, you will not be able to apply partial changes to an array and will need to replace the whole array.
+::: 
 
 ---
 
