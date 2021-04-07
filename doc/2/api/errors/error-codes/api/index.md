@@ -48,5 +48,6 @@ description: Error codes definitions
 | api.process.too_many_requests<br/><pre>0x02020008</pre>  | [TooManyRequestsError](/core/2/api/errors/error-codes#toomanyrequestserror) <pre>(429)</pre> | Rejected: requests rate limit exceeded for this user. | The request has been refused because a rate limit has been exceeded for this user |
 | api.process.admin_exists<br/><pre>0x02020009</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Admin user is already set. | Attempted to create the first administrator, when one already exists |
 | api.process.incomplete_multiple_request<br/><pre>0x0202000a</pre>  | [MultipleErrorsError](/core/2/api/errors/error-codes#multipleerrorserror) <pre>(400)</pre> | At least one of the %s actions failed. | Failed to execute some or all actions requested |
+| api.process.not_enough_nodes<br/><pre>0x0202000b</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this cluster is disabled because there aren't enough nodes connected. | The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added |
 
 ---

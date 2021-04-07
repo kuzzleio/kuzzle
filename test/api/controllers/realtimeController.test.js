@@ -166,7 +166,7 @@ describe('RealtimeController', () => {
 
     it('should send the correct ask event', async () => {
       const stub = kuzzle.ask
-        .withArgs('core:realtime:room:size:get', 'foo')
+        .withArgs('cluster:realtime:room:count', 'foo')
         .resolves(42);
 
       request.input.body.roomId = 'foo';

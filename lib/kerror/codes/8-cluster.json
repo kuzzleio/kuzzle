@@ -1,0 +1,16 @@
+{
+  "code": 8,
+  "subdomains": {
+    "fatal": {
+      "code": 0,
+      "errors": {
+        "desync": {
+          "description": "Caught a synchronization inconsistency. Triggers a suicide from the node detecting it.",
+          "code": 1,
+          "message": "Caught a desync error: %s.",
+          "class": "InternalError"
+        }
+      }
+    }
+  }
+}
