@@ -53,7 +53,7 @@ describe('EmbeddedSDK', () => {
   describe('#query', () => {
     it('should add default propagate parameter', async () => {
       const request = { controller: 'realtime', action: 'subscribe' };
-      embeddedSdk.protocol.query = sinon.stub().resolves();
+      embeddedSdk.protocol.query = sinon.stub().resolves({});
 
       await embeddedSdk.query(request);
 
