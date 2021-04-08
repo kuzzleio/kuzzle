@@ -21,6 +21,7 @@ describe('Backend', () => {
     fsStub = new FsMock();
     fsStub.existsSync.returns(true);
     fsStub.readFileSync.returns('ref: refs/master');
+    fsStub.statSync.returns({ isDirectory: () => true });
 
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
@@ -85,6 +86,7 @@ describe('Backend', () => {
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
       should(plugin.version).be.eql('42.21.84');
+      console.log(plugin.commit)
       should(plugin.commit).be.String();
       should(plugin.instance).be.eql(application._instanceProxy);
 
