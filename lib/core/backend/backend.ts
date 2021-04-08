@@ -466,7 +466,7 @@ export class Backend {
   /**
    * Current Git commit (if available)
    */
-  public commit: string | null;
+  public commit: string | null = null;
 
   /**
    * Errors manager
@@ -604,11 +604,12 @@ export class Backend {
       // Silent if no version can be found
     }
 
-    let commit = null;
     try {
       this.commit = this._readCommit();
     }
-    catch {}
+    catch {
+      // catch errors and leave commit value to "null"
+    }
   }
 
   /**
