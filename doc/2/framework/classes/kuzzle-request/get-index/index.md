@@ -7,7 +7,7 @@ description: KuzzleRequest class getIndex() method
 
 # getIndex
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Returns the index specified in the request.
 

@@ -7,7 +7,7 @@ description: KuzzleRequest class getId() method
 
 # getId
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Returns the `_id` specified in the request.
 

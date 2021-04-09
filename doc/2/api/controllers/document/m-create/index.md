@@ -94,7 +94,7 @@ kourou document:mCreate <index> <collection> <body> -a silent=true
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created documents are indexed
 - `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
-- `strict`: if set, an error will occur if at least one document has not been created <SinceBadge version="auto-version" />
+- `strict`: if set, an error will occur if at least one document has not been created <SinceBadge version="2.11.0" />
 
 ---
 

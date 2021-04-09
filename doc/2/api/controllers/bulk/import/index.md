@@ -76,7 +76,7 @@ Body:
 
 ### Optional:
 
-- `strict`: if set, an error will occur if at least one document has not been created/updated/deleted <SinceBadge version="auto-version" />
+- `strict`: if set, an error will occur if at least one document has not been created/updated/deleted <SinceBadge version="2.11.0" />
 
 ---
 

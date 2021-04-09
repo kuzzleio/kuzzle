@@ -7,7 +7,7 @@ description: KuzzleRequest class getInteger() method
 
 # getInteger
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Gets a parameter from a request arguments and checks that it is an integer.
 

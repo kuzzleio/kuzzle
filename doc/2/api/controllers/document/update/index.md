@@ -14,14 +14,14 @@ Applies partial changes to a document. The document must exist in the storage la
 
 ### HTTP
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.11.0"/>
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
 Method: PATCH
 Body:
 ```
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.11.0">
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
 Method: PUT

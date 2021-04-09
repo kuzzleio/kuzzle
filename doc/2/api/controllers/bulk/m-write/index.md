@@ -87,7 +87,7 @@ Body:
 
 - `notify`: if set to true, Kuzzle will trigger realtime notifications
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
-- `strict`: if set, an error will occur if at least one document has not been created/replaced <SinceBadge version="auto-version" />
+- `strict`: if set, an error will occur if at least one document has not been created/replaced <SinceBadge version="2.11.0" />
 
 ---
 

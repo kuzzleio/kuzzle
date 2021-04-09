@@ -66,7 +66,7 @@ kourou document:mGet <index> <collection> <body>
 
 ### Optional:
 
-- `strict`: if set, an error will occur if any of the documents could not be retrieved <SinceBadge version="auto-version" />
+- `strict`: if set, an error will occur if any of the documents could not be retrieved <SinceBadge version="2.11.0" />
 
 ---
 

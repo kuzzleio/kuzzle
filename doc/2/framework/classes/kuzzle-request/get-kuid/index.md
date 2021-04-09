@@ -7,7 +7,7 @@ description: KuzzleRequest class getKuid() method
 
 # getKuid
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Returns the current user kuid.
 

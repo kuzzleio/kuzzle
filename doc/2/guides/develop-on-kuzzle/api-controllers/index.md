@@ -235,7 +235,7 @@ The main available properties are the following:
 
 ### Extract parameters from request
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 The request object exposes methods to safely extract parameters from the request in a standardized way.
 

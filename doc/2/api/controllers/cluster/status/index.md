@@ -7,7 +7,7 @@ description: cluster:status API action
 
 # status
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.11.0"/>
 
 Gets the current cluster status.
 

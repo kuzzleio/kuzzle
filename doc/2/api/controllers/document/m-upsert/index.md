@@ -6,7 +6,7 @@ title: mUpsert
 
 # mUpsert
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.11.0"/>
 
 Applies partial changes to multiple documents. If a document doesn't already exist, a new document is created.
 

@@ -7,7 +7,7 @@ description: KuzzleRequest class getRefresh() method
 
 # getRefresh
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Gets the refresh value.
 

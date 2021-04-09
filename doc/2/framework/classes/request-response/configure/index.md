@@ -7,7 +7,7 @@ description: RequestResponse class configure() method
 
 # configure
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Allows to configure how the API response should be sent to the requesting client.
 

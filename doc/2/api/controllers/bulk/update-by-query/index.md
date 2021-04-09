@@ -6,7 +6,7 @@ title: updateByQuery
 
 # updateByQuery
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.11.0"/>
 
 Updates documents matching the provided search query. 
 

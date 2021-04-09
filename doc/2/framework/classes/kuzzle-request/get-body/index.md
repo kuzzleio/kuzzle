@@ -7,7 +7,7 @@ description: KuzzleRequest class getBody() method
 
 # getBody
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Returns the provided request's body.
 

@@ -54,7 +54,7 @@ _`_id`, `index`, `collection`, `refresh`, `onExistingUser`, `foobar`, etc._
 
 ## `resource`
 
-<DeprecatedBadge since="auto-version" />
+<DeprecatedBadge since="2.11.0" />
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|

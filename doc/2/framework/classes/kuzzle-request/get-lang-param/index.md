@@ -7,7 +7,7 @@ description: KuzzleRequest class getLangParam() method
 
 # getLangParam
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Returns the `lang` param of the request.
 

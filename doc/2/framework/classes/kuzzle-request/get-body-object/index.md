@@ -7,7 +7,7 @@ description: KuzzleRequest class getBodyObject() method
 
 # getBodyObject
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.11.0" />
 
 Gets a parameter from the request body and checks that it is an object.
 
