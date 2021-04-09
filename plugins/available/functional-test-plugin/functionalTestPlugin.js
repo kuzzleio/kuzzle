@@ -119,12 +119,22 @@ class FunctionalTestPlugin {
 
 
     // Embedded SDK.as() Impersonation =========================================
-    this.controllers.impersonate = { createDocumentAs: 'createDocumentAs' };
+    this.controllers.impersonate = {
+      createDocumentAs: 'createDocumentAs',
+      testAction: 'testImpersonatedAction'
+    };
 
     this.routes.push({
       action: 'createDocumentAs',
       controller: 'impersonate',
       path: '/impersonate/createDocumentAs/:kuid',
+      verb: 'post',
+    });
+
+    this.routes.push({
+      action: 'testAction',
+      controller: 'impersonate',
+      path: '/impersonate/testAction/:kuid',
       verb: 'post',
     });
 
@@ -295,13 +305,29 @@ class FunctionalTestPlugin {
     if (request.input.args.checkRights !== undefined) {
       options.checkRights = request.input.args.checkRights;
     }
-    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid }, options);
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
 
     return sdkInstance.document.create(
       'nyc-open-data',
       'yellow-taxi',
       { shouldBeCreatedBy: request.input.args.kuid },
     );
+  }
+
+  /**
+   * Use this action tool to verify impersonated actions
+   */
+  async testImpersonatedAction (request) {
+    const { controller, action, args } = request.input.body;
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance[controller][action](...args);
   }
 }
 
