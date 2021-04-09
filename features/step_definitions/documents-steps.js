@@ -33,7 +33,7 @@ Then('The document {string} content match:', async function (documentId, dataTab
     documentId);
 
   for (const [key, value] of Object.entries(expectedContent)) {
-    should(document._source[key]).be.eql(value);
+    should(_.get(document._source, key)).be.eql(value);
   }
 });
 
