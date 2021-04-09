@@ -14,6 +14,11 @@ echo "Testing Kuzzle against node v$NODE_VERSION"
 echo "Installing dependencies..."
 npm install --unsafe-perm
 
+if [ "$REBUILD" == "true" ];
+then
+  npm rebuild
+fi
+
 ./.ci/scripts/install-plugins.sh
 
 npm run build-ts
