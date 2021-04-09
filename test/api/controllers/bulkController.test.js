@@ -3,7 +3,11 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const { Request, MultipleErrorsError } = require('../../../index');
+const { 
+  BadRequestError,
+  MultipleErrorsError,
+  Request
+} = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
 
@@ -284,6 +288,82 @@ describe('Test the bulk controller', () => {
         { refresh: 'wait_for', fetch: false, size: -1 });
 
       should(response.deleted).be.eql(2);
+    });
+  });
+
+  describe('#updateByQuery', () => {
+    let query;
+    let changes;
+    let esResponse;
+
+    beforeEach(() => {
+      query = {
+        match: { foo: 'bar' }
+      };
+      changes = {
+        bar: 'foo'
+      };
+
+      request.input.body = { query, changes };
+
+      esResponse = {
+        updated: 1
+      };
+
+      kuzzle.ask
+        .withArgs('core:storage:public:bulk:updateByQuery')
+        .resolves(esResponse);
+    });
+
+    it('should forward to the store module', async () => {
+      request.input.args.refresh = 'wait_for';
+
+      const response = await controller.updateByQuery(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:bulk:updateByQuery',
+        index,
+        collection,
+        query,
+        changes,
+        { refresh: 'wait_for'});
+      should(response).be.eql(esResponse);
+    });
+
+    it('should have default value for refresh param', async () => {
+      await controller.updateByQuery(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:bulk:updateByQuery',
+        index,
+        collection,
+        query,
+        changes,
+        { refresh: 'false'});
+    });
+
+    it('should throw an error if body.query is malformed', () => {
+      request.input.body = { query: 'not an object', changes };
+
+      return should(controller.updateByQuery(request)).be.rejectedWith(
+        BadRequestError,
+        {
+          id: 'api.assert.invalid_type',
+          message: 'Wrong type for argument "body.query" (expected: object)',
+        }
+      );
+    });
+
+    it('should throw an error if body.changes is malformed', () => {
+      request.input.body = { query, missingProperty: 'changes' };
+
+      return should(controller.updateByQuery(request)).be.rejectedWith(
+        BadRequestError,
+        {
+          id: 'api.assert.missing_argument',
+          message: 'Missing argument "body.changes".',
+        }
+      );
     });
   });
 });
