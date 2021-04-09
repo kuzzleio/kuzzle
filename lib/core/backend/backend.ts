@@ -466,7 +466,7 @@ export class Backend {
   /**
    * Current Git commit (if available)
    */
-  public commit: string | null;
+  public commit: string | null = null;
 
   /**
    * Errors manager
@@ -604,7 +604,12 @@ export class Backend {
       // Silent if no version can be found
     }
 
-    this.commit = this._readCommit();
+    try {
+      this.commit = this._readCommit();
+    }
+    catch {
+      // catch errors and leave commit value to "null"
+    }
   }
 
   /**
@@ -699,12 +704,18 @@ export class Backend {
       return null;
     }
 
-    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+    const gitDir = `${dir}/.gut`;
+
+    if (! fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
-    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+    if (! fs.statSync(gitDir).isDirectory()) {
+      return null;
+    }
+
+    const ref = fs.readFileSync(`${dir}/.gut/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.gut/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
       return null;

@@ -21,6 +21,7 @@ describe('Backend', () => {
     fsStub = new FsMock();
     fsStub.existsSync.returns(true);
     fsStub.readFileSync.returns('ref: refs/master');
+    fsStub.statSync.returns({ isDirectory: () => true });
 
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
