@@ -74,6 +74,20 @@ Feature: Plugin context
     Then I should receive a result matching:
       | _source._kuzzle_info.author | "test-admin" |
 
+  Scenario: Test user impersonation as a whole workflow
+    Given a collection "nyc-open-data":"yellow-taxi"
+    And I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | kuid | "default-user" |
+    And I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | kuid | "test-admin" |
+    And I refresh the collection
+    When I successfully execute the action "functional-test-plugin/impersonate":"testAction" with args:
+      | checkRights | "true"                                                                                                                                                        |
+      | kuid        | "test-admin"                                                                                                                                                  |
+      | body        | { "controller": "document", "action": "search", "args": ["nyc-open-data", "yellow-taxi", { "query": { "match": { "shouldBeCreatedBy": "default-user" } } }] } |
+    Then I should receive a result matching:
+      | total | 1 |
+
   @security
   Scenario: Verify if a specific user is authorized to execute an action
     Given a collection "nyc-open-data":"yellow-taxi"
@@ -81,7 +95,7 @@ Feature: Plugin context
       | document | { "create": false } |
     When I execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
       | kuid        | "default-user" |
-      | checkRights | "true"           |
+      | checkRights | "true"         |
     Then I should receive an error matching:
       | id | "security.rights.forbidden" |
 
