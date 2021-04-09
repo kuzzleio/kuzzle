@@ -1,12 +1,14 @@
 ---
 code: true
 type: page
-title: mUpdate
+title: mUpsert
 ---
 
-# mUpdate
+# mUpsert
 
-Updates multiple documents.
+<SinceBadge version="auto-version"/>
+
+Applies partial changes to multiple documents. If a document doesn't already exist, a new document is created.
 
 ::: info
 The number of documents that can be updated by a single request is limited by the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
@@ -18,35 +20,30 @@ The number of documents that can be updated by a single request is limited by th
 
 ### HTTP
 
-<SinceBadge version="auto-version"/>
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_mUpdate[?refresh=wait_for][&retryOnConflict=<retries>][&silent]
-Method: PATCH
+URL: http://kuzzle:7512/<index>/<collection>/_mUpsert[?refresh=wait_for][&retryOnConflict=<retries>][&silent]
+Method: POST
 Body:
 ```
-
-<DeprecatedBadge version="auto-version">
-```http
-URL: http://kuzzle:7512/<index>/<collection>/_mUpdate[?refresh=wait_for][&retryOnConflict=<retries>][&silent]
-Method: PUT
-Body:
-```
-</DeprecatedBadge>
 
 ```js
 {
   "documents": [
     {
       "_id": "<documentId>",
-      "body": {
-        // document changes
+      "changes": {
+        // document partial changes
+      },
+      "default": {
+        // optional: document fields to add to the "update" part if the document
+        // is created
       }
     },
     {
       "_id": "<anotherDocumentId>",
-      "body": {
-        // document changes
-      }
+      "changes": {
+        // document partial changes
+      },
     }
   ]
 }
@@ -59,20 +56,24 @@ Body:
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "mUpdate",
+  "action": "mUpsert",
   "body": {
     "documents": [
       {
         "_id": "<documentId>",
-        "body": {
-          // document changes
+        "changes": {
+          // document partial changes
+        },
+        "default": {
+          // optional: document fields to add to the "update" part if the document
+          // is created
         }
       },
       {
         "_id": "<anotherDocumentId>",
-        "body": {
-          // document changes
-        }
+        "changes": {
+          // document partial changes
+        },
       }
     ]
   }
@@ -82,8 +83,8 @@ Body:
 ### Kourou
 
 ```bash
-kourou document:mUpdate <index> <collection> <body>
-kourou document:mUpdate <index> <collection> <body> -a silent=true
+kourou document:mUpsert <index> <collection> <body>
+kourou document:mUpsert <index> <collection> <body> -a silent=true
 ```
 
 ---
@@ -97,8 +98,8 @@ kourou document:mUpdate <index> <collection> <body> -a silent=true
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the updates are indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
-- `strict`: if set, an error will occur if a document was not updated <SinceBadge version="auto-version" />
+- `silent`: if set, then Kuzzle will not generate notifications
+- `strict`: if set, an error will occur if a document was not updated
 
 ---
 
@@ -106,7 +107,8 @@ kourou document:mUpdate <index> <collection> <body> -a silent=true
 
 - `documents`: an array of object. Each object describes a document to update, by exposing the following properties:
   - `_id` : ID of the document to replace
-  - `body`: partial changes to apply to the document
+  - `changes`: partial changes to apply to the document
+  - `default`: (optional) fields to add to the document if it gets created
 
 ---
 
@@ -119,6 +121,7 @@ Each updated document is an object of the `successes` array with the following p
 - `_id`: document unique identifier
 - `_source`: document content
 - `_version`: updated document version
+- `created`: if `true`, a new document was created, otherwise the document existed and was updated
 - `status`: HTTP status code
 
 Each errored document is an object of the `errors` array with the following properties:
@@ -135,13 +138,14 @@ If `strict` mode is enabled, will rather return an error if at least one documen
   "error": null,
   "index": "<index>",
   "collection": "<collection>",
-  "action": "mUpdate",
+  "action": "mUpsert",
   "controller": "document",
   "requestId": "<unique request identifier>",
   "result": {
     "successes": [
       {
         "_id": "<documentId>",
+        "created": false,
         "status": 200,
         "_source": {
           // updated document content
@@ -150,9 +154,10 @@ If `strict` mode is enabled, will rather return an error if at least one documen
       },
       {
         "_id": "<anotherDocumentId>",
+        "created": true,
         "status": 200,
         "_source": {
-          // updated document content
+          // created document content
         },
         "_version": 2
       }
@@ -160,10 +165,10 @@ If `strict` mode is enabled, will rather return an error if at least one documen
     "errors": [
       {
         "document": {
-          // updated document content
+          // document content to update
         },
-        "status": 404,
-        "reason": "Document 'foobar' not found"
+        "status": 400,
+        "reason": "document changes must be an object"
       }
     ]
   }

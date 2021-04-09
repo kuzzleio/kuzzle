@@ -16,18 +16,27 @@ Applies partial changes to a document. If the document doesn't already exist, a 
 
 ### HTTP
 
+<SinceBadge version="auto-version"/>
+```http
+URL: http://kuzzle:7512/<index>/<collection>/<_id>/_upsert[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
+Method: POST
+Body:
+```
+
+<DeprecatedBadge version="auto-version">
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/<_id>/_upsert[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
 Method: PUT
 Body:
 ```
+</DeprecatedBadge>
 
 ```js
 {
-  changes: {
+  "changes": {
     // document partial changes
   },
-  default: {
+  "default": {
     // optional: document fields to add to the "update" part if the document
     // is created
   }

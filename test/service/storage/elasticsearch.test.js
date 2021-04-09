@@ -756,7 +756,7 @@ describe('Test: ElasticSearch service', () => {
             },
             id: 'liia',
             refresh: undefined,
-            retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+            retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
           });
 
           should(result).match({
@@ -793,7 +793,7 @@ describe('Test: ElasticSearch service', () => {
             id: 'liia',
             refresh: 'wait_for',
             _source: true,
-            retryOnConflict: 42
+            retry_on_conflict: 42
           });
 
           should(result).match({
@@ -843,7 +843,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
     });
   });
@@ -888,7 +888,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -931,7 +931,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -985,7 +985,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -1026,7 +1026,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: 42
+        retry_on_conflict: 42
       });
 
       should(result).match({
@@ -1077,7 +1077,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
     });
   });
@@ -3398,9 +3398,9 @@ describe('Test: ElasticSearch service', () => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
-              { update: { _index: esIndexName, _id: 'liia' } },
+              { update: { _index: esIndexName, _id: 'liia', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
             ],
             refresh: undefined,
@@ -3438,16 +3438,16 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         documents,
-        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+        { refresh: 'wait_for', retryOnConflict: 2, timeout: '10m', userId: 'aschen' });
 
       return promise
         .then(() => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: 2 } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
-              { update: { _index: esIndexName, _id: 'liia' } },
+              { update: { _index: esIndexName, _id: 'liia', retry_on_conflict: 2 } },
               { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
             ],
             refresh: 'wait_for',
@@ -3478,7 +3478,7 @@ describe('Test: ElasticSearch service', () => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true }
             ],
             refresh: undefined,
@@ -3500,6 +3500,197 @@ describe('Test: ElasticSearch service', () => {
             toImport,
             rejected);
         });
+    });
+  });
+
+  describe('#mUpsert', () => {
+    let documents;
+    let kuzzleUpdateMeta;
+    let kuzzleCreateMeta;
+    let esRequest;
+    let toImport;
+    let mExecuteResult;
+
+    beforeEach(() => {
+      documents = [
+        { _id: 'mehry', changes: { city: 'Kathmandu' } },
+        { _id: 'liia', changes: { city: 'Ho Chi Minh City' } }
+      ];
+
+      kuzzleUpdateMeta = {
+        _kuzzle_info: {
+          updater: null,
+          updatedAt: timestamp
+        }
+      };
+      kuzzleCreateMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp
+        }
+      };
+
+      esRequest = {
+        body: [
+          { update: { _index: esIndexName, _id: 'mehry', _source: true, retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
+          { doc: { city: 'Kathmandu', ...kuzzleUpdateMeta }, upsert: { city: 'Kathmandu', ...kuzzleCreateMeta } },
+          { update: { _index: esIndexName, _id: 'liia', _source: true, retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
+          { doc: { city: 'Ho Chi Minh City', ...kuzzleUpdateMeta }, upsert: { city: 'Ho Chi Minh City', ...kuzzleCreateMeta } }
+        ],
+        refresh: undefined,
+        timeout: undefined
+      };
+
+      toImport = [
+        { _id: 'mehry', _source: { changes: { city: 'Kathmandu', ...kuzzleUpdateMeta }, default: { city: 'Kathmandu', ...kuzzleCreateMeta } } },
+        { _id: 'liia', _source: { changes: { city: 'Ho Chi Minh City', ...kuzzleUpdateMeta }, default: { city: 'Ho Chi Minh City', ...kuzzleCreateMeta } } }
+      ];
+
+      mExecuteResult = {
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu' },
+            created: false,
+            result: 'updated',
+            get: { _source: { age: 26, city: 'Kathmandu' } }
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City' },
+            created: false,
+            result: 'updated',
+            get: { _source: { age: 29, city: 'Ho Chi Minh City' } }
+          }
+        ],
+        errors: []
+      };
+
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+    });
+
+    it('should call _mExecute with formated documents', async () => {
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []);
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: false
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should handle default values for upserted documents', async () => {
+      documents[1].default = { country: 'Vietnam' };
+      esRequest.body[3].upsert.country = 'Vietnam';
+      toImport[1]._source.default.country = 'Vietnam';
+
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+    
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []
+      );
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: false
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should allow additional options', async () => {
+      kuzzleUpdateMeta._kuzzle_info.updater = 'aschen';
+      kuzzleCreateMeta._kuzzle_info.author = 'aschen';
+      esRequest.body[0].update.retry_on_conflict = 42;
+      esRequest.body[2].update.retry_on_conflict = 42;
+      esRequest.refresh = 'wait_for';
+      esRequest.timeout = '10m';
+
+      await elasticsearch.mUpsert(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', retryOnConflict: 42, timeout: '10m', userId: 'aschen' });
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []);
+    });
+
+    it('should add documents without ID to rejected documents', async () => {
+      documents[1] = { changes: { city: 'Ho Chi Minh City' } };
+      esRequest.body = esRequest.body.slice(0,2);
+      toImport = toImport.slice(0,1);
+      const rejected = [
+        {
+          document: { changes: { city: 'Ho Chi Minh City' } },
+          reason: 'document _id must be a string',
+          status: 400
+        }
+      ];
+
+      await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        rejected);
+    });
+
+    it('should return the right "_created" result on a document creation', async () => {
+      mExecuteResult.items[1].result = 'created';
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []
+      );
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: true
+          }
+        ],
+        errors: []
+      });
     });
   });
 
