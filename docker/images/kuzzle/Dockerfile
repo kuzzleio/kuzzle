@@ -8,6 +8,7 @@ RUN  set -x \
        curl \
        python \
        make \
+       git \
        g++ \
        python \
        libzmq3-dev \
