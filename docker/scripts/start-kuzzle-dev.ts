@@ -3,7 +3,7 @@
 // Starts a Kuzzle Backend application tailored for development
 // This loads a special plugin dedicated to functional tests
 
-import should from 'should';
+import should from 'should/as-function';
 import { omit } from 'lodash';
 
 import { Backend, KuzzleRequest, Mutex } from '../../index';
@@ -151,8 +151,8 @@ app.controller.register('tests', {
         const client = new app.storage.StorageClient();
         const esRequest = {
           body: request.input.body,
-          id: request.input.resource._id,
-          index: request.input.resource.index,
+          id: request.input.args._id,
+          index: request.input.args.index,
         };
 
         const response = await client.index(esRequest);

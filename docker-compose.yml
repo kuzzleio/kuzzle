@@ -23,9 +23,10 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_services__memoryStorage__node__host=redis
     - kuzzle_server__protocols__mqtt__enabled=true
     - kuzzle_server__protocols__mqtt__developmentMode=false
+    - kuzzle_http__accessControlAllowOrigin=localhost
     - kuzzle_limits__loginsPerSecond=50
     - NODE_ENV=${NODE_ENV:-development}
-    - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:entry-point:protocols:websocket,-kuzzle:cluster:heartbeat}
+    - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:network:protocols:websocket,-kuzzle:events}
     # - DEBUG=${DEBUG:-none}
     - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
     - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
@@ -38,10 +39,6 @@ x-kuzzle-config: &kuzzle-config
     - NODE_12_VERSION=12.13.0
     - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
     - REBUILD # Force a rebuild of npm modules
-    # cluster
-    - kuzzle_plugins__cluster__privileged=true
-    - kuzzle_plugins__cluster__minimumNodes=3
-    - KUZZLE_PLUGINS=kuzzle-plugin-cluster
 
 services:
   nginx:

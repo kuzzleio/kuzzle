@@ -21,6 +21,7 @@ describe('Backend', () => {
     fsStub = new FsMock();
     fsStub.existsSync.returns(true);
     fsStub.readFileSync.returns('ref: refs/master');
+    fsStub.statSync.returns({ isDirectory: () => true });
 
     mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
@@ -429,7 +430,6 @@ describe('Backend', () => {
     should(application.kerror.get).be.a.Function();
     should(application.kerror.reject).be.a.Function();
     should(application.kerror.getFrom).be.a.Function();
-    should(application.kerror.rejectFrom).be.a.Function();
     should(application.kerror.wrap).be.a.Function();
   });
 

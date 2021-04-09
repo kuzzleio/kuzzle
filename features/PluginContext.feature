@@ -32,14 +32,15 @@ Feature: Plugin context
 
   @realtime
   Scenario: Subscribe and unsubscribe to realtime notifications
+    Given I successfully execute the action "functional-test-plugin/realtime":"subscribeOnce"
     Given I subscribe to "test":"answer" notifications
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |
       | collection | "question" |
       | body       | {}         |
     Then I should have receive "1" notifications for "test":"answer"
-    # should not be subscribed anymore
-    # (see the hook 'kuzzle:state:live' in the plugin)
+    # should not be subscribed anymore: the plugin unsubscribes after sending
+    # a single notification
     When I successfully execute the action "realtime":"publish" with args:
       | index      | "test"     |
       | collection | "question" |
@@ -73,6 +74,20 @@ Feature: Plugin context
     Then I should receive a result matching:
       | _source._kuzzle_info.author | "test-admin" |
 
+  Scenario: Test user impersonation as a whole workflow
+    Given a collection "nyc-open-data":"yellow-taxi"
+    And I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | kuid | "default-user" |
+    And I successfully execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
+      | kuid | "test-admin" |
+    And I refresh the collection
+    When I successfully execute the action "functional-test-plugin/impersonate":"testAction" with args:
+      | checkRights | "true"                                                                                                                                                        |
+      | kuid        | "test-admin"                                                                                                                                                  |
+      | body        | { "controller": "document", "action": "search", "args": ["nyc-open-data", "yellow-taxi", { "query": { "match": { "shouldBeCreatedBy": "default-user" } } }] } |
+    Then I should receive a result matching:
+      | total | 1 |
+
   @security
   Scenario: Verify if a specific user is authorized to execute an action
     Given a collection "nyc-open-data":"yellow-taxi"
@@ -80,7 +95,7 @@ Feature: Plugin context
       | document | { "create": false } |
     When I execute the action "functional-test-plugin/impersonate":"createDocumentAs" with args:
       | kuid        | "default-user" |
-      | checkRights | "true"           |
+      | checkRights | "true"         |
     Then I should receive an error matching:
       | id | "security.rights.forbidden" |
 

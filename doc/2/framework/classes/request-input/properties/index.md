@@ -12,11 +12,8 @@ API request arguments are accessible here.
 Common arguments are accessible at the root level:
 _`jwt`, `volatile`, `body`, `controller`, `action`_
 
-Resource arguments are accessible under the `resource` property:
-_`_id`, `index`, `collection`_
-
 Every other arguments are accessible under the `args` property. E.g:
-_`refresh`, `onExistingUser`, `foobar`, etc._
+_`_id`, `index`, `collection`, `refresh`, `onExistingUser`, `foobar`, etc._
 
 ## `action`
 
@@ -29,7 +26,7 @@ _`refresh`, `onExistingUser`, `foobar`, etc._
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
-| <pre>JSONObject</pre> | KuzzleRequest arguments (except `body`, `_id`, `index` and `collection`) | get |
+| <pre>JSONObject</pre> | KuzzleRequest arguments (except `body`) | get |
 
 ## `body`
 
@@ -56,6 +53,8 @@ _`refresh`, `onExistingUser`, `foobar`, etc._
 | <pre>string</pre> | Authentication token | get |
 
 ## `resource`
+
+<DeprecatedBadge since="2.11.0" />
 
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|

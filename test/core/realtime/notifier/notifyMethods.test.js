@@ -81,36 +81,38 @@ describe('notify methods', () => {
     it('should emit the cluster sync event', async () => {
       notifier._notifyDocument = sinon.stub();
       const content = {some: 'content'};
+      const rooms = [
+        'matchingSome',
+        'nonMatching',
+        'alwaysMatching',
+        'IAMERROR',
+        'cluster'
+      ];
 
       await notifier.notifyDocument(
-        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
+        rooms,
         request,
         'out',
-        'action',
+        'update',
+        content);
+
+      const expectedNotification = DocumentNotification.fromRequest(
+        request,
+        'out',
+        'update',
         content);
 
       should(notifier._notifyDocument).be.calledWith(
-        ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
-        request,
-        'out',
-        'action',
-        content,
+        rooms,
+        expectedNotification,
         { fromCluster: false });
 
       should(kuzzle.emit.callCount).be.eql(1);
       should(kuzzle.emit.getCall(0).args).match([
         'core:notify:document',
         {
-          rooms: [
-            'matchingSome',
-            'nonMatching',
-            'alwaysMatching',
-            'IAMERROR'
-          ],
-          scope: 'out',
-          action: 'action',
-          content,
-          request: request.serialize()
+          notification: expectedNotification,
+          rooms,
         }
       ]);
     });
@@ -123,7 +125,7 @@ describe('notify methods', () => {
           [],
           request,
           'scope',
-          'action',
+          'update',
           { some: 'content'},
           { fromCluster: false });
 
@@ -134,17 +136,16 @@ describe('notify methods', () => {
       it('should notify the right channels', async () => {
         sinon.spy(notifier, '_notifyDocument');
         const content = {some: 'content'};
+        const documentNotification = DocumentNotification.fromRequest(
+          request,
+          'out',
+          'update',
+          content);
 
         await notifier._notifyDocument(
           ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
-          request,
-          'out',
-          'create',
-          content,
+          documentNotification,
           { fromCluster: false });
-
-        should(notifier._notifyDocument.getCall(0).args[5])
-          .be.eql({ fromCluster: false});
 
         const dispatch = kuzzle.entryPoint.dispatch;
 
@@ -165,11 +166,11 @@ describe('notify methods', () => {
           requestId: request.id,
           timestamp: request.timestamp,
           volatile: request.input.volatile,
-          index: request.input.resource.index,
-          collection: request.input.resource.collection,
+          index: request.input.args.index,
+          collection: request.input.args.collection,
           controller: request.input.controller,
           event: 'write',
-          action: 'create',
+          action: 'update',
           protocol: request.context.protocol,
           node: kuzzle.id,
           scope: 'out',
@@ -192,7 +193,7 @@ describe('notify methods', () => {
           ['nonMatching', 'IAMERROR'],
           request,
           'not a scope',
-          'action',
+          'create',
           content,
           { fromCluster: false });
 
@@ -203,13 +204,15 @@ describe('notify methods', () => {
     describe('call from the cluster', () => {
       it('should notify every channels', async () => {
         const content = {some: 'content'};
-
-        await notifier._notifyDocument(
-          ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
+        const documentNotification = DocumentNotification.fromRequest(
           request,
           'out',
           'create',
           content);
+
+        await notifier._notifyDocument(
+          ['matchingSome', 'nonMatching', 'alwaysMatching', 'IAMERROR', 'cluster'],
+          documentNotification);
 
         const dispatch = kuzzle.entryPoint.dispatch;
         should(dispatch.firstCall.args[1].channels).eql(
@@ -233,58 +236,56 @@ describe('notify methods', () => {
         });
     });
 
-    it('should notify the right channels', () => {
+    it('should notify the right channels', async () => {
       const content = {some: 'content'};
 
-      return notifier.notifyUser('matchingSome', request, 'out' , content)
-        .then(() => {
-          const dispatch = kuzzle.entryPoint.dispatch;
+      await notifier.notifyUser('matchingSome', request, 'out' , content);
 
-          should(dispatch).calledOnce();
+      const dispatch = kuzzle.entryPoint.dispatch;
 
-          should(dispatch.firstCall.args[0]).be.eql('broadcast');
+      should(dispatch).calledOnce();
+      should(dispatch.firstCall.args[0]).be.eql('broadcast');
 
-          should(dispatch.firstCall.args[1].channels)
-            .match(['matching_all', 'matching_userOut']);
+      should(dispatch.firstCall.args[1].channels).match([
+        'matching_all',
+        'matching_userOut',
+      ]);
 
-          should(dispatch.firstCall.args[1].payload)
-            .be.instanceof(UserNotification);
+      should(dispatch.firstCall.args[1].payload)
+        .be.instanceof(UserNotification);
 
-          const notification = dispatch.firstCall.args[1].payload;
+      const notification = dispatch.firstCall.args[1].payload;
 
-          should(notification).match({
-            status: 200,
-            type: 'user',
-            timestamp: request.timestamp,
-            volatile: request.input.volatile,
-            index: request.input.resource.index,
-            collection: request.input.resource.collection,
-            controller: request.input.controller,
-            action: request.input.action,
-            protocol: request.context.protocol,
-            node: kuzzle.id,
-            user: 'out',
-            result: content
-          });
+      should(notification).match({
+        status: 200,
+        type: 'user',
+        timestamp: request.timestamp,
+        volatile: request.input.volatile,
+        index: request.input.resource.index,
+        collection: request.input.resource.collection,
+        controller: request.input.controller,
+        action: request.input.action,
+        protocol: request.context.protocol,
+        node: kuzzle.id,
+        user: 'out',
+        result: content
+      });
 
-          should(kuzzle.emit.callCount).be.eql(1);
-          should(kuzzle.emit.getCall(0).args).match([
-            'core:notify:user',
-            {
-              room: 'matchingSome',
-              scope: 'out',
-              content,
-              request: request.serialize()
-            }
-          ]);
-          should(kuzzle.pipe.callCount).be.eql(2);
+      should(kuzzle.emit.callCount).be.eql(1);
+      should(kuzzle.emit.getCall(0).args).match([
+        'core:notify:user',
+        {
+          notification,
+          room: 'matchingSome',
+        }
+      ]);
+      should(kuzzle.pipe.callCount).be.eql(2);
 
-          should(kuzzle.pipe.getCall(0).args).match(
-            ['notify:user', notification]);
+      should(kuzzle.pipe.getCall(0).args).match(
+        ['notify:user', notification]);
 
-          should(kuzzle.pipe.getCall(1).args).match(
-            ['notify:dispatch', notification]);
-        });
+      should(kuzzle.pipe.getCall(1).args).match(
+        ['notify:dispatch', notification]);
     });
   });
 

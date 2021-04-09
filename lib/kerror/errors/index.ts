@@ -25,6 +25,7 @@ export * from './forbiddenError';
 export * from './gatewayTimeoutError';
 export * from './internalError';
 export * from './kuzzleError';
+export * from './multipleErrorsError';
 export * from './notFoundError';
 export * from './partialError';
 export * from './pluginImplementationError';

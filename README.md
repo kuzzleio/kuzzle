@@ -41,8 +41,6 @@ Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/pro
 
 With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performances.  
 
-We also provide a plugin to deploy a [Kuzzle cluster](https://github.com/kuzzleio/kuzzle-plugin-cluster) that provides horizontal scalability. In addition, its masterless cluster architecture provides high availability for constant uptime.
-
 Check out our [support plans](https://kuzzle.io/pricing/).
 
 ## Run Kuzzle

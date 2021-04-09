@@ -1,6 +1,6 @@
 'use strict';
 
-const { setWorldConstructor } = require('cucumber');
+const { setDefaultTimeout, setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
 
 const config = require('../../lib/config');
@@ -127,5 +127,6 @@ class KuzzleWorld {
 }
 
 setWorldConstructor(KuzzleWorld);
+setDefaultTimeout(30000);
 
 module.exports = KuzzleWorld;

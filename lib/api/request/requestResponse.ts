@@ -264,6 +264,39 @@ export class RequestResponse {
   get node (): string {
     return (global as any).kuzzle.id;
   }
+
+  /**
+   * Configure the response
+   *
+   * @param [options]
+   * @param [options.headers] - Additional protocol headers
+   * @param [options.status=200] - HTTP status code
+   * @param [options.format] - Response format, standard or raw
+   * @returns void
+   */
+  configure (
+    options: {
+      headers?: JSONObject;
+      status?: number;
+      format?: 'standard' | 'raw';
+    } = {}
+  ): void {
+    if (options.headers) {
+      this.setHeaders(options.headers);
+    }
+
+    this.status = options.status || 200;
+
+    switch (options.format) {
+      case 'raw':
+        this.raw = true;
+        break;
+      case 'standard':
+        this.raw = false;
+        break;
+    }
+  }
+
   /**
    * Gets a header value (case-insensitive)
    */

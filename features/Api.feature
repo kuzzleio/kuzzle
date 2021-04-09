@@ -1,6 +1,7 @@
 Feature: API
 
   @mappings
+  @http
   Scenario: Send Request to the HTTP JSON endpoint
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I'm logged in Kuzzle as user "test-admin" with password "password"
