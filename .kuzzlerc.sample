@@ -893,9 +893,13 @@
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
   //   * ip:
-  //       A string telling weither Kuzzle should use the first
-  //       public IP ("public"), private IP ("private") or
-  //       a custom one ("192.168.0.42")
+  //       A string used to returns the address for the network interface on the
+  //       current system with the specified name:
+  //         * String: First `family` address of the interface.
+  //                   If not found first address with `ipv4` or
+  //                   loopback address `127.0.0.1`.
+  //         * 'public': the first public ip address of family.
+  //         * 'private': the first private ip address of family.
   //   * joinTimeout:
   //       The cluster join timeout (in ms): if that timeout is reached before
   //       the node could join the cluster, it will kill itself.

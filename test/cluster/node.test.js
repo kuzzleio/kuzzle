@@ -134,10 +134,6 @@ describe('#Cluster Node', () => {
       kuzzle.config.cluster.ip = 'public';
       node = new ClusterNode();
       should(node.ip).be.eql(ip.address('public', 'ipv4'));
-
-      kuzzle.config.cluster.ip = '192.168.42.42';
-      node = new ClusterNode();
-      should(node.ip).be.eql('192.168.42.42');
     });
   });
 
