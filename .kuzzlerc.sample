@@ -892,6 +892,14 @@
   //       erroneous node evictions on slow networks.
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
+  //   * ip:
+  //       A string used to returns the address for the network interface on the
+  //       current system with the specified name:
+  //         * String: First `family` address of the interface.
+  //                   If not found first address with `ipv4` or
+  //                   loopback address `127.0.0.1`.
+  //         * 'public': the first public ip address of family.
+  //         * 'private': the first private ip address of family.
   //   * joinTimeout:
   //       The cluster join timeout (in ms): if that timeout is reached before
   //       the node could join the cluster, it will kill itself.
@@ -923,6 +931,7 @@
     "activityDepth": 50,
     "heartbeat": 2000,
     "ipv6": false,
+    "ip": "public",
     "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {
