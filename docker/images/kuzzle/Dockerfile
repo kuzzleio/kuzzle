@@ -41,7 +41,8 @@ RUN  set -x \
   # Remove useless leftover dependencies
   && rm -rf node_modules/rxjs/ \
   # Strip binaries
-  && strip node_modules/re2/build/Release/re2.node
+  ; strip node_modules/re2/build/Release/re2.node \
+  ; true
 
 ################################################################################
 # Production build 2 image
