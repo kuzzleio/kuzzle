@@ -215,6 +215,8 @@ export class KuzzleRequest {
   /**
    * Sets the request result and status
    *
+   * @deprecated Use request.response.configure instead
+   *
    * @param result Request result. Will be converted to JSON unless `raw` option is set to `true`
    * @param options Additional options
    *    - `status` (number): HTTP status code (default: 200)

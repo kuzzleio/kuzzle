@@ -272,6 +272,7 @@ export class RequestResponse {
    * @param [options.headers] - Additional protocol headers
    * @param [options.status=200] - HTTP status code
    * @param [options.format] - Response format, standard or raw
+   *
    * @returns void
    */
   configure (
