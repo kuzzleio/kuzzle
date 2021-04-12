@@ -931,7 +931,7 @@
     "activityDepth": 50,
     "heartbeat": 2000,
     "ipv6": false,
-    "ip": "private",
+    "ip": "public",
     "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {
