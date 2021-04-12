@@ -8,7 +8,6 @@ RUN  set -x \
       curl \
       python \
       make \
-      git \
       g++ \
       xz \
       zeromq-dev \

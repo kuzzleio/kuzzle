@@ -78,7 +78,7 @@
     "semver": "^7.3.5",
     "sorted-array": "^2.0.4",
     "uuid": "^8.3.2",
-    "uWebSockets.js": "git+http://github.com/uNetworking/uWebSockets.js#v18.14.0",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v18.14.0.tar.gz",
     "validator": "^13.5.2",
     "winston": "^3.3.3",
     "winston-elasticsearch": "0.15.4",

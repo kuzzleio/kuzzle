@@ -892,6 +892,10 @@
   //       erroneous node evictions on slow networks.
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
+  //   * ip:
+  //       A string telling weither Kuzzle should use the first
+  //       public IP ("public"), private IP ("private") or
+  //       a custom one ("192.168.0.42")
   //   * joinTimeout:
   //       The cluster join timeout (in ms): if that timeout is reached before
   //       the node could join the cluster, it will kill itself.
@@ -923,6 +927,7 @@
     "activityDepth": 50,
     "heartbeat": 2000,
     "ipv6": false,
+    "ip": "private",
     "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {
