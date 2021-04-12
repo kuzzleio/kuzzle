@@ -7,7 +7,6 @@ RUN  set -x \
   && apt-get update && apt-get install -y \
        curl \
        make \
-       git \
        g++ \
        python \
        libzmq3-dev \

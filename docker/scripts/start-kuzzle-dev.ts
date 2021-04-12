@@ -213,6 +213,33 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
+// ensure role and profiles loading at startup is working
+app._support.securities = {
+  profiles: {
+    reader: {
+      policies: [
+        {
+          roleId: 'reader',
+        }
+      ]
+    }
+  },
+  roles: {
+    reader: {
+      controllers: {
+        document: {
+          actions: {
+            get: true,
+            mGet: true,
+            search: true,
+            scroll: true,
+          }
+        }
+      }
+    }
+  },
+};
+
 loadAdditionalPlugins()
   .then(() => app.start())
   .then(() => {
