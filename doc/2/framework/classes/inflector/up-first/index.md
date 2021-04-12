@@ -5,7 +5,7 @@ title: upFirst
 description: Inflector class upFirst() method
 ---
 
-# constructorupFirst
+# upFirst
 
 <SinceBadge version="auto-version" />
 
