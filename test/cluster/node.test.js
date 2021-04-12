@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const mockRequire = require('mock-require');
 const Long = require('long');
-const ip = require('ip');
+const getIP = require('ip');
 
 const { IdCard } = require('../../lib/cluster/idCardHandler');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
@@ -129,11 +129,11 @@ describe('#Cluster Node', () => {
     it('should select the correct IP address according to the configuration', () => {
       kuzzle.config.cluster.ip = 'private';
       node = new ClusterNode();
-      should(node.ip).be.eql(ip.address('private', 'ipv4'));
+      should(node.ip).be.eql(getIP.address('private', 'ipv4'));
 
       kuzzle.config.cluster.ip = 'public';
       node = new ClusterNode();
-      should(node.ip).be.eql(ip.address('public', 'ipv4'));
+      should(node.ip).be.eql(getIP.address('public', 'ipv4'));
     });
   });
 
