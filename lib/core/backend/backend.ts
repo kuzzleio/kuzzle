@@ -29,6 +29,7 @@ import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { Inflector } from '../../util/inflector';
+import { Mutex } from '../../util/mutex';
 import vault from '../../kuzzle/vault';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
@@ -39,6 +40,7 @@ import {
   EventHandler,
 } from '../../types';
 import { BackendCluster, BackendPlugin } from './index';
+import { NotFoundError } from '../../kerror/errors';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -651,6 +653,21 @@ export class Backend {
 
     this._sdk = new EmbeddedSDK();
 
+    this._kuzzle.ask(
+      'core:storage:private:collection:create',
+      'kuzzle',
+      'installations',
+      {
+        mappings: {
+          dynamic: "false",
+          properties: {
+            timestamp: {
+              type: "integer"
+            },
+          }
+        }
+      });
+
     this.started = true;
   }
 
@@ -668,6 +685,57 @@ export class Backend {
     }
 
     return this._kuzzle.pipe(event, ...payload);
+  }
+
+  /**
+   * Allow the execution of code only once
+   * 
+   * @param {string} id - Unique id needed to differenciate each deployement
+   * @param {Function} handler - Method to execute only once
+   * 
+   * @returns {boolean} true when successful, false if already deployed
+   */
+  async install (id: string, handler: () => Promise<void>): Promise<boolean> {
+    if (this.started) {
+      throw runtimeError.get('already_started', 'install');
+    }
+    if (typeof id !== 'string') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    }
+    if (typeof handler !== 'function') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
+    }
+
+    const mutex = new Mutex('backend:install');
+    await mutex.lock();
+
+    try {
+      try {
+        await this._kuzzle.ask('core:storage:private:document:get', 'kuzzle', 'installations', id);
+        return false;
+      } catch (error) {
+        if (! (error instanceof NotFoundError) ) {
+          throw error
+        }
+      }
+
+      await handler();
+      
+      await this._kuzzle.ask(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { timestamp: Date.now() },
+        { id });
+    }
+    catch (error) {
+      throw runtimeError.get('unexpected_error', error);
+    }
+    finally {
+      await mutex.unlock();
+    }
+
+    return true;
   }
 
   /**
