@@ -598,6 +598,21 @@ export class Backend {
 
     this.kerror = kerror;
 
+    this._kuzzle.ask(
+      'core:storage:private:collection:create',
+      'kuzzle',
+      'installations',
+      {
+        mappings: {
+          dynamic: "false",
+          properties: {
+            timestamp: {
+              type: "integer"
+            },
+          }
+        }
+      });
+
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
       this.version = info.version;
@@ -653,21 +668,6 @@ export class Backend {
 
     this._sdk = new EmbeddedSDK();
 
-    this._kuzzle.ask(
-      'core:storage:private:collection:create',
-      'kuzzle',
-      'installations',
-      {
-        mappings: {
-          dynamic: "false",
-          properties: {
-            timestamp: {
-              type: "integer"
-            },
-          }
-        }
-      });
-
     this.started = true;
   }
 
@@ -690,10 +690,10 @@ export class Backend {
   /**
    * Allow the execution of code only once
    * 
-   * @param {string} id - Unique id needed to differenciate each deployement
+   * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
    * 
-   * @returns {boolean} true when successful, false if already deployed
+   * @returns {boolean} true when successful, false if already installed
    */
   async install (id: string, handler: () => Promise<void>): Promise<boolean> {
     if (this.started) {
