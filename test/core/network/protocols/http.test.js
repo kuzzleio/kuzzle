@@ -480,51 +480,52 @@ describe('core/network/protocols/http', () => {
       should(response.writeStatus).calledOnce().calledWithMatch(Buffer.from('200'));
 
       should(response.writeHeader)
-      .not.be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Headers'),
-        Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
-      );
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Headers'),
+          Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+        );
 
       should(response.writeHeader)
-      .be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Headers'),
-        Buffer.from('foo')
-      );
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Headers'),
+          Buffer.from('foo')
+        );
 
       should(response.writeHeader)
-      .not.be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Methods'),
-        Buffer.from(kuzzle.config.http.accessControlAllowMethods)
-      );
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Methods'),
+          Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+        );
 
       should(response.writeHeader)
-      .be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Methods'),
-        Buffer.from('foo')
-      );
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Methods'),
+          Buffer.from('foo')
+        );
 
       should(response.writeHeader)
-      .not.be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Origin'),
-        Buffer.from(kuzzle.config.http.accessControlAllowOrigin)
-      );
-
-      should(response.writeHeader).be.calledWithMatch(
-        Buffer.from('Access-Control-Allow-Origin'),
-        Buffer.from('foo')
-      );
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Origin'),
+          Buffer.from(kuzzle.config.http.accessControlAllowOrigin)
+        );
 
       should(response.writeHeader)
-      .not.be.calledWithMatch(
-        Buffer.from('Content-Type'),
-        Buffer.from('application/json')
-      );
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Origin'),
+          Buffer.from('foo')
+        );
 
       should(response.writeHeader)
-      .be.calledWithMatch(
-        Buffer.from('Content-Type'),
-        Buffer.from('foo')
-      );
+        .not.be.calledWithMatch(
+          Buffer.from('Content-Type'),
+          Buffer.from('application/json')
+        );
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('Content-Type'),
+          Buffer.from('foo')
+        );
 
       should(response.writeHeader.calledBefore(response.tryEnd));
 
