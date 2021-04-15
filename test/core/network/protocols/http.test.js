@@ -452,6 +452,92 @@ describe('core/network/protocols/http', () => {
       should(entryPoint.removeConnection).calledOnce();
     });
 
+    it('should not duplicate headers if a header with the same name as one of the default headers is present', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(
+        'yo',
+        {
+          headers: {
+            'Access-Control-Allow-Headers': 'foo',
+            'Access-Control-Allow-Methods': 'foo',
+            'Access-Control-Allow-Origin': 'foo',
+            'Content-Type': 'foo'
+          }
+        }
+      );
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
+
+      should(entryPoint.newConnection).calledOnce();
+
+      const response = httpWs.server._httpResponse;
+
+      should(response.cork).calledOnce();
+      should(response.cork.calledBefore(response.writeStatus)).be.true();
+
+      should(response.writeStatus).calledOnce().calledWithMatch(Buffer.from('200'));
+
+      should(response.writeHeader)
+      .not.be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Headers'),
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+      );
+
+      should(response.writeHeader)
+      .be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Headers'),
+        Buffer.from('foo')
+      );
+
+      should(response.writeHeader)
+      .not.be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Methods'),
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+      );
+
+      should(response.writeHeader)
+      .be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Methods'),
+        Buffer.from('foo')
+      );
+
+      should(response.writeHeader)
+      .not.be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Origin'),
+        Buffer.from(kuzzle.config.http.accessControlAllowOrigin)
+      );
+
+      should(response.writeHeader).be.calledWithMatch(
+        Buffer.from('Access-Control-Allow-Origin'),
+        Buffer.from('foo')
+      );
+
+      should(response.writeHeader)
+      .not.be.calledWithMatch(
+        Buffer.from('Content-Type'),
+        Buffer.from('application/json')
+      );
+
+      should(response.writeHeader)
+      .be.calledWithMatch(
+        Buffer.from('Content-Type'),
+        Buffer.from('foo')
+      );
+
+      should(response.writeHeader.calledBefore(response.tryEnd));
+
+      should(response.tryEnd).calledOnce();
+      should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(entryPoint.removeConnection).calledOnce();
+    });
+
     it('should compress the response with gzip if asked to', async () => {
       const result = new KuzzleRequest({});
       result.setResult('yo');
