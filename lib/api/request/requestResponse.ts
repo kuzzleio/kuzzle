@@ -322,7 +322,7 @@ export class RequestResponse {
   /**
    * Adds new multiple headers.
    */
-  setHeaders (headers: JSONObject, ifNotPresent:boolean = false) {
+  setHeaders (headers: JSONObject, ifNotPresent = false) {
     assert.assertObject('headers', headers);
 
     if (headers) {
