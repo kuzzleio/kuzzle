@@ -12,7 +12,7 @@ description: cluster:status API action
 Gets the current cluster status.
 
 ::: info
-The cluster activity is stored in the cluster full state which is shared by each node. Since the full state is stored in RAM, the `activity` array will be wiped out if the entire cluster restart.
+The cluster activity is stored in the cluster full state which is shared by each node. Since the full state is stored in RAM, the `activity` array will be wiped out if the entire cluster restarts.
 :::
 
 ## Query Syntax
