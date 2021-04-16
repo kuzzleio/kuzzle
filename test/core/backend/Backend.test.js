@@ -5,12 +5,13 @@ const util = require('util');
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
-const mockrequire = require('mock-require');
+const mockRequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const FsMock = require('../../mocks/fs.mock');
+const MutexMock = require('../../mocks/mutex.mock.js');
 
 describe('Backend', () => {
   let application;
@@ -23,16 +24,17 @@ describe('Backend', () => {
     fsStub.readFileSync.returns('ref: refs/master');
     fsStub.statSync.returns({ isDirectory: () => true });
 
-    mockrequire('fs', fsStub);
-    mockrequire('../../../lib/kuzzle', KuzzleMock);
+    mockRequire('fs', fsStub);
+    mockRequire('../../../lib/kuzzle', KuzzleMock);
+    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
 
-    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
+    ({ Backend } = mockRequire.reRequire('../../../lib/core/backend/backend'));
 
     application = new Backend('black-mesa');
   });
 
   afterEach(() => {
-    mockrequire.stopAll();
+    mockRequire.stopAll();
   });
 
   describe('#_instanceProxy', () => {
@@ -450,6 +452,50 @@ describe('Backend', () => {
         application.trigger('xen:crystal', 'payload');
       })
         .throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
+  });
+
+  describe('#install', () => {
+    let handler;
+
+    beforeEach(async () => {
+      handler = sinon.stub().resolves();
+      sinon.stub(Date, 'now').returns(Date.now());
+
+      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(false);
+      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:create']).resolves();
+    });
+
+    afterEach(() => {
+      Date.now.restore();
+    });
+
+    it('should call the handler and work properly', async () => {
+      const result = await application.install('id', handler);
+
+      should(application._kuzzle.ask).be.calledTwice();
+      should(handler).be.calledOnce();
+      should(result).match(true);
+    });
+
+    it('should handle situation when handler has already been called', async () => {
+      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
+
+      const result = await application.install('id', handler);
+
+      should(application._kuzzle.ask).be.calledWith(
+        'core:storage:private:document:get',
+        'kuzzle',
+        'installations',
+        'id');
+      should(application._kuzzle.ask).be.neverCalledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { installedAt: Date.now() },
+        { id: 'id' });
+      should(handler).not.be.called();
+      should(result).match(false);
     });
   });
 
