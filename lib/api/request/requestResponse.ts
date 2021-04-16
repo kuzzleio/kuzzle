@@ -326,12 +326,12 @@ export class RequestResponse {
     assert.assertObject('headers', headers);
 
     if (headers) {
-      Object.keys(headers).forEach(name => {
+      for (const name in headers) {
         // When ifNotPresent is set to true, only set the header if no value has been defined before
         if (!ifNotPresent || this.getHeader(name) === undefined) {
           this.setHeader(name, headers[name]);
         }
-      });
+      }
     }
   }
 
