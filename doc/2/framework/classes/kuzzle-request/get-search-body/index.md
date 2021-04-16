@@ -15,7 +15,7 @@ In the HTTP protocol, the search body will be extracted depending on the verb:
   - `GET`: extract the `searchBody` query string argument and parse it
   - `POST`: return the request body
 
-Typically the search body contains keywords used by Elasticsearch to perform queries like `query`, `sort`, `aggregations` etc.
+Typically the search body contains keywords used by Kuzzle to perform queries like `query`, `sort`, `aggregations` etc.
 
 ### Arguments
 
