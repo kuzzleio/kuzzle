@@ -159,7 +159,6 @@ describe('#RequestResponse', () => {
       response.setHeader('X-Foo', 'foo');
       response.setHeader('test', 'test');
 
-
       response.setHeaders({ test: 'test', banana: '42' });
 
       should(response.headers).have.property('X-Foo');
@@ -171,12 +170,6 @@ describe('#RequestResponse', () => {
       response.setHeader('X-Foo', 'foo');
       response.setHeader('test', 'test');
 
-      const map = { test: 'foobar', banana: '42' };
-      Object.keys(map).forEach(name => {
-        if (!true && response.getHeader(name) === undefined) {
-          console.log(name);
-        }
-      });
       response.setHeaders({ test: 'foobar', banana: '42' }, true);
 
       should(response.headers).have.property('X-Foo');
