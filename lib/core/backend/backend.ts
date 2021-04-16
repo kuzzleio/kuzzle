@@ -40,7 +40,7 @@ import {
   EventHandler,
 } from '../../types';
 import { BackendCluster, BackendPlugin } from './index';
-import { NotFoundError } from '../../kerror/errors';
+import { NotFoundError, PreconditionError } from '../../kerror/errors';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -598,21 +598,6 @@ export class Backend {
 
     this.kerror = kerror;
 
-    this._kuzzle.ask(
-      'core:storage:private:collection:create',
-      'kuzzle',
-      'installations',
-      {
-        mappings: {
-          dynamic: "false",
-          properties: {
-            timestamp: {
-              type: "integer"
-            },
-          }
-        }
-      });
-
     try {
       const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
       this.version = info.version;
@@ -710,13 +695,14 @@ export class Backend {
     await mutex.lock();
 
     try {
-      try {
-        await this._kuzzle.ask('core:storage:private:document:get', 'kuzzle', 'installations', id);
+      const alreadyInstalled = await this._kuzzle.ask(
+        'core:storage:private:document:exist',
+        'kuzzle',
+        'installations',
+        id );
+
+      if (alreadyInstalled) {
         return false;
-      } catch (error) {
-        if (! (error instanceof NotFoundError) ) {
-          throw error
-        }
       }
 
       await handler();
@@ -725,7 +711,7 @@ export class Backend {
         'core:storage:private:document:create',
         'kuzzle',
         'installations',
-        { timestamp: Date.now() },
+        { installedAt: Date.now() },
         { id });
     }
     catch (error) {
