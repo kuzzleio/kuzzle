@@ -11,7 +11,7 @@ description: KuzzleRequest class getSearchBody() method
 
 Returns the search body.
 
-With the HTTP protocol, the search body will be fetch depending on the verb:
+In the HTTP protocol, the search body will be extracted depending on the verb:
   - `GET`: extract the `searchBody` query string argument and parse it
   - `POST`: return the request body
 
