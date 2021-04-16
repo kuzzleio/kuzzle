@@ -322,11 +322,16 @@ export class RequestResponse {
   /**
    * Adds new multiple headers.
    */
-  setHeaders (headers: JSONObject) {
+  setHeaders (headers: JSONObject, ifNotPresent:boolean = false) {
     assert.assertObject('headers', headers);
 
     if (headers) {
-      Object.keys(headers).forEach(name => this.setHeader(name, headers[name]));
+      Object.keys(headers).forEach(name => {
+        // When ifNotPresent is set to true, only set the header if no value has been defined before
+        if (!ifNotPresent || this.getHeader(name) === undefined) {
+          this.setHeader(name, headers[name]);
+        }
+      });
     }
   }
 
