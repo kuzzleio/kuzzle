@@ -166,6 +166,17 @@ describe('#RequestResponse', () => {
       should(response.headers).have.property('banana', '42');
     });
 
+    it('should not set headers if already existing', () => {
+      response.setHeader('X-Foo', 'foo');
+      response.setHeader('test', 'test');
+
+      response.setHeaders({ test: 'foobar', banana: '42' }, true);
+
+      should(response.headers).have.property('X-Foo');
+      should(response.headers).have.property('test', 'test');
+      should(response.headers).have.property('banana', '42');
+    });
+
     it('should do nothing if a null header is provided', () => {
       response.setHeaders(null);
 
