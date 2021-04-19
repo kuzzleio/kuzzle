@@ -19,32 +19,19 @@
  * limitations under the License.
  */
 
-/**
- * Internal logger.
- */
-export type InternalLogger = {
-  /**
-   * Logs a debug message
-   */
-  debug: (message: any) => void
+import _ from 'lodash';
+import { Backend } from './index';
 
-  /**
-   * Logs an error message
-   */
-  error: (message: any) => void
+export class ApplicationManager {
+  protected _application: any;
 
-  /**
-   * Logs an info message
-   */
-  info: (message: any) => void
+  constructor (application: Backend) {
+    Reflect.defineProperty(this, '_application', {
+      value: application
+    });
+  }
 
-  /**
-   * Logs a verbose message
-   */
-  verbose: (message: any) => void
-
-  /**
-   * Logs a warn message
-   */
-  warn: (message: any) => void
-};
+  protected get _kuzzle () {
+    return this._application._kuzzle;
+  }
+}
