@@ -28,7 +28,7 @@ import { Client } from '@elastic/elasticsearch';
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
-import { kebabCase } from '../../util/inflector';
+import { Inflector } from '../../util/inflector';
 import vault from '../../kuzzle/vault';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
@@ -240,7 +240,7 @@ class BackendController extends ApplicationManager {
     }
 
     if (! controller.name) {
-      controller.name = kebabCase(controller.constructor.name)
+      controller.name = Inflector.kebabCase(controller.constructor.name)
         .replace('-controller', '');
     }
 
