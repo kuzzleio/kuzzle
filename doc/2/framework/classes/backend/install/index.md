@@ -10,17 +10,17 @@ description: Backend class install() method
 <SinceBadge version="auto-version" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
-Execution a piece of code only once during the lifetime of the app.
+Register code which will be executed only once during the lifetime of the app.
+
+::: info
+This method can only be used before the application is started because the handler is called when the app is launching. If the handler throws, the app will be unable to start.
+:::
 
 ```ts
-install (id: string, handler: () => Promise<void>): Promise<boolean>
+install (id: string, handler: () => Promise<void>): void
 ```
 
 <br/>
-
-## Returns
-
-Returns a Promise resolving to true if succesfully executed or false if already installed.
 
 ## Usage
 

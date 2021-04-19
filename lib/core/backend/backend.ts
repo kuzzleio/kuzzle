@@ -76,6 +76,7 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
+  protected _installationsWaitingList: Array<{id: String, handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -264,6 +265,7 @@ export class Backend {
 
     const options = {
       fixtures: this._support.fixtures,
+      installations: this._installationsWaitingList,
       mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
@@ -273,6 +275,7 @@ export class Backend {
 
     await this._kuzzle.start(application, options);
 
+    this._installationsWaitingList = [];
     this._sdk = new EmbeddedSDK();
 
     this.started = true;
@@ -295,14 +298,14 @@ export class Backend {
   }
 
   /**
-   * Allow the execution of code only once
+   * Register a method that will be executed only once.
+   * If its execution throw an error, the app will fail during starting phase.
    * 
    * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
    * 
-   * @returns {boolean} true when successful, false if already installed
    */
-  async install (id: string, handler: () => Promise<void>): Promise<boolean> {
+  install (id: string, handler: () => Promise<void>): void {
     if (this.started) {
       throw runtimeError.get('already_started', 'install');
     }
@@ -313,37 +316,7 @@ export class Backend {
       throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
     }
 
-    const mutex = new Mutex('backend:install');
-    await mutex.lock();
-
-    try {
-      const alreadyInstalled = await this._kuzzle.ask(
-        'core:storage:private:document:exist',
-        'kuzzle',
-        'installations',
-        id );
-
-      if (alreadyInstalled) {
-        return false;
-      }
-
-      await handler();
-      
-      await this._kuzzle.ask(
-        'core:storage:private:document:create',
-        'kuzzle',
-        'installations',
-        { installedAt: Date.now() },
-        { id });
-    }
-    catch (error) {
-      throw runtimeError.get('unexpected_error', error);
-    }
-    finally {
-      await mutex.unlock();
-    }
-
-    return true;
+    this._installationsWaitingList.push({ id, handler });
   }
 
   /**

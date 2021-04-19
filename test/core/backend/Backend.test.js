@@ -5,13 +5,12 @@ const util = require('util');
 const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
-const mockRequire = require('mock-require');
+const mockrequire = require('mock-require');
 const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const FsMock = require('../../mocks/fs.mock');
-const MutexMock = require('../../mocks/mutex.mock.js');
 
 describe('Backend', () => {
   let application;
@@ -24,17 +23,16 @@ describe('Backend', () => {
     fsStub.readFileSync.returns('ref: refs/master');
     fsStub.statSync.returns({ isDirectory: () => true });
 
-    mockRequire('fs', fsStub);
-    mockRequire('../../../lib/kuzzle', KuzzleMock);
-    mockRequire('../../../lib/util/mutex', { Mutex: MutexMock });
+    mockrequire('fs', fsStub);
+    mockrequire('../../../lib/kuzzle', KuzzleMock);
 
-    ({ Backend } = mockRequire.reRequire('../../../lib/core/backend/backend'));
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
 
     application = new Backend('black-mesa');
   });
 
   afterEach(() => {
-    mockRequire.stopAll();
+    mockrequire.stopAll();
   });
 
   describe('#_instanceProxy', () => {
@@ -72,6 +70,7 @@ describe('Backend', () => {
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
+      application._installationsWaitingList = [{ id: 'foo', handler: () => {} }];
       application._plugins = {};
       application._support = {
         mappings: 'mappings',
@@ -98,6 +97,7 @@ describe('Backend', () => {
       should(options.mappings).be.eql(application._support.mappings);
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
+      should(options.installations).be.eql(application._installationsWaitingList);
     });
 
     it('should only submit the configured embedded plugins', async () => {
@@ -460,42 +460,20 @@ describe('Backend', () => {
 
     beforeEach(async () => {
       handler = sinon.stub().resolves();
-      sinon.stub(Date, 'now').returns(Date.now());
-
-      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(false);
-      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:create']).resolves();
     });
 
-    afterEach(() => {
-      Date.now.restore();
-    });
+    it('should store both id and handler in the waiting list', () => {
+      application.install('id', handler);
 
-    it('should call the handler and work properly', async () => {
-      const result = await application.install('id', handler);
-
-      should(application._kuzzle.ask).be.calledTwice();
-      should(handler).be.calledOnce();
-      should(result).match(true);
-    });
-
-    it('should handle situation when handler has already been called', async () => {
-      application._kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
-
-      const result = await application.install('id', handler);
-
-      should(application._kuzzle.ask).be.calledWith(
-        'core:storage:private:document:get',
-        'kuzzle',
-        'installations',
-        'id');
-      should(application._kuzzle.ask).be.neverCalledWith(
-        'core:storage:private:document:create',
-        'kuzzle',
-        'installations',
-        { installedAt: Date.now() },
-        { id: 'id' });
+      should(application._installationsWaitingList).match([{ id: 'id', handler }]);
       should(handler).not.be.called();
-      should(result).match(false);
+    });
+
+    it('should throws', async () => {
+      await application.start();
+
+      should(() => application.install('id', handler))
+        .throwError({ id: 'plugin.runtime.unavailable_before_start' });
     });
   });
 
