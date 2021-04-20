@@ -20,8 +20,6 @@
  */
 
 import fs from 'fs';
-import _ from 'lodash';
-
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import kerror from '../../kerror';
@@ -315,7 +313,7 @@ export class Backend {
       throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
     }
 
-    this._installationsWaitingList.push({ id, handler });
+    this._installationsWaitingList.push({ handler, id });
   }
 
   /**
