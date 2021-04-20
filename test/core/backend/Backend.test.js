@@ -157,11 +157,11 @@ describe('Backend', () => {
       should(handler).not.be.called();
     });
 
-    it('should throws', async () => {
+    it('should throws if the app is already running', async () => {
       await application.start();
 
       should(() => application.install('id', handler))
-        .throwError({ id: 'plugin.runtime.unavailable_before_start' });
+        .throwError({ id: 'plugin.runtime.already_started' });
     });
   });
 });
