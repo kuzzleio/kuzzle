@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
 import { Client } from '@elastic/elasticsearch';
 
 import Elasticsearch from '../../service/storage/elasticsearch';

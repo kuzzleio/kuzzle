@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-
 import { Inflector } from '../../util/inflector';
 import kerror from '../../kerror';
 import { ControllerDefinition, Controller } from '../../types';

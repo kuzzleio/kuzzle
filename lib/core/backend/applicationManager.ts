@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
 import { Backend } from './index';
 
 export class ApplicationManager {

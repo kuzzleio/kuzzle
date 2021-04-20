@@ -111,7 +111,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.ask.withArgs('core:security:load'),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
-        kuzzle.install,
+        kuzzle.install.withArgs(options.installations),
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
@@ -254,17 +254,28 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should call the handler and work properly', async () => {
-      const result = await kuzzle.install('id', handler);
+      const result = await kuzzle.install([{ id: 'id', handler}]);
 
       should(kuzzle.ask).be.calledTwice();
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:get',
+        'kuzzle',
+        'installations',
+        'id');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { handler: handler.toString(), installedAt: Date.now() },
+        { id: 'id' });
       should(handler).be.calledOnce();
-      should(result).match(true);
+      should(result).match(1);
     });
 
-    it('should handle situation when handler has already been called', async () => {
+    it('should handle situation when handler has already been executed', async () => {
       kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
 
-      const result = await kuzzle.install('id', handler);
+      const result = await kuzzle.install([{ id: 'id', handler}]);
 
       should(kuzzle.ask).be.calledWith(
         'core:storage:private:document:get',
@@ -278,7 +289,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         { handler: handler.toString(), installedAt: Date.now() },
         { id: 'id' });
       should(handler).not.be.called();
-      should(result).match(false);
+      should(result).match(0);
     });
   });
 });

@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-
 import kerror from '../../kerror';
 import { EventHandler } from '../../types';
 import { ApplicationManager } from './index';

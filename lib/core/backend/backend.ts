@@ -24,7 +24,6 @@ import _ from 'lodash';
 
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import { Mutex } from '../../util/mutex';
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import {
@@ -76,7 +75,7 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
-  protected _installationsWaitingList: Array<{id: String, handler: () => void}> = [];
+  protected _installationsWaitingList: Array<{id: string, handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency

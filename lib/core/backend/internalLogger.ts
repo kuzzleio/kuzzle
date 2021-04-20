@@ -20,9 +20,6 @@
  */
 
 import util from 'util';
-
-import _ from 'lodash';
-
 import { ApplicationManager } from './index';
 
 

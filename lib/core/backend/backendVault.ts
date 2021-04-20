@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-
 import vault from '../../kuzzle/vault';
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
