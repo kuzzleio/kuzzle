@@ -61,7 +61,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     mockrequire('../../lib/core/security', coreModuleStub);
     mockrequire('../../lib/core/realtime', coreModuleStub);
     mockrequire('../../lib/cluster', coreModuleStub);
-    mockrequire('../../../lib/util/mutex', { Mutex: MutexMock });
+    mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
@@ -85,6 +85,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
+      kuzzle.install = sinon.stub().resolves(0);
       const options = {
         installations: [{ id: 'foo', handler: () => {} }],
         mappings: {},
@@ -258,7 +259,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledTwice();
       should(kuzzle.ask).be.calledWith(
-        'core:storage:private:document:get',
+        'core:storage:private:document:exist',
         'kuzzle',
         'installations',
         'id');
@@ -278,7 +279,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       const result = await kuzzle.install([{ id: 'id', handler}]);
 
       should(kuzzle.ask).be.calledWith(
-        'core:storage:private:document:get',
+        'core:storage:private:document:exist',
         'kuzzle',
         'installations',
         'id');
