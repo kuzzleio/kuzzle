@@ -73,7 +73,7 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
-  protected _installationsWaitingList: Array<{id: string, handler: () => void}> = [];
+  protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -299,9 +299,10 @@ export class Backend {
    * 
    * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
+   * @param {string | undefined} description - Optional: Describe the purpose of this installation
    * 
    */
-  install (id: string, handler: () => Promise<void>): void {
+  install (id: string, handler: () => Promise<void>, description?: string): void {
     if (this.started) {
       throw runtimeError.get('already_started', 'install');
     }
@@ -311,8 +312,11 @@ export class Backend {
     if (typeof handler !== 'function') {
       throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
     }
+    if (description && typeof description !== 'string') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    }
 
-    this._installationsWaitingList.push({ handler, id });
+    this._installationsWaitingList.push({ description, handler, id });
   }
 
   /**

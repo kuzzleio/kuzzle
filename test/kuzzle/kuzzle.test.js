@@ -255,7 +255,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should call the handler and work properly', async () => {
-      const result = await kuzzle.install([{ id: 'id', handler}]);
+      const result = await kuzzle.install([{ id: 'id', handler, description: 'description'}]);
 
       should(kuzzle.ask).be.calledTwice();
       should(kuzzle.ask).be.calledWith(
@@ -267,7 +267,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'core:storage:private:document:create',
         'kuzzle',
         'installations',
-        { handler: handler.toString(), installedAt: Date.now() },
+        { description: 'description', handler: handler.toString(), installedAt: Date.now() },
         { id: 'id' });
       should(handler).be.calledOnce();
       should(result).match(1);

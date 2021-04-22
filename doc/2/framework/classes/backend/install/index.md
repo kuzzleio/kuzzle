@@ -17,7 +17,7 @@ This method can only be used before the application is started because the handl
 :::
 
 ```ts
-install (id: string, handler: () => Promise<void>): void
+install (id: string, handler: () => Promise<void>, description?: string): void
 ```
 
 <br/>

@@ -150,10 +150,10 @@ describe('Backend', () => {
       handler = sinon.stub().resolves();
     });
 
-    it('should store both id and handler in the waiting list', () => {
-      application.install('id', handler);
+    it('should store id, handler and description in the waiting list', () => {
+      application.install('id', handler, 'description');
 
-      should(application._installationsWaitingList).match([{ id: 'id', handler }]);
+      should(application._installationsWaitingList).match([{ id: 'id', handler, description: 'description' }]);
       should(handler).not.be.called();
     });
 
