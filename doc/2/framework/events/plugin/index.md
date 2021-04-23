@@ -25,7 +25,7 @@ All calls to plugins API actions trigger two of these three events:
 
 | Arguments | Type      | Description                                                                       |
 |-----------|-----------|-----------------------------------------------------------------------------------|
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 A `before` event is triggered before a plugin API request starts.
 
@@ -51,7 +51,7 @@ The `before` event name is built using the following template:
 
 | Arguments | Type      | Description                                                                       |
 |-----------|-----------|-----------------------------------------------------------------------------------|
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 An `after` event is triggered after a plugin API request succeeds.
 
@@ -77,7 +77,7 @@ The `after` event name is built using the following template:
 
 | Arguments | Type      | Description                                                                       |
 |-----------|-----------|-----------------------------------------------------------------------------------|
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 An `error` event is triggered after a plugin API request fails.
 

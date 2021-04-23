@@ -48,7 +48,7 @@ describe('DocumentExtractor', () => {
       }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobar');
+      should(newReq.input.args._id).equal('foobar');
       should(newReq.input.body.foo).equal('baz');
     });
 
@@ -129,7 +129,7 @@ describe('DocumentExtractor', () => {
       }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobar');
+      should(newReq.input.args._id).equal('foobar');
       should(newReq.input.body.foo).equal('baz');
     });
 
@@ -210,7 +210,7 @@ describe('DocumentExtractor', () => {
       }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobar');
+      should(newReq.input.args._id).equal('foobar');
       should(newReq.input.body.foo).equal('baz');
     });
 
@@ -291,7 +291,7 @@ describe('DocumentExtractor', () => {
       }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobar');
+      should(newReq.input.args._id).equal('foobar');
       should(newReq.input.body.foo).equal('baz');
     });
 
@@ -1045,7 +1045,7 @@ describe('DocumentExtractor', () => {
       const documents = [{ _id: 'foobaz' }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobaz');
+      should(newReq.input.args._id).equal('foobaz');
     });
 
     it('should extract documents from result', () => {
@@ -1099,7 +1099,7 @@ describe('DocumentExtractor', () => {
       const documents = [{ _id: 'foobaz' }];
 
       const newReq = new DocumentExtractor(req).insert(documents);
-      should(newReq.input.resource._id).equal('foobaz');
+      should(newReq.input.args._id).equal('foobaz');
     });
 
     it('should extract documents from result', () => {

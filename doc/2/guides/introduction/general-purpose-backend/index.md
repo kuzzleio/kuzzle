@@ -16,7 +16,11 @@ Rather than developing the same standard features over and over again each time 
 
 The majority of Kuzzle's features are available via its [API](/core/2/guides/main-concepts/api) for various external clients.
 
-This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**.
+This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**:
+ - [HTTP](/core/2/api/protocols/http/)
+ - [WebSocket](/core/2/api/protocols/websocket/)
+ - [MQTT](/core/2/api/protocols/mqtt/)
+ - Or [any IP protocol](https://docs.kuzzle.io/core/2/guides/write-protocols/start-writing-protocols/)
 
 Whether it is the creation and modification of the database or the management of users and rights, **everything is available through the different controllers of the API**.
 
@@ -45,26 +49,26 @@ let result = await sdk.document.search('iot', 'sensors', {
       ]
     }
   }
-})
+});
 ```
 
 In the same way, creating collections or the writing of documents is also done directly from the frontend into the database collections:
 
 ```js
 // First create an index and a collection to handle our data
-await sdk.index.create('iot')
+await sdk.index.create('iot');
 await sdk.collection.create('iot', 'sensors', {
   mappings: {
     model: { type: 'keyword' },
     temperature: { type: 'integer' },
   }
-})
+});
 
 // Create a document inside our collection
 let result = await sdk.document.create('iot', 'sensors', {
   model: 'temperature',
   temperature: 42
-})
+});
 ```
 
 ## Authentication
@@ -92,12 +96,12 @@ This system allows to manage the majority of access control rights situations. F
 app.pipe.register('generic:document:afterGet', async (documents: Document[], request: KuzzleRequest) => {
   for (const document of documents) {
     if (request.context.user._id !== document._source._kuzzle_info.creator) {
-      throw new ForbiddenError(`Not allowed to access document ${document._id}`)
+      throw new ForbiddenError(`Not allowed to access document ${document._id}`);
     }
   }
 
-  return documents
-})
+  return documents;
+});
 ```
 
 ## Extensibility
@@ -107,9 +111,9 @@ Like any framework, Kuzzle allows you to **develop new features by extending and
 To do so, just install the [NPM kuzzle package](https://www.npmjs.com/package/kuzzle) and start developing your application.
 
 ```js
-import { Backend, KuzzleRequest } from 'kuzzle'
+import { Backend, KuzzleRequest } from 'kuzzle';
 
-const app = new Backend('iot-tracker')
+const app = new Backend('iot-tracker');
 
 // Register a new API controller
 app.controller.register('greeting', {
@@ -118,10 +122,10 @@ app.controller.register('greeting', {
       handler: (request: KuzzleRequest) => `Hello, ${request.input.args.name}`
     }
   }
-})
+});
 
 app.start()
-  .then(() => app.log.info('Application started'))
+  .then(() => app.log.info('Application started'));
 ```
 
 Kuzzle offers different mechanisms to **develop the business functionalities** of your application:
@@ -160,8 +164,8 @@ await sdk.realtime.subscribe('iot', 'sensors', {
   }
 },
 async (notification: Notification) => {
-  console.log(`Sensor ${notification.result._id} temperature is too high!`)
-})
+  console.log(`Sensor ${notification.result._id} temperature is too high!`);
+});
 ```
 
 The entire realtime engine is used exclusively from a client (frontend or backend) and **does not require any additional code on the Kuzzle application side** to generate and transmit notifications.

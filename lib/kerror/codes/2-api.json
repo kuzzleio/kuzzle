@@ -73,13 +73,19 @@
         "koncorde_unknown_keyword": {
           "description": "An unknown keyword has been provided in filters",
           "code": 12,
-          "message": "The keyword \"%s\" is not one of the Koncorde filters DSL keywords.",
+          "message": "The keyword \"%s\" is not part of Koncorde filters DSL keywords. Are you trying to use an Elasticsearch query?",
           "class": "BadRequestError"
         },
         "koncorde_restricted_keyword": {
           "description": "A restricted keyword has been provided in filters",
           "code": 13,
           "message": "The %s \"%s\" of Koncorde DSL is not supported for search queries.",
+          "class": "BadRequestError"
+        },
+        "koncorde_dsl_error": {
+          "description": "Provided filters contains an error",
+          "code": 14,
+          "message": "%s",
           "class": "BadRequestError"
         }
       }
@@ -114,7 +120,7 @@
         "action_not_found": {
           "description": "API controller action not found",
           "code": 5,
-          "message": "Controller action \"%s\" not found.",
+          "message": "API action \"%s\":\"%s\" not found",
           "class": "NotFoundError"
         },
         "incompatible_sdk_version": {
@@ -140,6 +146,18 @@
           "code": 9,
           "message": "Admin user is already set.",
           "class": "PreconditionError"
+        },
+        "incomplete_multiple_request": {
+          "description": "Failed to execute some or all actions requested",
+          "code": 10,
+          "message": "At least one of the %s actions failed.",
+          "class": "MultipleErrorsError"
+        },
+        "not_enough_nodes": {
+          "description": "The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added",
+          "code": 11,
+          "message": "Rejected: this cluster is disabled because there aren't enough nodes connected.",
+          "class": "ServiceUnavailableError"
         }
       }
     }

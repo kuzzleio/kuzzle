@@ -51,12 +51,22 @@ Method: GET
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mGet <index> <collection> <body>
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
 - `index`: index name
+
+### Optional:
+
+- `strict`: if set, an error will occur if any of the documents could not be retrieved <SinceBadge version="2.11.0" />
 
 ---
 
@@ -79,6 +89,8 @@ Each document is an object with the following properties:
 - `_version`: version number of the document
 
 The `errors` array contain the IDs of not found documents.
+
+If `strict` mode is enabled, will rather return an error if at least one document could not been retreived.
 
 ```js
 {

@@ -46,7 +46,7 @@ app.controller.register('greeting', {
       handler: async request => /* ... */
     },
   }
-})
+});
 ```
 
 This is faster to develop but maintenance can be costly in the long run for larger applications with many controllers and actions.
@@ -65,7 +65,7 @@ The controller name will be inferred from the class name (unless the `name` prop
 :::
 
 ```js
-import { Controller, KuzzleRequest } from 'kuzzle'
+import { Controller, KuzzleRequest } from 'kuzzle';
 
 class GreetingController extends Controller {
   constructor (app: Backend) {
@@ -81,7 +81,7 @@ class GreetingController extends Controller {
           handler: this.sayGoodbye
         }
       }
-    }
+    };
   }
 
   async sayHello (request: KuzzleRequest) { /* ... */ }
@@ -97,9 +97,9 @@ If the handler function is an instance method of the controller then the context
 Once you have defined your controller class, you can instantiate it and pass it to the `Backend.controller.use` method:
 
 ```js
-const greetingController = new GreetingController(app)
+const greetingController = new GreetingController(app);
 
-app.controller.use(greetingController)
+app.controller.use(greetingController);
 ```
 
 This way of doing things takes longer to develop but it allows you to have a better code architecture while respecting OOP concepts.
@@ -108,7 +108,7 @@ This way of doing things takes longer to develop but it allows you to have a bet
 
 The handler is the function that will **be called each time our API action is executed**.
 
-This function **takes a [KuzzleRequest](/core/2/framework/classes/kuzzle-request object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
+This function **takes a [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object** as a parameter and **must return a Promise** resolving on the result to be returned to the client.
 
 This function is defined in the `handler` property of an action. Its signature is: `(request: KuzzleRequest) => Promise<any>`.
 
@@ -118,11 +118,11 @@ app.controller.register('greeting', {
     sayHello: {
       // Handler function for the "greeting:sayHello" action
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
-})
+});
 ```
 
 The result returned by our `handler` will be **converted to JSON format** and integrated into the standard Kuzzle response in the `result` property.
@@ -172,7 +172,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         // generated route: "GET http://<host>:<port>/greeting/hello"
@@ -182,7 +182,7 @@ app.controller.register('greeting', {
       ]
     }
   }
-})
+});
 ```
 
 ::: warning
@@ -197,14 +197,14 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         // "name" comes from the url parameter
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         { verb: 'get', path: '/email/send/:name' },
       ]
     }
   }
-})
+});
 ```
 
 ### Default route
@@ -223,16 +223,25 @@ By doing this, the action will only be available through the HTTP protocol with 
 
 ## KuzzleRequest Input
 
-The `handler` of an API action receives an instance of [KuzzleRequest](/core/2/framework/classes/kuzzle-request object. This object represents an API request and **contains both the client input and client contextual information**.
+The `handler` of an API action receives an instance of [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object. This object represents an API request and **contains both the client input and client contextual information**.
 
 The arguments of requests sent to the Kuzzle API are available in the [KuzzleRequest.input](/core/2/framework/classes/request-input) property.
 
 The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
- - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: additional arguments
- - `body`: body content
+ - `args`: Action arguments
+ - `body`: Body content
+
+### Extract parameters from request
+
+<SinceBadge version="2.11.0" />
+
+The request object exposes methods to safely extract parameters from the request in a standardized way.
+
+Each of those methods will check for the parameter presence and type. In case of a validation failure, the corresponding API error will be thrown.
+
+All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc. 
 
 ### HTTP
 
@@ -241,7 +250,7 @@ With HTTP, there are 3 types of input parameters:
  - Query arguments (__e.g. `/greeting/hello?name=aschen`__)
  - KuzzleRequest body
 
-URL parameters and query arguments can be found in the `request.input.args` property **unless it is a Kuzzle specific argument** (`_id`, `index` and `collection`), in that case they can be found in the `request.input.resource` property.
+URL parameters and query arguments can be found in the `request.input.args` property.
 
 The content of the query body can be found in the `request.input.body` property 
 
@@ -262,26 +271,31 @@ curl \
   }'
 ```
 
-We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA')
-        assert(request.input.args.name === 'aschen')
-        assert(request.input.args.age === '27')
-        assert(request.input.body.city === 'Antalya')
+        assert(request.input.args._id === 'JkkZN62jLSA');
+        assert(request.input.args.name === 'aschen');
+        assert(request.input.args.age === '27');
+        assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
       http: [
         { verb: 'POST', path: 'greeting/hello/:name' }
       ]
     }
   }
-})
+});
 ```
 
 ::: info
@@ -307,28 +321,29 @@ npx wscat -c ws://localhost:7512 --execute '{
 }'
 ```
 
-We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request object passed to the `handler`:
+We can retrieve them in the [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object passed to the `handler`:
 
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA')
-        assert(request.input.args.name === 'aschen')
-        assert(request.input.args.age === '27')
-        assert(request.input.body.city === 'Antalya')
+        assert(request.input.args._id === 'JkkZN62jLSA');
+        assert(request.input.args.name === 'aschen');
+        assert(request.input.args.age === '27');
+        assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
     }
   }
-})
+});
 ```
-
-::: warning
-`_id`, `index` and `collection` are **specific Kuzzle inputs** and are available in the `request.input.resource` property.
-:::
 
 ::: info
 See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
@@ -346,20 +361,22 @@ The available properties are as follows:
 
 Example:
 ```js
-import assert from 'assert'
+import assert from 'assert';
 
 app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
+        assert(request.context.connection.protocol === 'http');
         // Unauthenticated users are anonymous 
         // and the anonymous user ID is "-1"
-        assert(request.context.user._id === '-1')
-        assert(request.context.connection.protocol === 'http')
+        assert(request.context.user._id === '-1');
+        // equivalent to
+        assert(request.getKuid() === '-1');
       },
     }
   }
-})
+});
 ```
 
 ::: info
@@ -394,11 +411,11 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
-})
+});
 ```
 
 The following response will be sent:
@@ -439,7 +456,7 @@ app.controller.register('files', {
   actions: {
     csv: {
       handler: async request => {
-        const csv = 'name,age\naschen,27\ncaner,28\n'
+        const csv = 'name,age\naschen,27\ncaner,28\n';
 
         request.setResult(null, {
           raw: true,
@@ -448,13 +465,13 @@ app.controller.register('files', {
             'Content-Type': 'text/csv',
             'Content-Disposition': 'attachment; filename="export.csv"'
           }
-        })
+        });
 
-        return csv
+        return csv;
       }
     }
   }
-})
+});
 ```
 
 The response will only contain the CSV document:
@@ -483,13 +500,13 @@ app.controller.register('redirect', {
           headers: {
             'Location': 'http://kuzzle.io'
           }
-        })
+        });
         
-        return null
+        return null;
       }
     }
   }
-})
+});
 ```
 
 ## Use a custom Controller Action
@@ -503,11 +520,11 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
-})
+});
 ```
 
 ### HTTP
@@ -563,7 +580,7 @@ const response = await kuzzle.query({
   controller: 'greeting',
   action: 'sayHello',
   name: 'Yagmur'
-})
+});
 ```
 
 :::

@@ -44,18 +44,25 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:replace <index> <collection> <id> <body>
+kourou document:replace <index> <collection> <id> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: unique ID of the document to replace
+- `_id`: unique ID of the document to replace
 - `index`: index name
 
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the new document content is indexed
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 

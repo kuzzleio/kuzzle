@@ -6,6 +6,7 @@ const ms = require('ms');
 
 const {
   BadRequestError,
+  MultipleErrorsError,
   PreconditionError,
   SizeLimitError,
 } = require('../../../index');
@@ -312,6 +313,7 @@ describe('Test: ElasticSearch service', () => {
             ],
             total: { value: 1 },
           },
+          suggest: { some: 'suggest' },
           _scroll_id: 'i-am-scroll-id',
         }
       });
@@ -343,6 +345,7 @@ describe('Test: ElasticSearch service', () => {
           },
         ],
         remaining: 0,
+        suggest: { some: 'suggest' },
         scrollId: 'i-am-scroll-id',
         total: 1,
       });
@@ -754,7 +757,7 @@ describe('Test: ElasticSearch service', () => {
             },
             id: 'liia',
             refresh: undefined,
-            retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+            retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
           });
 
           should(result).match({
@@ -791,7 +794,7 @@ describe('Test: ElasticSearch service', () => {
             id: 'liia',
             refresh: 'wait_for',
             _source: true,
-            retryOnConflict: 42
+            retry_on_conflict: 42
           });
 
           should(result).match({
@@ -841,7 +844,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
     });
   });
@@ -886,7 +889,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -929,7 +932,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -983,7 +986,7 @@ describe('Test: ElasticSearch service', () => {
         },
         id: 'liia',
         refresh: undefined,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
 
       should(result).match({
@@ -1024,7 +1027,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: 42
+        retry_on_conflict: 42
       });
 
       should(result).match({
@@ -1075,7 +1078,7 @@ describe('Test: ElasticSearch service', () => {
         id: 'liia',
         refresh: 'wait_for',
         _source: true,
-        retryOnConflict: elasticsearch.config.defaults.onUpdateConflictRetries
+        retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries
       });
     });
   });
@@ -1332,39 +1335,37 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should allow additional options', () => {
-      const promise = elasticsearch.updateByQuery(
+    it('should allow additional options', async () => {
+      const result = await elasticsearch.updateByQuery(
         index,
         collection,
         { filter: 'term' },
         { name: 'bar'},
-        { refresh: 'wait_for', size: 3 });
+        { refresh: 'wait_for', size: 3, userId: 'aschen' });
 
-      return promise
-        .then(result => {
-          should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
-            index: esIndexName,
-            body: { query: { filter: 'term'} },
-            scroll: '5s',
-            size: 3
-          });
+      should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
+        index: esIndexName,
+        body: { query: { filter: 'term'} },
+        scroll: '5s',
+        size: 3
+      });
 
-          should(elasticsearch.mUpdate).be.calledWithMatch(
-            index,
-            collection,
-            documents,
-            {
-              refresh: 'wait_for'
-            });
-
-          should(result).match({
-            successes: [
-              { _id: '_id1', _source: { name: 'bar' }, status: 200 },
-              { _id: '_id2', _source: { name: 'bar' }, status: 200 },
-            ],
-            errors: []
-          });
+      should(elasticsearch.mUpdate).be.calledWithMatch(
+        index,
+        collection,
+        documents,
+        {
+          refresh: 'wait_for',
+          userId: 'aschen',
         });
+
+      should(result).match({
+        successes: [
+          { _id: '_id1', _source: { name: 'bar' }, status: 200 },
+          { _id: '_id2', _source: { name: 'bar' }, status: 200 },
+        ],
+        errors: []
+      });
     });
 
     it('should reject if the number of impacted documents exceeds the configured limit', () => {
@@ -1388,6 +1389,108 @@ describe('Test: ElasticSearch service', () => {
         .rejectedWith(
           SizeLimitError,
           { id: 'services.storage.write_limit_exceeded' });
+    });
+  });
+
+  describe('#bulkUpdateByQuery', () => {
+    let query;
+    let changes;
+    let request;
+  
+    beforeEach(() => {
+      query = {
+        match: { foo: 'bar' }
+      };
+      changes = {
+        bar: 'foo'
+      };
+
+      request = {
+        body: {
+          query,
+          script: {
+            params: { bar: 'foo'},
+            source: 'ctx._source.bar = params[\'bar\'];'
+          }
+        },
+        index: esIndexName,
+        refresh: 'false'
+      };
+
+      elasticsearch._client.updateByQuery.resolves({
+        body: {
+          total: 42,
+          updated: 42,
+          failures: []
+        }
+      });
+
+    });
+
+    it('should have updateByQuery capabilities', async () => {
+      const result = await elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch(request);
+
+      should(result).match({
+        updated: 42
+      });
+    });
+
+    it('should allow additonnal option', async () => {
+      request.refresh = 'wait_for';
+
+      await elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes,
+        {refresh: 'wait_for'});
+
+      should(elasticsearch._client.updateByQuery).be.calledWithMatch(request);
+    });
+
+    it('should reject if client.updateByQuery fails', () => {
+      elasticsearch._client.updateByQuery.rejects(esClientError);
+
+      const promise = elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
+        });
+    });
+
+    it('should reject if some failures occur', () => {
+      elasticsearch._client.updateByQuery.resolves({
+        body: {
+          total: 3,
+          updated: 2,
+          failures: [{ shardId: 42, reason: 'error', foo: 'bar' }]
+        }
+      });
+
+      const promise = elasticsearch.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        changes);
+
+      return should(promise).be.rejectedWith(
+        MultipleErrorsError,
+        {
+          id: 'services.storage.incomplete_update',
+          message: '2 documents were successfully updated before an error occured',
+        }
+      );
     });
   });
 
@@ -1879,8 +1982,9 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should reject with BadRequestError on wrong mapping', () => {
+    it('should reject with BadRequestError on wrong mapping', async () => {
       elasticsearch._checkMappings = _checkMappings;
+
       const mappings = {
         dinamic: 'false',
         properties: {
@@ -1888,15 +1992,19 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      const promise = elasticsearch.createCollection(
-        index,
-        collection,
-        { mappings });
+      global.NODE_ENV = 'development';
+      await should(elasticsearch.createCollection(index, collection, { mappings }))
+        .be.rejectedWith({
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic"?',
+          id: 'services.storage.invalid_mapping'
+        });
 
-      return should(promise).be.rejectedWith({
-        message: /Did you mean "dynamic"/,
-        id: 'services.storage.invalid_mapping'
-      });
+      global.NODE_ENV = 'production';
+      await should(elasticsearch.createCollection(index, collection, { mappings }))
+        .be.rejectedWith({
+          message: 'Invalid mapping property "mappings.dinamic".',
+          id: 'services.storage.invalid_mapping'
+        });
     });
 
     it('should reject when an incorrect dynamic property value is provided', async () => {
@@ -2257,7 +2365,7 @@ describe('Test: ElasticSearch service', () => {
         });
     });
 
-    it('should reject with BadRequestError on wrong mapping', () => {
+    it('should reject with BadRequestError on wrong mapping', async () => {
       elasticsearch._checkMappings = _checkMappings;
       newMapping = {
         dinamic: 'false',
@@ -2266,9 +2374,17 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      return should(elasticsearch.updateMapping(index, collection, newMapping))
+      global.NODE_ENV = 'development';
+      await should(elasticsearch.updateMapping(index, collection, newMapping))
         .be.rejectedWith({
-          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic"?',
+          id: 'services.storage.invalid_mapping'
+        });
+
+      global.NODE_ENV = 'production';
+      await should(elasticsearch.updateMapping(index, collection, newMapping))
+        .be.rejectedWith({
+          message: 'Invalid mapping property "mappings.dinamic".',
           id: 'services.storage.invalid_mapping'
         });
     });
@@ -3385,9 +3501,9 @@ describe('Test: ElasticSearch service', () => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
-              { update: { _index: esIndexName, _id: 'liia' } },
+              { update: { _index: esIndexName, _id: 'liia', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
             ],
             refresh: undefined,
@@ -3425,16 +3541,16 @@ describe('Test: ElasticSearch service', () => {
         index,
         collection,
         documents,
-        { refresh: 'wait_for', timeout: '10m', userId: 'aschen' });
+        { refresh: 'wait_for', retryOnConflict: 2, timeout: '10m', userId: 'aschen' });
 
       return promise
         .then(() => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: 2 } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true },
-              { update: { _index: esIndexName, _id: 'liia' } },
+              { update: { _index: esIndexName, _id: 'liia', retry_on_conflict: 2 } },
               { doc: { city: 'Ho Chi Minh City', ...kuzzleMeta }, _source: true }
             ],
             refresh: 'wait_for',
@@ -3465,7 +3581,7 @@ describe('Test: ElasticSearch service', () => {
           const esRequest = {
             index: esIndexName,
             body: [
-              { update: { _index: esIndexName, _id: 'mehry' } },
+              { update: { _index: esIndexName, _id: 'mehry', retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
               { doc: { city: 'Kathmandu', ...kuzzleMeta }, _source: true }
             ],
             refresh: undefined,
@@ -3487,6 +3603,197 @@ describe('Test: ElasticSearch service', () => {
             toImport,
             rejected);
         });
+    });
+  });
+
+  describe('#mUpsert', () => {
+    let documents;
+    let kuzzleUpdateMeta;
+    let kuzzleCreateMeta;
+    let esRequest;
+    let toImport;
+    let mExecuteResult;
+
+    beforeEach(() => {
+      documents = [
+        { _id: 'mehry', changes: { city: 'Kathmandu' } },
+        { _id: 'liia', changes: { city: 'Ho Chi Minh City' } }
+      ];
+
+      kuzzleUpdateMeta = {
+        _kuzzle_info: {
+          updater: null,
+          updatedAt: timestamp
+        }
+      };
+      kuzzleCreateMeta = {
+        _kuzzle_info: {
+          author: null,
+          createdAt: timestamp
+        }
+      };
+
+      esRequest = {
+        body: [
+          { update: { _index: esIndexName, _id: 'mehry', _source: true, retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
+          { doc: { city: 'Kathmandu', ...kuzzleUpdateMeta }, upsert: { city: 'Kathmandu', ...kuzzleCreateMeta } },
+          { update: { _index: esIndexName, _id: 'liia', _source: true, retry_on_conflict: elasticsearch.config.defaults.onUpdateConflictRetries } },
+          { doc: { city: 'Ho Chi Minh City', ...kuzzleUpdateMeta }, upsert: { city: 'Ho Chi Minh City', ...kuzzleCreateMeta } }
+        ],
+        refresh: undefined,
+        timeout: undefined
+      };
+
+      toImport = [
+        { _id: 'mehry', _source: { changes: { city: 'Kathmandu', ...kuzzleUpdateMeta }, default: { city: 'Kathmandu', ...kuzzleCreateMeta } } },
+        { _id: 'liia', _source: { changes: { city: 'Ho Chi Minh City', ...kuzzleUpdateMeta }, default: { city: 'Ho Chi Minh City', ...kuzzleCreateMeta } } }
+      ];
+
+      mExecuteResult = {
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu' },
+            created: false,
+            result: 'updated',
+            get: { _source: { age: 26, city: 'Kathmandu' } }
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City' },
+            created: false,
+            result: 'updated',
+            get: { _source: { age: 29, city: 'Ho Chi Minh City' } }
+          }
+        ],
+        errors: []
+      };
+
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+    });
+
+    it('should call _mExecute with formated documents', async () => {
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []);
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: false
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should handle default values for upserted documents', async () => {
+      documents[1].default = { country: 'Vietnam' };
+      esRequest.body[3].upsert.country = 'Vietnam';
+      toImport[1]._source.default.country = 'Vietnam';
+
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+    
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []
+      );
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: false
+          }
+        ],
+        errors: []
+      });
+    });
+
+    it('should allow additional options', async () => {
+      kuzzleUpdateMeta._kuzzle_info.updater = 'aschen';
+      kuzzleCreateMeta._kuzzle_info.author = 'aschen';
+      esRequest.body[0].update.retry_on_conflict = 42;
+      esRequest.body[2].update.retry_on_conflict = 42;
+      esRequest.refresh = 'wait_for';
+      esRequest.timeout = '10m';
+
+      await elasticsearch.mUpsert(
+        index,
+        collection,
+        documents,
+        { refresh: 'wait_for', retryOnConflict: 42, timeout: '10m', userId: 'aschen' });
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []);
+    });
+
+    it('should add documents without ID to rejected documents', async () => {
+      documents[1] = { changes: { city: 'Ho Chi Minh City' } };
+      esRequest.body = esRequest.body.slice(0,2);
+      toImport = toImport.slice(0,1);
+      const rejected = [
+        {
+          document: { changes: { city: 'Ho Chi Minh City' } },
+          reason: 'document _id must be a string',
+          status: 400
+        }
+      ];
+
+      await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        rejected);
+    });
+
+    it('should return the right "_created" result on a document creation', async () => {
+      mExecuteResult.items[1].result = 'created';
+      elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
+
+      const result = await elasticsearch.mUpsert(index, collection, documents);
+
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        []
+      );
+
+      should(result).match({
+        items: [
+          {
+            _id: 'mehry',
+            _source: { city: 'Kathmandu', age: 26 },
+            created: false
+          },
+          {
+            _id: 'liia',
+            _source: { city: 'Ho Chi Minh City', age: 29 },
+            created: true
+          }
+        ],
+        errors: []
+      });
     });
   });
 
@@ -4069,20 +4376,19 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#_checkMappings', () => {
     it('should throw when a property is incorrect', () => {
-      const
-        mapping2 = {
-          type: 'nested',
-          properties: {}
-        },
-        mapping = {
-          properties: {},
-          dinamic: 'false'
-        };
+      const mapping2 = {
+        type: 'nested',
+        properties: {}
+      };
+      const mapping = {
+        properties: {},
+        dinamic: 'false'
+      };
 
-
+      global.NODE_ENV = 'development';
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.dinamic". Did you mean "dynamic"?',
           id: 'services.storage.invalid_mapping'
         });
 
@@ -4107,9 +4413,17 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
+      global.NODE_ENV='development';
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
-          message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic" ?',
+          message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic"?',
+          id: 'services.storage.invalid_mapping'
+        });
+
+      global.NODE_ENV='production';
+      should(() => elasticsearch._checkMappings(mapping))
+        .throw({
+          message: 'Invalid mapping property "mappings.properties.car.dinamic".',
           id: 'services.storage.invalid_mapping'
         });
     });

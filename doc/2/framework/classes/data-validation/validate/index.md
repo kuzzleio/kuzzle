@@ -19,7 +19,7 @@ validate(request: KuzzleRequest, verbose: boolean): Promise<any>;
 
 | Arguments | Type                                                           | Description                                                                                         |
 | --------- | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `request` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | KuzzleRequest object with a non-empty body content                                                        |
+| `request` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | KuzzleRequest object with a non-empty body content                                                        |
 | `verbose` | <pre>boolean</pre>                                             | If true, returns an exhaustive validation report, instead of failing at the first encountered error |
 
 ### Return

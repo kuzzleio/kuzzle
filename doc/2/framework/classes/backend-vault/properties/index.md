@@ -41,7 +41,3 @@ This property is only available before the application is started.
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
 | <pre>JSONObject</pre> | Decrypted secrets | get       |
-
-::: info
-This property is only available after the application started up.
-:::

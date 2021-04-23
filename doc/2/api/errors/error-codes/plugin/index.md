@@ -44,6 +44,7 @@ description: Error codes definitions
 | plugin.runtime.too_many_pipes<br/><pre>0x04020004</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Request discarded: maximum number of executing pipe functions reached. | The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes. |
 | plugin.runtime.already_started<br/><pre>0x04020005</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" when application is already running | Features definition cannot be changed after startup. |
 | plugin.runtime.unavailable_before_start<br/><pre>0x04020006</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" before application startup | The property is only accessible after application startup. |
+| plugin.runtime.unknown_pipe<br/><pre>0x04020007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unknown pipe ID "%s" | The provided pipe identifier is unknown. |
 
 ---
 

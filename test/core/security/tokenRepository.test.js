@@ -200,13 +200,14 @@ describe('Test: security/tokenRepository', () => {
 
     it('should resolve to a token signed with the provided username', async () => {
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -258,6 +259,18 @@ describe('Test: security/tokenRepository', () => {
       should(token).be.an.instanceOf(Token);
     });
 
+    it('should prefix the token', async () => {
+      const user = new User();
+      user._id = 'id';
+      const tokenAuth = await tokenRepository.generateToken(user);
+      const tokenApiKey = await tokenRepository.generateToken(user, {
+        type: 'apiKey',
+      });
+
+      should(tokenAuth.jwt).be.startWith('kauth-');
+      should(tokenApiKey.jwt).be.startWith('kapikey-');
+    });
+
     it('should allow a ttl lower than the maxTTL', async () => {
       const user = new User();
       user._id = 'id';
@@ -307,13 +320,14 @@ describe('Test: security/tokenRepository', () => {
       // milliseconds received by 1000 without precaution, making jwt.sign
       // throw an error when generating the token
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: 123,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -580,8 +594,8 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
-        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
+        { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 },
+        { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 },
       ]);
     });
 

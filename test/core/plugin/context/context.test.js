@@ -27,6 +27,7 @@ const {
   BadRequestError,
 } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const MutexMock = require('../../../mocks/mutex.mock');
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('Plugin Context', () => {
@@ -36,11 +37,14 @@ describe('Plugin Context', () => {
   let PluginContext;
 
   beforeEach(() => {
-    const modul = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`);
-    PluginContext = modul.PluginContext;
-
+    mockrequire('../../../../lib/util/mutex', { Mutex: MutexMock });
+    ({ PluginContext } = mockrequire.reRequire(`${root}/lib/core/plugin/pluginContext`));
     kuzzle = new KuzzleMock();
     context = new PluginContext('pluginName');
+  });
+
+  afterEach(() => {
+    mockrequire.stopAll();
   });
 
   describe('#constructor', () => {
@@ -136,9 +140,9 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.controller).be.null();
         should(pluginRequest.input.jwt).be.eql(request.input.jwt);
         should(pluginRequest.input.args.foobar).be.eql(request.input.args.foobar);
-        should(pluginRequest.input.resource._id).be.eql(request.input.resource._id);
-        should(pluginRequest.input.resource.index).be.eql(request.input.resource.index);
-        should(pluginRequest.input.resource.collection).be.eql(request.input.resource.collection);
+        should(pluginRequest.input.args._id).be.eql(request.input.args._id);
+        should(pluginRequest.input.args.index).be.eql(request.input.args.index);
+        should(pluginRequest.input.args.collection).be.eql(request.input.args.collection);
         should(pluginRequest.input.volatile).match({foo: 'bar'});
       });
 
@@ -184,9 +188,9 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.args.bar).be.eql('bar');
         should(pluginRequest.input.args.from).be.eql(0);
         should(pluginRequest.input.args.size).be.eql(99);
-        should(pluginRequest.input.resource._id).be.eql('_id');
-        should(pluginRequest.input.resource.index).be.eql('index');
-        should(pluginRequest.input.resource.collection).be.eql('pluginCollection');
+        should(pluginRequest.input.args._id).be.eql('_id');
+        should(pluginRequest.input.args.index).be.eql('index');
+        should(pluginRequest.input.args.collection).be.eql('pluginCollection');
         should(pluginRequest.input.volatile).match({foo: 'overridden', bar: 'baz'});
       });
 

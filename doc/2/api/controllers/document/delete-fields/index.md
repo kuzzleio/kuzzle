@@ -47,19 +47,26 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:deleteFields <index> <collection> <body>
+kourou document:deleteFields <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: unique ID of the document where the fields should be removed
+- `_id`: unique ID of the document where the fields should be removed
 - `index`: index name
 
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the new document content is indexed
 - `source`: if set to `true`, the response will contain the new updated document
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 

@@ -264,6 +264,39 @@ export class RequestResponse {
   get node (): string {
     return (global as any).kuzzle.id;
   }
+
+  /**
+   * Configure the response
+   *
+   * @param [options]
+   * @param [options.headers] - Additional protocol headers
+   * @param [options.status=200] - HTTP status code
+   * @param [options.format] - Response format, standard or raw
+   * @returns void
+   */
+  configure (
+    options: {
+      headers?: JSONObject;
+      status?: number;
+      format?: 'standard' | 'raw';
+    } = {}
+  ): void {
+    if (options.headers) {
+      this.setHeaders(options.headers);
+    }
+
+    this.status = options.status || 200;
+
+    switch (options.format) {
+      case 'raw':
+        this.raw = true;
+        break;
+      case 'standard':
+        this.raw = false;
+        break;
+    }
+  }
+
   /**
    * Gets a header value (case-insensitive)
    */
@@ -289,11 +322,16 @@ export class RequestResponse {
   /**
    * Adds new multiple headers.
    */
-  setHeaders (headers: JSONObject) {
+  setHeaders (headers: JSONObject, ifNotPresent = false) {
     assert.assertObject('headers', headers);
 
     if (headers) {
-      Object.keys(headers).forEach(name => this.setHeader(name, headers[name]));
+      for (const name of Object.keys(headers)) {
+        // When ifNotPresent is set to true, only set the header if no value has been defined before
+        if (!ifNotPresent || this.getHeader(name) === undefined) {
+          this.setHeader(name, headers[name]);
+        }
+      }
     }
   }
 

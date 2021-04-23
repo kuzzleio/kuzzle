@@ -20,6 +20,7 @@
   "rootDir": "lib/",
   "include": [
     "lib/**/*.ts",
-    "index.ts"
+    "index.ts",
+    "docker/scripts/*.ts"
   ]
 }

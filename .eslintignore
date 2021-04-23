@@ -7,11 +7,14 @@
 /index.js
 lib/core/backend/index.js
 lib/core/backend/backend.js
+lib/core/backend/backendPlugin.js
 lib/core/backend/backendCluster.js
+lib/core/backend/backendPlugin.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js
 lib/api/request/kuzzle-request.js
+lib/api/request/kuzzleRequest.js
 lib/api/request/requestContext.js
 lib/api/request/requestInput.js
 lib/api/request/requestResponse.js
@@ -22,6 +25,7 @@ lib/kerror/errors/gatewayTimeoutError.js
 lib/kerror/errors/index.js
 lib/kerror/errors/internalError.js
 lib/kerror/errors/kuzzleError.js
+lib/kerror/errors/multipleErrorsError.js
 lib/kerror/errors/notFoundError.js
 lib/kerror/errors/partialError.js
 lib/kerror/errors/pluginImplementationError.js

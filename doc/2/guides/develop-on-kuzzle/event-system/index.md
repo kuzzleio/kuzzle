@@ -67,10 +67,10 @@ When an event has more than one payload then only the first argument of the hand
 
 ```js
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
-  request.result.now = (new Date()).toUTCString()
+  request.result.now = (new Date()).toUTCString();
 
-  return request
-})
+  return request;
+});
 ```
 
 ::: warning
@@ -87,23 +87,23 @@ If the error is one of the [available default errors](/core/2/api/errors/types) 
 
 **Example:** _Limit reading access to documents to their creator_
 ```js
-import { Document, KuzzleRequest, Backend, ForbiddenError } from 'kuzzle'
+import { Document, KuzzleRequest, Backend, ForbiddenError } from 'kuzzle';
 
 app.pipe.register(
     'generic:document:afterGet', 
     async (documents: Document[], request: KuzzleRequest) => {
       for (const document of documents) {
-        if (request.context.user._id !== document._source._kuzzle_info.creator) {
-          throw new ForbiddenError('Unauthorized access')
+        if (request.getKuid() !== document._source._kuzzle_info.creator) {
+          throw new ForbiddenError('Unauthorized access');
         }
       }
 
-      return documents
-    })
+      return documents;
+    });
 ```
 
 ::: info
-[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [KuzzleRequest](/core/2/framework/classes/kuzzle-request object
+[Generic Document Events](/core/2/framework/events/generic-document) have a payload consisting of two arguments: an array of documents and the original [KuzzleRequest](/core/2/framework/classes/kuzzle-request) object
 :::
 
 ## Hooks
@@ -132,8 +132,8 @@ It is possible to register several hooks on the same event by calling several ti
 
 ```js
 app.hook.register('security:afterCreateRestrictedUser', async (request: KuzzleRequest) => {
-  app.log.info(`New user registered: ${JSON.stringify(request.context.user)}`)
-})
+  app.log.info(`New user registered: ${JSON.stringify(request.getUser())}`);
+});
 ```
 
 ### Handling errors
@@ -151,8 +151,8 @@ Handler function attached to this event will receive the following arguments:
 app.hook.register(
   'hook:onError', 
   async (pluginName: string, event: string, error: Error) => {
-    app.log.error(`Error occured on event "${event}": ${error}`)
-  })
+    app.log.error(`Error occured on event "${event}": ${error}`);
+  });
 ```
 
 ::: info

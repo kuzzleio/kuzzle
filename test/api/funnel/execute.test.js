@@ -13,6 +13,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = rewire('../../../lib/api/funnel');
+const kuzzleStateEnum = require('../../../lib/kuzzle/kuzzleStateEnum');
 
 describe('funnelController.execute', () => {
   let now = Date.now();
@@ -337,13 +338,7 @@ describe('funnelController.execute', () => {
 
       await funnel.init();
 
-      should(funnel.shuttingDown).be.false();
-
-      kuzzle.emit.restore();
-      kuzzle.emit('kuzzle:shutdown');
-
-      // gives some time for the event to propagate
-      should(funnel.shuttingDown).be.true();
+      kuzzle.state = kuzzleStateEnum.SHUTTING_DOWN;
 
       await new Promise((resolve, reject) => {
         funnel.execute(request, (err, res) => {

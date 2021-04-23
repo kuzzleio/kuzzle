@@ -135,7 +135,7 @@ The provided `subscription` object has the following properties:
 | `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier                      |
 | `index`        | <pre>string</pre>    | Index                                                                                                     |
 | `collection`   | <pre>string</pre>    | Collection                                                                                                |
-| `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)|
+| `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
 
 ---
 
@@ -166,7 +166,7 @@ The provided `room` object has the following properties:
 
 | Arguments | Type                                                                     | Description                           |
 | --------- | ------------------------------------------------------------------------ | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time notification is about to be sent.
 
@@ -176,7 +176,7 @@ Triggered whenever a real-time notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time document notification is about to be sent.
 
@@ -186,7 +186,7 @@ Triggered whenever a real-time document notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time server notification is about to be sent.
 
@@ -196,7 +196,7 @@ Triggered whenever a real-time server notification is about to be sent.
 
 | Arguments | Type                                                                      | Description                           |
 | --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time user notification is about to be sent.
 

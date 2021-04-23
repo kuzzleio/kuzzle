@@ -169,6 +169,18 @@ kourou auth:login -a strategy=local --body '{
 }'
 ```
 
+<SinceBadge version="2.10.0"/>
+### Authentication Token in the Browser
+
+When you're sending HTTP requests from a browser you can instruct Kuzzle
+to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
+This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/checkToken), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
+
+::: warning
+This only works if the option `http.accessControlAllowOrigin` is not defined to `*` in the [Kuzzle Configuration](/core/2/guides/advanced/configuration)
+:::
+
+
 ### `local` Strategy Configuration
 
 The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-local` configuration key.
@@ -278,12 +290,12 @@ This plugin is not shipped by default with Kuzzle and must be installed via NPM:
 
 Then you need to instantiate it and use it within your application:
 ```js
-import PluginOAuth from 'kuzzle-plugin-auth-passport-oauth' 
-import { Backend } from 'kuzzle'
+import PluginOAuth from 'kuzzle-plugin-auth-passport-oauth';
+import { Backend } from 'kuzzle';
 
-const app = new Backend('tirana')
+const app = new Backend('tirana');
 
-app.plugin.use(new PluginOAuth())
+app.plugin.use(new PluginOAuth());
 ```
 
 This strategy allows to create users in Kuzzle if they don't already exist when they login for the first time.

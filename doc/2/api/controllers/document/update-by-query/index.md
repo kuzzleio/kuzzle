@@ -23,7 +23,12 @@ Koncorde `bool` operator and `regexp` clause are not supported for search querie
 
 The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 
-To update a greater number of documents, either change the server configuration, or split the search query.
+To update a greater number of documents:
+
+- Change the server configuration
+- Split the search query
+- Use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mUpdate](/core/2/api/controllers/document/m-update)
+- Use [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query)
 
 ---
 
@@ -67,6 +72,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:updateByQuery <index> <collection> <body>
+kourou document:updateByQuery <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
@@ -81,7 +93,7 @@ Body:
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ## Body properties
 

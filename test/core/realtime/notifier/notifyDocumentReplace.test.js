@@ -35,7 +35,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
   });
 
   it('should notify subscribers when a replaced document entered their scope', async () => {
-    const _id = request.input.resource._id;
+    const _id = request.input.args._id;
 
     kuzzle.koncorde.test.returns(['foo']);
 
@@ -67,7 +67,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
     const rooms = await notifier.notifyDocumentReplace(
       request,
       {
-        _id: request.input.resource._id,
+        _id: request.input.args._id,
         _source: request.input.body,
       },
       JSON.stringify(['foo', 'bar']));

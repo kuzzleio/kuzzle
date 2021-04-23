@@ -5,7 +5,7 @@ const sinon = require('sinon');
 const {
   BaseController,
   NativeController
-} = require('../../lib/api/controller/base');
+} = require('../../lib/api/controllers/baseController');
 const {
   InternalError: KuzzleInternalError
 } = require('../../index');

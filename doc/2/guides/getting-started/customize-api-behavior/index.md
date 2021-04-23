@@ -28,7 +28,7 @@ The format of those events is the following:
  - `<controller>:before<Action>`: emitted before processing
  - `<controller>:after<Action>`: emitted after processing, before sending back the response
 
-Restarts your application with the following command to display events: `DEBUG=kuzzle:events npm run dev`
+Restarts your application with the following command to display events: `DEBUG=kuzzle:events npm run dev:docker`
 
 ::: info
 Kuzzle uses the [debug](https://www.npmjs.com/package/debug) package to display messages.  
@@ -79,10 +79,10 @@ In this example, we are going to change the return value of the `server:now` act
 
 ```js
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
-  request.result.now = (new Date()).toUTCString()
+  request.result.now = (new Date()).toUTCString();
 
-  return request
-})
+  return request;
+});
 ```
 
 ::: info

@@ -1,864 +1,877 @@
 'use strict';
 
-const root = '../../../..';
+const zlib = require('zlib');
 
-const mockrequire = require('mock-require');
-
-const HttpFormDataStream = require('../../../../lib/core/network/service/httpFormDataStream');
-const EntryPoint = require('../../../../lib/core/network/entryPoint');
-const ClientConnection = require('../../../../lib/core/network/clientConnection');
-const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
-const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
-const should = require('should');
 const sinon = require('sinon');
-const { Writable } = require('stream');
-const errorMatcher = require('../../../../test/util/errorMatcher');
-const {
-  Request,
-  SizeLimitError,
-  BadRequestError
-} = require('../../../../index');
+const should = require('should');
+const mockRequire = require('mock-require');
 
-const kerror = require('../../../../lib/kerror').wrap('network', 'http');
+const { KuzzleRequest } = require('../../../../lib/api/request');
+const { BadRequestError } = require('../../../../lib/kerror/errors');
+const HttpMessage = require('../../../../lib/core/network/protocols/httpMessage');
+const ClientConnection = require('../../../../lib/core/network/clientConnection');
 
-describe('/lib/core/network/protocols/http', () => {
-  const gunzipMock = sinon.stub();
-  const inflateMock = sinon.stub();
-  const identityMock = sinon.stub();
-  const zlibstub = {
-    gzip: sinon.stub(),
-    deflate: sinon.stub(),
-    createGunzip: sinon.stub().returns(gunzipMock),
-    createInflate: sinon.stub().returns(inflateMock)
-  };
-  let HttpProtocol;
+const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const uWSMock = require('../../../mocks/uWS.mock');
+const EntryPointMock = require('../../../mocks/entrypoint.mock');
+
+describe('core/network/protocols/http', () => {
+  let HttpWs;
   let kuzzle;
-  let entrypoint;
-  let protocol;
-  let response;
+  let entryPoint;
+  let httpWs;
 
   before(() => {
-    [gunzipMock, inflateMock, identityMock].forEach(m => {
-      m.pipe = sinon.stub();
-      m.on = sinon.stub();
-      m.close = sinon.stub();
-    });
-    mockrequire('zlib', zlibstub);
-    HttpProtocol = mockrequire
-      .reRequire(`${root}/lib/core/network/protocols/http`)
-      .HttpProtocol;
+    mockRequire('uWebSockets.js', uWSMock);
+    HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
   });
 
   after(() => {
-    mockrequire.stopAll();
+    mockRequire.stopAll();
   });
 
   beforeEach(() => {
-    response = {
-      end: sinon.spy(),
-      setHeader: sinon.spy(),
-      writeHead: sinon.spy()
-    };
-
     kuzzle = new KuzzleMock();
+    entryPoint = new EntryPointMock({
+      maxRequestSize: '1MB',
+      port: 7512,
+      protocols: {
+        http: {
+          allowCompression: true,
+          enabled: true,
+          maxEncodingLayers: 3,
+          maxFormFileSize: '1MB'
+        },
+        websocket: {
+          enabled: true,
+          idleTimeout: 60000,
+          compression: false,
+          rateLimit: 0,
+        }
+      }
+    });
 
-    entrypoint = new EntryPoint();
-    sinon.stub(entrypoint, 'execute');
-    sinon.stub(entrypoint, 'newConnection');
-    sinon.stub(entrypoint, 'removeConnection');
-    entrypoint.httpServer = {
-      listen: sinon.spy(),
-      on: sinon.spy()
-    };
-    entrypoint.logger = {
-      info: sinon.stub()
-    };
-    protocol = new HttpProtocol();
+    httpWs = new HttpWs();
   });
 
   afterEach(() => {
-    Object.keys(zlibstub).forEach(s => zlibstub[s].resetHistory());
-    [gunzipMock, inflateMock, identityMock].forEach(m => {
-      m.resetHistory();
-      ['pipe', 'on', 'close'].forEach(f => m[f].resetHistory());
+    clearInterval(httpWs.nowInterval);
+  });
+
+  describe('http configuration & initialization', () => {
+    it('should disable http if no configuration can be found', async () => {
+      entryPoint.config.protocols.http = undefined;
+      kuzzle.log.warn.resetHistory();
+
+      await should(httpWs.init(entryPoint));
+
+      should(httpWs.server.any).not.called();
+      should(kuzzle.log.warn).calledWith('[http] no configuration found for http: disabling it');
     });
   });
 
-  describe('#init', () => {
-    it('should throw if an invalid maxRequestSize parameter is set', () => {
-      entrypoint.config.maxRequestSize = 'invalid';
+  describe('http errors (not request ones)', () => {
+    let connection;
+    let message;
 
-      return should(
-        protocol.init(entrypoint)
-      ).be.rejectedWith('Invalid "maxRequestSize" parameter value: expected a numeric value');
+    beforeEach(async () => {
+      await httpWs.init(entryPoint);
+
+      connection = new ClientConnection('http', ['1.2.3.4'], 'foo');
+      const req = new uWSMock.MockHttpRequest();
+      message = new HttpMessage(connection, req);
     });
 
-    it('should throw if an invalid maxFormFileSize parameter is set', () => {
-      entrypoint.config.protocols.http.maxFormFileSize = 'invalid';
+    it('should send an error with the right headers', () => {
+      const error = new BadRequestError('ohnoes', 'foo.bar');
+      const response = new uWSMock.MockHttpResponse();
 
-      return should(
-        protocol.init(entrypoint)
-      ).be.rejectedWith('Invalid HTTP "maxFormFileSize" parameter value: expected a numeric value');
+      httpWs.httpSendError(message, response, error);
+
+      should(response.cork).calledOnce();
+      should(response.cork.calledBefore(response.writeStatus)).be.true();
+
+      should(response.writeStatus).calledOnce().calledWith(Buffer.from('400'));
+      should(response.writeStatus.calledBefore(response.writeHeader)).be.true();
+
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Headers'),
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders));
+
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Methods'),
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods));
+
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Origin'),
+        Buffer.from(kuzzle.config.http.accessControlAllowOrigin));
+
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Content-Type'),
+        Buffer.from('application/json'));
+
+      should(response.writeHeader.calledBefore(response.end));
+
+      should(response.end).calledOnce();
+      should(JSON.parse(response.end.firstCall.args[0].toString())).match({
+        id: 'foo.bar',
+        status: 400,
+      });
+
+      should(entryPoint.removeConnection).calledOnce().calledWith(connection.id);
     });
 
-    it('should throw if an invalid maxEncodingLayers parameter is set', () => {
-      entrypoint.config.protocols.http.maxEncodingLayers = 'invalid';
+    it('should wrap non Kuzzle errors', () => {
+      const error = new Error('ohnoes');
+      const response = new uWSMock.MockHttpResponse();
 
-      return should(
-        protocol.init(entrypoint)
-      ).be.rejectedWith('Invalid HTTP "maxEncodingLayers" parameter value: expected a numeric value');
+      httpWs.httpSendError(message, response, error);
+      should(response.end).calledOnce();
+      should(JSON.parse(response.end.firstCall.args[0].toString())).match({
+        id: 'network.http.unexpected_error',
+        message: /ohnoes/,
+        status: 400,
+      });
     });
 
-    it('should throw if an invalid allowCompression parameter is set', () => {
-      entrypoint.config.protocols.http.allowCompression = 'foobar';
+    it('should discard the error if the client connection is aborted', () => {
+      const response = new uWSMock.MockHttpResponse();
 
-      return should(
-        protocol.init(entrypoint)
-      ).be.rejectedWith('Invalid HTTP "allowCompression" parameter value: expected a boolean value');
+      response.aborted = true;
+
+      httpWs.httpSendError(message, response, new Error('ohnoes'));
+
+      should(entryPoint.removeConnection).calledOnce().calledWith(connection.id);
+      should(response.cork).not.called();
+      should(response.writeStatus).not.called();
+      should(response.writeHeader).not.called();
+      should(response.end).not.called();
+    });
+  });
+
+  describe('message reception', () => {
+    beforeEach(async () => {
+      await httpWs.init(entryPoint);
+      sinon.stub(httpWs, 'httpSendError');
     });
 
-    it('should configure the zlib decoders', () => {
-      return protocol.init(entrypoint)
-        .then(() => {
-          should(protocol.decoders).have.keys('deflate', 'gzip', 'identity');
-          should(protocol.decoders.get('gzip')).eql(zlibstub.createGunzip);
-          should(protocol.decoders.get('deflate')).eql(zlibstub.createInflate);
-          should(protocol.decoders.get('identity')).be.a.Function();
-          should(protocol.decoders.get('identity')('foobar')).eql(null);
+    it('should reject requests that are too large', () => {
+      httpWs.maxRequestSize = 1024;
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-length': 1025,
+      });
+
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.request_too_large',
         });
     });
 
-    it('should set decoders with throwables if compression is disabled', () => {
-      entrypoint.config.protocols.http.allowCompression = false;
+    it('should reject requests with unhandled content types', () => {
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'oh/noes',
+      });
 
-      return protocol.init(entrypoint)
-        .then(() => {
-          should(protocol.decoders).have.keys('deflate', 'gzip', 'identity');
-          should(protocol.decoders.get('gzip')).Function().and.not.eql(gunzipMock);
-          should(protocol.decoders.get('deflate')).Function().and.not.eql(inflateMock);
-          should(protocol.decoders.get('identity')).be.a.Function();
-          should(() => protocol.decoders.get('gzip')()).throw(BadRequestError, {
-            id: 'network.http.compression_disabled'
-          });
-          should(() => protocol.decoders.get('deflate')()).throw(BadRequestError, {
-            id: 'network.http.compression_disabled'
-          });
-          should(protocol.decoders.get('identity')('foobar')).eql(null);
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.unsupported_content',
         });
     });
 
-    describe('#onRequest', () => {
-      let
-        multipart,
-        onRequest,
-        request;
-
-      beforeEach(() => {
-        multipart = [
-          '-----------------------------165748628625109734809700179',
-          'Content-Disposition: form-data; name="foo"',
-          '',
-          'bar',
-          '-----------------------------165748628625109734809700179',
-          'Content-Disposition: form-data; name="baz"; filename="test-multipart.txt"',
-          'Content-Type: text/plain',
-          '',
-          'YOLO\n\n\n',
-          '-----------------------------165748628625109734809700179--'
-        ].join('\r\n');
-
-        request = {
-          headers: {
-            'x-forwarded-for': '2.2.2.2',
-            'x-foo': 'bar'
-          },
-          httpVersion: '1.1',
-          method: 'method',
-          on: sinon.spy(),
-          removeAllListeners: sinon.stub().returnsThis(),
-          resume: sinon.stub().returnsThis(),
-          socket: {
-            remoteAddress: '1.1.1.1'
-          },
-          url: 'url',
-          emit: sinon.spy(),
-          pipe: sinon.spy(),
-          unpipe: sinon.spy()
-        };
-
-        return protocol.init(entrypoint)
-          .then(() => {
-            onRequest = protocol.server.on.firstCall.args[1];
-
-            protocol._replyWithError = sinon.spy();
-            protocol._sendRequest = sinon.spy();
-          });
+    it('should reject requests with unhandled charsets', () => {
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'application/json; charset=utf-82',
       });
 
-      it('should complain if the request is too big', () => {
-        request.headers['content-length'] = Infinity;
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.unsupported_charset',
+        });
+    });
 
-        onRequest(request, response);
-
-        should(request.resume).be.calledOnce();
-
-        should(protocol._replyWithError)
-          .be.calledOnce()
-          .be.calledWithMatch(
-            { path: request.url, url: request.url, method: request.method },
-            response,
-            {message: 'Maximum HTTP request size exceeded.'});
+    it('should reject huge requests lying about their content-length', () => {
+      httpWs.maxRequestSize = 8;
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-length': 7,
       });
 
-      it('should handle json content', done => {
-        request.headers['content-type'] = 'application/json charset=utf-8';
+      httpWs.server._httpResponse._onData(Buffer.from('{"ahah":"i am a h4ck3r"}'));
 
-        protocol._sendRequest = (connection, resp, payload) => {
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.request_too_large',
+        });
+    });
+
+    it('should reject requests with too many encoding layers', () => {
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-encoding': 'gzip,gzip,gzip,gzip,gzip,gzip,gzip',
+      });
+
+      httpWs.server._httpResponse._onData(Buffer.from('foobar'), true);
+
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.too_many_encodings',
+        });
+    });
+
+    it('should reject requests with an unhandled content encoding', () => {
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-encoding': 'lol',
+      });
+
+      httpWs.server._httpResponse._onData(Buffer.from('foobar'), true);
+
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.unsupported_compression',
+        });
+    });
+
+    it('should reject requests when failing to uncompress the payload', done => {
+      httpWs.httpSendError.callsFake((message, response, error) => {
+        try {
+          should(entryPoint.newConnection).not.called();
+          should(global.kuzzle.router.http.route).not.called();
+          should(error.code).eql('Z_DATA_ERROR');
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-encoding': 'gzip',
+      });
+
+      httpWs.server._httpResponse._onData(Buffer.from('foobar'), true);
+    });
+
+    it('should be able to decode a compressed payload', done => {
+      sinon
+        .stub(httpWs, 'httpProcessRequest')
+        .callsFake((response, message) => {
           try {
-            should(connection).be.instanceOf(ClientConnection);
-            should(payload.raw).eql('{"chunk":"chunk"}');
-            should(payload.content).eql({chunk: 'chunk'});
-            done();
-          }
-          catch(e) {
-            done(e);
-          }
-        };
-
-        onRequest(request, response);
-
-        should(request.pipe)
-          .calledOnce()
-          .calledWith(sinon.match.instanceOf(Writable));
-
-        const writable = request.pipe.firstCall.args[0];
-
-        writable.write('{"chunk":');
-        writable.write('"chun');
-        writable.write('k"}');
-        writable.emit('finish');
-      });
-
-      it('should handle compressed content', () => {
-        request.headers['content-encoding'] = 'gzip';
-
-        onRequest(request, response);
-
-        should(request.pipe).calledOnce().calledWith(gunzipMock);
-        should(gunzipMock.pipe).calledOnce().calledWith(sinon.match.instanceOf(Writable));
-        should(protocol.decoders.get('identity')).not.called();
-        should(protocol.decoders.get('deflate')).not.called();
-
-        should(protocol.decoders.get('gzip')).calledOnce();
-        should(gunzipMock.on).calledOnce().calledWith('error');
-      });
-
-      it('should reject if there are more compression layers than the configured limit', () => {
-        protocol.maxEncodingLayers = 3;
-        request.headers['content-encoding'] = 'identity, identity, identity, identity';
-
-        onRequest(request, response);
-        should(request.pipe).not.called();
-        should(protocol._replyWithError)
-          .be.calledOnce()
-          .be.calledWithMatch(
-            { path: request.url, url: request.url, method: request.method },
-            response,
-            {message: 'Too many encodings.'});
-      });
-
-      it('should reject if an unknown compression algorithm is provided', () => {
-        request.headers['content-encoding'] = 'foobar';
-
-        onRequest(request, response);
-
-        should(protocol._replyWithError)
-          .be.calledOnce()
-          .be.calledWithMatch(
-            { path: request.url, url: request.url, method: request.method },
-            response,
-            {message: 'Unsupported compression algorithm "foobar".'});
-      });
-
-      it('should handle chain pipes properly to match multi-layered compression', () => {
-        protocol.maxEncodingLayers = 5;
-        protocol.decoders.set('identity', sinon.stub().returns(identityMock));
-        request.headers['content-encoding'] = 'gzip, deflate, iDeNtItY, DEFlate, GzIp';
-
-        onRequest(request, response);
-        should(request.pipe).calledOnce();
-        should(protocol.decoders.get('gzip')).calledTwice();
-        should(protocol.decoders.get('deflate')).calledTwice();
-        should(protocol.decoders.get('identity')).calledOnce();
-
-        // testing the pipe chain
-        should(request.pipe).calledWith(gunzipMock);
-        should(gunzipMock.pipe.firstCall).calledWith(inflateMock);
-        should(inflateMock.pipe.firstCall).calledWith(identityMock);
-        should(identityMock.pipe.firstCall).calledWith(inflateMock);
-        should(inflateMock.pipe.secondCall).calledWith(gunzipMock);
-        should(gunzipMock.pipe.secondCall).calledWith(sinon.match.instanceOf(Writable));
-      });
-
-      it('should handle valid x-www-form-urlencoded request', done => {
-        protocol._sendRequest = (connection, resp, payload) => {
-          try {
-            should(connection).instanceOf(ClientConnection);
-            should(payload.content).be.eql({foo: 'bar', baz: '1234'});
+            should(message.content).match({ foo: 'bar' });
             done();
           }
           catch (e) {
             done(e);
           }
-        };
-
-        request.headers['content-type'] = 'application/x-www-form-urlencoded';
-
-        onRequest(request, response);
-
-        should(request.pipe)
-          .calledOnce()
-          .calledWith(sinon.match.instanceOf(HttpFormDataStream));
-
-        const writable = request.pipe.firstCall.args[0];
-
-        writable.write('foo=bar&baz=1234');
-        writable.emit('finish');
-      });
-
-      it('should handle valid multipart/form-data request', done => {
-        protocol._sendRequest = (connection, resp, payload) => {
-          should(connection).instanceOf(ClientConnection);
-          should(payload.content).match({
-            foo: 'bar',
-            baz: {
-              filename: 'test-multipart.txt',
-              mimetype: 'text/plain',
-              file: 'WU9MTwoKCg=='
-            }
-          });
-          done();
-        };
-
-        request.headers['content-type'] = 'multipart/form-data; boundary=---------------------------165748628625109734809700179';
-
-        onRequest(request, response);
-
-        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
-        const writable = request.pipe.firstCall.args[0];
-
-        writable.write(multipart);
-        writable.emit('finish');
-      });
-
-      it('should reply with error if the actual data sent exceeds the maxRequestSize', done => {
-        protocol.maxRequestSize = 2;
-        request.headers['content-encoding'] = 'gzip';
-        onRequest(request, response);
-
-        should(request.pipe).calledOnce().calledWith(gunzipMock);
-        should(gunzipMock.pipe)
-          .calledOnce()
-          .calledWith(sinon.match.instanceOf(Writable));
-        const writable = gunzipMock.pipe.firstCall.args[0];
-
-        sinon.spy(writable, 'removeAllListeners');
-        sinon.spy(writable, 'end');
-
-        should(request.on).calledOnce().calledWith('error', sinon.match.func);
-        const errorHandler = request.on.firstCall.args[1];
-
-        writable.on('error', error => {
-          try {
-            should(error)
-              .instanceOf(SizeLimitError)
-              .match({message: 'Maximum HTTP request size exceeded.'});
-
-            // called automatically when a pipe rejects a callback, but not
-            // by our mock obviously
-            errorHandler(error);
-
-            should(request.unpipe).calledOnce();
-            should(request.removeAllListeners).calledOnce();
-            // should-sinon is outdated, so we cannot use it with calledAfter :-(
-            should(request.removeAllListeners.calledAfter(request.unpipe))
-              .be.true();
-            should(request.resume).calledOnce();
-            should(request.resume.calledAfter(request.removeAllListeners))
-              .be.true();
-            should(writable.removeAllListeners).calledOnce();
-            should(writable.end).calledOnce();
-            should(writable.end.calledAfter(writable.removeAllListeners))
-              .be.true();
-
-            // pipes should be closed manually
-            should(gunzipMock.close).calledOnce();
-
-            should(protocol._replyWithError)
-              .be.calledWithMatch(
-                { path: request.url, url: request.url, method: request.method },
-                response,
-                { message: 'Maximum HTTP request size exceeded.' });
-            done();
-          } catch (e) {
-            done(e);
-          }
         });
 
-        writable.write('a slightly too big chunk');
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-encoding': 'gzip,deflate,identity',
       });
 
-      it('should reply with error if the content type is unsupported', () => {
-        request.headers['content-type'] = 'foo/bar';
+      let payload = Buffer.from('{"foo":"bar"}');
+      payload = zlib.gzipSync(payload);
+      payload = zlib.deflateSync(payload);
 
-        onRequest(request, response);
-
-        should(request.resume).be.calledOnce();
-        should(protocol._replyWithError)
-          .be.calledOnce()
-          .be.calledWithMatch(
-            { path: request.url, url: request.url, method: request.method },
-            response,
-            {
-              id: 'network.http.unexpected_error',
-              message: 'Caught an unexpected HTTP error: Unsupported content type: foo/bar'
-            });
-      });
-
-      it('should reply with error if the binary file size sent exceeds the maxFormFileSize', () => {
-        protocol.maxFormFileSize = 2;
-        request.headers['content-type'] = 'multipart/form-data; boundary=---------------------------165748628625109734809700179';
-        onRequest(request, response);
-
-        should(request.pipe).calledOnce().calledWith(sinon.match.instanceOf(HttpFormDataStream));
-        const writable = request.pipe.firstCall.args[0];
-
-        sinon.spy(writable, 'removeAllListeners');
-        sinon.spy(writable, 'end');
-
-        should(request.on).calledOnce().calledWith('error', sinon.match.func);
-
-        writable.write(multipart);
-
-        should(request.emit)
-          .calledOnce()
-          .calledWith('error', sinon.match.instanceOf(SizeLimitError));
-
-        should(request.emit.firstCall.args[1].id).be.eql('network.http.file_too_large');
-      });
+      httpWs.server._httpResponse._onData(payload, true);
     });
 
-    describe('#_sendRequest', () => {
-      let payload;
+    it('should be able to handle data submitted in chunks', () => {
+      sinon.stub(httpWs, 'httpProcessRequest');
 
-      beforeEach(() => {
-        payload = {
-          requestId: 'requestId',
-          url: 'url?pretty',
-          method: 'getpostput',
-          json: {
-            some: 'value'
+      httpWs.server._httpOnMessage('get', '/', '', {});
+
+      httpWs.server._httpResponse._onData(Buffer.from('{"fo'), false);
+      httpWs.server._httpResponse._onData(Buffer.from('o":'), false);
+      httpWs.server._httpResponse._onData(Buffer.from('"ba'), false);
+      httpWs.server._httpResponse._onData(Buffer.from('r"}'), true);
+
+      should(httpWs.httpProcessRequest).calledOnce().calledWithMatch(
+        httpWs.server._httpResponse,
+        { content: { foo: 'bar' } });
+    });
+
+    it('should be able to handle requests without a payload', () => {
+      sinon.stub(httpWs, 'httpProcessRequest');
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+
+      httpWs.server._httpResponse._onData(Buffer.from(''), true);
+
+      should(httpWs.httpProcessRequest).calledOnce().calledWithMatch(
+        httpWs.server._httpResponse,
+        { content: null });
+    });
+
+    it('should reject malformed JSON content', () => {
+      httpWs.server._httpOnMessage('get', '/', '', {});
+
+      httpWs.server._httpResponse._onData(Buffer.from('{lol}'), true);
+
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.body_parse_failed',
+        });
+    });
+
+    it('should be able to handle multipart/form-data requests', () => {
+      sinon.stub(httpWs, 'httpProcessRequest');
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'multipart/form-data; boundary=foo',
+      });
+
+      httpWs.server._httpResponse._onData(
+        Buffer.from('--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'),
+        true);
+
+      should(httpWs.httpProcessRequest).calledOnce().calledWithMatch(
+        httpWs.server._httpResponse,
+        {
+          content: {
+            f: {
+              encoding: 'application/octet-stream',
+              file: 'Zm9vYmFy',
+              filename: 'filename',
+            },
+            t: 'value'
           }
-        };
-        return protocol.init(entrypoint);
+        });
+    });
+
+    it('should reject multipart/form-data requests with too large files', () => {
+      httpWs.maxFormFileSize = 2;
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'multipart/form-data; boundary=foo',
       });
 
-      it('should call kuzzle http router and send the client the response back', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
+      httpWs.server._httpResponse._onData(
+        Buffer.from('--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'),
+        true);
 
-        should(kuzzle.router.http.route).be.calledWith(payload);
+      should(httpWs.httpSendError).calledOnce().calledWithMatch(
+        sinon.match.object,
+        httpWs.server._httpResponse,
+        {
+          id: 'network.http.file_too_large',
+        });
+    });
 
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
 
-        result.setResult(
-          'content',
-          {
-            status: 444,
-            headers: { 'x-foo': 'bar' }
-          });
+    it('should be able to handle application/x-www-form-urlencoded requests', () => {
+      sinon.stub(httpWs, 'httpProcessRequest');
 
-        cb(result);
-
-        should(response.writeHead)
-          .be.calledOnce()
-          .be.calledWithMatch(444, { 'x-foo': 'bar' });
-
-        const expected = {
-          action: null,
-          collection: null,
-          controller: null,
-          error: null,
-          index: null,
-          node: 'nasty-author-4242',
-          requestId: 'requestId',
-          result: 'content',
-          status: 444,
-          volatile: null,
-        };
-
-        should(response.end)
-          .be.calledOnce()
-          .be.calledWith(Buffer.from(JSON.stringify(expected, undefined, 2)));
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'application/x-www-form-urlencoded',
       });
 
-      it('should remove error stack traces if not in development', () => {
-        const nodeEnv = global.NODE_ENV;
+      httpWs.server._httpResponse._onData(Buffer.from('foo=bar&baz=qux'), true);
 
-        for (const env of ['production', '', 'development']) {
-          global.NODE_ENV = env;
+      should(httpWs.httpProcessRequest).calledOnce().calledWithMatch(
+        httpWs.server._httpResponse,
+        {
+          content: {
+            baz: 'qux',
+            foo: 'bar',
+          }
+        });
+    });
 
-          protocol._sendRequest({id: 'connectionId'}, response, payload);
+    it('should forward a well-formed request to the router', () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
 
-          should(kuzzle.router.http.route).be.calledWith(payload);
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
-          const
-            cb = kuzzle.router.http.route.firstCall.args[1],
-            result = new Request({});
+      should(entryPoint.newConnection).calledOnce();
 
-          result.setError(kerror.get('unexpected_error', 'foobar'));
+      const response = httpWs.server._httpResponse;
 
-          cb(result);
+      should(response.cork).calledOnce();
+      should(response.cork.calledBefore(response.writeStatus)).be.true();
 
-          should(result.response.getHeader('Content-Length'))
-            .eql(String(response.end.firstCall.args[0].length));
+      should(response.writeStatus).calledOnce().calledWithMatch(Buffer.from('200'));
 
-          should(response.writeHead)
-            .be.calledOnce()
-            .be.calledWithMatch(400, result.response.headers);
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Headers'),
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders));
 
-          const matcher = errorMatcher.fromMessage(
-            'network',
-            'http',
-            'unexpected_error',
-            'foobar');
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Methods'),
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods));
 
-          should(response.end)
-            .be.calledOnce()
-            .be.calledWith(sinon.match(matcher));
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Access-Control-Allow-Origin'),
+        Buffer.from(kuzzle.config.http.accessControlAllowOrigin));
 
-          response.writeHead.resetHistory();
-          response.end.resetHistory();
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Content-Type'),
+        Buffer.from('application/json'));
+
+      should(response.writeHeader).calledWithMatch(
+        Buffer.from('Content-Encoding'),
+        Buffer.from('identity'));
+
+      should(response.writeHeader.calledBefore(response.tryEnd));
+
+      should(response.tryEnd).calledOnce();
+      should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(entryPoint.removeConnection).calledOnce();
+    });
+
+    it('should not duplicate headers if a header with the same name as one of the default headers is present', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(
+        'yo',
+        {
+          headers: {
+            'Access-Control-Allow-Headers': 'foo',
+            'Access-Control-Allow-Methods': 'foo',
+            'Access-Control-Allow-Origin': 'foo',
+            'Content-Type': 'foo'
+          }
+        }
+      );
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
+
+      should(entryPoint.newConnection).calledOnce();
+
+      const response = httpWs.server._httpResponse;
+
+      should(response.cork).calledOnce();
+      should(response.cork.calledBefore(response.writeStatus)).be.true();
+
+      should(response.writeStatus).calledOnce().calledWithMatch(Buffer.from('200'));
+
+      should(response.writeHeader)
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Headers'),
+          Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+        );
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Headers'),
+          Buffer.from('foo')
+        );
+
+      should(response.writeHeader)
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Methods'),
+          Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+        );
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Methods'),
+          Buffer.from('foo')
+        );
+
+      should(response.writeHeader)
+        .not.be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Origin'),
+          Buffer.from(kuzzle.config.http.accessControlAllowOrigin)
+        );
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('Access-Control-Allow-Origin'),
+          Buffer.from('foo')
+        );
+
+      should(response.writeHeader)
+        .not.be.calledWithMatch(
+          Buffer.from('Content-Type'),
+          Buffer.from('application/json')
+        );
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('Content-Type'),
+          Buffer.from('foo')
+        );
+
+      should(response.writeHeader.calledBefore(response.tryEnd));
+
+      should(response.tryEnd).calledOnce();
+      should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(entryPoint.removeConnection).calledOnce();
+    });
+
+    it('should compress the response with gzip if asked to', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'gzip',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.gunzipSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('gzip'));
+    });
+
+    it('should compress the response with deflate if asked to', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.inflateSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('deflate'));
+    });
+
+    it('should choose to compress the response with gzip if multiple algorithms are possible', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate, deflate, deflate, identity, gzip, deflate',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.gunzipSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('gzip'));
+    });
+
+    it('should comply to the provided algorithm priorities provided in the headers', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'deflate;q=0.8, gzip;q=0.25, *=0',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      let payload = response.tryEnd.firstCall.args[0];
+      payload = zlib.inflateSync(payload);
+
+      should(JSON.parse(payload.toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('deflate'));
+    });
+
+    it('should fall back to not compressing if no suitable algorithm is found', async () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo');
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'accept-encoding': 'br;q=0.8, compress;q=0.25',
+      });
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+
+      // the response is processed in background tasks, need to wait for it
+      // to finish
+      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+      }
+
+      should(response.tryEnd).calledOnce();
+
+      should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+        error: null,
+        result: 'yo',
+        status: 200,
+      });
+
+      should(response.writeHeader)
+        .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
+    });
+
+    it('should fall back to not compressing if the payload could not be compressed with gzip', async () => {
+      mockRequire('zlib', {
+        gzip: sinon.stub().yields(new Error('foo')),
+      });
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
+      const protocol = new HttpWs();
+      await protocol.init(entryPoint);
+
+      try {
+        const result = new KuzzleRequest({});
+        result.setResult('yo');
+        kuzzle.router.http.route.yields(result);
+
+        protocol.server._httpOnMessage('get', '/', '', {
+          'accept-encoding': 'gzip',
+        });
+        protocol.server._httpResponse._onData('', true);
+
+        const response = protocol.server._httpResponse;
+
+        // the response is processed in background tasks, need to wait for it
+        // to finish
+        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
         }
 
-        global.NODE_ENV = nodeEnv;
-      });
+        should(response.tryEnd).calledOnce();
 
-      it('should output buffer raw result', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          content = Buffer.from('test'),
-          result = new Request({});
-
-        result.setResult(content, {
-          raw: true,
-          status: 444
+        should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+          error: null,
+          result: 'yo',
+          status: 200,
         });
 
-        cb(result);
-
-        // Buffer.from(content) !== content
-        const sent = response.end.firstCall.args[0];
-
-        should(content.toString()).eql(sent.toString());
-
-        should(result.response.getHeader('Content-Length'))
-          .eql(String(sent.length));
-      });
-
-      it('should output a stringified buffer as a raw buffer result', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          content = JSON.parse(JSON.stringify(Buffer.from('test'))),
-          result = new Request({});
-
-        result.setResult(content, {
-          raw: true,
-          status: 444
-        });
-
-        cb(result);
-
-        const sent = response.end.firstCall.args[0];
-
-        should(sent).be.an.instanceof(Buffer);
-        should(sent.toString()).eql('test');
-
-        should(result.response.getHeader('Content-Length'))
-          .eql(String(sent.length));
-      });
-
-      it('should output serialized JS objects marked as raw', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult([{foo: 'bar'}], {
-          raw: true
-        });
-
-        cb(result);
-
-        const expected = Buffer.from(JSON.stringify([{foo: 'bar'}]));
-
-        should(response.end).be.calledWith(expected);
-        should(result.response.getHeader('Content-Length'))
-          .eql(String(expected.length));
-      });
-
-      it('should output scalar content as-is if marked as raw', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {
-          raw: true
-        });
-
-        cb(result);
-
-        const expected = Buffer.from('content');
-
-        should(response.end)
-          .be.calledOnce()
-          .be.calledWithExactly(expected);
-
-        should(result.response.getHeader('Content-Length'))
-          .eql(String(expected.length));
-      });
-
-      it('should send a 0-length-content response if marked as raw and content is null', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult(null, {
-          raw : true
-        });
-
-        cb(result);
-
-        should(response.end).be.calledWith(Buffer.from(''));
-        should(result.response.getHeader('Content-Length')).eql('0');
-      });
-
-      it('should compress the outgoing message with deflate if asked to', () => {
-        payload.headers = {'accept-encoding': 'identity, foo, bar, identity, qux, deflate, baz'};
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {});
-
-        cb(result);
-
-        should(response.setHeader).calledWith('Content-Encoding', 'deflate');
-        should(zlibstub.deflate).calledOnce();
-        should(zlibstub.gzip).not.called();
-      });
-
-      it('should compress the outgoing message with gzip if asked to', () => {
-        payload.headers = {
-          'accept-encoding': 'identity, foo, bar, identity, qux, gzip, baz'
-        };
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {});
-
-        cb(result);
-
-        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
-        should(zlibstub.deflate).not.called();
-        should(zlibstub.gzip).calledOnce();
-      });
-
-      it('should not compress if no suitable algorithm is found within the accept-encoding list', () => {
-        payload.headers = {
-          'accept-encoding': 'identity, foo, bar, identity, qux, baz'
-        };
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {});
-
-        cb(result);
-
-        should(response.setHeader).not.calledWith(
-          'Content-Encoding',
-          sinon.match.string);
-        should(zlibstub.deflate).not.called();
-        should(zlibstub.gzip).not.called();
-      });
-
-      it('should prefer gzip over deflate if both algorithm are accepted', () => {
-        payload.headers = {
-          'accept-encoding': 'deflate,deflate,DEFLATE,dEfLaTe, GZiP, DEFLATE,deflate'
-        };
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {});
-
-        cb(result);
-
-        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
-        should(zlibstub.deflate).not.called();
-        should(zlibstub.gzip).calledOnce();
-      });
-
-      it('should reply with an error if compressing fails', () => {
-        const error = new Error('foobar');
-
-        payload.headers = {'accept-encoding': 'gzip'};
-        zlibstub.gzip.yields(error);
-        sinon.stub(protocol, '_replyWithError');
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          result = new Request({});
-
-        result.setResult('content', {});
-
-        cb(result);
-
-        should(protocol._replyWithError)
-          .be.calledOnce()
-          .be.calledWithMatch(
-            {id: 'connectionId'},
-            response,
-            {id: 'network.http.unexpected_error'});
-
-        should(response.setHeader).calledWith('Content-Encoding', 'gzip');
-        should(zlibstub.deflate).not.called();
-        should(zlibstub.gzip).calledOnce();
-      });
-
-      it('should overwrite the content-length even if one was set', () => {
-        protocol._sendRequest({id: 'connectionId'}, response, payload);
-        const
-          cb = kuzzle.router.http.route.firstCall.args[1],
-          request = new Request({}),
-          result = 'foobar';
-
-        request.setResult(result, {
-          raw : true
-        });
-
-        request.response.setHeader(
-          'Content-Length',
-          'one does not simply set a content length');
-
-        cb(request);
-
-        should(response.end).be.calledWith(Buffer.from(result));
-        should(request.response.getHeader('Content-Length'))
-          .eql(String(result.length));
-      });
-    });
-  });
-
-  describe('#_replyWithError', () => {
-    beforeEach(() => {
-      entrypoint.logAccess = sinon.spy();
-      return protocol.init(entrypoint);
-    });
-
-    it('should log the access and reply with error', () => {
-      const
-        connectionId = 'connectionId',
-        payload = new HttpMessage({id: 'connectionId'}, {}),
-        nodeEnv = global.NODE_ENV;
-
-      for (const env of ['production', '', 'development']) {
-        global.NODE_ENV = env;
-
-        const
-          kerr = kerror.get('unexpected_error', 'foobar'),
-          matcher = errorMatcher.fromError(kerr),
-          expected = (new Request(payload, {connectionId, error: kerr})).serialize();
-
-        // likely to be different, and we do not care about it
-        delete expected.data.timestamp;
-
-        protocol._replyWithError(payload, response, new Error('foobar'));
-
-        should(entrypoint.logAccess).be.calledOnce();
-        should(entrypoint.logAccess.firstCall.args[0].serialize())
-          .match(expected);
-
-        should(response.end)
-          .calledOnce()
-          .calledWith(sinon.match(matcher));
-
-        should(response.writeHead)
-          .be.calledOnce()
-          .be.calledWith(
-            kerr.status,
-            {
-              'Content-Type': 'application/json',
-              'Access-Control-Allow-Origin': '*',
-              'Access-Control-Allow-Methods' : 'GET,POST,PUT,PATCH,DELETE,HEAD,OPTIONS',
-              'Access-Control-Allow-Headers': 'Content-Type,Access-Control-Allow-Headers,Authorization,X-Requested-With,Content-Length,Content-Encoding,X-Kuzzle-Volatile',
-              'Content-Length': String(response.end.firstCall.args[0].length)
-            });
-
-        entrypoint.logAccess.resetHistory();
-        response.writeHead.resetHistory();
-        response.end.resetHistory();
+        should(response.writeHeader)
+          .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
       }
-
-      global.NODE_ENV = nodeEnv;
+      finally {
+        mockRequire.stop('zlib');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
+        clearInterval(protocol.nowInterval);
+      }
     });
 
-    it('should remove pending request from clients', () => {
-      const error = new Error('test');
-      error.status = 'status';
+    it('should fall back to not compressing if the payload could not be compressed with deflate', async () => {
+      mockRequire('zlib', {
+        deflate: sinon.stub().yields(new Error('foo')),
+      });
+      HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
+      const protocol = new HttpWs();
+      await protocol.init(entryPoint);
 
-      protocol._replyWithError(
-        new HttpMessage({id: 'connectionId'}, {}),
-        response,
-        error);
-
-      should(entrypoint.removeConnection).calledOnce().calledWith('connectionId');
-    });
-  });
-
-  describe('#_createWritableStream', () => {
-    beforeEach(() => {
-      return protocol.init(entrypoint);
-    });
-
-    it('should throw if Content-Type HTTP header is invalid', () => {
-      const request = { headers: { 'content-type': 'application/toto'}};
       try {
-        protocol._createWritableStream(request, {});
-      } catch (e) {
-        should(e).be.instanceOf(BadRequestError);
-        should(e.id).be.equals('network.http.unexpected_error');
+        const result = new KuzzleRequest({});
+        result.setResult('yo');
+        kuzzle.router.http.route.yields(result);
+
+        protocol.server._httpOnMessage('get', '/', '', {
+          'accept-encoding': 'deflate',
+        });
+        protocol.server._httpResponse._onData('', true);
+
+        const response = protocol.server._httpResponse;
+
+        // the response is processed in background tasks, need to wait for it
+        // to finish
+        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+          await new Promise(resolve => setTimeout(resolve, 200));
+        }
+
+        should(response.tryEnd).calledOnce();
+
+        should(JSON.parse(response.tryEnd.firstCall.args[0].toString())).match({
+          error: null,
+          result: 'yo',
+          status: 200,
+        });
+
+        should(response.writeHeader)
+          .calledWithMatch(Buffer.from('Content-Encoding'), Buffer.from('identity'));
       }
+      finally {
+        mockRequire.stop('zlib');
+        HttpWs = mockRequire.reRequire('../../../../lib/core/network/protocols/httpwsProtocol');
+        clearInterval(protocol.nowInterval);
+      }
+    });
+
+    it('should not wrap a raw response to a standard Kuzzle Response object', () => {
+      const result = new KuzzleRequest({});
+      result.setResult('yo', { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('yo');
+    });
+
+    it('should be able to handle empty raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(null, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('');
+    });
+
+    it('should be able to handle JSON objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult({foo: 'bar'}, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('{"foo":"bar"}');
+    });
+
+    it('should be able to handle Buffer objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(Buffer.from('foobar'), { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('foobar');
+    });
+
+    it('should be able to handle stringified Buffer objects as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(JSON.stringify(Buffer.from('foobar')), { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString())
+        .eql(JSON.stringify(Buffer.from('foobar')));
+    });
+
+    it('should be able to handle scalars as raw responses', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(123.45, { raw: true });
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpResponse._onData('', true);
+
+      const response = httpWs.server._httpResponse;
+      should(response.tryEnd).calledOnce();
+
+      should(response.tryEnd.firstCall.args[0].toString()).eql('123.45');
     });
   });
 });

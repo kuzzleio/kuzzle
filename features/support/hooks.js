@@ -91,6 +91,12 @@ Before({ tags: '@http' }, async function () {
   }
 });
 
+Before({ tags: '@not-http' }, async function () {
+  if (process.env.KUZZLE_PROTOCOL === 'http') {
+    return 'skipped';
+  }
+});
+
 // firstAdmin hooks ============================================================
 
 Before({ tags: '@firstAdmin' }, async function () {
@@ -163,4 +169,8 @@ After({ tags: '@realtime' }, function () {
     .map(({ unsubscribe }) => unsubscribe());
 
   return Promise.all(promises);
+});
+
+After({ tags: '@websocket' }, function () {
+  this.props.client.terminate();
 });

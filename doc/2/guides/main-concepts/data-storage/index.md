@@ -390,7 +390,7 @@ While updating the collection settings, the collection will be [closed](https://
 Whenever a **document is created, updated or deleted**, Kuzzle will **add or update the document's metadata**. These metadata provide information about the document's lifecycle.
 
 ::: info
-You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
+You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write), [bulk:mWrite](/core/2/api/controllers/bulk/m-write) or [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query) actions.
 :::
 
 Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
@@ -427,7 +427,7 @@ kourou document:create ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-Metadata cannot be edited manually (except with [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions). Kuzzle will discard any `_kuzzle_info` property sent in document content.  
+Metadata cannot be edited manually (except with [bulk:write](/core/2/api/controllers/bulk/write), [bulk:mWrite](/core/2/api/controllers/bulk/m-write) or [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query) actions). Kuzzle will discard any `_kuzzle_info` property sent in document content.  
 ::: 
 
 ### Metadata mappings
@@ -615,6 +615,7 @@ The following actions are available:
  - [bulk:mWrite](/core/2/api/controllers/bulk/m-write): write multiple documents
  - [bulk:import](/core/2/api/controllers/bulk/import): import documents as fast as possible
  - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): delete large volume of documents matching a query
+ - [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query): update large volume of documents matching a query
 
 ::: warning
 Bulk actions are intended to be used by administrators and scripts.  
@@ -646,14 +647,14 @@ const esRequest =  {
   // Internal name of the index "nyc-open-data" and the collection "yellow-taxi"
   index: '&nyc-open-data.yellow-taxi',
   op_type: 'create'
-}
+};
 
 // Use directly an Elasticsearch client instance
-await app.storage.client.index(esRequest)
+await app.storage.client.index(esRequest);
 
 // Instantiate and use a new client
-const storageClient = new app.storage.Client()
-await storageClient.index(esRequest)
+const storageClient = new app.storage.Client();
+await storageClient.index(esRequest);
 ```
 
 ::: warning

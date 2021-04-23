@@ -69,7 +69,8 @@ Body:
 
   // optional arguments
   "_id": "<kuid>",
-  "refresh": "wait_for"
+  "refresh": "wait_for",
+  "kuid": "human"
 }
 ```
 
@@ -81,7 +82,7 @@ Body:
 
 - `_id`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid). An error is returned if the provided identifier already exists. If not provided, a random kuid is automatically generated.
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created user is indexed (default: `"wait_for"`)
-
+- `kuid`: if set to `human`, Kuzzle will generate a human readable id, otherwise if set to `uuid` Kuzzle will generate a standard uuid (default: `"human"`)
 ---
 
 ## Body properties

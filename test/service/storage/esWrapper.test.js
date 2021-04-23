@@ -74,6 +74,21 @@ describe('Test: ElasticSearch Wrapper', () => {
       });
     });
 
+    it('should handle unknown DSL keyword', () => {
+      const error = new Error('');
+      error.meta = { body: { error: { reason: '[and] query malformed, no start_object after query name' } } };
+
+      should(esWrapper.formatESError(error)).be.match({
+        id: 'services.storage.unknown_query_keyword'
+      });
+
+      error.meta = { body: { error: { reason: 'no [query] registered for [equals]' } } };
+
+      should(esWrapper.formatESError(error)).be.match({
+        id: 'services.storage.unknown_query_keyword'
+      });
+    });
+
     describe('logging in production', () => {
       let nodeEnv;
 

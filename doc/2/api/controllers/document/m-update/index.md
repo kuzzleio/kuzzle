@@ -18,11 +18,20 @@ The number of documents that can be updated by a single request is limited by th
 
 ### HTTP
 
+<SinceBadge version="2.11.0"/>
+```http
+URL: http://kuzzle:7512/<index>/<collection>/_mUpdate[?refresh=wait_for][&retryOnConflict=<retries>][&silent]
+Method: PATCH
+Body:
+```
+
+<DeprecatedBadge version="2.11.0">
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_mUpdate[?refresh=wait_for][&retryOnConflict=<retries>][&silent]
 Method: PUT
 Body:
 ```
+</DeprecatedBadge>
 
 ```js
 {
@@ -70,6 +79,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mUpdate <index> <collection> <body>
+kourou document:mUpdate <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
@@ -81,7 +97,8 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the updates are indexed
 - `retryOnConflict`: conflicts may occur if the same document gets updated multiple times within a short timespan in a database cluster. You can set the `retryOnConflict` optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error.
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
+- `strict`: if set, an error will occur if a document was not updated <SinceBadge version="2.11.0" />
 
 ---
 
@@ -109,6 +126,8 @@ Each errored document is an object of the `errors` array with the following prop
 - `document`: original document that caused the error
 - `status`: HTTP error status code
 - `reason`: human readable reason
+
+If `strict` mode is enabled, will rather return an error if at least one document has not been updated.
 
 ```js
 {

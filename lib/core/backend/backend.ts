@@ -29,6 +29,7 @@ import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { kebabCase } from '../../util/inflector';
+import vault from '../../kuzzle/vault';
 import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
@@ -64,15 +65,21 @@ class BackendPipe extends ApplicationManager {
    *
    * @param event - Event name
    * @param handler - Function to execute when the event is triggered
-   *
    */
-  register (event: string, handler: EventHandler): void {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'pipe');
+  register (event: string, handler: EventHandler, options: any = {}): string | void {
+    if (this._application.started && options.dynamic !== true) {
+      throw runtimeError.get('already_started', 'pipe.register');
     }
 
     if (typeof handler !== 'function') {
       throw assertionError.get('invalid_pipe', event);
+    }
+
+    if (this._application.started) {
+      return global.kuzzle.pluginsManager.registerPipe(
+        global.kuzzle.pluginsManager.application,
+        event,
+        handler);
     }
 
     if (! this._application._pipes[event]) {
@@ -80,6 +87,14 @@ class BackendPipe extends ApplicationManager {
     }
 
     this._application._pipes[event].push(handler);
+  }
+
+  unregister (pipeId: string): void {
+    if (! this._application.started) {
+      throw runtimeError.get('unavailable_before_start', 'pipe.unregister');
+    }
+
+    global.kuzzle.pluginsManager.unregisterPipe(pipeId);
   }
 }
 
@@ -267,6 +282,9 @@ class BackendController extends ApplicationManager {
 /* BackendVault class ======================================================= */
 
 class BackendVault extends ApplicationManager {
+  private decrypted = false;
+  private _secrets: JSONObject;
+
   /**
    * Secret key to decrypt encrypted secrets.
    */
@@ -293,11 +311,18 @@ class BackendVault extends ApplicationManager {
    * Decrypted secrets
    */
   get secrets () : JSONObject {
-    if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'vault.secrets');
+    // We need to load the secrets before Kuzzle start so we can use them
+    // in the configuration (e.g. configure ES X-Pack credentials)
+    if (! this._application.started && ! this.decrypted) {
+      const kuzzleVault = vault.load(this._application._vaultKey, this._application._secretsFile);
+      this._secrets = kuzzleVault.secrets;
     }
 
-    return this._kuzzle.vault.secrets;
+    if (this._application.started) {
+      return this._kuzzle.vault.secrets;
+    }
+
+    return this._secrets;
   }
 }
 
@@ -393,6 +418,27 @@ class BackendStorage extends ApplicationManager {
 
 /* Backend class ======================================================== */
 
+let _app = null;
+
+Reflect.defineProperty(global, 'app', {
+  configurable: true,
+  enumerable: false,
+  get () {
+    if (_app === null) {
+      throw new Error('App instance not found. Are you sure you have already started your application?');
+    }
+
+    return _app;
+  },
+  set (value) {
+    if (_app !== null) {
+      throw new Error('Cannot build an App instance: another one already exists');
+    }
+
+    _app = value;
+  },
+});
+
 export class Backend {
   private _kuzzle: any;
   private _name: string;
@@ -420,7 +466,7 @@ export class Backend {
   /**
    * Current Git commit (if available)
    */
-  public commit: string | null;
+  public commit: string | null = null;
 
   /**
    * Errors manager
@@ -536,6 +582,8 @@ export class Backend {
       writable: true
     });
 
+    global.app = this;
+
     this.pipe = new BackendPipe(this);
     this.hook = new BackendHook(this);
     this.config = new BackendConfig(this);
@@ -556,7 +604,12 @@ export class Backend {
       // Silent if no version can be found
     }
 
-    this.commit = this._readCommit();
+    try {
+      this.commit = this._readCommit();
+    }
+    catch {
+      // catch errors and leave commit value to "null"
+    }
   }
 
   /**
@@ -651,12 +704,18 @@ export class Backend {
       return null;
     }
 
-    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+    const gitDir = `${dir}/.gut`;
+
+    if (! fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
-    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+    if (! fs.statSync(gitDir).isDirectory()) {
+      return null;
+    }
+
+    const ref = fs.readFileSync(`${dir}/.gut/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.gut/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
       return null;

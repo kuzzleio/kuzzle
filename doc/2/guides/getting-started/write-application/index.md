@@ -19,9 +19,9 @@ The [Backend](/core/2/framework/classes/backend) class is the entrypoint of any 
 First we need to instantiate it with an application name:
 
 ```js
-import { Backend } from 'kuzzle'
+import { Backend } from 'kuzzle';
 
-const app = new Backend('playground')
+const app = new Backend('playground');
 ```
 
 An application has two phases: `setup` and `runtime`. The classes and methods that can be used **depend on the phase the application is in**. 
@@ -45,11 +45,11 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async request => {
-        return `Hello, ${request.input.args.name}`
+        return `Hello, ${request.input.args.name}`;
       }
     }
   }
-})
+});
 ```
 
 Once the features have been registered, it is possible to start our Kuzzle application with the [Backend.start](/core/2/framework/classes/backend/start) method.
@@ -76,10 +76,10 @@ app.start()
   .then(async () => {
     // Interact with Kuzzle API to create a new index if it does not already exist
     if (! await app.sdk.index.exists('nyc-open-data')) {
-      await app.sdk.index.create('nyc-open-data')
+      await app.sdk.index.create('nyc-open-data');
     }
   })
-  .catch(console.error)
+  .catch(console.error);
 ```
 
 ::: warning
@@ -106,7 +106,7 @@ The Embedded SDK is a modified version of the [Javascript SDK](/sdk/js/7) which 
 await app.sdk.document.create('nyc-open-data', 'yellow-taxi', {
   name: 'Aschen',
   age: 27
-})
+});
 ```
 
 The low level [query](/sdk/js/7/core-classes/kuzzle/query) method can also be used to send custom requests to the Kuzzle API.  
@@ -122,16 +122,16 @@ await app.sdk.query({
   controller: 'greeting',
   action: 'sayHello',
   name: 'Aschen'
-})
+});
 ```
 
 ## Complete example
 
 ```js
-import { Backend } from 'kuzzle'
+import { Backend } from 'kuzzle';
 
 // Instantiate an application
-const app = new Backend('playground')
+const app = new Backend('playground');
 
 // Now we can register features
 
@@ -144,7 +144,7 @@ app.controller.register('greeting', {
       }
     }
   }
-})
+});
 
 // Start the application
 app.start()
@@ -153,10 +153,10 @@ app.start()
 
     // Interact with Kuzzle API to creates a new index if it does not exists
     if (! await app.sdk.index.exists('nyc-open-data')) {
-      await app.sdk.index.create('nyc-open-data')
+      await app.sdk.index.create('nyc-open-data');
     }
   })
-  .catch(console.error)
+  .catch(console.error);
 ```
 
 <GuidesLinks
