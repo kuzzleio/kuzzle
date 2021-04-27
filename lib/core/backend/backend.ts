@@ -294,8 +294,8 @@ export class Backend {
   }
 
   /**
-   * Register a method that will be executed only once.
-   * If its execution throw an error, the app will fail during starting phase.
+   * Register a method that will be executed only once on any given environment.
+   * If this method throws, the app won't start.
    * 
    * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
