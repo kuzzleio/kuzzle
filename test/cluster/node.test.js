@@ -642,6 +642,29 @@ describe('#Cluster Node', () => {
       should(node.heartbeatTimer).not.be.null();
     });
 
+    it('should abort if another node has the same IP as this one', async () => {
+      const nodes = [
+        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
+        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
+        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+      ];
+
+      node.idCardHandler.getRemoteIdCards.resolves(nodes);
+      node.ip = '2.3.4.2';
+
+      await node.handshake();
+
+      should(node.idCardHandler.createIdCard).calledOnce();
+      should(node.idCardHandler.getRemoteIdCards).calledOnce();
+
+      should(node.command.getFullState).not.called();
+      should(node.command.broadcastHandshake).not.called();
+      should(node.fullState.loadFullState).not.called();
+
+      should(kuzzle.log.error).calledWithMatch(/Another node share the same IP address as this one/);
+      should(kuzzle.shutdown).calledOnce();
+    });
+
     it('should be able to connect to existing nodes and get a fullstate', async () => {
       const fullstate = { full: 'state', activity: [] };
       const nodes = [
