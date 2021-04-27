@@ -661,7 +661,7 @@ describe('#Cluster Node', () => {
       should(node.command.broadcastHandshake).not.called();
       should(node.fullState.loadFullState).not.called();
 
-      should(kuzzle.log.error).calledWithMatch(/Another node share the same IP address as this one/);
+      should(kuzzle.log.error).calledWithMatch(/Another node share the same IP address as this one \(2.3.4.2\): baz/);
       should(kuzzle.shutdown).calledOnce();
     });
 
