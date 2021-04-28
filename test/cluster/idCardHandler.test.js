@@ -12,10 +12,18 @@ describe('ClusterIdCardHandler', () => {
   let idCardHandler;
   let ip = '192.168.42.42';
   let refreshDelay = 20;
+  let evictNodeStub;
 
   beforeEach(() => {
     kuzzle = new Kuzzle();
-    idCardHandler = new ClusterIdCardHandler(ip, refreshDelay);
+
+    evictNodeStub = sinon.stub();
+
+    idCardHandler = new ClusterIdCardHandler({
+      evictSelf: evictNodeStub,
+      heartbeatDelay: refreshDelay,
+      ip,
+    });
   });
 
   describe('#createIdCard', () => {
@@ -23,6 +31,10 @@ describe('ClusterIdCardHandler', () => {
       kuzzle.ask
         .withArgs('core:cache:internal:store')
         .resolves(true);
+
+      kuzzle.ask
+        .withArgs('core:cache:internal:pexpire')
+        .resolves(1);
     });
 
     afterEach(() => {
@@ -31,7 +43,7 @@ describe('ClusterIdCardHandler', () => {
       }
     });
 
-    it('should creates a new uniq IdCard and store it in Redis', async () => {
+    it('should create a new uniq IdCard and store it in Redis', async () => {
       await idCardHandler.createIdCard();
 
       should(idCardHandler.nodeId).be.String();
@@ -74,6 +86,29 @@ describe('ClusterIdCardHandler', () => {
         'core:cache:internal:pexpire',
         idCardHandler.nodeIdKey,
         refreshDelay * 1.5);
+
+      should(evictNodeStub).not.called();
+    });
+
+    it('should evict the node if unable to refresh the IdCard in time', async () => {
+      kuzzle.ask
+        .withArgs('core:cache:internal:pexpire')
+        .resolves(0);
+
+      await idCardHandler.createIdCard();
+
+      should(idCardHandler.refreshTimer).not.null();
+
+      await new Promise(resolve => setTimeout(resolve, refreshDelay * 1.5 + 5));
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:pexpire',
+        idCardHandler.nodeIdKey,
+        refreshDelay * 1.5);
+
+      should(evictNodeStub)
+        .calledOnce()
+        .calledWith('Node too slow: ID card expired');
     });
   });
 
