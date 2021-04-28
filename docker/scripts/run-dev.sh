@@ -26,7 +26,7 @@ else
   ENABLED_PLUGINS=functional-test-plugin
 fi
 
-node docker/scripts/reloader.js \
+npx kuzzle-reloader \
     --inspect=0.0.0.0:9229 \
     -r ts-node/register docker/scripts/start-kuzzle-dev.ts \
     --mappings /fixtures/mappings.json \
