@@ -6,6 +6,7 @@ const mockRequire = require('mock-require');
 const uWS = require('uWebSockets.js');
 
 const { KuzzleRequest } = require('../../../../lib/api/request');
+const ClientConnection = require('../../../../lib/core/network/clientConnection');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
@@ -228,20 +229,25 @@ describe('core/network/protocols/websocket', () => {
       entryPoint.execute.yields({ requestId: 'foobar', content: { } });
       httpWs.server._wsOnMessage('{"controller":"foo","action":"bar"}');
 
-      should(entryPoint.execute).calledOnce().calledWithMatch({
-        input: {
-          action: 'bar',
-          controller: 'foo',
-        },
-        context: {
-          connection: {
-            protocol: 'websocket',
-            ips: [ '1.2.3.4' ],
-          },
-        },
-      });
+      const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
-      should(entryPoint.execute.firstCall.args[0]).instanceof(KuzzleRequest);
+      should(entryPoint.execute)
+        .calledOnce()
+        .calledWithMatch(clientConnection, {
+          input: {
+            action: 'bar',
+            controller: 'foo',
+          },
+          context: {
+            connection: {
+              protocol: 'websocket',
+              ips: [ '1.2.3.4' ],
+            },
+          },
+        });
+
+      should(entryPoint.execute.firstCall.args[0]).instanceof(ClientConnection);
+      should(entryPoint.execute.firstCall.args[1]).instanceof(KuzzleRequest);
 
       const payload = socket.send.firstCall.args[0];
       should(payload).be.instanceof(Buffer);
