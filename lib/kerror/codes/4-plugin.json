@@ -135,6 +135,12 @@
           "code": 7,
           "message": "Unknown pipe ID \"%s\"",
           "class": "PluginImplementationError"
+        },
+        "unexpected_installation_error": {
+          "description": "Embeds an unexpected installation error into a standardized KuzzleError object.",
+          "code": 8,
+          "message": "Caught an unexpected error while executing installation \"%s\": %s",
+          "class": "PluginImplementationError"
         }
       }
     },
