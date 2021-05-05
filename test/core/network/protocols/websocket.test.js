@@ -11,6 +11,7 @@ const ClientConnection = require('../../../../lib/core/network/clientConnection'
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
 const EntryPointMock = require('../../../mocks/entrypoint.mock');
+const { MockHttpResponse, MockHttpRequest } = require('../../../mocks/uWS.mock');
 
 describe('core/network/protocols/websocket', () => {
   let HttpWs;
@@ -116,6 +117,7 @@ describe('core/network/protocols/websocket', () => {
         idleTimeout: 12345,
         maxBackPressure: sinon.match.number,
         maxPayloadLength: 1024,
+        upgrade: sinon.match.func,
         open: sinon.match.func,
         message: sinon.match.func,
         close: sinon.match.func,
@@ -129,6 +131,37 @@ describe('core/network/protocols/websocket', () => {
       should(httpWs.server.ws).calledWithMatch('/*', {
         compression: uWS.DISABLED,
       });
+    });
+  });
+
+  describe('upgrade connection', () => {
+    beforeEach(() => httpWs.init(entryPoint));
+
+    it('should upgrade the connection and forward and store the cookie if present when upgrading', () => {
+      const response = new MockHttpResponse();
+      const request = new MockHttpRequest(
+        '',
+        '',
+        '',
+        {
+          cookie: 'foo',
+          'sec-websocket-key': 'websocket-key',
+          'sec-websocket-protocol': 'websocket-protocol',
+          'sec-websocket-extensions': 'websocket-extension',
+        }
+      );
+      const context = {}; // context object
+      httpWs.server._wsOnUpgrade(response, request, context);
+
+      should(response.upgrade).be.calledWithMatch(
+        {
+          cookie: 'foo',
+        },
+        'websocket-key',
+        'websocket-protocol',
+        'websocket-extension',
+        context
+      );
     });
   });
 
