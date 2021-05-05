@@ -209,6 +209,81 @@ describe('Test: security controller - credentials', () => {
     });
   });
 
+  describe('#searchUsersByCredentials', () => {
+    let query;
+    let methodStub;
+
+    beforeEach(() => {
+      query = {
+        bool: {
+          must: [
+            {
+              match: {
+                username:  'test@test.com'
+              }
+            }
+          ]
+        }
+      };
+      request = new Request({
+        controller: 'security',
+        action: 'searchUsersByCredentials',
+        strategy: 'someStrategy',
+        body: { query }
+      });
+
+      methodStub = sinon.stub().resolves({
+        hits: [{ username: 'bar', kuid: 'foo' }],
+        total: 1
+      });
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
+
+      securityController.ask = sinon.stub().withArgs('core:security:user:get').resolves({
+        _id: 'foo',
+        profileIds: [],
+        _kuzzle_info: {
+          author: null,
+          createdAt: 1620134078450,
+          updatedAt: null,
+          updater: null
+        }
+      });
+    });
+
+    it('should call the plugin search method and add user core data', async () => {
+      const result = await securityController.searchUsersByCredentials(request);
+
+      should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+      should(kuzzle.pluginsManager.getStrategyMethod).be.calledWith('someStrategy', 'search');
+      should(methodStub).be.calledOnce();
+      should(methodStub.firstCall.args[0]).be.eql(request);
+      should(securityController.ask).be.calledOnce();
+      should(securityController.ask).be.calledWith('core:security:user:get', 'foo');
+      should(result).be.deepEqual({
+        'hits': [
+          {
+            'strategy': {
+              'someStrategy': {
+                'username': 'bar'
+              }
+            },
+            '_id': 'foo',
+            '_source': {
+              'profileIds': [],
+              '_kuzzle_info': {
+                'author': null,
+                'createdAt': 1620134078450,
+                'updatedAt': null,
+                'updater': null
+              }
+            }
+          }
+        ],
+        'total': 1
+      });
+    });
+  });
+
   describe('#getCredentials', () => {
     it('should call the plugin getInfo method if it is provided', () => {
       const methodStub = sinon.stub().resolves({foo: 'bar'});
