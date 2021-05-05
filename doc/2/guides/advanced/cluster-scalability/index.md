@@ -72,7 +72,7 @@ For instance, an application that greatly requires to write/read documents from 
 
 ## Quick start
 
-Kuzzle's Cluster embeds an auto-discovery feature, allowing to automatically form a new cluster when more than 1 nodes are started, and allowing newly started node to join an existing cluster if one is present.  
+Kuzzle's Cluster embeds an auto-discovery feature, allowing to automatically form a new cluster when more than 1 nodes are started, and allowing newly started nodes to join an existing cluster if one is present.  
 
 
 New nodes will automatically synchronize themselves with existing ones, and be made available once they have successfully joined the cluster.
@@ -116,4 +116,3 @@ On these versions, the plugin is an empty shell, only there to ensure backward-c
 * Using the cluster plugin will now display a deprecation notice in Kuzzle's logs;
 * If present, the cluster plugin configuration will be interpreted and applied to the native cluster configuration;
 * API routes exposed by the legacy plugin will stay available, their response being reconstructed from the native cluster data. Users might want to migrate to the new [cluster:status](/core/2/api/controllers/cluster/status) native API route for a more detailed view of their cluster health.
-
