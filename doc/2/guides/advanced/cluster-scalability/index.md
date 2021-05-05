@@ -6,265 +6,114 @@ description: Understand how a Kuzzle cluster works
 order: 700
 ---
 
+:::info
+This documentation page applies to Kuzzle versions 2.11 and above.  
+
+Previous versions of Kuzzle used a Cluster plugin. See the "Legacy Cluster Plugin" section at the end of this page.
+:::
+
 # Cluster and Scalability
 
-<!-- need rewrite -->
+Kuzzle natively supports cluster capabilities, and is thus able to easily scale horizontally.
 
-Kuzzle can scale horizontally, provided our [official Cluster Plugin](https://github.com/kuzzleio/kuzzle-plugin-cluster) is installed.  
-
-This guide covers Kuzzle Cluster features and how clustering capabilities can be added to Kuzzle.
+This guide covers the Kuzzle Cluster features and how clustering capabilities can be added to Kuzzle.
 
 ---
 
 ## Kuzzle Cluster features
 
 Kuzzle uses a cluster in [masterless mode](https://en.wikipedia.org/wiki/Shared-nothing_architecture) to ensure maximum resilience.  
-Each node in the cluster handles part of the load of requests received by the application.  
+Each node in the cluster handles part of the load of requests received by the application, given a load balancer is used.  
 
 ### High Availability
 
 A Kuzzle cluster shares the processing of requests and the dispatching of real-time notifications.  
 From 2 nodes onwards, even if a problem causes a service interruption on a server, the availability of the application will not be affected.  
 
+### Resiliency
+
+The Kuzzle Cluster architecture is built to be resilient against network or machine failures.  
+It features a predictive algorithm ensuring that all nodes stay synchronized, at all times.
+
+Nodes isolated because of a network failure are automatically evicted from the cluster, and killed.  
+Nodes installed on faulty machines, or too slow to stay synchronized with the cluster, will also be evicted and killed.
+
+This strategy guarantees that a Kuzzle Cluster stays sane at all times. Used with a load balancer able to spawn new Kuzzle instances on the fly, it also guarantees your application to be stable, even when facing disrupting events.
+
 ### Scaling without service interruption
 
-Masterless mode allows you to add and remove nodes without service interruption.  
-If the load becomes heavier, just start additional servers, they will be automatically integrated into the cluster for request processing.  
-On the contrary, if the load decreases, just stop servers, the rest of the nodes will handle the remaining load.  
-This allows to control the hosting costs during scalability due to temporary events.  
+The Kuzzle Cluster allows you to add and remove nodes on the fly, without service interruption.  
 
-### Complete cluster environment
+If the load intensifies, just start additional servers, they will be automatically integrated into the cluster for request processing.  
+It requires only a few seconds for a new Kuzzle node to join an existing cluster and to synchronize with it.
 
-Kuzzle uses Elasticsearch as a database and Redis for communication between nodes as well as as a cache for performance.  
-Both software have native cluster modes allowing them to scale to handle an increasing load of users and requests.  
 
-The scaling of the [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/guide/current/distributed-cluster.html) and [Redis](https://redis.io/topics/cluster-tutorial) clusters are independent of Kuzzle. Each can scale differently depending on the needs.  
+On the contrary, if the load decreases, just stop Kuzzle instances: the rest of the nodes will handle the remaining load.  
 
-An application that greatly requires the write/read database can afford a larger Elasticsearch cluster, while an application that makes intensive use of real time will increase the size of its Kuzzle and Redis clusters.
+This allows to control the hosting costs while scaling accordingly when facing temporary events.
+
+This model also fits nicely with how cloud providers allow to add/remove instances on the fly, depending on usage metrics.  
+
+:::info 
+A load balancer in front of a Kuzzle cluster is highly advised, to dispatch user connections to different Kuzzle nodes.  
+Once assigned to a Kuzzle node, a client stays attached to it until their connection drop; when needed, a Kuzzle node automatically dispatches valuable information to other nodes.
+
+Any load balancer will do: nginx, traefik, your favorite cloud provider's load balancer, ...
+:::
+
+### Completely scalable environment
+
+Kuzzle uses Elasticsearch as it storage layer, and Redis as a shared cache.    
+Both of these products have native cluster capabilities, allowing them to scale to handle an increasing load of users and requests.  
+
+Scaling [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/guide/current/distributed-cluster.html) and [Redis](https://redis.io/topics/cluster-tutorial) is done independently of Kuzzle. Each can scale differently depending on the needs.  
+
+For instance, an application that greatly requires to write/read documents from the storage should have a larger Elasticsearch cluster, while an application that makes intensive use of real time with a large number of simultaneous connections should increase the size of its Kuzzle cluster.
 
 ## Quick start
 
-This chapter shows how to quickly create a Kuzzle cluster stack for development purposes. If you already have an existing Kuzzle server running, you may want to read the manual install chapter instead.
+Kuzzle's Cluster embeds an auto-discovery feature, allowing to automatically form a new cluster when more than 1 nodes are started, and allowing newly started node to join an existing cluster if one is present.  
 
-::: info
-This development stack is for demonstration and test purposes only and should not be used as-is on production.  
 
-Notably, this stack only starts Kuzzle in cluster mode: Elasticsearch and Redis are not clustered.
+New nodes will automatically synchronize themselves with existing ones, and be made available once they have successfully joined the cluster.
+
+Getting a Kuzzle cluster is as simple as running new instances, no configuration needed:
+
+Simply start a Kuzzle instance.  
+Then start another one, using the same Redis endpoint: you now have a 2-node cluster.  
+Start another one, and you have a 3-node cluster.  
+Start another one, ...  
+
+
+:::info
+For this to work, each instance must share the same Redis endpoint.  
+
+Also, all nodes must have different IP addresses. Failing that, nodes will refuse to start with a meaningful error message.  
+
+If you want to quickly create a Kuzzle cluster on a single machine, you can use our Docker images to spawn Kuzzle instances easily, each with a different IP address.
 :::
 
-Install and run: 
 
-```bash
-git clone https://github.com/kuzzleio/kuzzle-plugin-cluster.git
-cd kuzzle-plugin-cluster
-docker-compose -p cluster up --scale kuzzle=3
-```
+## Cluster configuration
 
-You should now have a Kuzzle cluster stack running with 3 Kuzzle nodes.
+Kuzzle's RC file features a `cluster` section, allowing to fine-tune its behavior.
 
-::: info
-<SinceBadge version="1.10.0" />
-
-Kuzzle Docker images are shipped with the cluster plugin.
-The cluster is disabled by default but you can use the [`$KUZZLE_PLUGINS`](/core/2/guides/develop-on-kuzzle/external-plugins) environment variable to enable it.
-:::
-
-### ENOSPC error
-
-On some Linux environments, you may get `ENOSPC` errors from the filesystem watcher, because of limits set too low.
-
-If that happens, simply raise the limits on the number of files that can be watched:
-
-`sudo sysctl -w fs.inotify.max_user_watches=524288`
-
-That configuration change will last until the next reboot. 
-
-To make it permanent, add the following line to your `/etc/sysctl.conf` file:
-
-```
-fs.inotify.max_user_watches=524288
-```
+See the `cluster` section of our [.kuzzlerc.sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample) for a complete documentation.
 
 ---
 
-## Manual install on an existing Kuzzle installation
+## Legacy Cluster Plugin
 
-To add cluster capabilities to an existing Kuzzle installation, the cluster plugin must be installed by following the Plugin Install Guide.
+<DeprecatedBadge version="2.11.0"/>
 
-::: info
-If you are running Kuzzle in a Docker container, you will need to access the running container's shell and then the Kuzzle installation folder inside the container.
-:::
+Before Kuzzle version 2.11.0, clustering capabilities were ensured by our official cluster plugin: `kuzzle-plugin-cluster`.
 
-To install the cluster plugin, follow these steps:
+This plugin is now deprecated and shouldn't be used.
 
-```bash
-cd <kuzzle directory>/plugins/available
+Kuzzle 2.11 and above still embed this plugin.  
+On these versions, the plugin is an empty shell, only there to ensure backward-compatibility with previous versions:
 
-git clone https://github.com/kuzzleio/kuzzle-plugin-cluster.git
-
-cd kuzzle-plugin-cluster
-npm install # add --unsafe-perm if installing from inside a docker container
-
-# Enable the installed plugin. Delete this link to disable it
-cd ../../enabled
-ln -s ../available/kuzzle-plugin-cluster
-```
-
-### Cluster plugin configuration
-
-* The cluster plugin requires a privileged context from Kuzzle. This context is granted by Kuzzle via the global configuration.
-* The cluster plugin registers a few [pipes](/core/2/guides/write-plugins/plugins-features#pipes-and-hooks). 
-
-Add the following to your kuzzlerc configuration file (see our [Kuzzle configuration guide](/core/2/guides/advanced/configuration)):
-
-```js
-"plugins": {
-  "common": {
-    "pipeWarnTime": 5000
-  },
-  "cluster": {
-    "privileged": true
-  }
-}
-```
-
-Once the plugin installed and configured, you can start as many Kuzzle instances as you need, and they will automatically synchronize and work together.
-
----
-
-## Extended API
-
-The cluster plugin adds an [API controller](/core/2/guides/write-plugins/plugins-features#api) named `cluster`, with the following actions defined:
-
-### health
-
-The `cluster:health` API action returns the cluster health status.
-
-#### HTTP
-
-```
-GET http://<host>:<port>/_plugin/cluster/health
-```
-
-#### Other Protocols
-
-```js
-{
-  "controller": "cluster/cluster",
-  "action": "health"
-}
-```
-
-#### Result
-
-```js
-{
-  "status": 200,
-  "error": null,
-  "controller": "cluster/cluster",
-  "action": "health",
-  "result": "ok"
-}
-````
-
-### reset
-
-The `cluster:reset` API action resets the cluster state and forces a resync.
-
-#### HTTP
-
-```
-POST http://<host>:<port>/_plugin/cluster/reset
-```
-
-#### Other Protocols
-
-```js
-{
-  "controller": "cluster/cluster",
-  "action": "reset"
-}
-```
-
-#### Result
-
-```js
-{
-  "status": 200,
-  "error": null,
-  "controller": "cluster/cluster",
-  "action": "reset",
-  "result": "ok"
-}
-````
-
-### status
-
-The `cluster:status` API action returns the current cluster status.
-
-#### HTTP
-
-```
-GET http://<host>:<port>/_plugin/cluster/status
-```
-
-#### Other Protocols
-
-```js
-{
-  "controller": "cluster/cluster",
-  "action": "status"
-}
-```
-
-#### Result
-
-```js
-{
-  "status": 200,
-  "error": null,
-  "controller": "cluster/cluster",
-  "action": "status",
-  "result": {
-    "count": 3,
-    "current": {
-      "pub": "tcp://<kuzzle node IP>:7511",
-      "router": "tcp://<kuzzle node IP>:7510",
-      "ready": true
-    },
-    "pool": [
-      {
-        "pub": "tcp://<kuzzle node IP>:7511",
-        "router": "tcp://<kuzzle node IP>:7510",
-        "ready": true
-      },
-      {
-        "pub": "tcp://<kuzzle node IP>:7511",
-        "router": "tcp://<kuzzle node IP>:7510",
-        "ready": true
-      }
-    ]
-  }
-}
-```
-
----
-
-## How a Kuzzle cluster works
-
-### Auto-discovery and Synchronization
-
-Kuzzle nodes are synchronized by maintaining their state in a [Redis](https://redis.io) server instance, and they constantly exchange information using the [0mq](http://zeromq.org) messaging library.
-
-What this means is that, to scale horizontally, all a Kuzzle node needs is a reachable Redis instance, and to be able to connect to other nodes.  
-When these conditions are met, a Kuzzle node with the cluster plugin installed only needs to be started to automatically synchronize its state and to work together with the other nodes.
-
-Check our [Kuzzle configuration guide](/core/2/guides/advanced/configuration) to know how to make Kuzzle connect to specific Redis instances.
-
-### Load Balancing
-
-A load balancer in front of a Kuzzle cluster is hugely advised, to dispatch user connections to different Kuzzle nodes.  
-Once assigned to a Kuzzle node, a client stays attached to it until their connection drop; when needed, a Kuzzle node automatically dispatches valuable information to other nodes.
-
-Any load balancer will do. For instance, our development stack uses nginx for the sake of example.
+* Using the cluster plugin will now display a deprecation notice in Kuzzle's logs;
+* If present, the cluster plugin configuration will be interpreted and applied to the native cluster configuration;
+* API routes exposed by the legacy plugin will stay available, their response being reconstructed from the native cluster data. Users might want to migrate to the new [cluster:status](/core/2/api/controllers/cluster/status) native API route for a more detailed view of their cluster health.
 
