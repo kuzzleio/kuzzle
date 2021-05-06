@@ -137,7 +137,7 @@ describe('core/network/protocols/websocket', () => {
   describe('upgrade connection', () => {
     beforeEach(() => httpWs.init(entryPoint));
 
-    it('should upgrade the connection and forward and store the cookie if present when upgrading', () => {
+    it('should upgrade the connection and store the cookie in the UserData if present', () => {
       const response = new MockHttpResponse();
       const request = new MockHttpRequest(
         '',
