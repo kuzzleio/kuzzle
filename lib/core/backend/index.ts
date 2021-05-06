@@ -1,5 +1,21 @@
+export * from './applicationManager';
+
 export * from './backend';
 
 export * from './backendCluster';
 
+export * from './backendConfig';
+
+export * from './backendController';
+
+export * from './backendHook';
+
+export * from './backendPipe';
+
 export * from './backendPlugin';
+
+export * from './backendStorage';
+
+export * from './backendVault';
+
+export * from './internalLogger';

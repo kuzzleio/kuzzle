@@ -1,12 +1,8 @@
 'use strict';
 
-const util = require('util');
-
-const _ = require('lodash');
 const should = require('should');
 const sinon = require('sinon');
 const mockrequire = require('mock-require');
-const { Client: ElasticsearchClient } = require('@elastic/elasticsearch');
 
 const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -70,6 +66,7 @@ describe('Backend', () => {
       application.version = '42.21.84';
       application._vaultKey = 'vaultKey';
       application._secretsFile = 'secretsFile';
+      application._installationsWaitingList = [{ id: 'foo', handler: () => {} }];
       application._plugins = {};
       application._support = {
         mappings: 'mappings',
@@ -96,6 +93,7 @@ describe('Backend', () => {
       should(options.mappings).be.eql(application._support.mappings);
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
+      should(options.installations).be.eql(application._installationsWaitingList);
     });
 
     it('should only submit the configured embedded plugins', async () => {
@@ -116,321 +114,13 @@ describe('Backend', () => {
     });
   });
 
-  describe('BackendPipe#register', () => {
-    it('should registers a new pipe', () => {
-      const handler = async () => {};
-      const handler_bis = async () => {};
-
-      application.pipe.register('kuzzle:state:ready', handler);
-      application.pipe.register('kuzzle:state:ready', handler_bis);
-
-      should(application._pipes['kuzzle:state:ready']).have.length(2);
-      should(application._pipes['kuzzle:state:ready'][0]).be.eql(handler);
-      should(application._pipes['kuzzle:state:ready'][1]).be.eql(handler_bis);
+  describe('#properties', () => {
+    it('should exposes kerror', () => {
+      should(application.kerror.get).be.a.Function();
+      should(application.kerror.reject).be.a.Function();
+      should(application.kerror.getFrom).be.a.Function();
+      should(application.kerror.wrap).be.a.Function();
     });
-
-    it('should throw an error if the pipe handler is invalid', () => {
-      should(() => {
-        application.pipe.register('kuzzle:state:ready', {});
-      }).throwError({ id: 'plugin.assert.invalid_pipe' });
-    });
-
-    it('should throw an error if the application is already started without opt-in dynamic option', () => {
-      application.started = true;
-
-      should(() => {
-        application.pipe.register('kuzzle:state:ready', async () => {});
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-
-    it('should allows to register pipe at runtime with opt-in dynamic option', () => {
-      const handler = async () => {};
-      application.started = true;
-      global.kuzzle = {
-        pluginsManager: {
-          registerPipe: sinon.stub().returns('pipe-unique-id')
-        }
-      };
-
-      const pipeId = application.pipe.register(
-        'kuzzle:state:ready',
-        handler,
-        { dynamic: true });
-
-      should(pipeId).be.eql('pipe-unique-id');
-      should(global.kuzzle.pluginsManager.registerPipe).be.calledWith(
-        global.kuzzle.pluginsManager.application,
-        'kuzzle:state:ready',
-        handler);
-    });
-  });
-
-  describe('BackendPipe#unregister', () => {
-    it('should allows to unregister a dynamic pipe', () => {
-      application.started = true;
-      global.kuzzle = {
-        pluginsManager: {
-          unregisterPipe: sinon.stub()
-        }
-      };
-
-      application.pipe.unregister('unique-pipe-id');
-
-      should(global.kuzzle.pluginsManager.unregisterPipe)
-        .be.calledWith('unique-pipe-id');
-    });
-
-    it('should throw an error if the application is not started', () => {
-      application.started = false;
-
-      should(() => {
-        application.pipe.unregister('unique-pipe-id');
-      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
-    });
-  });
-
-  describe('HookManager#register', () => {
-    it('should registers a new hook', () => {
-      const handler = async () => {};
-      const handler_bis = async () => {};
-
-      application.hook.register('kuzzle:state:ready', handler);
-      application.hook.register('kuzzle:state:ready', handler_bis);
-
-      should(application._hooks['kuzzle:state:ready']).have.length(2);
-      should(application._hooks['kuzzle:state:ready'][0]).be.eql(handler);
-      should(application._hooks['kuzzle:state:ready'][1]).be.eql(handler_bis);
-    });
-
-    it('should throw an error if the hook handler is invalid', () => {
-      should(() => {
-        application.hook.register('kuzzle:state:ready', {});
-      }).throwError({ id: 'plugin.assert.invalid_hook' });
-    });
-
-    it('should throw an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.hook.register('kuzzle:state:ready', async () => {});
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-  });
-
-  describe('ConfigManager#set', () => {
-    it('should allows to set a configuration value', () => {
-      application.config.set('server.http.enabled', false);
-
-      should(application.config.content.server.http.enabled).be.false();
-    });
-
-    it('should throw an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.config.set('server.http.enabled', false);
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-  });
-
-  describe('ConfigManager#merge', () => {
-    it('should allows to merge configuration values', () => {
-      application.config.merge({
-        server: { http: { enabled: false } }
-      });
-
-      should(application.config.content.server.http.enabled).be.false();
-    });
-
-    it('should throw an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.config.merge({
-          server: { http: { enabled: false } }
-        });
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-  });
-
-  describe('ControllerManager#register', () => {
-    const getDefinition = () => ({
-      actions: {
-        sayHello: {
-          handler: async request => `Hello, ${request.input.args.name}`,
-          http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
-        },
-        sayBye: {
-          handler: async request => `Bye ${request.input.args.name}!`,
-        }
-      }
-    });
-    let definition;
-
-    beforeEach(() => {
-      definition = getDefinition();
-    });
-
-    it('should registers a new controller definition', () => {
-      application.controller.register('greeting', definition);
-
-      should(application._controllers.greeting).not.be.undefined();
-      should(application._controllers.greeting.actions.sayHello)
-        .be.eql(definition.actions.sayHello);
-    });
-
-    it('should rejects if the controller definition is invalid', () => {
-      definition.actions.sayHello.handler = {};
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-
-
-      definition = getDefinition();
-      definition.actions.sayHello.htto = [];
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-
-      definition = getDefinition();
-      definition.actions.sayHello.http = [{ verp: 'POST', path: '/url' }];
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-    });
-
-    it('should rejects if the name is already taken', () => {
-      application.controller.register('greeting', definition);
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-    });
-  });
-
-  describe('ControllerManager#use', () => {
-    class GreetingController {
-      constructor () {
-        this.definition = {
-          actions: {
-            sayHello: {
-              handler: this.sayHello
-            },
-          }
-        };
-      }
-
-      async sayHello () {}
-    }
-
-    let controller;
-
-    beforeEach(() => {
-      controller = new GreetingController();
-    });
-
-    it('should uses a new controller instance', () => {
-      application.controller.use(controller);
-
-      should(application._controllers.greeting).not.be.undefined();
-      should(application._controllers.greeting.actions.sayHello.handler.name)
-        .be.eql('bound sayHello');
-    });
-
-    it('should uses the name property for controller name', () => {
-      controller.name = 'bonjour';
-      application.controller.use(controller);
-
-      should(application._controllers.bonjour).not.be.undefined();
-    });
-
-    it('should rejects if the controller instance is invalid', () => {
-      controller.definition.actions.sayHello.handler = {};
-
-      should(() => {
-        application.controller.use(controller);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-    });
-
-    it('should rejects if the name is already taken', () => {
-      application.controller.use(controller);
-      const controller2 = new GreetingController();
-
-      should(() => {
-        application.controller.use(controller2);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-    });
-  });
-
-  describe('BackendVault#key', () => {
-    it('should sets the vault key', () => {
-      application.vault.key = 'unforeseen-consequences';
-
-      should(application._vaultKey).be.eql('unforeseen-consequences');
-    });
-
-    it('should throw an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.vault.key = 'unforeseen-consequences';
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-  });
-
-  describe('BackendVault#file', () => {
-    it('should sets the vault file', () => {
-      application.vault.file = 'xen.bmp';
-
-      should(application._secretsFile).be.eql('xen.bmp');
-    });
-
-    it('should throw an error if the application is already started', () => {
-      application.started = true;
-
-      should(() => {
-        application.vault.file = 'xen.bmp';
-      }).throwError({ id: 'plugin.runtime.already_started' });
-    });
-  });
-
-  describe('BackendVault.secrets', () => {
-    it('should exposes Kuzzle vault secrets when application is started', () => {
-      application.started = true;
-      _.set(application, '_kuzzle.vault.secrets', { beware: 'vortigaunt' });
-
-      should(application.vault.secrets).be.eql({ beware: 'vortigaunt' });
-    });
-  });
-
-  describe('Logger', () => {
-    describe('#_log', () => {
-      it('should exposes log methods and call kuzzle ones', async () => {
-        await application.start();
-
-        application.log.debug('debug');
-        application.log.info('info');
-        application.log.warn('warn');
-        application.log.error('error');
-        application.log.verbose({ info: 'verbose' });
-
-        should(global.kuzzle.log.debug).be.calledWith(util.inspect('debug'));
-        should(global.kuzzle.log.info).be.calledWith(util.inspect('info'));
-        should(global.kuzzle.log.warn).be.calledWith(util.inspect('warn'));
-        should(global.kuzzle.log.error).be.calledWith(util.inspect('error'));
-        should(global.kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
-      });
-    });
-  });
-
-  it('should exposes kerror', () => {
-    should(application.kerror.get).be.a.Function();
-    should(application.kerror.reject).be.a.Function();
-    should(application.kerror.getFrom).be.a.Function();
-    should(application.kerror.wrap).be.a.Function();
   });
 
   describe('#trigger', () => {
@@ -453,29 +143,25 @@ describe('Backend', () => {
     });
   });
 
-  describe('StorageManager#StorageClient', () => {
-    it('should allows to construct an ES StorageClient', async () => {
-      await application.start();
-      global.kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
-      should(application.storage.StorageClient).be.a.Function();
+  describe('#install', () => {
+    let handler;
 
-      const client = new application.storage.StorageClient({ maxRetries: 42 });
-      should(client).be.instanceOf(ElasticsearchClient);
-      should(client.connectionPool.connections[0].url.toString()).be.eql('http://es:9200/');
-      should(client.helpers.maxRetries).be.eql(42);
+    beforeEach(async () => {
+      handler = sinon.stub().resolves();
     });
-  });
 
-  describe('StorageManager#storageClient', () => {
-    it('should allows lazily access an ES Client', async () => {
+    it('should store id, handler and description in the waiting list', () => {
+      application.install('id', handler, 'description');
+
+      should(application._installationsWaitingList).match([{ id: 'id', handler, description: 'description' }]);
+      should(handler).not.be.called();
+    });
+
+    it('should throws if the app is already running', async () => {
       await application.start();
 
-      global.kuzzle.config.services.storageEngine.client.node = 'http://es:9200';
-      should(application.storage._client).be.null();
-
-      should(application.storage.storageClient).be.instanceOf(ElasticsearchClient);
-      should(application.storage.storageClient.connectionPool.connections[0].url.toString())
-        .be.eql('http://es:9200/');
+      should(() => application.install('id', handler))
+        .throwError({ id: 'plugin.runtime.already_started' });
     });
   });
 });
