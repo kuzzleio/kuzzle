@@ -67,7 +67,7 @@
         "version_mismatch": {
           "description": "The version of the target Elasticsearch is not compatible with this version of Kuzzle",
           "code": 13,
-          "message": "Your elasticsearch version is %s; Only elasticsearch version 5 is currently supported.",
+          "message": "Your elasticsearch version is %s: this version is not compatible with this version of Kuzzle",
           "class": "InternalError"
         },
         "unknown_scroll_id": {
