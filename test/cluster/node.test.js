@@ -640,6 +640,30 @@ describe('#Cluster Node', () => {
       should(node.command.getFullState).not.called();
       should(node.fullState.loadFullState).not.called();
       should(node.heartbeatTimer).not.be.null();
+      should(node.idCardHandler.addNode).not.called();
+    });
+
+    it('should abort if another node has the same IP as this one', async () => {
+      const nodes = [
+        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
+        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
+        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+      ];
+
+      node.idCardHandler.getRemoteIdCards.resolves(nodes);
+      node.ip = '2.3.4.2';
+
+      await node.handshake();
+
+      should(node.idCardHandler.createIdCard).calledOnce();
+      should(node.idCardHandler.getRemoteIdCards).calledOnce();
+
+      should(node.command.getFullState).not.called();
+      should(node.command.broadcastHandshake).not.called();
+      should(node.fullState.loadFullState).not.called();
+
+      should(kuzzle.log.error).calledWithMatch(/Another node share the same IP address as this one \(2.3.4.2\): baz/);
+      should(kuzzle.shutdown).calledOnce();
     });
 
     it('should be able to connect to existing nodes and get a fullstate', async () => {
@@ -652,6 +676,11 @@ describe('#Cluster Node', () => {
 
       node.command.getFullState.resolves(fullstate);
       node.idCardHandler.getRemoteIdCards.resolves(nodes);
+      node.command.broadcastHandshake.resolves({
+        bar: {},
+        baz: {},
+        qux: {},
+      });
 
       await node.handshake();
 
@@ -671,6 +700,11 @@ describe('#Cluster Node', () => {
       should(node.command.broadcastHandshake).calledOnce().calledWith(nodes);
       should(node.fullState.loadFullState).calledOnce().calledWith(fullstate);
       should(node.heartbeatTimer).not.be.null();
+
+      should(node.idCardHandler.addNode).calledThrice();
+      should(node.idCardHandler.addNode).calledWith('bar');
+      should(node.idCardHandler.addNode).calledWith('baz');
+      should(node.idCardHandler.addNode).calledWith('qux');
     });
 
     it('should retry getting a fullstate if unable to get one the first time', async () => {
@@ -685,6 +719,11 @@ describe('#Cluster Node', () => {
 
       node.command.getFullState.onFirstCall().resolves(null);
       node.command.getFullState.onSecondCall().resolves(fullstate);
+      node.command.broadcastHandshake.resolves({
+        bar: {},
+        baz: {},
+        qux: {},
+      });
 
       node.idCardHandler.getRemoteIdCards.resolves(nodes);
 
@@ -707,6 +746,11 @@ describe('#Cluster Node', () => {
       should(node.command.broadcastHandshake).calledOnce().calledWith(nodes);
       should(node.heartbeatTimer).not.be.null();
 
+      should(node.idCardHandler.addNode).calledThrice();
+      should(node.idCardHandler.addNode).calledWith('bar');
+      should(node.idCardHandler.addNode).calledWith('baz');
+      should(node.idCardHandler.addNode).calledWith('qux');
+
       should(kuzzle.log.warn).calledWithMatch(/Retrying/);
     });
 
@@ -725,6 +769,7 @@ describe('#Cluster Node', () => {
 
       should(node.idCardHandler.createIdCard).calledOnce();
       should(node.idCardHandler.getRemoteIdCards).calledTwice();
+      should(node.idCardHandler.addNode).not.called();
 
       should(node.command.getFullState).calledTwice();
       should(node.command.broadcastHandshake).not.called();
@@ -771,6 +816,10 @@ describe('#Cluster Node', () => {
       should(node.command.broadcastHandshake).calledOnce().calledWith(nodes);
       should(node.fullState.loadFullState).calledOnce().calledWith(fullstate);
       should(node.heartbeatTimer).not.be.null();
+
+      should(node.idCardHandler.addNode).calledTwice();
+      should(node.idCardHandler.addNode).calledWith('bar');
+      should(node.idCardHandler.addNode).calledWith('qux');
     });
 
     it('should shutdown if unable to complete handshake before a timeout', async () => {

@@ -25,6 +25,8 @@ describe('core/network/httpRouter', () => {
     kuzzleMock = new KuzzleMock();
     router = new Router();
     handler = sinon.stub().yields();
+    kuzzleMock.config.internal.allowAllOrigins = true;
+    kuzzleMock.config.internal.cookieAuthentication = false;
   });
 
   afterEach(() => {
@@ -77,7 +79,6 @@ describe('core/network/httpRouter', () => {
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'gzip,deflate,identity',
-        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD',
         'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
       });
@@ -90,14 +91,12 @@ describe('core/network/httpRouter', () => {
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'identity',
-        'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD',
         'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
       });
     });
 
     it('should take the value of the CORS headers from the config file, if set', () => {
-      kuzzleMock.config.http.accessControlAllowOrigin = 'foobar';
       kuzzleMock.config.http.accessControlAllowMethods = 'METHOD';
       kuzzleMock.config.http.accessControlAllowHeaders = 'headers';
 
@@ -106,10 +105,8 @@ describe('core/network/httpRouter', () => {
       should(router.defaultHeaders).eql({
         'content-type': 'application/json',
         'Accept-Encoding': 'gzip,deflate,identity',
-        'Access-Control-Allow-Origin': 'foobar',
         'Access-Control-Allow-Methods': 'METHOD',
         'Access-Control-Allow-Headers': 'headers',
-        'Access-Control-Allow-Credentials': 'true'
       });
     });
   });
@@ -300,9 +297,13 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should trigger an event when handling an OPTIONS HTTP method', done => {
+      kuzzleMock.config.internal.allowAllOrigins = false;
+      kuzzleMock.config.http.accessControlAllowOrigin = ['foo'];
+
       const req = new MockHttpRequest('options', '/', '', {
         'content-type': 'application/json',
-        foo: 'bar'
+        foo: 'bar',
+        origin: 'foo',
       });
 
       const httpMessage = new HttpMessage(connection, req);
@@ -320,7 +321,11 @@ describe('core/network/httpRouter', () => {
               requestId: 'requestId',
               result: {}
             },
-            headers: router.defaultHeaders
+            headers: {
+              ...router.defaultHeaders,
+              'Access-Control-Allow-Origin': 'foo',
+              'Vary': 'Origin',
+            }
           });
 
           should(result.input.headers).match(httpMessage.headers);
@@ -338,9 +343,13 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should register a default / route with the HEAD verb', done => {
+      kuzzleMock.config.internal.allowAllOrigins = false;
+      kuzzleMock.config.http.accessControlAllowOrigin = ['foo'];
+      
       const req = new MockHttpRequest('head', '/', '', {
         'content-type': 'application/json',
         foo: 'bar',
+        origin: 'foo',
       });
       const httpMessage = new HttpMessage(connection, req);
 
@@ -357,7 +366,11 @@ describe('core/network/httpRouter', () => {
               requestId: 'requestId',
               result: {}
             },
-            headers: router.defaultHeaders
+            headers: {
+              ...router.defaultHeaders,
+              'Access-Control-Allow-Origin': 'foo',
+              'Vary': 'Origin',
+            }
           });
 
           should(result.input.headers).match(httpMessage.headers);
@@ -370,10 +383,14 @@ describe('core/network/httpRouter', () => {
     });
 
     it('should return an error if the HTTP method is unknown', done => {
+      kuzzleMock.config.internal.allowAllOrigins = false;
+      kuzzleMock.config.http.accessControlAllowOrigin = ['foo'];
+
       router.post('/foo/bar', handler);
 
       const req = new MockHttpRequest('foobar', '/foo/bar', '', {
         'content-type': 'application/json',
+        origin: 'foo',
       });
       const httpMessage = new HttpMessage(connection, req);
       httpMessage.content = { foo: 'bar' };
@@ -395,7 +412,11 @@ describe('core/network/httpRouter', () => {
                 requestId: 'requestId',
                 result: null
               },
-              headers: router.defaultHeaders
+              headers: {
+                ...router.defaultHeaders,
+                'Access-Control-Allow-Origin': 'foo',
+                'Vary': 'Origin',
+              }
             });
           done();
         }

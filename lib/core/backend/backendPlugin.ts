@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import { kebabCase } from '../../util/inflector';
+import { Inflector } from '../../util/inflector';
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { Plugin } from '../../types';
-import { ApplicationManager } from './backend';
+import { ApplicationManager } from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -58,7 +58,7 @@ export class BackendPlugin extends ApplicationManager {
     }
 
     const name: string = options.name
-      || kebabCase(plugin.constructor.name.replace('Plugin', ''));
+      || Inflector.kebabCase(plugin.constructor.name.replace('Plugin', ''));
 
     if (! this._application.PluginObject.checkName(name)) {
       throw assertionError.get('invalid_plugin_name', name);

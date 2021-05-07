@@ -15,11 +15,9 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 describe('#Request', () => {
   let rq;
   let nodeEnv;
-  let kuzzle;
 
   beforeEach(() => {
-    // eslint-disable-next-line no-unused-vars
-    kuzzle = new KuzzleMock();
+    new KuzzleMock();
 
     nodeEnv = global.NODE_ENV;
     rq = new Request({});

@@ -51,4 +51,5 @@ lib/types/Global.d.ts
 lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
+lib/util/inflector.js
 features/support/application/functional-tests-app.js

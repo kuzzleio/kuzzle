@@ -158,6 +158,12 @@
           "code": 11,
           "message": "Rejected: this cluster is disabled because there aren't enough nodes connected.",
           "class": "ServiceUnavailableError"
+        },
+        "unauthorized_origin": {
+          "description": "The domain reaching out to Kuzzle is not authorized",
+          "code": 12,
+          "message": "The origin \"%s\" is not authorized.",
+          "class": "UnauthorizedError"
         }
       }
     }

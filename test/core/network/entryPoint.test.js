@@ -48,17 +48,6 @@ describe('lib/core/core/network/entryPoint', () => {
   let httpEventEmitter;
   let EntryPoint;
   let entrypoint;
-  let winstonTransportConsole;
-  let winstonTransportFile;
-  let winstonTransportElasticsearch;
-  let winstonTransportSyslog;
-  let winstonFormatMock = {
-    simple: sinon.stub().returns('format.simple'),
-    json: sinon.stub().returns('format.json'),
-    colorize: sinon.stub().returns('format.colorize'),
-    timestamp: sinon.stub().returns('format.timestamp'),
-    prettyPrint: sinon.stub().returns('format.prettyPrint')
-  };
 
   before(() => {
     sinon.usingPromise(Bluebird);
@@ -66,8 +55,6 @@ describe('lib/core/core/network/entryPoint', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-
-    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     HttpWebSocketMock = FakeWebSocketProtocol;
     MqttMock = FakeMqttProtocol;
@@ -77,26 +64,10 @@ describe('lib/core/core/network/entryPoint', () => {
     sinon.spy(httpEventEmitter, 'on');
     httpEventEmitter.listen = sinon.spy();
 
-    winstonTransportConsole = sinon.spy();
-    winstonTransportElasticsearch = sinon.spy();
-    winstonTransportFile = sinon.spy();
-    winstonTransportSyslog = sinon.spy();
-
     const network = `${root}/lib/core/network`;
     mockrequire(`${network}/protocols/httpwsProtocol`, HttpWebSocketMock);
     mockrequire(`${network}/protocols/mqttProtocol`, MqttMock);
     mockrequire(`${network}/protocols/internalProtocol`, InternalMock);
-
-    mockrequire('winston', {
-      createLogger: sinon.stub(),
-      transports: {
-        Console: winstonTransportConsole,
-        File: winstonTransportFile
-      },
-      format: winstonFormatMock
-    });
-    mockrequire('winston-elasticsearch', winstonTransportElasticsearch);
-    mockrequire('winston-syslog', winstonTransportSyslog);
 
     // Bluebird.map forces a different context, preventing rewire to mock
     // "require"
@@ -121,29 +92,12 @@ describe('lib/core/core/network/entryPoint', () => {
 
     entrypoint = new EntryPoint();
 
-    Object.defineProperty(entrypoint, 'logger', {
-      enumerable: true,
-      value: {
-        info: sinon.spy(),
-        warn: sinon.spy(),
-        error: sinon.spy()
-      }
-    });
-
     for (const Class of [HttpWebSocketMock, MqttMock, InternalMock]) {
       Class.prototype.init = sinon.stub().resolves(true);
     }
-
   });
 
   afterEach(() => {
-    mockrequire.stopAll();
-    for (const stub of ['prettyPrint', 'simple', 'json', 'colorize', 'timestamp']) {
-      winstonFormatMock[stub].resetHistory();
-    }
-  });
-
-  after(() => {
     mockrequire.stopAll();
   });
 
@@ -186,10 +140,10 @@ describe('lib/core/core/network/entryPoint', () => {
         foo: 'bar'
       });
 
-      entrypoint.execute(request, response => {
+      entrypoint.execute({}, request, response => {
         should(entrypoint.logAccess)
           .be.calledOnce()
-          .be.calledWith(request);
+          .be.calledWith({}, request);
 
         should(response)
           .be.eql(request.response.toJSON());
@@ -203,7 +157,7 @@ describe('lib/core/core/network/entryPoint', () => {
       kuzzle.funnel.execute.callsFake((request, cb) => cb(error, request));
 
       const request = new Request({});
-      entrypoint.execute(request, response => {
+      entrypoint.execute({}, request, response => {
         should(response.content.error)
           .be.eql(error);
 
@@ -215,7 +169,7 @@ describe('lib/core/core/network/entryPoint', () => {
       entrypoint.dispatch('shutdown');
 
       const request = new Request({});
-      entrypoint.execute(request, response => {
+      entrypoint.execute({}, request, response => {
         should(response.status).eql(503);
         should(response.content.error)
           .be.an.instanceof(ServiceUnavailableError);
@@ -240,13 +194,10 @@ describe('lib/core/core/network/entryPoint', () => {
     });
 
     it('should call proper methods in order', async () => {
-      entrypoint.initLogger = sinon.spy();
       entrypoint.loadMoreProtocols = sinon.stub().resolves();
       kuzzle.config.server.port = -42;
 
       await entrypoint.startListening();
-
-      should(entrypoint.initLogger).be.calledOnce();
 
       should(entrypoint.protocols.get('websocket').init).be.calledOnce();
       should(entrypoint.protocols.get('mqtt').init).be.calledOnce();
@@ -281,152 +232,6 @@ describe('lib/core/core/network/entryPoint', () => {
       sinon.stub(entrypoint, 'loadMoreProtocols').throws(error);
 
       return should(entrypoint.startListening()).rejectedWith(error);
-    });
-  });
-
-  describe('#initLogger', () => {
-    it('should support all available transports', () => {
-
-      entrypoint.config.logs.transports = [{
-        level: 'level',
-        silent: true,
-        colorize: true,
-        timestamp: true,
-        prettyPrint: true,
-        depth: 'depth',
-        format: 'simple'
-      }];
-      for (let i = 0; i < 3; i++) {
-        entrypoint.config.logs.transports.push(Object.assign({}, entrypoint.config.logs.access));
-      }
-
-      entrypoint.config.logs.transports[0].transport = 'console';
-      entrypoint.config.logs.transports[0].humanReadableUnhandledException = 'humanReadableUnhandledException';
-
-      entrypoint.config.logs.transports[1].transport = 'file';
-      Object.assign(entrypoint.config.logs.transports[1], {
-        filename: 'filename',
-        maxSize: 'maxSize',
-        maxFiles: 'maxFiles',
-        eol: 'eol',
-        logstash: 'logstash',
-        tailable: 'tailable',
-        maxRetries: 'maxRetries',
-        zippedArchive: 'zippedArchive'
-      });
-
-      entrypoint.config.logs.transports[2].transport = 'elasticsearch';
-      Object.assign(entrypoint.config.logs.transports[2], {
-        index: 'index',
-        indexPrefix: 'indexPrefix',
-        indexSuffixPattern: 'indexSuffixPattern',
-        messageType: 'messageType',
-        ensureMappingTemplate: 'ensureMappingTemplate',
-        mappingTemplate: 'mappingTemplate',
-        flushInterval: 'flushInterval',
-        clientOpts: 'clientOpts'
-      });
-
-      entrypoint.config.logs.transports[3].transport = 'syslog';
-      Object.assign(entrypoint.config.logs.transports[3], {
-        host: 'host',
-        port: 'port',
-        protocol: 'protocol',
-        path: 'path',
-        pid: 'pid',
-        facility: 'facility',
-        localhost: 'localhost',
-        type: 'type',
-        app_name: 'app_name',
-        eol: 'eol'
-      });
-
-      entrypoint.initLogger();
-
-      should(winstonTransportConsole)
-        .be.calledOnce()
-        .be.calledWithMatch({
-          level: 'level',
-          silent: true,
-          colorize: 'format.colorize',
-          timestamp: 'format.timestamp',
-          prettyPrint: 'format.prettyPrint',
-          depth: 'depth',
-          format: 'format.simple',
-          humanReadableUnhandledException: 'humanReadableUnhandledException',
-          stderrLevels: ['error', 'debug']
-        });
-
-      should(winstonFormatMock.colorize).calledOnce();
-      should(winstonFormatMock.timestamp).calledOnce();
-      should(winstonFormatMock.prettyPrint).calledOnce();
-      should(winstonFormatMock.simple).calledOnce();
-      // default format, so it should be called 3 times
-      // (we used the "simple" format for the 1st transport)
-      should(winstonFormatMock.json.callCount).be.eql(3);
-    });
-
-    it('should ignore badly configured transports', () => {
-      const
-        config = [{
-          level: 'level',
-          silent: 'silent',
-          colorize: 'colorize',
-          timestamp: 'timestamp',
-          json: 'json',
-          stringify: 'stringify',
-          prettyPrint: 'prettyPrint',
-          depth: 'depth',
-          showLevel: 'showLevel'
-        }];
-
-      entrypoint.config.logs.transports = [Object.assign({}, config)];
-      entrypoint.config.logs.transports.push(Object.assign({}, config));
-
-      entrypoint.config.logs.transports[0].transport = 'foobar';
-      Object.assign(entrypoint.config.logs.transports[0], {
-        index: 'index',
-        indexPrefix: 'indexPrefix',
-        indexSuffixPattern: 'indexSuffixPattern',
-        messageType: 'messageType',
-        ensureMappingTemplate: 'ensureMappingTemplate',
-        mappingTemplate: 'mappingTemplate',
-        flushInterval: 'flushInterval',
-        clientOpts: 'clientOpts'
-      });
-
-      entrypoint.config.logs.transports[1].transport = 'syslog';
-      Object.assign(entrypoint.config.logs.transports[1], {
-        host: 'host',
-        port: 'port',
-        protocol: 'protocol',
-        path: 'path',
-        pid: 'pid',
-        facility: 'facility',
-        localhost: 'localhost',
-        type: 'type',
-        app_name: 'app_name',
-        eol: 'eol'
-      });
-
-      entrypoint.initLogger();
-
-      should(winstonTransportSyslog)
-        .be.calledOnce()
-        .be.calledWithMatch({
-          host: 'host',
-          port: 'port',
-          protocol: 'protocol',
-          path: 'path',
-          pid: 'pid',
-          facility: 'facility',
-          localhost: 'localhost',
-          type: 'type',
-          app_name: 'app_name',
-          eol: 'eol'
-        });
-      should(kuzzle.log.error)
-        .calledWith('Failed to initialize logger transport "foobar": unsupported transport. Skipped.');
     });
   });
 
@@ -643,235 +448,6 @@ describe('lib/core/core/network/entryPoint', () => {
           protocol: 'protocol',
           headers: 'headers'
         });
-    });
-  });
-
-  describe('#logAccess', () => {
-    beforeEach(() => {
-      entrypoint.logger = {
-        info: sinon.spy()
-      };
-      entrypoint.anonymousUserId = '-1';
-    });
-
-    it('should use the request context if the connection has dropped', () => {
-      const request = new Request(
-        {controller: 'controller', action: 'action'},
-        {
-          connectionId: '-1',
-          token: { userId: '-1' },
-          protocol: 'foobar'
-        });
-
-      entrypoint.logAccess(request);
-
-      should(entrypoint.logger.info)
-        .calledOnce()
-        .calledWithMatch(/^- - \(anonymous\) \[.*?\] "DO \/controller\/action FOOBAR" \d{3} \d{3} - -$/);
-    });
-
-    it('should forward the params to the logger when using "logstash" format output', () => {
-      const
-        connection = {foo: 'bar' },
-        request = new Request({foo: 'bar'}, {connectionId: 'connectionId'}),
-        error = new KuzzleInternalError('test');
-
-      error.status = 444;
-      request.setError(error);
-
-      entrypoint._clients.set('connectionId', connection);
-      entrypoint.config.logs.accessLogFormat = 'logstash';
-
-      entrypoint.logAccess(request);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch({
-          connection,
-          request: request.input,
-          extra: null,
-          error: error,
-          status: 444
-        });
-    });
-
-    it('should output combined logs from an http request', () => {
-      const
-        connection = {
-          protocol: 'HTTP/1.1',
-          headers: {
-            authorization: 'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJhZG1pbiIsImlhdCI6MTQ4MjE3MDQwNywiZXhwIjoxNDgyMTg0ODA3fQ.SmLTFuIPsVuA8Pgpf9XONW2RtxcHjQffthNZ5Er4L4s',
-            referer: 'http://referer.com',
-            'user-agent': 'user agent'
-          },
-          ips: ['1.1.1.1', '2.2.2.2']
-        },
-        extra = {
-          url: 'url',
-          method: 'METHOD'
-        },
-        request = new Request({
-          index: 'index',
-          collection: 'collection'
-        }, {
-          connectionId: 'connectionId'
-        });
-
-      request.status = 444;
-
-      entrypoint._clients.set('connectionId', connection);
-      entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint.config.logs.accessLogIpOffset = 1;
-
-      entrypoint.logAccess(request, extra);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch(/^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 357 "http:\/\/referer.com" "user agent"$/);
-    });
-
-    it('should extract the user from Basic auth header', () => {
-      const
-        connection = {
-          protocol: 'HTTP/1.0',
-          headers: {
-            authorization: 'Zm9vOmJhcg==' // base64('foo:bar')
-          },
-          ips: ['1.1.1.1']
-        },
-        extra = {
-          url: 'url',
-          method: 'GET'
-        },
-        request = new Request({}, {connectionId: 'connectionId'}),
-        result = {
-          raw: true,
-          content: 'test'
-        };
-
-      request.setResult({foo: 'bar'}, result);
-
-      entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint._clients.set('connectionId', connection);
-
-      entrypoint.logAccess(request, extra);
-
-      should(entrypoint.logger.info)
-        .be.calledWithMatch(/^1\.1\.1\.1 - foo \[/);
-    });
-
-    it('should extract the user from a JWT', () => {
-      const
-        connection = {
-          protocol: 'websocket',
-          headers: {
-          },
-          ips: ['ip']
-        },
-        request = new Request({
-          controller: 'controller',
-          action: 'action',
-          jwt: 'token.eyJfaWQiOiJmb28ifQ==' // base64("{'_id':'foo'}")
-        }, {connection});
-
-      entrypoint.logAccess(request);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch(/^ip - foo \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action WEBSOCKET" \d+ \d+ - -$/);
-    });
-
-    it('should handle the case of a user that cannot be extracted from http headers', () => {
-      const
-        connection = {
-          protocol: 'HTTP/1.0',
-          headers: {
-            authorization: 'Bearer invalid'
-          },
-          ips: ['ip']
-        },
-        extra = {
-          url: 'url',
-          method: 'GET'
-        },
-        request = new Request({}, {connectionId: 'connectionId'}),
-        result = {
-          raw: true,
-          status: 300,
-          content: 'test'
-        };
-
-      request.setResult({foo: 'bar'}, result);
-
-      entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint._clients.set('connectionId', connection);
-
-      entrypoint.logAccess(request, extra);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch(/^ip - - \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "GET url HTTP\/1.0" 300 154 - -$/);
-    });
-
-    it('should handle the case of a user that cannot be extracted from a jwt', () => {
-      const
-        connection = {
-          protocol: 'websocket',
-          headers: {},
-          ips: ['ip']
-        },
-        request = new Request({
-          timestamp: 'timestamp',
-          requestId: 'requestId',
-          jwt: 'invalid',
-          controller: 'controller',
-          action: 'action',
-          index: 'index',
-          collection: 'collection',
-          _id: 'id',
-          foo: 'bar'
-        }, {
-          connectionId: 'connectionId'
-        }),
-        result = {
-          raw: true,
-          content: 'test'
-        };
-
-      request.setResult({foo: 'bar'}, result);
-
-      entrypoint.config.logs.accessLogFormat = 'combined';
-      entrypoint._clients.set('connectionId', connection);
-
-      entrypoint.logAccess(request);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch(/^ip - - \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection\/id\?timestamp=timestamp&requestId=requestId&foo=bar WEBSOCKET" 200 127 - -$/);
-    });
-
-    it('should use the already verified user from the request, if available', () => {
-      const request = new Request({
-        controller: 'controller',
-        action: 'action',
-        index: 'index',
-        collection: 'collection'
-      }, {
-        token: {
-          userId: 'foobar'
-        },
-        connection: {
-          protocol: 'websocket',
-          headers: {},
-          ips: ['ip']
-        }
-      });
-
-      entrypoint.logAccess(request);
-
-      should(entrypoint.logger.info)
-        .be.calledOnce()
-        .be.calledWithMatch(/^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 369 - -$/);
     });
   });
 

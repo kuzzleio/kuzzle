@@ -20,6 +20,7 @@
  */
 
 import * as uuid from 'uuid';
+import { nanoid } from 'nanoid';
 import { JSONObject } from 'kuzzle-sdk';
 
 import { RequestInput } from './requestInput';
@@ -59,7 +60,7 @@ export class KuzzleRequest {
   public id: string;
 
   constructor (data: any, options: any) {
-    this[_internalId] = uuid.v4();
+    this[_internalId] = nanoid();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
     this[_context] = new RequestContext(options);
@@ -74,7 +75,7 @@ export class KuzzleRequest {
 
     this.id = data.requestId
       ? assert.assertString('requestId', data.requestId)
-      : uuid.v4();
+      : nanoid();
 
     this[_timestamp] = data.timestamp || Date.now();
 
@@ -214,6 +215,8 @@ export class KuzzleRequest {
 
   /**
    * Sets the request result and status
+   *
+   * @deprecated Use request.response.configure instead
    *
    * @param result Request result. Will be converted to JSON unless `raw` option is set to `true`
    * @param options Additional options
