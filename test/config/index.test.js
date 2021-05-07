@@ -233,6 +233,21 @@ describe('lib/config/index.js', () => {
   });
 
   describe('#checkHttpOptions', () => {
+
+    it('should throw if "accessControlAllowOrigin" is not an array or a string', () => {
+      for (const bad of [null, 123, 0, true] ) {
+        mockedConfigContent = getcfg({
+          http: {
+            accessControlAllowOrigin: bad
+          }
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.load())
+          .throw(`[http] "accessControlAllowOrigin" parameter: invalid value "${bad}" (array or string expected)`);
+      }
+    });
+
     it('should throw if "enabled" is not a boolean', () => {
       for (const bad of [null, 'foo', 123, 0, [], {}] ) {
         mockedConfigContent = getcfg({
@@ -377,6 +392,57 @@ describe('lib/config/index.js', () => {
         should(() => config.load())
           .throw(`[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`);
       }
+    });
+  });
+
+  describe('#preprocessHttpOptions', async () => {
+    it('should convert string separated coma to an array for accessControlAllowOrigin', () => {
+      mockedConfigContent = getcfg({
+        http: {
+          accessControlAllowOrigin: 'foo, bar'
+        }
+      });
+
+      config.load();
+
+      should(mockedConfigContent.http.accessControlAllowOrigin).be.eql([
+        'foo',
+        'bar'
+      ]);
+    });
+
+    it('should set internal cookieAuthentication to false if * is present in accessControlAllowOrigin', () => {
+      mockedConfigContent = getcfg({
+        http: {
+          accessControlAllowOrigin: 'foo, bar, *'
+        }
+      });
+
+      const cfg = config.load();
+
+      should(cfg.http.accessControlAllowOrigin).be.eql([
+        'foo',
+        'bar',
+        '*'
+      ]);
+      should(cfg.internal.cookieAuthentication).be.false();
+    });
+
+    it('should set internal allowAllOrigins to true if * is present in accessControlAllowOrigin', () => {
+      mockedConfigContent = getcfg({
+        http: {
+          accessControlAllowOrigin: 'foo, bar, *'
+        }
+      });
+
+      const cfg = config.load();
+
+      should(cfg.http.accessControlAllowOrigin).be.eql([
+        'foo',
+        'bar',
+        '*'
+      ]);
+      should(cfg.internal.allowAllOrigins).be.true();
     });
   });
 });

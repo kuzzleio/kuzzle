@@ -35,6 +35,9 @@ describe('core/network/protocols/http', () => {
     entryPoint = new EntryPointMock({
       maxRequestSize: '1MB',
       port: 7512,
+      http: {
+        accessControlAllowOrigin: 'foo'
+      },
       protocols: {
         http: {
           allowCompression: true,
@@ -51,6 +54,11 @@ describe('core/network/protocols/http', () => {
       }
     });
 
+    kuzzle.config.http.accessControlAllowOrigin = [
+      'foo'
+    ];
+    kuzzle.config.internal.allowAllOrigins = false;
+    kuzzle.config.internal.cookieAuthentication = true;
     httpWs = new HttpWs();
   });
 
@@ -78,7 +86,13 @@ describe('core/network/protocols/http', () => {
       await httpWs.init(entryPoint);
 
       connection = new ClientConnection('http', ['1.2.3.4'], 'foo');
-      const req = new uWSMock.MockHttpRequest();
+      const req = new uWSMock.MockHttpRequest(
+        '',
+        '',
+        '',
+        {
+          origin: 'foo'
+        });
       message = new HttpMessage(connection, req);
     });
 
@@ -104,7 +118,7 @@ describe('core/network/protocols/http', () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from('Access-Control-Allow-Origin'),
-        Buffer.from(kuzzle.config.http.accessControlAllowOrigin));
+        Buffer.from('foo'));
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from('Content-Type'),
@@ -408,7 +422,7 @@ describe('core/network/protocols/http', () => {
       result.setResult('yo');
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foo'});
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -430,7 +444,7 @@ describe('core/network/protocols/http', () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from('Access-Control-Allow-Origin'),
-        Buffer.from(kuzzle.config.http.accessControlAllowOrigin));
+        Buffer.from('foo'));
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from('Content-Type'),
@@ -467,7 +481,7 @@ describe('core/network/protocols/http', () => {
       );
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {});
+      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foobar'});
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -506,7 +520,13 @@ describe('core/network/protocols/http', () => {
       should(response.writeHeader)
         .not.be.calledWithMatch(
           Buffer.from('Access-Control-Allow-Origin'),
-          Buffer.from(kuzzle.config.http.accessControlAllowOrigin)
+          Buffer.from('foobar')
+        );
+      
+      should(response.writeHeader)
+        .not.be.calledWithMatch(
+          Buffer.from('Vary'),
+          Buffer.from('Origin')
         );
 
       should(response.writeHeader)
