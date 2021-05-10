@@ -266,6 +266,12 @@
           "code": 20,
           "message": "%s",
           "class": "UnauthorizedError"
+        },
+        "missing_optional_method": {
+          "description": "An optional method has not been implemented for this strategy",
+          "code": 21,
+          "message": "%s method is optional. The %s strategy did not implement it yet.",
+          "class": "NotFoundError"
         }
       }
     },

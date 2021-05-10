@@ -74,6 +74,7 @@ description: Error codes definitions
 | plugin.strategy.unauthorized_removal<br/><pre>0x04030012</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot remove strategy %s: owned by another plugin. | Tried to remove a strategy owned by another plugin |
 | plugin.strategy.strategy_not_found<br/><pre>0x04030013</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Cannot remove strategy %s: strategy does not exist. | Attempted to remove a non-existent authentication strategy |
 | plugin.strategy.missing_user<br/><pre>0x04030014</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s | A strategy plugin approved credentials without providing a user object to Kuzzle |
+| plugin.strategy.missing_optional_method<br/><pre>0x04030015</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | %s method is optional. The %s strategy did not implement it yet. | An optional method has not been implemented for this strategy |
 
 ---
 
