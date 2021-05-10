@@ -338,10 +338,12 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
     it('should forward the client payload to kuzzle and respond the client back', () => {
       entrypoint.execute.yields({ content: 'response' });
 
-      protocol.connections.set(fakeClient, {
+      const connection = {
         id: fakeClient.id,
         protocol: 'mqtt',
-      });
+      };
+
+      protocol.connections.set(fakeClient, connection);
 
       protocol.onMessage(
         {
@@ -352,7 +354,9 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
 
       should(entrypoint.execute).be.calledOnce();
 
-      const request = entrypoint.execute.firstCall.args[0];
+      should(entrypoint.execute.firstCall.args[0]).eql(connection);
+
+      const request = entrypoint.execute.firstCall.args[1];
       should(request.serialize()).match({
         data: {
           foo: 'bar'

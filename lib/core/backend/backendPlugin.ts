@@ -23,7 +23,7 @@ import { Inflector } from '../../util/inflector';
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { Plugin } from '../../types';
-import { ApplicationManager } from './backend';
+import { ApplicationManager } from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');

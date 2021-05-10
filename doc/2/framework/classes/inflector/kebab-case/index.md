@@ -7,7 +7,7 @@ description: Inflector class kebabCase() method
 
 # kebabCase
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.12.0" />
 
 Converts a string to kebab-case.
 

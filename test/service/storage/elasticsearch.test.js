@@ -1396,7 +1396,7 @@ describe('Test: ElasticSearch service', () => {
     let query;
     let changes;
     let request;
-  
+
     beforeEach(() => {
       query = {
         match: { foo: 'bar' }
@@ -3703,7 +3703,7 @@ describe('Test: ElasticSearch service', () => {
       toImport[1]._source.default.country = 'Vietnam';
 
       const result = await elasticsearch.mUpsert(index, collection, documents);
-    
+
       should(elasticsearch._mExecute).be.calledWithMatch(
         esRequest,
         toImport,
@@ -4463,12 +4463,31 @@ describe('Test: ElasticSearch service', () => {
 
     describe('#_getESIndex', () => {
       it('return esIndex name for a collection', () => {
-        const
-          publicESIndex = publicES._getESIndex('nepali', 'liia'),
-          internalESIndex = internalES._getESIndex('nepali', 'mehry');
+        const publicESIndex = publicES._getESIndex('nepali', 'liia');
+        const internalESIndex = internalES._getESIndex('nepali', 'mehry');
 
         should(publicESIndex).be.eql('&nepali.liia');
         should(internalESIndex).be.eql('%nepali.mehry');
+      });
+
+      it('should throw if the index is invalid', () => {
+        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
+          // eslint-disable-next-line no-loop-func
+          should(() => publicES._getESIndex(invalid, 'foo'))
+            .throw(BadRequestError, {
+              id: 'services.storage.invalid_index_name',
+            });
+        }
+      });
+
+      it('should throw if the collection is invalid or null', () => {
+        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
+          // eslint-disable-next-line no-loop-func
+          should(() => publicES._getESIndex('foo', invalid))
+            .throw(BadRequestError, {
+              id: 'services.storage.invalid_collection_name',
+            });
+        }
       });
     });
 

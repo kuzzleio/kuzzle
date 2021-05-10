@@ -6,10 +6,12 @@ const mockRequire = require('mock-require');
 const uWS = require('uWebSockets.js');
 
 const { KuzzleRequest } = require('../../../../lib/api/request');
+const ClientConnection = require('../../../../lib/core/network/clientConnection');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
 const EntryPointMock = require('../../../mocks/entrypoint.mock');
+const { MockHttpResponse, MockHttpRequest } = require('../../../mocks/uWS.mock');
 
 describe('core/network/protocols/websocket', () => {
   let HttpWs;
@@ -115,6 +117,7 @@ describe('core/network/protocols/websocket', () => {
         idleTimeout: 12345,
         maxBackPressure: sinon.match.number,
         maxPayloadLength: 1024,
+        upgrade: sinon.match.func,
         open: sinon.match.func,
         message: sinon.match.func,
         close: sinon.match.func,
@@ -128,6 +131,37 @@ describe('core/network/protocols/websocket', () => {
       should(httpWs.server.ws).calledWithMatch('/*', {
         compression: uWS.DISABLED,
       });
+    });
+  });
+
+  describe('upgrade connection', () => {
+    beforeEach(() => httpWs.init(entryPoint));
+
+    it('should upgrade the connection and store the cookie in the UserData if present', () => {
+      const response = new MockHttpResponse();
+      const request = new MockHttpRequest(
+        '',
+        '',
+        '',
+        {
+          cookie: 'foo',
+          'sec-websocket-key': 'websocket-key',
+          'sec-websocket-protocol': 'websocket-protocol',
+          'sec-websocket-extensions': 'websocket-extension',
+        }
+      );
+      const context = {}; // context object
+      httpWs.server._wsOnUpgrade(response, request, context);
+
+      should(response.upgrade).be.calledWithMatch(
+        {
+          cookie: 'foo',
+        },
+        'websocket-key',
+        'websocket-protocol',
+        'websocket-extension',
+        context
+      );
     });
   });
 
@@ -228,20 +262,25 @@ describe('core/network/protocols/websocket', () => {
       entryPoint.execute.yields({ requestId: 'foobar', content: { } });
       httpWs.server._wsOnMessage('{"controller":"foo","action":"bar"}');
 
-      should(entryPoint.execute).calledOnce().calledWithMatch({
-        input: {
-          action: 'bar',
-          controller: 'foo',
-        },
-        context: {
-          connection: {
-            protocol: 'websocket',
-            ips: [ '1.2.3.4' ],
-          },
-        },
-      });
+      const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
-      should(entryPoint.execute.firstCall.args[0]).instanceof(KuzzleRequest);
+      should(entryPoint.execute)
+        .calledOnce()
+        .calledWithMatch(clientConnection, {
+          input: {
+            action: 'bar',
+            controller: 'foo',
+          },
+          context: {
+            connection: {
+              protocol: 'websocket',
+              ips: [ '1.2.3.4' ],
+            },
+          },
+        });
+
+      should(entryPoint.execute.firstCall.args[0]).instanceof(ClientConnection);
+      should(entryPoint.execute.firstCall.args[1]).instanceof(KuzzleRequest);
 
       const payload = socket.send.firstCall.args[0];
       should(payload).be.instanceof(Buffer);

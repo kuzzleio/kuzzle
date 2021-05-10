@@ -59,6 +59,8 @@ class MockHttpResponse {
     this.getRemoteAddressAsText = sinon.stub().returns('1.2.3.4');
     this.tryEnd = sinon.stub().returns([ true, null ]);
 
+    this.upgrade = sinon.stub();
+
     this.onData = sinon
       .stub()
       .callsFake(handler => (this._onDataHandler = handler));
@@ -139,6 +141,14 @@ class App {
     }
 
     this._wsConfig.drain(this._wsSocket);
+  }
+
+  _wsOnUpgrade (response, request, context) {
+    if (!this._wsConfig || !this._wsConfig.upgrade) {
+      throw new Error('Missing "upgrade" handler');
+    }
+
+    this._wsConfig.upgrade(response, request, context);
   }
 
   _httpOnMessage (method, url, qs, headers) {
