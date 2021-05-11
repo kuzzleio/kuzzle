@@ -6,9 +6,18 @@ title: searchUsersByCredentials
 
 # searchUsersByCredentials
 
-Searches users credentials for the specified authentification strategy.
-
 <SinceBadge version="auto-version"/>
+
+Given a credentials related search query, returns matched users' kuid.
+Since credentials depend on the authentification strategy, so do the search query.
+
+::: info
+If you are using a custom strategy plugin, you must first implement the optional search method in order to use this action.
+:::
+
+::: warning
+This method is not intended to be exposed to the end user because of sensitive data that represents an exhaustive list of users ids.
+:::
 
 ---
 
@@ -69,13 +78,18 @@ Body:
 
 ## Body properties
 
-- `query`: documents matching this search query will be deleted. Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax.
+- `query`: Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax. Properties on which the query applies depend entirely on the authentication strategy.
 
 ---
 
 ## Response
 
-Returns a search result containing users data from the authentication strategy and from the core.
+Returns a search result set, with the following properties:
+
+- `hits`: Array of matched users. Each hit has the following properties:
+  - `kuid`: Users unique identifier
+  - `...`: Other properties depend on the authentification strategy
+- `total`: Total of matched users.
 
 ```js
 {
@@ -87,22 +101,9 @@ Returns a search result containing users data from the authentication strategy a
   "result": {
     "hits": [
       {
-        "strategy": {
-          // example with the "local" authentication strategy
-          "local": {
-            "username": "test@example.com"
-          }
-        },
-        "_id": "test",
-        "_source": {
-          "profileIds": [...],
-          "_kuzzle_info": {
-            "author": null,
-            "createdAt": 1620134078450,
-            "updatedAt": null,
-            "updater": null
-          }
-        }
+        kuid: "kuid",
+        // example with the "local" authentication strategy
+        username: "test@example.com"
       }
     ],
     "total": 1

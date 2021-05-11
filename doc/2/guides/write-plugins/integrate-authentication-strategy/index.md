@@ -79,6 +79,7 @@ this.strategies = {
       exists: 'exists',
       getById: 'getById',
       getInfo: 'getInfo',
+      search: 'search',
       update: 'update',
       validate: 'validate',
       verify: 'verify'
@@ -109,17 +110,18 @@ The `config` part of the `strategies` object can contain the following propertie
 
 The `methods` part of the `strategies` object can contain the following properties:
 
-| Arguments       | Type              | Description                                                                                                                        |
-| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `create`        | <pre>string</pre> | The name of the exposed [create](#create) function                                   |
-| `delete`        | <pre>string</pre> | The name of the exposed [delete](#delete) function                                   |
-| `exists`        | <pre>string</pre> | The name of the exposed [exists](#exists) function                                   |
-| `update`        | <pre>string</pre> | The name of the exposed [update](#update) function                                   |
-| `validate`      | <pre>string</pre> | The name of the exposed [validate](#update) function                                 |
-| `verify`        | <pre>string</pre> | The name of the exposed [verify](#verify) function                                   |
+| Arguments       | Type              | Description                                                              |
+| --------------- | ----------------- | ------------------------------------------------------------------------ |
+| `create`        | <pre>string</pre> | The name of the exposed [create](#create) function                       |
+| `delete`        | <pre>string</pre> | The name of the exposed [delete](#delete) function                       |
+| `exists`        | <pre>string</pre> | The name of the exposed [exists](#exists) function                       |
+| `update`        | <pre>string</pre> | The name of the exposed [update](#update) function                       |
+| `validate`      | <pre>string</pre> | The name of the exposed [validate](#update) function                     |
+| `verify`        | <pre>string</pre> | The name of the exposed [verify](#verify) function                       |
 | `afterRegister` | <pre>string</pre> | (optional) The name of the exposed [afterRegister](#optional-afterregister) function |
-| `getById`       | <pre>string</pre> | (optional) The name of the exposed [getById](#optional-getbyid) function             |
-| `getInfo`       | <pre>string</pre> | (optional) The name of the exposed [getInfo](#optional-getinfo) function             |
+| `getById`       | <pre>string</pre> | (optional) The name of the exposed [getById](#optional-getbyid) function |
+| `getInfo`       | <pre>string</pre> | (optional) The name of the exposed [getInfo](#optional-getinfo) function |
+| `search`        | <pre>string</pre> | (optional) The name of the exposed [search](#optional-search) function   |
 
 Even though each strategy must declare its own set of properties, the same strategy method can be used by multiple strategies.
 
@@ -385,6 +387,43 @@ getInfo(request, kuid, strategy);
 ### Returned value
 
 The `getInfo` function must return a promise, resolving to an object containing credentials information. It can be left empty.
+
+---
+
+## (optional) search
+
+Given a credentials related search query, returns matched users' kuid.
+
+If this function is not implemented, a `missing_optional_method` error occurs.
+
+### Arguments
+
+```js
+search(query);
+```
+
+<br/>
+
+| Arguments | Type                                                                                                  | Description                           |
+| --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `query`   | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentification strategy credentials |
+
+:::warning
+Beware of which properties are searchable. It would be unsafe to let the password be a search criteria, isn't it?
+:::
+
+### Returned value
+
+The `search` function must return a promise, resolving to an search result with the following properties:
+
+- `hits`: Array of matched users. Each hit has the following properties:
+  - `kuid`: Users unique identifier
+  - `...`: __Non sensitive__ credentials specific to this authentification strategy
+- `total`: Total of matched users.
+
+:::warning
+The object resolved by the promise is directly forwarded to the originating user. For security reasons, it must only contain *non sensitive* information.
+:::
 
 ---
 
