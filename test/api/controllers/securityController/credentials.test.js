@@ -212,6 +212,7 @@ describe('Test: security controller - credentials', () => {
   describe('#searchUsersByCredentials', () => {
     let query;
     let methodStub;
+    let stubResult;
 
     beforeEach(() => {
       query = {
@@ -219,7 +220,7 @@ describe('Test: security controller - credentials', () => {
           must: [
             {
               match: {
-                username:  'test@test.com'
+                credentials:  'test@test.com'
               }
             }
           ]
@@ -232,55 +233,29 @@ describe('Test: security controller - credentials', () => {
         body: { query }
       });
 
-      methodStub = sinon.stub().resolves({
-        hits: [{ username: 'bar', kuid: 'foo' }],
+      stubResult = {
+        hits: [{ credentials: 'test@test.com', kuid: 'kuid' }],
         total: 1
-      });
+      };
+      methodStub = sinon.stub().resolves(stubResult);
       kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
-
-      securityController.ask = sinon.stub().withArgs('core:security:user:get').resolves({
-        _id: 'foo',
-        profileIds: [],
-        _kuzzle_info: {
-          author: null,
-          createdAt: 1620134078450,
-          updatedAt: null,
-          updater: null
-        }
-      });
     });
 
-    it('should call the plugin search method and add user core data', async () => {
+    it('should return the result of the appropriate method from the right strategy plugin', async () => {
       const result = await securityController.searchUsersByCredentials(request);
 
       should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
       should(kuzzle.pluginsManager.getStrategyMethod).be.calledWith('someStrategy', 'search');
       should(methodStub).be.calledOnce();
-      should(methodStub.firstCall.args[0]).be.eql(request);
-      should(securityController.ask).be.calledOnce();
-      should(securityController.ask).be.calledWith('core:security:user:get', 'foo');
-      should(result).be.deepEqual({
-        'hits': [
-          {
-            'strategy': {
-              'someStrategy': {
-                'username': 'bar'
-              }
-            },
-            '_id': 'foo',
-            '_source': {
-              'profileIds': [],
-              '_kuzzle_info': {
-                'author': null,
-                'createdAt': 1620134078450,
-                'updatedAt': null,
-                'updater': null
-              }
-            }
-          }
-        ],
-        'total': 1
-      });
+      should(methodStub.firstCall.args[0]).be.eql({ query });
+      should(result).be.deepEqual(stubResult);
+    });
+
+    it('should throw if the optional method search has not been implemented', () => {
+      kuzzle.pluginsManager.getStrategyMethod.returns(undefined);
+
+      return should(securityController.searchUsersByCredentials(request))
+        .rejectedWith({ id: 'plugin.strategy.missing_optional_method' });
     });
   });
 
