@@ -396,6 +396,10 @@ Given a credentials related search query, returns matched users' kuid.
 
 If this function is not implemented, a `missing_optional_method` error occurs.
 
+:::warning
+Beware of which properties are searchable. It would be unsafe to let the password be a search criteria, isn't it?
+:::
+
 ### Arguments
 
 ```js
@@ -407,10 +411,6 @@ search(query);
 | Arguments | Type                                                                                                  | Description                           |
 | --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------- |
 | `query`   | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentification strategy credentials |
-
-:::warning
-Beware of which properties are searchable. It would be unsafe to let the password be a search criteria, isn't it?
-:::
 
 ### Returned value
 
