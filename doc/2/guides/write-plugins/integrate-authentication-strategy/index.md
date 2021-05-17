@@ -403,14 +403,15 @@ Beware of which properties are searchable. It would be unsafe to let the passwor
 ### Arguments
 
 ```js
-search(query);
+search(searchBody, options);
 ```
 
 <br/>
 
-| Arguments | Type                                                                                                  | Description                           |
-| --------- | ----------------------------------------------------------------------------------------------------- | ------------------------------------- |
-| `query`   | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentification strategy credentials |
+| Arguments    | Type                                                                                                  | Description                                                  |
+| ------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `searchBody` | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentification strategy credentials |
+| `options`    | `{ from?: number, size?: number }`                                                                    | Search options useful for paginations                        |
 
 ### Returned value
 

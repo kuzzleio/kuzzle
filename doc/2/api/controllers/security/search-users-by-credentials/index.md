@@ -74,11 +74,24 @@ Body:
 
 - `strategy`: authentication strategy
 
+### Optional:
+
+- `from`: paginates search results by defining the offset from the first result you want to fetch. Usually used with the `size` argument
+- `size`: set the maximum number of documents returned per result page
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used.
+
 ---
 
 ## Body properties
 
-- `query`: Uses the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) syntax. Properties on which the query applies depend entirely on the authentication strategy.
+Properties on which the query applies depend entirely on the authentication strategy.
+
+### Optional:
+
+- `query`: the search query itself, using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
+- `sort`: contains a list of fields, used to [sort search results](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-sort.html), in order of importance
+
+If the body is left empty, the result will return all available users for this strategy.
 
 ---
 
