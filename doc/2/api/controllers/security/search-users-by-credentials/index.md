@@ -88,7 +88,7 @@ Returns a search result set, with the following properties:
 
 - `hits`: Array of matched users. Each hit has the following properties:
   - `kuid`: Users unique identifier
-  - `...`: Other properties depend on the authentification strategy
+  - `...`: Other properties depending on the authentification strategy
 - `total`: Total of matched users.
 
 ```js
