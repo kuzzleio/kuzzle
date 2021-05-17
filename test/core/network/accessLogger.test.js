@@ -149,7 +149,15 @@ describe('#AccessLogger', () => {
 
     it('should send the log message to the worker when asked to log something', async () => {
       const fakeRequest = {
-        serialize: sinon.stub().returns('serialized'),
+        response: 'response',
+        serialize: sinon.stub().returns({
+          data: 'data',
+          options: {
+            error: 'error',
+            result: 'result',
+            status: 'status',
+          },
+        }),
       };
 
       kuzzle.config.server.logs.transports = [
@@ -168,7 +176,15 @@ describe('#AccessLogger', () => {
       should(postMessage).calledOnce().calledWithMatch({
         connection: 'connection',
         extra: 'extra',
-        request: 'serialized',
+        request: {
+          data: 'data',
+          options: {
+            error: 'error',
+            result: undefined,
+            status: 'status',
+          },
+        },
+        size: Buffer.byteLength(JSON.stringify('response')).toString(),
       });
     });
 
@@ -460,7 +476,7 @@ describe('#AccessLogger', () => {
         accessLoggerWorker.config.logs.accessLogFormat = 'combined';
         accessLoggerWorker.config.logs.accessLogIpOffset = 1;
 
-        accessLoggerWorker.logAccess(connection, request, extra);
+        accessLoggerWorker.logAccess(connection, request, '327', extra);
 
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
@@ -482,7 +498,7 @@ describe('#AccessLogger', () => {
           });
         const connection = new ClientConnection('websocket', ['ip']);
 
-        accessLoggerWorker.logAccess(connection, request);
+        accessLoggerWorker.logAccess(connection, request, '339');
 
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
@@ -505,11 +521,16 @@ describe('#AccessLogger', () => {
           connection: 'connection',
           request: request.serialize(),
           extra: 'extra',
+          size: '123',
         });
 
         should(accessLoggerWorker.logAccess)
           .calledOnce()
-          .calledWith('connection', sinon.match.instanceOf(KuzzleRequest), 'extra');
+          .calledWith(
+            'connection',
+            sinon.match.instanceOf(KuzzleRequest),
+            '123',
+            'extra');
       });
     });
   });
