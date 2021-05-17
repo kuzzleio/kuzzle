@@ -16,7 +16,7 @@ If you are using a custom strategy plugin, you must first implement the optional
 :::
 
 ::: warning
-This method is not intended to be exposed to the end user because of sensitive data that represents an exhaustive list of users ids.
+This method is not intended to be exposed to the end user. A full list of users ids should be considered as sensitive data.
 :::
 
 ---
