@@ -7,7 +7,7 @@ description: Backend class install() method
 
 # Install
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.12.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Register code executed when the application starts, and only once on any given environment. Once successfully executed, the code associated to an install identifier will never be run again on that environment.

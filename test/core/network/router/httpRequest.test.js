@@ -26,7 +26,8 @@ describe('Test: router.httpRequest', () => {
       callback(null, request);
     });
 
-    kuzzle.config.http.accessControlAllowOrigin = 'foobar';
+    kuzzle.config.http.accessControlAllowOrigin = ['foobar'];
+    kuzzle.config.internal.allowAllOrigins = false; // Set automaticaly in the config when accessControlAllowOrigin has no wildcard
 
     routeController = new Router();
     routeController.init();
@@ -35,7 +36,11 @@ describe('Test: router.httpRequest', () => {
   it('should register GET routes from the config/httpRoutes file', done => {
     const req = new MockHttpRequest(
       'GET',
-      '/ms/_getrange/someId?start=start&end=end');
+      '/ms/_getrange/someId?start=start&end=end',
+      undefined,
+      {
+        'origin': 'foobar'
+      });
     const httpMessage = new HttpMessage(connection, req);
 
     routeController.http.route(httpMessage, request => {

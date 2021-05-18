@@ -7,7 +7,7 @@ description: Inflector class upFirst() method
 
 # upFirst
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.12.0" />
 
 Returns the input string with the first letter in uppercase.
 

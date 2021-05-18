@@ -32,10 +32,9 @@ else
   ENABLED_PLUGINS=functional-test-plugin
 fi
 
-node docker/scripts/reloader.js \
-    --inspect=0.0.0.0:9229 \
-    -r ts-node/register docker/scripts/start-kuzzle-dev.ts \
-    --mappings /fixtures/mappings.json \
-    --fixtures /fixtures/fixtures.json \
-    --securities /fixtures/securities.json \
-    --enable-plugins $ENABLED_PLUGINS
+npx ergol docker/scripts/start-kuzzle-dev.ts \
+  -c ./config/ergol.config.json \
+  --script-args=--mappings /fixtures/mappings.json \
+  --script-args=--fixtures /fixtures/fixtures.json \
+  --script-args=--securities /fixtures/securities.json \
+  --script-args=--enable-plugins $ENABLED_PLUGINS

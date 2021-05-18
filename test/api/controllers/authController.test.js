@@ -29,7 +29,7 @@ describe('Test the auth controller', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.config.security.jwt.secret = 'test-secret';
-    kuzzle.config.http.accessControlAllowOrigin = '*';
+    kuzzle.config.internal.cookieAuthentication = false;
     kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     user = new User();
@@ -278,7 +278,7 @@ describe('Test the auth controller', () => {
     let createTokenStub;
 
     beforeEach(() => {
-      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
+      kuzzle.config.internal.cookieAuthentication = true;
       createTokenStub = kuzzle.ask.withArgs('core:security:token:create');
     });
 
@@ -517,7 +517,7 @@ describe('Test the auth controller', () => {
 
   describe('#logout with cookies', () => {
     beforeEach(() => {
-      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
+      kuzzle.config.internal.cookieAuthentication = true;
 
       const signedToken = jwt.sign(
         {_id: 'admin'},
@@ -666,7 +666,7 @@ describe('Test the auth controller', () => {
     let testToken;
 
     beforeEach(() => {
-      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
+      kuzzle.config.internal.cookieAuthentication = true;
 
       request = new Request(
         {
@@ -783,7 +783,8 @@ describe('Test the auth controller', () => {
 
   describe('#refreshToken with cookies', () => {
     beforeEach(() => {
-      kuzzle.config.http.accessControlAllowOrigin = 'localhost';
+      kuzzle.config.internal.allowAllOrigins = false;
+      kuzzle.config.internal.cookieAuthentication = true;
     });
 
     it('should reject if the user is not authenticated', () => {
