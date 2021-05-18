@@ -92,7 +92,7 @@
           "description": "The request plugin does not exists or have not been loaded yet.",
           "code": 15,
           "message": "Plugin \"%s\" not found.%s",
-          "class": "PluginImplementationError"
+          "class": "NotFoundError"
         }
       }
     },
