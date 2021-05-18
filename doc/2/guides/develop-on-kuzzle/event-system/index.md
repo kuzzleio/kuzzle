@@ -93,7 +93,7 @@ app.pipe.register(
     'generic:document:afterGet', 
     async (documents: Document[], request: KuzzleRequest) => {
       for (const document of documents) {
-        if (request.context.user._id !== document._source._kuzzle_info.creator) {
+        if (request.getKuid() !== document._source._kuzzle_info.creator) {
           throw new ForbiddenError('Unauthorized access');
         }
       }
@@ -132,7 +132,7 @@ It is possible to register several hooks on the same event by calling several ti
 
 ```js
 app.hook.register('security:afterCreateRestrictedUser', async (request: KuzzleRequest) => {
-  app.log.info(`New user registered: ${JSON.stringify(request.context.user)}`);
+  app.log.info(`New user registered: ${JSON.stringify(request.getUser())}`);
 });
 ```
 

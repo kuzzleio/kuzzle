@@ -13,13 +13,10 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('EmbeddedSDK', () => {
-  let kuzzle;
   let embeddedSdk;
 
   beforeEach(() => {
-    kuzzle = new KuzzleMock();
-    kuzzle.state = KuzzleMock.states.RUNNING;
-
+    new KuzzleMock();
     embeddedSdk = new EmbeddedSDK();
   });
 
@@ -56,7 +53,7 @@ describe('EmbeddedSDK', () => {
   describe('#query', () => {
     it('should add default propagate parameter', async () => {
       const request = { controller: 'realtime', action: 'subscribe' };
-      embeddedSdk.protocol.query = sinon.stub().resolves();
+      embeddedSdk.protocol.query = sinon.stub().resolves({});
 
       await embeddedSdk.query(request);
 

@@ -33,7 +33,7 @@ Then('The document {string} content match:', async function (documentId, dataTab
     documentId);
 
   for (const [key, value] of Object.entries(expectedContent)) {
-    should(document._source[key]).be.eql(value);
+    should(_.get(document._source, key)).be.eql(value);
   }
 });
 
@@ -46,6 +46,21 @@ Then('I {string} the following documents:', async function (action, dataTable) {
     this.props.index,
     this.props.collection,
     documents);
+});
+
+Then(/I execute the "(.*?)" action on the following documents:$/, async function (action, dataTable) {
+  action = `m${action[0].toUpperCase() + action.slice(1)}`;
+
+  const documents = this.parseObjectArray(dataTable);
+
+  const response = await this.sdk.query({
+    controller: 'document',
+    action,
+    index: this.props.index,
+    collection: this.props.collection,
+    body: { documents } });
+
+  this.props.result = response.result;
 });
 
 Then('I {string} the document {string} with content:', async function (action, _id, dataTable) {

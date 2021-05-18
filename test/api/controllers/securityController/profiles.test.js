@@ -95,7 +95,7 @@ describe('Test: security controller - profiles', () => {
         .withArgs(createOrReplaceEvent)
         .resolves(fakeProfile);
 
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { policies: [{ roleId: 'role1' }] };
     });
 
@@ -104,7 +104,7 @@ describe('Test: security controller - profiles', () => {
 
       should(createOrReplaceStub).calledWithMatch(
         createOrReplaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         { refresh: 'wait_for', userId: 'userId' });
 
@@ -137,7 +137,7 @@ describe('Test: security controller - profiles', () => {
 
         should(createOrReplaceStub).calledWithMatch(
           createOrReplaceEvent,
-          request.input.resource._id,
+          request.input.args._id,
           request.input.body,
           { refresh: 'false', userId: 'userId' });
       }
@@ -151,7 +151,7 @@ describe('Test: security controller - profiles', () => {
 
         should(createOrReplaceStub).calledWithMatch(
           createOrReplaceEvent,
-          request.input.resource._id,
+          request.input.args._id,
           request.input.body,
           { strict: false, userId: 'userId' });
       }
@@ -161,7 +161,7 @@ describe('Test: security controller - profiles', () => {
 
       should(createOrReplaceStub).calledWithMatch(
         createOrReplaceEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         { strict: true, userId: 'userId' });
     });
@@ -187,7 +187,7 @@ describe('Test: security controller - profiles', () => {
         });
       should(createOrReplaceStub).not.called();
 
-      request.input.resource._id = null;
+      request.input.args._id = null;
       request.input.body = {policies: []};
       should(securityController.createOrReplaceProfile(request))
         .rejectedWith(BadRequestError, {
@@ -207,7 +207,7 @@ describe('Test: security controller - profiles', () => {
         .withArgs(createEvent)
         .resolves(fakeProfile);
 
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
       request.input.body = { policies: [{ roleId: 'role1' }] };
 
     });
@@ -225,7 +225,7 @@ describe('Test: security controller - profiles', () => {
 
       should(createStub).calledWithMatch(
         createEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         { refresh: 'wait_for', userId: 'userId' });
 
@@ -260,7 +260,7 @@ describe('Test: security controller - profiles', () => {
         });
       should(createStub).not.called();
 
-      request.input.resource._id = null;
+      request.input.args._id = null;
       request.input.body = {policies: []};
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
@@ -278,7 +278,7 @@ describe('Test: security controller - profiles', () => {
 
         should(createStub).calledWithMatch(
           createStub,
-          request.input.resource._id,
+          request.input.args._id,
           request.input.body,
           { refresh: 'false', userId: 'userId' });
       }
@@ -292,7 +292,7 @@ describe('Test: security controller - profiles', () => {
 
         should(createStub).calledWithMatch(
           createEvent,
-          request.input.resource._id,
+          request.input.args._id,
           request.input.body,
           { strict: false, userId: 'userId' });
       }
@@ -302,7 +302,7 @@ describe('Test: security controller - profiles', () => {
 
       should(createStub).calledWithMatch(
         createEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         { strict: true, userId: 'userId' });
     });
@@ -326,7 +326,7 @@ describe('Test: security controller - profiles', () => {
           message: 'Wrong type for argument "body.policies" (expected: array)'
         });
 
-      request.input.resource._id = null;
+      request.input.args._id = null;
       request.input.body = {policies: []};
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
@@ -342,7 +342,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       getStub = kuzzle.ask.withArgs(getEvent);
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should resolve to an object on a getProfile call', async () => {
@@ -350,7 +350,7 @@ describe('Test: security controller - profiles', () => {
 
       const response = await securityController.getProfile(request);
 
-      should(getStub).calledWithMatch(getStub, request.input.resource._id);
+      should(getStub).calledWithMatch(getStub, request.input.args._id);
 
       should(response).be.an.Object().and.not.instanceof(Profile);
       should(response).match({
@@ -363,7 +363,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject an error on a getProfile call without id', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.getProfile(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -379,7 +379,7 @@ describe('Test: security controller - profiles', () => {
       await should(securityController.getProfile(request))
         .be.rejectedWith(error);
 
-      should(getStub).calledWith(getEvent, request.input.resource._id);
+      should(getStub).calledWith(getEvent, request.input.args._id);
     });
   });
 
@@ -567,7 +567,7 @@ describe('Test: security controller - profiles', () => {
     beforeEach(() => {
       updateStub = kuzzle.ask.withArgs(updateEvent).resolves(fakeProfile);
 
-      request.input.resource._id = 'profileId';
+      request.input.args._id = 'profileId';
       request.input.body = {
         policies: 'policies'.split(''),
         rateLimit: 123,
@@ -579,7 +579,7 @@ describe('Test: security controller - profiles', () => {
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           refresh: 'wait_for',
@@ -598,7 +598,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject if no id is given', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.updateProfile(request))
         .rejectedWith(BadRequestError, {
@@ -625,7 +625,7 @@ describe('Test: security controller - profiles', () => {
 
       should(updateStub).calledWithMatch(
         updateEvent,
-        request.input.resource._id,
+        request.input.args._id,
         request.input.body,
         {
           refresh: 'false',
@@ -651,7 +651,7 @@ describe('Test: security controller - profiles', () => {
     beforeEach(() => {
       deleteStub = kuzzle.ask.withArgs(deleteEvent).resolves();
 
-      request.input.resource._id = 'profileId';
+      request.input.args._id = 'profileId';
     });
 
     it('should return the deleted profile identifier and use default options', async () => {
@@ -659,11 +659,11 @@ describe('Test: security controller - profiles', () => {
 
       should(deleteStub).calledWithMatch(
         deleteEvent,
-        request.input.resource._id,
+        request.input.args._id,
         { refresh: 'wait_for' });
 
       should(response).be.an.Object().and.match({
-        _id: request.input.resource._id
+        _id: request.input.args._id
       });
     });
 
@@ -676,7 +676,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject if no _id is provided', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.deleteProfile(request))
         .rejectedWith(BadRequestError, {
@@ -694,7 +694,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       getStub = kuzzle.ask.withArgs(getEvent);
-      request.input.resource._id = 'test';
+      request.input.args._id = 'test';
     });
 
     it('should resolve to an object on a getProfileRights call', async () => {
@@ -720,7 +720,7 @@ describe('Test: security controller - profiles', () => {
 
       const response = await securityController.getProfileRights(request);
 
-      should(getStub).calledWith(getEvent, request.input.resource._id);
+      should(getStub).calledWith(getEvent, request.input.args._id);
 
       should(response).be.an.Object();
       should(response.hits).be.an.Array().and.have.length(2);
@@ -729,7 +729,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject an error on if invoked without an id', async () => {
-      request.input.resource._id = null;
+      request.input.args._id = null;
 
       await should(securityController.getProfileRights(request))
         .rejectedWith(BadRequestError, {

@@ -3,8 +3,8 @@ description: Run ESLint
 
 runs:
   using: "composite"
-  steps: 
-    - run: npm ci --silent
+  steps:
+    - run: npm install
       shell: bash
-    - run: npm run --silent test:lint
+    - run: npm run test:lint
       shell: bash

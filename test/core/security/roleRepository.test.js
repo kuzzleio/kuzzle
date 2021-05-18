@@ -13,6 +13,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const Role = require('../../../lib/model/security/role');
 const RoleRepository = require('../../../lib/core/security/roleRepository');
 const Repository = require('../../../lib/core/shared/repository');
+const kuzzleStateEnum = require('../../../lib/kuzzle/kuzzleStateEnum');
 
 describe('Test: security/roleRepository', () => {
   let kuzzle;
@@ -339,9 +340,6 @@ describe('Test: security/roleRepository', () => {
         .be.calledOnce()
         .be.calledWith(fakeRole._id);
       should(roleRepository.roles).not.have.key(fakeRole._id);
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith('core:roleRepository:delete', {_id: fakeRole._id});
     });
 
     it('should reject if the role to delete cannot be loaded', async () => {
@@ -472,11 +470,6 @@ describe('Test: security/roleRepository', () => {
       should(roleRepository.persistToDatabase)
         .be.calledOnce()
         .be.calledWith(fakeRole);
-      should(kuzzle.emit)
-        .be.calledOnce()
-        .be.calledWith(
-          'core:roleRepository:save',
-          { _id: 'test', controllers: controllers });
     });
   });
 
@@ -484,7 +477,6 @@ describe('Test: security/roleRepository', () => {
     const { NativeController } = require('../../../lib/api/controllers/baseController');
 
     beforeEach(() => {
-      kuzzle.state = KuzzleMock.states.RUNNING;
       kuzzle.funnel.controllers.set('document', new NativeController([
         'create',
         'delete'
@@ -577,8 +569,6 @@ describe('Test: security/roleRepository', () => {
     let plugin_test;
 
     beforeEach(() => {
-      kuzzle.state = KuzzleMock.states.RUNNING;
-
       plugin_test = {
         object: {
           controllers: {
@@ -624,7 +614,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should warn if kuzzle is not started and forceWarn is set', () => {
-      kuzzle.state = KuzzleMock.states.STARTING;
+      kuzzle.state = kuzzleStateEnum.STARTING;
       kuzzle.pluginsManager.isController.returns(false);
       const role = new Role();
 

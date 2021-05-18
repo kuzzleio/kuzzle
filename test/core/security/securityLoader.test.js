@@ -36,7 +36,7 @@ describe('security/securityLoader', () => {
     should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql('createOrReplaceRole');
-    should(kuzzle.funnel.processRequest.getCall(0).args[0].input.resource._id).be.eql('driver');
+    should(kuzzle.funnel.processRequest.getCall(0).args[0].input.args._id).be.eql('driver');
     should(kuzzle.funnel.processRequest.getCall(0).args[0].input.args.force).be.eql(true);
     should(kuzzle.funnel.processRequest.getCall(0).args[0].input.body.controllers.document.actions['*']).be.eql(true);
   });
@@ -51,7 +51,7 @@ describe('security/securityLoader', () => {
     const request = kuzzle.funnel.processRequest.getCall(1).args[0];
 
     should(request.input.action).be.eql('createOrReplaceProfile');
-    should(request.input.resource._id).be.eql('customer');
+    should(request.input.args._id).be.eql('customer');
     should(request.input.body.policies[0].roleId).be.eql('customer');
   });
 
@@ -84,7 +84,7 @@ describe('security/securityLoader', () => {
 
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action)
       .be.eql('createUser');
-    should(kuzzle.funnel.processRequest.getCall(1).args[0].input.resource._id)
+    should(kuzzle.funnel.processRequest.getCall(1).args[0].input.args._id)
       .be.eql('bcalhoun');
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.body.content.profileIds)
       .be.eql(['customer']);
@@ -113,7 +113,7 @@ describe('security/securityLoader', () => {
 
     should(kuzzle.funnel.processRequest.getCall(2).args[0].input.action)
       .be.eql('createUser');
-    should(kuzzle.funnel.processRequest.getCall(2).args[0].input.resource._id)
+    should(kuzzle.funnel.processRequest.getCall(2).args[0].input.args._id)
       .be.eql('gfreeman');
     should(kuzzle.funnel.processRequest.getCall(2).args[0].input.body.content.profileIds)
       .be.eql(['driver']);

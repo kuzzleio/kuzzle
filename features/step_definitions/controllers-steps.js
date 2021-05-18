@@ -205,7 +205,10 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
     json: true,
     resolveWithFullResponse: true,
     method,
-    body,
+    body: {
+      jwt: this.sdk.jwt,
+      ...body,
+    },
     headers: body.headers,
   };
 

@@ -1,6 +1,6 @@
 'use strict';
 
-const should = require('should');
+const should = require('should/as-function');
 const _ = require('lodash');
 
 class FunctionalTestPlugin {
@@ -106,24 +106,35 @@ class FunctionalTestPlugin {
     this.pipes['server:afterNow'] = this.afterNowPipe;
 
     // Embedded SDK realtime ===================================================
-    this.hooks['kuzzle:state:live'] = async () => {
-      const roomId = await this.sdk.realtime.subscribe(
-        'test',
-        'question',
-        {},
-        async () => {
-          await this.sdk.realtime.publish('test', 'answer', {});
-          await this.sdk.realtime.unsubscribe(roomId);
-        });
+    this.controllers.realtime = {
+      subscribeOnce: 'subscribeOnce',
     };
 
+    this.routes.push({
+      action: 'subscribeOnce',
+      controller: 'realtime',
+      path: '/realtime/subscribeOnce',
+      verb: 'post',
+    });
+
+
     // Embedded SDK.as() Impersonation =========================================
-    this.controllers.impersonate = { createDocumentAs: 'createDocumentAs' };
+    this.controllers.impersonate = {
+      createDocumentAs: 'createDocumentAs',
+      testAction: 'testImpersonatedAction'
+    };
 
     this.routes.push({
       action: 'createDocumentAs',
       controller: 'impersonate',
       path: '/impersonate/createDocumentAs/:kuid',
+      verb: 'post',
+    });
+
+    this.routes.push({
+      action: 'testAction',
+      controller: 'impersonate',
+      path: '/impersonate/testAction/:kuid',
       verb: 'post',
     });
 
@@ -187,8 +198,8 @@ class FunctionalTestPlugin {
       client = new this.context.constructors.ESClient(),
       esRequest = {
         body: request.input.body,
-        id: request.input.resource._id,
-        index: request.input.resource.index,
+        id: request.input.args._id,
+        index: request.input.args.index,
       };
 
     const { body } = await client.index(esRequest);
@@ -260,6 +271,18 @@ class FunctionalTestPlugin {
     return request;
   }
 
+  // realtime related methods =====================================================
+  async subscribeOnce () {
+    const roomId = await this.sdk.realtime.subscribe(
+      'test',
+      'question',
+      {},
+      async () => {
+        await this.sdk.realtime.publish('test', 'answer', {});
+        await this.sdk.realtime.unsubscribe(roomId);
+      });
+  }
+
   /**
    * Tests that the context.accessors.trigger method returns the results of the
    * pipe chain
@@ -282,13 +305,29 @@ class FunctionalTestPlugin {
     if (request.input.args.checkRights !== undefined) {
       options.checkRights = request.input.args.checkRights;
     }
-    const sdkInstance = await this.sdk.as({ _id: request.input.args.kuid }, options);
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
 
     return sdkInstance.document.create(
       'nyc-open-data',
       'yellow-taxi',
       { shouldBeCreatedBy: request.input.args.kuid },
     );
+  }
+
+  /**
+   * Use this action tool to verify impersonated actions
+   */
+  async testImpersonatedAction (request) {
+    const { controller, action, args } = request.input.body;
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance[controller][action](...args);
   }
 }
 

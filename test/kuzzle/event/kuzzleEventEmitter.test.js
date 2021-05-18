@@ -358,10 +358,15 @@ describe('#KuzzleEventEmitter', () => {
 
       should(await emitter.ask('foo:bar', 'foo', 'bar')).eql('oh noes');
 
+      const eventPayload = {
+        args: ['foo', 'bar'],
+        response: 'oh noes',
+      };
+
       should(answerer).calledOnce().calledWith('foo', 'bar');
-      should(listener1).calledOnce().calledWith('foo', 'bar');
-      should(listener2).calledOnce().calledWith('foo', 'bar');
-      should(listener3).calledOnce().calledWith('foo', 'bar');
+      should(listener1).calledOnce().calledWith(eventPayload);
+      should(listener2).calledOnce().calledWith(eventPayload);
+      should(listener3).calledOnce().calledWith(eventPayload);
     });
   });
 

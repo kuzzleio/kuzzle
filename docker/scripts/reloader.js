@@ -29,7 +29,7 @@ const chokidar = require('chokidar');
 const clc = require('cli-color');
 
 const config = {
-  cwd: '/var/app',
+  cwd: '.',
   killDelay: 5000,
   watch: [
     'lib',
@@ -127,6 +127,7 @@ async function stopProcess () {
 }
 
 const watcher = chokidar.watch(script);
+console.log(config.watch.map(dir => path.join(config.cwd, dir)))
 watcher.add(config.watch.map(dir => path.join(config.cwd, dir)));
 
 watcher.on('change', async file => {
@@ -135,6 +136,12 @@ watcher.on('change', async file => {
     await stopProcess();
     startProcess();
   }
+});
+
+process.on('SIGUSR1', async () => {
+  console.log(clc.green('[RELOADER] Caught signal SIGUSR1. Restarting...'));
+  await stopProcess();
+  startProcess();
 });
 
 startProcess();

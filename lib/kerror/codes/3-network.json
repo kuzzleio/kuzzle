@@ -103,6 +103,12 @@
           "code": 1,
           "message": "Caught an unexpected WebSocket error: %s",
           "class": "BadRequestError"
+        },
+        "ratelimit_exceeded": {
+          "description": "Too many requests received from a client socket",
+          "code": 2,
+          "message": "Rejected: too many requests received from that socket",
+          "class": "TooManyRequestsError"
         }
       }
     },

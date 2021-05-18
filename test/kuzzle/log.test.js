@@ -23,7 +23,7 @@ describe('/lib/kuzzle/log', () => {
   it('should add the node id in log', () => {
     logger.info('Kiev');
 
-    should(kuzzle.emit).be.calledWith('log:info', '[nasty-author-4242] Kiev');
+    should(kuzzle.emit).be.calledWith('log:info', '[knode-nasty-author-4242] Kiev');
   });
 
   it('should add the requestId in log', () => {
@@ -31,6 +31,6 @@ describe('/lib/kuzzle/log', () => {
 
     logger.info('Kiev');
 
-    should(kuzzle.emit).be.calledWith('log:info', '[nasty-author-4242] [request-unique-id] Kiev');
+    should(kuzzle.emit).be.calledWith('log:info', '[knode-nasty-author-4242] [request-unique-id] Kiev');
   });
 });

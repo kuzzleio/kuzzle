@@ -10,5 +10,5 @@ description: RequestResponse class properties
 Kuzzle normalized API response
 
 ::: info
-This object is only meant to be used internaly by Kuzzle.  
+This object is mostly meant to be used internally by Kuzzle.
 :::

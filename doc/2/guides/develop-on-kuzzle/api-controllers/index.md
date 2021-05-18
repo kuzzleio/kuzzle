@@ -118,7 +118,7 @@ app.controller.register('greeting', {
     sayHello: {
       // Handler function for the "greeting:sayHello" action
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
@@ -172,7 +172,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         // generated route: "GET http://<host>:<port>/greeting/hello"
@@ -197,7 +197,7 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         // "name" comes from the url parameter
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       },
       http: [
         { verb: 'get', path: '/email/send/:name' },
@@ -230,9 +230,18 @@ The arguments of requests sent to the Kuzzle API are available in the [KuzzleReq
 The main available properties are the following:
  - `controller`: API controller name
  - `action`: API action name
- - `resource`: Kuzzle specifics arguments (`_id`, `index` and `collection`)
- - `args`: additional arguments
- - `body`: body content
+ - `args`: Action arguments
+ - `body`: Body content
+
+### Extract parameters from request
+
+<SinceBadge version="2.11.0" />
+
+The request object exposes methods to safely extract parameters from the request in a standardized way.
+
+Each of those methods will check for the parameter presence and type. In case of a validation failure, the corresponding API error will be thrown.
+
+All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc. 
 
 ### HTTP
 
@@ -241,7 +250,7 @@ With HTTP, there are 3 types of input parameters:
  - Query arguments (__e.g. `/greeting/hello?name=aschen`__)
  - KuzzleRequest body
 
-URL parameters and query arguments can be found in the `request.input.args` property **unless it is a Kuzzle specific argument** (`_id`, `index` and `collection`), in that case they can be found in the `request.input.resource` property.
+URL parameters and query arguments can be found in the `request.input.args` property.
 
 The content of the query body can be found in the `request.input.body` property 
 
@@ -271,10 +280,15 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args._id === 'JkkZN62jLSA');
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
       http: [
         { verb: 'POST', path: 'greeting/hello/:name' }
@@ -316,19 +330,20 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        assert(request.input.resource._id === 'JkkZN62jLSA');
+        assert(request.input.args._id === 'JkkZN62jLSA');
         assert(request.input.args.name === 'aschen');
         assert(request.input.args.age === '27');
         assert(request.input.body.city === 'Antalya');
+        // equivalent to
+        assert(request.getId() === 'JkkZN62jLSA');
+        assert(request.getString('name') === 'aschen');
+        assert(request.getInteger('age') === '27');
+        assert(request.getBodyString('city') === 'Antalya');
       },
     }
   }
 });
 ```
-
-::: warning
-`_id`, `index` and `collection` are **specific Kuzzle inputs** and are available in the `request.input.resource` property.
-:::
 
 ::: info
 See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
@@ -352,10 +367,12 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
+        assert(request.context.connection.protocol === 'http');
         // Unauthenticated users are anonymous 
         // and the anonymous user ID is "-1"
         assert(request.context.user._id === '-1');
-        assert(request.context.connection.protocol === 'http');
+        // equivalent to
+        assert(request.getKuid() === '-1');
       },
     }
   }
@@ -394,7 +411,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }
@@ -503,7 +520,7 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.input.args.name}`;
+        return `Hello, ${request.getString('name')}`;
       }
     }
   }

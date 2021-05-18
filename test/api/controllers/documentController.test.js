@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
+  MultipleErrorsError,
   SizeLimitError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
@@ -77,7 +78,7 @@ describe('DocumentController', () => {
     });
 
     it('should reject if index contains a comma', () => {
-      request.input.resource.index = '%test,anotherIndex';
+      request.input.args.index = '%test,anotherIndex';
       request.input.action = 'search';
 
       return should(documentController.search(request)).rejectedWith(
@@ -86,7 +87,7 @@ describe('DocumentController', () => {
     });
 
     it('should reject if collection contains a comma', () => {
-      request.input.resource.collection = 'unit-test-documentController,anotherCollection';
+      request.input.args.collection = 'unit-test-documentController,anotherCollection';
       request.input.action = 'search';
 
       return should(documentController.search(request)).rejectedWith(
@@ -186,7 +187,7 @@ describe('DocumentController', () => {
   describe('#exists', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:exist').resolves(true);
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       const response = await documentController.exists(request);
 
@@ -209,7 +210,7 @@ describe('DocumentController', () => {
         some: 'other'
       }));
 
-      request.input.resource._id = 'foo';
+      request.input.args._id = 'foo';
 
       const response = await documentController.get(request);
 
@@ -230,7 +231,7 @@ describe('DocumentController', () => {
   describe('#mGet', () => {
     beforeEach(() => {
       request.input.body = {
-        ids: ['foo', 'bar']
+        ids: ['id', 'id2']
       };
 
       kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
@@ -249,7 +250,7 @@ describe('DocumentController', () => {
         'core:storage:public:document:mGet',
         index,
         collection,
-        ['foo', 'bar']);
+        ['id', 'id2']);
 
       should(response).match({
         errors: [],
@@ -263,7 +264,7 @@ describe('DocumentController', () => {
     it('should throw an error if the number of documents to get exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
 
-      should(() => documentController.mGet(request)).throw(
+      should(documentController.mGet(request)).be.rejectedWith(
         SizeLimitError,
         { id: 'services.storage.get_limit_exceeded' });
     });
@@ -284,6 +285,21 @@ describe('DocumentController', () => {
           { _id: 'id', _source: 'source', _version: 1 }
         ]
       });
+    });
+
+    it('should throw an error in strict mode if at least one document is missing', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mGet').resolves(({
+        items: [
+          { _id: 'id', _source: 'source', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      return should(documentController.mGet(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -331,7 +347,7 @@ describe('DocumentController', () => {
     });
 
     it('should forward to the store module and notify', async () => {
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
       request.context.user = { _id: 'aschen' };
       request.input.args.refresh = 'wait_for';
 
@@ -377,20 +393,30 @@ describe('DocumentController', () => {
 
     beforeEach(() => {
       documents = [
-        { _id: '_id1', body: '_source' },
-        { _id: '_id2', body: '_source' },
-        { _id: '_id3', body: '_source' }
+        { _id: '_id1', body: { field: '_source' } },
+        { _id: '_id2', body: { field: '_source' } },
+        { _id: '_id3', body: { field: '_source' } }
       ];
 
       request.input.body = { documents };
 
       items = [
-        { _id: '_id1', _source: '_source', _version: '_version', created: true, result: 'created' },
-        { _id: '_id2', _source: '_source', _version: '_version', created: true, result: 'created' },
-        { _id: '_id3', _source: '_source', _version: '_version', created: true, result: 'created' }
+        { _id: '_id1', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' },
+        { _id: '_id2', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' },
+        { _id: '_id3', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' }
       ];
 
       kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
+        items,
+        errors: []
+      }));
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpdate').resolves(({
+        items,
+        errors: []
+      }));
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpsert').resolves(({
         items,
         errors: []
       }));
@@ -425,7 +451,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: 'aschen', refresh: 'wait_for' });
+        { userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
 
       should(kuzzle.ask).be.calledWith(
         'core:realtime:document:mNotify',
@@ -439,7 +465,7 @@ describe('DocumentController', () => {
       });
     });
 
-    it('should have default values for userId and refresh params', async () => {
+    it('should have default values for userId, refresh and retryOnConflict params', async () => {
       await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
 
       should(kuzzle.ask).be.calledWith(
@@ -447,7 +473,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false' });
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should handle errors if some actions failed', async () => {
@@ -516,6 +542,131 @@ describe('DocumentController', () => {
       should(kuzzle.ask.withArgs('core:realtime:document:mNotify'))
         .not.called();
     });
+
+    it('should throw an error in strict mode if at least one action has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
+        items,
+        errors: [
+          {
+            document: { _id: '_id42', _source: '_source' },
+            status: 400,
+            reason: 'reason'
+          }
+        ]
+      }));
+
+      return should(documentController._mChanges(request, 'mCreate', actionEnum.CREATE))
+        .rejectedWith(
+          MultipleErrorsError,
+          { id: 'api.process.incomplete_multiple_request' });
+    });
+
+    it('should retrieve retryOnConflict param when updating ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mUpdate', actionEnum.UPDATE);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mUpdate',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: 2 });
+    });
+
+    it('should retrieve retryOnConflict param doing an upsert ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mUpsert',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: 2 });
+    });
+
+    it('should not check retryOnConflict param when not performing an update/upsert ', async () => {
+      request.input.args.retryOnConflict = 2;
+
+      await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreate',
+        index,
+        collection,
+        documents,
+        { userId: null, refresh: 'false', retryOnConflict: undefined });
+    });
+
+    it('should notify with _updatedFields when updating ', async () => {
+      items[0].created = false;
+      items[1].created = false;
+      items[2].created = false;
+
+      await documentController._mChanges(request, 'mUpdate', actionEnum.UPDATE);
+
+      items[0]._updatedFields = ['field'];
+      items[1]._updatedFields = ['field'];
+      items[2]._updatedFields = ['field'];
+
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.UPDATE,
+        items);
+    });
+
+    it('should notify with _updatedFields when doing an upsert ', async () => {
+      request.input.body.documents = [
+        { _id: '_id1', changes: { field: '_source'}, default: { field2: 'default'} },
+        { _id: '_id2', changes: { field: '_source'}, default: { field2: 'default'} },
+        { _id: '_id3', changes: { field: '_source'}, default: { field2: 'default'} }
+      ];
+
+      items[0].created = false;
+      items[1].created = false;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mUpsert').resolves(({
+        items,
+        errors: []
+      }));
+
+      await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
+
+      const updatedItems = [
+        { 
+          _id: '_id1',
+          _source: { field: '_source' },
+          _version: '_version',
+          _updatedFields: ['field'],
+          created: false,
+          result: 'created'
+        },
+        { 
+          _id: '_id2',
+          _source: { field: '_source' },
+          _version: '_version',
+          _updatedFields: ['field'],
+          created: false,
+          result: 'created' },
+        { 
+          _id: '_id3',
+          _source: { field: '_source' },
+          _version: '_version',
+          created: true,
+          result: 'created' }
+      ];
+
+      should(kuzzle.ask).be.calledWith(
+        'core:realtime:document:mNotify',
+        request,
+        actionEnum.UPSERT,
+        updatedItems);
+    });
   });
 
   describe('#createOrReplace', () => {
@@ -537,7 +688,7 @@ describe('DocumentController', () => {
           created: true
         });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -611,7 +762,7 @@ describe('DocumentController', () => {
         _source: { ...content, name: 'gordon' }
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -693,7 +844,7 @@ describe('DocumentController', () => {
       defaultValues = { def: 'val' };
 
       request.input.body = { changes, default: defaultValues };
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
 
       kuzzle.ask.withArgs('core:storage:public:document:upsert').resolves({
         _id: '_id',
@@ -1016,7 +1167,7 @@ describe('DocumentController', () => {
         _source: '_source'
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -1051,7 +1202,7 @@ describe('DocumentController', () => {
         'core:realtime:document:notify',
         request,
         actionEnum.REPLACE,
-        { _id: request.input.resource._id, _source: content });
+        { _id: request.input.args._id, _source: content });
 
       should(response).match({
         _id: '_id',
@@ -1075,7 +1226,7 @@ describe('DocumentController', () => {
 
   describe('#delete', () => {
     beforeEach(() => {
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
 
       kuzzle.ask.withArgs('core:storage:public:document:get').resolves({
         _id: 'foobar',
@@ -1153,7 +1304,7 @@ describe('DocumentController', () => {
         _source: { foo: 'bar' }
       });
 
-      request.input.resource._id = 'foobar';
+      request.input.args._id = 'foobar';
     });
 
     it('should not notify with "silent" argument', async () => {
@@ -1295,6 +1446,21 @@ describe('DocumentController', () => {
         ]
       });
     });
+
+    it('should throw an error in strict mode if at least one deletion has failed', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mDelete').resolves(({
+        documents,
+        errors: [
+          { id: 'id1', reason: 'reason' }
+        ]
+      }));
+
+      should(documentController.mDelete(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
+    });
   });
 
   describe('#deleteByQuery', () => {
@@ -1416,33 +1582,6 @@ describe('DocumentController', () => {
         true);
 
       should(response).match({ ok: 'ok' });
-    });
-  });
-
-  describe('#_extractUpdatedFields', () => {
-    it('should extract full paths to values and ignore _kuzzle_info', () => {
-      const document = {
-        reference: 'tito',
-        measures: {
-          temp: {
-            degree: 21
-          }
-        },
-        metadata: {
-          color: 'red'
-        },
-        _kuzzle_info: {
-          creator: 'aschen'
-        }
-      };
-
-      const updatedFields = documentController._extractUpdatedFields(document);
-
-      should(updatedFields).be.eql([
-        'reference',
-        'measures.temp.degree',
-        'metadata.color'
-      ]);
     });
   });
 });

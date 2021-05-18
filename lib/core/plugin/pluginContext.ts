@@ -31,6 +31,7 @@ import Store from '../shared/store';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { isPlainObject } from '../../util/safeObject';
 import Promback from '../../util/promback';
+import { Mutex } from '../../util/mutex';
 import kerror from '../../kerror';
 import storeScopeEnum from '../storage/storeScopeEnum';
 import {
@@ -507,12 +508,23 @@ function curryAddStrategy(pluginName) {
       throw contextError.get('missing_authenticator', pluginName, name);
     }
 
-    // @todo use Plugin.checkName to ensure format
-    global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
+    const mutex = new Mutex('auth:strategies:add', { ttl: 30000 });
 
-    return global.kuzzle.pipe(
-      'core:auth:strategyAdded',
-      {name, pluginName, strategy});
+    await mutex.lock();
+
+    try {
+      // @todo use Plugin.checkName to ensure format
+      global.kuzzle.pluginsManager.registerStrategy(pluginName, name, strategy);
+
+      return await global.kuzzle.pipe('core:auth:strategyAdded', {
+        name,
+        pluginName,
+        strategy,
+      });
+    }
+    finally {
+      mutex.unlock();
+    }
   };
 }
 
@@ -528,7 +540,16 @@ function curryRemoveStrategy(pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
   return async function removeStrategy(name) {
-    global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-    return global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
+    const mutex = new Mutex('auth:strategies:remove', { ttl: 30000 });
+
+    await mutex.lock();
+
+    try {
+      global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
+      return await global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
+    }
+    finally {
+      mutex.unlock();
+    }
   };
 }
