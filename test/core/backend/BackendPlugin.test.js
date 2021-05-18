@@ -115,7 +115,7 @@ describe('BackendPlugin', () => {
     });
 
     it('should list loaded plugins', () => {
-      should(application.plugin.list()).be.eql(['dummy', 'foobar'])
-    })
+      should(application.plugin.list()).be.eql(['dummy', 'foobar']);
+    });
   });
 });
