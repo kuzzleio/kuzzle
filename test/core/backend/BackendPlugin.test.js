@@ -3,6 +3,16 @@
 const should = require('should');
 const mockrequire = require('mock-require');
 
+class DummyPlugin {
+  constructor () {}
+  init () {}
+}
+
+class FoobarPlugin {
+  constructor () {}
+  init () {}
+}
+
 describe('BackendPlugin', () => {
   let application;
   let Backend;
@@ -14,10 +24,6 @@ describe('BackendPlugin', () => {
   });
 
   describe('#use', () => {
-    class DummyPlugin {
-      constructor () {}
-      init () {}
-    }
     class WrongPlugin {
       constructor () {}
     }
@@ -61,5 +67,55 @@ describe('BackendPlugin', () => {
         application.plugin.use(new WrongPlugin());
       }).throwError({ id: 'plugin.assert.init_not_found' });
     });
+  });
+
+  describe('#get', () => {
+    let dummyPlugin;
+    let foobarPlugin;
+
+    beforeEach(() => {
+      dummyPlugin = new DummyPlugin();
+      foobarPlugin = new FoobarPlugin();
+
+      application.plugin.use(dummyPlugin);
+      application.plugin.use(foobarPlugin);
+    });
+
+    it('should return the loaded plugin instance', () => {
+      const plugin = application.plugin.get('dummy');
+
+      should(plugin).be.eql(dummyPlugin);
+    });
+
+    it('should throw an error if the plugin does not exists', () => {
+      const nodeEnv = global.NODE_ENV;
+      global.NODE_ENV = 'development';
+
+      should(() => {
+        application.plugin.get('foubar');
+      }).throwError({
+        id: 'plugin.assert.plugin_not_found',
+        message: 'Plugin "foubar" not found. Did you mean "foobar"?\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.',
+      });
+
+      global.NODE_ENV = nodeEnv;
+    });
+  });
+
+  describe('#list', () => {
+    let dummyPlugin;
+    let foobarPlugin;
+
+    beforeEach(() => {
+      dummyPlugin = new DummyPlugin();
+      foobarPlugin = new FoobarPlugin();
+
+      application.plugin.use(dummyPlugin);
+      application.plugin.use(foobarPlugin);
+    });
+
+    it('should list loaded plugins', () => {
+      should(application.plugin.list()).be.eql(['dummy', 'foobar'])
+    })
   });
 });

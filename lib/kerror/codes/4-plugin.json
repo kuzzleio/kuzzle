@@ -87,6 +87,12 @@
           "code": 14,
           "message": "Cannot define new controllers in the \"api\" and the \"controllers\" objects at the same time",
           "class": "PluginImplementationError"
+        },
+        "plugin_not_found": {
+          "description": "The request plugin does not exists or have not been loaded yet.",
+          "code": 15,
+          "message": "Plugin \"%s\" not found.%s",
+          "class": "PluginImplementationError"
         }
       }
     },
