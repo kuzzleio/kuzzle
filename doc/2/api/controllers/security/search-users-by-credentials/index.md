@@ -80,6 +80,10 @@ Body:
 - `size`: set the maximum number of documents returned per result page
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used.
 
+::: warning
+There is a limit to how many documents can be returned by a single search query. That limit is by default set at 10000 documents (see `limits.documentsFetchCount`), and you can't get over it even with the `from` and `size` pagination options.
+:::
+
 ---
 
 ## Body properties
@@ -92,6 +96,10 @@ Properties on which the query applies depend entirely on the authentication stra
 - `sort`: contains a list of fields, used to [sort search results](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-sort.html), in order of importance
 
 If the body is left empty, the result will return all available users for this strategy.
+
+::: warning
+Koncorde `bool` operator and `regexp` clause are not supported for search queries.
+:::
 
 ---
 
