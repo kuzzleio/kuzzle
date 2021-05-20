@@ -190,7 +190,7 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
  - [Node.js](/sdk/js/7/getting-started/node-js)
  - [Java](/sdk/jvm/1/getting-started/java)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
- - [C# .NET Core](https://docs.kuzzle.io/sdk/csharp/2/getting-started/standalone/)
+ - [C# .NET Core](/sdk/csharp/2/getting-started/standalone)
  
 ### Frontend Web
  - [React.js](https://docs.kuzzle.io/sdk/js/7/getting-started/react/standalone/)
