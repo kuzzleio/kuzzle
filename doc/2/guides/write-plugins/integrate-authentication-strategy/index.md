@@ -410,7 +410,7 @@ search(searchBody, options);
 
 | Arguments    | Type                                                                                                  | Description                                                  |
 | ------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| `searchBody` | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentification strategy credentials |
+| `searchBody` | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentication strategy credentials |
 | `options`    | `{ from?: number, size?: number }`                                                                    | Search options useful for paginations                        |
 
 ### Returned value
@@ -419,7 +419,7 @@ The `search` function must return a promise, resolving to an search result with 
 
 - `hits`: Array of matched users. Each hit has the following properties:
   - `kuid`: Users unique identifier
-  - `...`: __Non sensitive__ credentials specific to this authentification strategy
+  - `...`: __Non sensitive__ credentials specific to this authentication strategy
 - `total`: Total of matched users.
 
 :::warning

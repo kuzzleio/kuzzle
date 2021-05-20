@@ -9,7 +9,7 @@ title: searchUsersByCredentials
 <SinceBadge version="auto-version"/>
 
 Given a credentials related search query, returns matched users' kuid.
-Since credentials depend on the authentification strategy, so do the search query.
+Since credentials depend on the authentication strategy, so do the search query.
 
 ::: info
 If you are using a custom strategy plugin, you must first implement the optional search method in order to use this action.
@@ -101,7 +101,7 @@ Returns a search result set, with the following properties:
 
 - `hits`: Array of matched users. Each hit has the following properties:
   - `kuid`: Users unique identifier
-  - `...`: Other properties depending on the authentification strategy
+  - `...`: Other properties depending on the authentication strategy
 - `total`: Total of matched users.
 
 ```js
