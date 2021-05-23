@@ -95,7 +95,7 @@ describe('BackendPlugin', () => {
         application.plugin.get('foubar');
       }).throwError({
         id: 'plugin.assert.plugin_not_found',
-        message: 'Plugin "foubar" not found. Did you mean "foobar"?\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.',
+        message: 'Plugin "foubar" not found. Did you mean "foobar"?',
       });
 
       global.NODE_ENV = nodeEnv;
