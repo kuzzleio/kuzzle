@@ -10,7 +10,7 @@ description: BackendPlugin.list method
 <SinceBadge version="auto-version" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
-Lists loaded plugin.
+Returns the list of loaded plugins.
 
 ```ts
 list (): string[]
