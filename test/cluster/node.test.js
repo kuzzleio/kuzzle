@@ -210,7 +210,7 @@ describe('#Cluster Node', () => {
     it('should throw if no valid IP address can be found', () => {
       kuzzle.config.cluster.interface = 'foobar';
 
-      should(() => new ClusterNode()).throw(/^\[FATAL\] Cluster: no suitable IP address found with the provided configuration/);
+      should(() => new ClusterNode()).throw(/^\[CLUSTER\] No suitable IP address found with the provided configuration/);
     });
   });
 
