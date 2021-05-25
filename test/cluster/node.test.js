@@ -129,6 +129,14 @@ describe('#Cluster Node', () => {
         internal: false,
       },
     ],
+    apipa: [
+      {
+        address: '169.254.2.3',
+        family: 'IPv4',
+        mac: 'ohnoes',
+        internal: false,
+      },
+    ],
   };
 
   before(() => {
@@ -210,6 +218,11 @@ describe('#Cluster Node', () => {
     it('should throw if no valid IP address can be found', () => {
       kuzzle.config.cluster.interface = 'foobar';
 
+      should(() => new ClusterNode()).throw(/^\[CLUSTER\] No suitable IP address found with the provided configuration/);
+    });
+
+    it('should throw if the only available address is an APIPA', () => {
+      kuzzle.config.cluster.interface = 'apipa';
       should(() => new ClusterNode()).throw(/^\[CLUSTER\] No suitable IP address found with the provided configuration/);
     });
   });
