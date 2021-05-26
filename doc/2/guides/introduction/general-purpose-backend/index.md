@@ -190,18 +190,18 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
  - [Node.js](/sdk/js/7/getting-started/node-js)
  - [Java](/sdk/jvm/1/getting-started/java)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
- - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
+ - [C# .NET Core](/sdk/csharp/2/getting-started/standalone)
  
 ### Frontend Web
- - [React.js](/sdk/js/7/getting-started/react/standalone/)
- - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/)
- - [Webpack](/sdk/js/7/getting-started/webpack/)
- - [Vanilla JS](/sdk/js/7/getting-started/raw-web/)
+ - [React.js](/sdk/js/7/getting-started/react/standalone)
+ - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone)
+ - [Webpack](/sdk/js/7/getting-started/webpack)
+ - [Vanilla JS](/sdk/js/7/getting-started/raw-web)
 
 ### Frontend Mobile
 
- - [React Native](/sdk/js/7/getting-started/react-native/)
- - [Flutter](/sdk/dart/2/getting-started/flutter/)
+ - [React Native](/sdk/js/7/getting-started/react-native)
+ - [Flutter](/sdk/dart/2/getting-started/flutter)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
  - [Java](/sdk/jvm/1/getting-started/java)
- - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
+ - [C# .NET Core](/sdk/csharp/2/getting-started/standalone)

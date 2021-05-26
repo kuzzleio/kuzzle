@@ -32,8 +32,12 @@ You can install Kourou globally by using NPM: `npm install -g kourou`
 
 ::: warning
 Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.  
-For the sake of simplicity we will use a Docker and Docker Compose throughout this guide.  
+For the sake of simplicity we will use a Docker and Docker Compose throughout this guide. 
 ::: 
+
+::: info
+If you encounter issues about permissions when trying to use Docker, please follow the [Docker as a non root user guide](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
+:::
 
 ### Let's go!
 

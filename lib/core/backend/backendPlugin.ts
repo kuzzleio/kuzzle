@@ -24,6 +24,7 @@ import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { Plugin } from '../../types';
 import { ApplicationManager } from './index';
+import didYouMean from '../../util/didYouMean';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -73,5 +74,25 @@ export class BackendPlugin extends ApplicationManager {
     }
 
     this._application._plugins[name] = { options, plugin };
+  }
+
+  /**
+   * Gets the instance of an already loaded plugin.
+   *
+   * @param name Plugin name
+   */
+  get (name: string): Plugin {
+    if (! this._application._plugins[name]) {
+      throw assertionError.get('plugin_not_found', name, didYouMean(name, this.list()));
+    }
+
+    return this._application._plugins[name].plugin;
+  }
+
+  /**
+   * Lists loaded plugins
+   */
+  list (): string[] {
+    return Object.keys(this._application._plugins);
   }
 }
