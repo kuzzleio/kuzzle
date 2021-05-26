@@ -200,8 +200,7 @@ describe('Test the auth controller', () => {
       should(request.status).be.equal(302);
       should(request.response).match({
         status: 302,
-        result: response,
-        headers: {Location: 'http://github.com'}
+        headers: { Location: 'http://github.com' }
       });
 
       should(kuzzle.ask.withArgs('core:security:token:create')).not.be.called();
@@ -380,8 +379,7 @@ describe('Test the auth controller', () => {
       should(requestcookieAuth.status).be.equal(302);
       should(requestcookieAuth.response).match({
         status: 302,
-        result: response,
-        headers: {Location: 'http://github.com'}
+        headers: { Location: 'http://github.com' }
       });
 
       should(kuzzle.ask.withArgs('core:security:token:create')).not.be.called();
@@ -676,7 +674,7 @@ describe('Test the auth controller', () => {
           cookieAuth: true,
         },
         {});
-      
+
       request.input.jwt = 'foobar';
       testToken = new Token({ expiresAt: 42, userId: 'durres' });
     });
