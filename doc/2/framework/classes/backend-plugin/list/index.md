@@ -7,7 +7,7 @@ description: BackendPlugin.list method
 
 # `list()`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.12.2" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Returns the list of loaded plugins.
