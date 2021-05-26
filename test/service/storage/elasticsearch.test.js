@@ -4563,23 +4563,23 @@ describe('Test: ElasticSearch service', () => {
       let searchBody;
 
       it('should return the same query if all top level keywords are valid', () => {
-        searchBody = {}
+        searchBody = {};
         for (const key of publicES.searchBodyKeys) {
-          searchBody[key] = { foo: 'bar' }
+          searchBody[key] = { foo: 'bar' };
         }
 
         const result = publicES._sanitizeSearchBody(Object.assign({}, searchBody));
 
-        should(result).be.deepEqual(searchBody)
+        should(result).be.deepEqual(searchBody);
       });
 
       it('should throw if any top level keyword is not in the white list', () => {
         searchBody = {
           unknown: {}
-        }
+        };
 
         should(() => publicES._sanitizeSearchBody(searchBody))
-          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'})
+          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'});
       });
 
       it('should throw if any script keyword is found in the query (even deeply nested)', () => {
@@ -4603,17 +4603,17 @@ describe('Test: ElasticSearch service', () => {
         };
 
         should(() => publicES._sanitizeSearchBody(searchBody))
-          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'})
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
       });
 
       it('should turn empty queries into match_all queries', () => {
         searchBody = {
           query: {}
-        }
+        };
 
         const result = publicES._sanitizeSearchBody(searchBody);
 
-        should(result).be.deepEqual({ query: { match_all: {} }})
+        should(result).be.deepEqual({ query: { match_all: {} }});
       });
     });
 
@@ -4621,9 +4621,9 @@ describe('Test: ElasticSearch service', () => {
       let object;
 
       it('should not throw when there is not a single script', () => {
-        object = { foo: 'bar' }
+        object = { foo: 'bar' };
 
-        should(() => publicES._scriptCheck(object)).not.throw()
+        should(() => publicES._scriptCheck(object)).not.throw();
       });
 
       it('should throw if any script keyword is found in the query', () => {
@@ -4641,7 +4641,7 @@ describe('Test: ElasticSearch service', () => {
         };
 
         should(() => publicES._sanitizeSearchBody(object))
-          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'})
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
       });
 
       it('should throw if any deeply nested script keyword is found in the query', () => {
@@ -4665,7 +4665,7 @@ describe('Test: ElasticSearch service', () => {
         };
 
         should(() => publicES._sanitizeSearchBody(object))
-          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'})
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
       });
     });
   });

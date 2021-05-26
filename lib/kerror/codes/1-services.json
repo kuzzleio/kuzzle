@@ -263,6 +263,12 @@
           "code": 46,
           "message": "%s documents were successfully updated before an error occured",
           "class": "MultipleErrorsError"
+        },
+        "invalid_query_keyword": {
+          "description": "A forbidden keyword has been provided in the query",
+          "code": 47,
+          "message": "The \"%s\" keyword is not allowed in this query.",
+          "class": "BadRequestError"
         }
       }
     },
