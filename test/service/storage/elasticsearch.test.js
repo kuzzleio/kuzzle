@@ -4519,43 +4519,24 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    describe('#_extractIndexes', () => {
-      it('extract the index names from a list of esIndex name', () => {
+    describe('#_extractSchema', () => {
+      it('should extract the list of indexes and their collections', () => {
         const esIndexes = [
-          '%nepali.liia', '%nepali.mehry', '&india.darjeeling', '&vietnam.lfiduras'
+          '%nepali.liia', '%nepali.mehry',
+          '&nepali.panipokari', '&nepali._kuzzle_keep',
+          '&vietnam.lfiduras'
         ];
 
-        const
-          publicIndexes = publicES._extractIndexes(esIndexes),
-          internalIndexes = internalES._extractIndexes(esIndexes);
+        const publicSchema = publicES._extractSchema(esIndexes);
+        const internalSchema = internalES._extractSchema(esIndexes);
 
-        should(publicIndexes).be.eql(['india', 'vietnam']);
-        should(internalIndexes).be.eql(['nepali']);
-      });
-
-      it('does not extract malformated indexes', () => {
-        const esIndexes = ['nepali', '&india', '&vietnam.'];
-
-        const
-          publicIndexes = publicES._extractIndexes(esIndexes),
-          internalIndexes = internalES._extractIndexes(esIndexes);
-
-        should(publicIndexes).be.empty();
-        should(internalIndexes).be.empty();
-      });
-    });
-
-    describe('#_extractCollections', () => {
-      it('extract the collection names for an index from a list of esIndex name', () => {
-        const esIndexes = [
-          '%nepali.liia', '%nepali.mehry', '&nepali.panipokari', '&vietnam.lfiduras'];
-
-        const
-          publicCollections = publicES._extractCollections(esIndexes, 'nepali'),
-          internalCollections = internalES._extractCollections(esIndexes, 'nepali');
-
-        should(publicCollections).be.eql(['panipokari']);
-        should(internalCollections).be.eql(['liia', 'mehry']);
+        should(publicSchema).be.eql({
+          nepali: ['panipokari'],
+          vietnam: ['lfiduras'],
+        });
+        should(internalSchema).be.eql({
+          nepali: ['liia', 'mehry'],
+        });
       });
     });
   });
