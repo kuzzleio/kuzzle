@@ -4,7 +4,11 @@ const rewire = require('rewire');
 const should = require('should');
 const sinon = require('sinon');
 
-const { Request } = require('../../../../index');
+const {
+  BadRequestError,
+  Request,
+  SizeLimitError
+} = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = rewire('../../../../lib/api/controllers/securityController');
@@ -206,6 +210,84 @@ describe('Test: security controller - credentials', () => {
           should(methodStub.firstCall.args[1]).be.eql('someUserId');
           should(methodStub.firstCall.args[2]).be.eql('someStrategy');
         });
+    });
+  });
+
+  describe('#searchUsersByCredentials', () => {
+    let query;
+    let methodStub;
+    let stubResult;
+
+    beforeEach(() => {
+      query = {
+        bool: {
+          must: [
+            {
+              match: {
+                credentials:  'test@test.com'
+              }
+            }
+          ]
+        }
+      };
+      request = new Request({
+        controller: 'security',
+        action: 'searchUsersByCredentials',
+        strategy: 'someStrategy',
+        body: { query }
+      });
+      securityController.translateKoncorde = sinon.stub().resolves();
+      stubResult = {
+        hits: [{ credentials: 'test@test.com', kuid: 'kuid' }],
+        total: 1
+      };
+      methodStub = sinon.stub().resolves(stubResult);
+      kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
+    });
+
+    it('should return the result of the appropriate method from the right strategy plugin', async () => {
+      const result = await securityController.searchUsersByCredentials(request);
+
+      should(securityController.translateKoncorde).not.be.called();
+      should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+      should(kuzzle.pluginsManager.getStrategyMethod).be.calledWith('someStrategy', 'search');
+      should(methodStub).be.calledOnce();
+      should(methodStub.firstCall.args[0]).be.eql({ query });
+      should(result).be.deepEqual(stubResult);
+    });
+
+    it('should throw if the optional method search has not been implemented', () => {
+      kuzzle.pluginsManager.getStrategyMethod.returns(undefined);
+
+      return should(securityController.searchUsersByCredentials(request))
+        .rejectedWith({ id: 'plugin.strategy.missing_optional_method' });
+    });
+
+    it('should reject if the size argument exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+      request.input.args.size = 10;
+
+      return should(securityController.searchUsersByCredentials(request)).rejectedWith(
+        SizeLimitError,
+        { id: 'services.storage.get_limit_exceeded' });
+    });
+
+    it('should reject if the "lang" is not supported', () => {
+      request.input.args.lang = 'turkish';
+
+      return should(securityController.searchUsersByCredentials(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.invalid_argument' });
+    });
+
+    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
+      request.input.body = { query: { equals: { credentials: 'test@test.com' } } };
+      request.input.args.lang = 'koncorde';
+
+      await securityController.searchUsersByCredentials(request);
+
+      should(securityController.translateKoncorde)
+        .be.calledWith({ equals: { credentials: 'test@test.com' } });
     });
   });
 
