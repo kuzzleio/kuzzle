@@ -239,143 +239,8 @@ describe('Test: security controller - users', () => {
     await itShouldCallTheRealUserControllerInstead('mGetUsers', 'mGet');
   });
 
-  describe('#searchUsers', () => {
-    const searchEvent = 'core:security:user:search';
-    let searchStub;
-
-    beforeEach(() => {
-      request.input.body = { query: {foo: 'bar' } };
-      request.input.args.from = 13;
-      request.input.args.size = 42;
-      request.input.args.scroll = 'foo';
-
-      searchStub = kuzzle.ask
-        .withArgs(searchEvent)
-        .resolves({
-          hits: [{ _id: 'admin', _source: { profileIds: ['admin'] } }],
-          total: 2,
-          scrollId: 'foobar'
-        });
-    });
-
-    it('should return a valid responseObject', async () => {
-      const response = await securityController.searchUsers(request);
-
-      should(searchStub).be.calledWithMatch(
-        searchEvent,
-        request.input.body,
-        {from: 13, size: 42, scroll: 'foo'});
-
-      should(response).match({
-        hits: [{_id: 'admin'}],
-        scrollId: 'foobar',
-        total: 2,
-      });
-    });
-
-    it('should handle empty body requests', async () => {
-      request.input.body = null;
-
-      const response = await securityController.searchUsers(new Request({}));
-
-      should(searchStub).be.calledWithMatch(searchEvent, {}, {});
-
-      should(response).match({
-        hits: [{_id: 'admin'}],
-        scrollId: 'foobar',
-        total: 2,
-      });
-    });
-
-    it('should allow `aggregations` and `highlight` arguments', async () => {
-      request.input.body = {aggregations: 'aggregations'};
-
-      await securityController.searchUsers(request);
-
-      should(searchStub).be.calledWithMatch(
-        searchEvent,
-        { aggregations: 'aggregations' },
-        {
-          from: request.input.args.from,
-          size: request.input.args.size,
-          scroll: request.input.args.scroll,
-        });
-
-      // highlight
-      searchStub.resetHistory();
-      request.input.body = {highlight: 'highlight'};
-      await securityController.searchUsers(request);
-
-      should(searchStub).be.calledWithMatch(
-        searchEvent,
-        { highlight: 'highlight' },
-        {
-          from: request.input.args.from,
-          size: request.input.args.size,
-          scroll: request.input.args.scroll,
-        });
-
-      // all in one
-      searchStub.resetHistory();
-      request.input.body = {
-        query: { match_all: {} },
-        aggregations: 'aggregations',
-        highlight: 'highlight'
-      };
-
-      await securityController.searchUsers(request);
-
-      should(searchStub).be.calledWithMatch(
-        searchEvent,
-        {
-          aggregations: 'aggregations',
-          highlight: 'highlight',
-          query: { match_all: {} },
-        },
-        {
-          from: request.input.args.from,
-          size: request.input.args.size,
-          scroll: request.input.args.scroll,
-        });
-    });
-
-    it('should reject if the number of documents per page exceeds server limits', () => {
-      kuzzle.config.limits.documentsFetchCount = 1;
-      request = new Request({ size: 10 });
-
-      return should(securityController.searchUsers(request))
-        .rejectedWith(SizeLimitError, {
-          id: 'services.storage.get_limit_exceeded'
-        });
-    });
-
-    it('should forward a security module exception', () => {
-      const error = new Error('Mocked error');
-      searchStub.rejects(error);
-
-      return should(securityController.searchUsers(request))
-        .be.rejectedWith(error);
-    });
-
-    it('should reject if the "lang" is not supported', () => {
-      request.input.body = { query: { foo: 'bar' } };
-      request.input.args.lang = 'turkish';
-
-      return should(securityController.searchUsers(request)).rejectedWith(
-        BadRequestError,
-        { id: 'api.assert.invalid_argument' });
-    });
-
-    it('should call the "translateKoncorde" method if "lang" is "koncorde"', async () => {
-      request.input.body = { query: { equals: { name: 'Melis' } } };
-      request.input.args.lang = 'koncorde';
-      securityController.translateKoncorde = sinon.stub().resolves();
-
-      await securityController.searchUsers(request);
-
-      should(securityController.translateKoncorde)
-        .be.calledWith({ equals: { name: 'Melis' } });
-    });
+  describe('#search', async () => {
+    await itShouldCallTheRealUserControllerInstead('scrollUsers', 'search');
   });
 
   describe('#scrollUsers', async () => {
@@ -411,16 +276,7 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#mDeleteUser', () => {
-    it('should forward its args to mDelete', async () => {
-      sinon.stub(securityController, '_mDelete').resolves('foobar');
-
-      await should(securityController.mDeleteUsers(request))
-        .fulfilledWith('foobar');
-
-      should(securityController._mDelete)
-        .be.calledOnce()
-        .be.calledWith('user', request);
-    });
+    await itShouldCallTheRealUserControllerInstead('getUserRights', 'mDelete');
   });
 
   describe('#revokeTokens', () => {
