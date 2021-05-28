@@ -10,7 +10,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const SecurityController = require('../../../../lib/api/controllers/securityController');
+const { NativeSecurityController } = require('../../../lib/api/controllers/baseController');
 const UserController = require('../../../lib/api/controllers/userController');
 const User = require('../../../lib/model/security/user');
 
@@ -27,6 +27,12 @@ describe('UserController', () => {
     request = new Request({ controller: 'user' }, { user: new User() });
 
     request.context.user._id = '4';
+  });
+
+  describe('#constructor', () => {
+    it('should inherit the base constructor', () => {
+      should(new UserController()).instanceOf(NativeSecurityController);
+    });
   });
 
   describe('#create', () => {
@@ -196,16 +202,14 @@ describe('UserController', () => {
   });
 
   describe('#mDelete', () => {
-    let securityController;
 
     it('should forward its args to mDelete', async () => {
-      securityController = new SecurityController()
-      sinon.stub(securityController, '_mDelete').resolves('foobar');
+      sinon.stub(userController, '_mDelete').resolves('foobar');
 
       await should(userController.mDelete(request))
         .fulfilledWith('foobar');
 
-      should(securityController._mDelete)
+      should(userController._mDelete)
         .be.calledOnce()
         .be.calledWith('user', request);
     });
@@ -910,6 +914,114 @@ describe('UserController', () => {
 
       await should(userController.checkRights(request))
         .be.rejectedWith({ id: 'api.assert.missing_argument' });
+    });
+  });
+
+  describe('#revokeTokens', () => {
+    beforeEach(() => {
+      request.input.args._id = 'test';
+    });
+
+    it('should revoke all tokens related to a given user', async () => {
+      await userController.revokeTokens(request);
+
+      should(kuzzle.ask).calledWithMatch(
+        'core:security:token:deleteByKuid',
+        request.input.args._id);
+    });
+
+    it('should reject if no id is provided', async () => {
+      request.input.args._id = null;
+
+      await should(userController.revokeTokens(request))
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+    });
+
+    it('should forward security module exceptions', () => {
+      const error = new Error('foo');
+
+      kuzzle.ask
+        .withArgs('core:security:token:deleteByKuid', request.input.args._id)
+        .rejects(error);
+
+      return should(userController.revokeTokens(request))
+        .rejectedWith(error);
+    });
+  });
+
+  describe('#createFirstAdmin', () => {
+    const adminExistsEvent = 'core:security:user:admin:exist';
+    const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
+    const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
+    let createOrReplaceRoleStub;
+    let createOrReplaceProfileStub;
+    let adminExistsStub;
+
+    beforeEach(() => {
+      sinon.stub(userController, '_persistUser');
+
+      request.input.args._id = 'test';
+
+      createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
+
+      createOrReplaceProfileStub = kuzzle.ask
+        .withArgs(createOrReplaceProfileEvent);
+
+      adminExistsStub = kuzzle.ask
+        .withArgs(adminExistsEvent)
+        .resolves(false);
+    });
+
+    it('should reject if an admin already exists', async () => {
+      adminExistsStub.resolves(true);
+
+      await should(userController.createFirstAdmin(request))
+        .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
+
+      should(userController._persistUser).not.called();
+      should(createOrReplaceRoleStub).not.called();
+      should(createOrReplaceProfileStub).not.called();
+    });
+
+    it('should create the admin user and not reset roles & profiles if not asked to', async () => {
+      request.input.body = { content: { foo: 'bar' } };
+
+      await userController.createFirstAdmin(request);
+
+      should(userController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['admin'], request.input.body.content);
+
+      should(createOrReplaceRoleStub).not.called();
+      should(createOrReplaceProfileStub).not.called();
+    });
+
+    it('should create the admin user and reset roles & profiles if asked to', async () => {
+      request.input.args.reset = true;
+
+      await userController.createFirstAdmin(request);
+
+      should(userController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['admin'], {});
+
+      const config = kuzzle.config.security.standard;
+
+      for (const [key, content] of Object.entries(config.roles)) {
+        should(createOrReplaceRoleStub).calledWithMatch(
+          createOrReplaceRoleEvent,
+          key,
+          content,
+          { refresh: 'wait_for', userId: request.context.user._id });
+      }
+
+      for (const [key, content] of Object.entries(config.profiles)) {
+        should(createOrReplaceProfileStub).calledWithMatch(
+          createOrReplaceProfileEvent,
+          key,
+          content,
+          { refresh: 'wait_for', userId: request.context.user._id });
+      }
     });
   });
 
