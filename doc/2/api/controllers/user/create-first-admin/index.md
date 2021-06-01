@@ -15,8 +15,8 @@ Creates a Kuzzle administrator account, only if none exist.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<kuid>/_createFirstAdmin[?reset]
-URL(2): http://kuzzle:7512/_createFirstAdmin[?reset]
+URL: http://kuzzle:7512/user/<kuid>/_createFirstAdmin[?reset]
+URL(2): http://kuzzle:7512/user/_createFirstAdmin[?reset]
 Method: POST
 Body:
 ```

@@ -18,6 +18,7 @@ const {
   RealtimeController,
   SecurityController,
   ServerController,
+  UserController
 } = require('../../../lib/api/controllers');
 
 describe('funnel.init', () => {
@@ -32,7 +33,7 @@ describe('funnel.init', () => {
     await funnel.init();
 
     should(funnel.rateLimiter.init).calledOnce();
-    should(funnel.controllers.size).be.eql(12);
+    should(funnel.controllers.size).be.eql(13);
     should(funnel.controllers.get('auth')).be.instanceOf(AuthController);
     should(funnel.controllers.get('bulk')).be.instanceOf(BulkController);
     should(funnel.controllers.get('cluster')).be.instanceOf(ClusterController);
@@ -44,6 +45,7 @@ describe('funnel.init', () => {
     should(funnel.controllers.get('realtime')).be.instanceOf(RealtimeController);
     should(funnel.controllers.get('security')).be.instanceOf(SecurityController);
     should(funnel.controllers.get('server')).be.instanceOf(ServerController);
+    should(funnel.controllers.get('user')).be.instanceOf(UserController);
     should(funnel.controllers.get('admin')).be.instanceOf(AdminController);
   });
 });

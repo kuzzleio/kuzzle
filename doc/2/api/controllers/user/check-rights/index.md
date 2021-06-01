@@ -17,7 +17,7 @@ Checks if the provided API request can be executed by a user.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_checkRights/<_id>
+URL: http://kuzzle:7512/user/<_id>/_checkRights
 Method: POST
 Body:
 ```
