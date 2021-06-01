@@ -707,7 +707,7 @@ export class KuzzleRequest {
 
   /**
    * Returns the search params.
-   * 
+   *
    * @param options defaultSize (10), withoutBody (false)
    */
   getSearchParams (options: { defaultSize?: number, withoutBody?: any } = {} ): {

@@ -16,7 +16,7 @@ Feature: Security Controller
   # security:checkRights =======================================================
 
   @security
-  Scenario: Check if logued user can execute provided API request
+  Scenario: Check if logged user can execute provided API request
     Given I "update" a role "default" with the following API rights:
       | auth     | { "actions": { "login": true, "checkRights": true } } |
       | document | { "actions": { "create": false, "update": true } }    |
@@ -166,6 +166,8 @@ Feature: Security Controller
     # Test of roles reset
     And The role "default" should match the default one
 
+  # security:createProfile =====================================================
+
   @security
   Scenario: Create a profile
     Given an index "example"
@@ -184,6 +186,8 @@ Feature: Security Controller
     Then I create a profile "test-profile2" with the following policies:
       | default | [{ "index": "example2", "collections": ["one", "two"] }] |
     And I am able to get a profile with id "test-profile"
+
+  # security:deleteProfile =====================================================
 
   Scenario: Delete a profile
     Given I "create" a role "test-role" with the following API rights:
@@ -226,6 +230,8 @@ Feature: Security Controller
       | base-profile |
     And The user "test-user-two" should have the following profiles:
       | anonymous |
+
+  # security: createRole, getRole, searchRoles, updateRole, deleteRole =========
 
   @security
   Scenario: Create a role with invalid API rights
@@ -325,6 +331,8 @@ Feature: Security Controller
     And The property "controllers.functional-test-plugin/non-existing-controller.actions" of the result should match:
       | manage | false |
 
+  # security:mGetUsers =========================================================
+
   @security
   Scenario: Get multiple users
     Given I create a user "test-user" with content:
@@ -343,6 +351,8 @@ Feature: Security Controller
       | _id          |
       | "test-user"  |
       | "test-user2" |
+
+  # security:searchUsers =======================================================
 
   @security
   Scenario: Search users

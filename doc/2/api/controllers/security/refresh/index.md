@@ -10,7 +10,12 @@ title: refresh
 
 Forces an immediate [reindexation](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/docs-refresh.html) of the provided security collection.
 
-The available security collections are: `users`, `profiles`, `roles`.
+The available security collections are `profiles` or `roles`.
+
+::: info
+<DeprecatedBadge version="auto-version">
+`users` collection can also be refreshed with this action but this behavior is deprecated. Use [user:refresh](/core/2/api/controllers/user/refresh) instead.
+:::
 
 When writing or deleting documents in Kuzzle, the changes need to be indexed before being reflected in the search results.
 By default, this operation can take up to 1 second.

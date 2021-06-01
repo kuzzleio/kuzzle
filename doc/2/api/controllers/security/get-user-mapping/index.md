@@ -8,6 +8,8 @@ title: getUserMapping
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:mappings](/core/2/api/controllers/user/mappings) instead.__
+
 Gets the mapping of the internal users collection.
 
 ---

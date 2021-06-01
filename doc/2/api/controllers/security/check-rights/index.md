@@ -9,6 +9,8 @@ title: checkRights
 <SinceBadge version="2.8.0"/>
 <DeprecatedBadge version="auto-version">
 
+__Use [user:checkRights](/core/2/api/controllers/user/check-rights) instead.__
+
 Checks if the provided API request can be executed by a user.
 
 ---

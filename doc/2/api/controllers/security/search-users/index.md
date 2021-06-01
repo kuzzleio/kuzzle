@@ -9,6 +9,8 @@ title: searchUsers
 <SinceBadge version="2.8.0"/>
 <DeprecatedBadge version="auto-version">
 
+__Use [user:search](/core/2/api/controllers/user/search) instead.__
+
 Searches users.
 
 This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.

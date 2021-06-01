@@ -8,6 +8,8 @@ title: mGetUsers
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:mGet](/core/2/api/controllers/user/m-get) instead.__
+
 Gets multiple users.
 
 ---

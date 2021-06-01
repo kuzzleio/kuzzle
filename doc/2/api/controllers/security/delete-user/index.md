@@ -8,6 +8,8 @@ title: deleteUser
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:delete](/core/2/api/controllers/user/delete) instead.__
+
 Deletes a user and all their associate credentials.
 
 ---

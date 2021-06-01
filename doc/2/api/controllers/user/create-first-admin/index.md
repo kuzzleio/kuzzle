@@ -6,10 +6,6 @@ title: createFirstAdmin
 
 # createFirstAdmin
 
-<DeprecatedBadge version="auto-version" />
-
-__Use [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) instead.__
-
 Creates a Kuzzle administrator account, only if none exist.
 
 ---
@@ -44,7 +40,7 @@ Body:
 
 ```js
 {
-  "controller": "security",
+  "controller": "user",
   "action": "createFirstAdmin",
   "body": {
     "content": {
@@ -94,7 +90,7 @@ Returns information about the newly created administrator:
 {
   "status": 200,
   "error": null,
-  "controller": "security",
+  "controller": "user",
   "action": "createFirstAdmin",
   "volatile": {},
   "requestId": "<unique request identifier>",

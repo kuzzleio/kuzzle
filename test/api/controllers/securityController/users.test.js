@@ -26,6 +26,7 @@ describe('Test: security controller - users', () => {
 
       should(funnelGetControllerStub).calledWithMatch('user');
       should(newActionStub).be.called();
+      should(request.deprecations).have.length(1);
     });
   }
 

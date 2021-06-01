@@ -8,6 +8,8 @@ title: getUser
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:get](/core/2/api/controllers/user/get) instead.__
+
 Gets a user.
 
 ---

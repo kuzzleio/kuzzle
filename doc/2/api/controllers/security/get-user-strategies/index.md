@@ -6,7 +6,9 @@ title: getUserStrategies
 
 # getUserStrategies
 
+<DeprecatedBadge version="auto-version">
 
+__Use [user:strategies](/core/2/api/controllers/user/strategies) instead.__
 
 Gets the available authentication strategies of a user.
 

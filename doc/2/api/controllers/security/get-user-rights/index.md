@@ -8,6 +8,8 @@ title: getUserRights
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:rights](/core/2/api/controllers/user/rights) instead.__
+
 Gets the detailed rights granted to a user.
 
 ---

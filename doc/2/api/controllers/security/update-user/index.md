@@ -8,6 +8,8 @@ title: updateUser
 
 <DeprecatedBadge version="auto-version">
 
+__Use [user:update](/core/2/api/controllers/user/update) instead.__
+
 Updates a user definition.
 
 ---
