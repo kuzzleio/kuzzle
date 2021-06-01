@@ -1,7 +1,6 @@
 'use strict';
 
 const rewire = require('rewire');
-const sinon = require('sinon');
 const should = require('should');
 
 const { NativeSecurityController } = require('../../../../lib/api/controllers/baseController');

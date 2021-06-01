@@ -14,7 +14,7 @@ const {
   PartialError,
   SizeLimitError
 } = require('../../../index');
-const kerror = require('../../../../lib/kerror');
+const kerror = require('../../../lib/kerror');
 
 describe('BaseController', () => {
 
@@ -151,7 +151,7 @@ describe('BaseController', () => {
       kuzzle = new KuzzleMock();
       sinon.spy(kerror, 'get');
       nativeSecurityController = new NativeSecurityController();
-      request = new Request();
+      request = new Request({});
     });
 
     afterEach(() => {
@@ -169,7 +169,7 @@ describe('BaseController', () => {
         for (const collection of ['users', 'roles', 'profiles']) {
           request.input.args.collection = collection;
 
-          const response = await nativeSecurityController._refresh(request);
+          const response = await nativeSecurityController._refresh(collection);
 
           should(response).be.null();
           should(kuzzle.ask).calledWith(
@@ -180,9 +180,7 @@ describe('BaseController', () => {
       });
 
       it('should raise an error with unknown collection', async () => {
-        request.input.args.collection = 'frontend-security';
-
-        await should(nativeSecurityController._refresh(request))
+        await should(nativeSecurityController._refresh('frontend-security'))
           .rejectedWith({ id: 'api.assert.unexpected_argument' });
 
         should(kuzzle.ask.withArgs('core:storage:private:collection:refresh'))

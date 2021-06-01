@@ -32,39 +32,7 @@ describe('Test: security controller - users', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     securityController = new SecurityController();
-    request = new Request();
-  });
-
-  describe('#checkRights', async () => {
-    await itShouldCallTheRealUserControllerInstead('checkRights', 'checkRights');
-  });
-
-  describe('#updateUserMapping', async () => {
-    await itShouldCallTheRealUserControllerInstead('updateUserMapping', 'updateMappings');
-  });
-
-  describe('#getUserMapping', async () => {
-    await itShouldCallTheRealUserControllerInstead('getUserMapping', 'mappings');
-  });
-
-  describe('#getUser', async () => {
-    await itShouldCallTheRealUserControllerInstead('getUser', 'get');
-  });
-
-  describe('#mGetUsers', async () => {
-    await itShouldCallTheRealUserControllerInstead('mGetUsers', 'mGet');
-  });
-
-  describe('#search', async () => {
-    await itShouldCallTheRealUserControllerInstead('scrollUsers', 'search');
-  });
-
-  describe('#scrollUsers', async () => {
-    await itShouldCallTheRealUserControllerInstead('scrollUsers', 'scroll');
-  });
-
-  describe('#deleteUser', async () => {
-    await itShouldCallTheRealUserControllerInstead('deleteUser', 'delete');
+    request = new Request({});
   });
 
   describe('#createUser', async () => {
@@ -75,6 +43,26 @@ describe('Test: security controller - users', () => {
     await itShouldCallTheRealUserControllerInstead('createRestrictedUser', 'createRestricted');
   });
 
+  describe('#createFirstAdmin', async () => {
+    await itShouldCallTheRealUserControllerInstead('createFirstAdmin', 'createFirstAdmin');
+  });
+
+  describe('#getUser', async () => {
+    await itShouldCallTheRealUserControllerInstead('getUser', 'get');
+  });
+
+  describe('#mGetUsers', async () => {
+    await itShouldCallTheRealUserControllerInstead('mGetUsers', 'mGet');
+  });
+
+  describe('#searchUsers', async () => {
+    await itShouldCallTheRealUserControllerInstead('searchUsers', 'search');
+  });
+
+  describe('#scrollUsers', async () => {
+    await itShouldCallTheRealUserControllerInstead('scrollUsers', 'scroll');
+  });
+
   describe('#updateUser', async () => {
     await itShouldCallTheRealUserControllerInstead('updateUser', 'update');
   });
@@ -83,23 +71,35 @@ describe('Test: security controller - users', () => {
     await itShouldCallTheRealUserControllerInstead('replaceUser', 'replace');
   });
 
-  describe('#getUserStrategies', async () => {
-    await itShouldCallTheRealUserControllerInstead('getUserStrategies', 'strategies');
+  describe('#deleteUser', async () => {
+    await itShouldCallTheRealUserControllerInstead('deleteUser', 'delete');
+  });
+
+  describe('#mDeleteUsers', async () => {
+    await itShouldCallTheRealUserControllerInstead('mDeleteUsers', 'mDelete');
+  });
+
+  describe('#getUserMapping', async () => {
+    await itShouldCallTheRealUserControllerInstead('getUserMapping', 'mappings');
+  });
+
+  describe('#updateUserMapping', async () => {
+    await itShouldCallTheRealUserControllerInstead('updateUserMapping', 'updateMappings');
   });
 
   describe('#getUserRights', async () => {
     await itShouldCallTheRealUserControllerInstead('getUserRights', 'rights');
   });
 
-  describe('#mDeleteUser', () => {
-    await itShouldCallTheRealUserControllerInstead('mDeleteUser', 'mDelete');
+  describe('#checkRights', async () => {
+    await itShouldCallTheRealUserControllerInstead('checkRights', 'checkRights');
   });
 
-  describe('#revokeTokens', () => {
+  describe('#getUserStrategies', async () => {
+    await itShouldCallTheRealUserControllerInstead('getUserStrategies', 'strategies');
+  });
+
+  describe('#revokeTokens', async () => {
     await itShouldCallTheRealUserControllerInstead('revokeTokens', 'revokeTokens');
-  });
-
-  describe('#createFirstAdmin', () => {
-    await itShouldCallTheRealUserControllerInstead('createFirstAdmin', 'createFirstAdmin');
   });
 });

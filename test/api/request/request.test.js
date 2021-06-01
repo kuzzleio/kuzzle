@@ -5,7 +5,8 @@ const should = require('should');
 const {
   KuzzleError,
   InternalError,
-  BadRequestError
+  BadRequestError,
+  SizeLimitError
 } = require('../../../lib/kerror/errors');
 const { Request, KuzzleRequest } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
@@ -902,6 +903,7 @@ describe('#Request', () => {
           searchBody: '{"query":{"foo":"bar"}}',
           body: { query: { foo: 'bar' } }
         };
+        global.kuzzle.config.limits.documentsFetchCount = 2048;
       });
 
       it('should extract search params', () => {
@@ -990,7 +992,7 @@ describe('#Request', () => {
         should(searchBody).be.eql({});
       });
 
-      it('should have have default value', () => {
+      it('should have default value', () => {
         request = new KuzzleRequest({}, {
           connection: { protocol: 'http', verb: 'POST' }
         });
@@ -1000,6 +1002,45 @@ describe('#Request', () => {
         should(from).be.eql(0);
         should(size).be.eql(10);
         should(scrollTTL).be.undefined();
+        should(query).be.eql({});
+        should(searchBody).be.eql({});
+      });
+
+      it('should override its default value when asked to', () => {
+        request = new KuzzleRequest({}, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        const { size } = request.getSearchParams({defaultSize: 42});
+
+        should(size).be.equal(42);
+      });
+
+      it('should replace defaultSize = -1 by maximum size in config', () => {
+        request = new KuzzleRequest({}, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        const { size } = request.getSearchParams({defaultSize: -1});
+
+        should(size).be.equal(2048);
+      });
+
+      it('should throw if requested size is above config limit', () => {
+        input.size = 3000;
+        request = new KuzzleRequest(input, {
+          connection: { protocol: 'http', verb: 'POST' }
+        });
+
+        should(() => request.getSearchParams({defaultSize: -1}))
+          .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
+      });
+
+      it('should not retreive body when withoutBody option is enabled', () => {
+        request = new KuzzleRequest({});
+
+        const { query, searchBody } = request.getSearchParams({ withoutBody: false });
+
         should(query).be.eql({});
         should(searchBody).be.eql({});
       });
