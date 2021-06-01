@@ -4539,5 +4539,115 @@ describe('Test: ElasticSearch service', () => {
         });
       });
     });
+
+    describe('#_sanitizeSearchBody', () => {
+      let searchBody;
+
+      it('should return the same query if all top level keywords are valid', () => {
+        searchBody = {};
+        for (const key of publicES.searchBodyKeys) {
+          searchBody[key] = { foo: 'bar' };
+        }
+
+        const result = publicES._sanitizeSearchBody(Object.assign({}, searchBody));
+
+        should(result).be.deepEqual(searchBody);
+      });
+
+      it('should throw if any top level keyword is not in the white list', () => {
+        searchBody = {
+          unknown: {}
+        };
+
+        should(() => publicES._sanitizeSearchBody(searchBody))
+          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'});
+      });
+
+      it('should throw if any script keyword is found in the query (even deeply nested)', () => {
+        searchBody = {
+          query: {
+            bool: {
+              filter: [
+                {
+                  script: {
+                    script: {
+                      inline: 'doc[message.keyword].value.length() > params.length',
+                      params: {
+                        length: 25
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(searchBody))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+      });
+
+      it('should turn empty queries into match_all queries', () => {
+        searchBody = {
+          query: {}
+        };
+
+        const result = publicES._sanitizeSearchBody(searchBody);
+
+        should(result).be.deepEqual({ query: { match_all: {} }});
+      });
+    });
+
+    describe('#_scriptCheck', () => {
+      let object;
+
+      it('should not throw when there is not a single script', () => {
+        object = { foo: 'bar' };
+
+        should(() => publicES._scriptCheck(object)).not.throw();
+      });
+
+      it('should throw if any script keyword is found in the query', () => {
+        object = {
+          query: {
+            match: {
+              script: {
+                inline: 'doc[message.keyword].value.length() > params.length',
+                params: {
+                  length: 25
+                }
+              }
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(object))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+      });
+
+      it('should throw if any deeply nested script keyword is found in the query', () => {
+        object = {
+          query: {
+            bool: {
+              filter: [
+                {
+                  script: {
+                    script: {
+                      inline: 'doc[message.keyword].value.length() > params.length',
+                      params: {
+                        length: 25
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(object))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+      });
+    });
   });
 });
