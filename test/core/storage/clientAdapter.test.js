@@ -61,6 +61,7 @@ describe('#core/storage/ClientAdapter', () => {
 
     beforeEach(() => {
       uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+      sinon.stub(uninitializedAdapter, 'populateCache').resolves();
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
@@ -71,19 +72,28 @@ describe('#core/storage/ClientAdapter', () => {
       should(uninitializedAdapter.client.init).not.called();
 
       await uninitializedAdapter.init();
+
       should(uninitializedAdapter.client.init).calledOnce();
+      should(uninitializedAdapter.populateCache).calledOnce();
+    });
+  });
+
+  describe('#populateCache', () => {
+    let uninitializedAdapter;
+
+    beforeEach(() => {
+      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+
+      // prevents event conflicts with the already initialized adapters above
+      kuzzle.onAsk.restore();
+      sinon.stub(kuzzle, 'onAsk');
     });
 
-    it('should initialize its index/collection cache', async () => {
-      uninitializedAdapter.client.listIndexes.resolves(['foo', 'bar']);
-      uninitializedAdapter.client.listCollections.withArgs('foo').resolves([
-        'foo1',
-        'foo2',
-      ]);
-      uninitializedAdapter.client.listCollections.withArgs('bar').resolves([
-        'bar1',
-        'bar2',
-      ]);
+    it('should populate the cache with index, collections and aliases', async () => {
+      uninitializedAdapter.client.getSchema.resolves({
+        foo: ['foo1', 'foo2'],
+        bar: ['bar1', 'bar2']
+      });
       uninitializedAdapter.client.listAliases.resolves([
         { index: 'alias1', collection: 'qux' },
         { index: 'alias2', collection: 'qux' },

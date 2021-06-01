@@ -50,6 +50,7 @@ export type StrategyDefinition = {
       exists: string,
       getById?: string,
       getInfo?: string,
+      search?: string,
       update: string,
       validate: string,
       verify: string,

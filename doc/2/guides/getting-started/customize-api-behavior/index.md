@@ -78,6 +78,8 @@ We need to use the [Backend.pipe.register](/core/2/framework/classes/backend-pip
 In this example, we are going to change the return value of the `server:now` action to make it return a formatted date string instead of a UNIX timestamp:
 
 ```js
+import { KuzzleRequest } from 'kuzzle';
+
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
   request.result.now = (new Date()).toUTCString();
 

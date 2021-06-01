@@ -30,6 +30,7 @@ description: Error codes definitions
 | plugin.assert.invalid_controller_definition<br/><pre>0x0401000c</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Incorrect "%s" controller definition: %s | The controller definition is incorrect. |
 | plugin.assert.invalid_application_name<br/><pre>0x0401000d</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Application name "%s" is invalid. Application names must be in kebab-case. | The application name is invalid. Application names can only contain lowercase letters and dashes. |
 | plugin.assert.duplicated_api_definition<br/><pre>0x0401000e</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot define new controllers in the "api" and the "controllers" objects at the same time | You cannot use the "api" and the "controllers" objects at the same time. Use the "api" object to define controllers. |
+| plugin.assert.plugin_not_found<br/><pre>0x0401000f</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Plugin "%s" not found.%s | The request plugin does not exists or have not been loaded yet. |
 
 ---
 
@@ -74,6 +75,7 @@ description: Error codes definitions
 | plugin.strategy.unauthorized_removal<br/><pre>0x04030012</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot remove strategy %s: owned by another plugin. | Tried to remove a strategy owned by another plugin |
 | plugin.strategy.strategy_not_found<br/><pre>0x04030013</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Cannot remove strategy %s: strategy does not exist. | Attempted to remove a non-existent authentication strategy |
 | plugin.strategy.missing_user<br/><pre>0x04030014</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s | A strategy plugin approved credentials without providing a user object to Kuzzle |
+| plugin.strategy.missing_optional_method<br/><pre>0x04030015</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | "%s" method is optional. The %s strategy plugin has not yet implemented it. | An optional method has not been implemented for this strategy |
 
 ---
 
