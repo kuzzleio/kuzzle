@@ -724,7 +724,7 @@ export class KuzzleRequest {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', options.defaultSize || 10);
     const scrollTTL = this.getScrollTTLParam();
-    const query = options.withoutBody ?  {} : this.getBodyObject('query', {});
+    const query = options.withoutBody ? {} : this.getBodyObject('query', {});
     const searchBody = options.withoutBody ? {} : this.getSearchBody();
 
     if (size - from > global.kuzzle.config.limits.documentsFetchCount) {
