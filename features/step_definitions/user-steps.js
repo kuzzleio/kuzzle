@@ -54,3 +54,18 @@ Then(/The user "(.*?)"( should not)? exists/, async function (userId, shouldNot)
     }
   }
 });
+
+Then(/The content of user "(.+)" should( not)? match:/, async function (userId, shouldNot, dataTable) {
+  const expectedContent = this.parseObject(dataTable);
+
+  const user = await this.sdk.user.get(userId);
+
+  for (const [key, value] of Object.entries(expectedContent)) {
+    if (shouldNot) {
+      should(_.get(user._source, key)).not.be.eql(value);
+    }
+    else {
+      should(_.get(user._source, key)).be.eql(value);
+    }
+  }
+});
