@@ -13,6 +13,21 @@ Feature: User Controller
 
   # user:createRestricted ======================================================
 
+  @security
+  Scenario: Create a new restricted user without permissions
+    Given I successfully execute the action "user":"createRestricted" with args:
+      | _id  | "alyx"                                       |
+      | body | { "content": { "profileIds": ["admin"] } } |
+    Then I got an error with id "security.rights.forbidden"
+
+  Scenario: Create a new restricted user successfuly
+    When I successfully execute the action "user":"createRestricted" with args:
+      | _id  | "alyx"                                       |
+      | body | { "content": { "profileIds": ["default"] } } |
+    Then I should receive a result matching:
+      | _id                | "alyx"      |
+      | _source.profileIds | ["default"] |
+
   # user:createFirstAdmin ======================================================
 
   @firstAdmin
@@ -43,6 +58,15 @@ Feature: User Controller
     And The role "default" should match the default one
 
   # user:get ===================================================================
+
+  @security
+  Scenario: Get a user
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    When I successfully execute the action "user":"get" with args:
+      | _id | "test-user" |
+    Then I should receive a result matching:
+      | _id | "test-user" |
 
   # user:mGet ==================================================================
 
@@ -107,6 +131,26 @@ Feature: User Controller
 
   # user:scroll ================================================================
 
+  @security
+  Scenario: Search with scroll
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    And I create a user "test-user2" with content:
+      | profileIds | ["admin"] |
+    When I successfully execute the action "user":"search" with args:
+      | body   | {}    |
+      | scroll | "30s" |
+      | size   | 1     |
+    Then I should receive a result matching:
+      | remaining | 1 |
+      | total     | 2 |
+    And I should receive a "hits" array containing 1 elements
+    When I scroll to the next page of users
+    Then I should receive a result matching:
+      | remaining | 0 |
+      | total     | 2 |
+    And I should receive a "hits" array containing 1 elements
+
   # user:update ================================================================
 
   # user:replace ===============================================================
@@ -158,6 +202,16 @@ Feature: User Controller
       | id | "security.user.not_found" |
 
   # user:revokeTokens ==========================================================
+
+  @security
+  Scenario: Revoke all tokens of a user
+    Given I create a user "test-user" with content:
+      | profileIds | ["default"] |
+    And I'm logged in Kuzzle as user "test-user" with password "password"
+    And I'm logged in Kuzzle as user "test-admin" with password "password"
+    When I successfully execute the action "user":"revokeTokens" with args:
+      | _id | "test-user" |
+    Then I can not login with the previously created API key
 
   # user:refresh ===============================================================
 
