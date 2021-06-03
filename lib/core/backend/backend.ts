@@ -67,9 +67,7 @@ export class Backend {
 
   protected started = false;
 
-  protected _pipes = {
-    'kuzzle:state:ready': async () => { this.started = true }
-  };
+  protected _pipes = {};
   protected _hooks = {};
   protected _controllers = {};
   protected _plugins = {};
@@ -205,6 +203,14 @@ export class Backend {
     Reflect.defineProperty(this, '_sdk', {
       writable: true
     });
+
+    /**
+     * Set the "started" property in this event so developers can use runtime
+     * features in pipes/hooks attached to this event.
+     */
+    this._pipes['kuzzle:state:ready'] = async () => {
+      this.started = true;
+    };
 
     global.app = this;
 
