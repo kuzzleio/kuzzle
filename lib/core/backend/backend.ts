@@ -282,6 +282,8 @@ export class Backend {
     await this._kuzzle.start(application, options);
 
     this._sdk = new EmbeddedSDK();
+
+    this.started = true;
   }
 
   /**

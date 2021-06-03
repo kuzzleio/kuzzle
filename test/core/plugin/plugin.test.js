@@ -31,7 +31,7 @@ describe('Plugin', () => {
   beforeEach(() => {
     manifest = {
       name: 'lambda-core',
-      kuzzleVersion: '2.x'
+      kuzzleVersion: '>=2.x'
     };
 
     packageJson = { version: 'version' };
@@ -64,7 +64,7 @@ describe('Plugin', () => {
     });
   });
 
-  describe('#init', () => {
+  describe.only('#init', () => {
     it('should initializes the plugin with name, config and context', () => {
       kuzzle.config = {
         plugins: {
