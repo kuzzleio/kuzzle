@@ -93,7 +93,7 @@ describe('Plugin', () => {
       should(plugin._context.constructor.name).be.eql('PrivilegedPluginContext');
     });
 
-    it.only('should throw an error if the manifest kuzzleVersion is not valid', () => {
+    it('should throw an error if the manifest kuzzleVersion is not valid', () => {
       plugin = new Plugin({ _manifest: { kuzzleVersion: '42.21.0' } });
 
       should(() => {
