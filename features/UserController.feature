@@ -197,7 +197,7 @@ Feature: User Controller
     Then I should receive a result matching:
       | _id        | "test-user" |
     And The user "test-user" should not exists
-    But The user "test-user2" should exists
+    But The user "test-user2" exists
 
   # user:mDelete ===============================================================
 
@@ -216,7 +216,7 @@ Feature: User Controller
       | "test-user2" |
     And The user "test-user" should not exists
     And The user "test-user2" should not exists
-    But The user "test-user3" should exists
+    But The user "test-user3" exists
 
   # user : mappings & updateMappings ===========================================
 
