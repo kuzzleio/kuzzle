@@ -67,7 +67,9 @@ export class Backend {
 
   protected started = false;
 
-  protected _pipes = {};
+  protected _pipes = {
+    'kuzzle:state:ready': async () => this.started = true
+  };
   protected _hooks = {};
   protected _controllers = {};
   protected _plugins = {};
@@ -247,6 +249,7 @@ export class Backend {
     // we need to load the default plugins
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
+
       this.plugin.use(new PluginClass(), {
         deprecationWarning: false,
         name: plugin,
@@ -273,8 +276,6 @@ export class Backend {
     await this._kuzzle.start(application, options);
 
     this._sdk = new EmbeddedSDK();
-
-    this.started = true;
   }
 
   /**
@@ -296,11 +297,11 @@ export class Backend {
   /**
    * Register a method that will be executed only once on any given environment.
    * If this method throws, the app won't start.
-   * 
+   *
    * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
    * @param {string | undefined} description - Optional: Describe the purpose of this installation
-   * 
+   *
    */
   install (id: string, handler: () => Promise<void>, description?: string): void {
     if (this.started) {

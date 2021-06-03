@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import semver from 'semver';
+
 import { PluginContext } from '../core/plugin/pluginContext';
 import { ControllerDefinition } from './ControllerDefinition';
 import { PluginManifest } from './PluginManifest';
@@ -147,6 +149,9 @@ export abstract class Plugin {
    */
   abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
 
+  /**
+   * @param manifest Manifest containing the required kuzzleVersion number
+   */
   constructor (manifest: PluginManifest) {
     if (! has(manifest, 'kuzzleVersion')) {
       // eslint-disable-next-line new-cap
