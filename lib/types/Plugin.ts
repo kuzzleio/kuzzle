@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import semver from 'semver';
-
 import { PluginContext } from '../core/plugin/pluginContext';
 import { ControllerDefinition } from './ControllerDefinition';
 import { PluginManifest } from './PluginManifest';

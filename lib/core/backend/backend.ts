@@ -68,7 +68,7 @@ export class Backend {
   protected started = false;
 
   protected _pipes = {
-    'kuzzle:state:ready': async () => this.started = true
+    'kuzzle:state:ready': async () => { this.started = true }
   };
   protected _hooks = {};
   protected _controllers = {};
