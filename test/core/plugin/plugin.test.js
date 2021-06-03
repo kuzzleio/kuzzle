@@ -64,7 +64,7 @@ describe('Plugin', () => {
     });
   });
 
-  describe.only('#init', () => {
+  describe('#init', () => {
     it('should initializes the plugin with name, config and context', () => {
       kuzzle.config = {
         plugins: {
