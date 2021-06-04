@@ -15,18 +15,19 @@ Feature: User Controller
 
   @security
   Scenario: Create a new restricted user without permissions
-    Given I successfully execute the action "user":"createRestricted" with args:
+    Given I execute the action "user":"createRestricted" with args:
       | _id                | "alyx"                                       |
       | body               | { "content": { "profileIds": ["admin"] } }   |
-    Then I got an error with id "security.rights.forbidden"
+    Then I got an error with id "api.assert.forbidden_argument"
 
   Scenario: Create a new restricted user successfuly
     When I successfully execute the action "user":"createRestricted" with args:
       | _id                | "alyx"                                       |
-      | body               | { "content": { "profileIds": ["default"] } } |
+      | body               | { "content": { "name": "toto" } } |
     Then I should receive a result matching:
       | _id                | "alyx"                                       |
       | _source.profileIds | ["default"]                                  |
+      | _source.name | "toto"                                  |
 
   # user:createFirstAdmin ======================================================
 
@@ -133,23 +134,17 @@ Feature: User Controller
 
   @security
   Scenario: Search users with scroll
-    Given I create a user "test-user" with content:
-      | profileIds | ["default"] |
-    And I create a user "test-user2" with content:
-      | profileIds | ["admin"]   |
     When I successfully execute the action "user":"search" with args:
       | body       | {}          |
       | scroll     | "30s"       |
       | size       | 1           |
     Then I should receive a result matching:
-      | remaining  | 1           |
       | total      | 2           |
     And I should receive a "hits" array containing 1 elements
+    When I successfully scroll to the next page of users
+    Then I should receive a "hits" array containing 1 elements
     When I scroll to the next page of users
-    Then I should receive a result matching:
-      | remaining  | 0           |
-      | total      | 2           |
-    And I should receive a "hits" array containing 1 elements
+    Then I got an error with id "services.storage.unknown_scroll_id"
 
   # user:update ================================================================
 
@@ -158,11 +153,12 @@ Feature: User Controller
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |
       | name       | "foo"       |
-    When I successfully execute the action "user":"update" with body:
-      | name       | "bar"       |
+    When I successfully execute the action "user":"update" with args:
+      | _id       | "test-user"       |
+      | body       | { name: "bar" }       |
     Then I should receive a result matching:
       | _id        | "test-user" |
-      | version    | 2           |
+      | _source.name    | "bar"          |
     And The content of user "test-user" should match:
       | name       | "bar"       |
 
@@ -173,11 +169,12 @@ Feature: User Controller
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |
       | name       | "foo"       |
-    When I successfully execute the action "user":"replace" with body:
-      | profileIds | ["default"] |
-      | age        | 42          |
+    When I successfully execute the action "user":"replace" with args:
+      | _id       | "test-user"       |
+      | body      | { profileIds: ["default"], age: 42 }       |
     Then I should receive a result matching:
       | _id        | "test-user" |
+      | _source    | { profileIds: ["default"], age: 42 }          |
     And The content of user "test-user" should match:
       | profileIds | ["default"] |
       | age        | 42          |
@@ -209,8 +206,8 @@ Feature: User Controller
       | profileIds   | ["default"] |
     And I create a user "test-user3" with content:
       | profileIds   | ["default"] |
-    When I successfully execute the action "user":"mDelete" with body:
-      | ids          | ["test-user", "test-user2"] |
+    When I successfully execute the action "user":"mDelete" with args:
+      | body          | { ids: ["test-user", "test-user2"] } |
     Then I should receive a array matching:
       | "test-user"  |
       | "test-user2" |
@@ -224,14 +221,13 @@ Feature: User Controller
   Scenario: Get user mappings and update them
     When I successfully execute the action "user":"mappings"
     Then The property "mapping" of the result should match:
-      | dynamic    | 'false'                         |
-      | properties | profileIds: { type: 'keyword' } |
-    When I successfully execute the action "user":"updateMappings" with body:
-      | properties | name: { type: 'keyword' }       |
+      | profileIds | { type: 'keyword' } |
+    When I successfully execute the action "user":"updateMappings" with args:
+      | body | { properties: { name: { type: 'keyword' } } }       |
     And I successfully execute the action "user":"mappings"
     Then The property "mapping" of the result should match:
-      | dynamic    | 'false'                                                    |
-      | properties | profileIds: { type: 'keyword' }, name: { type: 'keyword' } |
+      | profileIds    | { type: 'keyword'}                                                    |
+      | name | { type: 'keyword' } |
 
   # user:rights ================================================================
 
@@ -242,13 +238,8 @@ Feature: User Controller
     When I successfully execute the action "user":"rights" with args:
       | _id        | "test-user"    |
     Then I should receive a "hits" array of objects matching:
-      | controller | action         |  value   |
-      | auth       | checkToken     |  allowed |
-      | auth       | getCurrentUser |  allowed |
-      | auth       | getMyRights    |  allowed |
-      | auth       | logout         |  allowed |
-      | auth       | updateSelf     |  allowed |
-      | server     | publicApi      |  allowed |
+      | action | collection | controller | index | value |
+      | "*"    | "*"     |  "*" | "*" | "allowed" |
 
   # user:checkRights ===========================================================
 
@@ -293,17 +284,17 @@ Feature: User Controller
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |
     And I'm logged in Kuzzle as user "test-user" with password "password"
-    And I'm logged in Kuzzle as user "test-admin" with password "password"
     When I successfully execute the action "user":"revokeTokens" with args:
       | _id        | "test-user" |
-    Then I can not login with the previously created API key
+    And I execute the action "server":"now"
+    Then I got an error with id "security.token.invalid"
 
   # user:refresh ===============================================================
 
   @security
   Scenario: Refresh user collection
     Given I successfully execute the action "user":"create" with args:
-      | _id            | "aschen"                                     |
+      | _id            | "toto"                                     |
       | refresh        | false                                        |
       | body           | { "content": { "profileIds": ["default"] } } |
     # Refresh success on known collection
@@ -312,6 +303,6 @@ Feature: User Controller
       | body           | { "sort": "_id" }                            |
     And I should receive a "hits" array of objects matching:
       | _id            |
-      | "aschen"       |
       | "default-user" |
       | "test-admin"   |
+      | "toto"       |

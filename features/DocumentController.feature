@@ -118,12 +118,12 @@ Feature: Document Controller
       | remaining | 2 |
       | total     | 3 |
     And I should receive a "hits" array containing 1 elements
-    When I scroll to the next page
+    When I successfully scroll to the next page
     Then I should receive a result matching:
       | remaining | 1 |
       | total     | 3 |
     And I should receive a "hits" array containing 1 elements
-    When I scroll to the next page
+    When I successfully scroll to the next page
     Then I should receive a result matching:
       | remaining | 0 |
       | total     | 3 |

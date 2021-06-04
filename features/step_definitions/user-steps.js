@@ -74,7 +74,7 @@ Then(/The user "(.*?)"( should not)? exists/, async function (userId, shouldNot)
 Then(/The content of user "(.+)" should( not)? match:/, async function (userId, shouldNot, dataTable) {
   const expectedContent = this.parseObject(dataTable);
 
-  const user = await this.sdk.query({
+  const { result: user} = await this.sdk.query({
     action: 'get',
     controller: 'user',
     _id: userId

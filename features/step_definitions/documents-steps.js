@@ -173,21 +173,31 @@ Then('I execute the search query', async function () {
   this.props.result = response.result;
 });
 
-Then(/I scroll to the next page( of (.+)s)?/, async function (controller) {
+Then(/I( successfully)? scroll to the next page( of (.+)s)?/, async function (expectSuccess, controller) {
   // temporary use of raw results, until the "remaining" property is made
   // available to the SearchResults SDK class
   if (!this.props.result.scrollId) {
     throw new Error('No scroll ID found');
   }
 
-  const response = await this.sdk.query({
-    action: 'scroll',
-    controller: controller || 'document',
-    scroll: '30s',
-    scrollId: this.props.result.scrollId,
-  });
+  let response;
+  try {
+    response = await this.sdk.query({
+      action: 'scroll',
+      controller: controller || 'document',
+      scroll: '30s',
+      scrollId: this.props.result.scrollId,
+    });
 
-  this.props.result = response.result;
+    this.props.result = response.result;
+  }
+  catch (error) {
+    if (expectSuccess) {
+      throw error;
+    }
+
+    this.props.error = error;
+  }
 });
 
 Then('I execute the search query with verb "GET"', async function () {
