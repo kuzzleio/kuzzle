@@ -13,16 +13,16 @@ Kuzzle handles authentication in a **generic way with a strategy system** that c
 These strategies are responsible for **managing user credentials** and **verifying them** during the authentication phase.
 
 ::: info
-Plugins have a secure storage space accessible only from the plugin code.  
-This space is used to store sensitive information such as user credentials.    
-Learn more about [Writing Plugins](/core/2/guides/write-plugins/start-writing-plugins).  
+Plugins have a secure storage space accessible only from the plugin code.
+This space is used to store sensitive information such as user credentials.
+Learn more about [Writing Plugins](/core/2/guides/write-plugins/start-writing-plugins).
 :::
 
 Each user can then use one of the available strategies to authenticate himself.
 
 ## Kuzzle User IDentifier (kuid)
 
-Users are identified by a unique identifier called the Kuzzle User IDentifier or `kuid`.  
+Users are identified by a unique identifier called the Kuzzle User IDentifier or `kuid`.
 
 This is for example the `kuid` found in the [Kuzzle Metadata](/core/2/guides/main-concepts/data-storage#kuzzle-metadata) of documents:
 
@@ -39,14 +39,14 @@ This is for example the `kuid` found in the [Kuzzle Metadata](/core/2/guides/mai
 }
 ```
 
-The `kuid` is auto-generated unless it is passed to the [security:createUser](/core/2/api/controllers/security/create-user) API action:
+The `kuid` is auto-generated unless it is passed to the [user:create](/core/2/api/controllers/user/create) API action:
 
 ```bash
-kourou security:createUser '{           
-  content: {    
+kourou user:create '{
+  content: {
     profileIds: ["default"]
-  },                    
-  credentials: {          
+  },
+  credentials: {
     local: {
       username: "my",
       password: "password"
@@ -67,7 +67,7 @@ They must be provided at the creation of a user in the `credentials` property of
 
 **Example:** _Create an user with `local` credentials_
 ```bash
-kourou security:createUser '{
+kourou user:create '{
   content: {
     profileIds: ["default"]
   },
@@ -100,15 +100,15 @@ kourou auth:login -a strategy=local --body '{
 
 ## Authentication Token
 
-Authentication is performed using the [auth:login](/core/2/api/controllers/auth/login) API action.  
+Authentication is performed using the [auth:login](/core/2/api/controllers/auth/login) API action.
 
 This action requires the name of the strategy to be used as well as any information necessary for this strategy.
 
 When authentication is successful, **Kuzzle returns an authentication token**. This token has a validity of 1 hours by default, then it will be necessary to ask for a new one with either [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) or [auth:login](/core/2/api/controllers/auth/login).
 
 ::: info
-It is possible to request an authentication token valid for more than 1 hours with the argument `expiresIn`.  
-The default validity period is configurable under the key `security.jwt.expiresIn`.  
+It is possible to request an authentication token valid for more than 1 hours with the argument `expiresIn`.
+The default validity period is configurable under the key `security.jwt.expiresIn`.
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
 :::
 
@@ -144,22 +144,22 @@ For historical reasons the API terminology uses the term `jwt` but Kuzzle authen
 Authentication tokens are revocable using the [auth:logout](/core/2/api/controllers/auth/logout) API action.
 
 ::: info
-It's also possible to revoke every authentication tokens of a user with the [security:revokeTokens](/core/2/api/controllers/security/revoke-tokens/).
+It's also possible to revoke every authentication tokens of a user with the [user:revokeTokens](/core/2/api/controllers/user/revoke-tokens/).
 :::
 
 ### Authentication Token Expiration
 
-**Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.  
+**Authentication tokens expire after a defined period of time**. Once an authentication token has expired, it **cannot be used in any way**.
 
 ::: info
 If the customer has subscribed to real-time notifications then they will be notified at the time of expiration with a [TokenExpired server notification](/core/2/api/payloads/notifications#server-notification).
 :::
 
-While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials. 
+While an authentication token is still valid, it is possible to provide it to the [auth:refreshToken](/core/2/api/controllers/auth/refresh-token) API action to request a new, fresher authentication token, without having to ask for credentials.
 
 ## `local` Strategy
 
-The `local` strategy allows users to authenticate with a `username` and a `password`.  
+The `local` strategy allows users to authenticate with a `username` and a `password`.
 
 Those information must be passed to the [auth:login](/core/2/api/controllers/auth/login) API action body:
 ```bash
@@ -195,7 +195,7 @@ The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-lo
       // one of the supported encryption algorithms
       // (run crypto.getHashes() to get the complete list).
       "algorithm": "sha512",
-      
+
       // boolean and controlling if the password is stretched or not.
       "stretching": true,
 
@@ -215,7 +215,7 @@ The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-lo
 
       // a positive time representation of the delay after which a
       // reset password token expires (see ms for possible formats).
-      "resetPasswordExpiresIn": -1, 
+      "resetPasswordExpiresIn": -1,
 
       // set of additional rules to apply to users, or to groups of users
       "passwordPolicies": []
@@ -313,7 +313,7 @@ Here is an example of a configuration:
     "facebook": {
       // Strategy name for passport (eg. google-oauth20 while the name of the provider is google)
       "passportStrategy": "facebook",
-      // Credentials provided by the provider  
+      // Credentials provided by the provider
       "credentials": {
         "clientID": "<your-client-id>",
         "clientSecret": "<your-client-secret>",
@@ -335,7 +335,7 @@ Here is an example of a configuration:
       //Mapping of attributes to persist in the user persisted in Kuzzle
       "kuzzleAttributesMapping": {
         // will store the attribute "email" from oauth provider as "userEmail" into the user credentials object
-        "userMail": "email" 
+        "userMail": "email"
       },
       // Attribute from the profile of the provider to use as unique identifier if you want to persist the user in Kuzzle
       "identifierAttribute": "email"
@@ -350,13 +350,13 @@ Here is an example of a configuration:
 
 **identifierAttribute**
 
-This attribute will be used to identify your users. It has to be unique.  
+This attribute will be used to identify your users. It has to be unique.
 
 You need to choose an attribute declared in the `persist` array.
 
 **Attributes Persistence**
 
-Attributes declared in the `persist` array will be persisted in the credentials object and not in the user content.  
+Attributes declared in the `persist` array will be persisted in the credentials object and not in the user content.
 
 For example, if you have the following configuration:
 ```js

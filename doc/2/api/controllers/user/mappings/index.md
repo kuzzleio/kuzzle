@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: Mappings
+title: mappings
 ---
 
 # mappings

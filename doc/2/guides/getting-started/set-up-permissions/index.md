@@ -64,13 +64,13 @@ You should see your newly created profile in the `Security > Profiles` section o
 
 ## User
 
-Finally, we need a user attached to the `dummy` profile. The API action to create a user is [security:createUser](/core/2/api/controllers/security/create-user).
+Finally, we need a user attached to the `dummy` profile. The API action to create a user is [user:create](/core/2/api/controllers/user/create).
 
 Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
-For this we will use the [security:createUser](/core/2/api/controllers/security/create-user) action:
+For this we will use the [user:create](/core/2/api/controllers/user/create) action:
 ```bash
-kourou security:createUser '{
+kourou user:create '{
   content: {
     profileIds: ["dummy"]
   },
@@ -97,17 +97,17 @@ As with any other user, the `anonymous` user has a profile assigned (named `anon
 By default, the `anonymous` role gives access to all API actions. This is intended to make development easier, but it's definitively not suitable for production.
 :::
 
-It's recommended to use the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action to create an administrator user, and to restrict anonymous user rights.
+It's recommended to use the [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) action to create an administrator user, and to restrict anonymous user rights.
 
 ::: info
-The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.  
+The [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
 The `reset` option allows to restrict `anonymous` default rights in the same time.
 :::
 
 This way you can always access the complete API through this admin account.
 
 ```bash
-kourou security:createFirstAdmin '{
+kourou user:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -127,9 +127,9 @@ You should get the following error because now the anonymous user is restricted 
 kourou server:now
 
 [ℹ] Unknown command "server:now", fallback to API method
- 
+
  🚀 Kourou - Executes an API query.
- 
+
  [ℹ] Connecting to http://localhost:7512 ...
  [X] UnauthorizedError: Unauthorized: authentication required to execute the action "server:now". -1
     [...Kuzzle internal calls deleted...]
@@ -148,9 +148,9 @@ We are allowed to use this API action because **we are now authenticated with a 
 kourou server:now --username melis --password password
 
 [ℹ] Unknown command "server:now", fallback to API method
- 
+
  🚀 Kourou - Executes an API query.
- 
+
  [ℹ] Connecting to http://localhost:7512 ...
  [ℹ] Loggued as melis.
  {
@@ -174,7 +174,7 @@ kourou security:updateRole '{
 ```
 :::
 
-<GuidesLinks 
+<GuidesLinks
   :prev="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"
-  :next="{ text: 'Authenticate Users', url: '/guides/getting-started/authenticate-users/' }" 
+  :next="{ text: 'Authenticate Users', url: '/guides/getting-started/authenticate-users/' }"
 />

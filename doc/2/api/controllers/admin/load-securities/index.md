@@ -16,10 +16,10 @@ The roles, profiles and users definitions follow the same structure as in the bo
 
  - [security:createRole](/core/2/api/controllers/security/create-role)
  - [security:createProfile](/core/2/api/controllers/security/create-profile)
- - [security:createUser](/core/2/api/controllers/security/create-user)
+ - [user:create](/core/2/api/controllers/user/create)
 
 ::: warning
-By default, Kuzzle prevents existing user overwriting.  
+By default, Kuzzle prevents existing user overwriting.
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 

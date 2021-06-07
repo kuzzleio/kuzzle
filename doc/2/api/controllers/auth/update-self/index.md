@@ -8,7 +8,7 @@ title: updateSelf
 
 Updates the currently logged in user information.
 
-This route cannot update the list of associated security profiles. To change a user's security profiles, the route [security:updateUser](/core/2/api/controllers/security/update-user) must be used instead.
+This route cannot update the list of associated security profiles. To change a user's security profiles, the route [user:update](/core/2/api/controllers/user/update) must be used instead.
 
 ---
 

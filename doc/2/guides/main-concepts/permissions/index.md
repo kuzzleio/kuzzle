@@ -15,7 +15,7 @@ You can think of a **profile as a group of users that share the same permissions
 
 The **profiles** themselves are made of **different groups of permissions**, these groups are called roles.
 
-A profile is linked to a set of roles, and each role defines a set of permissions.  
+A profile is linked to a set of roles, and each role defines a set of permissions.
 For example, in the diagram below, the `editor` profile has all permissions, the `contributor` has fewer permissions, and the `default` profile has only default permissions:
 
 ![Users, Profiles and Roles](./profiles-roles.png)
@@ -28,15 +28,15 @@ Roles, profiles and users can be edited in the [Admin Console](http://console.ku
 
 When you run your application for the first time there is no administrator account and anonymous users (i.e. unauthenticated users) can execute any API action.
 
-To secure your application you will need to create an administrator account by using the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) API action.
+To secure your application you will need to create an administrator account by using the [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) API action.
 
 ::: info
-The [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.  
+The [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) action creates a user attached to the `admin` profile, which uses the `admin` role, giving access to all API actions.
 The `reset` option allows to restrict `anonymous` default rights at the same time.
 :::
 
 ```bash
-kourou security:createFirstAdmin '{
+kourou user:createFirstAdmin '{
   credentials: {
     local: {
       username: "admin",
@@ -46,7 +46,7 @@ kourou security:createFirstAdmin '{
 }' -a reset=true
 ```
 
-Once the administrator account is created, and anonymous access rights are removed, you can properly secure your installation.  
+Once the administrator account is created, and anonymous access rights are removed, you can properly secure your installation.
 
 ::: info
 You can then use the [Admin Console](http://console.kuzzle.io) or Kuzzle API to create new users and assign them permissions.
@@ -102,7 +102,7 @@ As an example, below is the role definition that Kuzzle uses to request authoriz
 In the above role definition, anonymous users can perform the following actions: [auth:login](/core/2/api/controllers/auth/login), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:getCurrentUser](/core/2/api/controllers/auth/get-current-user) and [auth:getMyRights](/core/2/api/controllers/auth/get-my-rights).
 
 ::: info
-Default roles and profiles used once the administrator account is created with the [security:createFirstAdmin](/core/2/api/controllers/security/create-first-admin) action can be configured under the [security.default](/core/2/guides/advanced/configuration) configuration key.
+Default roles and profiles used once the administrator account is created with the [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) action can be configured under the [security.default](/core/2/guides/advanced/configuration) configuration key.
 :::
 
 For a list of available controllers and actions from Kuzzle's API by opening the following URL in your browser: [http://localhost:7512/?pretty](http://localhost:7512/?pretty)
@@ -136,7 +136,7 @@ This means that:
 Profiles are used to group the rights of several roles. They can then be assigned to users.
 
 ::: warning
-You cannot remove a profile that is assigned to at least one user.  
+You cannot remove a profile that is assigned to at least one user.
 You can use the `onAssignedUsers` option of the [security:deleteProfile](/core/2/api/controllers/security/delete-profile) action to remove a profile from it's assigned users before deleting it.
 :::
 
@@ -232,10 +232,10 @@ Three different profiles can be created using that same role, each with varying 
       "roleId": "publisher",
       "restrictedTo": [
         {
-          "index": "nyc-open-data", 
+          "index": "nyc-open-data",
           "collections": ["yellow-taxi", "green-taxi"]
         },
-        { 
+        {
           "index": "mtp-open-data"
         }
       ]
@@ -304,7 +304,7 @@ More information about [Authentication](/core/2/guides/main-concepts/authenticat
 
 ### Profiles list
 
-The list of profiles assigned to a user is contained in the `content.profileIds` property.  
+The list of profiles assigned to a user is contained in the `content.profileIds` property.
 This property is a list of profile identifiers:
 
 ```js
@@ -321,7 +321,7 @@ Users must be assigned to at least one profile.
 
 ### Custom content
 
-It is also possible to store custom data in the user object.  
+It is also possible to store custom data in the user object.
 
 Those data must be stored in the `content` property alongside the profile list:
 
@@ -338,31 +338,31 @@ Those data must be stored in the `content` property alongside the profile list:
 ```
 
 ::: info
-As any other collection, the `users` collection has an associated mapping that can be edited using the [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/) API action.
+As any other collection, the `users` collection has an associated mapping that can be edited using the [user:updateMappings](/core/2/api/controllers/user/update-mappings/) API action.
 :::
 
 ### Associated API actions
 
- - [security:createRestrictedUser](/core/2/api/controllers/security/create-restricted-user/)
- - [security:createUser](/core/2/api/controllers/security/create-user/)
- - [security:deleteUser](/core/2/api/controllers/security/delete-user/)
- - [security:getUser](/core/2/api/controllers/security/get-user/)
- - [security:getUserMapping](/core/2/api/controllers/security/get-user-mapping/)
- - [security:getUserRights](/core/2/api/controllers/security/get-user-rights/)
- - [security:mDeleteUsers](/core/2/api/controllers/security/m-delete-users/)
- - [security:mGetUsers](/core/2/api/controllers/security/m-get-users/)
- - [security:replaceUsers](/core/2/api/controllers/security/replace-user/)
- - [security:scrollUsers](/core/2/api/controllers/security/scroll-users/)
- - [security:searchUsers](/core/2/api/controllers/security/search-users/)
- - [security:updateUser](/core/2/api/controllers/security/update-user/)
- - [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/)
+ - [user:createRestricted](/core/2/api/controllers/user/create-restricted/)
+ - [user:create](/core/2/api/controllers/user/create/)
+ - [user:delete](/core/2/api/controllers/user/delete/)
+ - [user:get](/core/2/api/controllers/user/get/)
+ - [user:mappings](/core/2/api/controllers/user/mappings/)
+ - [user:rights](/core/2/api/controllers/user/rights/)
+ - [user:mDelete](/core/2/api/controllers/user/m-delete/)
+ - [user:mGet](/core/2/api/controllers/user/m-get/)
+ - [user:replace](/core/2/api/controllers/user/replace/)
+ - [user:scroll](/core/2/api/controllers/user/scroll/)
+ - [user:search](/core/2/api/controllers/user/search/)
+ - [user:update](/core/2/api/controllers/user/update/)
+ - [user:updateMappings](/core/2/api/controllers/user/update-mappings/)
 
 User credentials related API actions:
 
  - [security:getCredentials](/core/2/api/controllers/security/get-credentials/)
  - [security:getCredentialsById](/core/2/api/controllers/security/get-credentials-by-id/)
  - [security:hasCredentials](/core/2/api/controllers/security/has-credentials/)
-
+ - [security:searchUsersByCredentials](/core/2/api/controllers/security/search-users-by-credentials/)
 
 ## Writing complex or dynamic permission rules
 
@@ -379,13 +379,13 @@ There are multiple ways of adding a business logic layer on top of the standard 
 
 ::: info
 More information about dynamic rules with pipes: [Event System](/core/2/guides/develop-on-kuzzle/event-system#pipes)
-::: 
+:::
 
 ## Load permissions
 
 ### Kourou
 
-It is possible to load a set of permission definitions containing roles, profiles and users with the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action.  
+It is possible to load a set of permission definitions containing roles, profiles and users with the [admin:loadSecurities](/core/2/api/controllers/admin/load-securities) action.
 
 The permissions definition format is the following:
 
@@ -415,10 +415,10 @@ The roles, profiles and users definitions follow the same structure as in the bo
 
  - [security:createRole](/core/2/api/controllers/security/create-role)
  - [security:createProfile](/core/2/api/controllers/security/create-profile)
- - [security:createUser](/core/2/api/controllers/security/create-user)
+ - [user:create](/core/2/api/controllers/user/create)
 
 ::: warning
-By default, Kuzzle prevents existing user overwriting.  
+By default, Kuzzle prevents existing user overwriting.
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 

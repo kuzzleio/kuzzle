@@ -16,18 +16,18 @@ Feature: User Controller
   @security
   Scenario: Create a new restricted user without permissions
     Given I execute the action "user":"createRestricted" with args:
-      | _id                | "alyx"                                       |
-      | body               | { "content": { "profileIds": ["admin"] } }   |
+      | _id                | "alyx"                                     |
+      | body               | { "content": { "profileIds": ["admin"] } } |
     Then I got an error with id "api.assert.forbidden_argument"
 
   Scenario: Create a new restricted user successfuly
     When I successfully execute the action "user":"createRestricted" with args:
-      | _id                | "alyx"                                       |
-      | body               | { "content": { "name": "toto" } } |
+      | _id                | "alyx"                                     |
+      | body               | { "content": { "name": "toto" } }          |
     Then I should receive a result matching:
-      | _id                | "alyx"                                       |
-      | _source.profileIds | ["default"]                                  |
-      | _source.name | "toto"                                  |
+      | _id                | "alyx"                                     |
+      | _source.profileIds | ["default"]                                |
+      | _source.name       | "toto"                                     |
 
   # user:createFirstAdmin ======================================================
 
@@ -135,11 +135,11 @@ Feature: User Controller
   @security
   Scenario: Search users with scroll
     When I successfully execute the action "user":"search" with args:
-      | body       | {}          |
-      | scroll     | "30s"       |
-      | size       | 1           |
+      | body   | {}    |
+      | scroll | "30s" |
+      | size   | 1     |
     Then I should receive a result matching:
-      | total      | 2           |
+      | total  | 2     |
     And I should receive a "hits" array containing 1 elements
     When I successfully scroll to the next page of users
     Then I should receive a "hits" array containing 1 elements
@@ -151,35 +151,35 @@ Feature: User Controller
   @security
   Scenario: Update user
     Given I create a user "test-user" with content:
-      | profileIds | ["default"] |
-      | name       | "foo"       |
+      | profileIds   | ["default"]     |
+      | name         | "foo"           |
     When I successfully execute the action "user":"update" with args:
-      | _id       | "test-user"       |
-      | body       | { name: "bar" }       |
+      | _id          | "test-user"     |
+      | body         | { name: "bar" } |
     Then I should receive a result matching:
-      | _id        | "test-user" |
-      | _source.name    | "bar"          |
+      | _id          | "test-user"     |
+      | _source.name | "bar"           |
     And The content of user "test-user" should match:
-      | name       | "bar"       |
+      | name         | "bar"           |
 
   # user:replace ===============================================================
 
   @security
   Scenario: Replace user
     Given I create a user "test-user" with content:
-      | profileIds | ["default"] |
-      | name       | "foo"       |
+      | profileIds | ["default"]                          |
+      | name       | "foo"                                |
     When I successfully execute the action "user":"replace" with args:
-      | _id       | "test-user"       |
-      | body      | { profileIds: ["default"], age: 42 }       |
+      | _id        | "test-user"                          |
+      | body       | { profileIds: ["default"], age: 42 } |
     Then I should receive a result matching:
-      | _id        | "test-user" |
-      | _source    | { profileIds: ["default"], age: 42 }          |
+      | _id        | "test-user"                          |
+      | _source    | { profileIds: ["default"], age: 42 } |
     And The content of user "test-user" should match:
-      | profileIds | ["default"] |
-      | age        | 42          |
+      | profileIds | ["default"]                          |
+      | age        | 42                                   |
     And The content of user "test-user" should not match:
-      | name       | "foo"       |
+      | name       | "foo"                                |
 
   # user:delete ================================================================
 
@@ -207,7 +207,7 @@ Feature: User Controller
     And I create a user "test-user3" with content:
       | profileIds   | ["default"] |
     When I successfully execute the action "user":"mDelete" with args:
-      | body          | { ids: ["test-user", "test-user2"] } |
+      | body         | { ids: ["test-user", "test-user2"] } |
     Then I should receive a array matching:
       | "test-user"  |
       | "test-user2" |
@@ -223,11 +223,11 @@ Feature: User Controller
     Then The property "mapping" of the result should match:
       | profileIds | { type: 'keyword' } |
     When I successfully execute the action "user":"updateMappings" with args:
-      | body | { properties: { name: { type: 'keyword' } } }       |
+      | body       | { properties: { name: { type: 'keyword' } } } |
     And I successfully execute the action "user":"mappings"
     Then The property "mapping" of the result should match:
-      | profileIds    | { type: 'keyword'}                                                    |
-      | name | { type: 'keyword' } |
+      | profileIds | { type: 'keyword' } |
+      | name       | { type: 'keyword' } |
 
   # user:rights ================================================================
 
@@ -238,8 +238,8 @@ Feature: User Controller
     When I successfully execute the action "user":"rights" with args:
       | _id        | "test-user"    |
     Then I should receive a "hits" array of objects matching:
-      | action | collection | controller | index | value |
-      | "*"    | "*"     |  "*" | "*" | "allowed" |
+      | action     | collection     | controller | index | value     |
+      | "*"        | "*"            |  "*"       | "*"   | "allowed" |
 
   # user:checkRights ===========================================================
 
@@ -294,7 +294,7 @@ Feature: User Controller
   @security
   Scenario: Refresh user collection
     Given I successfully execute the action "user":"create" with args:
-      | _id            | "toto"                                     |
+      | _id            | "toto"                                       |
       | refresh        | false                                        |
       | body           | { "content": { "profileIds": ["default"] } } |
     # Refresh success on known collection
@@ -305,4 +305,4 @@ Feature: User Controller
       | _id            |
       | "default-user" |
       | "test-admin"   |
-      | "toto"       |
+      | "toto"         |

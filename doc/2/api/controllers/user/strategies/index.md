@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: getUserStrategies
+title: strategies
 ---
 
-# getUserStrategies
+# strategies
 
 
 
@@ -25,8 +25,8 @@ Method: GET
 
 ```js
 {
-  "controller": "security",
-  "action": "getUserStrategies",
+  "controller": "user",
+  "action": "strategies",
   "_id": "<kuid>"
 }
 ```

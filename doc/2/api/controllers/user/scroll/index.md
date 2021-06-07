@@ -38,7 +38,7 @@ Method: GET
 
 ## Arguments
 
-- `scrollId`: cursor unique identifier, obtained by either a searchUsers or a scroll query
+- `scrollId`: cursor unique identifier, obtained by either a search or a scroll query
 
 ### Optional:
 
