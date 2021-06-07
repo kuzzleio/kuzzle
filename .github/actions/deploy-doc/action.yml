@@ -35,7 +35,7 @@ runs:
     - name: Build documentation
       run: |
         rm -fr doc/framework
-        npm ci
+        npm ci --production=false
         npm i --save-dev kuzdoc
         npm run doc-prepare
         npm run doc-build
