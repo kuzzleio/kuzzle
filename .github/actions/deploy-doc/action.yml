@@ -36,7 +36,7 @@ runs:
       run: |
         rm -fr doc/framework
         npm ci
-        npm i kuzdoc
+        npm i --save-dev kuzdoc
         npm run doc-prepare
         npm run doc-build
       env:
