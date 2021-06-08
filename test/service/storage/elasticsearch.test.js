@@ -291,17 +291,17 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#search', () => {
-    let filter;
+    let searchBody;
 
     beforeEach(() => {
-      filter = {};
+      searchBody = {};
     });
 
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
           aggregations: { some: 'aggregs' },
-          body: filter,
+          body: searchBody,
           hits: {
             hits: [
               {
@@ -318,7 +318,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      const result = await elasticsearch.search(index, collection, filter);
+      const result = await elasticsearch.search(index, collection, searchBody);
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         index: esIndexName,
@@ -359,14 +359,14 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      await elasticsearch.search(index, collection, filter, {
+      await elasticsearch.search(index, collection, searchBody, {
         from: 0,
         scroll: '30s',
         size: 1,
       });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
-        body: filter,
+        body: searchBody,
         from: 0,
         index: esIndexName,
         scroll: '30s',
@@ -381,22 +381,38 @@ describe('Test: ElasticSearch service', () => {
         { ttl: 30000 });
     });
 
+    it('should be able to search on ES alias with invalid collection name', async () => {
+      elasticsearch._client.search.resolves({
+        body: {
+          hits: { hits: [], total: { value: 0 } },
+        }
+      });
+
+      await elasticsearch.search('main', 'kuzzleData', searchBody);
+
+      should(elasticsearch._client.search.firstCall.args[0]).match({
+        body: searchBody,
+        index: '&main.kuzzleData',
+        trackTotalHits: true,
+      });
+    });
+
     it('should return a rejected promise if a search fails', async () => {
       elasticsearch._client.search.rejects(esClientError);
 
-      await should(elasticsearch.search(index, collection, filter))
+      await should(elasticsearch.search(index, collection, searchBody))
         .be.rejected();
 
       should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
 
     it('should return a rejected promise if an unhautorized property is in the query', () => {
-      filter = {
+      searchBody = {
         not_authorized: 42,
         query : {}
       };
 
-      return should(elasticsearch.search(index, collection, filter))
+      return should(elasticsearch.search(index, collection, searchBody))
         .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
@@ -415,7 +431,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
 
-      const promise = elasticsearch.search(index, collection, filter, {
+      const promise = elasticsearch.search(index, collection, searchBody, {
         scroll: '42m'
       });
 
@@ -4468,26 +4484,6 @@ describe('Test: ElasticSearch service', () => {
 
         should(publicESIndex).be.eql('&nepali.liia');
         should(internalESIndex).be.eql('%nepali.mehry');
-      });
-
-      it('should throw if the index is invalid', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex(invalid, 'foo'))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_index_name',
-            });
-        }
-      });
-
-      it('should throw if the collection is invalid or null', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex('foo', invalid))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_collection_name',
-            });
-        }
       });
     });
 
