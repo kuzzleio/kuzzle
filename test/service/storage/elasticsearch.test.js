@@ -4485,26 +4485,6 @@ describe('Test: ElasticSearch service', () => {
         should(publicESIndex).be.eql('&nepali.liia');
         should(internalESIndex).be.eql('%nepali.mehry');
       });
-
-      it('should throw if the index is invalid', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex(invalid, 'foo'))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_index_name',
-            });
-        }
-      });
-
-      it('should throw if the collection is invalid or null', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex('foo', invalid))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_collection_name',
-            });
-        }
-      });
     });
 
     describe('#_extractIndex', () => {
