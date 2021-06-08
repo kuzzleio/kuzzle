@@ -81,7 +81,7 @@ services:
       - "9231:9229" # Debug port
 
   redis:
-    image: redis:6
+    image: redis:6.2.4
     container_name: kuzzle_redis
     ports:
       - "6379:6379"
