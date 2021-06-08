@@ -74,7 +74,7 @@ describe('Backend', () => {
         securities: 'securities',
       };
       application._pipes['kuzzle:state:ready'] = [
-        application._pipes['kuzzle:state:ready'],
+        ...application._pipes['kuzzle:state:ready'],
         async () => should(application.started).be.true()
       ];
 
