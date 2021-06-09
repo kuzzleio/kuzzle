@@ -249,12 +249,12 @@ Feature: User Controller
       | auth     | { "actions": { "login": true, "checkRights": true } } |
       | document | { "actions": { "create": false, "update": true } }    |
     When I successfully execute the action "user":"checkRights" with args:
-      | userId   | "default-user"                                        |
+      | _id   | "default-user"                                        |
       | body     | { "controller": "document", "action": "create" }      |
     Then I should receive a result matching:
       | allowed  | false                                                 |
     When I successfully execute the action "user":"checkRights" with args:
-      | userId   | "default-user"                                        |
+      | _id   | "default-user"                                        |
       | body     | { "controller": "document", "action": "update" }      |
     Then I should receive a result matching:
       | allowed  | true                                                  |
