@@ -2059,9 +2059,9 @@ describe('Test: ElasticSearch service', () => {
         settings = { index: { blocks: { write: true } } },
         mappings = { properties: { city: { type: 'keyword' } } };
 
-      elasticsearch.hasCollection = sinon.stub().resolves(true);
-      elasticsearch.deleteCollection = sinon.stub().resolves();
-      elasticsearch.updateCollection = sinon.stub().resolves({});
+      sinon.stub(elasticsearch, 'hasCollection').resolves(true);
+      sinon.stub(elasticsearch, 'deleteCollection').resolves();
+      sinon.stub(elasticsearch, 'updateCollection').resolves({});
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
