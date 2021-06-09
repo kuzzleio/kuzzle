@@ -4520,7 +4520,7 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    describe.only('#_extractSchema', () => {
+    describe('#_extractSchema', () => {
       it('should extract the list of indexes and their collections', () => {
         const esIndexes = [
           '%nepali.liia', '%nepali.mehry',
