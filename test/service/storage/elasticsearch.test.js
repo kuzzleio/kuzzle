@@ -3000,7 +3000,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#deleteCollection', () => {
     it('should allow to delete a collection', () => {
       const promise = elasticsearch.deleteCollection('nepali', 'liia');
-      elasticsearch.listCollections = sinon.stub().resolves(['nepali', 'liia']);
+      sinon.stub(elasticsearch, 'listCollections').resolves(['nepali', 'liia']);
       return promise
         .then(result => {
           should(elasticsearch._client.indices.delete).be.calledWithMatch({
