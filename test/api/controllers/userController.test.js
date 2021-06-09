@@ -1062,7 +1062,7 @@ describe('UserController', () => {
         .withArgs('core:security:user:get')
         .resolves(user);
 
-      request.input.args.userId = 'melis';
+      request.input.args._id = 'melis';
 
       request.input.body = {
         controller: 'document',
@@ -1070,7 +1070,7 @@ describe('UserController', () => {
       };
     });
 
-    it('should check if the action is allowed for the provided userId', async () => {
+    it('should check if the action is allowed for the provided user id', async () => {
       const response = await userController.checkRights(request);
 
       should(kuzzle.ask).be.calledWith('core:security:user:get', 'melis');
