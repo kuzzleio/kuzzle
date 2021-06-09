@@ -2738,7 +2738,7 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    it.only('should allow listing all available collections', () => {
+    it('should allow listing all available collections', () => {
       const promise = elasticsearch.listCollections('nepali');
 
       return promise
