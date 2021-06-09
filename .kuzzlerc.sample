@@ -241,12 +241,11 @@
       "secret": null
     },
     // [apiKey]
-    // configuration for the api keys
+    // API Keys configuration
     //
     //   * maxTTL:
-    //      Maximum duration in milliseconds a token can be requested
-    //      to be valid.
-    //      If set to -1 (default), no maximum duration is set.
+    //      Maximum time to live of an API Key, in milliseconds
+    //      If set to -1 (default), API Keys can be created with an infinite duration.
     "apiKey": {
       "maxTTL": -1
     },
