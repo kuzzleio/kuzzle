@@ -24,6 +24,7 @@ By default, **API keys do not expire**. But it is possible to specify the durati
 
 ::: info
 It is also possible to set a maximum validity period for an API key under the key `security.apiKey.maxTTL` in the Kuzzle configuration.
+This limit will only apply to API key created with the `auth` controller.
 :::
 
 It is also necessary to **provide a description** of the API key.
