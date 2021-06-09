@@ -148,7 +148,7 @@ Feature: User Controller
 
   # user:update ================================================================
 
-  @security
+  @security @mappings
   Scenario: Update user
     Given I create a user "test-user" with content:
       | profileIds   | ["default"]     |
@@ -164,7 +164,7 @@ Feature: User Controller
 
   # user:replace ===============================================================
 
-  @security
+  @security @mappings
   Scenario: Replace user
     Given I create a user "test-user" with content:
       | profileIds | ["default"]                          |
@@ -217,7 +217,7 @@ Feature: User Controller
 
   # user : mappings & updateMappings ===========================================
 
-  @security
+  @security @mappings
   Scenario: Get user mappings and update them
     When I successfully execute the action "user":"mappings"
     Then The property "mapping" of the result should match:
@@ -249,12 +249,12 @@ Feature: User Controller
       | auth     | { "actions": { "login": true, "checkRights": true } } |
       | document | { "actions": { "create": false, "update": true } }    |
     When I successfully execute the action "user":"checkRights" with args:
-      | _id   | "default-user"                                        |
+      | _id      | "default-user"                                        |
       | body     | { "controller": "document", "action": "create" }      |
     Then I should receive a result matching:
       | allowed  | false                                                 |
     When I successfully execute the action "user":"checkRights" with args:
-      | _id   | "default-user"                                        |
+      | _id      | "default-user"                                        |
       | body     | { "controller": "document", "action": "update" }      |
     Then I should receive a result matching:
       | allowed  | true                                                  |
