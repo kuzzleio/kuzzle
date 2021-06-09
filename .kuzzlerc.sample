@@ -240,6 +240,16 @@
       "maxTTL": -1,
       "secret": null
     },
+    // [apiKey]
+    // configuration for the api keys
+    //
+    //   * maxTTL:
+    //      Maximum duration in milliseconds a token can be requested
+    //      to be valid.
+    //      If set to -1 (default), no maximum duration is set.
+    "apiKey": {
+      "maxTTL": -1
+    },
     // [default]
     // The default role defines permissions for all users,
     // until an administrator configures the backend rights
