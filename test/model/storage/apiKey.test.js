@@ -62,7 +62,7 @@ describe('ApiKey', () => {
         user,
         'expiresIn',
         'Sigfox API key',
-        { creatorId: 'aschen', refresh: 'wait_for' });
+        { creatorId: 'aschen', refresh: 'wait_for', bypassMaxTTL: true });
 
       should(createTokenStub).be.calledWith(
         createTokenEvent,
@@ -79,6 +79,17 @@ describe('ApiKey', () => {
         ttl: '1y',
         token: 'jwt-token-encrypted'
       });
+    });
+
+    it.only('should not be able to create a new API key with an exceed ttl', async () => {
+      kuzzle.config.security.apiKey.maxTTL = 42;
+
+      return should(ApiKey.create(
+        user,
+        '1m',
+        'Sigfox API key',
+        { creatorId: 'aschen', refresh: 'wait_for' }))
+        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
     it('should allow to specify the API key ID', async () => {
