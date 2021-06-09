@@ -90,6 +90,15 @@ describe('ApiKey', () => {
 
       should(apiKey._id).be.eql('my-api-key-id');
     });
+
+    it('should use the fingerprint as default API key ID', async () => {
+      const apiKey = await ApiKey.create(
+        user,
+        'expiresIn',
+        'Sigfox API key',
+        {});
+      should(apiKey._id).be.eql(apiKey._source.fingerprint);
+    });
   });
 
   describe('ApiKey.load', () => {
