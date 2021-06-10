@@ -37,7 +37,7 @@ describe('UserController', () => {
     });
   });
 
-  describe('#_persistUser', () => {
+  describe('#_persist', () => {
     const createEvent = 'core:security:user:create';
     const deleteEvent = 'core:security:user:delete';
     const content = { foo: 'bar' };
