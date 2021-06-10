@@ -63,10 +63,10 @@ Feature: Server Controller
   Scenario: Get server limits
     When I successfully execute the action "server":"limits"
     Then The property "limits" of the result should match:
-      | concurrentRequests   | "100"   |
-      | documentsFetchCount  | "10000" |  
-      | documentsWriteCount  | "200"   |
-      | loginsPerSecond      | "1"     |
+      | concurrentRequests   | "_NUMBER_" |
+      | documentsFetchCount  | "_NUMBER_" |  
+      | documentsWriteCount  | "_NUMBER_" |
+      | loginsPerSecond      | "_NUMBER_" |
 
   # server:openapi ========================================================================
   @http
