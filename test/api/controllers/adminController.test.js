@@ -12,7 +12,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const MutexMock = require('../../mocks/mutex.mock.js');
 
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
 
 describe('AdminController', () => {
   let AdminController;

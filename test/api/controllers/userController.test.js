@@ -12,7 +12,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const { NativeSecurityController } = require('../../../lib/api/controllers/baseController');
+const NativeSecurityController = require('../../../lib/api/controllers/base/nativeSecurityController');
 const UserController = require('../../../lib/api/controllers/userController');
 const User = require('../../../lib/model/security/user');
 

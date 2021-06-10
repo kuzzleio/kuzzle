@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const { 
+const {
   BadRequestError,
   MultipleErrorsError,
   Request
@@ -12,7 +12,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const mockAssertions = require('../../mocks/mockAssertions');
 
 const BulkController = require('../../../lib/api/controllers/bulkController');
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
 describe('Test the bulk controller', () => {

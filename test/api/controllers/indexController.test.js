@@ -5,7 +5,7 @@ const sinon = require('sinon');
 
 const IndexController = require('../../../lib/api/controllers/indexController');
 const { Request } = require('../../../index');
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
 const mockAssertions = require('../../mocks/mockAssertions');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 

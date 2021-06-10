@@ -474,7 +474,7 @@ describe('Test: security/roleRepository', () => {
   });
 
   describe('#checkRoleNativeRights', () => {
-    const { NativeController } = require('../../../lib/api/controllers/baseController');
+    const NativeController = require('../../../lib/api/controllers/base/nativeController');
 
     beforeEach(() => {
       kuzzle.funnel.controllers.set('document', new NativeController([

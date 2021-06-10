@@ -3,7 +3,7 @@
 const rewire = require('rewire');
 const should = require('should');
 
-const { NativeSecurityController } = require('../../../../lib/api/controllers/baseController');
+const NativeSecurityController = require('../../../../lib/api/controllers/base/nativeSecurityController');
 const SecurityController = rewire('../../../../lib/api/controllers/securityController');
 
 describe('/api/controllers/securityController', () => {

@@ -2,10 +2,8 @@
 
 const sinon = require('sinon');
 
-const {
-  BaseController,
-  NativeController
-} = require('../../lib/api/controllers/baseController');
+const BaseController = require('../../lib/api/controllers/base/baseController');
+const NativeController = require('../../lib/api/controllers/base/nativeController');
 const {
   InternalError: KuzzleInternalError
 } = require('../../index');

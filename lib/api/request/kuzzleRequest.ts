@@ -708,9 +708,9 @@ export class KuzzleRequest {
   /**
    * Returns the search params.
    *
-   * @param options defaultSize (10), withoutBody (false)
+   * @param options defaultSize (10)
    */
-  getSearchParams (options: { defaultSize?: number, withoutBody?: any } = {} ): {
+  getSearchParams (options: { defaultSize?: number } = {} ): {
     from: number,
     query: JSONObject,
     scrollTTL: string,
@@ -724,8 +724,8 @@ export class KuzzleRequest {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', options.defaultSize || 10);
     const scrollTTL = this.getScrollTTLParam();
-    const query = options.withoutBody ? {} : this.getBodyObject('query', {});
-    const searchBody = options.withoutBody ? {} : this.getSearchBody();
+    const query = this.getBodyObject('query', {});
+    const searchBody = this.getSearchBody();
 
     if (size - from > global.kuzzle.config.limits.documentsFetchCount) {
       throw kerror.get('services', 'storage', 'get_limit_exceeded');

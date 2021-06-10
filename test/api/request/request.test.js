@@ -1035,15 +1035,6 @@ describe('#Request', () => {
         should(() => request.getSearchParams({defaultSize: -1}))
           .throw(SizeLimitError, { id: 'services.storage.get_limit_exceeded' });
       });
-
-      it('should not retreive body when withoutBody option is enabled', () => {
-        request = new KuzzleRequest({});
-
-        const { query, searchBody } = request.getSearchParams({ withoutBody: false });
-
-        should(query).be.eql({});
-        should(searchBody).be.eql({});
-      });
     });
 
     describe('#getScrollTTLParam', () => {

@@ -9,7 +9,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
 
 describe('RealtimeController', () => {
   let kuzzle;

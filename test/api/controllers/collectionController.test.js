@@ -11,7 +11,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const CollectionController = require('../../../lib/api/controllers/collectionController');
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
 
 describe('Test: collection controller', () => {
   let collectionController;

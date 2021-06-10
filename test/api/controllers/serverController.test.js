@@ -11,10 +11,8 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const ServerController = require('../../../lib/api/controllers/serverController');
-const {
-  BaseController,
-  NativeController
-} = require('../../../lib/api/controllers/baseController');
+const NativeController = require('../../../lib/api/controllers/base/nativeController');
+const BaseController = require('../../../lib/api/controllers/base/baseController');
 
 describe('ServerController', () => {
   let serverController;
