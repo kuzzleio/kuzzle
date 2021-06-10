@@ -2059,12 +2059,14 @@ describe('Test: ElasticSearch service', () => {
         settings = { index: { blocks: { write: true } } },
         mappings = { properties: { city: { type: 'keyword' } } };
 
-      sinon.stub(elasticsearch, 'hasCollection').resolves(true);
-      sinon.stub(elasticsearch, 'deleteCollection').resolves();
+      elasticsearch.hasCollection = sinon.stub().resolves(true);
       sinon.stub(elasticsearch, 'updateCollection').resolves({});
+      sinon.stub(elasticsearch, 'deleteCollection').resolves();
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
+      should(elasticsearch.hasCollection).be.calledWith(index, '_kuzzle_keep', true);
+      should(elasticsearch.deleteCollection).be.calledWith(index, '_kuzzle_keep');
       should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
