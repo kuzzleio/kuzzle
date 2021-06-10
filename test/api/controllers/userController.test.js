@@ -86,7 +86,7 @@ describe('UserController', () => {
     it('should reject if a strategy is unknown', async () => {
       kuzzle.pluginsManager.listStrategies.returns(['oops']);
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .be.rejectedWith(BadRequestError, {
           id: 'security.credentials.unknown_strategy'
         });
@@ -98,7 +98,7 @@ describe('UserController', () => {
     it('should reject if credentials already exist on the provided user id', async () => {
       strategyExistsStub.resolves(true);
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .be.rejectedWith(PluginImplementationError, {
           id: 'security.credentials.database_inconsistency'
         });
@@ -110,7 +110,7 @@ describe('UserController', () => {
     it('should rollback if credentials don\'t validate the strategy', async () => {
       strategyValidateStub.rejects(new Error('error'));
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .be.rejectedWith(BadRequestError, {
           id: 'security.credentials.rejected'
         });
@@ -131,7 +131,7 @@ describe('UserController', () => {
     it('should reject and rollback if credentials don\'t create properly', async () => {
       strategyCreateStub.rejects(new Error('some error'));
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .rejectedWith(PluginImplementationError, {
           id: 'plugin.runtime.unexpected_error',
         });
@@ -146,7 +146,7 @@ describe('UserController', () => {
       const error = new Error('error');
       createStub.rejects(error);
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .rejectedWith(error);
 
       should(strategyCreateStub).not.called();
@@ -176,7 +176,7 @@ describe('UserController', () => {
 
       request.input.body.credentials.foo = { firstname: 'X Æ A-12' };
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .rejectedWith(PluginImplementationError, {
           id: 'plugin.runtime.unexpected_error',
           message: /.*oh noes\nsomeStrategy delete error\n.*/,
@@ -193,13 +193,13 @@ describe('UserController', () => {
 
       strategyValidateStub.rejects(error);
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .be.rejectedWith(error);
 
       strategyValidateStub.resolves();
       strategyCreateStub.rejects(error);
 
-      await should(userController._persistUser(request, profileIds, content))
+      await should(userController._persist(request, profileIds, content))
         .be.rejectedWith(error);
     });
   });
@@ -208,7 +208,7 @@ describe('UserController', () => {
     const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
 
     beforeEach(() => {
-      sinon.stub(userController, '_persistUser').resolves(createdUser);
+      sinon.stub(userController, '_persist').resolves(createdUser);
       request.input.args._id = 'test';
       request.input.body = {
         content: { name: 'John Doe', profileIds: ['default'] }
@@ -218,7 +218,7 @@ describe('UserController', () => {
     it('should return a valid response', async () => {
       const response = await userController.create(request);
 
-      should(userController._persistUser)
+      should(userController._persist)
         .calledOnce()
         .calledWithMatch(request, ['default'], { name: 'John Doe' });
 
@@ -231,7 +231,7 @@ describe('UserController', () => {
       await should(userController.create(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
 
-      should(userController._persistUser).not.called();
+      should(userController._persist).not.called();
     });
 
     it('should reject if no profileId is given', async () => {
@@ -243,7 +243,7 @@ describe('UserController', () => {
           message: 'Missing argument "body.content.profileIds".'
         });
 
-      should(userController._persistUser).not.called();
+      should(userController._persist).not.called();
     });
 
     it('should reject if profileIds is not an array', async () => {
@@ -255,7 +255,7 @@ describe('UserController', () => {
           message: 'Wrong type for argument "body.content.profileIds" (expected: array)'
         });
 
-      should(userController._persistUser).not.called();
+      should(userController._persist).not.called();
     });
   });
 
@@ -263,7 +263,7 @@ describe('UserController', () => {
     const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
 
     beforeEach(() => {
-      sinon.stub(userController, '_persistUser').resolves(createdUser);
+      sinon.stub(userController, '_persist').resolves(createdUser);
       request.input.args._id = 'test';
       request.input.body = {
         content: { name: 'John Doe' }
@@ -275,14 +275,14 @@ describe('UserController', () => {
     it('should return a valid response', async () => {
       const response = await userController.createRestricted(request);
 
-      should(userController._persistUser)
+      should(userController._persist)
         .calledOnce()
         .calledWithMatch(
           request,
           kuzzle.config.security.restrictedProfileIds,
           { name: 'John Doe' });
 
-      should(userController._persistUser.firstCall.args[2])
+      should(userController._persist.firstCall.args[2])
         .not.have.ownProperty('profileIds');
 
       should(response).eql(createdUser);
@@ -297,7 +297,7 @@ describe('UserController', () => {
           message: 'The argument "body.content.profileIds" is not allowed by this API action.'
         });
 
-      should(userController._persistUser).not.called();
+      should(userController._persist).not.called();
     });
 
     it('should allow the request to not have a body content', async () => {
@@ -305,14 +305,14 @@ describe('UserController', () => {
 
       const response = await userController.createRestricted(request);
 
-      should(userController._persistUser)
+      should(userController._persist)
         .calledOnce()
         .calledWithMatch(
           request,
           kuzzle.config.security.restrictedProfileIds,
           {});
 
-      should(userController._persistUser.firstCall.args[2])
+      should(userController._persist.firstCall.args[2])
         .not.have.ownProperty('profileIds');
 
       should(response).eql(createdUser);
@@ -328,7 +328,7 @@ describe('UserController', () => {
     let adminExistsStub;
 
     beforeEach(() => {
-      sinon.stub(userController, '_persistUser');
+      sinon.stub(userController, '_persist');
 
       request.input.args._id = 'test';
 
@@ -348,7 +348,7 @@ describe('UserController', () => {
       await should(userController.createFirstAdmin(request))
         .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
 
-      should(userController._persistUser).not.called();
+      should(userController._persist).not.called();
       should(createOrReplaceRoleStub).not.called();
       should(createOrReplaceProfileStub).not.called();
     });
@@ -358,7 +358,7 @@ describe('UserController', () => {
 
       await userController.createFirstAdmin(request);
 
-      should(userController._persistUser)
+      should(userController._persist)
         .calledOnce()
         .calledWithMatch(request, ['admin'], request.input.body.content);
 
@@ -371,7 +371,7 @@ describe('UserController', () => {
 
       await userController.createFirstAdmin(request);
 
-      should(userController._persistUser)
+      should(userController._persist)
         .calledOnce()
         .calledWithMatch(request, ['admin'], {});
 
