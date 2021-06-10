@@ -240,6 +240,15 @@
       "maxTTL": -1,
       "secret": null
     },
+    // [apiKey]
+    // API Keys configuration
+    //
+    //   * maxTTL:
+    //      Maximum time to live of an API Key, in milliseconds
+    //      If set to -1 (default), API Keys can be created with an infinite duration.
+    "apiKey": {
+      "maxTTL": -1
+    },
     // [default]
     // The default role defines permissions for all users,
     // until an administrator configures the backend rights
