@@ -59,6 +59,15 @@ Feature: Server Controller
       | memoryStorage | "green" |
       | storageEngine | "green" |
 
+# server:limits ================================================================
+  Scenario: Get server limits
+    When I successfully execute the action "server":"limits"
+    Then The property "limits" of the result should match:
+      | concurrentRequests   | "100"   |
+      | documentsFetchCount  | "10000" |  
+      | documentsWriteCount  | "200"   |
+      | loginsPerSecond      | "1"     |
+
   # server:openapi ========================================================================
   @http
   Scenario: Get our API in OpenApi format as a raw response

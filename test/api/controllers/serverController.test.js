@@ -309,6 +309,21 @@ describe('ServerController', () => {
     });
   });
 
+  describe('#limits', () => {
+    it('should return the kuzzle configuration limits', () => {
+      return serverController.limits(request)
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).not.be.undefined();
+          should(response.limits).be.instanceof(Object);
+          should(response.limits.concurrentRequests).be.a.Number();
+          should(response.limits.documentsFetchCount).be.a.Number();
+          should(response.limits.documentsWriteCount).be.a.Number();
+          should(response.limits.loginsPerSecond).be.a.Number();
+        });
+    });
+  });
+
   describe('#publicApi', () => {
     it('should build the api definition', () => {
       const nativeController = new NativeController();
