@@ -2076,10 +2076,13 @@ describe('Test: ElasticSearch service', () => {
         mappings = { properties: { city: { type: 'keyword' } } };
 
       elasticsearch.hasCollection = sinon.stub().resolves(true);
-      elasticsearch.updateCollection = sinon.stub().resolves({});
+      sinon.stub(elasticsearch, 'updateCollection').resolves({});
+      sinon.stub(elasticsearch, 'deleteCollection').resolves();
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
+      should(elasticsearch.hasCollection).be.calledWith(index, '_kuzzle_keep', true);
+      should(elasticsearch.deleteCollection).be.calledWith(index, '_kuzzle_keep');
       should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
@@ -3015,7 +3018,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#deleteCollection', () => {
     it('should allow to delete a collection', () => {
       const promise = elasticsearch.deleteCollection('nepali', 'liia');
-
+      sinon.stub(elasticsearch, 'listCollections').resolves(['nepali', 'liia']);
       return promise
         .then(result => {
           should(elasticsearch._client.indices.delete).be.calledWithMatch({
@@ -4520,7 +4523,7 @@ describe('Test: ElasticSearch service', () => {
         const esIndexes = [
           '%nepali.liia', '%nepali.mehry',
           '&nepali.panipokari', '&nepali._kuzzle_keep',
-          '&vietnam.lfiduras'
+          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
         ];
 
         const publicSchema = publicES._extractSchema(esIndexes);
@@ -4529,6 +4532,25 @@ describe('Test: ElasticSearch service', () => {
         should(publicSchema).be.eql({
           nepali: ['panipokari'],
           vietnam: ['lfiduras'],
+        });
+        should(internalSchema).be.eql({
+          nepali: ['liia', 'mehry'],
+        });
+      });
+
+      it('should extract the list of indexes and their collections including internal _kuzzle_keep', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry',
+          '&nepali.panipokari', '&nepali._kuzzle_keep',
+          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
+        ];
+
+        const publicSchema = publicES._extractSchema(esIndexes, true);
+        const internalSchema = internalES._extractSchema(esIndexes);
+
+        should(publicSchema).be.eql({
+          nepali: ['panipokari', '_kuzzle_keep'],
+          vietnam: ['lfiduras', '_kuzzle_keep'],
         });
         should(internalSchema).be.eql({
           nepali: ['liia', 'mehry'],
