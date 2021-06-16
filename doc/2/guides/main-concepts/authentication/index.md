@@ -110,6 +110,9 @@ When authentication is successful, **Kuzzle returns an authentication token**. T
 It is possible to request an authentication token valid for more than 1 hours with the argument `expiresIn`.
 The default validity period is configurable under the key `security.jwt.expiresIn`.
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
+Possible values: 
+  - `<= -1`: disable the use of maxTTL
+  - `>= 0`: enable maxTTL with setted value (`0` will invalid all your authentication tokens at their creation)
 :::
 
 

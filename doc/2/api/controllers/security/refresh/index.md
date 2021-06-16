@@ -31,7 +31,7 @@ Forcing immediate refreshes comes with performance costs, and should only perfor
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<collection>/_refresh
+URL: http://kuzzle:7512/_security/<collection>/_refresh
 Method: POST
 ```
 

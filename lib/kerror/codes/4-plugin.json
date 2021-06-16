@@ -352,7 +352,7 @@
         "version_mismatch": {
           "description": "Current Kuzzle's version does not match the plugin's requirements",
           "code": 2,
-          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "message": "[%s] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
           "class": "PluginImplementationError"
         },
         "invalid_name_type": {
