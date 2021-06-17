@@ -178,26 +178,6 @@ describe('Test: hotelClerk.subscribe', () => {
     });
   });
 
-  it('should reject the subscription if the number of minterms exceeds the configured limit', () => {
-    kuzzle.config.limits.subscriptionMinterms = 8;
-
-    const normalized = [];
-    for (let i = 0; i < 9; i++) {
-      normalized.push([]);
-    }
-
-    kuzzle.koncorde.normalize.resolves({
-      normalized,
-      index: 'index',
-      collection: 'collection',
-      id: 'foobar',
-    });
-
-    return should(hotelClerk.subscribe(request)).rejectedWith(SizeLimitError, {
-      id: 'core.realtime.too_many_terms',
-    });
-  });
-
   it('should refuse a subscription if the rooms limit has been reached', () => {
     hotelClerk.roomsCount = kuzzle.config.limits.subscriptionRooms;
 
