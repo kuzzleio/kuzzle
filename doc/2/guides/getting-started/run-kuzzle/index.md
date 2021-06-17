@@ -115,6 +115,26 @@ When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
 
+::: info
+The minimum rights required for the anonymous user to connect to the Admin Console are:
+
+```js
+{
+  "controllers": {
+    "auth": {
+      "actions": {
+        "login": true,
+        "checkToken": true,
+        "getCurrentUser": true,
+        "getMyRights": true
+      }
+    }
+  }
+}
+```
+
+:::
+
 <GuidesLinks 
   :next="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"
 />
