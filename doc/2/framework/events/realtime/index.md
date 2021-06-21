@@ -147,6 +147,10 @@ The provided `subscription` object has the following properties:
 
 Triggered whenever a user leaves a room.
 
+:::info
+Pipes cannot listen to this event, only hooks can.
+:::
+
 <SinceBadge version="2.5.0"/>
 
 | Arguments        | Type              | Description                                                                     |

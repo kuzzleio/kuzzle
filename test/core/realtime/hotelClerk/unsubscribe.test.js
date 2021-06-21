@@ -115,6 +115,18 @@ describe('Test: hotelClerk.unsubscribe', () => {
       },
       'out',
       { count: 0 });
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:user:unsubscribe:after', {
+      requestContext: {
+        connection: {
+          id: connectionId
+        }
+      },
+      room: {
+        collection: 'collection',
+        id: roomId,
+        index: 'index',
+      }
+    });
   });
 
   it('should remove the room from the customer list and keep other existing rooms', async () => {
