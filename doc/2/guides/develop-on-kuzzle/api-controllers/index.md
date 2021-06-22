@@ -447,7 +447,7 @@ In some cases it may be necessary to **return a response that differs** from the
 
 This may be to send a **smaller JSON response** for constrained environments, to **perform HTTP redirection** or to **return another MIME type** such as CSV, an image, a PDF document, etc.
 
-For this it is possible to use the method [KuzzleRequest.setResult](/core/2/framework/classes/kuzzle-request/set-result) with the `raw` option set to true. This option prevents Kuzzle from standardizing an action's output:
+For this it is possible to use the method [request.response.configure](/core/2/framework/classes/request-response/configure) with the `raw` format. This option prevents Kuzzle from standardizing an action's output:
 
 **Example:** _Return a CSV file_
 
@@ -458,8 +458,8 @@ app.controller.register('files', {
       handler: async request => {
         const csv = 'name,age\naschen,27\ncaner,28\n';
 
-        request.setResult(null, {
-          raw: true,
+        request.response.configure({
+          format: 'raw',
           headers: {
             'Content-Length': csv.length.toString(),
             'Content-Type': 'text/csv',
@@ -493,8 +493,8 @@ app.controller.register('redirect', {
   actions: {
     proxy: {
       handler: async request => {
-        request.setResult(null, {
-          raw: true,
+        request.response.configure({
+          format: 'raw',
           // HTTP status code for redirection
           status: 302,
           headers: {

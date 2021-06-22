@@ -4,7 +4,6 @@ const sinon = require('sinon');
 const should = require('should');
 const mockRequire = require('mock-require');
 const Long = require('long');
-const getIP = require('ip');
 
 const { IdCard } = require('../../lib/cluster/idCardHandler');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
@@ -100,6 +99,45 @@ describe('#Cluster Node', () => {
   let ClusterNode;
   let kuzzle;
   let node;
+  const networkInterfaces = {
+    lo: [ { internal: true } ],
+    private: [
+      {
+        address: '10.1.1.1',
+        family: 'IPv4',
+        mac: 'welp',
+        internal: false,
+      },
+      {
+        address: 'fe80::b468:a254:bb56:ea68',
+        family: 'IPv6',
+        mac: 'welp',
+        internal: false,
+      },
+    ],
+    public: [
+      {
+        address: '11.1.1.1',
+        family: 'IPv4',
+        mac: 'welp2',
+        internal: false,
+      },
+      {
+        address: 'fe81::b468:a254:bb56:ea68',
+        family: 'IPv6',
+        mac: 'welp2',
+        internal: false,
+      },
+    ],
+    apipa: [
+      {
+        address: '169.254.2.3',
+        family: 'IPv4',
+        mac: 'ohnoes',
+        internal: false,
+      },
+    ],
+  };
 
   before(() => {
     mockRequire('../../lib/cluster/publisher', ClusterPublisherMock);
@@ -111,6 +149,7 @@ describe('#Cluster Node', () => {
       IdCard
     });
     mockRequire('../../lib/util/mutex', { Mutex: MutexMock });
+    mockRequire('os', { networkInterfaces: () => networkInterfaces });
 
     ClusterNode = mockRequire.reRequire('../../lib/cluster/node');
   });
@@ -128,12 +167,63 @@ describe('#Cluster Node', () => {
   describe('#constructor', () => {
     it('should select the correct IP address according to the configuration', () => {
       kuzzle.config.cluster.ip = 'private';
+      kuzzle.config.cluster.ipv6 = false;
+      kuzzle.config.interface = null;
       node = new ClusterNode();
-      should(node.ip).be.eql(getIP.address('private', 'ipv4'));
+      should(node.ip).be.eql('10.1.1.1');
+
+      kuzzle.config.cluster.ip = 'private';
+      kuzzle.config.cluster.ipv6 = true;
+      kuzzle.config.cluster.interface = null;
+      node = new ClusterNode();
+      should(node.ip).be.eql('fe80::b468:a254:bb56:ea68');
 
       kuzzle.config.cluster.ip = 'public';
+      kuzzle.config.cluster.ipv6 = false;
+      kuzzle.config.cluster.interface = null;
       node = new ClusterNode();
-      should(node.ip).be.eql(getIP.address('public', 'ipv4'));
+      should(node.ip).be.eql('11.1.1.1');
+
+      kuzzle.config.cluster.ip = 'public';
+      kuzzle.config.cluster.ipv6 = true;
+      kuzzle.config.cluster.interface = null;
+      node = new ClusterNode();
+      should(node.ip).be.eql('fe81::b468:a254:bb56:ea68');
+
+      kuzzle.config.cluster.ip = null;
+      kuzzle.config.cluster.ipv6 = false;
+      kuzzle.config.cluster.interface = 'welp2';
+      node = new ClusterNode();
+      should(node.ip).be.eql('11.1.1.1');
+
+      kuzzle.config.cluster.ip = null;
+      kuzzle.config.cluster.ipv6 = true;
+      kuzzle.config.cluster.interface = 'welp2';
+      node = new ClusterNode();
+      should(node.ip).be.eql('fe81::b468:a254:bb56:ea68');
+
+      kuzzle.config.cluster.ip = null;
+      kuzzle.config.cluster.ipv6 = false;
+      kuzzle.config.cluster.interface = null;
+      node = new ClusterNode();
+      should(node.ip).be.eql('10.1.1.1');
+
+      kuzzle.config.cluster.ip = null;
+      kuzzle.config.cluster.ipv6 = true;
+      kuzzle.config.cluster.interface = null;
+      node = new ClusterNode();
+      should(node.ip).be.eql('fe80::b468:a254:bb56:ea68');
+    });
+
+    it('should throw if no valid IP address can be found', () => {
+      kuzzle.config.cluster.interface = 'foobar';
+
+      should(() => new ClusterNode()).throw(/^\[CLUSTER\] No suitable IP address found with the provided configuration/);
+    });
+
+    it('should throw if the only available address is an APIPA', () => {
+      kuzzle.config.cluster.interface = 'apipa';
+      should(() => new ClusterNode()).throw(/^\[CLUSTER\] No suitable IP address found with the provided configuration/);
     });
   });
 

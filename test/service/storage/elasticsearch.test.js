@@ -291,17 +291,17 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#search', () => {
-    let filter;
+    let searchBody;
 
     beforeEach(() => {
-      filter = {};
+      searchBody = {};
     });
 
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
           aggregations: { some: 'aggregs' },
-          body: filter,
+          body: searchBody,
           hits: {
             hits: [
               {
@@ -318,7 +318,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      const result = await elasticsearch.search(index, collection, filter);
+      const result = await elasticsearch.search(index, collection, searchBody);
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         index: esIndexName,
@@ -359,14 +359,14 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      await elasticsearch.search(index, collection, filter, {
+      await elasticsearch.search(index, collection, searchBody, {
         from: 0,
         scroll: '30s',
         size: 1,
       });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
-        body: filter,
+        body: searchBody,
         from: 0,
         index: esIndexName,
         scroll: '30s',
@@ -381,22 +381,38 @@ describe('Test: ElasticSearch service', () => {
         { ttl: 30000 });
     });
 
+    it('should be able to search on ES alias with invalid collection name', async () => {
+      elasticsearch._client.search.resolves({
+        body: {
+          hits: { hits: [], total: { value: 0 } },
+        }
+      });
+
+      await elasticsearch.search('main', 'kuzzleData', searchBody);
+
+      should(elasticsearch._client.search.firstCall.args[0]).match({
+        body: searchBody,
+        index: '&main.kuzzleData',
+        trackTotalHits: true,
+      });
+    });
+
     it('should return a rejected promise if a search fails', async () => {
       elasticsearch._client.search.rejects(esClientError);
 
-      await should(elasticsearch.search(index, collection, filter))
+      await should(elasticsearch.search(index, collection, searchBody))
         .be.rejected();
 
       should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
     });
 
     it('should return a rejected promise if an unhautorized property is in the query', () => {
-      filter = {
+      searchBody = {
         not_authorized: 42,
         query : {}
       };
 
-      return should(elasticsearch.search(index, collection, filter))
+      return should(elasticsearch.search(index, collection, searchBody))
         .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
@@ -415,7 +431,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
 
-      const promise = elasticsearch.search(index, collection, filter, {
+      const promise = elasticsearch.search(index, collection, searchBody, {
         scroll: '42m'
       });
 
@@ -2060,10 +2076,13 @@ describe('Test: ElasticSearch service', () => {
         mappings = { properties: { city: { type: 'keyword' } } };
 
       elasticsearch.hasCollection = sinon.stub().resolves(true);
-      elasticsearch.updateCollection = sinon.stub().resolves({});
+      sinon.stub(elasticsearch, 'updateCollection').resolves({});
+      sinon.stub(elasticsearch, 'deleteCollection').resolves();
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
+      should(elasticsearch.hasCollection).be.calledWith(index, '_kuzzle_keep', true);
+      should(elasticsearch.deleteCollection).be.calledWith(index, '_kuzzle_keep');
       should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
@@ -2999,7 +3018,7 @@ describe('Test: ElasticSearch service', () => {
   describe('#deleteCollection', () => {
     it('should allow to delete a collection', () => {
       const promise = elasticsearch.deleteCollection('nepali', 'liia');
-
+      sinon.stub(elasticsearch, 'listCollections').resolves(['nepali', 'liia']);
       return promise
         .then(result => {
           should(elasticsearch._client.indices.delete).be.calledWithMatch({
@@ -4469,26 +4488,6 @@ describe('Test: ElasticSearch service', () => {
         should(publicESIndex).be.eql('&nepali.liia');
         should(internalESIndex).be.eql('%nepali.mehry');
       });
-
-      it('should throw if the index is invalid', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex(invalid, 'foo'))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_index_name',
-            });
-        }
-      });
-
-      it('should throw if the collection is invalid or null', () => {
-        for (const invalid of [ null, '', 123, true, 'foo+bar', '_all', 'HELP']) {
-          // eslint-disable-next-line no-loop-func
-          should(() => publicES._getESIndex('foo', invalid))
-            .throw(BadRequestError, {
-              id: 'services.storage.invalid_collection_name',
-            });
-        }
-      });
     });
 
     describe('#_extractIndex', () => {
@@ -4519,43 +4518,153 @@ describe('Test: ElasticSearch service', () => {
       });
     });
 
-    describe('#_extractIndexes', () => {
-      it('extract the index names from a list of esIndex name', () => {
+    describe('#_extractSchema', () => {
+      it('should extract the list of indexes and their collections', () => {
         const esIndexes = [
-          '%nepali.liia', '%nepali.mehry', '&india.darjeeling', '&vietnam.lfiduras'
+          '%nepali.liia', '%nepali.mehry',
+          '&nepali.panipokari', '&nepali._kuzzle_keep',
+          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
         ];
 
-        const
-          publicIndexes = publicES._extractIndexes(esIndexes),
-          internalIndexes = internalES._extractIndexes(esIndexes);
+        const publicSchema = publicES._extractSchema(esIndexes);
+        const internalSchema = internalES._extractSchema(esIndexes);
 
-        should(publicIndexes).be.eql(['india', 'vietnam']);
-        should(internalIndexes).be.eql(['nepali']);
+        should(publicSchema).be.eql({
+          nepali: ['panipokari'],
+          vietnam: ['lfiduras'],
+        });
+        should(internalSchema).be.eql({
+          nepali: ['liia', 'mehry'],
+        });
       });
 
-      it('does not extract malformated indexes', () => {
-        const esIndexes = ['nepali', '&india', '&vietnam.'];
+      it('should extract the list of indexes and their collections including internal _kuzzle_keep', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry',
+          '&nepali.panipokari', '&nepali._kuzzle_keep',
+          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
+        ];
 
-        const
-          publicIndexes = publicES._extractIndexes(esIndexes),
-          internalIndexes = internalES._extractIndexes(esIndexes);
+        const publicSchema = publicES._extractSchema(esIndexes, true);
+        const internalSchema = internalES._extractSchema(esIndexes);
 
-        should(publicIndexes).be.empty();
-        should(internalIndexes).be.empty();
+        should(publicSchema).be.eql({
+          nepali: ['panipokari', '_kuzzle_keep'],
+          vietnam: ['lfiduras', '_kuzzle_keep'],
+        });
+        should(internalSchema).be.eql({
+          nepali: ['liia', 'mehry'],
+        });
       });
     });
 
-    describe('#_extractCollections', () => {
-      it('extract the collection names for an index from a list of esIndex name', () => {
-        const esIndexes = [
-          '%nepali.liia', '%nepali.mehry', '&nepali.panipokari', '&vietnam.lfiduras'];
+    describe('#_sanitizeSearchBody', () => {
+      let searchBody;
 
-        const
-          publicCollections = publicES._extractCollections(esIndexes, 'nepali'),
-          internalCollections = internalES._extractCollections(esIndexes, 'nepali');
+      it('should return the same query if all top level keywords are valid', () => {
+        searchBody = {};
+        for (const key of publicES.searchBodyKeys) {
+          searchBody[key] = { foo: 'bar' };
+        }
 
-        should(publicCollections).be.eql(['panipokari']);
-        should(internalCollections).be.eql(['liia', 'mehry']);
+        const result = publicES._sanitizeSearchBody(Object.assign({}, searchBody));
+
+        should(result).be.deepEqual(searchBody);
+      });
+
+      it('should throw if any top level keyword is not in the white list', () => {
+        searchBody = {
+          unknown: {}
+        };
+
+        should(() => publicES._sanitizeSearchBody(searchBody))
+          .throw(BadRequestError, { id: 'services.storage.invalid_search_query'});
+      });
+
+      it('should throw if any script keyword is found in the query (even deeply nested)', () => {
+        searchBody = {
+          query: {
+            bool: {
+              filter: [
+                {
+                  script: {
+                    script: {
+                      inline: 'doc[message.keyword].value.length() > params.length',
+                      params: {
+                        length: 25
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(searchBody))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+      });
+
+      it('should turn empty queries into match_all queries', () => {
+        searchBody = {
+          query: {}
+        };
+
+        const result = publicES._sanitizeSearchBody(searchBody);
+
+        should(result).be.deepEqual({ query: { match_all: {} }});
+      });
+    });
+
+    describe('#_scriptCheck', () => {
+      let object;
+
+      it('should not throw when there is not a single script', () => {
+        object = { foo: 'bar' };
+
+        should(() => publicES._scriptCheck(object)).not.throw();
+      });
+
+      it('should throw if any script keyword is found in the query', () => {
+        object = {
+          query: {
+            match: {
+              script: {
+                inline: 'doc[message.keyword].value.length() > params.length',
+                params: {
+                  length: 25
+                }
+              }
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(object))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+      });
+
+      it('should throw if any deeply nested script keyword is found in the query', () => {
+        object = {
+          query: {
+            bool: {
+              filter: [
+                {
+                  script: {
+                    script: {
+                      inline: 'doc[message.keyword].value.length() > params.length',
+                      params: {
+                        length: 25
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(object))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
       });
     });
   });

@@ -31,7 +31,7 @@ describe('Plugin', () => {
   beforeEach(() => {
     manifest = {
       name: 'lambda-core',
-      kuzzleVersion: '2.x'
+      kuzzleVersion: '>=2.x'
     };
 
     packageJson = { version: 'version' };
@@ -91,6 +91,16 @@ describe('Plugin', () => {
       plugin.init('lambda-core');
 
       should(plugin._context.constructor.name).be.eql('PrivilegedPluginContext');
+    });
+
+    it('should throw an error if the manifest kuzzleVersion is not valid', () => {
+      plugin = new Plugin({ _manifest: { kuzzleVersion: '42.21.0' } });
+
+      should(() => {
+        plugin.init('wrong-version');
+      }).throwError({
+        id: 'plugin.manifest.version_mismatch'
+      });
     });
   });
 
