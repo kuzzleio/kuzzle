@@ -7,6 +7,9 @@ const ws = require('ws');
 Given('I open a new local websocket connection', function () {
   return new Promise((resolve) => {
     this.props.client = new ws('ws://localhost:7512');
+    this.props.client.on('message', (data) =>{
+      this.props.result = JSON.parse(data);
+    });
     this.props.client.on('open', () =>{
       return resolve();
     });
@@ -19,10 +22,12 @@ When('I send the message {string} to Kuzzle through websocket', function (messag
 
 Then('I wait to receive a websocket response from Kuzzle', function() {
   return new Promise((resolve) => {
-    this.props.client.on('message', data => {
-      this.props.result = JSON.parse(data);
-      return resolve();
-    });
+    const interval = setInterval(() => {
+      if (this.props.result) {
+        clearInterval(interval);
+        return resolve();
+      }
+    }, 200);
   });
 });
 

@@ -240,6 +240,15 @@
       "maxTTL": -1,
       "secret": null
     },
+    // [apiKey]
+    // API Keys configuration
+    //
+    //   * maxTTL:
+    //      Maximum time to live of an API Key, in milliseconds
+    //      If set to -1 (default), API Keys can be created with an infinite duration.
+    "apiKey": {
+      "maxTTL": -1
+    },
     // [default]
     // The default role defines permissions for all users,
     // until an administrator configures the backend rights
@@ -890,16 +899,27 @@
   //       Delay between 2 heartbeat frames. A higher value means less
   //       reactivity for detecting dead nodes, while a lower value might mean
   //       erroneous node evictions on slow networks.
+  //   * interface:
+  //      Network interface to use as the node IP address.
+  //      If the configured interface cannot be found, the node will refuse to
+  //      start.
+  //      Accepted values:
+  //        * interface name (e.g. eth0, wlan0, vmnet1, ...)
+  //        * IP address (v4 or v6)
+  //        * MAC address
+  //        * null value: no preferred network interface
   //   * ipv6:
   //       If true, asks nodes to use IPv6 to connect to each others
   //   * ip:
-  //       A string used to returns the address for the network interface on the
-  //       current system with the specified name:
-  //         * String: First `family` address of the interface.
-  //                   If not found first address with `ipv4` or
-  //                   loopback address `127.0.0.1`.
-  //         * 'public': the first public ip address of family.
-  //         * 'private': the first private ip address of family.
+  //       The type of IP address to use.
+  //       If no suitable IP address can be found, the node will refuse to
+  //       start.
+  //       Accepted values:
+  //         * 'public': will target only public IPs
+  //         * 'private': will target only private IPs (private addresses,
+  //           ULAs and link-local addresses)
+  //         * null (or blank string): no target preference. If this
+  //           property is left to null, it is advised to configure an interface
   //   * joinTimeout:
   //       The cluster join timeout (in ms): if that timeout is reached before
   //       the node could join the cluster, it will kill itself.
@@ -930,8 +950,9 @@
   "cluster": {
     "activityDepth": 50,
     "heartbeat": 2000,
+    "interface": null,
     "ipv6": false,
-    "ip": "public",
+    "ip": "private",
     "joinTimeout": 60000,
     "minimumNodes": 2,
     "ports": {

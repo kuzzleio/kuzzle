@@ -9,7 +9,7 @@ description: PluginStorage class bootstrap() method
 
 Initializes the plugin private storage.
 
-Can be called ad much as needed as long as identical mappings are provided.
+Can be called as much as needed as long as identical mappings are provided.
 
 
 ## Arguments

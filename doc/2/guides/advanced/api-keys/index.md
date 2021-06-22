@@ -22,6 +22,14 @@ Administrators can create API keys for other users using the [security:createApi
 
 By default, **API keys do not expire**. But it is possible to specify the duration of an API key using the argument `expiresIn`.
 
+::: info
+It is also possible to set a maximum validity period for an API key under the key `security.apiKey.maxTTL` in the Kuzzle configuration.
+This limit will only apply to API key created with the `auth` controller.
+Possible values: 
+  - `<= -1`: disable the use of maxTTL
+  - `>= 0`: enable maxTTL with setted value (`0` will invalid all your API keys at their creation)
+:::
+
 It is also necessary to **provide a description** of the API key.
 
 **Example: _Create an API key for the user "melis" and valid for 30 days_**

@@ -59,6 +59,7 @@ description: Error codes definitions
 | services.storage.scroll_duration_too_great<br/><pre>0x0101002c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Scroll duration "%s" is too great. | The scroll duration exceed the configured maxium value. (See config.services.storageEngine.maxScrollDuration) |
 | services.storage.unknown_query_keyword<br/><pre>0x0101002d</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not part of Elasticsearch Query DSL. Are you trying to use a Koncorde query? | An unknown keyword has been provided in the search query |
 | services.storage.incomplete_update<br/><pre>0x0101002e</pre>  | [MultipleErrorsError](/core/2/api/errors/error-codes#multipleerrorserror) <pre>(400)</pre> | %s documents were successfully updated before an error occured | Couldn't update all the requested documents |
+| services.storage.invalid_query_keyword<br/><pre>0x0101002f</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The "%s" keyword is not allowed in this query. | A forbidden keyword has been provided in the query |
 
 ---
 

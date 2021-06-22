@@ -65,7 +65,9 @@ kourou auth:login -a strategy=local --body '{
   username: "melis",
   password: "password"
 }'
+```
 
+```bash
 [ℹ] Unknown command "auth:login", fallback to API method
  
  🚀 Kourou - Executes an API query.

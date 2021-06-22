@@ -204,6 +204,16 @@ export class Backend {
       writable: true
     });
 
+    /**
+     * Set the "started" property in this event so developers can use runtime
+     * features in pipes/hooks attached to this event.
+     */
+    this._pipes['kuzzle:state:ready'] = [
+      async () => {
+        this.started = true;
+      },
+    ];
+
     global.app = this;
 
     this.pipe = new BackendPipe(this);
@@ -247,6 +257,7 @@ export class Backend {
     // we need to load the default plugins
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
+
       this.plugin.use(new PluginClass(), {
         deprecationWarning: false,
         name: plugin,
@@ -296,11 +307,11 @@ export class Backend {
   /**
    * Register a method that will be executed only once on any given environment.
    * If this method throws, the app won't start.
-   * 
+   *
    * @param {string} id - Unique id needed to differenciate each installation
    * @param {Function} handler - Method to execute only once
    * @param {string | undefined} description - Optional: Describe the purpose of this installation
-   * 
+   *
    */
   install (id: string, handler: () => Promise<void>, description?: string): void {
     if (this.started) {

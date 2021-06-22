@@ -66,6 +66,8 @@ When an event has more than one payload then only the first argument of the hand
 **Example:** _Changing the result of the [server:now](/core/2/api/controllers/server/now) API action_
 
 ```js
+import { KuzzleRequest } from 'kuzzle';
+
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
   request.result.now = (new Date()).toUTCString();
 
