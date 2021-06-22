@@ -80,6 +80,29 @@ describe('Test: security/tokenRepository', () => {
     });
   });
 
+  describe('#isApiKey', () => {
+    it('should return true if the token is an ApiKey', async () => {
+      const user = new User();
+      user._id = 'id';
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '1000y',
+        type: 'apiKey'
+      });
+
+      should(tokenRepository.isApiKey(token.jwt)).be.true();
+    });
+
+    it('should return true if the token is not an ApiKey', async () => {
+      const user = new User();
+      user._id = 'id';
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '1000y',
+      });
+
+      should(tokenRepository.isApiKey(token.jwt)).be.false();
+    });
+  });
+
   describe('#verify', () => {
     beforeEach(() => {
       kuzzle.ask.withArgs('core:cache:internal:get').resolves(null);
@@ -486,29 +509,60 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:searchKeys').resolves([
         'repos/kuzzle/token/foo#foo',
         'repos/kuzzle/token/foo#bar',
-        'repos/kuzzle/token/foo#baz',
+        `repos/kuzzle/token/foo#${TokenRepository.APIKEY_PREFIX}baz`,
       ]);
 
       kuzzle.ask.withArgs('core:cache:internal:get').onFirstCall().resolves(
-        JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1 }));
+        JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1, jwt: 'foo' }));
 
       kuzzle.ask.withArgs('core:cache:internal:get').onSecondCall().resolves(
-        JSON.stringify({ userId: 'foo', _id: 'bar', expiresAt: 2 }));
+        JSON.stringify({ userId: 'foo', _id: 'bar', expiresAt: 2, jwt: 'bar' }));
 
       kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
-        JSON.stringify({ userId: 'foo', _id: 'baz', expiresAt: 3 }));
-
-      await tokenRepository.deleteByKuid('foo');
+        JSON.stringify({ userId: 'foo', _id: `${TokenRepository.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${TokenRepository.APIKEY_PREFIX}baz`}));
+      
+      await tokenRepository.deleteByKuid('foo', {keepApiKeys: false});
 
       should(kuzzle.ask)
         .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
         .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/bar', -1)
-        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/baz', -1);
+        .calledWith('core:cache:internal:expire', `repos/kuzzle/token/${TokenRepository.APIKEY_PREFIX}baz`, -1);
 
       should(kuzzle.tokenManager.expire)
         .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
         .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2})
-        .calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 3});
+        .calledWithMatch({userId: 'foo', _id: `${TokenRepository.APIKEY_PREFIX}baz`, expiresAt: 3});
+    });
+
+
+    it('should delete the tokens associated to a user identifier except the ones that are ApiKeys', async () => {
+      sinon.stub(tokenRepository, 'refreshCacheTTL');
+      kuzzle.ask.withArgs('core:cache:internal:searchKeys').resolves([
+        'repos/kuzzle/token/foo#foo',
+        'repos/kuzzle/token/foo#bar',
+        `repos/kuzzle/token/foo#${TokenRepository.APIKEY_PREFIX}baz`,
+      ]);
+
+      kuzzle.ask.withArgs('core:cache:internal:get').onFirstCall().resolves(
+        JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1, jwt: 'foo' }));
+
+      kuzzle.ask.withArgs('core:cache:internal:get').onSecondCall().resolves(
+        JSON.stringify({ userId: 'foo', _id: 'bar', expiresAt: 2, jwt: 'bar' }));
+
+      kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
+        JSON.stringify({ userId: 'foo', _id: `${TokenRepository.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${TokenRepository.APIKEY_PREFIX}baz`}));
+      
+      await tokenRepository.deleteByKuid('foo', {keepApiKeys: true});
+
+      should(kuzzle.ask)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
+        .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/bar', -1)
+        .not.calledWith('core:cache:internal:expire', `repos/kuzzle/token/${TokenRepository.APIKEY_PREFIX}baz`, -1);
+
+      should(kuzzle.tokenManager.expire)
+        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
+        .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2})
+        .not.calledWithMatch({userId: 'foo', _id: `${TokenRepository.APIKEY_PREFIX}baz`, expiresAt: 3});
     });
 
     it('should not delete tokens if the internal cache return a false positive', async () => {

@@ -483,17 +483,20 @@ describe('Test the auth controller', () => {
       const response = await authController.logout(request);
 
       should(kuzzle.ask)
+        .calledWith('core:security:token:isApiKey', request.context.token);
+
+      should(kuzzle.ask)
         .calledWith('core:security:token:delete', request.context.token);
 
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens at once', async () => {
+    it('should expire all tokens that are not ApiKeys at once', async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', {keepApiKeys: true});
     });
 
     it('should emit an error if the token cannot be expired', () => {
@@ -510,6 +513,17 @@ describe('Test the auth controller', () => {
       return should(authController.logout(request)).rejectedWith(
         UnauthorizedError,
         {id: 'security.rights.unauthorized'});
+    });
+
+    it('should not expires the token if this is an apikey', async () => {
+      kuzzle.ask.withArgs('core:security:token:isApiKey').resolves(true);
+
+      const response = await authController.logout(request);
+
+      should(kuzzle.ask)
+        .not.be.calledWith('core:security:token:delete', request.context.token);
+      
+      should(response.responseObject).be.instanceof(Object);
     });
   });
 
@@ -553,17 +567,20 @@ describe('Test the auth controller', () => {
       const response = await authController.logout(request);
 
       should(kuzzle.ask)
+        .calledWith('core:security:token:isApiKey', request.context.token);
+
+      should(kuzzle.ask)
         .calledWith('core:security:token:delete', request.context.token);
 
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens at once', async () => {
+    it('should expire all tokens that are not ApiKeys at once', async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', {keepApiKeys: true});
     });
 
     it('should emit an error if the token cannot be expired', () => {
@@ -572,6 +589,17 @@ describe('Test the auth controller', () => {
       kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
+    });
+
+    it('should not expires the token if this is an apikey', async () => {
+      kuzzle.ask.withArgs('core:security:token:isApiKey').resolves(true);
+
+      const response = await authController.logout(request);
+
+      should(kuzzle.ask)
+        .not.be.calledWith('core:security:token:delete', request.context.token);
+      
+      should(response.responseObject).be.instanceof(Object);
     });
   });
 
