@@ -74,7 +74,7 @@ services:
       - "17512:7512"
 
   redis:
-    image: redis:5
+    image: redis:6
     container_name: kuzzle_redis
 
   elasticsearch:
