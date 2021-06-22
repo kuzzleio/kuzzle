@@ -138,9 +138,9 @@ As it is a single-page application (SPA), no data related to your Kuzzle applica
 We develop many SDKs to facilitate the use of Kuzzle in applications.  
 
 These SDKs are available for the most common languages and the majority of frontend development platforms:
- - [Javascript / Typescript](/sdk/js/7) : [Node](/sdk/js/7/getting-started/node-js/), [React](/sdk/js/7/getting-started/react/standalone/), [React Native](/sdk/js/7/getting-started/react-native/), [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/), Angular, etc
- - [Dart](/sdk/dart/2) : [Flutter](/sdk/dart/2/getting-started/flutter/)
- - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone/)
+ - [Javascript / Typescript](/sdk/js/7) : [Node](/sdk/js/7/getting-started/node-js), [React](/sdk/js/7/getting-started/react/standalone), [React Native](/sdk/js/7/getting-started/react-native), [Vue.js](/sdk/js/7/getting-started/vuejs/standalone), Angular, etc
+ - [Dart](/sdk/dart/2) : [Flutter](/sdk/dart/2/getting-started/flutter)
+ - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone)
  - [Java / Kotlin](/sdk/jvm/1) : Android, JVM
 
 ![sdks and platforms](./ecosystem-sdk-platforms.png)
