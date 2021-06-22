@@ -79,6 +79,7 @@ this.strategies = {
       exists: 'exists',
       getById: 'getById',
       getInfo: 'getInfo',
+      search: 'search',
       update: 'update',
       validate: 'validate',
       verify: 'verify'
@@ -109,17 +110,18 @@ The `config` part of the `strategies` object can contain the following propertie
 
 The `methods` part of the `strategies` object can contain the following properties:
 
-| Arguments       | Type              | Description                                                                                                                        |
-| --------------- | ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `create`        | <pre>string</pre> | The name of the exposed [create](#create) function                                   |
-| `delete`        | <pre>string</pre> | The name of the exposed [delete](#delete) function                                   |
-| `exists`        | <pre>string</pre> | The name of the exposed [exists](#exists) function                                   |
-| `update`        | <pre>string</pre> | The name of the exposed [update](#update) function                                   |
-| `validate`      | <pre>string</pre> | The name of the exposed [validate](#update) function                                 |
-| `verify`        | <pre>string</pre> | The name of the exposed [verify](#verify) function                                   |
+| Arguments       | Type              | Description                                                              |
+| --------------- | ----------------- | ------------------------------------------------------------------------ |
+| `create`        | <pre>string</pre> | The name of the exposed [create](#create) function                       |
+| `delete`        | <pre>string</pre> | The name of the exposed [delete](#delete) function                       |
+| `exists`        | <pre>string</pre> | The name of the exposed [exists](#exists) function                       |
+| `update`        | <pre>string</pre> | The name of the exposed [update](#update) function                       |
+| `validate`      | <pre>string</pre> | The name of the exposed [validate](#update) function                     |
+| `verify`        | <pre>string</pre> | The name of the exposed [verify](#verify) function                       |
 | `afterRegister` | <pre>string</pre> | (optional) The name of the exposed [afterRegister](#optional-afterregister) function |
-| `getById`       | <pre>string</pre> | (optional) The name of the exposed [getById](#optional-getbyid) function             |
-| `getInfo`       | <pre>string</pre> | (optional) The name of the exposed [getInfo](#optional-getinfo) function             |
+| `getById`       | <pre>string</pre> | (optional) The name of the exposed [getById](#optional-getbyid) function |
+| `getInfo`       | <pre>string</pre> | (optional) The name of the exposed [getInfo](#optional-getinfo) function |
+| `search`        | <pre>string</pre> | (optional) The name of the exposed [search](#optional-search) function   |
 
 Even though each strategy must declare its own set of properties, the same strategy method can be used by multiple strategies.
 
@@ -143,7 +145,7 @@ create(request, credentials, kuid, strategy);
 
 | Arguments     | Type                                                           | Description                                                                                      |
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | API request asking for the credentials creation                                                  |
+| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | API request asking for the credentials creation                                                  |
 | `credentials` | <pre>object</pre>                                              | New credentials to create, already validated by this strategy's [validate](#validate) function   |
 | `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy used by these credentials                                                |
@@ -172,7 +174,7 @@ delete (request, kuid, strategy);
 
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | API request asking for the credentials deletion                                                  |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | API request asking for the credentials deletion                                                  |
 | `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
@@ -196,7 +198,7 @@ exists(request, kuid, strategy);
 
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | Source API request                                                                               |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                               |
 | `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
@@ -220,7 +222,7 @@ update(request, credentials, kuid, strategy);
 
 | Arguments     | Type                                                           | Description                                                                                            |
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | Source API request                                                                                     |
+| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                                     |
 | `credentials` | <pre>object</pre>                                              | Updated credentials.<br/>Those are already validated by this strategy's [validate](#validate) function |
 | `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid)       |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy name                                                                           |
@@ -249,7 +251,7 @@ validate(request, credentials, kuid, strategy, isUpdate);
 
 | Arguments     | Type                                                           | Description                                                                                                                                                                                 |
 | ------------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | Source API request                                                                                                                                                                          |
+| `request`     | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API request                                                                                                                                                                          |
 | `credentials` | <pre>object</pre>                                              | Credentials to validate                                                                                                                                                                     |
 | `kuid`        | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid)                                                                                            |
 | `strategy`    | <pre>string</pre>                                              | Authentication strategy name                                                                                                                                                                |
@@ -289,7 +291,7 @@ The `payload` object has the following properties:
 
 | Properties | Type                                                           | Description                                                                     |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `original` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | Source API login request                                                        |
+| `original` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | Source API login request                                                        |
 | `query`    | <pre>object</pre>                                              | Direct link to `original.input.args`, containing the optional request arguments |
 | `body`     | <pre>object</pre>                                              | Direct link to `original.input.body`, containing the request body content       |
 
@@ -348,7 +350,7 @@ getById(request, id, strategy);
 
 | Arguments  | Type                                                           | Description                                        |
 | ---------- | -------------------------------------------------------------- | -------------------------------------------------- |
-| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | The API request asking for credentials information |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | The API request asking for credentials information |
 | `id`       | <pre>string</pre>                                              | Strategy's user identifier                         |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                       |
 
@@ -378,13 +380,51 @@ getInfo(request, kuid, strategy);
 
 | Arguments  | Type                                                           | Description                                                                                      |
 | ---------- | -------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request | The API request asking for credentials information                                               |
+| `request`  | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) | The API request asking for credentials information                                               |
 | `kuid`     | <pre>string</pre>                                              | User's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid-kuid) |
 | `strategy` | <pre>string</pre>                                              | Authentication strategy name                                                                     |
 
 ### Returned value
 
 The `getInfo` function must return a promise, resolving to an object containing credentials information. It can be left empty.
+
+---
+
+## (optional) search
+
+Given a credentials related search query, returns matched users' kuid.
+
+If this function is not implemented, a `missing_optional_method` error occurs.
+
+:::warning
+Beware of which properties are searchable. It would be unsafe to let the password be a search criteria, isn't it?
+:::
+
+### Arguments
+
+```js
+search(searchBody, options);
+```
+
+<br/>
+
+| Arguments    | Type                                                                                                  | Description                                                  |
+| ------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `searchBody` | [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/query-dsl.html) | A query concerning the authentication strategy credentials |
+| `options`    | `{ from?: number, size?: number }`                                                                    | Search options useful for paginations                        |
+
+### Returned value
+
+The `search` function must return a promise, resolving to an search result with the following properties:
+
+- `hits`: Array of matched users. Each hit has the following properties:
+  - `kuid`: Users unique identifier
+  - `...`: __Non sensitive__ credentials specific to this authentication strategy
+- `total`: Total of matched users.
+
+:::warning
+The object resolved by the promise is directly forwarded to the originating user. For security reasons, it must only contain *non sensitive* information.
+:::
 
 ---
 

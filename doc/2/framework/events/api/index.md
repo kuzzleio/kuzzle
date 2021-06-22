@@ -20,7 +20,7 @@ All API actions, without exception, trigger two of these three events:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 A `before` event is triggered before an API request starts.
 
@@ -37,7 +37,7 @@ The `before` event name is built using the following template:
 
 | API action                                                                                   | After event name                 |
 | -------------------------------------------------------------------------------------------- | -------------------------------- |
-| [auth:login](/core/2/api/controllers/auth/login)                               | `auth:beforeLogin`               |
+| [auth:login](/core/2/api/controllers/auth/login)                               | auth:beforeLogin`               |
 | [document:createOrReplace](/core/2/api/controllers/document/create-or-replace) | `document:beforeCreateOrReplace` |
 
 ---
@@ -46,7 +46,7 @@ The `before` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 An `after` event is triggered after an API request succeeds.
 
@@ -72,7 +72,7 @@ The `after` event name is built using the following template:
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| `request` | `KuzzleRequest` | The normalized API [request](/core/2/framework/classes/kuzzle-request |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
 
 An `error` event is triggered after an API request fails.
 

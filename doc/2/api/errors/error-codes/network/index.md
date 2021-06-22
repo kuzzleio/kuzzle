@@ -47,6 +47,7 @@ description: Error codes definitions
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
 | network.websocket.unexpected_error<br/><pre>0x03030001</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Caught an unexpected WebSocket error: %s | Caught an unexpected WebSocket error |
+| network.websocket.ratelimit_exceeded<br/><pre>0x03030002</pre>  | [TooManyRequestsError](/core/2/api/errors/error-codes#toomanyrequestserror) <pre>(429)</pre> | Rejected: too many requests received from that socket | Too many requests received from a client socket |
 
 ---
 

@@ -316,6 +316,69 @@ describe('#notifier.notifyDocuments', () => {
       should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
     });
 
+    it('"document upsert" notification (at least 1 update)', async () => {
+      const cacheResult = [
+        undefined,
+        'bar',
+        undefined,
+      ];
+
+      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
+
+      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
+      sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
+
+      await notifier.notifyDocuments(request, actionEnum.UPSERT, [
+        { _id: 'foo', created: true },
+        { _id: 'bar', created: false, _updatedFields: ['toto'] },
+        { _id: 'baz', created: true },
+      ]);
+
+      should(notifier.notifyDocumentCreate).calledTwice();
+      should(notifier.notifyDocumentUpdate).calledOnce();
+
+      should(notifier.notifyDocumentCreate.firstCall)
+        .calledWith(request, { _id: 'foo', created: true });
+
+      should(notifier.notifyDocumentCreate.secondCall)
+        .calledWith(request, { _id: 'baz', created: true });
+
+      should(notifier.notifyDocumentUpdate)
+        .calledWith(request, { _id: 'bar', created: false, _updatedFields: ['toto'] }, cacheResult[1]);
+
+      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
+        `{notif/${index}/${collection}}/foo`,
+        `{notif/${index}/${collection}}/bar`,
+        `{notif/${index}/${collection}}/baz`,
+      ]);
+    });
+
+    it('"document upsert" notification (no update)', async () => {
+      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
+      sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
+
+      await notifier.notifyDocuments(request, actionEnum.UPSERT, [
+        { _id: 'foo', created: true },
+        { _id: 'bar', created: true },
+        { _id: 'baz', created: true },
+      ]);
+
+      should(notifier.notifyDocumentCreate).calledThrice();
+      should(notifier.notifyDocumentUpdate).not.called();
+
+      should(notifier.notifyDocumentCreate.firstCall)
+        .calledWith(request, { _id: 'foo', created: true });
+
+      should(notifier.notifyDocumentCreate.secondCall)
+        .calledWith(request, { _id: 'bar', created: true });
+
+      should(notifier.notifyDocumentCreate.thirdCall)
+        .calledWith(request, { _id: 'baz', created: true });
+
+      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+    });
+
+
     it('should throw on an unknown action', () => {
       return should(notifier.notifyDocuments(request, 'ohnoes', [document]))
         .rejectedWith(KuzzleInternalError, { id: 'core.fatal.assertion_failed' });

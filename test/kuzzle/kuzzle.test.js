@@ -7,7 +7,10 @@ const rewire = require('rewire');
 const Bluebird = require('bluebird');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
+const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
+const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
+
 const config = require('../../lib/config').load();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
@@ -57,6 +60,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
     mockrequire('../../lib/core/security', coreModuleStub);
     mockrequire('../../lib/core/realtime', coreModuleStub);
+    mockrequire('../../lib/cluster', coreModuleStub);
+    mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
@@ -80,13 +85,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
+      kuzzle.install = sinon.stub().resolves(0);
       const options = {
+        installations: [{ id: 'foo', handler: () => {} }],
         mappings: {},
         fixtures: {},
         securities: {}
       };
 
-      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
+      should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
 
       await kuzzle.start(application, options);
 
@@ -100,11 +107,12 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.validation.curateSpecification,
         kuzzle.ask.withArgs('core:storage:public:mappings:import'),
         kuzzle.ask.withArgs('core:storage:public:document:import'),
-        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
+        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
+        kuzzle.install.withArgs(options.installations),
         kuzzle.pipe.withArgs('kuzzle:start'),
         kuzzle.pipe.withArgs('kuzzle:state:live'),
         kuzzle.entryPoint.startListening,
@@ -112,7 +120,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.emit.withArgs('core:kuzzleStart')
       );
 
-      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
+      should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
     });
 
     // @deprecated
@@ -216,7 +224,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         await kuzzle.shutdown();
 
         should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
-        should(kuzzle.emit).calledWith('kuzzle:shutdown');
+        should(kuzzle.pipe).calledWith('kuzzle:shutdown');
         should(Bluebird.delay.callCount).approximately(5, 1);
 
         // @deprecated
@@ -228,6 +236,61 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         process.exit.restore();
         Bluebird.delay.restore();
       }
+    });
+  });
+
+  describe('#install', () => {
+    let handler;
+
+    beforeEach(() => {
+      handler = sinon.stub().resolves();
+      sinon.stub(Date, 'now').returns(Date.now());
+
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(false);
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:create']).resolves();
+    });
+
+    afterEach(() => {
+      Date.now.restore();
+    });
+
+    it('should call the handler and work properly', async () => {
+      await kuzzle.install([{ id: 'id', handler, description: 'description'}]);
+
+      should(kuzzle.ask).be.calledTwice();
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:exist',
+        'kuzzle',
+        'installations',
+        'id');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { description: 'description', handler: handler.toString(), installedAt: Date.now() },
+        { id: 'id' });
+      should(handler).be.calledOnce();
+      should(kuzzle.log.info).be.calledOnce();
+    });
+
+    it('should handle situation when handler has already been executed', async () => {
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
+
+      await kuzzle.install([{ id: 'id', handler}]);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:exist',
+        'kuzzle',
+        'installations',
+        'id');
+      should(kuzzle.ask).be.neverCalledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { handler: handler.toString(), installedAt: Date.now() },
+        { id: 'id' });
+      should(handler).not.be.called();
+      should(kuzzle.log.info).not.be.called();
     });
   });
 });

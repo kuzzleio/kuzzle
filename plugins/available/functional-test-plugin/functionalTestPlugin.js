@@ -1,6 +1,6 @@
 'use strict';
 
-const should = require('should');
+const should = require('should/as-function');
 const _ = require('lodash');
 
 class FunctionalTestPlugin {
@@ -56,8 +56,6 @@ class FunctionalTestPlugin {
 
     // pipes related declarations ==============================================
 
-    this.activatedPipes = {};
-
     this.controllers.pipes = {
       deactivateAll: 'pipesDeactivateAll',
       manage: 'pipesManage',
@@ -104,20 +102,41 @@ class FunctionalTestPlugin {
     this.pipes['plugin-functional-test-plugin:testPipesReturn'] =
       async name => `Hello, ${name}`;
 
-    // Pipe declared with a function name
+    // Pipe declared with a function name ======================================
     this.pipes['server:afterNow'] = this.afterNowPipe;
 
-    // Embedded SDK realtime
-    this.hooks['kuzzle:state:live'] = async () => {
-      const roomId = await this.sdk.realtime.subscribe(
-        'test',
-        'question',
-        {},
-        async () => {
-          await this.sdk.realtime.publish('test', 'answer', {});
-          await this.sdk.realtime.unsubscribe(roomId);
-        });
+    // Embedded SDK realtime ===================================================
+    this.controllers.realtime = {
+      subscribeOnce: 'subscribeOnce',
     };
+
+    this.routes.push({
+      action: 'subscribeOnce',
+      controller: 'realtime',
+      path: '/realtime/subscribeOnce',
+      verb: 'post',
+    });
+
+
+    // Embedded SDK.as() Impersonation =========================================
+    this.controllers.impersonate = {
+      createDocumentAs: 'createDocumentAs',
+      testAction: 'testImpersonatedAction'
+    };
+
+    this.routes.push({
+      action: 'createDocumentAs',
+      controller: 'impersonate',
+      path: '/impersonate/createDocumentAs/:kuid',
+      verb: 'post',
+    });
+
+    this.routes.push({
+      action: 'testAction',
+      controller: 'impersonate',
+      path: '/impersonate/testAction/:kuid',
+      verb: 'post',
+    });
 
     // hooks related declarations ==============================================
     this.hooks['server:afterNow'] = async () => {
@@ -179,8 +198,8 @@ class FunctionalTestPlugin {
       client = new this.context.constructors.ESClient(),
       esRequest = {
         body: request.input.body,
-        id: request.input.resource._id,
-        index: request.input.resource.index,
+        id: request.input.args._id,
+        index: request.input.args.index,
       };
 
     const { body } = await client.index(esRequest);
@@ -205,26 +224,30 @@ class FunctionalTestPlugin {
     const state = request.input.args.state;
     const event = request.input.args.event;
 
-    this.activatedPipes[event] = {
+    await this.sdk.ms.set(`plugin:pipes:${event}`, JSON.stringify({
       payload,
       state,
-    };
+    }));
 
     return null;
   }
 
   async pipesDeactivateAll () {
-    for (const pipe of Object.values(this.activatedPipes)) {
+    const names = await this.sdk.ms.keys('plugin:pipes:*');
+
+    for (const name of names) {
+      const pipe = JSON.parse(await this.sdk.ms.get(name));
       pipe.state = 'off';
+      await this.sdk.ms.set(name, JSON.stringify(pipe));
     }
 
     return null;
   }
 
   async genericDocumentEvent (event, documents) {
-    const pipe = this.activatedPipes[`generic:document:${event}`];
+    const pipe = JSON.parse(await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`));
 
-    if (!pipe || pipe.state === 'off') {
+    if (! pipe || pipe.state === 'off') {
       return documents;
     }
 
@@ -234,12 +257,11 @@ class FunctionalTestPlugin {
         _.set(document, field, eval(value));
       }
     }
-
     return documents;
   }
 
   async afterNowPipe (request) {
-    const pipe = this.activatedPipes['server:afterNow'];
+    const pipe = JSON.parse(await this.sdk.ms.get('plugin:pipes:server:afterNow'));
 
     if (pipe && pipe.state !== 'off') {
       const response = request.response.result;
@@ -247,6 +269,18 @@ class FunctionalTestPlugin {
     }
 
     return request;
+  }
+
+  // realtime related methods =====================================================
+  async subscribeOnce () {
+    const roomId = await this.sdk.realtime.subscribe(
+      'test',
+      'question',
+      {},
+      async () => {
+        await this.sdk.realtime.publish('test', 'answer', {});
+        await this.sdk.realtime.unsubscribe(roomId);
+      });
   }
 
   /**
@@ -259,6 +293,41 @@ class FunctionalTestPlugin {
       request.input.args.name);
 
     return { result: helloName };
+  }
+
+  /**
+   * Tests the EmbeddedSDK's impersonating feature using the new
+   * ImpersonatedSDK wrapper
+   */
+  async createDocumentAs (request) {
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance.document.create(
+      'nyc-open-data',
+      'yellow-taxi',
+      { shouldBeCreatedBy: request.input.args.kuid },
+    );
+  }
+
+  /**
+   * Use this action tool to verify impersonated actions
+   */
+  async testImpersonatedAction (request) {
+    const { controller, action, args } = request.input.body;
+    const options = {};
+
+    if (request.input.args.checkRights !== undefined) {
+      options.checkRights = request.input.args.checkRights;
+    }
+
+    const sdkInstance = this.sdk.as({ _id: request.input.args.kuid }, options);
+
+    return sdkInstance[controller][action](...args);
   }
 }
 

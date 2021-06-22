@@ -46,6 +46,12 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:validate <index> <collection> <body>
+```
+
 ---
 
 ## Arguments

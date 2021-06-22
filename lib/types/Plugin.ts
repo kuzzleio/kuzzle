@@ -147,6 +147,9 @@ export abstract class Plugin {
    */
   abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
 
+  /**
+   * @param manifest Manifest containing the required kuzzleVersion number
+   */
   constructor (manifest: PluginManifest) {
     if (! has(manifest, 'kuzzleVersion')) {
       // eslint-disable-next-line new-cap

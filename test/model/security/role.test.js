@@ -138,25 +138,25 @@ describe('Test: model/security/role', () => {
       should(role.isActionAllowed(req)).be.true();
       should(role.isActionAllowed(req, restrictions)).be.true();
 
-      req.input.resource.index = 'index';
+      req.input.args.index = 'index';
       should(role.isActionAllowed(req, restrictions)).be.false();
 
-      req.input.resource.index = 'index1';
+      req.input.args.index = 'index1';
       should(role.isActionAllowed(req, restrictions)).be.true();
 
-      req.input.resource.index = 'index2';
+      req.input.args.index = 'index2';
       should(role.isActionAllowed(req, restrictions)).be.true();
 
-      req.input.resource.collection = 'collection';
+      req.input.args.collection = 'collection';
       should(role.isActionAllowed(req, restrictions)).be.false();
 
-      req.input.resource.collection = 'collection1';
+      req.input.args.collection = 'collection1';
       should(role.isActionAllowed(req, restrictions)).be.true();
 
-      req.input.resource.collection = 'collection2';
+      req.input.args.collection = 'collection2';
       should(role.isActionAllowed(req, restrictions)).be.false();
 
-      req.input.resource.index = 'index3';
+      req.input.args.index = 'index3';
       should(role.isActionAllowed(req, restrictions)).be.true();
     });
 

@@ -27,8 +27,9 @@ description: Error codes definitions
 | api.assert.unexpected_type_assertion<br/><pre>0x02010009</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | An unexepected type assertion "%s" has been invoked on attribute "%s". | Unexpected type assertion |
 | api.assert.invalid_id<br/><pre>0x0201000a</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Invalid "_id" value: cannot start with an underscore | _id values cannot start with an underscore |
 | api.assert.forbidden_argument<br/><pre>0x0201000b</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The argument "%s" is not allowed by this API action. | A forbidden argument has been provided |
-| api.assert.koncorde_unknown_keyword<br/><pre>0x0201000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not one of the Koncorde filters DSL keywords. | An unknown keyword has been provided in filters |
+| api.assert.koncorde_unknown_keyword<br/><pre>0x0201000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not part of Koncorde filters DSL keywords. Are you trying to use an Elasticsearch query? | An unknown keyword has been provided in filters |
 | api.assert.koncorde_restricted_keyword<br/><pre>0x0201000d</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The %s "%s" of Koncorde DSL is not supported for search queries. | A restricted keyword has been provided in filters |
+| api.assert.koncorde_dsl_error<br/><pre>0x0201000e</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | %s | Provided filters contains an error |
 
 ---
 
@@ -41,10 +42,13 @@ description: Error codes definitions
 | api.process.overloaded<br/><pre>0x02020002</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Request discarded: Kuzzle Server is temporarily overloaded. | The request has been discarded because the server is overloaded |
 | api.process.connection_dropped<br/><pre>0x02020003</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Client connection dropped | The request has been discarded because its linked client connection has dropped |
 | api.process.controller_not_found<br/><pre>0x02020004</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | API controller "%s" not found. | API controller not found |
-| api.process.action_not_found<br/><pre>0x02020005</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Controller action "%s" not found. | API controller action not found |
+| api.process.action_not_found<br/><pre>0x02020005</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | API action "%s":"%s" not found | API controller action not found |
 | api.process.incompatible_sdk_version<br/><pre>0x02020006</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Incompatible SDK client. Your SDK version (%s) does not match Kuzzle requirement (%s). | SDK is incompatible with the current Kuzzle version |
 | api.process.shutting_down<br/><pre>0x02020007</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this node is shutting down. | This Kuzzle node is shutting down and refuses new requests |
 | api.process.too_many_requests<br/><pre>0x02020008</pre>  | [TooManyRequestsError](/core/2/api/errors/error-codes#toomanyrequestserror) <pre>(429)</pre> | Rejected: requests rate limit exceeded for this user. | The request has been refused because a rate limit has been exceeded for this user |
 | api.process.admin_exists<br/><pre>0x02020009</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Admin user is already set. | Attempted to create the first administrator, when one already exists |
+| api.process.incomplete_multiple_request<br/><pre>0x0202000a</pre>  | [MultipleErrorsError](/core/2/api/errors/error-codes#multipleerrorserror) <pre>(400)</pre> | At least one of the %s actions failed. | Failed to execute some or all actions requested |
+| api.process.not_enough_nodes<br/><pre>0x0202000b</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this cluster is disabled because there aren't enough nodes connected. | The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added |
+| api.process.unauthorized_origin<br/><pre>0x0202000c</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | The origin "%s" is not authorized. | The domain reaching out to Kuzzle is not authorized |
 
 ---

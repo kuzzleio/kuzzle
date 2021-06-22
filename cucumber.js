@@ -28,5 +28,4 @@ module.exports = {
   http: '--fail-fast --tags "not @realtime" --world-parameters \'{"protocol": "http", "port": 7512}\'',
   mqtt: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "mqtt", "port": 1883}\'',
   websocket: '--fail-fast --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\'',
-  websocketCluster: '--fail-fast --tags "not @redis" --tags "not @http" --world-parameters \'{"protocol": "websocket", "port": 7512}\''
 };

@@ -1,5 +1,0 @@
--r should-sinon
---reporter dot
---recursive
---slow 2000
---timeout 10000

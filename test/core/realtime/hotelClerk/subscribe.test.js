@@ -64,9 +64,17 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should register a new room and customer', async () => {
+    const normalized = {
+      index: 'foo',
+      collection: 'bar',
+      id: null,
+      filters: request.input.body,
+      roomId: 'foobar'
+    };
+
     kuzzle.koncorde.normalize
-      .onFirstCall().resolves({id: 'foobar'})
-      .onSecondCall().resolves({id: 'barfoo'});
+      .onFirstCall().resolves({ ...normalized, id: 'foobar' })
+      .onSecondCall().resolves({ ...normalized, id: 'barfoo' });
 
     kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
@@ -87,6 +95,7 @@ describe('Test: hotelClerk.subscribe', () => {
       { count: 1 });
 
     const roomId = hotelClerk.rooms.get(response.roomId).id;
+
     const customer = hotelClerk.customers.get(connectionId);
 
     should(customer).have.value(roomId, request.input.volatile);
@@ -110,6 +119,14 @@ describe('Test: hotelClerk.subscribe', () => {
       request,
       'in',
       { count: 1 });
+
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:user:subscribe:after', {
+      index: request.input.args.index,
+      collection: request.input.args.collection,
+      filters: request.input.body,
+      roomId,
+      connectionId,
+    });
   });
 
   it('should return the same response when the user has already subscribed to the filter', async () => {
@@ -135,14 +152,14 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should reject if no index is provided', () => {
-    request.input.resource.index = null;
+    request.input.args.index = null;
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',
     });
   });
 
   it('should reject with an error if no collection is provided', () => {
-    request.input.resource.collection = null;
+    request.input.args.collection = null;
 
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',

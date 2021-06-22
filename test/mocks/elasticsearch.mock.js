@@ -23,11 +23,13 @@ class ElasticsearchMock extends Elasticsearch {
     sinon.stub(this, 'deleteByQuery').resolves();
     sinon.stub(this, 'deleteFields').resolves();
     sinon.stub(this, 'updateByQuery').resolves();
+    sinon.stub(this, 'bulkUpdateByQuery').resolves();
     sinon.stub(this, 'createIndex').resolves();
     sinon.stub(this, 'createCollection').resolves();
     sinon.stub(this, 'getMapping').resolves();
     sinon.stub(this, 'truncateCollection').resolves();
     sinon.stub(this, 'import').resolves();
+    sinon.stub(this, 'getSchema').resolves({});
     sinon.stub(this, 'listCollections').resolves([]);
     sinon.stub(this, 'listIndexes').resolves([]);
     sinon.stub(this, 'listAliases').resolves([]);
@@ -40,6 +42,7 @@ class ElasticsearchMock extends Elasticsearch {
     sinon.stub(this, 'mCreate').resolves();
     sinon.stub(this, 'mCreateOrReplace').resolves();
     sinon.stub(this, 'mUpdate').resolves();
+    sinon.stub(this, 'mUpsert').resolves();
     sinon.stub(this, 'mReplace').resolves();
     sinon.stub(this, 'mDelete').resolves();
     sinon.stub(this, 'deleteCollection').resolves();

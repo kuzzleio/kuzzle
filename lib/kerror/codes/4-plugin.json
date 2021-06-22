@@ -87,6 +87,12 @@
           "code": 14,
           "message": "Cannot define new controllers in the \"api\" and the \"controllers\" objects at the same time",
           "class": "PluginImplementationError"
+        },
+        "plugin_not_found": {
+          "description": "The request plugin does not exists or have not been loaded yet.",
+          "code": 15,
+          "message": "Plugin \"%s\" not found.%s",
+          "class": "NotFoundError"
         }
       }
     },
@@ -128,6 +134,18 @@
           "description": "The property is only accessible after application startup.",
           "code": 6,
           "message": "Cannot use property \"%s\" before application startup",
+          "class": "PluginImplementationError"
+        },
+        "unknown_pipe": {
+          "description": "The provided pipe identifier is unknown.",
+          "code": 7,
+          "message": "Unknown pipe ID \"%s\"",
+          "class": "PluginImplementationError"
+        },
+        "unexpected_installation_error": {
+          "description": "Embeds an unexpected installation error into a standardized KuzzleError object.",
+          "code": 8,
+          "message": "Caught an unexpected error while executing installation \"%s\": %s",
           "class": "PluginImplementationError"
         }
       }
@@ -254,6 +272,12 @@
           "code": 20,
           "message": "%s",
           "class": "UnauthorizedError"
+        },
+        "missing_optional_method": {
+          "description": "An optional method has not been implemented for this strategy",
+          "code": 21,
+          "message": "\"%s\" method is optional. The %s strategy plugin has not yet implemented it.",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -328,7 +352,7 @@
         "version_mismatch": {
           "description": "Current Kuzzle's version does not match the plugin's requirements",
           "code": 2,
-          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "message": "[%s] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
           "class": "PluginImplementationError"
         },
         "invalid_name_type": {

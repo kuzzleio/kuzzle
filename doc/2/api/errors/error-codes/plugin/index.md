@@ -30,6 +30,7 @@ description: Error codes definitions
 | plugin.assert.invalid_controller_definition<br/><pre>0x0401000c</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Incorrect "%s" controller definition: %s | The controller definition is incorrect. |
 | plugin.assert.invalid_application_name<br/><pre>0x0401000d</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Application name "%s" is invalid. Application names must be in kebab-case. | The application name is invalid. Application names can only contain lowercase letters and dashes. |
 | plugin.assert.duplicated_api_definition<br/><pre>0x0401000e</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot define new controllers in the "api" and the "controllers" objects at the same time | You cannot use the "api" and the "controllers" objects at the same time. Use the "api" object to define controllers. |
+| plugin.assert.plugin_not_found<br/><pre>0x0401000f</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Plugin "%s" not found.%s | The request plugin does not exists or have not been loaded yet. |
 
 ---
 
@@ -44,6 +45,8 @@ description: Error codes definitions
 | plugin.runtime.too_many_pipes<br/><pre>0x04020004</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Request discarded: maximum number of executing pipe functions reached. | The number of running pipes exceeds the configured capacity (see configuration files). This may be caused by pipes being too slow, or by an insufficient number of Kuzzle nodes. |
 | plugin.runtime.already_started<br/><pre>0x04020005</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" when application is already running | Features definition cannot be changed after startup. |
 | plugin.runtime.unavailable_before_start<br/><pre>0x04020006</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" before application startup | The property is only accessible after application startup. |
+| plugin.runtime.unknown_pipe<br/><pre>0x04020007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unknown pipe ID "%s" | The provided pipe identifier is unknown. |
+| plugin.runtime.unexpected_installation_error<br/><pre>0x04020008</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Caught an unexpected error while executing installation "%s": %s | Embeds an unexpected installation error into a standardized KuzzleError object. |
 
 ---
 
@@ -72,6 +75,7 @@ description: Error codes definitions
 | plugin.strategy.unauthorized_removal<br/><pre>0x04030012</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot remove strategy %s: owned by another plugin. | Tried to remove a strategy owned by another plugin |
 | plugin.strategy.strategy_not_found<br/><pre>0x04030013</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Cannot remove strategy %s: strategy does not exist. | Attempted to remove a non-existent authentication strategy |
 | plugin.strategy.missing_user<br/><pre>0x04030014</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s | A strategy plugin approved credentials without providing a user object to Kuzzle |
+| plugin.strategy.missing_optional_method<br/><pre>0x04030015</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | "%s" method is optional. The %s strategy plugin has not yet implemented it. | An optional method has not been implemented for this strategy |
 
 ---
 
@@ -98,7 +102,7 @@ description: Error codes definitions
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
 | plugin.manifest.cannot_load<br/><pre>0x04050001</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Unable to load the file 'manifest.json': %s | Unable to load the plugin's manifest file |
-| plugin.manifest.version_mismatch<br/><pre>0x04050002</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s). | Current Kuzzle's version does not match the plugin's requirements |
+| plugin.manifest.version_mismatch<br/><pre>0x04050002</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s). | Current Kuzzle's version does not match the plugin's requirements |
 | plugin.manifest.invalid_name_type<br/><pre>0x04050003</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Invalid "name" property: expected a non-empty string. | Invalid plugin's name |
 | plugin.manifest.invalid_name<br/><pre>0x04050004</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores. | Invalid characters in a plugin's name |
 | plugin.manifest.missing_name<br/><pre>0x04050005</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] A "name" property is required. | A plugin name is required |

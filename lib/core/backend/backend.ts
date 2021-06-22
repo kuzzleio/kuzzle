@@ -19,379 +19,46 @@
  * limitations under the License.
  */
 
-import util from 'util';
-
 import fs from 'fs';
-import _ from 'lodash';
-import { Client } from '@elastic/elasticsearch';
-
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import Elasticsearch from '../../service/storage/elasticsearch';
-import { kebabCase } from '../../util/inflector';
 import kerror from '../../kerror';
-import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
 import {
-  ControllerDefinition,
-  Controller,
-  EventHandler,
-} from '../../types';
-import { BackendCluster, BackendPlugin } from './index';
+  BackendCluster,
+  BackendConfig,
+  BackendController,
+  BackendHook,
+  BackendPipe,
+  BackendPlugin,
+  BackendStorage,
+  BackendVault,
+  InternalLogger
+} from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
-export class ApplicationManager {
-  protected _application: any;
+let _app = null;
 
-  constructor (application: Backend) {
-    Reflect.defineProperty(this, '_application', {
-      value: application
-    });
-  }
-
-  protected get _kuzzle () {
-    return this._application._kuzzle;
-  }
-}
-
-/* BackendPipe class ======================================================== */
-
-class BackendPipe extends ApplicationManager {
-  /**
-   * Registers a new pipe on an event
-   *
-   * @param event - Event name
-   * @param handler - Function to execute when the event is triggered
-   *
-   */
-  register (event: string, handler: EventHandler): void {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'pipe');
+Reflect.defineProperty(global, 'app', {
+  configurable: true,
+  enumerable: false,
+  get () {
+    if (_app === null) {
+      throw new Error('App instance not found. Are you sure you have already started your application?');
     }
 
-    if (typeof handler !== 'function') {
-      throw assertionError.get('invalid_pipe', event);
+    return _app;
+  },
+  set (value) {
+    if (_app !== null) {
+      throw new Error('Cannot build an App instance: another one already exists');
     }
 
-    if (! this._application._pipes[event]) {
-      this._application._pipes[event] = [];
-    }
-
-    this._application._pipes[event].push(handler);
-  }
-}
-
-/* BackendHook class ======================================================== */
-
-class BackendHook extends ApplicationManager {
-  /**
-   * Registers a new hook on an event
-   *
-   * @param event - Event name
-   * @param handler - Function to execute when the event is triggered
-   *
-   */
-  register (event: string, handler: EventHandler) : void {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'hook');
-    }
-
-    if (typeof handler !== 'function') {
-      throw assertionError.get('invalid_hook', event);
-    }
-
-    if (! this._application._hooks[event]) {
-      this._application._hooks[event] = [];
-    }
-
-    this._application._hooks[event].push(handler);
-  }
-}
-
-/* BackendConfig class ====================================================== */
-
-class BackendConfig extends ApplicationManager {
-  /**
-   * Configuration content
-   */
-  public content: JSONObject;
-
-  constructor (application: Backend) {
-    super(application);
-
-    this.content = kuzzleConfig.load();
-  }
-
-  /**
-   * Sets a configuration value
-   *
-   * @param path - Path to the configuration key (lodash style)
-   * @param value - Value for the configuration key
-   */
-  set (path: string, value: any) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'config');
-    }
-
-    _.set(this.content, path, value);
-  }
-
-  /**
-   * Merges a configuration object into the current configuration
-   *
-   * @param config - Configuration object to merge
-   */
-  merge (config: JSONObject) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'config');
-    }
-
-    this.content = _.merge(this.content, config);
-  }
-}
-
-/* BackendController class ================================================== */
-
-class BackendController extends ApplicationManager {
-  /**
-   * Registers a new controller.
-   *
-   * Http routes will be auto-generated unless they are provided or an empty array
-   * is provided.
-   *
-   * @param name - Controller name
-   * @param definition - Controller definition
-   *
-   * @example
-   * app.controller.register('greeting', {
-   *   actions: {
-   *     sayHello: {
-   *       handler: async request => `Hello, ${request.input.args.name}`,
-   *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
-   *     }
-   *   }
-   * })
-   *
-   */
-  register (name: string, definition: ControllerDefinition) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'controller');
-    }
-
-    this._add(name, definition);
-  }
-
-  /**
-   * Uses a new controller class.
-   *
-   * The controller class must:
-   *  - call the super constructor with the application instance
-   *  - extend the "Controller" class
-   *  - define the "definition" property
-   *  - (optional) define the "name" property
-   *
-   * The controller name will be inferred from the class name.
-   *   e.g. "PaymentSolutionController" will become "payment-solution"
-   *
-   * @example
-   *
-   * class EmailController extends Controller {
-   *   constructor (app) {
-   *     super(app);
-   *
-   *     this.definition = {
-   *       actions: {
-   *         send: {
-   *           handler: this.send
-   *         }
-   *       }
-   *     };
-   *   }
-   *
-   *   async send (request: Request) {
-   *     // ...
-   *   }
-   * }
-   *
-   * app.controller.use(new EmailController(app));
-   *
-   * @param controller Controller class
-   */
-  use (controller: Controller) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'controller');
-    }
-
-    if (! controller.name) {
-      controller.name = kebabCase(controller.constructor.name)
-        .replace('-controller', '');
-    }
-
-    for (const [action, definition] of Object.entries(controller.definition.actions)) {
-      if (typeof definition.handler !== 'function') {
-        throw assertionError.get(
-          'invalid_controller_definition',
-          controller.name,
-          `Handler for action "${action}" is not a function.`);
-      }
-
-      // if the function handler is an instance method,
-      // bind the context to the controller instance
-      const handlerName = definition.handler.name;
-      if (handlerName && typeof controller[handlerName] === 'function') {
-        definition.handler = definition.handler.bind(controller);
-      }
-    }
-
-    this._add(controller.name, controller.definition);
-  }
-
-  private _add (name: string, definition: ControllerDefinition) {
-    // Check definition here to throw error early
-    // with the corresponding line number
-    this._application.PluginObject.checkControllerDefinition(name, definition, { application: true });
-
-    if (this._application._controllers[name]) {
-      throw assertionError.get(
-        'invalid_controller_definition',
-        name,
-        'A controller with this name already exists');
-    }
-
-    this._application._controllers[name] = definition;
-  }
-}
-
-/* BackendVault class ======================================================= */
-
-class BackendVault extends ApplicationManager {
-  /**
-   * Secret key to decrypt encrypted secrets.
-   */
-  set key (key: string) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'vault');
-    }
-
-    this._application._vaultKey = key;
-  }
-
-  /**
-   * File containing encrypted secrets
-   */
-  set file (file: string) {
-    if (this._application.started) {
-      throw runtimeError.get('already_started', 'vault');
-    }
-
-    this._application._secretsFile = file;
-  }
-
-  /**
-   * Decrypted secrets
-   */
-  get secrets () : JSONObject {
-    if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'vault.secrets');
-    }
-
-    return this._kuzzle.vault.secrets;
-  }
-}
-
-/* InternalLogger class ====================================================== */
-
-class InternalLogger extends ApplicationManager implements InternalLogger {
-  debug (message: any): void {
-    this._log('debug', message);
-  }
-
-  /**
-   * Logs an info message
-   */
-  info (message: any): void {
-    this._log('info', message);
-  }
-
-  /**
-   * Logs a warn message
-   */
-  warn (message: any): void {
-    this._log('warn', message);
-  }
-
-  /**
-   * Logs an error message
-   */
-  error (message: any): void {
-    this._log('error', message);
-  }
-
-  /**
-   * Logs a verbose message
-   */
-  verbose (message: any): void {
-    this._log('verbose', message);
-  }
-
-  private _log (level: string, message: any) {
-    if (! this._application.started) {
-      // eslint-disable-next-line no-console
-      console.log(util.inspect(message));
-    }
-    else {
-      this._kuzzle.log[level](util.inspect(message));
-    }
-  }
-}
-
-/* BackendStorage class ===================================================== */
-
-class BackendStorage extends ApplicationManager {
-  private _client: Client = null;
-  private _Client: new (clientConfig?: any) => Client = null;
-
-  constructor (application: Backend) {
-    super(application);
-  }
-
-  /**
-   * Storage client constructor.
-   * (Currently Elasticsearch)
-   *
-   * @param clientConfig Overload configuration for the underlaying storage client
-   */
-  get StorageClient (): new (clientConfig?: any) => Client {
-    if (! this._Client) {
-      const kuzzle = this._kuzzle;
-
-      this._Client = function ESClient (clientConfig: JSONObject = {}) {
-        return Elasticsearch.buildClient({
-          ...kuzzle.config.services.storageEngine.client,
-          ...clientConfig,
-        });
-      } as any;
-    }
-
-    return this._Client;
-  }
-
-  /**
-   * Access to the underlaying storage engine client.
-   * (Currently Elasticsearch)
-   */
-  get storageClient (): Client {
-    if (! this._client) {
-      this._client = Elasticsearch
-        .buildClient(this._kuzzle.config.services.storageEngine.client);
-    }
-
-    return this._client;
-  }}
-
-/* Backend class ======================================================== */
+    _app = value;
+  },
+});
 
 export class Backend {
   private _kuzzle: any;
@@ -406,6 +73,7 @@ export class Backend {
   protected _plugins = {};
   protected _vaultKey?: string;
   protected _secretsFile?: string;
+  protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -420,7 +88,7 @@ export class Backend {
   /**
    * Current Git commit (if available)
    */
-  public commit: string | null;
+  public commit: string | null = null;
 
   /**
    * Errors manager
@@ -536,6 +204,18 @@ export class Backend {
       writable: true
     });
 
+    /**
+     * Set the "started" property in this event so developers can use runtime
+     * features in pipes/hooks attached to this event.
+     */
+    this._pipes['kuzzle:state:ready'] = [
+      async () => {
+        this.started = true;
+      },
+    ];
+
+    global.app = this;
+
     this.pipe = new BackendPipe(this);
     this.hook = new BackendHook(this);
     this.config = new BackendConfig(this);
@@ -556,7 +236,12 @@ export class Backend {
       // Silent if no version can be found
     }
 
-    this.commit = this._readCommit();
+    try {
+      this.commit = this._readCommit();
+    }
+    catch {
+      // catch errors and leave commit value to "null"
+    }
   }
 
   /**
@@ -572,6 +257,7 @@ export class Backend {
     // we need to load the default plugins
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
+
       this.plugin.use(new PluginClass(), {
         deprecationWarning: false,
         name: plugin,
@@ -587,6 +273,7 @@ export class Backend {
 
     const options = {
       fixtures: this._support.fixtures,
+      installations: this._installationsWaitingList,
       mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
@@ -615,6 +302,32 @@ export class Backend {
     }
 
     return this._kuzzle.pipe(event, ...payload);
+  }
+
+  /**
+   * Register a method that will be executed only once on any given environment.
+   * If this method throws, the app won't start.
+   *
+   * @param {string} id - Unique id needed to differenciate each installation
+   * @param {Function} handler - Method to execute only once
+   * @param {string | undefined} description - Optional: Describe the purpose of this installation
+   *
+   */
+  install (id: string, handler: () => Promise<void>, description?: string): void {
+    if (this.started) {
+      throw runtimeError.get('already_started', 'install');
+    }
+    if (typeof id !== 'string') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    }
+    if (typeof handler !== 'function') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
+    }
+    if (description && typeof description !== 'string') {
+      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    }
+
+    this._installationsWaitingList.push({ description, handler, id });
   }
 
   /**
@@ -651,12 +364,18 @@ export class Backend {
       return null;
     }
 
-    if (! fs.existsSync(`${dir}/.git`) && depth > 0) {
+    const gitDir = `${dir}/.gut`;
+
+    if (! fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
-    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+    if (! fs.statSync(gitDir).isDirectory()) {
+      return null;
+    }
+
+    const ref = fs.readFileSync(`${dir}/.gut/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.gut/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
       return null;

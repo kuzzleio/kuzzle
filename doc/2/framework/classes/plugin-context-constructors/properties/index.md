@@ -64,7 +64,7 @@ Instantiates a new [Repository](/core/2/framework/classes/repository).
 
 ## `KuzzleRequest`
 
-Modified [KuzzleRequest](/core/2/framework/classes/kuzzle-request constructor that allows to instantiate a new `KuzzleRequest` with the context (user, jwt, connection) of another one.
+Modified [KuzzleRequest](/core/2/framework/classes/kuzzle-request) constructor that allows to instantiate a new `KuzzleRequest` with the context (user, jwt, connection) of another one.
 
 ### Arguments
 

@@ -6,8 +6,6 @@ title: delete
 
 # delete
 
-
-
 Deletes a document.
 
 ---
@@ -33,19 +31,26 @@ Method: DELETE
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:delete <index> <collection> <id>
+kourou document:delete <index> <collection> <id> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
-- `documentId`: document unique identifier
+- `_id`: document unique identifier
 - `index`: index name
 
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deletion has been indexed
 - `source`: if set to `true` Kuzzle will return the deleted document body in the response.
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 

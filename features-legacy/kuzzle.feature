@@ -1,5 +1,6 @@
 Feature: Kuzzle functional tests
 
+  @http
   Scenario: Http server does not crash on crafted request
     When I send the crafted HTTP multipart request
     Then Kuzzle is still up

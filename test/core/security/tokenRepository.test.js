@@ -200,13 +200,14 @@ describe('Test: security/tokenRepository', () => {
 
     it('should resolve to a token signed with the provided username', async () => {
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: ms(kuzzle.config.security.jwt.expiresIn) / 1000,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -247,7 +248,7 @@ describe('Test: security/tokenRepository', () => {
       }
     });
 
-    it('should allow a big ttl if no maxTTL is set', async () => {
+    it('should allow a big ttl if no maxTTL is set for jwt', async () => {
       const user = new User();
       user._id = 'id';
 
@@ -258,7 +259,31 @@ describe('Test: security/tokenRepository', () => {
       should(token).be.an.instanceOf(Token);
     });
 
-    it('should allow a ttl lower than the maxTTL', async () => {
+    it('should allow a big ttl if no maxTTL is set for apiKey', async () => {
+      const user = new User();
+      user._id = 'id';
+
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '1000y',
+        type: 'apiKey'
+      });
+
+      should(token).be.an.instanceOf(Token);
+    });
+
+    it('should prefix the token', async () => {
+      const user = new User();
+      user._id = 'id';
+      const tokenAuth = await tokenRepository.generateToken(user);
+      const tokenApiKey = await tokenRepository.generateToken(user, {
+        type: 'apiKey',
+      });
+
+      should(tokenAuth.jwt).be.startWith('kauth-');
+      should(tokenApiKey.jwt).be.startWith('kapikey-');
+    });
+
+    it('should allow a ttl lower than the maxTTL for jwt', async () => {
       const user = new User();
       user._id = 'id';
 
@@ -271,7 +296,21 @@ describe('Test: security/tokenRepository', () => {
       should(token).be.an.instanceOf(Token);
     });
 
-    it('should reject if the ttl exceeds the maxTTL', () => {
+    it('should allow a ttl lower than the maxTTL for apiKey', async () => {
+      const user = new User();
+      user._id = 'id';
+
+      kuzzle.config.security.apiKey.maxTTL = 42000;
+
+      const token = await tokenRepository.generateToken(user, {
+        expiresIn: '30s',
+        type: 'apiKey'
+      });
+
+      should(token).be.an.instanceOf(Token);
+    });
+
+    it('should reject if the ttl exceeds the maxTTL for jwt', () => {
       const user = new User();
       user._id = 'id';
 
@@ -281,13 +320,33 @@ describe('Test: security/tokenRepository', () => {
         .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
-    it('should reject if the ttl is infinite and the maxTTL is finite', () => {
+    it('should reject if the ttl exceeds the maxTTL for apiKey', () => {
+      const user = new User();
+      user._id = 'id';
+
+      kuzzle.config.security.apiKey.maxTTL = 42000;
+
+      return should(tokenRepository.generateToken(user, {expiresIn: '1m', type: 'apiKey'}))
+        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+    });
+
+    it('should reject if the ttl is infinite and the maxTTL is finite for jwt', () => {
       const user = new User();
       user._id = 'id';
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
       return should(tokenRepository.generateToken(user, { expiresIn: -1 }))
+        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+    });
+
+    it('should reject if the ttl is infinite and the maxTTL is finite for apiKey', () => {
+      const user = new User();
+      user._id = 'id';
+
+      kuzzle.config.security.apiKey.maxTTL = 42000;
+
+      return should(tokenRepository.generateToken(user, { expiresIn: -1, type: 'apiKey' }))
         .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
     });
 
@@ -307,13 +366,14 @@ describe('Test: security/tokenRepository', () => {
       // milliseconds received by 1000 without precaution, making jwt.sign
       // throw an error when generating the token
       const user = new User();
-      const checkToken = jwt.sign(
+      const rawToken = jwt.sign(
         { _id: 'userInCache' },
         kuzzle.secret,
         {
           algorithm: kuzzle.config.security.jwt.algorithm,
           expiresIn: 123,
         });
+      const checkToken = TokenRepository.AUTH_PREFIX + rawToken;
 
       user._id = 'userInCache';
 
@@ -580,8 +640,8 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
-        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
+        { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 },
+        { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 },
       ]);
     });
 

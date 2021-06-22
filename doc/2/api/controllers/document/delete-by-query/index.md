@@ -70,6 +70,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:deleteByQuery <index> <collection> <body>
+kourou document:deleteByQuery <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
@@ -82,7 +89,7 @@ Body:
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the deleted documents are removed from the search indexes
 - `source`: if set to `true` Kuzzle will return each deleted document body in the response.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="change-me" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 

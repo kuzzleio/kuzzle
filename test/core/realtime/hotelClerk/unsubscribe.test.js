@@ -115,6 +115,18 @@ describe('Test: hotelClerk.unsubscribe', () => {
       },
       'out',
       { count: 0 });
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:user:unsubscribe:after', {
+      requestContext: {
+        connection: {
+          id: connectionId
+        }
+      },
+      room: {
+        collection: 'collection',
+        id: roomId,
+        index: 'index',
+      }
+    });
   });
 
   it('should remove the room from the customer list and keep other existing rooms', async () => {
@@ -175,33 +187,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
       {count: 1});
 
     should(kuzzle.pipe).be.calledWithMatch(
-      'core:realtime:user:unsubscribe:after',
-      {
-        requestContext: { connection: { id: connectionId } },
-        room: hotelClerk.rooms.get('roomId')
-      });
-  });
-
-  it('should only propagate channels with the "cluster" option', async () => {
-    hotelClerk.customers.set('connectionId', new Map([
-      [ roomId, null ]
-    ]));
-    hotelClerk.customers.set('foobar', new Map([
-      [ roomId, null ]
-    ]));
-    hotelClerk.rooms.get(roomId).channels.ch1.cluster = false;
-    const expectedRoom = {
-      channels: { ch2: { cluster: true } },
-      customers: new Set()
-    };
-
-    await hotelClerk.unsubscribe(connectionId, roomId);
-
-    should(kuzzle.pipe).be.calledWithMatch(
-      'core:realtime:user:unsubscribe:after',
-      {
-        requestContext: { connection: { id: connectionId } },
-        room: expectedRoom
-      });
+      'core:realtime:unsubscribe:after',
+      roomId);
   });
 });

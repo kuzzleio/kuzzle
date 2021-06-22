@@ -105,7 +105,7 @@ Select the `nyc-open-data` index and then the `yellow-taxi` collection. You shou
 
 ### Search for documents
 
-Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way. 
+Kuzzle allows to search for documents through its API, with different query languages depending on your needs.
 
 We'll now use that to search for the documents we're interested in.
 
@@ -131,22 +131,20 @@ Then we are going to use the [document:search](/core/2/api/controllers/document/
  - `age` is greater than `30`
  - `city` is equal to `Antalya`
 
-For this, we need to write a [Boolean Query](/core/2/guides/main-concepts/querying#boolean-query):
+For this, we need to write a [Koncorde Query](/core/2/guides/main-concepts/querying/#koncorde-query):
 
 ```js
 {
-  bool: {
-    must: [
-      {
-        range: {
-          age: { gt: 30 }
-        }
-      },
-      {
-        term: { city: "Antalya" }
+  and: [
+    {
+      range: {
+        age: { gt: 30 }
       }
-    ]
-  }
+    },
+    {
+      equals: { city: "Antalya" }
+    }
+  ]
 }
 ```
 
@@ -154,18 +152,16 @@ And to execute this query we are going to use Kourou again:
 
 ```bash
 kourou document:search nyc-open-data yellow-taxi '{
-  bool: {
-    must: [
-      {
-        range: {
-          age: { gt: 30 }
-        }
-      },
-      {
-        term: { city: "Antalya" }
+  and: [
+    {
+      range: {
+        age: { gt: 30 }
       }
-    ]
-  }
+    },
+    {
+      equals: { city: "Antalya" }
+    }
+  ]
 }'
 ```
 

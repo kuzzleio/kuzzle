@@ -358,10 +358,51 @@ describe('#KuzzleEventEmitter', () => {
 
       should(await emitter.ask('foo:bar', 'foo', 'bar')).eql('oh noes');
 
+      const eventPayload = {
+        args: ['foo', 'bar'],
+        response: 'oh noes',
+      };
+
       should(answerer).calledOnce().calledWith('foo', 'bar');
-      should(listener1).calledOnce().calledWith('foo', 'bar');
-      should(listener2).calledOnce().calledWith('foo', 'bar');
-      should(listener3).calledOnce().calledWith('foo', 'bar');
+      should(listener1).calledOnce().calledWith(eventPayload);
+      should(listener2).calledOnce().calledWith(eventPayload);
+      should(listener3).calledOnce().calledWith(eventPayload);
+    });
+  });
+
+  describe('registerPluginPipe', () => {
+    it('should register the pipe handler and pipe description', () => {
+      const handler = () => {};
+
+      const pipeId = emitter.registerPluginPipe('event', handler);
+
+      should(pipeId).be.a.String();
+      should(emitter.pluginPipes.get('event')).be.eql([handler]);
+      should(emitter.pluginPipeDefinitions.get(pipeId)).match({
+        event: 'event',
+        pipeId,
+        handler,
+      });
+    });
+  });
+
+  describe('unregisterPluginPipe', () => {
+    it('should unregister the pipe handler and remove pipe description', () => {
+      const handler = () => {};
+      const pipeId = emitter.registerPluginPipe('event', handler);
+
+      emitter.unregisterPluginPipe(pipeId);
+
+      should(emitter.pluginPipes.get('event')).be.undefined();
+      should(emitter.pluginPipeDefinitions.get(pipeId)).be.undefined();
+    });
+
+    it('should throw an error if the pipeId does not exists', () => {
+      should(() => {
+        emitter.unregisterPluginPipe('unknown-pipe-id');
+      }).throwError({
+        id: 'plugin.runtime.unknown_pipe'
+      });
     });
   });
 });

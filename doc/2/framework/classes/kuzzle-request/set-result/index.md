@@ -46,5 +46,5 @@ request.setResult(null, {
   headers: {
     'Location': 'http://kuzzle.io'
   }
-})
+});
 ```

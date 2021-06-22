@@ -19,7 +19,7 @@ const {
 const ElasticsearchClientMock = require('../../mocks/service/elasticsearchClient.mock');
 
 const Funnel = require('../../../lib/api/funnel');
-const DocumentController = require('../../../lib/api/controller/document');
+const DocumentController = require('../../../lib/api/controllers/documentController');
 
 describe('funnel.processRequest', () => {
   let kuzzle;
@@ -247,14 +247,14 @@ describe('funnel.processRequest', () => {
         init: () => {},
         pipes: {
           'generic:document:beforeWrite': async function hello(documents) {
-            should(documents[0]._id).equal(null);
+            should(documents[0]._id).be.undefined();
 
             documents[0]._id = 'foobar';
 
             return documents;
           },
           'document:beforeCreate': async (request) => {
-            should(request.input.resource._id).equal('foobar');
+            should(request.input.args._id).equal('foobar');
             return request;
           },
         },

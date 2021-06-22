@@ -6,7 +6,7 @@ title: stats
 
 # stats
 
-
+<SinceBadge version="2.10.0" />
 
 Returns detailed storage usage statistics: overall index/collection sizes and the number of documents per collection.
 
