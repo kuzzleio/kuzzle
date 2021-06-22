@@ -483,7 +483,7 @@ describe('Test the auth controller', () => {
       const response = await authController.logout(request);
 
       should(kuzzle.ask)
-        .calledWith('core:security:token:isApiKey', request.context.token);
+        .calledWith('core:security:token:isApiKey', request.context.token.jwt);
 
       should(kuzzle.ask)
         .calledWith('core:security:token:delete', request.context.token);
@@ -567,7 +567,7 @@ describe('Test the auth controller', () => {
       const response = await authController.logout(request);
 
       should(kuzzle.ask)
-        .calledWith('core:security:token:isApiKey', request.context.token);
+        .calledWith('core:security:token:isApiKey', request.context.token.jwt);
 
       should(kuzzle.ask)
         .calledWith('core:security:token:delete', request.context.token);
