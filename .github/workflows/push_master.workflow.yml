@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -21,7 +21,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -36,13 +36,13 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket, mqtt]
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:legacy:${{ matrix.test_set }}
@@ -54,13 +54,13 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -70,6 +70,9 @@ jobs:
     name: Cluster Monkey Tests
     needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     steps:
       - uses: actions/checkout@v2
       - name: Cloning Monkey Tester
@@ -79,10 +82,10 @@ jobs:
           path: 'kuzzle-monkey-tests'
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/monkey-tests
         with:
-          node-version: 12.20.0
+          node-version: ${{ matrix.node-version }}
 
   error-codes-check:
     name: Documentation - Error codes check
@@ -101,7 +104,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/deploy-doc
         with:
           REGION: us-west-2
@@ -119,7 +122,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - name: Get branch name
         # Github expose branch name with this format '/ref/branch/branchName'
         # So we need to extract the wanted part (branchName)

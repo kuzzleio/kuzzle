@@ -272,6 +272,12 @@
           "code": 20,
           "message": "%s",
           "class": "UnauthorizedError"
+        },
+        "missing_optional_method": {
+          "description": "An optional method has not been implemented for this strategy",
+          "code": 21,
+          "message": "\"%s\" method is optional. The %s strategy plugin has not yet implemented it.",
+          "class": "PluginImplementationError"
         }
       }
     },
@@ -346,7 +352,7 @@
         "version_mismatch": {
           "description": "Current Kuzzle's version does not match the plugin's requirements",
           "code": 2,
-          "message": "[%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
+          "message": "[%s] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s).",
           "class": "PluginImplementationError"
         },
         "invalid_name_type": {

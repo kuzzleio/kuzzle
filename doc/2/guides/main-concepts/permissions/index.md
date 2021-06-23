@@ -118,16 +118,16 @@ This means that:
 
 ### Associated API actions
 
- - [security:createOrReplaceRole](/core/2/api/controllers/security/create-or-replace-role/)
- - [security:createRole](/core/2/api/controllers/security/create-role/)
- - [security:deleteRole](/core/2/api/controllers/security/delete-role/)
- - [security:getRole](/core/2/api/controllers/security/get-role/)
- - [security:getRoleMapping](/core/2/api/controllers/security/get-role-mapping/)
- - [security:mDeleteRoles](/core/2/api/controllers/security/m-delete-roles/)
- - [security:mGetRoles](/core/2/api/controllers/security/m-get-roles/)
- - [security:searchRoles](/core/2/api/controllers/security/search-roles/)
- - [security:updateRole](/core/2/api/controllers/security/update-role/)
- - [security:updateRoleMapping](/core/2/api/controllers/security/update-role-mapping/)
+ - [security:createOrReplaceRole](/core/2/api/controllers/security/create-or-replace-role)
+ - [security:createRole](/core/2/api/controllers/security/create-role)
+ - [security:deleteRole](/core/2/api/controllers/security/delete-role)
+ - [security:getRole](/core/2/api/controllers/security/get-role)
+ - [security:getRoleMapping](/core/2/api/controllers/security/get-role-mapping)
+ - [security:mDeleteRoles](/core/2/api/controllers/security/m-delete-roles)
+ - [security:mGetRoles](/core/2/api/controllers/security/m-get-roles)
+ - [security:searchRoles](/core/2/api/controllers/security/search-roles)
+ - [security:updateRole](/core/2/api/controllers/security/update-role)
+ - [security:updateRoleMapping](/core/2/api/controllers/security/update-role-mapping)
 
 ---
 
@@ -274,18 +274,18 @@ Example:
 
 ### Associated API actions
 
- - [security:createOrReplaceProfile](/core/2/api/controllers/security/create-or-replace-profile/)
- - [security:createProfile](/core/2/api/controllers/security/create-profile/)
- - [security:deleteProfile](/core/2/api/controllers/security/delete-profile/)
- - [security:getProfile](/core/2/api/controllers/security/get-profile/)
- - [security:getProfileMapping](/core/2/api/controllers/security/get-profile-mapping/)
- - [security:getProfileRights](/core/2/api/controllers/security/get-profile-rights/)
- - [security:mDeleteProfiles](/core/2/api/controllers/security/m-delete-profiles/)
- - [security:mGetProfiles](/core/2/api/controllers/security/m-get-profiles/)
- - [security:scrollProfiles](/core/2/api/controllers/security/scroll-profiles/)
- - [security:searchProfiles](/core/2/api/controllers/security/search-profiles/)
- - [security:updateProfile](/core/2/api/controllers/security/update-profile/)
- - [security:updateProfileMapping](/core/2/api/controllers/security/update-profile-mapping/)
+ - [security:createOrReplaceProfile](/core/2/api/controllers/security/create-or-replace-profile)
+ - [security:createProfile](/core/2/api/controllers/security/create-profile)
+ - [security:deleteProfile](/core/2/api/controllers/security/delete-profile)
+ - [security:getProfile](/core/2/api/controllers/security/get-profile)
+ - [security:getProfileMapping](/core/2/api/controllers/security/get-profile-mapping)
+ - [security:getProfileRights](/core/2/api/controllers/security/get-profile-rights)
+ - [security:mDeleteProfiles](/core/2/api/controllers/security/m-delete-profiles)
+ - [security:mGetProfiles](/core/2/api/controllers/security/m-get-profiles)
+ - [security:scrollProfiles](/core/2/api/controllers/security/scroll-profiles)
+ - [security:searchProfiles](/core/2/api/controllers/security/search-profiles)
+ - [security:updateProfile](/core/2/api/controllers/security/update-profile)
+ - [security:updateProfileMapping](/core/2/api/controllers/security/update-profile-mapping)
 
 ---
 
@@ -338,30 +338,30 @@ Those data must be stored in the `content` property alongside the profile list:
 ```
 
 ::: info
-As any other collection, the `users` collection has an associated mapping that can be edited using the [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/) API action.
+As any other collection, the `users` collection has an associated mapping that can be edited using the [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping) API action.
 :::
 
 ### Associated API actions
 
- - [security:createRestrictedUser](/core/2/api/controllers/security/create-restricted-user/)
- - [security:createUser](/core/2/api/controllers/security/create-user/)
- - [security:deleteUser](/core/2/api/controllers/security/delete-user/)
- - [security:getUser](/core/2/api/controllers/security/get-user/)
- - [security:getUserMapping](/core/2/api/controllers/security/get-user-mapping/)
- - [security:getUserRights](/core/2/api/controllers/security/get-user-rights/)
- - [security:mDeleteUsers](/core/2/api/controllers/security/m-delete-users/)
- - [security:mGetUsers](/core/2/api/controllers/security/m-get-users/)
- - [security:replaceUsers](/core/2/api/controllers/security/replace-user/)
- - [security:scrollUsers](/core/2/api/controllers/security/scroll-users/)
- - [security:searchUsers](/core/2/api/controllers/security/search-users/)
- - [security:updateUser](/core/2/api/controllers/security/update-user/)
- - [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping/)
+ - [security:createRestrictedUser](/core/2/api/controllers/security/create-restricted-user)
+ - [security:createUser](/core/2/api/controllers/security/create-user)
+ - [security:deleteUser](/core/2/api/controllers/security/delete-user)
+ - [security:getUser](/core/2/api/controllers/security/get-user)
+ - [security:getUserMapping](/core/2/api/controllers/security/get-user-mapping)
+ - [security:getUserRights](/core/2/api/controllers/security/get-user-rights)
+ - [security:mDeleteUsers](/core/2/api/controllers/security/m-delete-users)
+ - [security:mGetUsers](/core/2/api/controllers/security/m-get-users)
+ - [security:replaceUsers](/core/2/api/controllers/security/replace-user)
+ - [security:scrollUsers](/core/2/api/controllers/security/scroll-users)
+ - [security:searchUsers](/core/2/api/controllers/security/search-users)
+ - [security:updateUser](/core/2/api/controllers/security/update-user)
+ - [security:updateUserMapping](/core/2/api/controllers/security/update-user-mapping)
 
 User credentials related API actions:
 
- - [security:getCredentials](/core/2/api/controllers/security/get-credentials/)
- - [security:getCredentialsById](/core/2/api/controllers/security/get-credentials-by-id/)
- - [security:hasCredentials](/core/2/api/controllers/security/has-credentials/)
+ - [security:getCredentials](/core/2/api/controllers/security/get-credentials)
+ - [security:getCredentialsById](/core/2/api/controllers/security/get-credentials-by-id)
+ - [security:hasCredentials](/core/2/api/controllers/security/has-credentials)
 
 
 ## Writing complex or dynamic permission rules

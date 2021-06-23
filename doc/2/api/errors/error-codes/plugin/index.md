@@ -75,6 +75,7 @@ description: Error codes definitions
 | plugin.strategy.unauthorized_removal<br/><pre>0x04030012</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot remove strategy %s: owned by another plugin. | Tried to remove a strategy owned by another plugin |
 | plugin.strategy.strategy_not_found<br/><pre>0x04030013</pre>  | [NotFoundError](/core/2/api/errors/error-codes#notfounderror) <pre>(404)</pre> | Cannot remove strategy %s: strategy does not exist. | Attempted to remove a non-existent authentication strategy |
 | plugin.strategy.missing_user<br/><pre>0x04030014</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s | A strategy plugin approved credentials without providing a user object to Kuzzle |
+| plugin.strategy.missing_optional_method<br/><pre>0x04030015</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | "%s" method is optional. The %s strategy plugin has not yet implemented it. | An optional method has not been implemented for this strategy |
 
 ---
 
@@ -101,7 +102,7 @@ description: Error codes definitions
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
 | plugin.manifest.cannot_load<br/><pre>0x04050001</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Unable to load the file 'manifest.json': %s | Unable to load the plugin's manifest file |
-| plugin.manifest.version_mismatch<br/><pre>0x04050002</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s/manifest.json] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s). | Current Kuzzle's version does not match the plugin's requirements |
+| plugin.manifest.version_mismatch<br/><pre>0x04050002</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Version mismatch: current Kuzzle version %s does not match the manifest requirements (%s). | Current Kuzzle's version does not match the plugin's requirements |
 | plugin.manifest.invalid_name_type<br/><pre>0x04050003</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Invalid "name" property: expected a non-empty string. | Invalid plugin's name |
 | plugin.manifest.invalid_name<br/><pre>0x04050004</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] Invalid plugin name. The name must be comprised only of letters, numbers, hyphens and underscores. | Invalid characters in a plugin's name |
 | plugin.manifest.missing_name<br/><pre>0x04050005</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | [%s] A "name" property is required. | A plugin name is required |
