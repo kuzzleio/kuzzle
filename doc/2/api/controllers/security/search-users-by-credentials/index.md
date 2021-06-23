@@ -6,7 +6,7 @@ title: searchUsersByCredentials
 
 # searchUsersByCredentials
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.13.0"/>
 
 Given a credentials related search query, returns matched users' kuid.
 Since credentials depend on the authentication strategy, so do the search query.
