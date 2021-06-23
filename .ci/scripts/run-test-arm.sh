@@ -4,8 +4,8 @@ set -ex
 
 if [ -z "$NODE_VERSION" ];
 then
-  echo "Missing NODE_VERSION, use default NODE_12_VERSION"
-  NODE_VERSION=$NODE_12_VERSION
+  echo "Missing NODE_VERSION, use default NODE_14_VERSION"
+  NODE_VERSION=$NODE_14_VERSION
 fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
