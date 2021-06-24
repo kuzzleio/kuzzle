@@ -15,6 +15,7 @@ const ESClientMock = require('../../mocks/service/elasticsearchClient.mock');
 
 const ES = require('../../../lib/service/storage/elasticsearch');
 const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
+const { Mutex } = require('../../../lib/util/mutex');
 
 describe('Test: ElasticSearch service', () => {
   let kuzzle;
@@ -46,6 +47,9 @@ describe('Test: ElasticSearch service', () => {
     };
 
     sinon.stub(Date, 'now').returns(timestamp);
+
+    sinon.stub(Mutex.prototype, 'lock').resolves();
+    sinon.stub(Mutex.prototype, 'unlock').resolves();
   });
 
   afterEach(() => {
@@ -1903,15 +1907,18 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       _checkMappings = elasticsearch._checkMappings;
 
-      elasticsearch.hasCollection = sinon.stub().resolves(false);
       elasticsearch._client.indices.create.resolves({});
+      elasticsearch.hasCollection = sinon.stub().resolves(false);
       elasticsearch._checkMappings = sinon.stub().resolves();
+
+      sinon.stub(elasticsearch, '_createHiddenCollection').resolves();
+      sinon.stub(elasticsearch, '_hasHiddenCollection').resolves(false);
+      sinon.stub(elasticsearch, 'deleteCollection').resolves();
     });
 
     it('should allow creating a new collection and inject commonMappings', async () => {
-      const
-        settings = { index: { blocks: { write: true } } },
-        mappings = { properties: { city: { type: 'keyword' } } };
+      const settings = { index: { blocks: { write: true } } };
+      const mappings = { properties: { city: { type: 'keyword' } } };
 
       const result = await elasticsearch.createCollection(
         index,
@@ -1935,6 +1942,18 @@ describe('Test: ElasticSearch service', () => {
       });
 
       should(result).be.null();
+      should(elasticsearch.deleteCollection).not.be.called();
+    });
+
+    it('should delete the hidden collection if present', async () => {
+      elasticsearch._hasHiddenCollection.resolves(true);
+
+      await elasticsearch.createCollection(index, collection, {});
+
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
+      should(elasticsearch._hasHiddenCollection).be.calledWith(index);
+      should(elasticsearch.deleteCollection).be.calledWith(index, '_kuzzle_keep');
     });
 
     it('should allow to set dynamic and _meta fields', async () => {
@@ -2071,18 +2090,13 @@ describe('Test: ElasticSearch service', () => {
     });
 
     it('should call updateCollection if the collection already exists', async () => {
-      const
-        settings = { index: { blocks: { write: true } } },
-        mappings = { properties: { city: { type: 'keyword' } } };
-
-      elasticsearch.hasCollection = sinon.stub().resolves(true);
+      const settings = { index: { blocks: { write: true } } };
+      const mappings = { properties: { city: { type: 'keyword' } } };
+      elasticsearch.hasCollection.resolves(true);
       sinon.stub(elasticsearch, 'updateCollection').resolves({});
-      sinon.stub(elasticsearch, 'deleteCollection').resolves();
 
       await elasticsearch.createCollection(index, collection, { mappings, settings });
 
-      should(elasticsearch.hasCollection).be.calledWith(index, '_kuzzle_keep', true);
-      should(elasticsearch.deleteCollection).be.calledWith(index, '_kuzzle_keep');
       should(elasticsearch.hasCollection).be.calledWith(index, collection);
       should(elasticsearch.updateCollection).be.calledWithMatch(index, collection, {
         settings: { index: { blocks: { write: true } } },
@@ -3016,17 +3030,31 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('#deleteCollection', () => {
-    it('should allow to delete a collection', () => {
-      const promise = elasticsearch.deleteCollection('nepali', 'liia');
-      sinon.stub(elasticsearch, 'listCollections').resolves(['nepali', 'liia']);
-      return promise
-        .then(result => {
-          should(elasticsearch._client.indices.delete).be.calledWithMatch({
-            index: '&nepali.liia'
-          });
+    beforeEach(() => {
+      sinon.stub(elasticsearch, '_hasHiddenCollection').resolves(true);
+      sinon.stub(elasticsearch, '_createHiddenCollection').resolves();
+    });
 
-          should(result).be.null();
-        });
+    it('should allow to delete a collection', async () => {
+      const result = await elasticsearch.deleteCollection('nepali', 'liia');
+
+      should(elasticsearch._client.indices.delete).be.calledWithMatch({
+        index: '&nepali.liia'
+      });
+
+      should(result).be.null();
+
+      should(elasticsearch._createHiddenCollection).not.be.called();
+    });
+
+    it('should create the hidden collection if the index is empty', async () => {
+      elasticsearch._hasHiddenCollection.resolves(false);
+
+      await elasticsearch.deleteCollection('nepali', 'liia');
+
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
+      should(elasticsearch._createHiddenCollection).be.called();
     });
   });
 
@@ -4393,6 +4421,24 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#_createHiddenCollection', () => {
+    it('creates the hidden collection', async () => {
+      elasticsearch._client.indices.create.resolves({});
+
+      await elasticsearch._createHiddenCollection('nisantasi');
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: '&nisantasi._kuzzle_keep',
+        body: {
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          }
+        }
+      });
+    });
+  });
+
   describe('#_checkMappings', () => {
     it('should throw when a property is incorrect', () => {
       const mapping2 = {
@@ -4532,25 +4578,6 @@ describe('Test: ElasticSearch service', () => {
         should(publicSchema).be.eql({
           nepali: ['panipokari'],
           vietnam: ['lfiduras'],
-        });
-        should(internalSchema).be.eql({
-          nepali: ['liia', 'mehry'],
-        });
-      });
-
-      it('should extract the list of indexes and their collections including internal _kuzzle_keep', () => {
-        const esIndexes = [
-          '%nepali.liia', '%nepali.mehry',
-          '&nepali.panipokari', '&nepali._kuzzle_keep',
-          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
-        ];
-
-        const publicSchema = publicES._extractSchema(esIndexes, true);
-        const internalSchema = internalES._extractSchema(esIndexes);
-
-        should(publicSchema).be.eql({
-          nepali: ['panipokari', '_kuzzle_keep'],
-          vietnam: ['lfiduras', '_kuzzle_keep'],
         });
         should(internalSchema).be.eql({
           nepali: ['liia', 'mehry'],
