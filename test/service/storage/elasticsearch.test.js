@@ -3050,7 +3050,7 @@ describe('Test: ElasticSearch service', () => {
     it('should create the hidden collection if the index is empty', async () => {
       elasticsearch._hasHiddenCollection.resolves(false);
 
-      const result = await elasticsearch.deleteCollection('nepali', 'liia');
+      await elasticsearch.deleteCollection('nepali', 'liia');
 
       should(Mutex.prototype.lock).be.called();
       should(Mutex.prototype.unlock).be.called();
