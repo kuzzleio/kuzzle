@@ -133,7 +133,7 @@ It is possible to register several hooks on the same event by calling several ti
 **Example:** _Use the [pub/sub engine](/core/2/main-concepts/5-realtime-engine#pub-sub) to log user registration_
 
 ```js
-app.hook.register('user:afterCreateRestricted', async (request: KuzzleRequest) => {
+app.hook.register('auth:afterSignin', async (request: KuzzleRequest) => {
   app.log.info(`New user registered: ${JSON.stringify(request.getUser())}`);
 });
 ```

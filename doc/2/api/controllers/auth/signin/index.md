@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: createRestricted
+title: signin
 ---
 
-# createRestricted
+# signin
 
 <SinceBadge version="auto-version"/>
 
@@ -21,8 +21,8 @@ This method allows users with limited rights to create other accounts, but block
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/user/<_id>/_createRestricted[?refresh=wait_for]
-URL(2): http://kuzzle:7512/user/_createRestricted[?refresh=wait_for]
+URL: http://kuzzle:7512/<_id>/_signin[?refresh=wait_for]
+URL(2): http://kuzzle:7512/_signin[?refresh=wait_for]
 Method: POST
 Body:
 ```
@@ -47,8 +47,8 @@ Body:
 
 ```js
 {
-  "controller": "user",
-  "action": "createRestricted",
+  "controller": "auth",
+  "action": "signin",
   "body": {
     // optional
     "content": {
@@ -102,8 +102,8 @@ Returns the restricted user creation status:
 {
   "status": 200,
   "error": null,
-  "controller": "user",
-  "action": "createRestricted",
+  "controller": "auth",
+  "action": "signin",
   "requestId": "<unique request identifier>",
   "result": {
     "_id": "<kuid>",

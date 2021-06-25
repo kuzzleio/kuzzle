@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: rights
+title: getRights
 ---
 
-# rights
+# getRights
 
 <SinceBadge version="auto-version"/>
 
@@ -26,7 +26,7 @@ Method: GET
 ```js
 {
   "controller": "user",
-  "action": "rights",
+  "action": "getRights",
   "_id": "<kuid>"
 }
 ```
@@ -41,7 +41,7 @@ Method: GET
 
 ## Response
 
-Returns a `hits` array of objects. Each object is a security right granted or denied to the user:
+Returns a `rights` array of objects. Each object is a security right granted or denied to the user:
 
 - `controller`: impacted Kuzzle controller
 - `action`: impacted controller action
@@ -54,7 +54,7 @@ Returns a `hits` array of objects. Each object is a security right granted or de
   "status": 200,
   "error": null,
   "result": {
-    "hits": [
+    "rights": [
       {
         "controller": "auth",
         "action": "login",

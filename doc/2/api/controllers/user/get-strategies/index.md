@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: strategies
+title: getStrategies
 ---
 
-# strategies
+# getStrategies
 
 
 
@@ -26,7 +26,7 @@ Method: GET
 ```js
 {
   "controller": "user",
-  "action": "strategies",
+  "action": "getStrategies",
   "_id": "<kuid>"
 }
 ```
@@ -41,10 +41,7 @@ Method: GET
 
 ## Response
 
-Returns an object with the following properties:
-
-- `strategies`: array containing all the available authentication strategies on the requested user.
-- `total`: total number of strategies found for that user.
+Returns an object with a `strategies` array containing all the available authentication strategies on the requested user.
 
 ```js
 {
@@ -52,7 +49,6 @@ Returns an object with the following properties:
   "error": null,
   "result": {
     "strategies": ["local"],
-    "total": 1
   }
 }
 ```

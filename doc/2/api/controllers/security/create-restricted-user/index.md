@@ -8,7 +8,7 @@ title: createRestrictedUser
 
 <DeprecatedBadge version="auto-version">
 
-__Use [user:createRestricted](/core/2/api/controllers/user/create-restricted) instead.__
+__Use [auth:signin](/core/2/api/controllers/auth/signin) instead.__
 
 Creates a new user in Kuzzle, with a preset list of security profiles.
 

@@ -1,10 +1,10 @@
 ---
 code: true
 type: page
-title: checkRights
+title: isAllowed
 ---
 
-# checkRights
+# isAllowed
 
 <SinceBadge version="auto-version"/>
 
@@ -17,7 +17,7 @@ Checks if the provided API request can be executed by a user.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/user/<_id>/_checkRights
+URL: http://kuzzle:7512/user/<_id>/_isAllowed
 Method: POST
 Body:
 ```
@@ -41,7 +41,7 @@ Body:
 ```js
 {
   "controller": "user",
-  "action": "checkRights",
+  "action": "isAllowed",
   "_id": "<kuid>",
   "body": {
     // RequestPayload
@@ -86,7 +86,7 @@ Example:
   "status": 200,
   "error": null,
   "controller": "user",
-  "action": "checkRights",
+  "action": "isAllowed",
   "requestId": "<unique request identifier>",
   "result": {
     "allowed": true

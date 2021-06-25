@@ -199,3 +199,21 @@ Feature: Auth Controller
     And I successfully execute the action "auth":"searchApiKeys"
     Then I should receive a empty "hits" array
     And I can not login with the previously created API key
+
+  # auth:signin ======================================================
+
+  @security
+  Scenario: Create a new restricted user without permissions
+    Given I execute the action "auth":"signin" with args:
+      | _id                | "alyx"                                     |
+      | body               | { "content": { "profileIds": ["admin"] } } |
+    Then I got an error with id "api.assert.forbidden_argument"
+
+  Scenario: Create a new restricted user successfuly
+    When I successfully execute the action "auth":"signin" with args:
+      | _id                | "alyx"                                     |
+      | body               | { "content": { "name": "toto" } }          |
+    Then I should receive a result matching:
+      | _id                | "alyx"                                     |
+      | _source.profileIds | ["default"]                                |
+      | _source.name       | "toto"                                     |

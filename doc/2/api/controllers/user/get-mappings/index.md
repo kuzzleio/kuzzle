@@ -1,14 +1,14 @@
 ---
 code: true
 type: page
-title: mappings
+title: getMappings
 ---
 
-# mappings
+# getMappings
 
 <SinceBadge version="auto-version"/>
 
-Gets the mapping of the internal users collection.
+Gets the mappings of the internal users collection.
 
 ---
 
@@ -26,7 +26,7 @@ Method: GET
 ```js
 {
   "controller": "user",
-  "action": "mappings"
+  "action": "getMappings"
 }
 ```
 
@@ -41,10 +41,10 @@ Returns the internal profiles mapping, using [Elasticsearch mapping format](http
   "status": 200,
   "error": null,
   "controller": "user",
-  "action": "mappings",
+  "action": "getMappings",
   "requestId": "<unique request identifier>",
   "result": {
-    "mapping": {
+    "mappings": {
       // ...
     }
   }

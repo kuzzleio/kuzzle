@@ -8,7 +8,7 @@ title: createFirstAdmin
 
 <DeprecatedBadge version="auto-version" />
 
-__Use [user:createFirstAdmin](/core/2/api/controllers/user/create-first-admin) instead.__
+__Use [user:create](/core/2/api/controllers/user/create) with admin profile instead.__
 
 Creates a Kuzzle administrator account, only if none exist.
 

@@ -7,7 +7,9 @@ const {
   BadRequestError,
   InternalError: KuzzleInternalError,
   NotFoundError,
+  PluginImplementationError,
   PreconditionError,
+  Request
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
@@ -15,6 +17,7 @@ const Repository = require('../../../lib/core/shared/repository');
 const User = require('../../../lib/model/security/user');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 const UserRepository = require('../../../lib/core/security/userRepository');
+const formatProcessing = require('../../../lib/core/auth/formatProcessing');
 
 describe('Test: security/userRepository', () => {
   let kuzzle;
@@ -310,73 +313,64 @@ describe('Test: security/userRepository', () => {
 
   describe('#create', () => {
     const createEvent = 'core:security:user:create';
+    const deleteEvent = 'core:security:user:delete';
+    const content = { foo: 'bar' };
     let fakeUser;
+    let profileIds;
+    let persistStub;
+    let deleteStub;
+    let strategyCreateStub;
+    let strategyExistsStub;
+    let strategyValidateStub;
+    let request;
 
     beforeEach(() => {
-      sinon.stub(userRepository, 'persist').resolves(fakeUser);
+      fakeUser = new User();
+      profileIds = ['foo' ];
+      request = new Request({ controller: 'user' }, { user: new User() });
+      request.context.user._id = '4';
+      request.input.args._id = 'test';
+      request.input.body = {
+        content: {name: 'John Doe', profileIds},
+        credentials: {someStrategy: {some: 'credentials'}}
+      };
+
+      strategyCreateStub = sinon.stub().resolves();
+      strategyExistsStub = sinon.stub().resolves(false);
+      strategyValidateStub = sinon.stub().resolves();
+      persistStub = sinon.stub(userRepository, 'persist').resolves(fakeUser);
+      deleteStub = sinon.stub(kuzzle, 'ask')
+        .withArgs(deleteEvent, request.input.args._id, sinon.match.object)
+        .resolves();
+      kuzzle.ask.callThrough();
+
       sinon.stub(userRepository, 'fromDTO').resolves(fakeUser);
+
+      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'create')
+        .returns(strategyCreateStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'exists')
+        .returns(strategyExistsStub);
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'validate')
+        .returns(strategyValidateStub);
     });
 
     it('should register a "create" event', async () => {
       sinon.stub(userRepository, 'create');
 
-      await kuzzle.ask(createEvent, 'id', 'profiles', 'content', 'opts');
+      await kuzzle.ask(createEvent, 'request', 'profiles', 'content', 'opts');
 
       should(userRepository.create)
-        .calledWith('id', 'profiles', 'content', 'opts');
-    });
-
-    it('should handle default options', async () => {
-      const content = {
-        _id: 'nope',
-        _kuzzle_info: 'nope',
-        foo: 'foo',
-        profileIds: ['nope'],
-      };
-      const profiles = ['foo', 'bar'];
-
-      await kuzzle.ask(createEvent, 'id', profiles, content, {userId: 'userId'});
-
-      should(userRepository.fromDTO).calledWithMatch({
-        foo: 'foo',
-        profileIds: ['foo', 'bar'],
-        _id: 'id',
-        _kuzzle_info: {
-          author: 'userId',
-          updatedAt: null,
-          updater: null,
-        },
-      });
-
-      should(userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt)
-        .approximately(Date.now(), 1000);
-
-      should(userRepository.persist).calledWith(fakeUser, {
-        database: {
-          method: 'create',
-          refresh: 'false',
-        }
-      });
-    });
-
-    it('should handle the refresh option', async () => {
-      await kuzzle.ask(createEvent, 'id', [], {}, {
-        refresh: 'wait_for',
-        userId: 'userId',
-      });
-
-      should(userRepository.persist).calledWith(fakeUser, {
-        database: {
-          method: 'create',
-          refresh: 'wait_for',
-        }
-      });
+        .calledWith('request', 'profiles', 'content', 'opts');
     });
 
     it('should return the created user object', async () => {
-      const ret = await kuzzle.ask(createEvent, 'id', [], {}, {userId: 'userId'});
+      const ret = await kuzzle.ask(createEvent, request, profileIds, content);
 
-      should(ret).eql(fakeUser);
+      should(ret).eql(formatProcessing.serializeUser(fakeUser));
     });
 
     it('should replace generic failure exceptions with a security dedicated one', async () => {
@@ -384,13 +378,124 @@ describe('Test: security/userRepository', () => {
 
       userRepository.persist.rejects(error);
 
-      await should(kuzzle.ask(createEvent, 'id', [], {}, {}))
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
         .rejectedWith(error);
 
       error.id = 'services.storage.document_already_exists';
 
-      await should(kuzzle.ask(createEvent, 'id', [], {}, {}))
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
         .rejectedWith(PreconditionError, { id: 'security.user.already_exists' });
+    });
+
+    it('should reject if a strategy is unknown', async () => {
+      kuzzle.pluginsManager.listStrategies.returns(['oops']);
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .be.rejectedWith(BadRequestError, {
+          id: 'security.credentials.unknown_strategy'
+        });
+
+      should(deleteStub).not.called();
+    });
+
+    it('should reject if credentials already exist on the provided user id', async () => {
+      strategyExistsStub.resolves(true);
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .be.rejectedWith(PluginImplementationError, {
+          id: 'security.credentials.database_inconsistency'
+        });
+
+      should(deleteStub).not.called();
+    });
+
+    it('should rollback if credentials don\'t validate the strategy', async () => {
+      strategyValidateStub.rejects(new Error('error'));
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .be.rejectedWith(BadRequestError, {
+          id: 'security.credentials.rejected'
+        });
+
+      should(kuzzle.ask).calledWithMatch(
+        deleteEvent,
+        request.input.args._id,
+        { refresh: 'false' });
+    });
+
+    it('should reject and rollback if credentials don\'t create properly', async () => {
+      strategyCreateStub.rejects(new Error('some error'));
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .rejectedWith(PluginImplementationError, {
+          id: 'plugin.runtime.unexpected_error',
+        });
+
+      should(kuzzle.ask).calledWithMatch(
+        deleteEvent,
+        request.input.args._id,
+        { refresh: 'false' });
+    });
+
+    it('should not create credentials if user creation fails', async () => {
+      const error = new Error('error');
+      persistStub.rejects(error);
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .rejectedWith(error);
+
+      should(strategyCreateStub).not.called();
+    });
+
+    it('should intercept errors during deletion of a rollback phase', async () => {
+      kuzzle.pluginsManager.listStrategies.returns(['foo', 'someStrategy']);
+
+      // "foo" should be called after before "someStrategy": we make the stub
+      // fail when the "create" method is invoked, and we make the
+      // "delete" method of someStrategy fail too
+      const strategyDeleteStub = sinon.stub()
+        .rejects(new Error('someStrategy delete error'));
+
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'validate')
+        .returns(sinon.stub().resolves());
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'exists')
+        .returns(sinon.stub().resolves(false));
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('foo', 'create')
+        .returns(sinon.stub().rejects(new Error('oh noes')));
+      kuzzle.pluginsManager.getStrategyMethod
+        .withArgs('someStrategy', 'delete')
+        .returns(strategyDeleteStub);
+
+      request.input.body.credentials.foo = { firstname: 'X Æ A-12' };
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .rejectedWith(PluginImplementationError, {
+          id: 'plugin.runtime.unexpected_error',
+          message: /.*oh noes\nsomeStrategy delete error\n.*/,
+        });
+
+      should(strategyDeleteStub).calledWithMatch(
+        request,
+        request.input.args._id,
+        'someStrategy');
+    });
+
+    it('should return the plugin error if it threw a KuzzleError error', async () => {
+      const error = new BadRequestError('foo');
+
+      strategyValidateStub.rejects(error);
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .be.rejectedWith(error);
+
+      strategyValidateStub.resolves();
+      strategyCreateStub.rejects(error);
+
+      await should(kuzzle.ask(createEvent, request, profileIds, content))
+        .be.rejectedWith(error);
     });
   });
 

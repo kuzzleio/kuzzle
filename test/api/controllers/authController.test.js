@@ -111,6 +111,70 @@ describe('Test the auth controller', () => {
     });
   });
 
+  describe('#signin', () => {
+    const createEvent = 'core:security:user:create';
+    const createdUser = { _id: 'foo', _source: { bar: 'baz' } };
+    let createStub;
+
+    beforeEach(() => {
+      createStub = kuzzle.ask.withArgs(createEvent).resolves(createdUser);
+      request.input.args._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe' }
+      };
+
+      kuzzle.config.security.restrictedProfileIds = [ 'foo', 'bar' ];
+    });
+
+    it('should return a valid response', async () => {
+      const response = await authController.signin(request);
+
+      should(createStub)
+        .calledOnce()
+        .calledWithMatch(
+          createEvent,
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          { name: 'John Doe' });
+
+      should(createStub.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
+    });
+
+    it('should reject if profileIds are given', async () => {
+      request.input.body.content.profileIds = [ 'ohnoes' ];
+
+      await should(authController.signin(request))
+        .rejectedWith(BadRequestError, {
+          id: 'api.assert.forbidden_argument',
+          message: 'The argument "body.content.profileIds" is not allowed by this API action.'
+        });
+
+      should(createStub).not.called();
+    });
+
+    it('should allow the request to not have a body content', async () => {
+      request.input.body = null;
+
+      const response = await authController.signin(request);
+
+      should(createStub)
+        .calledOnce()
+        .calledWithMatch(
+          createEvent,
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          {});
+
+      should(createStub.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
+    });
+  });
+
   describe('#login', () => {
     let createTokenStub;
 

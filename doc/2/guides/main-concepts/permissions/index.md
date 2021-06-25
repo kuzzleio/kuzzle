@@ -343,15 +343,18 @@ As any other collection, the `users` collection has an associated mapping that c
 
 ### Associated API actions
 
- - [user:createRestricted](/core/2/api/controllers/user/create-restricted)
  - [user:create](/core/2/api/controllers/user/create)
  - [user:delete](/core/2/api/controllers/user/delete)
  - [user:get](/core/2/api/controllers/user/get)
- - [user:mappings](/core/2/api/controllers/user/mappings)
- - [user:rights](/core/2/api/controllers/user/rights)
+ - [user:getMappings](/core/2/api/controllers/user/get-mappings)
+ - [user:getRights](/core/2/api/controllers/user/get-rights)
+ - [user:getStrategies](/core/2/api/controllers/user/get-strategies)
+ - [user:isAllowed](/core/2/api/controllers/user/is-allowed)
  - [user:mDelete](/core/2/api/controllers/user/m-delete)
  - [user:mGet](/core/2/api/controllers/user/m-get)
+ - [user:refresh](/core/2/api/controllers/user/refresh)
  - [user:replace](/core/2/api/controllers/user/replace)
+ - [user:revokeTokens](/core/2/api/controllers/user/revoke-tokens)
  - [user:scroll](/core/2/api/controllers/user/scroll)
  - [user:search](/core/2/api/controllers/user/search)
  - [user:update](/core/2/api/controllers/user/update)

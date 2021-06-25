@@ -6,13 +6,11 @@ const sinon = require('sinon');
 const {
   Request,
   BadRequestError,
-  PluginImplementationError,
-  PreconditionError,
   SizeLimitError
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const NativeSecurityController = require('../../../lib/api/controllers/base/nativeSecurityController');
+const AbstractSecurityController = require('../../../lib/api/controllers/base/abstractSecurityController');
 const UserController = require('../../../lib/api/controllers/userController');
 const User = require('../../../lib/model/security/user');
 
@@ -32,183 +30,18 @@ describe('UserController', () => {
   });
 
   describe('#constructor', () => {
-    it('should inherit the base constructor', () => {
-      should(new UserController()).instanceOf(NativeSecurityController);
-    });
-  });
-
-  describe('#_persist', () => {
-    const createEvent = 'core:security:user:create';
-    const deleteEvent = 'core:security:user:delete';
-    const content = { foo: 'bar' };
-    let fakeUser;
-    let profileIds;
-    let createStub;
-    let deleteStub;
-    let strategyCreateStub;
-    let strategyExistsStub;
-    let strategyValidateStub;
-
-    beforeEach(() => {
-      profileIds = ['foo' ];
-      request.input.args._id = 'test';
-      request.input.body = {
-        content: {name: 'John Doe', profileIds},
-        credentials: {someStrategy: {some: 'credentials'}}
-      };
-      kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-
-      fakeUser = new User();
-      createStub = kuzzle.ask
-        .withArgs(createEvent, request.input.args._id, profileIds, content)
-        .resolves(fakeUser);
-      deleteStub = kuzzle.ask
-        .withArgs(deleteEvent, request.input.args._id, sinon.match.object)
-        .resolves();
-
-      strategyCreateStub = sinon.stub().resolves();
-      strategyExistsStub = sinon.stub().resolves(false);
-      strategyValidateStub = sinon.stub().resolves();
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'create')
-        .returns(strategyCreateStub);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'exists')
-        .returns(strategyExistsStub);
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'validate')
-        .returns(strategyValidateStub);
-    });
-
-    it('should reject if a strategy is unknown', async () => {
-      kuzzle.pluginsManager.listStrategies.returns(['oops']);
-
-      await should(userController._persist(request, profileIds, content))
-        .be.rejectedWith(BadRequestError, {
-          id: 'security.credentials.unknown_strategy'
-        });
-
-      should(createStub).not.called();
-      should(deleteStub).not.called();
-    });
-
-    it('should reject if credentials already exist on the provided user id', async () => {
-      strategyExistsStub.resolves(true);
-
-      await should(userController._persist(request, profileIds, content))
-        .be.rejectedWith(PluginImplementationError, {
-          id: 'security.credentials.database_inconsistency'
-        });
-
-      should(createStub).not.called();
-      should(deleteStub).not.called();
-    });
-
-    it('should rollback if credentials don\'t validate the strategy', async () => {
-      strategyValidateStub.rejects(new Error('error'));
-
-      await should(userController._persist(request, profileIds, content))
-        .be.rejectedWith(BadRequestError, {
-          id: 'security.credentials.rejected'
-        });
-
-      should(kuzzle.ask).calledWithMatch(
-        createEvent,
-        request.input.args._id,
-        profileIds,
-        content,
-        { refresh: 'wait_for' });
-
-      should(kuzzle.ask).calledWithMatch(
-        deleteEvent,
-        request.input.args._id,
-        { refresh: 'false' });
-    });
-
-    it('should reject and rollback if credentials don\'t create properly', async () => {
-      strategyCreateStub.rejects(new Error('some error'));
-
-      await should(userController._persist(request, profileIds, content))
-        .rejectedWith(PluginImplementationError, {
-          id: 'plugin.runtime.unexpected_error',
-        });
-
-      should(kuzzle.ask).calledWithMatch(
-        deleteEvent,
-        request.input.args._id,
-        { refresh: 'false' });
-    });
-
-    it('should not create credentials if user creation fails', async () => {
-      const error = new Error('error');
-      createStub.rejects(error);
-
-      await should(userController._persist(request, profileIds, content))
-        .rejectedWith(error);
-
-      should(strategyCreateStub).not.called();
-    });
-
-    it('should intercept errors during deletion of a rollback phase', async () => {
-      kuzzle.pluginsManager.listStrategies.returns(['foo', 'someStrategy']);
-
-      // "foo" should be called after before "someStrategy": we make the stub
-      // fail when the "create" method is invoked, and we make the
-      // "delete" method of someStrategy fail too
-      const strategyDeleteStub = sinon.stub()
-        .rejects(new Error('someStrategy delete error'));
-
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'validate')
-        .returns(sinon.stub().resolves());
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'exists')
-        .returns(sinon.stub().resolves(false));
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('foo', 'create')
-        .returns(sinon.stub().rejects(new Error('oh noes')));
-      kuzzle.pluginsManager.getStrategyMethod
-        .withArgs('someStrategy', 'delete')
-        .returns(strategyDeleteStub);
-
-      request.input.body.credentials.foo = { firstname: 'X Æ A-12' };
-
-      await should(userController._persist(request, profileIds, content))
-        .rejectedWith(PluginImplementationError, {
-          id: 'plugin.runtime.unexpected_error',
-          message: /.*oh noes\nsomeStrategy delete error\n.*/,
-        });
-
-      should(strategyDeleteStub).calledWithMatch(
-        request,
-        request.input.args._id,
-        'someStrategy');
-    });
-
-    it('should return the plugin error if it threw a KuzzleError error', async () => {
-      const error = new BadRequestError('foo');
-
-      strategyValidateStub.rejects(error);
-
-      await should(userController._persist(request, profileIds, content))
-        .be.rejectedWith(error);
-
-      strategyValidateStub.resolves();
-      strategyCreateStub.rejects(error);
-
-      await should(userController._persist(request, profileIds, content))
-        .be.rejectedWith(error);
+    it('should inherit the abstract constructor', () => {
+      should(new UserController()).instanceOf(AbstractSecurityController);
     });
   });
 
   describe('#create', () => {
     const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
+    const createEvent = 'core:security:user:create';
+    let createStub;
 
     beforeEach(() => {
-      sinon.stub(userController, '_persist').resolves(createdUser);
+      createStub = kuzzle.ask.withArgs(createEvent).resolves(createdUser);
       request.input.args._id = 'test';
       request.input.body = {
         content: { name: 'John Doe', profileIds: ['default'] }
@@ -218,9 +51,9 @@ describe('UserController', () => {
     it('should return a valid response', async () => {
       const response = await userController.create(request);
 
-      should(userController._persist)
+      should(createStub)
         .calledOnce()
-        .calledWithMatch(request, ['default'], { name: 'John Doe' });
+        .calledWithMatch(createEvent, request, ['default'], { name: 'John Doe' });
 
       should(response).eql(createdUser);
     });
@@ -231,7 +64,7 @@ describe('UserController', () => {
       await should(userController.create(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
 
-      should(userController._persist).not.called();
+      should(createStub).not.called();
     });
 
     it('should reject if no profileId is given', async () => {
@@ -243,7 +76,7 @@ describe('UserController', () => {
           message: 'Missing argument "body.content.profileIds".'
         });
 
-      should(userController._persist).not.called();
+      should(createStub).not.called();
     });
 
     it('should reject if profileIds is not an array', async () => {
@@ -255,143 +88,7 @@ describe('UserController', () => {
           message: 'Wrong type for argument "body.content.profileIds" (expected: array)'
         });
 
-      should(userController._persist).not.called();
-    });
-  });
-
-  describe('#createRestricted', () => {
-    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
-
-    beforeEach(() => {
-      sinon.stub(userController, '_persist').resolves(createdUser);
-      request.input.args._id = 'test';
-      request.input.body = {
-        content: { name: 'John Doe' }
-      };
-
-      kuzzle.config.security.restrictedProfileIds = [ 'foo', 'bar' ];
-    });
-
-    it('should return a valid response', async () => {
-      const response = await userController.createRestricted(request);
-
-      should(userController._persist)
-        .calledOnce()
-        .calledWithMatch(
-          request,
-          kuzzle.config.security.restrictedProfileIds,
-          { name: 'John Doe' });
-
-      should(userController._persist.firstCall.args[2])
-        .not.have.ownProperty('profileIds');
-
-      should(response).eql(createdUser);
-    });
-
-    it('should reject if profileIds are given', async () => {
-      request.input.body.content.profileIds = [ 'ohnoes' ];
-
-      await should(userController.createRestricted(request))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.forbidden_argument',
-          message: 'The argument "body.content.profileIds" is not allowed by this API action.'
-        });
-
-      should(userController._persist).not.called();
-    });
-
-    it('should allow the request to not have a body content', async () => {
-      request.input.body = null;
-
-      const response = await userController.createRestricted(request);
-
-      should(userController._persist)
-        .calledOnce()
-        .calledWithMatch(
-          request,
-          kuzzle.config.security.restrictedProfileIds,
-          {});
-
-      should(userController._persist.firstCall.args[2])
-        .not.have.ownProperty('profileIds');
-
-      should(response).eql(createdUser);
-    });
-  });
-
-  describe('#createFirstAdmin', () => {
-    const adminExistsEvent = 'core:security:user:admin:exist';
-    const createOrReplaceRoleEvent = 'core:security:role:createOrReplace';
-    const createOrReplaceProfileEvent = 'core:security:profile:createOrReplace';
-    let createOrReplaceRoleStub;
-    let createOrReplaceProfileStub;
-    let adminExistsStub;
-
-    beforeEach(() => {
-      sinon.stub(userController, '_persist');
-
-      request.input.args._id = 'test';
-
-      createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
-
-      createOrReplaceProfileStub = kuzzle.ask
-        .withArgs(createOrReplaceProfileEvent);
-
-      adminExistsStub = kuzzle.ask
-        .withArgs(adminExistsEvent)
-        .resolves(false);
-    });
-
-    it('should reject if an admin already exists', async () => {
-      adminExistsStub.resolves(true);
-
-      await should(userController.createFirstAdmin(request))
-        .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
-
-      should(userController._persist).not.called();
-      should(createOrReplaceRoleStub).not.called();
-      should(createOrReplaceProfileStub).not.called();
-    });
-
-    it('should create the admin user and not reset roles & profiles if not asked to', async () => {
-      request.input.body = { content: { foo: 'bar' } };
-
-      await userController.createFirstAdmin(request);
-
-      should(userController._persist)
-        .calledOnce()
-        .calledWithMatch(request, ['admin'], request.input.body.content);
-
-      should(createOrReplaceRoleStub).not.called();
-      should(createOrReplaceProfileStub).not.called();
-    });
-
-    it('should create the admin user and reset roles & profiles if asked to', async () => {
-      request.input.args.reset = true;
-
-      await userController.createFirstAdmin(request);
-
-      should(userController._persist)
-        .calledOnce()
-        .calledWithMatch(request, ['admin'], {});
-
-      const config = kuzzle.config.security.standard;
-
-      for (const [key, content] of Object.entries(config.roles)) {
-        should(createOrReplaceRoleStub).calledWithMatch(
-          createOrReplaceRoleEvent,
-          key,
-          content,
-          { refresh: 'wait_for', userId: request.context.user._id });
-      }
-
-      for (const [key, content] of Object.entries(config.profiles)) {
-        should(createOrReplaceProfileStub).calledWithMatch(
-          createOrReplaceProfileEvent,
-          key,
-          content,
-          { refresh: 'wait_for', userId: request.context.user._id });
-      }
+      should(createStub).not.called();
     });
   });
 
@@ -938,20 +635,20 @@ describe('UserController', () => {
     });
   });
 
-  describe('#mappings', () => {
+  describe('#getMappings', () => {
     it('should fulfill with a response object', async () => {
       kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
         properties: { foo: 'bar' },
       });
 
-      const response = await userController.mappings(request);
+      const response = await userController.getMappings(request);
 
       should(kuzzle.ask).calledWith(
         'core:storage:private:mappings:get',
         kuzzle.internalIndex.index,
         'users');
 
-      should(response).match({ mapping: { foo: 'bar' } });
+      should(response).match({ mappings: { foo: 'bar' } });
     });
   });
 
@@ -979,7 +676,7 @@ describe('UserController', () => {
     });
   });
 
-  describe('#rights', () => {
+  describe('#getRights', () => {
     const getEvent = 'core:security:user:get';
     let getStub;
     let returnedUser;
@@ -1016,22 +713,21 @@ describe('UserController', () => {
 
       returnedUser.getRights.returns(rights);
 
-      const response = await userController.rights(request);
+      const response = await userController.getRights(request);
 
       should(getStub).calledWith(getEvent, request.input.args._id);
 
       should(response).be.an.Object().and.not.empty();
-      should(response.hits).be.an.Array().and.have.length(2);
-      should(response.total).eql(2);
+      should(response.rights).be.an.Array().and.have.length(2);
 
-      should(response.hits.includes(rights.rights1)).be.true();
-      should(response.hits.includes(rights.rights2)).be.true();
+      should(response.rights.includes(rights.rights1)).be.true();
+      should(response.rights.includes(rights.rights2)).be.true();
     });
 
     it('should reject if no id is provided', async () => {
       request.input.args._id = null;
 
-      await should(userController.rights(request))
+      await should(userController.getRights(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'
@@ -1045,12 +741,12 @@ describe('UserController', () => {
 
       getStub.rejects(error);
 
-      return should(userController.rights(request))
+      return should(userController.getRights(request))
         .rejectedWith(error);
     });
   });
 
-  describe('#checkRights', () => {
+  describe('#isAllowed', () => {
     let user;
 
     beforeEach(() => {
@@ -1071,7 +767,7 @@ describe('UserController', () => {
     });
 
     it('should check if the action is allowed for the provided user id', async () => {
-      const response = await userController.checkRights(request);
+      const response = await userController.isAllowed(request);
 
       should(kuzzle.ask).be.calledWith('core:security:user:get', 'melis');
 
@@ -1087,18 +783,18 @@ describe('UserController', () => {
     it('should reject if the provided request is not valid', async () => {
       request.input.body.controller = null;
 
-      await should(userController.checkRights(request))
+      await should(userController.isAllowed(request))
         .be.rejectedWith({ id: 'api.assert.missing_argument' });
 
       request.input.body.controller = 'document';
       request.input.body.action = null;
 
-      await should(userController.checkRights(request))
+      await should(userController.isAllowed(request))
         .be.rejectedWith({ id: 'api.assert.missing_argument' });
     });
   });
 
-  describe('#strategies', () => {
+  describe('#getStrategies', () => {
     const getEvent = 'core:security:user:get';
     const exampleStrategy = 'someStrategy';
     const returnedUser = new User();
@@ -1119,22 +815,20 @@ describe('UserController', () => {
     });
 
     it('should return a list of strategies', async () => {
-      const response = await userController.strategies(request);
+      const response = await userController.getStrategies(request);
 
       should(response).be.an.Object().and.not.empty();
       should(response.strategies).be.an.Array().and.have.length(1);
       should(response.strategies.includes(exampleStrategy)).be.true();
-      should(response.total).eql(1);
     });
 
     it('should return empty when anonymous id is provided', async () => {
       request.input.args._id = '-1';
 
-      const response = await userController.strategies(request);
+      const response = await userController.getStrategies(request);
 
       should(response).be.an.Object().and.not.empty();
       should(response.strategies).be.an.Array().and.have.length(0);
-      should(response.total).eql(0);
     });
 
     it('should reject if user is not found', async () => {
@@ -1145,14 +839,14 @@ describe('UserController', () => {
         .withArgs(getEvent, request.input.args._id)
         .rejects(error);
 
-      await should(userController.strategies(request))
+      await should(userController.getStrategies(request))
         .rejectedWith(error);
     });
 
     it('should reject if no id is provided', async () => {
       request.input.args._id = null;
 
-      await should(userController.strategies(request))
+      await should(userController.getStrategies(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
           message: 'Missing argument "_id".'

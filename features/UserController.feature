@@ -11,53 +11,6 @@ Feature: User Controller
       | _id                | "alyx"                                       |
       | _source.profileIds | ["default"]                                  |
 
-  # user:createRestricted ======================================================
-
-  @security
-  Scenario: Create a new restricted user without permissions
-    Given I execute the action "user":"createRestricted" with args:
-      | _id                | "alyx"                                     |
-      | body               | { "content": { "profileIds": ["admin"] } } |
-    Then I got an error with id "api.assert.forbidden_argument"
-
-  Scenario: Create a new restricted user successfuly
-    When I successfully execute the action "user":"createRestricted" with args:
-      | _id                | "alyx"                                     |
-      | body               | { "content": { "name": "toto" } }          |
-    Then I should receive a result matching:
-      | _id                | "alyx"                                     |
-      | _source.profileIds | ["default"]                                |
-      | _source.name       | "toto"                                     |
-
-  # user:createFirstAdmin ======================================================
-
-  @firstAdmin
-  Scenario: Create first admin
-    Given I update the role "default" with:
-      | document | { "delete": true, "get": true } |
-      | auth     | { "login": true }               |
-    When I successfully execute the action "user":"createFirstAdmin" with args:
-      | _id      | "first-admin"                   |
-      | body     | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
-    Then I should receive a result matching:
-      | _source  | { "profileIds": ["admin"] }     |
-    And I'm logged in Kuzzle as user "first-admin" with password "password"
-
-  @firstAdmin
-  Scenario: Create first admin then reset anonymous and default roles
-    Given I update the role "default" with:
-      | document | { "delete": true, "get": true } |
-      | auth     | { "login": true }               |
-    When I successfully execute the action "user":"createFirstAdmin" with args:
-      | _id      | "first-admin"                   |
-      | body     | { "credentials": { "local": { "username": "first-admin", "password": "password" } }, "content": {} } |
-      | reset    | true                            |
-    Then I should receive a result matching:
-      | _source  | { "profileIds": ["admin"] }     |
-    And I'm logged in Kuzzle as user "first-admin" with password "password"
-    # Test of roles reset
-    And The role "default" should match the default one
-
   # user:get ===================================================================
 
   @security
@@ -215,64 +168,64 @@ Feature: User Controller
     And The user "test-user2" should not exists
     But The user "test-user3" exists
 
-  # user : mappings & updateMappings ===========================================
+  # user : getMappings & updateMappings ===========================================
 
   @security @mappings
   Scenario: Get user mappings and update them
-    When I successfully execute the action "user":"mappings"
-    Then The property "mapping" of the result should match:
+    When I successfully execute the action "user":"getMappings"
+    Then The property "mappings" of the result should match:
       | profileIds | { type: 'keyword' } |
     When I successfully execute the action "user":"updateMappings" with args:
       | body       | { properties: { name: { type: 'keyword' } } } |
-    And I successfully execute the action "user":"mappings"
-    Then The property "mapping" of the result should match:
+    And I successfully execute the action "user":"getMappings"
+    Then The property "mappings" of the result should match:
       | profileIds | { type: 'keyword' } |
       | name       | { type: 'keyword' } |
 
-  # user:rights ================================================================
+  # user:getRights ================================================================
 
   @security
   Scenario: Get user rights
     Given I create a user "test-user" with content:
       | profileIds | ["default"]    |
-    When I successfully execute the action "user":"rights" with args:
+    When I successfully execute the action "user":"getRights" with args:
       | _id        | "test-user"    |
-    Then I should receive a "hits" array of objects matching:
+    Then I should receive a "rights" array of objects matching:
       | action     | collection     | controller | index | value     |
       | "*"        | "*"            |  "*"       | "*"   | "allowed" |
 
-  # user:checkRights ===========================================================
+  # user:isAllowed ===========================================================
 
   @security
   Scenario: Check if logged user can execute provided API request
     Given I "update" a role "default" with the following API rights:
       | auth     | { "actions": { "login": true, "checkRights": true } } |
       | document | { "actions": { "create": false, "update": true } }    |
-    When I successfully execute the action "user":"checkRights" with args:
+    When I successfully execute the action "user":"isAllowed" with args:
       | _id      | "default-user"                                        |
       | body     | { "controller": "document", "action": "create" }      |
     Then I should receive a result matching:
       | allowed  | false                                                 |
-    When I successfully execute the action "user":"checkRights" with args:
+    When I successfully execute the action "user":"isAllowed" with args:
       | _id      | "default-user"                                        |
       | body     | { "controller": "document", "action": "update" }      |
     Then I should receive a result matching:
       | allowed  | true                                                  |
 
-  # user:strategies ============================================================
+  # user:getStrategies ============================================================
 
   @security
   Scenario: Get user strategies
     Given I create a user "test-user" with content:
       | profileIds | ["default"]               |
-    When I successfully execute the action "user":"strategies" with args:
+    When I successfully execute the action "user":"getStrategies" with args:
       | _id        | "test-user"               |
     Then I should receive a "strategies" array matching:
       | "local"    |
-    When I successfully execute the action "user":"strategies" with args:
+    When I successfully execute the action "user":"getStrategies" with args:
       | _id        | "-1"                      |
     Then I should receive a empty "strategies" array
-    When I execute the action "user":"strategies" with args:
+    When I execute the action "user":"getStrategies" with args:
       | _id        | "fake-user-id"            |
     Then I should receive an error matching:
       | id         | "security.user.not_found" |
