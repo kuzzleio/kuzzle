@@ -79,7 +79,7 @@
     "loginsPerSecond": 1,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
-    "subscriptionConditionsCount": 16,
+    "subscriptionConditionsCount": 100,
     "subscriptionRooms": 1000000,
     "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
   },

@@ -19,12 +19,14 @@
  * limitations under the License.
  */
 
-import { uniq } from 'lodash';
 import { JSONObject } from 'kuzzle-sdk';
 import { Koncorde as KoncordeV4, KoncordeOptions, NormalizedFilter } from 'koncorde';
-
-// No collision possible: "/" is forbidden in index (or collection) names
-const SEPARATOR = '/';
+import {
+  getCollections,
+  getIndexes,
+  koncordeTest,
+  toKoncordeIndex,
+} from '../../util/koncordeCompat';
 
 /**
  * Emulates the normalized object returned by Koncorde v3
@@ -65,19 +67,6 @@ class NormalizedFilterV3 {
     this.normalized = normalized.filter;
   }
 }
-
-/**
- * Builds a Koncorde v4 index name from the old fashioned index+collection
- * arguments
- *
- * @param {string} index
- * @param {string} collection
- * @return {string}
- */
-function getIndexName (index: string, collection: string) : string {
-  return `${index}${SEPARATOR}${collection}`;
-}
-
 
 /*
   @deprecated
@@ -133,7 +122,7 @@ export class Koncorde {
    * @return {boolean}
    */
   exists (index: string, collection: string) : boolean {
-    return this.koncorde.getIndexes().includes(getIndexName(index, collection));
+    return this.koncorde.getIndexes().includes(toKoncordeIndex(index, collection));
   }
 
   /**
@@ -144,12 +133,7 @@ export class Koncorde {
    * @return {string[]}
    */
   getCollections (index: string) : string[] {
-    const indexPrefix = `${index}${SEPARATOR}`;
-
-    return this.koncorde
-      .getIndexes()
-      .filter(i => i.startsWith(indexPrefix))
-      .map(i => i.substr(indexPrefix.length));
+    return getCollections(this.koncorde, index);
   }
 
   /**
@@ -161,7 +145,7 @@ export class Koncorde {
    * @return {string[]}
    */
   getFilterIds (index: string, collection: string) : string[] {
-    return this.koncorde.getFilterIds(getIndexName(index, collection));
+    return this.koncorde.getFilterIds(toKoncordeIndex(index, collection));
   }
 
   /**
@@ -170,12 +154,7 @@ export class Koncorde {
    * @return {string[]}
    */
   getIndexes () : string[] {
-    const indexes = this.koncorde
-      .getIndexes()
-      .filter(i => i !== '(default)')
-      .map(i => i.substr(0, i.indexOf(SEPARATOR)));
-
-    return uniq(indexes);
+    return getIndexes(this.koncorde);
   }
 
   /**
@@ -210,7 +189,7 @@ export class Koncorde {
     return new NormalizedFilterV3(
       index,
       collection,
-      this.koncorde.normalize(filter, getIndexName(index, collection)));
+      this.koncorde.normalize(filter, toKoncordeIndex(index, collection)));
   }
 
   /**
@@ -225,7 +204,7 @@ export class Koncorde {
   async register (index: string, collection: string, filter: JSONObject)
     : Promise<JSONObject>
   {
-    const indexV4 = getIndexName(index, collection);
+    const indexV4 = toKoncordeIndex(index, collection);
     const normalized = this.koncorde.normalize(filter, indexV4);
 
     return this.store(new NormalizedFilterV3(index, collection, normalized));
@@ -250,7 +229,7 @@ export class Koncorde {
    * @return {JSONObject}
    */
   async store (normalized: NormalizedFilterV3) : Promise<JSONObject> {
-    const indexV4 = getIndexName(normalized.index, normalized.collection);
+    const indexV4 = toKoncordeIndex(normalized.index, normalized.collection);
 
     if (this.koncorde.hasFilterId(normalized.id, indexV4)) {
       return {
@@ -285,13 +264,7 @@ export class Koncorde {
    * @return {string[]}
    */
   test (index: string, collection: string, data: JSONObject, id?: string) : string[] {
-    // Koncorde v4 silently accepts the old "ids" keyword, but it is now
-    // an undocumented feature, left there so that Kuzzle can use Koncorde v4
-    // without breaking changes. But Kuzzle now have to inject the "_id" field
-    // necessary for that "ids" keyword.
-    const dataV4 = Object.assign({}, data, { _id: id });
-
-    return this.koncorde.test(dataV4, getIndexName(index, collection));
+    return koncordeTest(this.koncorde, index, collection, data, id);
   }
 
   /**

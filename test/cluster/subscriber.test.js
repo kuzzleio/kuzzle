@@ -431,10 +431,9 @@ describe('ClusterSubscriber', () => {
     describe('#handleNewRealtimeRoom', () => {
       it('should add the room to the fullstate', async () => {
         const message = {
-          roomId: 'roomId',
-          index: 'index',
-          collection: 'collection',
-          filters: '["filters"]',
+          id: 'roomId',
+          index: 'index/collection',
+          filter: '["filters"]',
           messageId: 'messageId',
         };
 

@@ -65,12 +65,12 @@ describe('Test: hotelClerk.subscribe', () => {
 
   it('should register a new room and customer', async () => {
     kuzzle.koncorde.normalize
-      .onFirstCall().resolves({id: 'foobar'})
-      .onSecondCall().resolves({id: 'barfoo'});
-
-    kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
+
+    kuzzle.koncorde.store
+      .onFirstCall().returns('foobar')
+      .onSecondCall().returns('barfoo');
 
     let response = await hotelClerk.subscribe(request);
 
@@ -129,7 +129,7 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.koncorde.normalize.rejects(new Error('test'));
+    kuzzle.koncorde.normalize.throws(new Error('test'));
 
     return should(hotelClerk.subscribe(request)).be.rejected();
   });

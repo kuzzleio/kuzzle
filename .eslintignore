@@ -61,4 +61,5 @@ lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
 lib/util/inflector.js
+lib/util/koncordeCompat.js
 features/support/application/functional-tests-app.js

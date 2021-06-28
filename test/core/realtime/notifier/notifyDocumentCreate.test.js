@@ -33,7 +33,7 @@ describe('Test: notifier.notifyDocumentCreate', () => {
 
     const result = await notifier.notifyDocumentCreate(request, { _id, _source });
 
-    should(kuzzle.koncorde.test).calledWith('index', 'collection', _source, _id);
+    should(kuzzle.koncorde.test).calledWith({ ..._source, _id }, 'index/collection');
     should(notifier.notifyDocument)
       .calledWithMatch(rooms, request, 'in', 'create', { _id, _source });
     should(result).match(rooms);
