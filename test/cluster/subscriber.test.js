@@ -73,7 +73,7 @@ describe('ClusterSubscriber', () => {
 
       should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.BUFFERING);
 
-      should(subscriber.lastHeartbeat).be.approximately(Date.now(), 10);
+      should(subscriber.lastHeartbeat).be.approximately(Date.now(), 100);
       should(subscriber.heartbeatDelay).be.eql(localNode.heartbeatDelay * 1.5);
 
       should(subscriber.handlers).be.eql({
