@@ -65,6 +65,10 @@ describe('Test: hotelClerk.subscribe', () => {
 
   it('should register a new room and customer', async () => {
     kuzzle.koncorde.normalize
+      .onFirstCall().returns({id: 'foobar', index: 'foo/bar', filter: []})
+      .onSecondCall().returns({id: 'barfoo', index: 'foo/bar', filter: []});
+
+    kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
 
@@ -87,6 +91,7 @@ describe('Test: hotelClerk.subscribe', () => {
       { count: 1 });
 
     const roomId = hotelClerk.rooms.get(response.roomId).id;
+
     const customer = hotelClerk.customers.get(connectionId);
 
     should(customer).have.value(roomId, request.input.volatile);
@@ -110,6 +115,14 @@ describe('Test: hotelClerk.subscribe', () => {
       request,
       'in',
       { count: 1 });
+
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:user:subscribe:after', {
+      index: request.input.args.index,
+      collection: request.input.args.collection,
+      filters: request.input.body,
+      roomId,
+      connectionId,
+    });
   });
 
   it('should return the same response when the user has already subscribed to the filter', async () => {
