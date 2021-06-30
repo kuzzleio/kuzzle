@@ -19,6 +19,7 @@ lib/core/backend/backendVault.js
 lib/core/backend/index.js
 lib/core/backend/internalLogger.js
 lib/core/shared/sdk/embeddedSdk.js
+lib/core/shared/KoncordeWrapper.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js
 lib/api/request/kuzzle-request.js
@@ -60,4 +61,5 @@ lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
 lib/util/inflector.js
+lib/util/koncordeCompat.js
 features/support/application/functional-tests-app.js

@@ -3,6 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 const mockRequire = require('mock-require');
+const { NormalizedFilter } = require('koncorde');
 
 class ZeroMQPublisherMock {
   constructor () {
@@ -93,20 +94,16 @@ describe('ClusterPublisher', () => {
 
     describe('#sendNewRealtimeRoom', () => {
       it('should send the appropriate command and payload', () => {
-        const result = publisher.sendNewRealtimeRoom(
-          'roomId',
-          'index',
-          'collection',
-          ['filters']);
+        const normalized = new NormalizedFilter(['filters'], 'roomId', 'index/collection');
+        const result = publisher.sendNewRealtimeRoom(normalized);
 
         should(result).be.eql('response');
         should(publisher.send).be.calledWith(
           'NewRealtimeRoom',
           {
-            collection: 'collection',
-            filters: '["filters"]',
-            index: 'index',
-            roomId: 'roomId',
+            filter: '["filters"]',
+            id: 'roomId',
+            index: 'index/collection',
           });
       });
     });

@@ -55,10 +55,6 @@
     //      NB: A condition is either a "simple" operator (anything but "and",
     //          "or" and "bool"), or a boolean condition that contains only
     //          simple operators.
-    // * subscriptionMinterms
-    //      Maximum number of minterms (AND) clauses after the filters are
-    //      transformed in their Canonical Disjunctive Normal Form (CDNF).
-    //      Set to 0 for no limit.
     // * subscriptionRooms
     //      Maximum number of different subscription rooms
     //      (i.e. different index+collection+filters subscription
@@ -83,8 +79,7 @@
     "loginsPerSecond": 1,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
-    "subscriptionConditionsCount": 16,
-    "subscriptionMinterms": 0,
+    "subscriptionConditionsCount": 100,
     "subscriptionRooms": 1000000,
     "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
   },

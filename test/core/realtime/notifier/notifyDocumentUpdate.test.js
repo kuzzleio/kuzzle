@@ -52,7 +52,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
     should(kuzzle.koncorde.test)
       .calledOnce()
-      .calledWith('foo', 'bar', {foo: 'bar'}, _id);
+      .calledWith({_id, foo: 'bar'}, 'foo/bar');
 
     should(notifier.notifyDocument.callCount).be.eql(2);
     should(notifier.notifyDocument.getCall(0))

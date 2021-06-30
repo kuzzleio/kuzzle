@@ -4,6 +4,7 @@ const sinon = require('sinon');
 const should = require('should');
 const mockRequire = require('mock-require');
 const Long = require('long');
+const { NormalizedFilter } = require('koncorde');
 
 const { IdCard } = require('../../lib/cluster/idCardHandler');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
@@ -434,20 +435,17 @@ describe('#Cluster Node', () => {
     it('should synchronize realtime room creations', () => {
       node.publisher.sendNewRealtimeRoom.returns('msgid');
 
-      kuzzle.emit('core:realtime:room:create:after', {
-        collection: 'collection',
-        filters: 'filters',
-        index: 'index',
-        roomId: 'roomId',
-      });
+      const normalized = new NormalizedFilter([], 'roomId', 'index/collection');
+
+      kuzzle.emit('core:realtime:room:create:after', normalized);
 
       should(node.publisher.sendNewRealtimeRoom)
         .calledOnce()
-        .calledWith('roomId', 'index', 'collection', 'filters');
+        .calledWith(normalized);
 
       should(node.fullState.addRealtimeRoom)
         .calledOnce()
-        .calledWithMatch('roomId', 'index', 'collection', 'filters', {
+        .calledWithMatch('roomId', 'index', 'collection', [], {
           messageId: 'msgid',
           nodeId: 'foonode',
           subscribers: 0,

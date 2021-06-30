@@ -9,21 +9,24 @@ const { PreconditionError } = require('../../../../index');
 const BaseType = require('../../../../lib/core/validation/baseType');
 
 describe('Test: validation/types/geoShape', () => {
-  let
-    geoShapeType,
-    GeoShapeType,
-    convertDistanceStub = sinon.stub(),
-    isPoint,
-    isPolygonPart,
-    isLine,
-    isPolygon,
-    isEnvelope,
-    isPointEqual,
-    checkStructure,
-    recursiveShapeValidation;
+  let geoShapeType;
+  let GeoShapeType;
+  let convertDistanceStub = sinon.stub();
+  let isPoint;
+  let isPolygonPart;
+  let isLine;
+  let isPolygon;
+  let isEnvelope;
+  let isPointEqual;
+  let checkStructure;
+  let recursiveShapeValidation;
 
   before(() => {
-    mockrequire('koncorde', {convertDistance: convertDistanceStub});
+    mockrequire('koncorde', {
+      Koncorde: {
+        convertDistance: convertDistanceStub,
+      }
+    });
     mockrequire.reRequire('koncorde');
     GeoShapeType = rewire('../../../../lib/core/validation/types/geoShape');
 
@@ -194,21 +197,21 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return true if circle is valid', () => {
-      const
-        isPointStub = sinon.stub().returns(true),
-        allowedShapes = ['circle'],
-        shape = {
-          type: 'circle',
-          coordinates: ['some coordinates'],
-          radius: '10m'
-        };
+      const isPointStub = sinon.stub().returns(true);
+      const allowedShapes = ['circle'];
+      const shape = {
+        type: 'circle',
+        coordinates: ['some coordinates'],
+        radius: '10m'
+      };
 
       checkStructureStub.returns(true);
       convertDistanceStub.returns(10);
       GeoShapeType.__set__('isPoint', isPointStub);
 
-      should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])).be.true();
-      should(isPointStub.callCount).be.eql(1);
+      should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, []))
+        .be.true();
+      should(isPointStub).calledOnce();
     });
 
     it('should return true if circle is valid', () => {

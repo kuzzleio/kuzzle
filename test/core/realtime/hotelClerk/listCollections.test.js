@@ -13,7 +13,7 @@ describe('Test: hotelClerk.listCollections', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.koncorde.getCollections.returns([]);
+    kuzzle.koncorde.getIndexes.returns([]);
 
     hotelClerk = new HotelClerk({});
 
@@ -36,8 +36,11 @@ describe('Test: hotelClerk.listCollections', () => {
   });
 
   it('should return an array of unique collection names', () => {
-    kuzzle.koncorde.getCollections.withArgs('index').returns(['foo', 'bar']);
-    kuzzle.koncorde.getCollections.withArgs('anotherIndex').returns(['baz']);
+    kuzzle.koncorde.getIndexes.returns([
+      'index/foo',
+      'index/bar',
+      'anotherIndex/baz',
+    ]);
 
     should(hotelClerk.listCollections('index')).match(['foo', 'bar']);
   });

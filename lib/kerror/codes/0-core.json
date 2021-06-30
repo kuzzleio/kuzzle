@@ -74,7 +74,8 @@
           "description": "The number of filter terms exceeds the configured server limit",
           "code": 6,
           "message": "Unable to subscribe: maximum number of terms exceeded (max %s, received %s).",
-          "class": "SizeLimitError"
+          "class": "SizeLimitError",
+          "deprecated": "2.12.3"
         },
         "too_many_rooms": {
           "description": "The configured number of unique rooms has been reached",

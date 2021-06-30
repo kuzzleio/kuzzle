@@ -2,10 +2,11 @@
 
 const should = require('should');
 const Long = require('long');
-const { InternalError } = require('../../lib/kerror/errors');
+const { NormalizedFilter } = require('koncorde');
 
 const Kuzzle = require('../mocks/kuzzle.mock');
 
+const { InternalError } = require('../../lib/kerror/errors');
 const State = require('../../lib/cluster/state');
 
 describe('#Cluster Full State', () => {
@@ -33,24 +34,19 @@ describe('#Cluster Full State', () => {
 
       state.addRealtimeRoom('roomid', 'index', 'collection', filters, node);
 
-      should(kuzzle.koncorde.store).calledWith({
-        collection: 'collection',
-        id: 'roomid',
-        index: 'index',
-        normalized: filters,
-      });
+      should(kuzzle.koncorde.store)
+        .calledWithMatch(new NormalizedFilter(filters, 'roomid', 'index/collection'));
       kuzzle.koncorde.store.resetHistory();
 
       state.addRealtimeRoom('roomid2', 'index', 'collection', filters, node);
 
-      should(kuzzle.koncorde.store).calledWith({
-        collection: 'collection',
-        id: 'roomid2',
-        index: 'index',
-        normalized: filters,
-      });
+      should(kuzzle.koncorde.store)
+        .calledWithMatch(new NormalizedFilter(filters, 'roomid2', 'index/collection'));
+
       kuzzle.koncorde.store.resetHistory();
-      kuzzle.koncorde.hasFilter.withArgs('roomid2').returns(true);
+      kuzzle.koncorde.hasFilterId
+        .withArgs('roomid2', 'index/collection')
+        .returns(true);
 
       state.addRealtimeRoom('roomid2', 'index', 'collection', filters, node2);
 
@@ -58,12 +54,8 @@ describe('#Cluster Full State', () => {
 
       state.addRealtimeRoom('roomid3', 'index', 'collection', filters, node);
 
-      should(kuzzle.koncorde.store).calledWith({
-        collection: 'collection',
-        id: 'roomid3',
-        index: 'index',
-        normalized: filters,
-      });
+      should(kuzzle.koncorde.store)
+        .calledWithMatch(new NormalizedFilter(filters, 'roomid3', 'index/collection'));
 
       should(state.serialize().rooms).match([
         {
@@ -183,12 +175,8 @@ describe('#Cluster Full State', () => {
         subscribers: 23,
       });
 
-      should(state.getNormalizedFilters('roomid')).match({
-        collection: 'collection',
-        id: 'roomid',
-        index: 'index',
-        normalized: filters,
-      });
+      should(state.getNormalizedFilters('roomid'))
+        .match(new NormalizedFilter(filters, 'roomid', 'index/collection'));
 
       should(state.getNormalizedFilters('ohnoes')).be.null();
     });
