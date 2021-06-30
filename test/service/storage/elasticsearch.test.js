@@ -4421,6 +4421,27 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+  describe('#getSchema', () => {
+    beforeEach(() => {
+      elasticsearch._client.cat.indices.resolves({
+        body: [
+          { index: '&nepali.mehry' },
+          { index: '&nepali._kuzzle_keep' },
+          { index: '&istanbul._kuzzle_keep' }
+        ]
+      });
+    });
+
+    it('should returns the DB schema without hidden collections', async () => {
+      const schema = await elasticsearch.getSchema();
+
+      should(schema).be.eql({
+        nepali: ['mehry'],
+        istanbul: [],
+      });
+    });
+  });
+
   describe('#_createHiddenCollection', () => {
     it('creates the hidden collection', async () => {
       elasticsearch._client.indices.create.resolves({});
@@ -4568,6 +4589,7 @@ describe('Test: ElasticSearch service', () => {
       it('should extract the list of indexes and their collections', () => {
         const esIndexes = [
           '%nepali.liia', '%nepali.mehry',
+
           '&nepali.panipokari', '&nepali._kuzzle_keep',
           '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
         ];
@@ -4575,12 +4597,32 @@ describe('Test: ElasticSearch service', () => {
         const publicSchema = publicES._extractSchema(esIndexes);
         const internalSchema = internalES._extractSchema(esIndexes);
 
+        should(internalSchema).be.eql({
+          nepali: ['liia', 'mehry'],
+        });
         should(publicSchema).be.eql({
           nepali: ['panipokari'],
           vietnam: ['lfiduras'],
         });
+      });
+
+      it('should include hidden collection with the option', () => {
+        const esIndexes = [
+          '%nepali.liia', '%nepali.mehry',
+
+          '&nepali.panipokari', '&nepali._kuzzle_keep',
+          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
+        ];
+
+        const publicSchema = publicES._extractSchema(esIndexes, { includeHidden: true });
+        const internalSchema = internalES._extractSchema(esIndexes, { includeHidden: true });
+
         should(internalSchema).be.eql({
           nepali: ['liia', 'mehry'],
+        });
+        should(publicSchema).be.eql({
+          nepali: ['panipokari', '_kuzzle_keep'],
+          vietnam: ['lfiduras', '_kuzzle_keep'],
         });
       });
     });
