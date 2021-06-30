@@ -73,7 +73,7 @@ describe('ClusterSubscriber', () => {
 
       should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.BUFFERING);
 
-      should(subscriber.lastHeartbeat).be.approximately(Date.now(), 10);
+      should(subscriber.lastHeartbeat).be.approximately(Date.now(), 100);
       should(subscriber.heartbeatDelay).be.eql(localNode.heartbeatDelay * 1.5);
 
       should(subscriber.handlers).be.eql({
@@ -431,10 +431,9 @@ describe('ClusterSubscriber', () => {
     describe('#handleNewRealtimeRoom', () => {
       it('should add the room to the fullstate', async () => {
         const message = {
-          roomId: 'roomId',
-          index: 'index',
-          collection: 'collection',
-          filters: '["filters"]',
+          id: 'roomId',
+          index: 'index/collection',
+          filter: '["filters"]',
           messageId: 'messageId',
         };
 

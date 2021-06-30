@@ -471,22 +471,21 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return a treated collection specification if validators are valid', () => {
-      const
-        indexName = 'anIndex',
-        curateValidatorFilterStub = sinon.spy(function () {return Bluebird.resolve({id: 'aFilterId'});}),
-        collectionName = 'aCollection',
-        collectionSpec = {
-          validators: [
-            'some',
-            'validators'
-          ]
-        },
-        dryRun = true,
-        expectedReturn = {
-          strict: false,
-          fields: {},
-          validators: 'aFilterId'
-        };
+      const indexName = 'anIndex';
+      const curateValidatorFilterStub = sinon.stub().returns('aFilterId');
+      const collectionName = 'aCollection';
+      const collectionSpec = {
+        validators: [
+          'some',
+          'validators'
+        ]
+      };
+      const dryRun = true;
+      const expectedReturn = {
+        strict: false,
+        fields: {},
+        validators: 'aFilterId'
+      };
 
       checkAllowedPropertiesStub.returns(true);
       validation.curateValidatorFilter = curateValidatorFilterStub;
@@ -502,19 +501,17 @@ describe('Test: validation initialization', () => {
     });
 
     it('should reject an error if validators are not valid', () => {
-      const
-        indexName = 'anIndex',
-        curateValidatorFilterStub = sinon.spy(function () {return Bluebird.reject(new Error('error'));}),
-        collectionName = 'aCollection',
-        collectionSpec = {
-          validators: [
-            'bad validators'
-          ]
-        },
-        dryRun = false;
+      const indexName = 'anIndex';
+      const collectionName = 'aCollection';
+      const collectionSpec = {
+        validators: [
+          'bad validators'
+        ]
+      };
+      const dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      validation.curateValidatorFilter = curateValidatorFilterStub;
+      sinon.stub(validation, 'curateValidatorFilter').throws(new Error('error'));
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
@@ -996,60 +993,52 @@ describe('Test: validation initialization', () => {
 
   describe('#curateValidatorFilter', () => {
     it('should return a promise if everything goes as expected', () => {
-      const
-        registerStub = sinon.stub().resolves({}),
-        validateStub = sinon.stub().resolves({}),
-        indexName = 'anIndex',
-        collectionName= 'aCollection',
-        validatorFilter = [{some: 'filters'}],
-        dryRun = false,
-        expectedQuery = {
-          bool: {
-            must: validatorFilter
-          }
-        };
+      const registerStub = sinon.stub().returns({});
+      const validateStub = sinon.stub();
+      const index = 'anIndex';
+      const collection = 'aCollection';
+      const filter = [{some: 'filters'}];
+      const dryRun = false;
+      const expectedQuery = {
+        bool: {
+          must: filter
+        }
+      };
 
       validation.koncorde = {
         register: registerStub,
         validate: validateStub
       };
 
-      return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
-        .then(() => {
-          should(validateStub.callCount).be.eql(1);
-          should(validateStub.args[0][0]).be.deepEqual(expectedQuery);
-          should(registerStub.callCount).be.eql(1);
-          should(registerStub.args[0][0]).be.eql(indexName);
-          should(registerStub.args[0][1]).be.eql(collectionName);
-          should(registerStub.args[0][2]).be.deepEqual(expectedQuery);
-        });
+      validation.curateValidatorFilter(index, collection, filter, dryRun);
+      should(validateStub.callCount).be.eql(1);
+      should(validateStub.args[0][0]).be.deepEqual(expectedQuery);
+      should(registerStub)
+        .calledOnce()
+        .calledWithMatch(expectedQuery, `${index}/${collection}`);
     });
 
     it('should return a promise if everything goes as expected and avoid registration if dryRun is true', () => {
-      const
-        registerStub = sinon.stub().resolves({}),
-        validateStub = sinon.stub().resolves({}),
-        indexName = 'anIndex',
-        collectionName= 'aCollection',
-        validatorFilter = [{some: 'filters'}],
-        dryRun = true,
-        expectedQuery = {
-          bool: {
-            must: validatorFilter
-          }
-        };
+      const registerStub = sinon.stub().returns({});
+      const validateStub = sinon.stub();
+      const index = 'anIndex';
+      const collection= 'aCollection';
+      const filter = [{some: 'filters'}];
+      const dryRun = true;
+      const expectedQuery = {
+        bool: {
+          must: filter
+        }
+      };
 
       validation.koncorde = {
         register: registerStub,
         validate: validateStub
       };
 
-      return validation.curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun)
-        .then(() => {
-          should(validateStub.callCount).be.eql(1);
-          should(registerStub.callCount).be.eql(0);
-          should(validateStub.args[0][0]).be.deepEqual(expectedQuery);
-        });
+      validation.curateValidatorFilter(index, collection, filter, dryRun);
+      should(validateStub).calledOnce().calledWithMatch(expectedQuery);
+      should(registerStub).not.called();
     });
   });
 });

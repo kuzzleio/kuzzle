@@ -121,26 +121,25 @@ describe('Test: validation.validate', () => {
     });
 
     it('should trigger all validation if specification enables them', () => {
-      const
-        filterId = 'someFilter',
-        id = 'anId',
-        verbose = false,
-        documentBody = {},
-        request = new Request({
-          index,
-          collection,
-          _id: id,
-          body: documentBody
-        }),
-        specification = {
-          [index]: {
-            [collection]: {
-              strict: true,
-              fields: {children: {aField: 'validation'}},
-              validators: filterId
-            }
+      const filterId = 'someFilter';
+      const id = 'anId';
+      const verbose = false;
+      const documentBody = {};
+      const request = new Request({
+        index,
+        collection,
+        _id: id,
+        body: documentBody
+      });
+      const specification = {
+        [index]: {
+          [collection]: {
+            strict: true,
+            fields: {children: {aField: 'validation'}},
+            validators: filterId
           }
-        };
+        }
+      };
 
       validation.specification = specification;
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
@@ -155,11 +154,9 @@ describe('Test: validation.validate', () => {
           should(validation.recurseFieldValidation.args[0][2]).be.true();
           should(validation.recurseFieldValidation.args[0][3]).be.eql([]);
           should(validation.recurseFieldValidation.args[0][4]).be.eql(verbose);
-          should(validation.koncorde.test.callCount).be.eql(1);
-          should(validation.koncorde.test.args[0][0]).be.deepEqual(index);
-          should(validation.koncorde.test.args[0][1]).be.deepEqual(collection);
-          should(validation.koncorde.test.args[0][2]).be.deepEqual(documentBody);
-          should(validation.koncorde.test.args[0][3]).be.deepEqual(id);
+          should(validation.koncorde.test)
+            .calledOnce()
+            .calledWithMatch({ ...documentBody, _id: id }, `${index}/${collection}`);
         });
     });
 

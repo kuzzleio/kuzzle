@@ -64,21 +64,17 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should register a new room and customer', async () => {
-    const normalized = {
-      index: 'foo',
-      collection: 'bar',
-      id: null,
-      filters: request.input.body,
-      roomId: 'foobar'
-    };
-
     kuzzle.koncorde.normalize
-      .onFirstCall().resolves({ ...normalized, id: 'foobar' })
-      .onSecondCall().resolves({ ...normalized, id: 'barfoo' });
+      .onFirstCall().returns({id: 'foobar', index: 'foo/bar', filter: []})
+      .onSecondCall().returns({id: 'barfoo', index: 'foo/bar', filter: []});
 
     kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
+
+    kuzzle.koncorde.store
+      .onFirstCall().returns('foobar')
+      .onSecondCall().returns('barfoo');
 
     let response = await hotelClerk.subscribe(request);
 
@@ -146,7 +142,7 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.koncorde.normalize.rejects(new Error('test'));
+    kuzzle.koncorde.normalize.throws(new Error('test'));
 
     return should(hotelClerk.subscribe(request)).be.rejected();
   });
@@ -192,26 +188,6 @@ describe('Test: hotelClerk.subscribe', () => {
 
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'core.realtime.invalid_users',
-    });
-  });
-
-  it('should reject the subscription if the number of minterms exceeds the configured limit', () => {
-    kuzzle.config.limits.subscriptionMinterms = 8;
-
-    const normalized = [];
-    for (let i = 0; i < 9; i++) {
-      normalized.push([]);
-    }
-
-    kuzzle.koncorde.normalize.resolves({
-      normalized,
-      index: 'index',
-      collection: 'collection',
-      id: 'foobar',
-    });
-
-    return should(hotelClerk.subscribe(request)).rejectedWith(SizeLimitError, {
-      id: 'core.realtime.too_many_terms',
     });
   });
 
