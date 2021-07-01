@@ -48,7 +48,7 @@ Returns the internal profiles mapping, using [Elasticsearch mapping format](http
     "_meta": {
       "some": "metadata"
     },
-    "mappings": {
+    "properties": {
       "field1": {
         "type": "integer"
       }
