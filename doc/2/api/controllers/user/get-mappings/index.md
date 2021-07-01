@@ -44,8 +44,14 @@ Returns the internal profiles mapping, using [Elasticsearch mapping format](http
   "action": "getMappings",
   "requestId": "<unique request identifier>",
   "result": {
+    "dynamic": "false",
+    "_meta": {
+      "some": "metadata"
+    },
     "mappings": {
-      // ...
+      "field1": {
+        "type": "integer"
+      }
     }
   }
 }

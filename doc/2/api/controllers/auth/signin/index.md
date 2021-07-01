@@ -21,8 +21,8 @@ This method allows users with limited rights to create other accounts, but block
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<_id>/_signin[?refresh=wait_for]
-URL(2): http://kuzzle:7512/_signin[?refresh=wait_for]
+URL: http://kuzzle:7512/<_id>/_sign-in[?refresh=wait_for]
+URL(2): http://kuzzle:7512/_sign-in[?refresh=wait_for]
 Method: POST
 Body:
 ```
