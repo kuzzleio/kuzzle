@@ -636,10 +636,14 @@ describe('UserController', () => {
   });
 
   describe('#getMappings', () => {
+    const result = {
+      dynamic: 'false',
+      _meta: { some: 'metadata' },
+      properties: { foo: 'bar' },
+    };
+
     it('should fulfill with a response object', async () => {
-      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
-        properties: { foo: 'bar' },
-      });
+      kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves(result);
 
       const response = await userController.getMappings(request);
 
@@ -648,7 +652,7 @@ describe('UserController', () => {
         kuzzle.internalIndex.index,
         'users');
 
-      should(response).match({ mappings: { foo: 'bar' } });
+      should(response).match(result);
     });
   });
 

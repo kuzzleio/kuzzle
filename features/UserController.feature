@@ -173,12 +173,12 @@ Feature: User Controller
   @security @mappings
   Scenario: Get user mappings and update them
     When I successfully execute the action "user":"getMappings"
-    Then The property "mappings" of the result should match:
+    Then The property "properties" of the result should match:
       | profileIds | { type: 'keyword' } |
     When I successfully execute the action "user":"updateMappings" with args:
       | body       | { properties: { name: { type: 'keyword' } } } |
     And I successfully execute the action "user":"getMappings"
-    Then The property "mappings" of the result should match:
+    Then The property "properties" of the result should match:
       | profileIds | { type: 'keyword' } |
       | name       | { type: 'keyword' } |
 
