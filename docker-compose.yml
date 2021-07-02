@@ -85,9 +85,14 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    image: opensearchproject/opensearch:latest
     container_name: kuzzle_elasticsearch
     ports:
       - "9200:9200"
     ulimits:
       nofile: 65536
+    environment:
+      - discovery.type=single-node
+      - cluster.name=kuzzle
+      - node.name=alyx
+      - plugins.security.disabled=true
