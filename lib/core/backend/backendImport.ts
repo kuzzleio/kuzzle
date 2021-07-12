@@ -59,7 +59,7 @@ export class BackendImport extends ApplicationManager {
       }
       // If some collections have already been defined, only their last mappings will be retained
       this._application._import.mappings[index] =
-        Object.assign({}, this._application._import.mappings[index], mappings[index])
+        Object.assign({}, this._application._import.mappings[index], mappings[index]);
     }
   }
 
@@ -85,7 +85,7 @@ export class BackendImport extends ApplicationManager {
 
     // If some profiles have already been defined, only their last definition will be retained
     this._application._import.profiles =
-      Object.assign({}, this._application._import.profiles, profiles)
+      Object.assign({}, this._application._import.profiles, profiles);
   }
 
   /**
@@ -110,7 +110,7 @@ export class BackendImport extends ApplicationManager {
 
     // If some roles have already been defined, only their last definition will be retained
     this._application._import.roles =
-      Object.assign({}, this._application._import.roles, roles)
+      Object.assign({}, this._application._import.roles, roles);
   }
 
   /**
@@ -169,6 +169,6 @@ export class BackendImport extends ApplicationManager {
 
     // If some users have already been defined (before startup), only their last definition will be retained
     this._application._import.users =
-      Object.assign({}, this._application._import.users, users)
+      Object.assign({}, this._application._import.users, users);
   }
 }

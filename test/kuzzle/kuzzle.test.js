@@ -86,6 +86,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   describe('#start', () => {
     it('should init the components in proper order', async () => {
       kuzzle.install = sinon.stub().resolves(0);
+      kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
       const options = {
         import: {
           mappings: {},
@@ -113,7 +114,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.internalIndex.updateMapping('users', options.users.mappings),
+        kuzzle.internalIndex.updateMapping.withArgs('users', options.import.mappings),
         kuzzle.ask.withArgs('core:storage:public:mappings:import'),
         kuzzle.ask.withArgs('core:storage:public:mappings:import'),
         kuzzle.ask.withArgs('core:storage:public:document:import'),
