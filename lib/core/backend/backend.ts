@@ -73,12 +73,12 @@ export class Backend {
   protected _controllers = {};
   protected _plugins = {};
   protected _import = {
-    _mappings: {},
-    _onExistingUsers: 'skip',
-    _profiles: {},
-    _roles: {},
-    _userMappings: {},
-    _users: {}
+    mappings: {},
+    onExistingUsers: 'skip',
+    profiles: {},
+    roles: {},
+    userMappings: {},
+    users: {}
   };
   protected _vaultKey?: string;
   protected _secretsFile?: string;

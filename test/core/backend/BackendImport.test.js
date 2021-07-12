@@ -80,9 +80,8 @@ describe('BackendImport', () => {
 
     it('should merge collection mappings from different calls', () => {
       application.import.mappings(mappings);
-      mappings.indexA = {
-        collection3: { mappings: { properties: { fieldE: { type: 'keyword'} } } },
-      };
+      mappings.indexA.collection3 =
+        { mappings: { properties: { fieldE: { type: 'keyword'} } } };
       delete mappings.indexA.collection2;
 
       application.import.mappings(mappings);
@@ -99,7 +98,7 @@ describe('BackendImport', () => {
     it('should throw an error if mappings is not an object', () => {
       should(() => {
         application.import.mappings('not an object');
-      }).throwError({ id: 'plugin.assert.invalid_mappings' });
+      }).throwError({ id: 'validation.assert.invalid_type' });
     });
 
     it('should throw an error if the application is already started', () => {
@@ -169,7 +168,7 @@ describe('BackendImport', () => {
     it('should throw an error if profile is not an object', () => {
       should(() => {
         application.import.profiles('not an object');
-      }).throwError({ id: 'plugin.assert.invalid_profile' });
+      }).throwError({ id: 'validation.assert.invalid_type' });
     });
 
     it('should throw an error if the application is already started', () => {
@@ -236,7 +235,7 @@ describe('BackendImport', () => {
     it('should throw an error if role is not an object', () => {
       should(() => {
         application.import.roles('not an object');
-      }).throwError({ id: 'plugin.assert.invalid_role' });
+      }).throwError({ id: 'validation.assert.invalid_type' });
     });
 
     it('should throw an error if the application is already started', () => {
@@ -286,7 +285,7 @@ describe('BackendImport', () => {
     it('should throw an error if mappings is not an object', () => {
       should(() => {
         application.import.userMappings('not an object');
-      }).throwError({ id: 'plugin.assert.invalid_mappings' });
+      }).throwError({ id: 'validation.assert.invalid_type' });
     });
 
     it('should throw an error if the application is already started', () => {
@@ -352,7 +351,7 @@ describe('BackendImport', () => {
     it('should throw an error if user is not an object', () => {
       should(() => {
         application.import.users('not an object');
-      }).throwError({ id: 'plugin.assert.invalid_user' });
+      }).throwError({ id: 'validation.assert.invalid_type' });
     });
 
     it('should throw an error if the application is already started', () => {
