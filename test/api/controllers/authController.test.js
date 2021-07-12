@@ -514,12 +514,10 @@ describe('Test the auth controller', () => {
 
     it('should not expires the token if this is an API Key', async () => {
       Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey'});
-      const response = await authController.logout(request);
+      await authController.logout(request);
 
       should(kuzzle.ask)
         .not.be.calledWith('core:security:token:delete', request.context.token);
-      
-      should(response.responseObject).be.instanceof(Object);
     });
   });
 
@@ -584,7 +582,7 @@ describe('Test the auth controller', () => {
       return should(authController.logout(request)).be.rejectedWith(error);
     });
 
-    it('should not expires the token if this is an apikey', async () => {
+    it('should not expire the token if this is an apikey', async () => {
       Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey'});
       const response = await authController.logout(request);
 
