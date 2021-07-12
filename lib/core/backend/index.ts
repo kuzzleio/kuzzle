@@ -10,6 +10,8 @@ export * from './backendController';
 
 export * from './backendHook';
 
+export * from './backendImport';
+
 export * from './backendPipe';
 
 export * from './backendPlugin';

@@ -77,6 +77,14 @@ describe('Backend', () => {
         ...application._pipes['kuzzle:state:ready'],
         async () => should(application.started).be.true()
       ];
+      application._import = {
+        mappings: { indexA: { collectionA: { mappings: { fieldA: { type: 'text' } } } } },
+        onExistingUsers: 'overwrite',
+        profiles: { profileA: { policies: [{ roleId: 'roleA' }] } },
+        roles: { roleA: { controllers: { '*': { actions: { '*': true } } } } },
+        userMappings: { properties: { fieldA: { type: 'text' } } },
+        user: { content: { profileIds: ['profileA'], name: 'bar'} },
+      };
 
       await application.start();
 
@@ -98,6 +106,7 @@ describe('Backend', () => {
       should(options.fixtures).be.eql(application._support.fixtures);
       should(options.securities).be.eql(application._support.securities);
       should(options.installations).be.eql(application._installationsWaitingList);
+      should(options.import).be.eql(application._import);
     });
 
     it('should only submit the configured embedded plugins', async () => {
