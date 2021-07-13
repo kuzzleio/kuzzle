@@ -78,7 +78,7 @@ describe('Backend', () => {
         async () => should(application.started).be.true()
       ];
       application._import = {
-        mappings: { indexA: { collectionA: { mappings: { fieldA: { type: 'text' } } } } },
+        mappings: { index1: { collection1: { mappings: { fieldA: { type: 'text' } } } } },
         onExistingUsers: 'overwrite',
         profiles: { profileA: { policies: [{ roleId: 'roleA' }] } },
         roles: { roleA: { controllers: { '*': { actions: { '*': true } } } } },

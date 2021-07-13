@@ -34,7 +34,7 @@ describe('BackendImport', () => {
 
     beforeEach(() => {
       mappings = {
-        indexA: {
+        index1: {
           collection1: {
             mappings: {
               dynamic: 'strict',
@@ -59,7 +59,7 @@ describe('BackendImport', () => {
           },
           collection2: { mappings: { properties: { fieldC: { type: 'keyword'} } } },
         },
-        indexB: {
+        index2: {
           collection1: { mappings: { properties: { fieldD: { type: 'integer'} } } },
         },
       };

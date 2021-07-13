@@ -34,12 +34,12 @@ export class BackendImport extends ApplicationManager {
    *
    * Example:
    * {
-   *   indexA: {
+   *   index1: {
    *     collection1: { mappings, settings },
    *     collection2: { mappings, settings }
    *     ...
    *   },
-   *   indexB: { ... },
+   *   index2: { ... },
    *   ...
    * }
    *

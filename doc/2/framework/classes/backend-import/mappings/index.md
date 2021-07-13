@@ -32,7 +32,7 @@ mappings(mappings: JSONObject): void
 
 ```js
 app.import.mappings({
-  indexA: {
+  index1: {
     collection1: [
       {/* mappings, settings */},
       {/* mappings, settings */},
@@ -42,7 +42,7 @@ app.import.mappings({
       {/* mappings, settings */},
     ],
   },
-  indexB: {
+  index2: {
     collection1: [
       {/* mappings, settings */},
       {/* mappings, settings */},
