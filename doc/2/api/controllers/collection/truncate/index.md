@@ -19,7 +19,7 @@ Documents removed that way do not trigger real-time notifications.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_truncate
+URL: http://kuzzle:7512/<index>/<collection>/_truncate[?strategy=<documents|collection>]
 Method: DELETE
 ```
 
@@ -30,7 +30,10 @@ Method: DELETE
   "index": "<index>",
   "collection": "<collection>",
   "controller": "collection",
-  "action": "truncate"
+  "action": "truncate",
+
+  // optional
+  "strategy": "<documents|collection>"
 }
 ```
 
@@ -40,8 +43,20 @@ Method: DELETE
 
 - `collection`: collection name
 - `index`: index name
+- `strategy`: truncate strategy <SinceBadge version="auto-version" />
 
 ---
+
+### strategy
+
+<SinceBadge version="auto-version" />
+
+Two strategies are available when truncating a collection:
+  - `collection`: delete and re-create the underlaying collection
+  - `documents`: search and deletes every documents in the collection
+
+Both methods offer similar performances when truncating a collection with < 10 million documents.    
+However when truncating many collection, it's faster to use the `documents` strategy because the storage engine is able to perform those actions simultaneously.
 
 ## Response
 
