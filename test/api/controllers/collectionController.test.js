@@ -133,17 +133,6 @@ describe('Test: collection controller', () => {
         acknowledged: true
       });
     });
-
-    it('should allows to use another truncate strategy', async () => {
-      request.input.args.strategy = 'collection';
-
-      await collectionController.truncate(request);
-
-      should(kuzzle.ask).be.calledWith(
-        'core:storage:public:collection:truncate',
-        index,
-        collection);
-    });
   });
 
   describe('#getSpecifications', () => {
