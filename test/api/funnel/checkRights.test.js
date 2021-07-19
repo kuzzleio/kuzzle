@@ -132,7 +132,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token in the cookie when cookieAuth is true and internal.cookieAuthentication is true and only the cookie is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = null;
     request.input.args.cookieAuth = true;
@@ -145,7 +145,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token when cookieAuth is true and internal.cookieAuthentication is true and only the token is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
@@ -157,7 +157,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should throw security.token.verification_error when cookieAuth is true and internal.cookieAuthentication is true and both cookie that belongs to kuzzle and token are present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
@@ -168,7 +168,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should not throw security.token.verification_error when cookieAuth is true and internal.cookieAuthentication is true and both cookie that does not belongs to kuzzle and token are present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
@@ -181,7 +181,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token when cookieAuth is true and internal.cookieAuthentication is true and both cookie and token are present, but cookie is set to null', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
@@ -194,7 +194,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should not throw security.cookie.unsupported and use the token when cookieAuth is false and internal.cookieAuthentication is false and cookies are present but none of them belongs to kuzzle', async () => {
-    kuzzle.config.internal.cookieAuthentication = false;
+    kuzzle.config.http.cookieAuthentication = false;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
@@ -207,7 +207,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should throw security.cookie.unsupported when cookieAuth is true and internal.cookieAuthentication is false', async () => {
-    kuzzle.config.internal.cookieAuthentication = false;
+    kuzzle.config.http.cookieAuthentication = false;
 
     request.input.jwt = null;
     request.input.args.cookieAuth = true;
@@ -219,7 +219,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should throw security.token.verification_error when cookieAuth is false and internal.cookieAuthentication is true and both cookie and token are present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
@@ -230,7 +230,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token in the cookie when cookieAuth is false and internal.cookieAuthentication is true and only the cookie is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = null;
     request.input.args.cookieAuth = false;
@@ -243,7 +243,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token in the jwt when cookieAuth is false and internal.cookieAuthentication is true and only the token is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
@@ -255,7 +255,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should throw security.cookie.unsupported when cookieAuth is false and internal.cookieAuthentication is false and both cookie and token are present', async () => {
-    kuzzle.config.internal.cookieAuthentication = false;
+    kuzzle.config.http.cookieAuthentication = false;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
@@ -266,7 +266,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should throw security.cookie.unsupported when cookieAuth is false and internal.cookieAuthentication is false and only the cookie is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = false;
+    kuzzle.config.http.cookieAuthentication = false;
 
     request.input.jwt = null;
     request.input.args.cookieAuth = false;
@@ -277,7 +277,7 @@ describe('funnel.checkRights', () => {
   });
 
   it('should use the token in the jwt when cookieAuth is false and internal.cookieAuthentication is false and only the token is present', async () => {
-    kuzzle.config.internal.cookieAuthentication = false;
+    kuzzle.config.http.cookieAuthentication = false;
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;

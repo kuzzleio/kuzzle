@@ -179,10 +179,11 @@ When you're sending HTTP requests from a browser you can instruct Kuzzle
 to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
 This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/checkToken), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
 
-::: warning
-This only works if the option `http.accessControlAllowOrigin` is not defined to `*` in the [Kuzzle Configuration](/core/2/guides/advanced/configuration)
-:::
+You can disable the cookie authentication by setting`http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 
+::: warning
+For security reasons, cookie authentication should not be enabled if CORS config `http.accessControlAllowOrigin` contains a wildcard (`*`).
+::: 
 
 ### `local` Strategy Configuration
 

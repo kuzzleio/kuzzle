@@ -26,7 +26,7 @@ describe('core/network/httpRouter', () => {
     router = new Router();
     handler = sinon.stub().yields();
     kuzzleMock.config.internal.allowAllOrigins = true;
-    kuzzleMock.config.internal.cookieAuthentication = false;
+    kuzzleMock.config.http.cookieAuthentication = false;
   });
 
   afterEach(() => {
@@ -345,7 +345,7 @@ describe('core/network/httpRouter', () => {
     it('should register a default / route with the HEAD verb', done => {
       kuzzleMock.config.internal.allowAllOrigins = false;
       kuzzleMock.config.http.accessControlAllowOrigin = ['foo'];
-      
+
       const req = new MockHttpRequest('head', '/', '', {
         'content-type': 'application/json',
         foo: 'bar',

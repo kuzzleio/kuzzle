@@ -411,23 +411,6 @@ describe('lib/config/index.js', () => {
       ]);
     });
 
-    it('should set internal cookieAuthentication to false if * is present in accessControlAllowOrigin', () => {
-      mockedConfigContent = getcfg({
-        http: {
-          accessControlAllowOrigin: 'foo, bar, *'
-        }
-      });
-
-      const cfg = config.load();
-
-      should(cfg.http.accessControlAllowOrigin).be.eql([
-        'foo',
-        'bar',
-        '*'
-      ]);
-      should(cfg.internal.cookieAuthentication).be.false();
-    });
-
     it('should set internal allowAllOrigins to true if * is present in accessControlAllowOrigin', () => {
       mockedConfigContent = getcfg({
         http: {

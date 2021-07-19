@@ -17,9 +17,14 @@
     // * accessControlAllowHeaders:
     //    sets the default Access-Control-Allow-Headers
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    // * cookieAuthentication:
+    //    Allows browser clients to connect to Kuzzle with cookies.
+    //    /!\ This should not be allowed if the "http.accessControlAllowOrigin"
+    //    configuration contains a wildcard ("*").
     "accessControlAllowOrigin": "*",
     "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
-    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
+    "cookieAuthentication": true
   },
 
   // Kuzzle configured limits
