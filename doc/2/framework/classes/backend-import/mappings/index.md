@@ -33,20 +33,48 @@ mappings(mappings: JSONObject): void
 ```js
 app.import.mappings({
   index1: {
-    collection1: [
-      {/* mappings, settings */},
-      {/* mappings, settings */},
-    ],
-    collection2: [
-      {/* mappings, settings */},
-      {/* mappings, settings */},
-    ],
+    collection1: {
+      mappings: {
+        dynamic: 'strict',
+        _meta: {
+          field: 'value',
+        },
+        properties: {
+          fieldA: { type: 'keyword'},
+          fieldB: { type: 'integer'}
+        },
+      },
+      settings: {
+        analysis : {
+          analyzer:{
+            content:{
+              type:'custom',
+              tokenizer:'whitespace'
+            }
+          }
+        }
+      }
+    },
+    collection2: {
+      mappings: {
+        properties: {
+          fieldC: {
+            type: 'keyword'
+          }
+        }
+      }
+    },
   },
   index2: {
-    collection1: [
-      {/* mappings, settings */},
-      {/* mappings, settings */},
-    ],
+    collection1: {
+      mappings: {
+        properties: {
+          fieldD: {
+            type: 'integer'
+          }
+        }
+      }
+    },
   },
 })
 ```

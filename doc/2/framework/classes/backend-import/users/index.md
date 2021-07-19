@@ -19,7 +19,12 @@ This method can only be used before the application is started.
 :::
 
 ```ts
-users(users: JSONObject): void
+users(
+  users: JSONObject,
+  options?: {
+    onExistingUsers?: 'fail' | 'overwrite' | 'skip'
+  }
+): void
 ```
 
 <br/>
@@ -33,7 +38,23 @@ users(users: JSONObject): void
 
 ```js
 app.import.users({
-  kuidA: { /* user definition */ },
-  kuidB: { /* user definition */ },
+  kuidA: {
+    content: {
+      profileIds: ['profileA', 'profileB'],
+      name: 'foo'
+    },
+    credentials: {
+      local: { username: 'bar', password: 'foobar' }
+    }
+  },
+  kuidB: {
+    content: {
+      profileIds: ['profileA'],
+      name: 'bar'
+    },
+    credentials: {
+      local: { username: 'foo', password: 'barfoo' }
+    }
+  },
 })
 ```

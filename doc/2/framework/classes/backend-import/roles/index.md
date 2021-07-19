@@ -32,7 +32,29 @@ roles(roles: JSONObject): void
 
 ```js
 app.import.roles({
-  roleA: { /* role definition */ },
-  roleB: { /* role definition */ },
+  roleA: {
+    controllers: {
+      controllerA: {
+        actions: {
+          actionA: true,
+          actionB: false,
+        }
+      },
+      controllerB: {
+        actions: {
+          '*': true
+        }
+      },
+    }
+  },
+  roleB: {
+    controllers: {
+      '*': {
+        actions: {
+          '*': true
+        }
+      }
+    },
+  },
 })
 ```

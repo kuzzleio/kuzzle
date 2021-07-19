@@ -32,7 +32,30 @@ profiles(profiles: JSONObject): void
 
 ```js
 app.import.profiles({
-  profileA: { /* profile definition */ },
-  profileB: { /* profile definition */ },
+  profileA: {
+    rateLimit: 50,
+    policies: [
+      {
+        roleId: 'roleA'
+      },
+      {
+        roleId: 'roleB',
+        restrictedTo: [
+          {
+            index: 'indexA'
+          },
+          {
+            index: 'indexB',
+            collections: [ 'collectionA', 'collectionB']
+          }
+        ]
+      }
+    ]
+  },
+  profileB: {
+    policies: [
+      { roleId: 'roleA' }
+    ]
+  },
 })
 ```

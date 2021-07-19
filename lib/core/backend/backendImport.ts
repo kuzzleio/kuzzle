@@ -32,7 +32,7 @@ export class BackendImport extends ApplicationManager {
   /**
    * Import mappings.
    *
-   * Example:
+   * @example
    * {
    *   index1: {
    *     collection1: { mappings, settings },
@@ -66,7 +66,7 @@ export class BackendImport extends ApplicationManager {
   /**
    * Import profiles.
    *
-   * Example:
+   * @example
    * {
    *   profileA: { profile definition },
    *   profileB: { profile definition },
@@ -91,7 +91,7 @@ export class BackendImport extends ApplicationManager {
   /**
    * Import roles
    *
-   * Example:
+   * @example
    * {
    *   roleA: { role definition },
    *   roleB: { role definition },
@@ -116,7 +116,7 @@ export class BackendImport extends ApplicationManager {
   /**
    * Import user mappings.
    *
-   * Example:
+   * @example
    * {
    *   properties: {
    *     fieldA: { type: 'keyword' },
@@ -141,30 +141,33 @@ export class BackendImport extends ApplicationManager {
   /**
    * Import users.
    *
-   * Example:
+   * @example
    * {
    *   kuidA: { user content },
    *   kuidB: { user content },
    * }
    *
    * @param users Object containing users and their content
-   * @param onExistingUsers Default to `skip`. Strategy to adopt when trying to create an already existing user.
+   * @param options onExistingUsers: Default to `skip`. Strategy to adopt when trying to create an already existing user.
    */
-  users (users: JSONObject, onExistingUsers?: 'fail' | 'overwrite' | 'skip') : void {
+  users (
+    users: JSONObject,
+    options: { onExistingUsers?: 'fail' | 'overwrite' | 'skip' } = {}
+  ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }
     else if (! isPlainObject(users)) {
       throw assertionError.get('invalid_type', 'users', 'object');
     }
-    else if (onExistingUsers) {
-      if (! ['fail', 'overwrite', 'skip'].includes(onExistingUsers)) {
+    else if (options.onExistingUsers) {
+      if (! ['fail', 'overwrite', 'skip'].includes(options.onExistingUsers)) {
         throw assertionError.get(
           'invalid_type',
           'onExistingUsers',
           ['skip', 'overwrite', 'fail']);
       }
-      this._application._import.onExistingUsers = onExistingUsers;
+      this._application._import.onExistingUsers = options.onExistingUsers;
     }
 
     // If some users have already been defined (before startup), only their last definition will be retained

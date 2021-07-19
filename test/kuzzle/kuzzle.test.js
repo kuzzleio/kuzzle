@@ -89,10 +89,32 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
       const options = {
         import: {
-          mappings: {},
+          mappings: {
+            index1: {
+              collection1: {
+                mappings: {
+                  properties: {
+                    fieldA: {
+                      type: 'text'
+                    }
+                  }
+                }
+              }
+            }
+          },
           onExistingUsers: 'skip',
           profiles: {},
-          roles: {},
+          roles: {
+            roleA: {
+              controllers: {
+                '*': {
+                  actions: {
+                    '*': true
+                  }
+                }
+              },
+            }
+          },
           userMappings: {},
           user: {},
         },
@@ -114,13 +136,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.internalIndex.updateMapping.withArgs('users', options.import.mappings),
-        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
+        kuzzle.internalIndex.updateMapping.withArgs('users', options.import.userMappings),
         kuzzle.ask.withArgs('core:storage:public:mappings:import'),
         kuzzle.ask.withArgs('core:storage:public:document:import'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
-        kuzzle.ask.withArgs('core:security:load'),
         kuzzle.ask.withArgs('core:security:load'),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
@@ -201,6 +221,46 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
+    });
+
+    it('should fail when support and import are being used at the same moment', async () => {
+      const options = {
+        import: {
+          mappings: {
+            something: 'here'
+          },
+          onExistingUsers: 'skip',
+          profiles: {
+            something: 'here'
+          },
+          roles: {
+            something: 'here'
+          },
+          userMappings: {},
+          user: {
+            something: 'here'
+          },
+        },
+        installations: [],
+        mappings: {
+          something: 'here'
+        },
+        fixtures: {},
+        securities: {}
+      };
+
+      await should(kuzzle.start(application, options)).be.rejectedWith({
+        id: 'plugin.runtime.incompatible'
+      });
+
+      options.import.mappings = {};
+      options.securities = {
+        something: 'here'
+      };
+
+      await should(kuzzle.start(application, options)).be.rejectedWith({
+        id: 'plugin.runtime.incompatible'
+      });
     });
   });
 

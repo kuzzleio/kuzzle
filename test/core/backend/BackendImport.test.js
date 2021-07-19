@@ -80,18 +80,18 @@ describe('BackendImport', () => {
 
     it('should merge collection mappings from different calls', () => {
       application.import.mappings(mappings);
-      mappings.indexA.collection3 =
+      mappings.index1.collection3 =
         { mappings: { properties: { fieldE: { type: 'keyword'} } } };
-      delete mappings.indexA.collection2;
+      delete mappings.index1.collection2;
 
       application.import.mappings(mappings);
 
       should(application._import.mappings).be.deepEqual({
-        indexA: {
+        index1: {
           collection2: { mappings: { properties: { fieldC: { type: 'keyword'} } } },
-          ...mappings.indexA
+          ...mappings.index1
         },
-        indexB: mappings.indexB
+        index2: mappings.index2
       });
     });
 
@@ -129,7 +129,7 @@ describe('BackendImport', () => {
                 },
                 {
                   index: 'indexB',
-                  collections: [ 'collectionA', '<collectionB>']
+                  collections: [ 'collectionA', 'collectionB']
                 }
               ]
             }
@@ -323,7 +323,7 @@ describe('BackendImport', () => {
     });
 
     it('should handle onExistingUsers option', () => {
-      application.import.users(users, 'overwrite');
+      application.import.users(users, { onExistingUsers: 'overwrite'});
 
       should(application._import.onExistingUsers).equals('overwrite');
     });
