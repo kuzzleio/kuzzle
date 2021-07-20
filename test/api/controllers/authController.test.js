@@ -124,7 +124,7 @@ describe('Test the auth controller', () => {
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -141,7 +141,7 @@ describe('Test the auth controller', () => {
         _id: 'foobar',
         jwt: 'bar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       should(createTokenStub).calledOnce();
@@ -153,14 +153,14 @@ describe('Test the auth controller', () => {
         jwt: 'foo',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
       const token = new Token({
         _id: 'foobar#bar',
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -234,7 +234,7 @@ describe('Test the auth controller', () => {
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -287,7 +287,7 @@ describe('Test the auth controller', () => {
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -320,14 +320,14 @@ describe('Test the auth controller', () => {
         jwt: 'foo',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
       const token = new Token({
         _id: 'foobar#bar',
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -413,7 +413,7 @@ describe('Test the auth controller', () => {
         jwt: 'bar',
         userId: 'foobar',
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       createTokenStub.resolves(token);
@@ -465,7 +465,7 @@ describe('Test the auth controller', () => {
       const t = new Token({
         _id: 'foo#' + signedToken,
         userId: 'foo',
-        jwt: signedToken
+        jwt: signedToken,
       });
 
       request = new Request({
@@ -488,12 +488,12 @@ describe('Test the auth controller', () => {
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens at once', async () => {
+    it('should expire all tokens that are not API Keys at once', async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', {keepApiKeys: true});
     });
 
     it('should emit an error if the token cannot be expired', () => {
@@ -511,6 +511,14 @@ describe('Test the auth controller', () => {
         UnauthorizedError,
         {id: 'security.rights.unauthorized'});
     });
+
+    it('should not expires the token if this is an API Key', async () => {
+      Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey'});
+      await authController.logout(request);
+
+      should(kuzzle.ask)
+        .not.be.calledWith('core:security:token:delete', request.context.token);
+    });
   });
 
   describe('#logout with cookies', () => {
@@ -524,7 +532,7 @@ describe('Test the auth controller', () => {
       const t = new Token({
         _id: 'foo#' + signedToken,
         userId: 'foo',
-        jwt: signedToken
+        jwt: signedToken,
       });
 
       request = new Request({
@@ -558,12 +566,12 @@ describe('Test the auth controller', () => {
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens at once', async () => {
+    it('should expire all tokens that are not ApiKeys at once', async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo');
+      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', {keepApiKeys: true});
     });
 
     it('should emit an error if the token cannot be expired', () => {
@@ -572,6 +580,16 @@ describe('Test the auth controller', () => {
       kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
+    });
+
+    it('should not expire the token if this is an apikey', async () => {
+      Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey'});
+      const response = await authController.logout(request);
+
+      should(kuzzle.ask)
+        .not.be.calledWith('core:security:token:delete', request.context.token);
+      
+      should(response.responseObject).be.instanceof(Object);
     });
   });
 
