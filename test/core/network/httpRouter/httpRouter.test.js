@@ -80,6 +80,7 @@ describe('core/network/httpRouter', () => {
         'content-type': 'application/json',
         'Accept-Encoding': 'gzip,deflate,identity',
         'Access-Control-Allow-Methods': 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD',
+        'Access-Control-Allow-Credentials': 'true',
         'Access-Control-Allow-Headers': 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile'
       });
     });
