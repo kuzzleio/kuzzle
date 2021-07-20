@@ -182,7 +182,7 @@ This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#co
 You can disable the cookie authentication by setting`http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 
 ::: warning
-For security reasons, cookie authentication should not be enabled if CORS config `http.accessControlAllowOrigin` contains a wildcard (`*`).
+Cookie authentication does not works if `http.accessControlAllowOrigin` contains a wildcard (`*`).
 ::: 
 
 ### `local` Strategy Configuration
