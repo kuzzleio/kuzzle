@@ -181,10 +181,6 @@ This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#co
 
 You can disable the cookie authentication by setting`http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 
-::: warning
-Cookie authentication does not works if `http.accessControlAllowOrigin` contains a wildcard (`*`).
-::: 
-
 ### `local` Strategy Configuration
 
 The strategy can be configured under the `plugins.kuzzle-plugin-auth-passport-local` configuration key.
