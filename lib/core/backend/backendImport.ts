@@ -152,7 +152,7 @@ export class BackendImport extends ApplicationManager {
    */
   users (
     users: JSONObject,
-    options: { onExistingUsers?: 'fail' | 'overwrite' | 'skip' } = {}
+    options: { onExistingUsers?: 'overwrite' | 'skip' } = {}
   ) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
@@ -161,11 +161,11 @@ export class BackendImport extends ApplicationManager {
       throw assertionError.get('invalid_type', 'users', 'object');
     }
     else if (options.onExistingUsers) {
-      if (! ['fail', 'overwrite', 'skip'].includes(options.onExistingUsers)) {
+      if (! (options.onExistingUsers === 'overwrite' || options.onExistingUsers === 'skip')) {
         throw assertionError.get(
           'invalid_type',
           'onExistingUsers',
-          ['skip', 'overwrite', 'fail']);
+          ['overwrite', 'skip']);
       }
       this._application._import.onExistingUsers = options.onExistingUsers;
     }

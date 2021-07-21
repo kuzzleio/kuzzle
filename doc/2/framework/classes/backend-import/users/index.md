@@ -22,7 +22,7 @@ This method can only be used before the application is started.
 users(
   users: JSONObject,
   options?: {
-    onExistingUsers?: 'fail' | 'overwrite' | 'skip'
+    onExistingUsers?: 'overwrite' | 'skip'
   }
 ): void
 ```
@@ -32,7 +32,11 @@ users(
 | Argument          | Type                                     | Description                   |
 |-------------------|------------------------------------------|-------------------------------|
 | `users`           | <pre>JSONObject</pre>                    | Object containing users and their [definitions](/core/2/guides/main-concepts/permissions#users). |
-| `onExistingUsers` | <pre>[`fail`, `overwrite`, `skip`]</pre> | Default to `skip`. Strategy to adopt when trying to import an already existing user.
+| `onExistingUsers` | <pre>[`overwrite`, `skip`]</pre>         | Default to `skip`. Strategy to adopt when trying to import an already existing user.
+
+::: warning
+`onExistingUsers` option applies globally for every user import even when not given in this specific call.
+:::
 
 ## Usage
 
