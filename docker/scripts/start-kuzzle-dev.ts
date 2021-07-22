@@ -213,32 +213,82 @@ if (process.env.SECRETS_FILE_PREFIX) {
 app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
-// ensure role and profiles loading at startup is working
-app._support.securities = {
-  profiles: {
-    reader: {
-      policies: [
-        {
-          roleId: 'reader',
-        }
-      ]
-    }
-  },
-  roles: {
-    reader: {
-      controllers: {
-        document: {
-          actions: {
-            get: true,
-            mGet: true,
-            search: true,
-            scroll: true,
-          }
-        }
+// Ensure imports before startup are working
+app.import.mappings({
+  index1: {
+    collection1: {
+      mappings: {
+        dynamic: 'strict',
+        _meta: { field: 'value' },
+        properties: { fieldA: { type: 'keyword'}, fieldB: { type: 'integer'} },
+      },
+      settings: {
+        analysis : { analyzer: { content: { type: 'custom', tokenizer: 'whitespace' } } }
       }
+    },
+    collection2: {
+      mappings: { properties: { fieldC: { type: 'keyword'} } }
+    },
+  },
+  index2: {
+    collection1: {
+      mappings: { properties: { fieldD: { type: 'integer'} } }
+    },
+  },
+})
+
+app.import.profiles({
+  profileA: {
+    rateLimit: 50,
+    policies: [{
+        roleId: 'roleB',
+        restrictedTo: [
+          { index: 'index1', collections: [ 'collection1', 'collection2'] },
+        ]
+    }]
+  },
+  profileB: {
+    policies: [{ roleId: 'roleA' }]
+  },
+})
+
+app.import.roles({
+  roleA: {
+    controllers: {
+      document: {
+        actions: {
+          create: true,
+          get: true,
+        }
+      },
+      cluster: { actions: { '*': true } },
     }
   },
-};
+  roleB: {
+    controllers: { '*': { actions: { '*': true } } },
+  },
+})
+
+app.import.userMappings({
+  properties: {
+    name: { type: 'keyword' },
+  }
+})
+
+app.import.users({
+  userA: {
+    content: {
+      profileIds: ['profileA', 'profileB'],
+      name: 'foo'
+    },
+    credentials: {
+      local: { username: 'bar', password: 'foobar' }
+    }
+  },
+  userB: {
+    content: { profileIds: ['profileA'], name: 'bar'}
+  },
+}, { onExistingUsers: 'overwrite' })
 
 loadAdditionalPlugins()
   .then(() => app.start())

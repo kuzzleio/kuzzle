@@ -56,7 +56,9 @@ Before(({ timeout: 10 * 1000 }), async function () {
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
+});
 
+Before(({ tags: 'not @preserveDatabase' }), async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'resetDatabase',

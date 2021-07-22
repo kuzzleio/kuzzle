@@ -42,10 +42,10 @@ app.import.profiles({
         roleId: 'roleB',
         restrictedTo: [
           {
-            index: 'indexA'
+            index: 'index1'
           },
           {
-            index: 'indexB',
+            index: 'index2',
             collections: [ 'collectionA', 'collectionB']
           }
         ]

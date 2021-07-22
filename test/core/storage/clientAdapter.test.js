@@ -427,9 +427,11 @@ describe('#core/storage/ClientAdapter', () => {
         mappings = {
           index: {
             collection: {
-              properties: {
-                foo: 'bar',
-                baz: 'qux',
+              mappings: {
+                properties: {
+                  foo: 'bar',
+                  baz: 'qux',
+                },
               },
             },
           },
@@ -444,9 +446,7 @@ describe('#core/storage/ClientAdapter', () => {
 
           should(adapter.client.createIndex).calledWith('index');
           should(adapter.client.createCollection)
-            .calledWith('index', 'collection', {
-              mappings: mappings.index.collection,
-            });
+            .calledWith('index', 'collection', mappings.index.collection );
 
           should(adapter.cache.addIndex).calledWith('index');
           should(adapter.cache.addCollection).calledWith('index', 'collection');
@@ -455,6 +455,28 @@ describe('#core/storage/ClientAdapter', () => {
           should(mutex.resource).eql('loadMappings');
           should(mutex.lock).calledOnce();
           should(mutex.unlock).calledOnce();
+        }
+      });
+
+      it('should handle rawMappings option', async () => {
+        const rawMappings = {
+          index: {
+            collection: {
+              properties: {
+                foo: 'bar',
+                baz: 'qux',
+              },
+            },
+          },
+        };
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:mappings:import`,
+            rawMappings,
+            { rawMappings: true });
+
+          should(adapter.client.createCollection)
+            .calledWith('index', 'collection', mappings.index.collection );
         }
       });
 
