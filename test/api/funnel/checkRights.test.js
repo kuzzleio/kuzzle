@@ -91,7 +91,7 @@ describe('funnel.checkRights', () => {
     should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
   });
 
-  it('should forward a token:verify exception', async () => {
+  it('should forward a token:verify exception and trigger event', async () => {
     const error = new Error('foo');
 
     verifyTokenStub.rejects(error);
@@ -102,7 +102,7 @@ describe('funnel.checkRights', () => {
     should(getUserEvent).not.called();
 
     should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
-    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+    should(kuzzle.pipe).be.calledWith('request:onUnauthorized', request);
   });
 
   it('should forward a user:get exception', async () => {
