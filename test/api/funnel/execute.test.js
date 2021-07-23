@@ -131,17 +131,7 @@ describe('funnelController.execute', () => {
       });
     });
 
-    it('should immediately reject requests with an origin not matching the configured accessControlAllowOrigin', done => {
-      kuzzle.config.internal = {
-        allowAllOrigins: false
-      };
-
-      kuzzle.config.http = {
-        accessControlAllowOrigin: [
-          'foo'
-        ]
-      };
-
+    it('should immediately reject requests with an unauthorized origin', done => {
       request = new Request({controller: 'foo', action: 'bar'}, {
         connection: {id: 'connectionid'},
         token: null
@@ -149,10 +139,12 @@ describe('funnelController.execute', () => {
       request.input.headers = {
         origin: 'foobar',
       };
-      
 
+      funnel._isOriginAuthorized = sinon.stub().returns(false);
+      
       funnel.execute(request, (err, res) => {
         try {
+          should(funnel._isOriginAuthorized).be.calledWith('foobar');
           should(err).be.instanceOf(UnauthorizedError);
           should(err.id).eql('api.process.unauthorized_origin');
           should(err.message).eql('The origin "foobar" is not authorized.');
@@ -165,17 +157,7 @@ describe('funnelController.execute', () => {
       });
     });
 
-    it('should not reject requests with an origin matching the configured accessControlAllowOrigin', done => {
-      kuzzle.config.internal = {
-        allowAllOrigins: false
-      };
-
-      kuzzle.config.http = {
-        accessControlAllowOrigin: [
-          'foo'
-        ]
-      };
-
+    it('should not reject requests with an authorized origin', done => {
       request = new Request({controller: 'foo', action: 'bar'}, {
         connection: {id: 'connectionid'},
         token: null
@@ -183,10 +165,13 @@ describe('funnelController.execute', () => {
       request.input.headers = {
         origin: 'foo',
       };
+
+      funnel._isOriginAuthorized = sinon.stub().returns(true);
       
 
       funnel.execute(request, (err) => {
         try {
+          should(funnel._isOriginAuthorized).be.calledWith('foo');
           should(err).be.null();
           done();
         }
@@ -197,10 +182,6 @@ describe('funnelController.execute', () => {
     });
 
     it('should not reject requests with a missing origin', done => {
-      kuzzle.config.internal = {
-        allowAllOrigins: false
-      };
-
       kuzzle.config.http = {
         accessControlAllowOrigin: [
           'foo'
@@ -212,37 +193,6 @@ describe('funnelController.execute', () => {
         token: null
       });
       request.input.headers = {};
-      
-
-      funnel.execute(request, (err) => {
-        try {
-          should(err).be.null();
-          done();
-        }
-        catch (e) {
-          done(e);
-        }
-      });
-    });
-
-    it('should not reject requests with an origin when the configured accessControlAllowOrigin contains *', done => {
-      kuzzle.config.internal = {
-        allowAllOrigins: true
-      };
-
-      kuzzle.config.http = {
-        accessControlAllowOrigin: [
-          '*'
-        ]
-      };
-
-      request = new Request({controller: 'foo', action: 'bar'}, {
-        connection: {id: 'connectionid'},
-        token: null
-      });
-      request.input.headers = {
-        origin: 'foo',
-      };
       
 
       funnel.execute(request, (err) => {

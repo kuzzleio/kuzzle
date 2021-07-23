@@ -141,6 +141,7 @@ describe('lib/core/core/network/entryPoint', () => {
       });
 
       entrypoint.execute({}, request, response => {
+        should(kuzzle.pipe).be.calledWith('funnel:beforeRequestExecution', request);
         should(entrypoint.logAccess)
           .be.calledOnce()
           .be.calledWith({}, request);
@@ -158,9 +159,21 @@ describe('lib/core/core/network/entryPoint', () => {
 
       const request = new Request({});
       entrypoint.execute({}, request, response => {
+        should(kuzzle.pipe).be.calledWith('funnel:beforeRequestExecution', request);
         should(response.content.error)
           .be.eql(error);
 
+        done();
+      });
+    });
+
+    it('should try to return an error if funnel:beforeRequestExecution throws', (done) => {
+      const request = new Request({});
+      const error = new KuzzleInternalError('test');
+      kuzzle.pipe.withArgs('funnel:beforeRequestExecution').rejects(error);
+      entrypoint.execute({}, request, response => {
+        should(response.content.error)
+          .be.eql(error);
         done();
       });
     });
