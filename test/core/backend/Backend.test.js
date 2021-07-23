@@ -102,11 +102,9 @@ describe('Backend', () => {
       should(options.vaultKey).be.eql(application._vaultKey);
       should(options.plugins)
         .have.keys('kuzzle-plugin-logger', 'kuzzle-plugin-auth-passport-local');
-      should(options.mappings).be.eql(application._support.mappings);
-      should(options.fixtures).be.eql(application._support.fixtures);
-      should(options.securities).be.eql(application._support.securities);
       should(options.installations).be.eql(application._installationsWaitingList);
       should(options.import).be.eql(application._import);
+      should(options.support).be.eql(application._support);
     });
 
     it('should only submit the configured embedded plugins', async () => {

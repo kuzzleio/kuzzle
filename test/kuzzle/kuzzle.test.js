@@ -85,8 +85,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      kuzzle.install = sinon.stub().resolves(0);
-      kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
+      kuzzle.install = sinon.stub().resolves();
+      kuzzle.import = sinon.stub().resolves();
       const options = {
         import: {
           mappings: {
@@ -119,9 +119,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           user: {},
         },
         installations: [{ id: 'foo', handler: () => {} }],
-        mappings: {},
-        fixtures: {},
-        securities: {}
+        support: {
+          mappings: {},
+          fixtures: {},
+          securities: {}
+        }
       };
 
       should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
@@ -136,12 +138,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.internalIndex.updateMapping.withArgs('users', options.import.userMappings),
-        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
-        kuzzle.ask.withArgs('core:storage:public:document:import'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
-        kuzzle.ask.withArgs('core:security:load'),
+        kuzzle.import.withArgs(options.import, options.support),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.install.withArgs(options.installations),
@@ -242,11 +241,13 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           },
         },
         installations: [],
-        mappings: {
-          something: 'here'
-        },
-        fixtures: {},
-        securities: {}
+        support: {
+          mappings: {
+            something: 'here'
+          },
+          fixtures: {},
+          securities: {}
+        }
       };
 
       await should(kuzzle.start(application, options)).be.rejectedWith({
@@ -254,7 +255,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       });
 
       options.import.mappings = {};
-      options.securities = {
+      options.support.securities.roles = {
         something: 'here'
       };
 
