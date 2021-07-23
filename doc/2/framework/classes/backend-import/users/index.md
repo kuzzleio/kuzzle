@@ -62,3 +62,7 @@ app.import.users({
   },
 })
 ```
+
+::: warning
+Users definition and especially their credentials are sensitive data that should not be hardcoded directly in the app.
+:::
