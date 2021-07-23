@@ -293,13 +293,11 @@ export class Backend {
     application.commit = this.commit;
 
     const options = {
-      fixtures: this._support.fixtures,
       import: this._import,
       installations: this._installationsWaitingList,
-      mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
-      securities: this._support.securities,
+      support: this._support,
       vaultKey: this._vaultKey,
     };
 
