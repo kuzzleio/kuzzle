@@ -431,5 +431,59 @@ describe('funnelController.execute', () => {
       });
     });
   });
+
+  describe('#_isOriginAuthorized', () => {
+    it('should be true when config.internal.allowAllOrigins is true', () => {
+      kuzzle.config.internal = {
+        allowAllOrigins: true
+      };
+
+      should(funnel._isOriginAuthorized('foo')).be.true();
+    });
+
+    it('should be false when the origin is not included in config.http.accessControlAllowOrigin', () => {
+      kuzzle.config.internal = {
+        allowAllOrigins: false
+      };
+
+      kuzzle.config.http.accessControlAllowOrigin = ['foo','bar'];
+      kuzzle.config.http.accessControlAllowOriginUseRegExp = false;
+
+      should(funnel._isOriginAuthorized('foobar')).be.false();
+    });
+
+    it('should be true when the origin is included in config.http.accessControlAllowOrigin', () => {
+      kuzzle.config.internal = {
+        allowAllOrigins: false
+      };
+
+      kuzzle.config.http.accessControlAllowOrigin = ['foo','bar'];
+      kuzzle.config.http.accessControlAllowOriginUseRegExp = false;
+
+      should(funnel._isOriginAuthorized('bar')).be.true();
+    });
+
+    it('should be false when the origin does not match any regular expressions pattern in config.http.accessControlAllowOrigin', () => {
+      kuzzle.config.internal = {
+        allowAllOrigins: false
+      };
+
+      kuzzle.config.http.accessControlAllowOrigin = [/bar/, /foo(bar)?/];
+      kuzzle.config.http.accessControlAllowOriginUseRegExp = true;
+
+      should(funnel._isOriginAuthorized('baz')).be.false();
+    });
+
+    it('should be true when the origin does match a regular expressions pattern in config.http.accessControlAllowOrigin', () => {
+      kuzzle.config.internal = {
+        allowAllOrigins: false
+      };
+
+      kuzzle.config.http.accessControlAllowOrigin = [/bar/, /foo(bar)?/];
+      kuzzle.config.http.accessControlAllowOriginUseRegExp = true;
+
+      should(funnel._isOriginAuthorized('foobar')).be.true();
+    });
+  });
 });
 
