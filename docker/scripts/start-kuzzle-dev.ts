@@ -8,6 +8,7 @@ import { omit } from 'lodash';
 
 import { Backend, KuzzleRequest, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
+import functionalFixtures from '../../features/fixtures/imports.json';
 
 const app = new Backend('functional-tests-app');
 
@@ -214,81 +215,11 @@ app.vault.file = vaultfile;
 app.vault.key = 'secret-password';
 
 // Ensure imports before startup are working
-app.import.mappings({
-  index1: {
-    collection1: {
-      mappings: {
-        dynamic: 'strict',
-        _meta: { field: 'value' },
-        properties: { fieldA: { type: 'keyword'}, fieldB: { type: 'integer'} },
-      },
-      settings: {
-        analysis : { analyzer: { content: { type: 'custom', tokenizer: 'whitespace' } } }
-      }
-    },
-    collection2: {
-      mappings: { properties: { fieldC: { type: 'keyword'} } }
-    },
-  },
-  index2: {
-    collection1: {
-      mappings: { properties: { fieldD: { type: 'integer'} } }
-    },
-  },
-})
-
-app.import.profiles({
-  profileA: {
-    rateLimit: 50,
-    policies: [{
-        roleId: 'roleB',
-        restrictedTo: [
-          { index: 'index1', collections: [ 'collection1', 'collection2'] },
-        ]
-    }]
-  },
-  profileB: {
-    policies: [{ roleId: 'roleA' }]
-  },
-})
-
-app.import.roles({
-  roleA: {
-    controllers: {
-      document: {
-        actions: {
-          create: true,
-          get: true,
-        }
-      },
-      cluster: { actions: { '*': true } },
-    }
-  },
-  roleB: {
-    controllers: { '*': { actions: { '*': true } } },
-  },
-})
-
-app.import.userMappings({
-  properties: {
-    name: { type: 'keyword' },
-  }
-})
-
-app.import.users({
-  userA: {
-    content: {
-      profileIds: ['profileA', 'profileB'],
-      name: 'foo'
-    },
-    credentials: {
-      local: { username: 'bar', password: 'foobar' }
-    }
-  },
-  userB: {
-    content: { profileIds: ['profileA'], name: 'bar'}
-  },
-}, { onExistingUsers: 'overwrite' })
+app.import.mappings(functionalFixtures.mappings)
+app.import.profiles(functionalFixtures.profiles)
+app.import.roles(functionalFixtures.roles)
+app.import.userMappings(functionalFixtures.userMappings)
+app.import.users(functionalFixtures.users, { onExistingUsers: 'overwrite' })
 
 loadAdditionalPlugins()
   .then(() => app.start())

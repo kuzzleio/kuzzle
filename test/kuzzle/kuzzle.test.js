@@ -88,42 +88,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       kuzzle.install = sinon.stub().resolves();
       kuzzle.import = sinon.stub().resolves();
       const options = {
-        import: {
-          mappings: {
-            index1: {
-              collection1: {
-                mappings: {
-                  properties: {
-                    fieldA: {
-                      type: 'text'
-                    }
-                  }
-                }
-              }
-            }
-          },
-          onExistingUsers: 'skip',
-          profiles: {},
-          roles: {
-            roleA: {
-              controllers: {
-                '*': {
-                  actions: {
-                    '*': true
-                  }
-                }
-              },
-            }
-          },
-          userMappings: {},
-          user: {},
-        },
+        import: { something: 'here' },
         installations: [{ id: 'foo', handler: () => {} }],
-        support: {
-          mappings: {},
-          fixtures: {},
-          securities: {}
-        }
+        support: { something: 'here' }
       };
 
       should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
@@ -220,48 +187,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
-    });
-
-    it('should fail when support and import are being used at the same moment', async () => {
-      const options = {
-        import: {
-          mappings: {
-            something: 'here'
-          },
-          onExistingUsers: 'skip',
-          profiles: {
-            something: 'here'
-          },
-          roles: {
-            something: 'here'
-          },
-          userMappings: {},
-          user: {
-            something: 'here'
-          },
-        },
-        installations: [],
-        support: {
-          mappings: {
-            something: 'here'
-          },
-          fixtures: {},
-          securities: {}
-        }
-      };
-
-      await should(kuzzle.start(application, options)).be.rejectedWith({
-        id: 'plugin.runtime.incompatible'
-      });
-
-      options.import.mappings = {};
-      options.support.securities.roles = {
-        something: 'here'
-      };
-
-      await should(kuzzle.start(application, options)).be.rejectedWith({
-        id: 'plugin.runtime.incompatible'
-      });
     });
   });
 
@@ -364,6 +289,68 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         { id: 'id' });
       should(handler).not.be.called();
       should(kuzzle.log.info).not.be.called();
+    });
+  });
+
+  describe('#import', () => {
+    let toImport;
+    let toSupport;
+
+    beforeEach(() => {
+      toImport = {
+        mappings: { something: 'here' },
+        onExistingUsers: 'skip',
+        profiles: { something: 'here' },
+        roles: { something: 'here' },
+        userMappings: { something: 'here' },
+        user: { something: 'here' },
+      };
+      toSupport = {
+        mappings: { something: 'here' },
+        fixtures: { something: 'here' },
+        securities: {
+          profiles: { something: 'here' },
+          roles: { something: 'here' },
+          user: { something: 'here' }
+        }
+      };
+
+      kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
+    });
+
+    it('should load correctly toImport mappings and securities', async () => {
+      await kuzzle.import(toImport, {});
+
+      should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings);
+      should(kuzzle.ask).calledWith('core:security:load',
+        {
+          profiles: toImport.profiles,
+          roles: toImport.roles,
+          users: toImport.users,
+        },
+        { onExistingUsers: toImport.onExistingUsers });
+    });
+
+    it('should load correctly toSupport mappings, fixtures and securities', async () => {
+      await kuzzle.import({}, toSupport);
+
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings);
+      should(kuzzle.ask).calledWith('core:storage:public:document:import', toSupport.fixtures);
+      should(kuzzle.ask).calledWith('core:security:load', toSupport.securities);
+    });
+
+    it('should prevent mappings to be loaded from import and support simultaneously', () => {
+      return should(kuzzle.import(toImport, { mappings: { something: 'here' } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
+    });
+
+    it('should prevent securities to be loaded from import and support simultaneously', () => {
+      return should(
+        kuzzle.import(
+          { profiles: { something: 'here' } },
+          { securities: { roles: { something: 'here'} } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
   });
 });
