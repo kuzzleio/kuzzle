@@ -297,7 +297,7 @@ export class Backend {
       installations: this._installationsWaitingList,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
-      support: this._support,
+      support: this._support, // NOSONAR
       vaultKey: this._vaultKey,
     };
 
