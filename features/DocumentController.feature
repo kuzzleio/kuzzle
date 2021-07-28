@@ -249,6 +249,45 @@ Feature: Document Controller
     And The document "document-2" content match:
       | name | "document2" |
 
+  # document:createOrReplace ==================================================
+
+  @mappings
+  Scenario: CreateOrReplace on a non existing document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"createOrReplace" with args:
+      | index      | "nyc-open-data"         |
+      | collection | "yellow-taxi"           |
+      | _id        | "document-1"            |
+      | body       | { "name": "document1" } |
+    Then I should receive a result matching:
+      | _id     | "document-1"             |
+      | _source | { "name": "document1" }  |
+      | created | true                     |
+    And I refresh the collection
+    And I count 1 documents
+    And The document "document-1" content match:
+      | name | "document1" |
+  
+  @mappings
+  Scenario: CreateOrReplace on an existing document
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+    When I successfully execute the action "document":"createOrReplace" with args:
+      | index      | "nyc-open-data"         |
+      | collection | "yellow-taxi"           |
+      | _id        | "document-1"            |
+      | body       | { "name": "replaced1" } |
+    Then I should receive a result matching:
+      | _id     | "document-1"             |
+      | _source | { "name": "replaced1" }  |
+      | created | false                    |
+    And I refresh the collection
+    And I count 1 documents
+    And The document "document-1" content match:
+      | name | "replaced1" |
+
   # document:mCreateOrReplace ==================================================
 
   @mappings
@@ -262,9 +301,9 @@ Feature: Document Controller
       | "document-1" | { "name": "replaced1" } |
       | -            | { "name": "document2" } |
     Then I should receive a "successes" array of objects matching:
-      | _id          | _source                 | status | result    |
-      | "document-1" | { "name": "replaced1" } | 200    | "updated" |
-      | -            | { "name": "document2" } | 201    | "created" |
+      | _id          | _source                 | status | result    | created |
+      | "document-1" | { "name": "replaced1" } | 200    | "updated" | false   |
+      | -            | { "name": "document2" } | 201    | "created" | true    |
     And I should receive a empty "errors" array
     And I refresh the collection
     And I count 2 documents
