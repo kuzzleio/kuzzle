@@ -659,7 +659,7 @@ describe('Test: ElasticSearch service', () => {
           _id: 'liia',
           _version: 1,
           _source: { city: 'Kathmandu' },
-          created: true
+          result: 'created'
         }
       });
     });
