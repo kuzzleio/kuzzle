@@ -4536,9 +4536,8 @@ describe('Test: ElasticSearch service', () => {
   });
 
   describe('Collection emulation utils', () => {
-    let
-      internalES,
-      publicES;
+    let internalES;
+    let publicES;
 
     beforeEach(() => {
       publicES = new ES(kuzzle.config.services.storageEngine);
@@ -4552,16 +4551,223 @@ describe('Test: ElasticSearch service', () => {
         const publicESIndex = publicES._getESIndex('nepali', 'liia');
         const internalESIndex = internalES._getESIndex('nepali', 'mehry');
 
+        should(publicESIndex).be.eql('@&nepali.liia');
+        should(internalESIndex).be.eql('@%nepali.mehry');
+      });
+    });
+
+    describe('#_getESIndexFromAlias', () => {
+      let body;
+
+      it('return the esIndex name associated to an alias (index+collection)', async () => {
+        body = [{ alias: '@&nepali.liia', index: '&nepali.lia', filter: 0 }];
+        elasticsearch._client.cat.aliases.resolves({ body });
+
+        const publicESIndex = await publicES._getESIndexFromAlias('nepali', 'liia');
+
+        should(publicESIndex).be.eql('&nepali.lia');
+
+
+        body = [{ alias: '@%nepali.mehry', index: '%nepalu.mehry', filter: 0 }];
+        elasticsearch._client.cat.aliases.resolves({ body });
+
+        const internalESIndex = await internalES._getESIndexFromAlias('nepali', 'mehry');
+
+        should(internalESIndex).be.eql('%nepalu.mehry');
+      });
+
+      it('throw if there is no ES index associated with the alias', async () => {
+        elasticsearch._client.cat.aliases.resolves({ body: [] });
+
+        await should(publicES._getESIndexFromAlias('nepali', 'liia'))
+          .be.rejectedWith({ id: 'service.storage.unknown_index_collection'});
+
+        await should(internalES._getESIndexFromAlias('nepali', 'mehry'))
+          .be.rejectedWith({ id: 'service.storage.unknown_index_collection'});
+      });
+
+      it('throw if there is more than one ES index associated with the alias', async () => {
+        body = [
+          { alias: '@&nepali.liia', index: '&nepali.lia', filter: 0 },
+          { alias: '@&nepali.liia', index: '&nepali.liia', filter: 0 },
+        ];
+        elasticsearch._client.cat.aliases.resolves({ body });
+
+        await should(publicES._getESIndexFromAlias('nepali', 'liia'))
+          .be.rejectedWith({ id: 'service.storage.multiple_index_alias'});
+
+
+        body = [
+          { alias: '@%nepali.mehry', index: '%nepalu.mehry', filter: 0 },
+          { alias: '@%nepali.mehry', index: '%nepali.mehry', filter: 0 }
+        ];
+        elasticsearch._client.cat.aliases.resolves({ body });
+
+        await should(internalES._getESIndexFromAlias('nepali', 'mehry'))
+          .be.rejectedWith({ id: 'service.storage.multiple_index_alias'});
+      });
+    });
+
+    describe('#_getAliasFromESIndex', () => {
+      let body;
+
+      it('return the alias associated with an esIndex', async () => {
+        body = {
+          ['&nepali.lia']: {
+            aliases: {
+              ['@&nepali.liia']: {}
+            }
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        const publicESIndex = await publicES._getAliasFromESIndex('&nepali.lia');
+
+        should(publicESIndex).be.eql('@&nepali.liia');
+
+
+        body = {
+          ['%nepalu.mehry']: {
+            aliases: {
+              ['@%nepali.mehry']: {}
+            }
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        const internalESIndex = await internalES._getAliasFromESIndex('%nepalu.mehry');
+
+        should(internalESIndex).be.eql('@%nepali.mehry');
+      });
+
+      it('throw if there is no alias associated with the ES index', async () => {
+        body = {
+          ['&nepali.lia']: {
+            aliases: {}
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        await should(publicES._getAliasFromESIndex('&nepali.lia'))
+          .be.rejectedWith({ id: 'service.storage.unknown_index_collection'});
+
+
+        body = {
+          ['%nepalu.mehry']: {
+            aliases: {}
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        await should(internalES._getAliasFromESIndex('%nepalu.mehry'))
+          .be.rejectedWith({ id: 'service.storage.unknown_index_collection'});
+      });
+
+      it('throw if there is more than one alias associated with the ES index', async () => {
+        body = {
+          ['&nepali.lia']: {
+            aliases: {
+              ['@&nepali.liia']: {},
+              ['@&nepali.lia']: {}
+            }
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        await should(publicES._getAliasFromESIndex('&nepali.lia'))
+          .be.rejectedWith({ id: 'service.storage.multiple_index_alias'});
+
+
+        body = {
+          ['%nepalu.mehry']: {
+            aliases: {
+              ['@%nepali.mehry']: {},
+              ['@%nepalu.mehry']: {}
+            }
+          }
+        };
+        elasticsearch._client.indices.getAlias.resolves({ body });
+
+        await should(internalES._getAliasFromESIndex('%nepalu.mehry'))
+          .be.rejectedWith({ id: 'service.storage.multiple_index_alias'});
+      });
+    });
+
+    describe('#_getSafeESIndex and _isESIndexAvailable', () => {
+      it('return raw ES index whenever it is possible', async () => {
+        elasticsearch._client.indices.get.resolves({ body: [] });
+
+        const publicESIndex = await publicES._getSafeESIndex('nepali', 'liia');
+        const internalESIndex = await internalES._getSafeESIndex('nepali');
+
         should(publicESIndex).be.eql('&nepali.liia');
-        should(internalESIndex).be.eql('%nepali.mehry');
+        should(internalESIndex).be.eql('%nepali._kuzzle_keep');
+      });
+
+      it('return random ES Index if necessary', async () => {
+        elasticsearch._client.indices.get
+          .onFirstCall().resolves({ body: [{index: '&nepali.liia'}] })
+          .resolves({ body: [] });
+
+        const publicESIndex = await publicES._getSafeESIndex('nepali', 'liia');
+
+        elasticsearch._client.indices.get
+          .onFirstCall().resolves({ body: [{index: '%nepali.mehry'}] })
+          .resolves({ body: [] });
+
+        const internalESIndex = await internalES._getSafeESIndex('nepali', 'mehry');
+
+        should(publicESIndex).match(/&([a-z]*).([a-z]*)/);
+        should(internalESIndex).match(/%([a-z]*).([a-z]*)/);
+      });
+    });
+
+    describe('#_ensureAliasConsistency', () => {
+      beforeEach(() => {
+        elasticsearch._client.indices.updateAliases.resolves();
+        elasticsearch._client.cat.indices.resolves({ body: [
+          { index: '&nepali.liia', status: 'open' },
+          { index: '%nepali.liia', status: 'open' },
+          { index: '&nepali.mehry', status: 'open' },
+          { index: '%nepali.mehry', status: 'open' },
+        ]});
+        elasticsearch._client.cat.aliases.resolves({ body: [
+          { alias: '@&nepali.lia', index: '&nepali.liia', filter: 0 },
+        ]});
+      });
+
+      it('Find indexes without alias and create aliases accordingly', async () => {
+        await publicES._ensureAliasConsistency();
+
+        should(elasticsearch._client.indices.updateAliases).be.calledWith({
+          actions : [
+            { add : { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
+          ]
+        });
+
+        await internalES._ensureAliasConsistency();
+
+        should(elasticsearch._client.indices.updateAliases).be.calledWith({
+          actions : [
+            { add : { alias: '@%nepali.liia', index: '%nepali.liia' } },
+            { add : { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
+          ]
+        });
       });
     });
 
     describe('#_extractIndex', () => {
-      it('extract the index name from esIndex name', () => {
-        const
-          publicIndex = publicES._extractIndex('&nepali.liia'),
-          internalIndex = internalES._extractIndex('%nepali.liia');
+      it('extract the index name from alias index name', () => {
+        const publicIndex = publicES._extractIndex('@&nepali.liia');
+        const internalIndex = internalES._extractIndex('@%nepali.liia');
+
+        should(publicIndex).be.eql('nepali');
+        should(internalIndex).be.eql('nepali');
+      });
+
+      it('extract the index name from raw esIndex name', () => {
+        const publicIndex = publicES._extractIndex('&nepali.liia');
+        const internalIndex = internalES._extractIndex('%nepali.liia');
 
         should(publicIndex).be.eql('nepali');
         should(internalIndex).be.eql('nepali');
@@ -4570,12 +4776,11 @@ describe('Test: ElasticSearch service', () => {
 
     describe('#_extractCollection', () => {
       it('extract the collection names from esIndex name', () => {
-        const
-          publicCollection = publicES._extractCollection('&nepali.liia'),
-          publicCollection2 = publicES._extractCollection('&vietnam.lfiduras'),
-          publicCollection3 = publicES._extractCollection('&vietnam.l'),
-          publicCollection4 = publicES._extractCollection('&vietnam.iamaverylongcollectionnamebecauseiworthit'),
-          internalCollection = internalES._extractCollection('%nepali.liia');
+        const publicCollection = publicES._extractCollection('&nepali.liia');
+        const publicCollection2 = publicES._extractCollection('@&vietnam.lfiduras');
+        const publicCollection3 = publicES._extractCollection('@&vietnam.l');
+        const publicCollection4 = publicES._extractCollection('&vietnam.iamaverylongcollectionnamebecauseiworthit');
+        const internalCollection = internalES._extractCollection('%nepali.liia');
 
         should(publicCollection).be.eql('liia');
         should(publicCollection2).be.eql('lfiduras');
@@ -4588,10 +4793,10 @@ describe('Test: ElasticSearch service', () => {
     describe('#_extractSchema', () => {
       it('should extract the list of indexes and their collections', () => {
         const esIndexes = [
-          '%nepali.liia', '%nepali.mehry',
+          '%nepali.liia', '@%nepali.mehry',
 
           '&nepali.panipokari', '&nepali._kuzzle_keep',
-          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
+          '@&vietnam.lfiduras', '@&vietnam._kuzzle_keep'
         ];
 
         const publicSchema = publicES._extractSchema(esIndexes);
@@ -4608,10 +4813,10 @@ describe('Test: ElasticSearch service', () => {
 
       it('should include hidden collection with the option', () => {
         const esIndexes = [
-          '%nepali.liia', '%nepali.mehry',
+          '%nepali.liia', '@%nepali.mehry',
 
           '&nepali.panipokari', '&nepali._kuzzle_keep',
-          '&vietnam.lfiduras', '&vietnam._kuzzle_keep'
+          '@&vietnam.lfiduras', '@&vietnam._kuzzle_keep'
         ];
 
         const publicSchema = publicES._extractSchema(esIndexes, { includeHidden: true });

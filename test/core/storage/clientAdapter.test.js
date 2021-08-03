@@ -89,15 +89,11 @@ describe('#core/storage/ClientAdapter', () => {
       sinon.stub(kuzzle, 'onAsk');
     });
 
-    it('should populate the cache with index, collections and aliases', async () => {
+    it('should populate the cache with index and collections', async () => {
       uninitializedAdapter.client.getSchema.resolves({
         foo: ['foo1', 'foo2'],
         bar: ['bar1', 'bar2']
       });
-      uninitializedAdapter.client.listAliases.resolves([
-        { index: 'alias1', collection: 'qux' },
-        { index: 'alias2', collection: 'qux' },
-      ]);
 
       sinon.stub(uninitializedAdapter.cache, 'addCollection');
 
@@ -107,8 +103,6 @@ describe('#core/storage/ClientAdapter', () => {
       should(uninitializedAdapter.cache.addCollection).calledWith('foo', 'foo2');
       should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar1');
       should(uninitializedAdapter.cache.addCollection).calledWith('bar', 'bar2');
-      should(uninitializedAdapter.cache.addCollection).calledWith('alias1', 'qux');
-      should(uninitializedAdapter.cache.addCollection).calledWith('alias2', 'qux');
     });
   });
 
