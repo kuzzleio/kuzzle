@@ -12,6 +12,11 @@
     // * accessControlAllowOrigin:
     //    sets the default Access-Control-Allow-Origin HTTP
     //    header used to send responses to the client
+    // * accessControlAllowOriginUseRegExp
+    //    Allow the usage of Regular Expressions to verify the origin
+    //    based on Access-Control-Allow-Origin.
+    //    /!\ This convert every string in Access-Control-Allow-Origin into Regular Expressions
+    //    be careful with the Regular Expressions that you use.
     // * accessControlAllowMethods:
     //    sets the default Access-Control-Allow-Method header
     // * accessControlAllowHeaders:
@@ -22,6 +27,7 @@
     //    /!\ This should not be allowed if the "http.accessControlAllowOrigin"
     //    configuration contains a wildcard ("*").
     "accessControlAllowOrigin": "*",
+    accessControlAllowOriginUseRegExp: false,
     "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
     "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
     "cookieAuthentication": true
