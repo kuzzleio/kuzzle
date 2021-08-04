@@ -67,7 +67,7 @@
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
     // * subscriptionDocumentTTL
-    //      Maximum time (in seconds) a document will be kept in cache for
+    //      Maximum time (in milliseconds) a document will be kept in cache for
     //      real-time subscriptions.
     //      This cache is used to notify subscriber when a document enters or
     //      leaves a scope after an update.
@@ -86,7 +86,7 @@
     "requestsBufferWarningThreshold": 5000,
     "subscriptionConditionsCount": 100,
     "subscriptionRooms": 1000000,
-    "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
+    "subscriptionDocumentTTL": 259200000 // 72 * 60 * 60 * 1000
   },
 
   // The application section lets you configure your application
@@ -196,12 +196,12 @@
   "repositories": {
     // [Common]
     //   * cacheTTL:
-    //      Time to live (in seconds) of cached objects.
+    //      Time to live (in milliseconds) of cached objects.
     //      Decreasing this value will lower Redis memory and
     //      disk consumption, at the cost of increasing
     //      queries rate to the database and response times
     "common": {
-      "cacheTTL": 1440
+      "cacheTTL": 1440000
     }
   },
 
