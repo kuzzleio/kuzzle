@@ -27,7 +27,7 @@
     //    /!\ This should not be allowed if the "http.accessControlAllowOrigin"
     //    configuration contains a wildcard ("*").
     "accessControlAllowOrigin": "*",
-    accessControlAllowOriginUseRegExp: false,
+    "accessControlAllowOriginUseRegExp": false,
     "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
     "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
     "cookieAuthentication": true
