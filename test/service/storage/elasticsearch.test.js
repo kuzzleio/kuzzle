@@ -1944,9 +1944,9 @@ describe('Test: ElasticSearch service', () => {
         properties: mappings.properties
       });
       should(elasticsearch._client.indices.create).be.calledWithMatch({
-        aliases: { [aliasIndexName]: {} },
         index: esIndexName,
         body: {
+          aliases: { [aliasIndexName]: {} },
           mappings: {
             dynamic: elasticsearch.config.commonMapping.dynamic,
             _meta: elasticsearch.config.commonMapping._meta,
@@ -1981,9 +1981,9 @@ describe('Test: ElasticSearch service', () => {
         { mappings });
 
       should(elasticsearch._client.indices.create).be.calledWithMatch({
-        aliases: { [aliasIndexName]: {} },
         index: esIndexName,
         body: {
+          aliases: { [aliasIndexName]: {} },
           mappings: {
             dynamic: 'true',
             _meta: { some: 'meta' },
@@ -2192,7 +2192,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       elasticsearch._client.indices.getMapping.resolves({
         body: {
-          [aliasIndexName]: {
+          [esIndexName]: {
             mappings: {
               dynamic: true,
               _meta: { lang: 'npl' },
@@ -2206,6 +2206,11 @@ describe('Test: ElasticSearch service', () => {
       });
 
       elasticsearch._esWrapper.getMapping = sinon.stub().resolves({foo: 'bar'});
+      sinon.stub(elasticsearch, '_getESIndexFromAlias').resolves(esIndexName);
+    });
+
+    afterEach(() => {
+      elasticsearch._getESIndexFromAlias.restore();
     });
 
     it('should have getMapping capabilities', () => {
@@ -2214,7 +2219,7 @@ describe('Test: ElasticSearch service', () => {
       return promise
         .then(result => {
           should(elasticsearch._client.indices.getMapping).be.calledWithMatch({
-            index: aliasIndexName
+            index: esIndexName
           });
 
           should(result).match({
@@ -2236,7 +2241,7 @@ describe('Test: ElasticSearch service', () => {
       return promise
         .then(result => {
           should(elasticsearch._client.indices.getMapping).be.calledWithMatch({
-            index: aliasIndexName
+            index: esIndexName
           });
 
           should(result).match({
@@ -2271,7 +2276,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       oldSettings = {
         body: {
-          [aliasIndexName]: {
+          [esIndexName]: {
             settings: {
               index: {
                 creation_date: Date.now(),
@@ -2291,7 +2296,13 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateMapping = sinon.stub().resolves();
       elasticsearch.updateSettings = sinon.stub().resolves();
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
+      sinon.stub(elasticsearch, '_getESIndexFromAlias').resolves(esIndexName);
     });
+
+    afterEach(() => {
+      elasticsearch._getESIndexFromAlias.restore();
+    });
+
     it('should call updateSettings, updateMapping', async () => {
       elasticsearch.getMapping = sinon.stub().resolves({dynamic: 'true', properties: { city: { type: 'keyword' }, dynamic: 'false' } });
       await elasticsearch.updateCollection(index, collection, { mappings, settings });
@@ -2318,7 +2329,7 @@ describe('Test: ElasticSearch service', () => {
       return should(promise).be.rejected()
         .then(() => {
           should(elasticsearch._client.indices.getSettings).be.calledWithMatch({
-            index: aliasIndexName
+            index: esIndexName
           });
           should(elasticsearch.updateSettings).be.calledTwice();
           should(elasticsearch.updateMapping).be.calledOnce();
@@ -2585,9 +2596,9 @@ describe('Test: ElasticSearch service', () => {
             index: esIndexName
           });
           should(elasticsearch._client.indices.create).be.calledWithMatch({
-            aliases: { [aliasIndexName]: {} },
             index: esIndexName,
             body: {
+              aliases: { [aliasIndexName]: {} },
               mappings: {
                 dynamic: 'false',
                 properties: {
@@ -4442,6 +4453,7 @@ describe('Test: ElasticSearch service', () => {
       should(elasticsearch._client.indices.create).be.calledWithMatch({
         index: '&nisantasi._kuzzle_keep',
         body: {
+          aliases: { '@&nisantasi._kuzzle_keep': {} },
           settings: {
             number_of_shards: 1,
             number_of_replicas: 1,
@@ -4679,8 +4691,8 @@ describe('Test: ElasticSearch service', () => {
 
     describe('#_getSafeESIndex and _isESIndexAvailable', () => {
       it('return raw ES index whenever it is possible', async () => {
-        publicES._client.indices.get.resolves({ body: [] });
-        internalES._client.indices.get.resolves({ body: [] });
+        publicES._client.indices.exists.resolves({ body: false });
+        internalES._client.indices.exists.resolves({ body: false });
 
         const publicESIndex = await publicES._getSafeESIndex('nepali', 'liia');
         const internalESIndex = await internalES._getSafeESIndex('nepali');
@@ -4690,12 +4702,12 @@ describe('Test: ElasticSearch service', () => {
       });
 
       it('return random ES Index if necessary', async () => {
-        publicES._client.indices.get
-          .onFirstCall().resolves({ body: [{index: '&nepali.liia'}] })
-          .resolves({ body: [] });
-        internalES._client.indices.get
-          .onFirstCall().resolves({ body: [{index: '%nepali.mehry'}] })
-          .resolves({ body: [] });
+        publicES._client.indices.exists
+          .onFirstCall().resolves({ body: true })
+          .resolves({ body: false });
+        internalES._client.indices.exists
+          .onFirstCall().resolves({ body: true })
+          .resolves({ body: false });
 
         const publicESIndex = await publicES._getSafeESIndex('nepali', 'liia');
         const internalESIndex = await internalES._getSafeESIndex('nepali', 'mehry');
@@ -4706,15 +4718,19 @@ describe('Test: ElasticSearch service', () => {
     });
 
     describe('#_ensureAliasConsistency', () => {
-      const indicesBody = { body: [
-        { index: '&nepali.liia', status: 'open' },
-        { index: '%nepali.liia', status: 'open' },
-        { index: '&nepali.mehry', status: 'open' },
-        { index: '%nepali.mehry', status: 'open' },
-      ]};
-      const aliasesBody = { body: [
-        { alias: '@&nepali.lia', index: '&nepali.liia', filter: 0 },
-      ]};
+      const indicesBody = {
+        body: [
+          { index: '&nepali.liia', status: 'open' },
+          { index: '%nepali.liia', status: 'open' },
+          { index: '&nepali.mehry', status: 'open' },
+          { index: '%nepali.mehry', status: 'open' },
+        ]
+      };
+      let aliasesBody = {
+        body: [
+          { alias: '@&nepali.lia', index: '&nepali.liia', filter: 0 },
+        ]
+      };
 
       beforeEach(() => {
         publicES._client.indices.updateAliases.resolves();
@@ -4732,16 +4748,39 @@ describe('Test: ElasticSearch service', () => {
         await internalES._ensureAliasConsistency();
 
         should(publicES._client.indices.updateAliases).be.calledWith({
-          actions : [
-            { add : { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
-          ]
+          body: {
+            actions : [
+              { add : { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
+            ]
+          }
         });
         should(internalES._client.indices.updateAliases).be.calledWith({
-          actions : [
-            { add : { alias: '@%nepali.liia', index: '%nepali.liia' } },
-            { add : { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
-          ]
+          body: {
+            actions : [
+              { add : { alias: '@%nepali.liia', index: '%nepali.liia' } },
+              { add : { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
+            ]
+          }
         });
+      });
+
+      it('do nothing when every index is associated with an alias', async () => {
+        aliasesBody = {
+          body: [
+            { alias: '@&nepali.lia', index: '&nepali.liia', filter: 0 },
+            { alias: '@%nepali.lia', index: '%nepali.liia', filter: 0 },
+            { alias: '@&nepalu.mehry', index: '&nepali.mehry', filter: 0 },
+            { alias: '@%nepalu.mehry', index: '%nepali.mehry', filter: 0 },
+          ]
+        };
+        publicES._client.cat.aliases.resolves(aliasesBody);
+        internalES._client.cat.aliases.resolves(aliasesBody);
+
+        await publicES._ensureAliasConsistency();
+        await internalES._ensureAliasConsistency();
+
+        should(publicES._client.indices.updateAliases).not.be.called();
+        should(internalES._client.indices.updateAliases).not.be.called();
       });
     });
 
