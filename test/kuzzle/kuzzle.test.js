@@ -318,7 +318,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
     });
 
-    it('should load correctly toImport mappings and securities', async () => {
+    it('should load correctly toImport mappings and permissions', async () => {
       await kuzzle.import(toImport, {});
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
@@ -329,7 +329,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           roles: toImport.roles,
           users: toImport.users,
         },
-        { onExistingUsers: toImport.onExistingUsers });
+        { onExistingUsers: toImport.onExistingUsers,
+          onExistingUsersWarning: true
+        });
     });
 
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
@@ -345,7 +347,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
 
-    it('should prevent securities to be loaded from import and support simultaneously', () => {
+    it('should prevent permissions to be loaded from import and support simultaneously', () => {
       return should(
         kuzzle.import(
           { profiles: { something: 'here' } },

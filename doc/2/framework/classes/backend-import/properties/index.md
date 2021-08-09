@@ -7,7 +7,7 @@ description: BackendImport class properties
 
 # BackendImport
 
-The `BackendImport` class handles mappings and security import.
+The `BackendImport` class handles mappings, permissions and users import.
 
 It is accessible from the [Backend.import](/core/2/framework/classes/backend/properties#import) property.
 
