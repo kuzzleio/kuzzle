@@ -303,6 +303,7 @@ class PipePlugin {
 
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
+- [document:search](/core/2/api/controllers/document/search)
 
 ---
 
