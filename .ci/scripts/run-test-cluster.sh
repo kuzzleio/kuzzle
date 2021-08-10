@@ -34,6 +34,8 @@ KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
 
+curl "http://localhost:7512/cluster/_status?pretty"
+
 trap - err
 
 npm run $KUZZLE_FUNCTIONAL_TESTS
