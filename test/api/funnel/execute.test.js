@@ -81,7 +81,6 @@ describe('funnelController.execute', () => {
           should(err).be.instanceOf(Error);
           should(res.status).be.exactly(503);
           should(res.error.message).be.exactly('test');
-          should(kuzzle.pipe).be.calledWith('request:beforeExecution', request);
           should(funnel.processRequest.calledOnce).be.false();
           should(funnel.overloaded).be.false();
           done();
@@ -215,7 +214,6 @@ describe('funnelController.execute', () => {
           should(res).eql(request);
           should(err).be.instanceOf(TooManyRequestsError);
           should(err.id).eql('api.process.too_many_requests');
-          should(kuzzle.pipe).not.be.calledWith('request:beforeExecution', request);
           should(funnel.processRequest).not.called();
           should(funnel.overloaded).be.false();
           done();
@@ -232,7 +230,7 @@ describe('funnelController.execute', () => {
           should(err).be.null();
           should(res).be.instanceOf(Request);
           should(kuzzle.asyncStore.run).be.calledOnce();
-          should(kuzzle.pipe).be.calledWith('request:beforeExecution', request);
+          should(kuzzle.pipe).be.calledWithMatch('request:beforeExecution', request);
           should(kuzzle.asyncStore.set).be.calledWith('REQUEST', request);
 
           done();
