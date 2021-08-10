@@ -316,30 +316,41 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       };
 
       kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
+      kuzzle.internalIndex.refreshCollection = sinon.stub().resolves();
     });
 
     it('should load correctly toImport mappings and permissions', async () => {
       await kuzzle.import(toImport, {});
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
-      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings);
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
+        { refresh: true });
       should(kuzzle.ask).calledWith('core:security:load',
         {
           profiles: toImport.profiles,
           roles: toImport.roles,
           users: toImport.users,
         },
-        { onExistingUsers: toImport.onExistingUsers,
-          onExistingUsersWarning: true
+        {
+          onExistingUsers: toImport.onExistingUsers,
+          onExistingUsersWarning: true,
+          refresh: 'wait_for',
         });
     });
 
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
       await kuzzle.import({}, toSupport);
 
-      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings);
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
+        rawMappings: true,
+        refresh: true,
+      });
       should(kuzzle.ask).calledWith('core:storage:public:document:import', toSupport.fixtures);
-      should(kuzzle.ask).calledWith('core:security:load', toSupport.securities);
+      should(kuzzle.ask).calledWith('core:security:load', toSupport.securities, {
+        force: true,
+        refresh: 'wait_for'
+      });
     });
 
     it('should prevent mappings to be loaded from import and support simultaneously', () => {
