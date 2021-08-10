@@ -83,4 +83,4 @@ services:
     ulimits:
       nofile: 65536
     environment:
-      - ES_JAVA_OPTS="-Xms2048m -Xmx2048m"
+      - "ES_JAVA_OPTS=-Xms2048m -Xmx2048m"
