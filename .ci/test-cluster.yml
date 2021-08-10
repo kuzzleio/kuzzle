@@ -82,3 +82,5 @@ services:
     container_name: kuzzle_elasticsearch
     ulimits:
       nofile: 65536
+    environment:
+      - ES_JAVA_OPTS="-Xms2048m -Xmx2048m"
