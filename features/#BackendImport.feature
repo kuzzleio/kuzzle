@@ -57,7 +57,7 @@ Feature: Backend Import
     Given I have configured user mappings in the app before startup
     When I successfully execute the action "security":"getUserMapping"
     Then The property "mapping" of the result should match:
-      | name | { type: 'keyword' } |
+      | age | { type: 'long' } |
 
   # import:users ==============================================================
 
@@ -65,9 +65,9 @@ Feature: Backend Import
   Scenario: Check if users have been correctly imported
     Given I have imported users in the app before startup
     When I successfully execute the action "security":"mGetUsers" with args:
-      | body    | { ids: [ 'userA', 'userB' ] }                         |
+      | body    | { ids: [ 'userA', 'userB' ] }                     |
     Then I should receive a "hits" array of objects matching:
-      | _id     | _source                                               |
-      | "userA" | { profileIds: ['profileA', 'profileB'], name: 'foo' } |
-      | "userB" | { profileIds: ['profileA'], name: 'bar' }             |
+      | _id     | _source                                           |
+      | "userA" | { profileIds: ['profileA', 'profileB'], age: 42 } |
+      | "userB" | { profileIds: ['profileA'], age: 5 }              |
     And I'm logged in Kuzzle as user "bar" with password "foobar"

@@ -56,7 +56,7 @@
 
   "userMappings": {
     "properties": {
-      "name": { "type": "keyword" }
+      "age": { "type": "long" }
     }
   },
 
@@ -64,14 +64,14 @@
     "userA": {
       "content": {
         "profileIds": ["profileA", "profileB"],
-        "name": "foo"
+        "age": 42
       },
       "credentials": {
         "local": { "username": "bar", "password": "foobar" }
       }
     },
     "userB": {
-      "content": { "profileIds": ["profileA"], "name": "bar"}
+      "content": { "profileIds": ["profileA"], "age": 5}
     }
   }
 }
