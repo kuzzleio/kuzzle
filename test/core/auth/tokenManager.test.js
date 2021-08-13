@@ -40,67 +40,78 @@ describe('Test: token manager core component', () => {
 
   describe('#link', () => {
     it('should do nothing if the token is not set', () => {
-      tokenManager.link(null, 'foo', 'bar');
+      tokenManager.link(null, 'foo');
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
+      should(tokenManager.tokensByConnection.size).equal(0);
     });
 
     it('should not add a link to an anonymous token', () => {
-      tokenManager.link(anonymousToken, 'foo', 'bar');
+      tokenManager.link(anonymousToken, 'foo');
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
+      should(tokenManager.tokensByConnection.size).equal(0);
     });
 
-    it('should link the provided room ID to a new entry if this is the first subscription with this token', () => {
+    it('should link the provided connection ID to a new entry if this is the first subscription with this token', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
-      tokenManager.link(token, 'foo', 'bar');
+      tokenManager.link(token, 'foo');
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([{
           idx: `${token.expiresAt};${token._id}`,
-          connectionId: 'foo',
+          connectionIds: new Set(['foo']),
           expiresAt: token.expiresAt,
           userId: token.userId,
-          rooms: new Set(['bar'])
         }])
         .and.have.length(1);
+
+      should(tokenManager.tokensByConnection.get('foo')).match({
+        idx: `${token.expiresAt};${token._id}`,
+        connectionIds: new Set(['foo']),
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+      });
 
       should(runTimerStub).be.calledOnce();
     });
 
-    it('should add the room ID to the list if an entry already exists for this token', () => {
-      tokenManager.tokens.insert({
-        idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-        rooms: new Set(['bar'])
-      });
-
-      const runTimerStub = sinon.stub(tokenManager, 'runTimer');
-
-      tokenManager.link(token, 'foo', 'bar2');
+    it('should add the connection ID to the list if an entry already exists for this token', () => {
+      
+      
+      tokenManager.link(token, 'foo');
+      tokenManager.link(token, 'bar');
 
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([{
           idx: `${token.expiresAt};${token._id}`,
-          connectionId: 'foo',
+          connectionIds: new Set(['foo', 'bar']),
           expiresAt: token.expiresAt,
           userId: token.userId,
-          rooms: new Set(['bar', 'bar2'])
         }])
         .and.have.length(1);
 
-      should(runTimerStub).not.be.called();
+      should(tokenManager.tokensByConnection.get('foo')).match({
+        idx: `${token.expiresAt};${token._id}`,
+        connectionIds: new Set(['foo', 'bar']),
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+      });
+
+      should(tokenManager.tokensByConnection.get('bar')).match({
+        idx: `${token.expiresAt};${token._id}`,
+        connectionIds: new Set(['foo', 'bar']),
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+      });
     });
 
     it('should not start a new timer if the new token is not the next one to expire', () => {
       tokenManager.tokens.insert({
         idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo']),
         expiresAt: token.expiresAt,
         userId: token.userId,
-        rooms: new Set(['bar'])
       });
 
       const
@@ -112,37 +123,89 @@ describe('Test: token manager core component', () => {
           expiresAt: Date.now()+10000,
         });
 
-      tokenManager.link(tokenAfter, 'foo2', 'bar2');
+      tokenManager.link(tokenAfter, 'foo2');
 
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([{
           idx: `${token.expiresAt};${token._id}`,
-          connectionId: 'foo',
+          connectionIds: new Set(['foo']),
           expiresAt: token.expiresAt,
           userId: token.userId,
-          rooms: new Set(['bar'])
         }, {
           idx: `${tokenAfter.expiresAt};${tokenAfter._id}`,
-          connectionId: 'foo2',
+          connectionIds: new Set(['foo2']),
           expiresAt: tokenAfter.expiresAt,
           userId: tokenAfter.userId,
-          rooms: new Set(['bar2'])
         }])
         .and.have.length(2);
+      
+      should(tokenManager.tokensByConnection.get('foo2')).match({
+        idx: `${tokenAfter.expiresAt};${tokenAfter._id}`,
+        connectionIds: new Set(['foo2']),
+        expiresAt: tokenAfter.expiresAt,
+        userId: tokenAfter.userId,
+      });
 
       should(runTimerStub).not.be.called();
+    });
+
+    it('should update the associated token of a connection when a connection is linked to a another token', () => {
+      const tokenAfter = new Token({
+        _id: 'foo2#bar2',
+        userId: 'foo2',
+        jwt: 'bar2',
+        expiresAt: Date.now()+10000,
+      });
+
+      tokenManager.link(token, 'foo1');
+      tokenManager.link(token, 'foo2');
+
+      should(tokenManager.tokensByConnection.get('foo1')).match({
+        idx: `${token.expiresAt};${token._id}`,
+        connectionIds: new Set(['foo1', 'foo2']),
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+      });
+
+      tokenManager.link(tokenAfter, 'foo1');
+
+      should(tokenManager.tokensByConnection.get('foo1')).match({
+        idx: `${tokenAfter.expiresAt};${tokenAfter._id}`,
+        connectionIds: new Set(['foo1']),
+        expiresAt: tokenAfter.expiresAt,
+        userId: tokenAfter.userId,
+      });
+
+      should(tokenManager.tokens.array)
+        .be.an.Array()
+        .and.match([{
+          idx: `${token.expiresAt};${token._id}`,
+          connectionIds: new Set(['foo2']),
+          expiresAt: token.expiresAt,
+          userId: token.userId,
+        }, {
+          idx: `${tokenAfter.expiresAt};${tokenAfter._id}`,
+          connectionIds: new Set(['foo1']),
+          expiresAt: tokenAfter.expiresAt,
+          userId: tokenAfter.userId,
+        }])
+        .and.have.length(2);
     });
   });
 
   describe('#expire', () => {
     it('should force a token to expire when called', async () => {
-      tokenManager._add(token, 'foo', ['bar']);
+      tokenManager.link(token, 'foo');
+      tokenManager.link(token, 'bar');
 
       await tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(kuzzle.ask)
-        .calledWith('core:realtime:user:remove', 'foo');
+        .calledWith('core:realtime:user:remove', 'foo')
+        .and.calledWith('core:realtime:user:remove', 'bar');
+      
+      should(tokenManager.tokensByConnection.size).equal(0);
     });
 
     it('should do nothing if the provided token is from the anonymous user', async () => {
@@ -150,10 +213,9 @@ describe('Test: token manager core component', () => {
       // should never happen in real-life scenarios (see UTs above)
       const fakeEntry = {
         idx: `${anonymousToken.expiresAt};${anonymousToken._id}`,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo']),
         expiresAt: anonymousToken.expiresAt,
         userId: anonymousToken.userId,
-        rooms: new Set(['bar'])
       };
 
       tokenManager.tokens.insert(fakeEntry);
@@ -204,12 +266,10 @@ describe('Test: token manager core component', () => {
 
       tokenManager.link(
         new Token({_id: 'bar', expiresAt }),
-        'connectionId1',
-        'roomId1');
+        'connectionId1');
       tokenManager.link(
         new Token({_id: 'foo', expiresAt }),
-        'connectionId2',
-        'roomId2');
+        'connectionId2');
 
       runTimerStub.resetHistory();
       await tokenManager.checkTokensValidity();
@@ -225,12 +285,10 @@ describe('Test: token manager core component', () => {
 
       tokenManager.link(
         new Token({_id: 'bar', expiresAt: now + 1000000 }),
-        'connectionId1',
-        'roomId1');
+        'connectionId1');
       tokenManager.link(
         new Token({_id: 'foo', expiresAt: now - 1000 }),
-        'connectionId2',
-        'roomId2');
+        'connectionId2');
 
       runTimerStub.resetHistory();
       await tokenManager.checkTokensValidity();
@@ -273,8 +331,7 @@ describe('Test: token manager core component', () => {
 
       tokenManager.link(
         new Token({_id: 'foo', expiresAt: now - 1000 }),
-        'connectionId2',
-        'roomId2');
+        'connectionId2');
 
       runTimerStub.resetHistory();
       await tokenManager.checkTokensValidity();
@@ -292,15 +349,14 @@ describe('Test: token manager core component', () => {
       // should never happen in real-life scenarios (see UTs above)
       const fakeEntry = {
         idx: `${anonymousToken.expiresAt};${anonymousToken._id}`,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo']),
         expiresAt: anonymousToken.expiresAt,
         userId: anonymousToken.userId,
-        rooms: new Set(['bar'])
       };
 
       tokenManager.tokens.insert(fakeEntry);
 
-      tokenManager.unlink(anonymousToken, 'bar');
+      tokenManager.unlink(anonymousToken, 'foo');
 
       should(tokenManager.tokens.array)
         .be.an.Array()
@@ -311,10 +367,9 @@ describe('Test: token manager core component', () => {
     it('should not try to unlink a non-existing token', () => {
       tokenManager.tokens.insert({
         idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo']),
         expiresAt: token.expiresAt,
         userId: token.userId,
-        rooms: new Set(['bar'])
       });
 
       tokenManager.unlink(new Token({_id: 'i am the beyonder' }), 'bar');
@@ -323,43 +378,60 @@ describe('Test: token manager core component', () => {
         .and.have.length(1);
     });
 
-    it('should remove only the provided room ID from the entry', () => {
-      tokenManager.tokens.insert({
+    it('should remove only the provided connection ID from the entry', () => {
+      tokenManager.link(token, 'foo');
+      tokenManager.link(token, 'bar');
+      tokenManager.link(token, 'baz');
+
+      should(tokenManager.tokens.array)
+      .be.an.Array()
+      .and.match([{
         idx: `${token.expiresAt};${token._id}`,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo', 'bar', 'baz']),
         expiresAt: token.expiresAt,
         userId: token.userId,
-        rooms: new Set(['foo', 'bar', 'baz'])
-      });
+      }])
+      .and.have.length(1);
 
       tokenManager.unlink(token, 'bar');
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([{
           idx: `${token.expiresAt};${token._id}`,
-          connectionId: 'foo',
+          connectionIds: new Set(['foo', 'baz']),
           expiresAt: token.expiresAt,
           userId: token.userId,
-          rooms: new Set(['foo', 'baz'])
         }])
         .and.have.length(1);
     });
 
-    it('should also remove the entry if the last linked room ID is removed', () => {
-      tokenManager._add(token, 'foo', ['bar', 'foo', 'baz']);
+    it('should also remove the entry if the last linked connection ID is removed', () => {
+      tokenManager.link(token, 'foo');
+      tokenManager.link(token, 'bar');
+      tokenManager.link(token, 'baz');
+
+      should(tokenManager.tokens.array)
+      .be.an.Array()
+      .and.match([{
+        idx: `${token.expiresAt};${token._id}`,
+        connectionIds: new Set(['foo', 'bar', 'baz']),
+        expiresAt: token.expiresAt,
+        userId: token.userId,
+      }])
+      .and.have.length(1);
 
       tokenManager.unlink(token, 'bar');
       tokenManager.unlink(token, 'foo');
       tokenManager.unlink(token, 'baz');
 
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
-      should(tokenManager.tokensByConnectedUser).be.empty();
+      should(tokenManager.tokensByConnection).be.empty();
     });
   });
 
   describe('#refresh', () => {
     beforeEach(() => {
-      tokenManager._add(token, 'foo', ['bar']);
+      tokenManager.link(token, 'foo');
     });
 
     it('should do nothing if the provided token is not linked', () => {
@@ -370,6 +442,10 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx)
         .eql(`${token.expiresAt};${token._id}`);
+
+      should(tokenManager.tokensByConnection.get('foo')).match({
+        idx: `${token.expiresAt};${token._id}`
+      });
     });
 
     it('should replace the old token with the new one', () => {
@@ -379,12 +455,16 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx)
         .eql(`${newT.expiresAt};${newT._id}`);
+
+      should(tokenManager.tokensByConnection.get('foo')).match({
+        idx: `${newT.expiresAt};${newT._id}`
+      });
     });
   });
 
   describe('#getConnectedUserToken', () => {
     it('should return a matching token', () => {
-      tokenManager._add(token, 'foo', ['bar']);
+      tokenManager.link(token, 'foo');
 
       const response = tokenManager.getConnectedUserToken(token.userId, 'foo');
       should(response).be.an.instanceOf(Token);
@@ -393,8 +473,17 @@ describe('Test: token manager core component', () => {
         expiresAt: token.expiresAt,
         ttl: null,
         userId: token.userId,
-        jwt: token.jwt
+        jwt: token.jwt,
+        connectionId: 'foo',
       });
+    });
+
+    it('should not return token if the userId is not associated to the connection', () => {
+      tokenManager.link(token, 'foo');
+      tokenManager.link(new Token({_id: 'New Token'}), 'bar');
+
+      const response = tokenManager.getConnectedUserToken(token.userId, 'bar');
+      should(response).be.null();
     });
   });
 });
