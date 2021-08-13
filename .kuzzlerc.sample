@@ -398,10 +398,13 @@
         //    allocate as many decoders to handle the incoming request.
         // * maxFormFileSize:
         //    Maximum size of requests sent via http forms
+        // * notifyTokenExpired:
+        //    Set to "true" to enable notification of expired tokens
         "allowCompression": true,
         "enabled": true,
         "maxEncodingLayers": 3,
-        "maxFormFileSize": "1mb"
+        "maxFormFileSize": "1mb",
+        "notifyTokenExpired": false
       },
       "mqtt": {
         // * enabled:
@@ -420,6 +423,8 @@
         // * server
         //    Constructor options passed to underlying MQTT server.
         //    See aedes documentation for further reference: https://github.com/moscajs/aedes
+        // * notifyTokenExpired:
+        //    Set to "true" to enable notification of expired tokens
         "enabled": false,
         "allowPubSub": false,
         "developmentMode": false,
@@ -428,7 +433,8 @@
         "responseTopic": "Kuzzle/response",
         "server": {
           "port": 1883
-        }
+        },
+        "notifyTokenExpired": true
       },
       "websocket": {
         // * compression:
@@ -448,10 +454,13 @@
         //    submit to the server.
         //    Requests exceeding that rate limit are rejected.
         //    Disabled if set to 0.
+        // * notifyTokenExpired:
+        //    Set to "true" to enable notification of expired tokens
         "compression": false,
         "enabled": true,
         "idleTimeout": 60000,
-        "rateLimit": 0
+        "rateLimit": 0,
+        "notifyTokenExpired": true
       }
     }
   },
