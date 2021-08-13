@@ -234,6 +234,7 @@ describe('Test: token manager core component', () => {
         userId: 'foo2',
         jwt: 'bar2',
         expiresAt: Date.now()+1000,
+        _idx: `${Date.now()+1000}#foo2`,
       });
 
       tokenManager.tokens.array.push(token);
