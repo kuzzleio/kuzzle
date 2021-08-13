@@ -309,8 +309,7 @@ describe('Test: token manager core component', () => {
 
       tokenManager.link(
         new Token({_id: 'api-key-1', expiresAt: -1 }),
-        'connectionId1',
-        'roomId1');
+        'connectionId1');
 
       runTimerStub.resetHistory();
 
@@ -384,14 +383,14 @@ describe('Test: token manager core component', () => {
       tokenManager.link(token, 'baz');
 
       should(tokenManager.tokens.array)
-      .be.an.Array()
-      .and.match([{
-        idx: `${token.expiresAt};${token._id}`,
-        connectionIds: new Set(['foo', 'bar', 'baz']),
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-      }])
-      .and.have.length(1);
+        .be.an.Array()
+        .and.match([{
+          idx: `${token.expiresAt};${token._id}`,
+          connectionIds: new Set(['foo', 'bar', 'baz']),
+          expiresAt: token.expiresAt,
+          userId: token.userId,
+        }])
+        .and.have.length(1);
 
       tokenManager.unlink(token, 'bar');
       should(tokenManager.tokens.array)
@@ -411,14 +410,14 @@ describe('Test: token manager core component', () => {
       tokenManager.link(token, 'baz');
 
       should(tokenManager.tokens.array)
-      .be.an.Array()
-      .and.match([{
-        idx: `${token.expiresAt};${token._id}`,
-        connectionIds: new Set(['foo', 'bar', 'baz']),
-        expiresAt: token.expiresAt,
-        userId: token.userId,
-      }])
-      .and.have.length(1);
+        .be.an.Array()
+        .and.match([{
+          idx: `${token.expiresAt};${token._id}`,
+          connectionIds: new Set(['foo', 'bar', 'baz']),
+          expiresAt: token.expiresAt,
+          userId: token.userId,
+        }])
+        .and.have.length(1);
 
       tokenManager.unlink(token, 'bar');
       tokenManager.unlink(token, 'foo');
