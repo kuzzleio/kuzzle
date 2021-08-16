@@ -270,10 +270,10 @@
           "message": "The \"%s\" keyword is not allowed in this query.",
           "class": "BadRequestError"
         },
-        "multiple_index_alias": {
-          "description": "The unique association between an index and its alias has not been respected",
+        "multiple_indice_alias": {
+          "description": "The unique association between an indice and its alias has not been respected",
           "code": 48,
-          "message": "An \"%s\" is not allowed to be associated with multiple \"%ses\". This is probably not linked to this request but rather the consequence of previous actions on ElasticSearch.",
+          "message": "An \"%s\" is not allowed to be associated with multiple \"%\". This is probably not linked to this request but rather the consequence of previous actions on ElasticSearch.",
           "class": "PreconditionError"
         }
       }
