@@ -36,7 +36,7 @@ The provided `subscription` object has the following properties:
 | `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier              |
 | `index`        | <pre>string</pre>  | Index                                                                                                      |
 | `collection`   | <pre>string</pre>  | Collection                                                                                                 |
-| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
+| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://github.com/kuzzleio/koncorde/wiki/Filter-Unique-Identifiers) |
 
 </DeprecatedBadge>
 
@@ -139,7 +139,7 @@ The provided `subscription` object has the following properties:
 | `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier              |
 | `index`        | <pre>string</pre>  | Index                                                                                                      |
 | `collection`   | <pre>string</pre>  | Collection                                                                                                 |
-| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
+| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://github.com/kuzzleio/koncorde/wiki/Filter-Unique-Identifiers) |
 
 ---
 
