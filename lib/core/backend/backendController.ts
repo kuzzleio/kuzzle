@@ -43,6 +43,7 @@ export class BackendController extends ApplicationManager {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
    *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
+   *       openapi: {...}
    *     }
    *   }
    * })
@@ -78,6 +79,8 @@ export class BackendController extends ApplicationManager {
    *       actions: {
    *         send: {
    *           handler: this.send
+   *           http: [{ verb: 'post', path: 'email/send/:object' }]
+   *           openapi: {...}
    *         }
    *       }
    *     };

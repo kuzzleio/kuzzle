@@ -343,6 +343,12 @@
           "code": 9,
           "message": "Unexpected return value from action \"%s:%s\": expected a Promise",
           "class": "PluginImplementationError"
+        },
+        "invalid_openapi_schema": {
+          "description": "OpenAPI specification is invalid",
+          "code": 10,
+          "message": "Invalid OpenAPI schema for action \"%s:%s\":%s %s",
+          "class": "PluginImplementationError"
         }
       }
     },
