@@ -401,7 +401,7 @@
         "allowCompression": true,
         "enabled": true,
         "maxEncodingLayers": 3,
-        "maxFormFileSize": "1mb",
+        "maxFormFileSize": "1mb"
       },
       "mqtt": {
         // * enabled:
