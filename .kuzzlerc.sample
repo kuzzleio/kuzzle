@@ -426,6 +426,8 @@
         // * server
         //    Constructor options passed to underlying MQTT server.
         //    See aedes documentation for further reference: https://github.com/moscajs/aedes
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
         "enabled": false,
         "allowPubSub": false,
         "developmentMode": false,
@@ -434,7 +436,8 @@
         "responseTopic": "Kuzzle/response",
         "server": {
           "port": 1883
-        }
+        },
+        "realtimeNotifications": true
       },
       "websocket": {
         // * compression:
@@ -454,10 +457,13 @@
         //    submit to the server.
         //    Requests exceeding that rate limit are rejected.
         //    Disabled if set to 0.
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
         "compression": false,
         "enabled": true,
         "idleTimeout": 60000,
-        "rateLimit": 0
+        "rateLimit": 0,
+        "realtimeNotifications": true
       }
     }
   },
