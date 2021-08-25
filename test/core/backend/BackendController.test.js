@@ -42,7 +42,7 @@ describe('Backend', () => {
                   in: 'path',
                   name: 'name',
                   schema: {
-                    type: 'integer'
+                    type: 'string'
                   },
                   required: true,
                 }],

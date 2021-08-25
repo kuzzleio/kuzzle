@@ -269,7 +269,7 @@ app.controller.register('greeting', {
               in: "path",
               name: "name",
               schema: {
-                type: "integer"
+                type: "string"
               },
               required: true,
             }],
@@ -314,7 +314,7 @@ app.controller.register('greeting', {
                 in: "query",
                   name: "name",
                   schema: {
-                    type: "integer"
+                    type: "string"
                   },
                   required: true,
               }],

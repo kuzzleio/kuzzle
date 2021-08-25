@@ -51,7 +51,7 @@ export class BackendController extends ApplicationManager {
    *               in: "path",
    *               name: "name",
    *               schema: {
-   *                 type: "integer"
+   *                 type: "string"
    *               },
    *               required: true,
    *             }],
@@ -116,7 +116,7 @@ export class BackendController extends ApplicationManager {
    *                     in: "path",
    *                     name: "object",
    *                     schema: {
-   *                       type: "integer"
+   *                       type: "string"
    *                     },
    *                    required: true,
    *                   }],
