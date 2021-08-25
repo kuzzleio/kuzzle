@@ -487,6 +487,12 @@ describe('Test: security/userRepository', () => {
       fakeUser = new User();
       fakeUser._id = 'foo';
       fakeUser.profileIds = ['foo', 'bar'];
+      fakeUser._kuzzle_info = {
+        createdAt: 'createdAt',
+        updatedAt: 'foo',
+        updater: 'bar',
+        author: 'author'
+      }
 
       sinon.stub(userRepository, 'load').resolves(fakeUser);
       sinon.stub(userRepository, 'persist').resolves(fakeUser);
@@ -517,6 +523,8 @@ describe('Test: security/userRepository', () => {
         _id: 'id',
         _kuzzle_info: {
           updater: undefined,
+          createdAt: 'createdAt',
+          author: 'author'
         },
       });
 
@@ -550,6 +558,8 @@ describe('Test: security/userRepository', () => {
         _id: 'id',
         _kuzzle_info: {
           updater: 'userId',
+          createdAt: 'createdAt',
+          author: 'author'
         },
       });
 
