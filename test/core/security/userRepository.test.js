@@ -492,7 +492,7 @@ describe('Test: security/userRepository', () => {
         updatedAt: 'foo',
         updater: 'bar',
         author: 'author'
-      }
+      };
 
       sinon.stub(userRepository, 'load').resolves(fakeUser);
       sinon.stub(userRepository, 'persist').resolves(fakeUser);
