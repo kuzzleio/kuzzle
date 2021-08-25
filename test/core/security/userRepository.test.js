@@ -524,6 +524,7 @@ describe('Test: security/userRepository', () => {
         _kuzzle_info: {
           updater: undefined,
           createdAt: 'createdAt',
+          updatedAt: sinon.match.number,
           author: 'author'
         },
       });
@@ -559,6 +560,7 @@ describe('Test: security/userRepository', () => {
         _kuzzle_info: {
           updater: 'userId',
           createdAt: 'createdAt',
+          updatedAt: sinon.match.number,
           author: 'author'
         },
       });
