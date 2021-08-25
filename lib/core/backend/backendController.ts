@@ -43,7 +43,33 @@ export class BackendController extends ApplicationManager {
    *     sayHello: {
    *       handler: async request => `Hello, ${request.input.args.name}`,
    *       http: [{ verb: 'post', path: 'greeting/hello/:name' }]
-   *       openapi: {...}
+   *       openapi: {
+   *         "/_/greeting/hello/{name}": {
+   *           post: {
+   *             description: "Simply say hello",
+   *             parameters: [{
+   *               in: "path",
+   *               name: "name",
+   *               schema: {
+   *                 type: "integer"
+   *               },
+   *               required: true,
+   *             }],
+   *             responses: {
+   *               200: {
+   *                 description: "Custom greeting",
+   *                 content: {
+   *                   "application/json": {
+   *                     schema: {
+   *                       type: "string",
+   *                     }
+   *                   }
+   *                 }
+   *               }
+   *             }
+   *           }
+   *         }
+   *       }
    *     }
    *   }
    * })
@@ -79,8 +105,37 @@ export class BackendController extends ApplicationManager {
    *       actions: {
    *         send: {
    *           handler: this.send
-   *           http: [{ verb: 'post', path: 'email/send/:object' }]
-   *           openapi: {...}
+   *           http: [{
+   *             verb: 'post',
+   *             path: 'email/send/:object',
+   *             openapi: {
+   *               "/_/email/send/{object}": {
+   *                 post: {
+   *                   description: "Send an email",
+   *                   parameters: [{
+   *                     in: "path",
+   *                     name: "object",
+   *                     schema: {
+   *                       type: "integer"
+   *                     },
+   *                    required: true,
+   *                   }],
+   *                   responses: {
+   *                     200: {
+   *                       description: "Acknowledgement",
+   *                       content: {
+   *                          "application/json": {
+   *                           schema: {
+   *                             type: "string",
+   *                           }
+   *                         }
+   *                       }
+   *                     }
+   *                   }
+   *                 }
+   *               }
+   *             }
+   *           }]
    *         }
    *       }
    *     };

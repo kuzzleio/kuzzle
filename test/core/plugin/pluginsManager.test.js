@@ -220,22 +220,110 @@ describe('Plugin', () => {
           // generated route
           action: 'send',
           controller: 'email',
+          openapi: undefined,
           path: '/_/email/send',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/path-from-root',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/_/path-with-leading-underscore',
           verb: 'post'
         }
       ]);
+    });
+
+    it('should register openapi when defined, first in a HTTP route, then in the action', async () => {
+      const openapi = {
+        '/_/example': {
+          get: {
+            description: 'Example',
+            responses: {
+              200: {
+                description: 'OK',
+                content: {
+                  'application/json': {
+                    schema: {
+                      type: 'string',
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      };
+
+      // Action level
+      plugin.instance.api.email.actions.send.openapi = openapi;
+      plugin.instance.api.email.actions.receive.openapi = openapi;
+      // HTTP route level
+      plugin.instance.api.email.actions.receive.http[0].openapi = openapi;
+
+      await pluginsManager._initApi(plugin);
+
+      should(pluginsManager.routes).match([
+        {
+          // generated route
+          action: 'send',
+          controller: 'email',
+          openapi,
+          path: '/_/email/send',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi,
+          path: '/path-from-root',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi,
+          path: '/_/path-with-leading-underscore',
+          verb: 'post'
+        }
+      ]);
+    });
+
+    it('should throw an error if the openAPI specification is invalid', () => {
+      // Action level
+      plugin.instance.api.email.actions.send.openapi = { invalid: 'specification'};
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.controller.invalid_openapi_schema' });
+
+      // HTTP route level
+      plugin.instance.api.email.actions.send.openapi = undefined;
+      plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: 'specification'};
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.controller.invalid_openapi_schema' });
+    });
+
+    it('should throw an error if the openAPI specification is not an object', () => {
+      // Action level
+      plugin.instance.api.email.actions.send.openapi = true;
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
+
+      // HTTP route level
+      plugin.instance.api.email.actions.send.openapi = undefined;
+      plugin.instance.api.email.actions.receive.http[0].openapi = true;
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
     });
 
     it('should throw an error if the controller definition is invalid', () => {

@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import { JSONObject } from 'kuzzle-sdk';
 import { KuzzleRequest } from '../api/request';
 
 /**
@@ -42,7 +43,26 @@ export type ControllerDefinition = {
    * {
    *   sayHello: {
    *     handler: async request => `Hello, ${request.input.args.name}`,
-   *     http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+   *     http: [{ verb: 'POST', path: '/greeting/hello/:name' }],
+   *     openapi: {
+   *       "/_/greeting/sayHello": {
+   *         get: {
+   *           description: "Simply say hello",
+   *           responses: {
+   *             200: {
+   *               description: "Custom greeting",
+   *               content: {
+   *                 "application/json": {
+   *                   schema: {
+   *                     type: "string",
+   *                   }
+   *                 }
+   *               }
+   *             }
+   *           }
+   *         }
+   *       }
+   *     }
    *   }
    * }
    */
@@ -61,6 +81,41 @@ export type ControllerDefinition = {
        * or an empty array is provided.
        */
       http?: HttpRoute[]
+      /**
+       * Provide a (openAPI specification v3)[https://swagger.io/specification/#paths-object] for this route.
+       * Kuzzle only expect the `paths` object of the specification.
+       * When not defined, Kuzzle generate one from the action definition by itself.
+       *
+       * @example
+       * {
+       *   "/_/greeting/sayHello/{name}": {
+       *     get: {
+       *       description: "Simply say hello",
+       *       parameters: [{
+       *         in: "path",
+       *         name: "name",
+       *         schema: {
+       *           type: "integer"
+       *         },
+       *         required: true,
+       *       }],
+       *       responses: {
+       *         200: {
+       *           description: "Custom greeting",
+       *           content: {
+       *             "application/json": {
+       *               schema: {
+       *                 type: "string",
+       *               }
+       *             }
+       *           }
+       *         }
+       *       }
+       *     }
+       *   }
+       * }
+       */
+      openapi?: JSONObject
     }
   }
 };
@@ -79,4 +134,39 @@ export type HttpRoute = {
    * will be prefixed by `/_/<application-name>/`.
    */
   path: string
+  /**
+   * Provide a (openAPI specification v3)[https://swagger.io/specification/#paths-object] for this route.
+   * Kuzzle only expect the `paths` object of the specification.
+   * When not defined, Kuzzle generate one from the action definition by itself.
+   *
+   * @example
+   * {
+   *   "/_/greeting/sayHello/{name}": {
+   *     get: {
+   *       description: "Simply say hello",
+   *       parameters: [{
+   *         in: "path",
+   *         name: "name",
+   *         schema: {
+   *           type: "integer"
+   *         },
+   *         required: true,
+   *       }],
+   *       responses: {
+   *         200: {
+   *           description: "Custom greeting",
+   *           content: {
+   *             "application/json": {
+   *               schema: {
+   *                 type: "string",
+   *               }
+   *             }
+   *           }
+   *         }
+   *       }
+   *     }
+   *   }
+   * }
+   */
+  openapi?: JSONObject
 };

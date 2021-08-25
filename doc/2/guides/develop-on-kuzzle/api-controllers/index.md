@@ -8,7 +8,7 @@ order: 300
 
 # API Controllers
 
-Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers of actions**.  
+Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers of actions**.
 
 These actions are then **processed like any other API action** and can be executed through the different mechanisms to secure and normalize requests.
 
@@ -17,7 +17,7 @@ These actions are then **processed like any other API action** and can be execut
 Each controller can therefore have several actions. Each of these **actions is associated with a function** called [handler](/core/2/guides/develop-on-kuzzle/api-controllers#handler-function).
 
 ::: info
-The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/framework/types/controller-definition) interface.  
+The syntax of the definition of these actions and the associated handlers is defined by the [ControllerDefinition](/core/2/framework/types/controller-definition) interface.
 :::
 
 By convention, a controller action is identified with the name of the controller followed by the action separated by a colon: `<controller>:<action>` (e.g. [document:create](/core/2/api/controllers/document/create)).
@@ -26,13 +26,13 @@ By convention, a controller action is identified with the name of the controller
 Controllers must be added to the application before the application is started with the [Backend.start](/core/2/framework/classes/backend/start) method.
 :::
 
-We have chosen to allow developers to add controllers in two different ways in order to best adapt to their needs.  
+We have chosen to allow developers to add controllers in two different ways in order to best adapt to their needs.
 
-These two ways are very similar and achieve the same goal.  
+These two ways are very similar and achieve the same goal.
 
 ### Register a Controller
 
-The [Backend.controller.register](/core/2/framework/classes/backend-controller/register) method allows to add a new controller using a **Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/framework/types/controller-definition) interface**.  
+The [Backend.controller.register](/core/2/framework/classes/backend-controller/register) method allows to add a new controller using a **Plain Old Javascript Object (POJO) complying with the [ControllerDefinition](/core/2/framework/types/controller-definition) interface**.
 
 This method takes in parameter the **name** of the controller followed by its **definition**:
 
@@ -53,7 +53,7 @@ This is faster to develop but maintenance can be costly in the long run for larg
 
 ### Use a Controller class
 
-The [Backend.controller.use](/core/2/framework/classes/backend-controller/use) method allows to add a new controller using a **class inheriting from the [Controller](/core/2/framework/abstract-classes/controller) class**.  
+The [Backend.controller.use](/core/2/framework/classes/backend-controller/use) method allows to add a new controller using a **class inheriting from the [Controller](/core/2/framework/abstract-classes/controller) class**.
 
 This class must respect the following conventions:
  - extend the `Controller` class
@@ -150,7 +150,7 @@ npx wscat -c ws://localhost:7512 --execute '{
 
 ## HTTP routes
 
-The execution of an API action through the HTTP protocol is significantly different from other protocols.  
+The execution of an API action through the HTTP protocol is significantly different from other protocols.
 
 Indeed, **the HTTP protocol uses verbs and routes** in order to address an action whereas the other protocols only use the controller and action name in their JSON payloads.
 
@@ -158,7 +158,7 @@ Indeed, **the HTTP protocol uses verbs and routes** in order to address an actio
 
 When defining a controller action, it is also possible to **specify one or more HTTP routes** available to execute our action using the `http` property.
 
-This property is at the same level as `handler` and **represents an array of routes**.  
+This property is at the same level as `handler` and **represents an array of routes**.
 Each route is an object containing a `verb` and a `path` property.
 
 The following HTTP verbs are available: `get`, `post`, `put`, `delete`, `head`.
@@ -213,13 +213,131 @@ If the `http` property is not set, then Kuzzle will **generate a default route**
 
 This default generated route has the following format: `GET http://<host>:<port>/_/<controller-name>/<action-name>`.
 
-The name of the controller and the action will be converted to `kebab-case` format.  
+The name of the controller and the action will be converted to `kebab-case` format.
 For example the default route of the `sayHello` action will be: `GET http://<host>:<port>/_/greeting/say-hello`.
 
 ::: info
-It is possible to prevent the generation of a default HTTP route by providing an empty array to the `http` property.  
+It is possible to prevent the generation of a default HTTP route by providing an empty array to the `http` property.
 By doing this, the action will only be available through the HTTP protocol with the [JSON Query Endpoint](/core/2/guides/main-concepts/api#json-query-endpoint).
 :::
+
+## OpenAPI Specification
+The API action [server:openapi](/core/2/api/controllers/server/openapi) returns available API routes OpenAPI v3 specifications.
+
+By default, Kuzzle autogenerates specifications for actions added via a controller. When defining a controller action, it is possible provide a custom specification which will overwrite the default one.
+
+Refer to the official [openapi specification](https://swagger.io/specification/#paths-object) especially the paths object section. Indeed, `openapi` property will injected in `paths` field when generating the specification.
+
+```json
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title":"Kuzzle API",
+    "description":"The Kuzzle HTTP API",
+    "contact": {
+      "name":"Kuzzle team",
+      "url":"http://kuzzle.io",
+      "email":"hello@kuzzle.io"
+    },
+    "license": {
+      "name":"Apache 2",
+      "url":"http://opensource.org/licenses/apache2.0"
+    },
+    "version":"2.4.5"
+  },
+  "paths": {
+    // openapi properties injected here
+  }
+}
+```
+
+### Action Specification
+OpenAPI specification can be provided in the action definition when providing an `openapi` object composed of paths.
+
+```js
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async (request: KuzzleRequest) => {
+        return `Hello, ${request.getString('name')}`;
+      },
+      openapi: {
+        "/_/greeting/sayHello/{name}": {
+          get: {
+            description: "Simply say hello",
+            parameters: [{
+              in: "path",
+              name: "name",
+              schema: {
+                type: "integer"
+              },
+              required: true,
+            }],
+            responses: {
+              200: {
+                description: "Custom greeting",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "string",
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+});
+```
+
+### HTTP Route Specification
+Kuzzle also accepts specification given directly in http routes for more granularity.
+
+```js
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async (request: KuzzleRequest) => {
+        return `Hello, ${request.getString('name')}`;
+      },
+      http: [{
+        verb: 'post',
+        path: 'hello/world',
+        openapi: {
+          "/_/hello/world": {
+            get: {
+              description: "Simply say hello",
+              parameters: [{
+                in: "query",
+                  name: "name",
+                  schema: {
+                    type: "integer"
+                  },
+                  required: true,
+              }],
+              responses: {
+                200: {
+                  description: "Custom greeting",
+                  content: {
+                    "application/json": {
+                      schema: {
+                        type: "string",
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }]
+    }
+  }
+});
+```
 
 ## KuzzleRequest Input
 
@@ -241,7 +359,7 @@ The request object exposes methods to safely extract parameters from the request
 
 Each of those methods will check for the parameter presence and type. In case of a validation failure, the corresponding API error will be thrown.
 
-All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc. 
+All those methods start with `getXX`: [getString](/core/2/framework/classes/kuzzle-request/get-string), [getBoolean](/core/2/framework/classes/kuzzle-request/get-boolean), [getBodyObject](/core/2/framework/classes/kuzzle-request/get-body-object) etc.
 
 ### HTTP
 
@@ -252,7 +370,7 @@ With HTTP, there are 3 types of input parameters:
 
 URL parameters and query arguments can be found in the `request.input.args` property.
 
-The content of the query body can be found in the `request.input.body` property 
+The content of the query body can be found in the `request.input.body` property
 
 ::: info
 The request body must either be in JSON format or submitted as an HTTP form (URL encoded or multipart form data)
@@ -261,13 +379,13 @@ The request body must either be in JSON format or submitted as an HTTP form (URL
 For example, with the following request input:
 
 ```bash
-# Route: "POST /greeting/hello/:name" 
+# Route: "POST /greeting/hello/:name"
 curl \
   -X POST \
   -H  "Content-Type: application/json" \
   "localhost:7512/_/greeting/hello/aschen?_id=JkkZN62jLSA&age=27" \
   --data '{
-    "city" : "Antalya" 
+    "city" : "Antalya"
   }'
 ```
 
@@ -300,11 +418,11 @@ app.controller.register('greeting', {
 
 ::: info
 See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with HTTP.
-::: 
+:::
 
 ### Other protocols
 
-Other protocols directly **use JSON payloads**.  
+Other protocols directly **use JSON payloads**.
 
 These payloads contain all the information directly:
 
@@ -347,7 +465,7 @@ app.controller.register('greeting', {
 
 ::: info
 See the [KuzzleRequest Payload](/core/2/api/payloads/request) page for more information about using the API with other protocols.
-::: 
+:::
 
 
 ## KuzzleRequest Context
@@ -368,7 +486,7 @@ app.controller.register('greeting', {
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         assert(request.context.connection.protocol === 'http');
-        // Unauthenticated users are anonymous 
+        // Unauthenticated users are anonymous
         // and the anonymous user ID is "-1"
         assert(request.context.user._id === '-1');
         // equivalent to
@@ -501,7 +619,7 @@ app.controller.register('redirect', {
             'Location': 'http://kuzzle.io'
           }
         });
-        
+
         return null;
       }
     }
@@ -536,7 +654,7 @@ curl http://localhost:7512/_/greeting/say-hello?name=Yagmur
 ```
 
 ::: info
-Default generated routes use the `GET` verb.  
+Default generated routes use the `GET` verb.
 It is therefore possible to open them directly in a browser: [http://localhost:7512/_/greeting/say-hello?name=Yagmur](http://localhost:7512/_/greeting/say-hello?name=Yagmur)
 :::
 
@@ -560,7 +678,7 @@ From a terminal, [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI, c
 kourou greeting:sayHello --arg name=Yagmur
 ```
 
-It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.  
+It is possible to pass multiple arguments by repeating the `--arg <arg>=<value>` flag or specify a body with the `--body '{}'` flag.
 
 ::: info
 More info about [Kourou](https://github.com/kuzzleio/kourou).
@@ -634,7 +752,7 @@ Response response = await kuzzle.QueryAsync(request);
 
 ## Allow access to a custom Controller Action
 
-In the rights management system, **[roles](/core/2/guides/main-concepts/permissions#roles) are managing access to API actions**.  
+In the rights management system, **[roles](/core/2/guides/main-concepts/permissions#roles) are managing access to API actions**.
 
 They operate on a whitelist principle by **listing the controllers and actions they give access to**.
 
