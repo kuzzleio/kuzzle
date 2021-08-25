@@ -3,7 +3,7 @@
 const
   { After, Before, BeforeAll } = require('cucumber'),
   testMappings = require('../fixtures/mappings'),
-  testSecurities = require('../fixtures/securities'),
+  testPermissions = require('../fixtures/permissions'),
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
@@ -19,7 +19,7 @@ async function resetSecurityDefault(sdk) {
   await sdk.query({
     controller: 'admin',
     action: 'loadSecurities',
-    body: testSecurities,
+    body: testPermissions,
     refresh: 'wait_for'
   });
 
@@ -37,12 +37,12 @@ BeforeAll(({ timeout: 10 * 1000 }), async function () {
 
   await world.sdk.connect();
 
-  console.log('Loading default securities..');
+  console.log('Loading default permissions..');
 
   await world.sdk.query({
     controller: 'admin',
     action: 'loadSecurities',
-    body: testSecurities,
+    body: testPermissions,
     onExistingUsers: 'overwrite',
     refresh: 'wait_for'
   });
@@ -56,7 +56,9 @@ Before(({ timeout: 10 * 1000 }), async function () {
   await this.sdk.auth.login(
     'local',
     { username: 'test-admin', password: 'password' });
+});
 
+Before(({ tags: 'not @preserveDatabase' }), async function () {
   await this.sdk.query({
     controller: 'admin',
     action: 'resetDatabase',

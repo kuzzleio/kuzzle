@@ -29,6 +29,7 @@ import {
   BackendConfig,
   BackendController,
   BackendHook,
+  BackendImport,
   BackendPipe,
   BackendPlugin,
   BackendStorage,
@@ -71,6 +72,14 @@ export class Backend {
   protected _hooks = {};
   protected _controllers = {};
   protected _plugins = {};
+  protected _import = {
+    mappings: {},
+    onExistingUsers: 'skip',
+    profiles: {},
+    roles: {},
+    userMappings: {},
+    users: {}
+  };
   protected _vaultKey?: string;
   protected _secretsFile?: string;
   protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
@@ -167,6 +176,17 @@ export class Backend {
   public cluster: BackendCluster;
 
   /**
+   * Import manager
+   *
+   * @method mappings - Import mappings
+   * @method profiles - Import profiles
+   * @method roles - Import roles
+   * @method users - Import users
+   * @method userMappings - Import user mappings
+   */
+  public import: BackendImport;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -223,6 +243,7 @@ export class Backend {
     this.controller = new BackendController(this);
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
+    this.import = new BackendImport(this);
     this.log = new InternalLogger(this);
     this.cluster = new BackendCluster();
 
@@ -272,12 +293,11 @@ export class Backend {
     application.commit = this.commit;
 
     const options = {
-      fixtures: this._support.fixtures,
+      import: this._import,
       installations: this._installationsWaitingList,
-      mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
-      securities: this._support.securities,
+      support: this._support, // NOSONAR
       vaultKey: this._vaultKey,
     };
 
