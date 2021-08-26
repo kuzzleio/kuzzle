@@ -47,7 +47,6 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "^7.13.0",
-    "@openapi-contrib/json-schema-to-openapi-schema": "^2.1.0",
     "aedes": "^0.46.0",
     "bluebird": "^3.7.2",
     "cli-color": "^2.0.0",
