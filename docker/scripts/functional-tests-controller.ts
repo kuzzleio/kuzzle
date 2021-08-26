@@ -7,33 +7,7 @@ export class FunctionalTestsController extends Controller {
     this.definition = {
       actions: {
         helloWorld: {
-          handler: this.helloWorld,
-          openapi: {
-            "/_/greeting/hello-world/{name}": {
-              get: {
-                parameters: [{
-                  in: "path",
-                  name: "name",
-                  schema: {
-                    type: "string"
-                  },
-                  required: true,
-                }],
-                responses: {
-                  200: {
-                    description: "Custom greeting",
-                    content: {
-                      "application/json": {
-                        schema: {
-                          type: "string",
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
+          handler: this.helloWorld
         },
         byeWorld: {
           handler: this.byeWorld

@@ -69,26 +69,22 @@ describe('OpenApiGenerator', () => {
 
     it('should render openAPI route specification as it is, when defined for some route', () => {
       const openapi = {
-        '/_/greeting/sayHello/{name}': {
-          get: {
-            description: 'Simply say hello',
-            parameters: [{
-              in: 'path',
-              name: 'name',
-              schema: {
-                type: 'string'
-              },
-              required: true,
-            }],
-            responses: {
-              200: {
-                description: 'Custom greeting',
-                content: {
-                  'application/json': {
-                    schema: {
-                      type: 'string',
-                    }
-                  }
+        description: 'Simply say hello',
+        parameters: [{
+          in: 'path',
+          name: 'name',
+          schema: {
+            type: 'string'
+          },
+          required: true,
+        }],
+        responses: {
+          200: {
+            description: 'Custom greeting',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
                 }
               }
             }
@@ -96,7 +92,7 @@ describe('OpenApiGenerator', () => {
         }
       };
       kuzzle.pluginsManager.routes[0].openapi = openapi;
-      should(generateOpenApi().paths['/_/greeting/sayHello/{name}']).match(openapi['/_/greeting/sayHello/{name}']);
+      should(generateOpenApi().paths['/_/pluginController/pluginAction'].post).match(openapi);
     });
   });
 });

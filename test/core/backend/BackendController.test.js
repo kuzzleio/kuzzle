@@ -34,33 +34,32 @@ describe('Backend', () => {
       actions: {
         sayHello: {
           handler: async request => `Hello, ${request.input.args.name}`,
-          http: [{ verb: 'POST', path: '/greeting/hello/:name' }],
-          openapi: {
-            '/greeting/hello/{name}': {
-              post: {
-                parameters: [{
-                  in: 'path',
-                  name: 'name',
-                  schema: {
-                    type: 'string'
-                  },
-                  required: true,
-                }],
-                responses: {
-                  200: {
-                    description: 'Custom greeting',
-                    content: {
-                      'application/json': {
-                        schema: {
-                          type: 'string',
-                        }
+          http: [{
+            verb: 'POST',
+            path: '/greeting/hello/:name',
+            openapi: {
+              parameters: [{
+                in: 'path',
+                name: 'name',
+                schema: {
+                  type: 'string'
+                },
+                required: true,
+              }],
+              responses: {
+                200: {
+                  description: 'Custom greeting',
+                  content: {
+                    'application/json': {
+                      schema: {
+                        type: 'string',
                       }
                     }
                   }
                 }
               }
             }
-          }
+          }],
         },
         sayBye: {
           handler: async request => `Bye ${request.input.args.name}!`,

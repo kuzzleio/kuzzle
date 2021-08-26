@@ -222,11 +222,54 @@ By doing this, the action will only be available through the HTTP protocol with 
 :::
 
 ## OpenAPI Specification
+
 The API action [server:openapi](/core/2/api/controllers/server/openapi) returns available API routes OpenAPI v3 specifications.
 
-By default, Kuzzle autogenerates specifications for actions added via a controller. When defining a controller action, it is possible provide a custom specification which will overwrite the default one.
+By default, Kuzzle autogenerates specifications for actions added via a controller. When defining a controller action, it is possible to provide a custom specification which will overwrite the default one.
 
-Refer to the official [openapi specification](https://swagger.io/specification/#paths-object) especially the paths object section. Indeed, `openapi` property will injected in `paths` field when generating the specification.
+### HTTP Route
+
+To register this custom specification, it must be declared with http routes in an `openapi` property. To write this object, follow the official [openapi specification](https://swagger.io/specification/#paths-object) especially the paths object section.
+
+```js
+app.controller.register('greeting', {
+  actions: {
+    sayHello: {
+      handler: async (request: KuzzleRequest) => {
+        return `Hello, ${request.getString('name')}`;
+      },
+      http: [{
+        verb: 'post',
+        path: 'hello/world',
+        openapi: {
+          description: "Simply say hello",
+          parameters: [{
+            in: "query",
+              name: "name",
+              schema: {
+                type: "string"
+              },
+              required: true,
+          }],
+          responses: {
+            200: {
+              description: "Custom greeting",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "string",
+                  }
+                }
+              }
+            }
+          }
+        }
+      }]
+    }
+  }
+});
+```
+Then Kuzzle will inject the http route specification as shown in the example below using each property `path`, `verb` and `openapi`.
 
 ```json
 {
@@ -246,97 +289,13 @@ Refer to the official [openapi specification](https://swagger.io/specification/#
     "version":"2.4.5"
   },
   "paths": {
-    // openapi properties injected here
+    "<path>": {
+      "<verb>": {
+        // openapi property injected here
+      }
+    },
   }
 }
-```
-
-### Action Specification
-OpenAPI specification can be provided in the action definition when providing an `openapi` object composed of paths.
-
-```js
-app.controller.register('greeting', {
-  actions: {
-    sayHello: {
-      handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.getString('name')}`;
-      },
-      openapi: {
-        "/_/greeting/sayHello/{name}": {
-          get: {
-            description: "Simply say hello",
-            parameters: [{
-              in: "path",
-              name: "name",
-              schema: {
-                type: "string"
-              },
-              required: true,
-            }],
-            responses: {
-              200: {
-                description: "Custom greeting",
-                content: {
-                  "application/json": {
-                    schema: {
-                      type: "string",
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-});
-```
-
-### HTTP Route Specification
-Kuzzle also accepts specification given directly in http routes for more granularity.
-
-```js
-app.controller.register('greeting', {
-  actions: {
-    sayHello: {
-      handler: async (request: KuzzleRequest) => {
-        return `Hello, ${request.getString('name')}`;
-      },
-      http: [{
-        verb: 'post',
-        path: 'hello/world',
-        openapi: {
-          "/_/hello/world": {
-            get: {
-              description: "Simply say hello",
-              parameters: [{
-                in: "query",
-                  name: "name",
-                  schema: {
-                    type: "string"
-                  },
-                  required: true,
-              }],
-              responses: {
-                200: {
-                  description: "Custom greeting",
-                  content: {
-                    "application/json": {
-                      schema: {
-                        type: "string",
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }]
-    }
-  }
-});
 ```
 
 ## KuzzleRequest Input

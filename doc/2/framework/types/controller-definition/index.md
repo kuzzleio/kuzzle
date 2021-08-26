@@ -29,17 +29,13 @@ const definition: ControllerDefinition = {
         verb: 'post',
         path: 'greeting/sayHello',
         openapi: {
-          "/_/greeting/sayHello": {
-            post: {
-              description: "Simply say hello",
-              responses: {
-                200: {
-                  content: {
-                    "application/json": {
-                      schema: {
-                        type: "string",
-                      }
-                    }
+          description: "Simply say hello",
+          responses: {
+            200: {
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "string",
                   }
                 }
               }
