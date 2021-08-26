@@ -7,7 +7,7 @@ description: BackendImport.profiles method
 
 # `profiles()`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.14.0" />
 <CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Loads profiles into the app.
