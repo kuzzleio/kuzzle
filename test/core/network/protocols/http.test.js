@@ -58,7 +58,7 @@ describe('core/network/protocols/http', () => {
       'foo'
     ];
     kuzzle.config.internal.allowAllOrigins = false;
-    kuzzle.config.internal.cookieAuthentication = true;
+    kuzzle.config.http.cookieAuthentication = true;
     httpWs = new HttpWs();
   });
 
@@ -522,7 +522,7 @@ describe('core/network/protocols/http', () => {
           Buffer.from('Access-Control-Allow-Origin'),
           Buffer.from('foobar')
         );
-      
+
       should(response.writeHeader)
         .not.be.calledWithMatch(
           Buffer.from('Vary'),

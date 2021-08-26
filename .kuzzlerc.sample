@@ -12,14 +12,25 @@
     // * accessControlAllowOrigin:
     //    sets the default Access-Control-Allow-Origin HTTP
     //    header used to send responses to the client
+    // * accessControlAllowOriginUseRegExp
+    //    Allow the usage of Regular Expressions to verify the origin
+    //    based on Access-Control-Allow-Origin.
+    //    /!\ This convert every string in Access-Control-Allow-Origin into Regular Expressions
+    //    be careful with the Regular Expressions that you use.
     // * accessControlAllowMethods:
     //    sets the default Access-Control-Allow-Method header
     // * accessControlAllowHeaders:
     //    sets the default Access-Control-Allow-Headers
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    // * cookieAuthentication:
+    //    Allows browser clients to connect to Kuzzle with cookies.
+    //    /!\ This should not be allowed if the "http.accessControlAllowOrigin"
+    //    configuration contains a wildcard ("*").
     "accessControlAllowOrigin": "*",
+    "accessControlAllowOriginUseRegExp": false,
     "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
-    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
+    "cookieAuthentication": true
   },
 
   // Kuzzle configured limits
@@ -55,10 +66,6 @@
     //      NB: A condition is either a "simple" operator (anything but "and",
     //          "or" and "bool"), or a boolean condition that contains only
     //          simple operators.
-    // * subscriptionMinterms
-    //      Maximum number of minterms (AND) clauses after the filters are
-    //      transformed in their Canonical Disjunctive Normal Form (CDNF).
-    //      Set to 0 for no limit.
     // * subscriptionRooms
     //      Maximum number of different subscription rooms
     //      (i.e. different index+collection+filters subscription
@@ -66,7 +73,7 @@
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
     // * subscriptionDocumentTTL
-    //      Maximum time (in seconds) a document will be kept in cache for
+    //      Maximum time (in milliseconds) a document will be kept in cache for
     //      real-time subscriptions.
     //      This cache is used to notify subscriber when a document enters or
     //      leaves a scope after an update.
@@ -83,10 +90,9 @@
     "loginsPerSecond": 1,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
-    "subscriptionConditionsCount": 16,
-    "subscriptionMinterms": 0,
+    "subscriptionConditionsCount": 100,
     "subscriptionRooms": 1000000,
-    "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
+    "subscriptionDocumentTTL": 259200000 // 72 * 60 * 60 * 1000
   },
 
   // The application section lets you configure your application
@@ -196,12 +202,12 @@
   "repositories": {
     // [Common]
     //   * cacheTTL:
-    //      Time to live (in seconds) of cached objects.
+    //      Time to live (in milliseconds) of cached objects.
     //      Decreasing this value will lower Redis memory and
     //      disk consumption, at the cost of increasing
     //      queries rate to the database and response times
     "common": {
-      "cacheTTL": 1440
+      "cacheTTL": 1440000
     }
   },
 
@@ -420,6 +426,8 @@
         // * server
         //    Constructor options passed to underlying MQTT server.
         //    See aedes documentation for further reference: https://github.com/moscajs/aedes
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
         "enabled": false,
         "allowPubSub": false,
         "developmentMode": false,
@@ -428,7 +436,8 @@
         "responseTopic": "Kuzzle/response",
         "server": {
           "port": 1883
-        }
+        },
+        "realtimeNotifications": true
       },
       "websocket": {
         // * compression:
@@ -448,10 +457,13 @@
         //    submit to the server.
         //    Requests exceeding that rate limit are rejected.
         //    Disabled if set to 0.
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
         "compression": false,
         "enabled": true,
         "idleTimeout": 60000,
-        "rateLimit": 0
+        "rateLimit": 0,
+        "realtimeNotifications": true
       }
     }
   },

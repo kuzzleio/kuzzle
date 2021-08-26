@@ -24,11 +24,10 @@ message NodeShutdown {
 message NewRealtimeRoom {
   uint64 messageId = 1;
   string index = 2;
-  string collection = 3;
-  string roomId = 4;
+  string id = 3;
 
   // serialized JSON
-  string filters = 5;
+  string filter = 4;
 }
 
 message RemoveRealtimeRoom {

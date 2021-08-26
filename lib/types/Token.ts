@@ -59,5 +59,10 @@ export interface Token extends JSONObject {
    * True if the token has been refreshed with the current request
    */
   refreshed: boolean;
+
+  /**
+   * Token type, could be authToken or apiKey
+   */
+  type: string;
 }
 

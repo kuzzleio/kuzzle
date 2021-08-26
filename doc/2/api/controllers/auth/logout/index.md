@@ -8,7 +8,8 @@ title: logout
 
 
 
-Revokes the provided authentication token.
+Revokes the provided authentication token if it's not an API key.
+If you are trying to delete an API key, see [auth:deleteApiKey](/core/2/api/controllers/auth/delete-api-key).
 
 If there were any, real-time subscriptions are cancelled.
 
@@ -43,7 +44,7 @@ Headers: Authorization: "Bearer <authentication token>"
 
 ### Optional:
 
-* `global`: if `true`, also revokes all other active sessions instead of just the current one (default: `false`)
+* `global`: if `true`, also revokes all other active sessions that aren't using an API key, instead of just the current one (default: `false`)
 
 * `cookieAuth`: Erase of the token in the [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies)
   - This only works in a Browser and only if Kuzzle CORS is properly configured. see [Authentication Token in the Browser](/core/2/guides/main-concepts/authentication)

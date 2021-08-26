@@ -54,7 +54,7 @@ describe('Plugin Context', () => {
 
     it('should expose the right constructors', () => {
       let repository;
-      const Koncorde = require('koncorde');
+      const { Koncorde } = require('../../../../lib/core/shared/KoncordeWrapper');
 
       should(context.constructors).be.an.Object().and.not.be.empty();
       should(context.constructors.Koncorde).be.a.Function();

@@ -119,9 +119,15 @@ describe('Test: collection controller', () => {
       const response = await collectionController.truncate(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:storage:public:collection:truncate',
+        'core:storage:public:collection:refresh',
         index,
         collection);
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:deleteByQuery',
+        index,
+        collection,
+        {},
+        { refresh: 'wait_for', fetch: false });
 
       should(response).match({
         acknowledged: true
