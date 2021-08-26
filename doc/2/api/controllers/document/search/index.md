@@ -14,8 +14,8 @@ That limit is by default set at 10000 documents (see `limits.documentsFetchCount
 To handle larger result sets, you have to either create a cursor by providing a value to the `scroll` option or, if you sort the results, by using the Elasticsearch [search_after](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-search-after) command.
 
 ::: warning
-When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.  
-It can lead to memory leaks if a scroll duration too large is provided, or if too many scroll sessions are open simultaneously.  
+When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep the same result during the entire scroll session.
+It can lead to memory leaks if a scroll duration too large is provided, or if too many scroll sessions are open simultaneously.
 :::
 
 
@@ -26,8 +26,8 @@ You can restrict the scroll session maximum duration under the `services.storage
 
 <SinceBadge version="2.8.0"/>
 
-This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
-Koncorde filters will be translated into an Elasticsearch query.  
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.
+Koncorde filters will be translated into an Elasticsearch query.
 
 ::: warning
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
@@ -98,7 +98,7 @@ Method: GET
 
 ```bash
 kourou document:search <index> <collection> <query>
-kourou document:search <index> <collection> <query> --sort <sort> --size <size> 
+kourou document:search <index> <collection> <query> --sort <sort> --size <size>
 ```
 
 ---
@@ -143,6 +143,7 @@ Returns a paginated search result set, with the following properties:
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
   - `highlight`: optional result from [highlight API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-highlighting)
+  - `inner_hits`: optional result from [inner_hits API](https://www.elastic.co/guide/en/elasticsearch/reference/current/inner-hits.html) <SinceBadge version="auto-version"/>
 - `remaining`: remaining documents that can be fetched. Present only if the `scroll` argument has been supplied <SinceBadge version="2.4.0"/>
 - `scrollId`: identifier to the next page of result. Present only if the `scroll` argument has been supplied
 - `total`: total number of found documents. Can be greater than the number of documents in a result page, meaning that other matches than the one retrieved are available
