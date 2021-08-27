@@ -35,7 +35,7 @@ describe('Backend', () => {
         sayHello: {
           handler: async request => `Hello, ${request.input.args.name}`,
           http: [{
-            verb: 'POST',
+            verb: 'post',
             path: '/greeting/hello/:name',
             openapi: {
               parameters: [{
