@@ -329,9 +329,20 @@ describe('Test: ElasticSearch service', () => {
             hits: [
               {
                 _id: 'liia',
-                _source: { city: 'Kathmandu' },
+                _source: { country: 'Nepal' },
+                _score: 42,
                 highlight: 'highlight',
-                other: 'thing'
+                inner_hits: {
+                  inner_name: {
+                    hits: {
+                      hits: [{
+                        _id: 'nestedLiia',
+                        _source: { city: 'Kathmandu' },
+                      }]
+                    }
+                  }
+                },
+                other: 'thing',
               }
             ],
             total: { value: 1 },
@@ -363,8 +374,15 @@ describe('Test: ElasticSearch service', () => {
         hits: [
           {
             _id: 'liia',
-            _source: { city: 'Kathmandu' },
+            _source: { country: 'Nepal' },
+            _score: 42,
             highlight: 'highlight',
+            inner_hits: {
+              inner_name: [{
+                _id: 'nestedLiia',
+                _source: { city: 'Kathmandu' },
+              }]
+            }
           },
         ],
         remaining: 0,
