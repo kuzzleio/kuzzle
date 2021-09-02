@@ -36,7 +36,33 @@ app.controller.register('greeting', {
   actions: {
     sayHello: {
       handler: async (request: KuzzleRequest) => `Hello, ${request.input.args.name}`,
-      http: [{ verb: 'post', path: 'greeting/hello/:name' }]
+      http: [{
+        verb: 'post',
+        path: 'greeting/hello/:name',
+        openapi: {
+          description: "Simply say hello",
+          parameters: [{
+            in: "path",
+            name: "name",
+            schema: {
+              type: "string"
+            },
+            required: true,
+          }],
+          responses: {
+            200: {
+              description: "Custom greeting",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "string",
+                  }
+                }
+              }
+            }
+          }
+        }
+      }]
     }
   }
 })
