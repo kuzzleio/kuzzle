@@ -6,9 +6,7 @@ title: searchProfiles
 
 # searchProfiles
 
-
-
-Searches security profiles, returning only those linked to the provided list of security roles.
+Searches security profiles.
 
 <SinceBadge version="auto-version"/>
 
@@ -31,16 +29,16 @@ Body:
 
 ```js
 {
-  // list of roles
+  // list of roles (deprecated since auto-version)
   "roles": [
     "role1",
     "admin"
   ],
 
-  // OR use a search query 
+  // use a search query 
   "query": {
     "terms": {
-      "tags": "moderator"
+      "policies.roleId": ["role1", "admin"]
     }
   }
 }
@@ -53,16 +51,16 @@ Body:
   "controller": "security",
   "action": "searchProfiles",
   "body": {
-    // list of roles
+    // list of roles (deprecated since auto-version)
     "roles": [
       "role1",
       "admin"
     ],
 
-    // OR use a search query 
+    // use a search query 
     "query": {
       "terms": {
-        "tags": "moderator"
+        "policies.roleId": ["role1", "admin"]
       }
     }
   },
@@ -90,15 +88,11 @@ Body:
 
 ### Optional:
 
-- `roles`: an array of role identifiers. Restrict the search to profiles linked to the provided roles.
+- `roles`: an array of role identifiers. Restrict the search to profiles linked to the provided roles <DeprecatedBadge version="auto-version"/>.
 
 - `query`: search query using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
 
 If the body is left empty, the result will return all available profiles.
-
-::: warning
-You cannot use both `roles` and `query` properties at the same time.
-::: 
 
 ---
 
