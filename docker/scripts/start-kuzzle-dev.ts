@@ -221,6 +221,15 @@ app.import.roles(functionalFixtures.roles)
 app.import.userMappings(functionalFixtures.userMappings)
 app.import.users(functionalFixtures.users, { onExistingUsers: 'overwrite' })
 
+
+app.hook.register('core:realtime:user:subscribe:after', sub => {
+  console.log('sub ', sub)
+});
+
+app.hook.register('core:realtime:user:unsubscribe:after', sub => {
+  console.log('unsub ', sub)
+});
+
 loadAdditionalPlugins()
   .then(() => app.start())
   .then(() => {

@@ -177,15 +177,15 @@ Then(/^I'm not able to delete profile (?:with id )?"([^"]*)"$/, function (id, ca
 });
 
 Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]*)")?$/, function (profilesCount, roleId, callback) {
-  const body = {roles: []};
+  const roles = [];
 
   if (roleId) {
-    body.roles.push(this.idPrefix + roleId);
+   roles.push(this.idPrefix + roleId);
   }
 
   let main = function (callbackAsync) {
     setTimeout(() => {
-      this.api.searchProfiles(body)
+      this.api.searchProfiles(roles)
         .then(response => {
           if (response.error) {
             return callbackAsync(new Error(response.error.message));
@@ -280,7 +280,7 @@ Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, fun
 Given(/^A scrolled search on profiles$/, function () {
   this.scrollId = null;
 
-  return this.api.searchProfiles({roles: []}, {scroll: '2s'})
+  return this.api.searchProfiles([], {scroll: '2s'})
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);
