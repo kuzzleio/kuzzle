@@ -64,6 +64,7 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should register a new room and customer', async () => {
+    request['context\u200b'].user = { _id: 'Umraniye' };
     kuzzle.koncorde.normalize
       .onFirstCall().returns({id: 'foobar', index: 'foo/bar', filter: []})
       .onSecondCall().returns({id: 'barfoo', index: 'foo/bar', filter: []});
@@ -122,6 +123,7 @@ describe('Test: hotelClerk.subscribe', () => {
       filters: request.input.body,
       roomId,
       connectionId,
+      kuid: 'Umraniye',
     });
   });
 
