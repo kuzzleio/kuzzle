@@ -180,7 +180,7 @@ Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]
   const roles = [];
 
   if (roleId) {
-   roles.push(this.idPrefix + roleId);
+    roles.push(this.idPrefix + roleId);
   }
 
   let main = function (callbackAsync) {
