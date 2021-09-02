@@ -329,32 +329,12 @@ describe('Test: security/profileRepository', () => {
 
   describe('#search', () => {
     it('should register a "search" event', async () => {
-      sinon.stub(profileRepository, 'searchProfiles');
+      sinon.stub(profileRepository, 'search');
 
       kuzzle.ask.restore();
       await kuzzle.ask('core:security:profile:search', 'foo', 'bar');
 
-      should(profileRepository.searchProfiles).calledWith('foo', 'bar');
-    });
-
-    it('should match all profiles on an empty request', async () => {
-      const opts = {from: 13, size: 42, scroll: 'foo'};
-      profileRepository.search = sinon.spy();
-
-      await profileRepository.searchProfiles(null, opts);
-
-      should(profileRepository.search)
-        .be.calledOnce()
-        .be.calledWith({query: {match_all: {}}}, opts);
-
-      await profileRepository.searchProfiles(['role1', 'role2']);
-      should(profileRepository.search)
-        .be.calledTwice()
-        .be.calledWith({
-          query: {
-            terms: {'policies.roleId': ['role1', 'role2']}
-          }
-        });
+      should(profileRepository.search).calledWith('foo', 'bar');
     });
   });
 

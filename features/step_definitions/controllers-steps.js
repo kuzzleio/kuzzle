@@ -11,7 +11,7 @@ const Bluebird = require('bluebird');
 
 Then(/I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/, async function (expectSuccess, controller, action, dataTable) {
   const args = this.parseObject(dataTable);
-  console.log({ controller, action, ...args })
+
   try {
     const response = await this.sdk.query({ controller, action, ...args });
 

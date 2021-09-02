@@ -8,7 +8,14 @@ title: searchProfiles
 
 
 
-Searches security profiles, optionally returning only those linked to the provided list of security roles.
+Searches security profiles, returning only those linked to the provided list of security roles.
+
+<SinceBadge version="auto-version"/>
+
+Support for search using a search query with the `query` property.
+
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
+Koncorde filters will be translated into an Elasticsearch query.  
 
 ---
 
@@ -24,10 +31,18 @@ Body:
 
 ```js
 {
+  // list of roles
   "roles": [
     "role1",
     "admin"
-  ]
+  ],
+
+  // OR use a search query 
+  "query": {
+    "terms": {
+      "tags": "moderator"
+    }
+  }
 }
 ```
 
@@ -38,10 +53,18 @@ Body:
   "controller": "security",
   "action": "searchProfiles",
   "body": {
+    // list of roles
     "roles": [
       "role1",
       "admin"
-    ]
+    ],
+
+    // OR use a search query 
+    "query": {
+      "terms": {
+        "tags": "moderator"
+      }
+    }
   },
   // optional: result pagination configuration
   "from": 0,
@@ -59,6 +82,7 @@ Body:
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollProfiles](/core/2/api/controllers/security/scroll-profiles) API action
 - `size`: the maximum number of profiles returned in one response page
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="auto-version"/>
 
 ---
 
@@ -67,6 +91,14 @@ Body:
 ### Optional:
 
 - `roles`: an array of role identifiers. Restrict the search to profiles linked to the provided roles.
+
+- `query`: search query using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
+
+If the body is left empty, the result will return all available profiles.
+
+::: warning
+You cannot use both `roles` and `query` properties at the same time.
+::: 
 
 ---
 

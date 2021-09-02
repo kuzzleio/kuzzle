@@ -455,11 +455,16 @@ describe('Test: security controller - profiles', () => {
 
       const response = await securityController.searchProfiles(request);
 
-      should(searchStub).calledWithMatch(searchEvent, request.input.body.roles, {
-        from: 13,
-        size: 42,
-        scroll: 'duration'
-      });
+      should(searchStub).calledWithMatch(
+        searchEvent,
+        {
+          query: { terms: { 'policies.roleId': 'roles'.split('') } }
+        },
+        {
+          from: 13,
+          size: 42,
+          scroll: 'duration'
+        });
 
       should(response).be.an.Object();
       should(response.hits).be.an.Array().and.have.length(3);
@@ -476,7 +481,7 @@ describe('Test: security controller - profiles', () => {
     it('should pass an empty array and default options on an empty request', async () => {
       await securityController.searchProfiles(request);
 
-      should(searchStub).calledWithMatch(searchEvent, [], {
+      should(searchStub).calledWithMatch(searchEvent, {}, {
         from: 0,
         size: kuzzle.config.limits.documentsFetchCount,
         scroll: undefined,
@@ -498,6 +503,7 @@ describe('Test: security controller - profiles', () => {
     });
 
     it('should reject if searching fails', () => {
+      request.input.body = {};
       const error = new Error('Mocked error');
       searchStub.rejects(error);
 
