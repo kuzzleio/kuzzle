@@ -76,7 +76,7 @@ The role definition is represented as a JSON object where each key at the root o
 ```
 
 ::: info
-Roles also have a `tags` property who can contains a list of string.
+Roles also have a `tags` property which can contains a list of string.
 
 ```js
 {
