@@ -23,6 +23,7 @@ Body:
 ```js
 {
   "rateLimit": 50,
+  "tags": ["moderators"],
   "policies": [
     {
       "roleId": "<roleId>"
@@ -55,6 +56,7 @@ Body:
   "_id": "<profileId>",
   "body": {
     "rateLimit": 50,
+    "tags": ["moderators"],
     "policies": [
       {
         "roleId": "<anotherRoleId>"
