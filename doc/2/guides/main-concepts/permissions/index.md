@@ -156,7 +156,7 @@ You can use the `onAssignedUsers` option of the [security:deleteProfile](/core/2
 A **profile definition is a JSON object** that contains an optional rate limit parameter, and an array of policies.
 
 ::: info
-Profiles also have a `tags` property who can contains a list of string.
+Profiles also have a `tags` property which can contains a list of string.
 
 ```js
 {
