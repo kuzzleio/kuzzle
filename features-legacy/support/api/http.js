@@ -1039,12 +1039,12 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  searchProfiles (query, args) {
+  searchProfiles (roles, args) {
     const options = {
       url: this.apiPath('profiles/_search'),
       method: 'POST',
       body: {
-        query
+        roles
       }
     };
 

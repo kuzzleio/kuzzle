@@ -394,7 +394,7 @@ describe('Test: security controller - roles', () => {
 
       should(searchStub).calledWithMatch(
         searchEvent,
-        request.input.body.controllers,
+        { controllers: request.input.body.controllers },
         { from: 0, size: kuzzle.config.limits.documentsFetchCount });
     });
 
@@ -449,17 +449,21 @@ describe('Test: security controller - roles', () => {
 
     it('should search for all controllers if none are provided', async () => {
       delete request.input.body.controllers;
+
       await securityController.searchRoles(request);
+
       should(searchStub).calledWithMatch(
         searchEvent,
-        [],
+        {},
         { from: 0, size: kuzzle.config.limits.documentsFetchCount });
 
       request.input.body = null;
+
       await securityController.searchRoles(request);
+
       should(searchStub).calledWithMatch(
         searchEvent,
-        [],
+        {},
         { from: 0, size: kuzzle.config.limits.documentsFetchCount });
     });
 

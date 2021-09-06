@@ -1,5 +1,39 @@
 Feature: Security Controller
 
+  # security:searchRole =====================================================
+
+  @security
+  Scenario: Search for profiles with a search query
+    Given I successfully execute the action "security":"createRole" with args:
+      | _id  | "kite-surf-1"                                                    |
+      | body | { "tags": ["kite-surf"], "controllers": { "*": { "actions": { "*": true } } } } |
+    And I successfully execute the action "security":"createRole" with args:
+      | _id  | "kite-surf-2"                                                    |
+      | body | { "tags": ["kite-surf"], "controllers": { "*": { "actions": { "*": true } } } } |
+    When I successfully execute the action "security":"searchRoles" with args:
+      | body | { "query": { "term": { "tags": "kite-surf" } } } |
+    Then I should receive a "hits" array of objects matching:
+      | _id           |
+      | "kite-surf-1" |
+      | "kite-surf-2" |
+
+  # security:searchProfile =====================================================
+
+  @security
+  Scenario: Search for profiles with a search query
+    Given I successfully execute the action "security":"createProfile" with args:
+      | _id  | "kite-surf-1"                                                    |
+      | body | { "tags": ["kite-surf"], "policies": [{ "roleId": "default" }] } |
+    And I successfully execute the action "security":"createProfile" with args:
+      | _id  | "kite-surf-2"                                                    |
+      | body | { "tags": ["kite-surf"], "policies": [{ "roleId": "default" }] } |
+    When I successfully execute the action "security":"searchProfiles" with args:
+      | body | { "query": { "term": { "tags": "kite-surf" } } } |
+    Then I should receive a "hits" array of objects matching:
+      | _id           |
+      | "kite-surf-1" |
+      | "kite-surf-2" |
+
   # security:updateRole ========================================================
 
   @security

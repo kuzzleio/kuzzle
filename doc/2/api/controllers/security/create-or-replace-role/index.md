@@ -24,6 +24,7 @@ Body:
 
 ```js
 {
+  "tags": ["moderators"],
   "controllers": {
     "*": {
       "actions": {
@@ -42,6 +43,7 @@ Body:
   "action": "createOrReplaceRole",
   "_id": "<roleId>",
   "body": {
+    "tags": ["moderators"],
     "controllers": {
       "*": {
         "actions": {

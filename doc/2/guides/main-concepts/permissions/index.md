@@ -75,6 +75,19 @@ The role definition is represented as a JSON object where each key at the root o
 }
 ```
 
+::: info
+Roles also have a `tags` property which can contains a list of string.
+
+```js
+{
+  "tags": ["moderator", "global"],
+  "controllers": {
+    // ...
+  }
+}
+```
+:::
+
 The `controllers` and `actions` properties can be set to a specific value or to the wildcard value "\*".
 
 When `controller` is declared within a Plugin, its name must be prefixed with the name of the Plugin, like `< plugin-name/controller-name >`.
@@ -141,6 +154,19 @@ You can use the `onAssignedUsers` option of the [security:deleteProfile](/core/2
 :::
 
 A **profile definition is a JSON object** that contains an optional rate limit parameter, and an array of policies.
+
+::: info
+Profiles also have a `tags` property which can contains a list of string.
+
+```js
+{
+  "tags": ["moderator", "global"],
+  "policies": [
+    // ...
+  ]
+}
+```
+:::
 
 ### Policies
 
