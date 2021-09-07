@@ -98,7 +98,7 @@ jobs:
 
   doc-dead-links:
     name: Check dead-links
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -121,7 +121,7 @@ jobs:
 
   doc-deploy:
     name: Deployment Doc to Prod
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-18.04
     needs: [cluster-monkey-tests, doc-dead-links]
     steps:
       - uses: actions/checkout@v2
