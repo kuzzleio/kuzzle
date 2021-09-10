@@ -354,14 +354,12 @@ export class PluginContext {
             });
           return global.kuzzle.ask(
             'core:realtime:subscribe',
-            request
-          );
+            request);
         },
         unregister: (connectionId, roomId, notify) =>
           global.kuzzle.ask(
             'core:realtime:unsubscribe',
-            connectionId, roomId, notify
-          )
+            connectionId, roomId, null, notify)
       },
       trigger: (eventName, payload) => (
         global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)

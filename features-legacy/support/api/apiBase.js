@@ -1030,13 +1030,13 @@ class ApiBase {
     return this.send(msg);
   }
 
-  searchProfiles (query, args) {
+  searchProfiles (roles, args) {
     const
       msg = {
         controller: 'security',
         action: 'searchProfiles',
         body: {
-          query
+          roles
         }
       };
 

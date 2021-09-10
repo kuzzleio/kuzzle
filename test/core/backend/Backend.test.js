@@ -6,20 +6,12 @@ const mockrequire = require('mock-require');
 
 const { EmbeddedSDK } = require('../../../lib/core/shared/sdk/embeddedSdk');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const FsMock = require('../../mocks/fs.mock');
 
 describe('Backend', () => {
   let application;
-  let fsStub;
   let Backend;
 
   beforeEach(() => {
-    fsStub = new FsMock();
-    fsStub.existsSync.returns(true);
-    fsStub.readFileSync.returns('ref: refs/master');
-    fsStub.statSync.returns({ isDirectory: () => true });
-
-    mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
     ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
@@ -95,13 +87,11 @@ describe('Backend', () => {
       should(plugin.application).be.true();
       should(plugin.name).be.eql('black-mesa');
       should(plugin.version).be.eql('42.21.84');
-      should(plugin.commit).be.String();
       should(plugin.instance).be.eql(application._instanceProxy);
 
       should(options.secretsFile).be.eql(application._secretsFile);
       should(options.vaultKey).be.eql(application._vaultKey);
-      should(options.plugins)
-        .have.keys('kuzzle-plugin-logger', 'kuzzle-plugin-auth-passport-local');
+      should(options.plugins).have.keys('kuzzle-plugin-logger', 'kuzzle-plugin-auth-passport-local');
       should(options.installations).be.eql(application._installationsWaitingList);
       should(options.import).be.eql(application._import);
       should(options.support).be.eql(application._support);

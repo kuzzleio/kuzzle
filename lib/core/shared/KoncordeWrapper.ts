@@ -31,7 +31,7 @@ import {
 /**
  * Emulates the normalized object returned by Koncorde v3
  */
-class NormalizedFilterV3 {
+export class NormalizedFilterV3 {
   /**
    * Filter Unique Identifier
    *

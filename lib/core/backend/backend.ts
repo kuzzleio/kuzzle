@@ -20,6 +20,7 @@
  */
 
 import fs from 'fs';
+
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import kerror from '../../kerror';
@@ -275,7 +276,6 @@ export class Backend {
 
     this._kuzzle = new Kuzzle(this.config.content);
 
-    // we need to load the default plugins
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
 
@@ -384,7 +384,7 @@ export class Backend {
       return null;
     }
 
-    const gitDir = `${dir}/.gut`;
+    const gitDir = `${dir}/.git`;
 
     if (! fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
@@ -394,8 +394,8 @@ export class Backend {
       return null;
     }
 
-    const ref = fs.readFileSync(`${dir}/.gut/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.gut/${ref}`.replace('\n', '');
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
       return null;
