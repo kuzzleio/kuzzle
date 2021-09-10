@@ -65,7 +65,7 @@ Returns a paginated search result set, with the following properties:
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
   - `highlight`: optional result from [highlight API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-highlighting)
-  - `inner_hits`: optional result from [inner_hits API](https://www.elastic.co/guide/en/elasticsearch/reference/current/inner-hits.html) <SinceBadge version="auto-version"/>
+  - `inner_hits`: optional result from [inner_hits API](https://www.elastic.co/guide/en/elasticsearch/reference/current/inner-hits.html) <SinceBadge version="2.14.1"/>
 - `remaining`: remaining documents that can be fetched <SinceBadge version="2.4.0"/>
 - `scrollId`: identifier to the next page of result. Can be different than the previous one(s)
 - `total`: total number of found documents. Usually greater than the number of documents in a result page

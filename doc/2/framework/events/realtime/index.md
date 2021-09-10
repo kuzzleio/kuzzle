@@ -140,7 +140,7 @@ The provided `subscription` object has the following properties:
 | `index`        | <pre>string</pre>  | Index                                                                                                      |
 | `collection`   | <pre>string</pre>  | Collection                                                                                                 |
 | `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
-| `kuid`         | <pre>string</pre>  | ID of the user <SinceBadge version="auto-version" />                                                       |
+| `kuid`         | <pre>string</pre>  | ID of the user <SinceBadge version="2.14.1" />                                                       |
 
 ---
 
@@ -156,9 +156,9 @@ Pipes cannot listen to this event, only hooks can.
 
 | Arguments        | Type              | Description                                                                                                                |
 |------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------|
-| `RequestContest` | <pre>object</pre> | [RequestContext](/core/2/guides/write-protocols/context/requestcontext/) object <DeprecatedBadge version="auto-version" /> |
-| `room`           | <pre>object</pre> | Joined room information in Koncorde format <DeprecatedBadge version="auto-version" />                                      |
-| `subscription`   | <pre>object</pre> | Contains information about the removed subscription <SinceBadge version="auto-version" />                                  |
+| `RequestContest` | <pre>object</pre> | [RequestContext](/core/2/guides/write-protocols/context/requestcontext/) object <DeprecatedBadge version="2.14.1" /> |
+| `room`           | <pre>object</pre> | Joined room information in Koncorde format <DeprecatedBadge version="2.14.1" />                                      |
+| `subscription`   | <pre>object</pre> | Contains information about the removed subscription <SinceBadge version="2.14.1" />                                  |
 
 ### room
 

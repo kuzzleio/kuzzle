@@ -10,7 +10,7 @@ title: searchRoles
 
 Searches security roles, returning only those allowing access to the provided controllers.
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.14.1"/>
 
 Support for search using a search query with the `query` property.
 
@@ -77,7 +77,7 @@ Body:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `size`: the maximum number of profiles returned in one response page
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="auto-version"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.14.1"/>
 
 ---
 

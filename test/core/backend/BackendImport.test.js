@@ -4,20 +4,12 @@ const should = require('should');
 const mockrequire = require('mock-require');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const FsMock = require('../../mocks/fs.mock');
 
 describe('BackendImport', () => {
   let application;
-  let fsStub;
   let Backend;
 
   beforeEach(() => {
-    fsStub = new FsMock();
-    fsStub.existsSync.returns(true);
-    fsStub.readFileSync.returns('ref: refs/master');
-    fsStub.statSync.returns({ isDirectory: () => true });
-
-    mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
     ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));

@@ -8,7 +8,7 @@ title: searchProfiles
 
 Searches security profiles.
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.14.1"/>
 
 Support for search using a search query with the `query` property.
 
@@ -29,7 +29,7 @@ Body:
 
 ```js
 {
-  // list of roles (deprecated since auto-version)
+  // list of roles (deprecated since 2.14.1)
   "roles": [
     "role1",
     "admin"
@@ -51,7 +51,7 @@ Body:
   "controller": "security",
   "action": "searchProfiles",
   "body": {
-    // list of roles (deprecated since auto-version)
+    // list of roles (deprecated since 2.14.1)
     "roles": [
       "role1",
       "admin"
@@ -80,7 +80,7 @@ Body:
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `scroll`: create a new forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` will be returned in the results. This cursor can then be moved forward using the [scrollProfiles](/core/2/api/controllers/security/scroll-profiles) API action
 - `size`: the maximum number of profiles returned in one response page
-- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="auto-version"/>
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.14.1"/>
 
 ---
 
@@ -88,7 +88,7 @@ Body:
 
 ### Optional:
 
-- `roles`: an array of role identifiers. Restrict the search to profiles linked to the provided roles <DeprecatedBadge version="auto-version"/>.
+- `roles`: an array of role identifiers. Restrict the search to profiles linked to the provided roles <DeprecatedBadge version="2.14.1"/>.
 
 - `query`: search query using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
 
