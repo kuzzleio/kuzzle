@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.14.1",
+  "version": "2.14.2",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -33,13 +33,6 @@
     "test:lint:ts:fix": "eslint --max-warnings=0 --fix ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint:js": "eslint --max-warnings=0 ./lib ./test ./features-legacy ./bin ./features ./doc/build-error-codes.js ./plugins/available/functional-test-plugin",
     "test:lint:js:fix": "eslint --max-warnings=0 --fix ./lib ./test ./features-legacy ./bin ./features ./doc/build-error-codes.js",
-    "doc-prepare": "kuzdoc framework:install",
-    "doc-dev": "kuzdoc repo:dev -d /core/2/ -v 2",
-    "doc-build": "kuzdoc repo:build -d /core/2/ -v 2",
-    "doc-upload": "kuzdoc repo:deploy -d /core/2/ -v 2",
-    "doc-cloudfront": "kuzdoc repo:cloudfront -d /core/2/*",
-    "doc-deploy": "npm run doc-upload && npm run doc-cloudfront",
-    "doc-netlify": "npm run doc-prepare && kuzdoc repo:build -d / -v 2",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes"
   },
   "directories": {
@@ -56,7 +49,7 @@
     "didyoumean": "^1.2.2",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
-    "inquirer": "^8.1.2",
+    "inquirer": "^8.1.4",
     "ioredis": "^4.27.9",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
@@ -83,7 +76,7 @@
     "uuid": "^8.3.2",
     "validator": "^13.6.0",
     "winston": "^3.3.3",
-    "winston-elasticsearch": "0.15.8",
+    "winston-elasticsearch": "0.15.9",
     "winston-syslog": "^2.4.4",
     "winston-transport": "^4.4.0",
     "yargs": "^17.1.1",
@@ -95,8 +88,8 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.172",
-    "@typescript-eslint/eslint-plugin": "^4.31.0",
-    "@typescript-eslint/parser": "^4.31.0",
+    "@typescript-eslint/eslint-plugin": "^4.31.1",
+    "@typescript-eslint/parser": "^4.31.1",
     "async": "^3.2.1",
     "chokidar": "^3.5.2",
     "codecov": "^3.8.3",
@@ -104,7 +97,6 @@
     "ergol": "^1.0.1",
     "eslint": "^7.32.0",
     "js-yaml": "^4.1.0",
-    "kuzdoc": "^1.4.5",
     "mocha": "^9.1.1",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.8",
@@ -117,7 +109,7 @@
     "sinon": "^11.1.2",
     "strip-json-comments": "3.1.1",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.3"
   },
   "engines": {
     "node": ">= 12.13.0"
