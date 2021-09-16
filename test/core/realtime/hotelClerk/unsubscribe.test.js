@@ -54,7 +54,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
     sinon.stub(hotelClerk, 'unsubscribe');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:unsubscribe', 'cnx', 'room', null, 'notify');
+    await kuzzle.ask('core:realtime:unsubscribe', 'cnx', 'room', 'notify');
 
     should(hotelClerk.unsubscribe).calledWith('cnx', 'room', 'notify');
   });
