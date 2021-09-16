@@ -43,6 +43,10 @@ describe('Test: hotelClerk.join', () => {
     }, {connectionId, token: null});
 
     kuzzle.config.limits.subscriptionMinterms = 0;
+
+    kuzzle.koncorde.normalize.returns({
+      id: 'foobar', index: 'foo/bar', filter: []
+    });
   });
 
   it('should register a "join" event', async () => {

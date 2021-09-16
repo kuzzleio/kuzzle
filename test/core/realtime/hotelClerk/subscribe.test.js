@@ -45,6 +45,10 @@ describe('Test: hotelClerk.subscribe', () => {
       }
     }, {connectionId, token: null});
 
+    kuzzle.koncorde.normalize.returns({
+      id: 'foobar', index: 'foo/bar', filter: []
+    });
+
     kuzzle.config.limits.subscriptionMinterms = 0;
   });
 

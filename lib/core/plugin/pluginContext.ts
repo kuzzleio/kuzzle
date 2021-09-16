@@ -359,7 +359,7 @@ export class PluginContext {
         unregister: (connectionId, roomId, notify) =>
           global.kuzzle.ask(
             'core:realtime:unsubscribe',
-            connectionId, roomId, null, notify)
+            connectionId, roomId, notify)
       },
       trigger: (eventName, payload) => (
         global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload)
