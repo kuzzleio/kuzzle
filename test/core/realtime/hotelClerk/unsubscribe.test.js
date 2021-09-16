@@ -56,7 +56,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
     kuzzle.ask.restore();
     await kuzzle.ask('core:realtime:unsubscribe', 'cnx', 'room', null, 'notify');
 
-    should(hotelClerk.unsubscribe).calledWith('cnx', 'room', null, 'notify');
+    should(hotelClerk.unsubscribe).calledWith('cnx', 'room', 'notify');
   });
 
   it('should reject if the customer cannot be found', () => {
