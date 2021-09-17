@@ -8,7 +8,6 @@ description: Controller abstract class properties
 # Controller
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `Controller` abstract class is the base class used to declare new controllers. Those controllers instances are meant to be used with the [BackendController.use](/core/2/framework/classes/backend-controller) method.
 

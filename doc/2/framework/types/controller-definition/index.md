@@ -8,7 +8,6 @@ description: ControllerDefinition type definition
 # ControllerDefinition
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `ControllerDefinition` type is used to define new controllers.
 
