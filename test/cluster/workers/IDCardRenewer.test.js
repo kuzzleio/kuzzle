@@ -13,6 +13,7 @@ describe('ClusterIDCardRenewer', () => {
     beforeEach(() => {
       idCardRenewer = new IDCardRenewer();
       idCardRenewer.initRedis = sinon.stub().resolves();
+      idCardRenewer.renewIDCard = sinon.stub().resolves();
     });
 
     it('should initialize the redis client', async () => {
@@ -54,7 +55,8 @@ describe('ClusterIDCardRenewer', () => {
     });
 
     it('should set an interval that will call the method renewIDCard', async () => {
-      idCardRenewer.renewIDCard = sinon.spy();
+      idCardRenewer.renewIDCard = sinon.stub().resolves();
+      const stub = sinon.spy(global, 'setInterval');
 
       await idCardRenewer.init({
         redis: {
@@ -64,12 +66,15 @@ describe('ClusterIDCardRenewer', () => {
           name: 'foo'
         },
         nodeIdKey: 'nodeIdKey',
-        refreshDelay: 0,
+        refreshDelay: 1,
       });
 
-      await new Promise((res) => setTimeout(res, 10));
+      await new Promise((res) => setTimeout(res, 1));
 
-      should(idCardRenewer.renewIDCard).be.called();
+      should(idCardRenewer.renewIDCard).be.calledTwice();
+      should(stub)
+        .be.calledOnce()
+        .and.be.calledWith(sinon.match.func, 1);
     });
   });
 
@@ -101,6 +106,7 @@ describe('ClusterIDCardRenewer', () => {
     });
 
     it('should call pexpire to refresh the key expiration time', async () => {
+      idCardRenewer.redis.commands.pexpire.resetHistory();
       await idCardRenewer.renewIDCard();
 
       should(idCardRenewer.redis.commands.pexpire)
@@ -126,7 +132,8 @@ describe('ClusterIDCardRenewer', () => {
         .and.be.calledWith({ error: 'Node too slow: ID card expired' });
     });
 
-    it('should not do anything if already disposed', async () => {
+    it('should not do nothing if already disposed', async () => {
+      idCardRenewer.redis.commands.pexpire.resetHistory();
       idCardRenewer.disposed = true;
       await idCardRenewer.renewIDCard();
 
