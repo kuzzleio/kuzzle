@@ -38,7 +38,7 @@ describe('ClusterIdCardHandler', () => {
         .resolves(1);
 
       idCardHandler._constructWorker = async (path) => {
-        return new WorkerMock(path)
+        return new WorkerMock(path);
       };
     });
 

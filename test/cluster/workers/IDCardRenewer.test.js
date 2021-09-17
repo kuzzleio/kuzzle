@@ -4,8 +4,6 @@ const should = require('should');
 const sinon = require('sinon');
 
 const IDCardRenewer = require('../../../lib/cluster/workers/IDCardRenewer');
-const Redis = require('../../../lib/service/cache/redis');
-
 
 describe('ClusterIDCardRenewer', () => {
 
@@ -88,7 +86,7 @@ describe('ClusterIDCardRenewer', () => {
             del: sinon.stub().resolves(),
           }
         };
-      }
+      };
 
       idCardRenewer.parentPort = {
         postMessage: sinon.stub(),
@@ -151,7 +149,7 @@ describe('ClusterIDCardRenewer', () => {
             del: sinon.stub().resolves(),
           }
         };
-      }
+      };
 
       await idCardRenewer.init({
         nodeIdKey: 'foo',
