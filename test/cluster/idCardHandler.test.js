@@ -6,6 +6,7 @@ const sinon = require('sinon');
 const Kuzzle = require('../mocks/kuzzle.mock');
 
 const { ClusterIdCardHandler, IdCard } = require('../../lib/cluster/idCardHandler');
+const WorkerMock = require('../mocks/worker.mock');
 
 describe('ClusterIdCardHandler', () => {
   let kuzzle;
@@ -35,6 +36,10 @@ describe('ClusterIdCardHandler', () => {
       kuzzle.ask
         .withArgs('core:cache:internal:pexpire')
         .resolves(1);
+
+      idCardHandler._constructWorker = async (path) => {
+        return new WorkerMock(path)
+      };
     });
 
     afterEach(() => {

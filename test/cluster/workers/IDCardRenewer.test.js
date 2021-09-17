@@ -6,15 +6,18 @@ const sinon = require('sinon');
 const IDCardRenewer = require('../../../lib/cluster/workers/IDCardRenewer');
 const Redis = require('../../../lib/service/cache/redis');
 
+
 describe('ClusterIDCardRenewer', () => {
+
   describe('#init', () => {
     let idCardRenewer;
 
     beforeEach(() => {
       idCardRenewer = new IDCardRenewer();
+      idCardRenewer.initRedis = sinon.stub().resolves();
     });
 
-    it('should initialize a redis client', async () => {
+    it('should initialize the redis client', async () => {
       await idCardRenewer.init({
         redis: {
           config: {
@@ -24,7 +27,14 @@ describe('ClusterIDCardRenewer', () => {
         }
       });
 
-      should(idCardRenewer.redis).be.instanceOf(Redis);
+      should(idCardRenewer.initRedis)
+        .be.calledOnce()
+        .and.be.calledWith({
+          config: {
+            initTimeout: 42
+          },
+          name: 'foo'
+        });
     });
 
     it('should init variable based on the given config', async () => {
@@ -70,6 +80,16 @@ describe('ClusterIDCardRenewer', () => {
 
     beforeEach(async () => {
       idCardRenewer = new IDCardRenewer();
+
+      idCardRenewer.initRedis = async () => {
+        idCardRenewer.redis = {
+          commands: {
+            pexpire: sinon.stub().resolves(1),
+            del: sinon.stub().resolves(),
+          }
+        };
+      }
+
       idCardRenewer.parentPort = {
         postMessage: sinon.stub(),
       };
@@ -77,20 +97,9 @@ describe('ClusterIDCardRenewer', () => {
       idCardRenewer.dispose = sinon.stub().resolves();
 
       await idCardRenewer.init({
-        redis: {
-          config: {initTimeout: 42},
-          name: 'bar'
-        },
         nodeIdKey: 'foo',
         refreshDelay: 100,
       });
-
-      idCardRenewer.redis = {
-        commands: {
-          pexpire: sinon.stub().resolves(1),
-          del: sinon.stub().resolves(),
-        }
-      };
     });
 
     it('should call pexpire to refresh the key expiration time', async () => {
@@ -135,21 +144,19 @@ describe('ClusterIDCardRenewer', () => {
     beforeEach(async () => {
       idCardRenewer = new IDCardRenewer();
 
+      idCardRenewer.initRedis = async () => {
+        idCardRenewer.redis = {
+          commands: {
+            pexpire: sinon.stub().resolves(1),
+            del: sinon.stub().resolves(),
+          }
+        };
+      }
+
       await idCardRenewer.init({
-        redis: {
-          config: {initTimeout: 42},
-          name: 'bar'
-        },
         nodeIdKey: 'foo',
         refreshDelay: 100,
       });
-
-      idCardRenewer.redis = {
-        commands: {
-          pexpire: sinon.stub().resolves(1),
-          del: sinon.stub().resolves(),
-        }
-      };
     });
 
     it('should set disposed to true and delete the nodeIdKey inside redis when called', async () => {
