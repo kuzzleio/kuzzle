@@ -75,55 +75,33 @@ describe('ClusterIdCardHandler', () => {
       should(args0[1]).not.eql(args1[1]);
     });
 
-    it('should refresh the IdCard in Redis', async () => {
-      await idCardHandler.createIdCard();
-
-      should(idCardHandler.refreshTimer).not.null();
-
-      await new Promise(resolve => setTimeout(resolve, refreshDelay * 1.5 + 5));
-
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:pexpire',
-        idCardHandler.nodeIdKey,
-        refreshDelay * 1.5);
-
-      should(evictNodeStub).not.called();
-    });
-
-    it('should evict the node if unable to refresh the IdCard in time', async () => {
-      kuzzle.ask
-        .withArgs('core:cache:internal:pexpire')
-        .resolves(0);
+    it('should evict the node an error is received from the refresh worker', async () => {
 
       await idCardHandler.createIdCard();
 
-      should(idCardHandler.refreshTimer).not.null();
+      should(idCardHandler.refreshWorker).not.null();
 
-      await new Promise(resolve => setTimeout(resolve, refreshDelay * 1.5 + 5));
-
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:pexpire',
-        idCardHandler.nodeIdKey,
-        refreshDelay * 1.5);
+      idCardHandler.refreshWorker.emit('message', { error: 'foo bar' });
 
       should(evictNodeStub)
         .calledOnce()
-        .calledWith('Node too slow: ID card expired');
+        .calledWith('foo bar');
     });
   });
 
   describe('#dispose', () => {
-    it('should clear the timer and delete the idCard from Redis', async () => {
+    it('should clear set disposed to true and notify the refresh worker that it should be disposed', async () => {
       const stub = sinon.stub();
-      idCardHandler.refreshTimer = setInterval(() => stub(), 10);
+      idCardHandler.refreshWorker = {
+        postMessage: stub,
+      };
 
       await idCardHandler.dispose();
-      await new Promise(resolve => setTimeout(resolve, 15));
 
-      should(stub).not.be.called();
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:del',
-        idCardHandler.nodeIdKey);
+      should(stub)
+        .be.called()
+        .and.be.calledWith({ action: 'dispose' });
+      should(idCardHandler.disposed).be.true();
     });
   });
 
