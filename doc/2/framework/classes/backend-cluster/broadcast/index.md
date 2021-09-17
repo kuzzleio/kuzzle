@@ -8,7 +8,6 @@ description: BackendCluster.broadcast method
 # `broadcast()`
 
 <SinceBadge version="2.9.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Broadcasts an event and its payload to other cluster nodes.
 

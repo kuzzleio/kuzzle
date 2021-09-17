@@ -100,7 +100,6 @@ Kuzzle start sequence ends in failure if:
 ## Accessing secrets in your application
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
 
