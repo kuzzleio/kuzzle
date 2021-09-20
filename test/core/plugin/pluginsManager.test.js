@@ -220,22 +220,87 @@ describe('Plugin', () => {
           // generated route
           action: 'send',
           controller: 'email',
+          openapi: undefined,
           path: '/_/email/send',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/path-from-root',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/_/path-with-leading-underscore',
           verb: 'post'
         }
       ]);
+    });
+
+    it('should register openapi when defined', async () => {
+      const openapi = {
+        description: 'Example',
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                }
+              }
+            }
+          }
+        }
+      };
+
+      // HTTP route level
+      plugin.instance.api.email.actions.receive.http[0].openapi = openapi;
+
+      await pluginsManager._initApi(plugin);
+
+      should(pluginsManager.routes).match([
+        {
+          // generated route
+          action: 'send',
+          controller: 'email',
+          openapi: undefined,
+          path: '/_/email/send',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi,
+          path: '/path-from-root',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi : undefined,
+          path: '/_/path-with-leading-underscore',
+          verb: 'post'
+        }
+      ]);
+    });
+
+    it('should throw an error if the openAPI specification is invalid', () => {
+      plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: 'specification'};
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.controller.invalid_openapi_schema' });
+    });
+
+    it('should throw an error if the openAPI specification is not an object', () => {
+      plugin.instance.api.email.actions.receive.http[0].openapi = true;
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
     });
 
     it('should throw an error if the controller definition is invalid', () => {

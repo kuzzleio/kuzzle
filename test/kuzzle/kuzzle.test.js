@@ -85,12 +85,12 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      kuzzle.install = sinon.stub().resolves(0);
+      kuzzle.install = sinon.stub().resolves();
+      kuzzle.import = sinon.stub().resolves();
       const options = {
+        import: { something: 'here' },
         installations: [{ id: 'foo', handler: () => {} }],
-        mappings: {},
-        fixtures: {},
-        securities: {}
+        support: { something: 'here' }
       };
 
       should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
@@ -105,11 +105,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle.funnel.init,
         kuzzle.statistics.init,
         kuzzle.validation.curateSpecification,
-        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
-        kuzzle.ask.withArgs('core:storage:public:document:import'),
         kuzzle.entryPoint.init,
         kuzzle.pluginsManager.init,
-        kuzzle.ask.withArgs('core:security:load'),
+        kuzzle.import.withArgs(options.import, options.support),
         kuzzle.ask.withArgs('core:security:verify'),
         kuzzle.router.init,
         kuzzle.install.withArgs(options.installations),
@@ -291,6 +289,81 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         { id: 'id' });
       should(handler).not.be.called();
       should(kuzzle.log.info).not.be.called();
+    });
+  });
+
+  describe('#import', () => {
+    let toImport;
+    let toSupport;
+
+    beforeEach(() => {
+      toImport = {
+        mappings: { something: 'here' },
+        onExistingUsers: 'skip',
+        profiles: { something: 'here' },
+        roles: { something: 'here' },
+        userMappings: { something: 'here' },
+        user: { something: 'here' },
+      };
+      toSupport = {
+        mappings: { something: 'here' },
+        fixtures: { something: 'here' },
+        securities: {
+          profiles: { something: 'here' },
+          roles: { something: 'here' },
+          user: { something: 'here' }
+        }
+      };
+
+      kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
+      kuzzle.internalIndex.refreshCollection = sinon.stub().resolves();
+    });
+
+    it('should load correctly toImport mappings and permissions', async () => {
+      await kuzzle.import(toImport, {});
+
+      should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
+        { refresh: true });
+      should(kuzzle.ask).calledWith('core:security:load',
+        {
+          profiles: toImport.profiles,
+          roles: toImport.roles,
+          users: toImport.users,
+        },
+        {
+          onExistingUsers: toImport.onExistingUsers,
+          onExistingUsersWarning: true,
+          refresh: 'wait_for',
+        });
+    });
+
+    it('should load correctly toSupport mappings, fixtures and securities', async () => {
+      await kuzzle.import({}, toSupport);
+
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
+        rawMappings: true,
+        refresh: true,
+      });
+      should(kuzzle.ask).calledWith('core:storage:public:document:import', toSupport.fixtures);
+      should(kuzzle.ask).calledWith('core:security:load', toSupport.securities, {
+        force: true,
+        refresh: 'wait_for'
+      });
+    });
+
+    it('should prevent mappings to be loaded from import and support simultaneously', () => {
+      return should(kuzzle.import(toImport, { mappings: { something: 'here' } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
+    });
+
+    it('should prevent permissions to be loaded from import and support simultaneously', () => {
+      return should(
+        kuzzle.import(
+          { profiles: { something: 'here' } },
+          { securities: { roles: { something: 'here'} } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
   });
 });

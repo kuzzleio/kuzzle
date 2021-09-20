@@ -359,7 +359,7 @@ describe('Plugin Context', () => {
 
       it('should call unregister with the right ask and argument', async () => {
         await context.accessors.subscription.unregister('connectionId', 'roomId', false);
-        should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', false);
+        should(kuzzle.ask).be.calledWithExactly('core:realtime:unsubscribe', 'connectionId', 'roomId', null,false);
       });
     });
 

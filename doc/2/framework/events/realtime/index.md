@@ -139,7 +139,8 @@ The provided `subscription` object has the following properties:
 | `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier              |
 | `index`        | <pre>string</pre>  | Index                                                                                                      |
 | `collection`   | <pre>string</pre>  | Collection                                                                                                 |
-| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://github.com/kuzzleio/koncorde/wiki/Filter-Unique-Identifiers) |
+| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
+| `kuid`         | <pre>string</pre>  | ID of the user <SinceBadge version="2.14.1" />                                                             |
 
 ---
 
@@ -153,10 +154,11 @@ Pipes cannot listen to this event, only hooks can.
 
 <SinceBadge version="2.5.0"/>
 
-| Arguments        | Type              | Description                                                                     |
-|------------------|-------------------|---------------------------------------------------------------------------------|
-| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/guides/write-protocols/context/requestcontext/) object |
-| `room`           | <pre>object</pre> | Joined room information in Koncorde format                                      |
+| Arguments        | Type              | Description                                                                                                                |
+|------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `RequestContest` | <pre>object</pre> | [RequestContext](/core/2/guides/write-protocols/context/requestcontext/) object <DeprecatedBadge version="2.14.1" /> |
+| `room`           | <pre>object</pre> | Joined room information in Koncorde format <DeprecatedBadge version="2.14.1" />                                      |
+| `subscription`   | <pre>object</pre> | Contains information about the removed subscription <SinceBadge version="2.14.1" />                                  |
 
 ### room
 
@@ -167,6 +169,18 @@ The provided `room` object has the following properties:
 | `id`         | <pre>string</pre> | Room unique identifier |
 | `index`      | <pre>string</pre> | Index                  |
 | `collection` | <pre>string</pre> | Collection             |
+
+### subscription
+
+The provided `subscription` object has the following properties:
+
+| Properties     | Type               | Description                                                                                   |
+|----------------|--------------------|-----------------------------------------------------------------------------------------------|
+| `roomId`       | <pre>string</pre>  | Room unique identifier                                                                        |
+| `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier |
+| `index`        | <pre>string</pre>  | Index                                                                                         |
+| `collection`   | <pre>string</pre>  | Collection                                                                                    |
+| `kuid`         | <pre>string</pre>  | ID of the user                                                                                |
 
 ---
 

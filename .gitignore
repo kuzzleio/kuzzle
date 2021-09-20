@@ -83,6 +83,7 @@ lib/core/backend/backendCluster.js
 lib/core/backend/backendConfig.js
 lib/core/backend/backendController.js
 lib/core/backend/backendHook.js
+lib/core/backend/backendImport.js
 lib/core/backend/backendPipe.js
 lib/core/backend/backendPlugin.js
 lib/core/backend/backendStorage.js

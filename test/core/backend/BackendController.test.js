@@ -4,20 +4,12 @@ const should = require('should');
 const mockrequire = require('mock-require');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const FsMock = require('../../mocks/fs.mock');
 
 describe('Backend', () => {
   let application;
-  let fsStub;
   let Backend;
 
   beforeEach(() => {
-    fsStub = new FsMock();
-    fsStub.existsSync.returns(true);
-    fsStub.readFileSync.returns('ref: refs/master');
-    fsStub.statSync.returns({ isDirectory: () => true });
-
-    mockrequire('fs', fsStub);
     mockrequire('../../../lib/kuzzle', KuzzleMock);
 
     ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
@@ -34,7 +26,32 @@ describe('Backend', () => {
       actions: {
         sayHello: {
           handler: async request => `Hello, ${request.input.args.name}`,
-          http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+          http: [{
+            verb: 'post',
+            path: '/greeting/hello/:name',
+            openapi: {
+              parameters: [{
+                in: 'path',
+                name: 'name',
+                schema: {
+                  type: 'string'
+                },
+                required: true,
+              }],
+              responses: {
+                200: {
+                  description: 'Custom greeting',
+                  content: {
+                    'application/json': {
+                      schema: {
+                        type: 'string',
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }],
         },
         sayBye: {
           handler: async request => `Bye ${request.input.args.name}!`,

@@ -224,3 +224,10 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
 Then('I wait {int} milliseconds', async function (ms) {
   await Bluebird.delay(ms);
 });
+
+Then(/I have .* in the app before startup/, function () {
+  // Do nothing, purpose here is only readability
+  // To check what have been done, refer to:
+  // - docker/scripts/start-kuzzle-dev
+  // - features/fixtures/imports
+});

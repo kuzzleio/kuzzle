@@ -20,6 +20,7 @@
  */
 
 import fs from 'fs';
+
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import kerror from '../../kerror';
@@ -29,6 +30,7 @@ import {
   BackendConfig,
   BackendController,
   BackendHook,
+  BackendImport,
   BackendPipe,
   BackendPlugin,
   BackendStorage,
@@ -71,6 +73,14 @@ export class Backend {
   protected _hooks = {};
   protected _controllers = {};
   protected _plugins = {};
+  protected _import = {
+    mappings: {},
+    onExistingUsers: 'skip',
+    profiles: {},
+    roles: {},
+    userMappings: {},
+    users: {}
+  };
   protected _vaultKey?: string;
   protected _secretsFile?: string;
   protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
@@ -167,6 +177,17 @@ export class Backend {
   public cluster: BackendCluster;
 
   /**
+   * Import manager
+   *
+   * @method mappings - Import mappings
+   * @method profiles - Import profiles
+   * @method roles - Import roles
+   * @method users - Import users
+   * @method userMappings - Import user mappings
+   */
+  public import: BackendImport;
+
+  /**
    * @deprecated
    *
    * Support for old features available before Kuzzle as a framework
@@ -223,6 +244,7 @@ export class Backend {
     this.controller = new BackendController(this);
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
+    this.import = new BackendImport(this);
     this.log = new InternalLogger(this);
     this.cluster = new BackendCluster();
 
@@ -254,7 +276,6 @@ export class Backend {
 
     this._kuzzle = new Kuzzle(this.config.content);
 
-    // we need to load the default plugins
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
 
@@ -272,12 +293,11 @@ export class Backend {
     application.commit = this.commit;
 
     const options = {
-      fixtures: this._support.fixtures,
+      import: this._import,
       installations: this._installationsWaitingList,
-      mappings: this._support.mappings,
       plugins: this._plugins,
       secretsFile: this._secretsFile,
-      securities: this._support.securities,
+      support: this._support, // NOSONAR
       vaultKey: this._vaultKey,
     };
 
@@ -364,7 +384,7 @@ export class Backend {
       return null;
     }
 
-    const gitDir = `${dir}/.gut`;
+    const gitDir = `${dir}/.git`;
 
     if (! fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
@@ -374,8 +394,8 @@ export class Backend {
       return null;
     }
 
-    const ref = fs.readFileSync(`${dir}/.gut/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.gut/${ref}`.replace('\n', '');
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
+    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
 
     if (! fs.existsSync(refFile)) {
       return null;

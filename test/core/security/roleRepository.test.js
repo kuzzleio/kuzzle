@@ -28,7 +28,7 @@ describe('Test: security/roleRepository', () => {
     kuzzle = new KuzzleMock();
 
     profileRepositoryMock = {
-      searchProfiles: sinon.stub(),
+      search: sinon.stub(),
     };
 
     roleRepository = new RoleRepository({
@@ -241,39 +241,39 @@ describe('Test: security/roleRepository', () => {
 
       let result;
 
-      result = await roleRepository.searchRole(['foo']);
+      result = await roleRepository.searchRole({ controllers: ['foo'] });
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.foo, roles.foobar]);
 
-      result = await roleRepository.searchRole(['bar']);
+      result = await roleRepository.searchRole({ controllers: ['bar'] });
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(3);
       should(result.hits).match([roles.default, roles.bar, roles.foobar]);
 
-      result = await roleRepository.searchRole(['foo', 'bar']);
+      result = await roleRepository.searchRole({ controllers: ['foo', 'bar'] });
       should(result.total).be.exactly(4);
       should(result.hits.length).be.exactly(4);
       should(result.hits).match([roles.default, roles.foo, roles.bar, roles.foobar]);
 
-      result = await roleRepository.searchRole(['baz']);
+      result = await roleRepository.searchRole({ controllers: ['baz'] });
       should(result.total).be.exactly(1);
       should(result.hits.length).be.exactly(1);
       should(result.hits).match([roles.default]);
 
-      result = await roleRepository.searchRole(['foo'], {from: 1});
+      result = await roleRepository.searchRole({ controllers: ['foo'] }, {from: 1});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.foo, roles.foobar]);
       should(result.hits).not.match([roles.default]);
 
-      result = await roleRepository.searchRole(['foo'], {size: 2});
+      result = await roleRepository.searchRole({ controllers: ['foo'] }, {size: 2});
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.default, roles.foo]);
       should(result.hits).not.match([roles.foobar]);
 
-      result = await roleRepository.searchRole(['foo', 'bar'], {
+      result = await roleRepository.searchRole({ controllers: ['foo', 'bar'] }, {
         from: 1,
         size: 2
       });
@@ -282,6 +282,14 @@ describe('Test: security/roleRepository', () => {
       should(result.hits).match([roles.foo, roles.bar]);
       should(result.hits).not.match([roles.default]);
       should(result.hits).not.match([roles.foobar]);
+    });
+
+    it('should pass the query to the search method', async () => {
+      sinon.stub(roleRepository, 'search');
+
+      await roleRepository.searchRole({ query: { term: {} } });
+
+      should(roleRepository.search).be.calledWith({ query: { term: {} } });
     });
   });
 
@@ -318,7 +326,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should reject if a profile uses the role about to be deleted', async () => {
-      profileRepositoryMock.searchProfiles.resolves({
+      profileRepositoryMock.search.resolves({
         total: 1,
         hits: [fakeRole._id]
       });
@@ -331,7 +339,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should call thoroughly delete a role', async () => {
-      profileRepositoryMock.searchProfiles.resolves({total: 0});
+      profileRepositoryMock.search.resolves({total: 0});
       roleRepository.roles.set(fakeRole._id, fakeRole);
 
       await roleRepository.deleteById(fakeRole._id);

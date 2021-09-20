@@ -47,6 +47,7 @@ description: Error codes definitions
 | plugin.runtime.unavailable_before_start<br/><pre>0x04020006</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Cannot use property "%s" before application startup | The property is only accessible after application startup. |
 | plugin.runtime.unknown_pipe<br/><pre>0x04020007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unknown pipe ID "%s" | The provided pipe identifier is unknown. |
 | plugin.runtime.unexpected_installation_error<br/><pre>0x04020008</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Caught an unexpected error while executing installation "%s": %s | Embeds an unexpected installation error into a standardized KuzzleError object. |
+| plugin.runtime.incompatible<br/><pre>0x04020009</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | "%s" and "%s" are incompatible. Please use only one of these features at the same time. | Some features incompatible are being used at the same time |
 
 ---
 
@@ -93,6 +94,7 @@ description: Error codes definitions
 | plugin.controller.unsupported_verb<br/><pre>0x04040007</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | %s Only the following http verbs are allowed: "%s". %s | A HTTP route is using an unsupported HTTP verb |
 | plugin.controller.unserializable_response<br/><pre>0x04040008</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unable to serialize response. Are you trying to return the request? | A plugin controller action returned a non-serializable response |
 | plugin.controller.invalid_action_response<br/><pre>0x04040009</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Unexpected return value from action "%s:%s": expected a Promise | API actions added by plugins must return a promise |
+| plugin.controller.invalid_openapi_schema<br/><pre>0x0404000a</pre>  | [PluginImplementationError](/core/2/api/errors/error-codes#pluginimplementationerror) <pre>(500)</pre> | Invalid OpenAPI specification in "%s:%s", %s : %s | OpenAPI specification is invalid |
 
 ---
 

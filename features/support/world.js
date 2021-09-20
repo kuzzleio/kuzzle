@@ -94,7 +94,7 @@ class KuzzleWorld {
         throw new Error(`Unknown protocol "${this.protocol}".`);
     }
 
-    return new Kuzzle(protocol);
+    return new Kuzzle(protocol, { deprecationWarning: false });
   }
 
   /**

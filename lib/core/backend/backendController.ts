@@ -78,6 +78,33 @@ export class BackendController extends ApplicationManager {
    *       actions: {
    *         send: {
    *           handler: this.send
+   *           http: [{
+   *             verb: 'post',
+   *             path: 'email/send/:object',
+   *             openapi: {
+   *               description: "Send an email",
+   *               parameters: [{
+   *                 in: "path",
+   *                 name: "object",
+   *                 schema: {
+   *                   type: "string"
+   *                 },
+   *                 required: true,
+   *               }],
+   *               responses: {
+   *                 200: {
+   *                   description: "Acknowledgement",
+   *                   content: {
+   *                      "application/json": {
+   *                       schema: {
+   *                         type: "string",
+   *                       }
+   *                     }
+   *                   }
+   *                 }
+   *               }
+   *             }
+   *           }]
    *         }
    *       }
    *     };
