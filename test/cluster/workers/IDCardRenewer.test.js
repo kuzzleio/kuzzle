@@ -3,7 +3,7 @@
 const should = require('should');
 const sinon = require('sinon');
 
-const IDCardRenewer = require('../../../lib/cluster/workers/IDCardRenewer');
+const { IDCardRenewer } = require('../../../lib/cluster/workers/IDCardRenewer');
 
 describe('ClusterIDCardRenewer', () => {
 
@@ -28,12 +28,11 @@ describe('ClusterIDCardRenewer', () => {
 
       should(idCardRenewer.initRedis)
         .be.calledOnce()
-        .and.be.calledWith({
-          config: {
+        .and.be.calledWith(
+          {
             initTimeout: 42
           },
-          name: 'foo'
-        });
+          'foo');
     });
 
     it('should init variable based on the given config', async () => {
@@ -101,6 +100,7 @@ describe('ClusterIDCardRenewer', () => {
 
       await idCardRenewer.init({
         nodeIdKey: 'foo',
+        redis: {},
         refreshDelay: 100,
       });
     });
@@ -160,6 +160,7 @@ describe('ClusterIDCardRenewer', () => {
 
       await idCardRenewer.init({
         nodeIdKey: 'foo',
+        redis: {},
         refreshDelay: 100,
       });
     });

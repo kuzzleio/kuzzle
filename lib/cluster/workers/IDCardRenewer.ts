@@ -1,19 +1,24 @@
-'use strict';
-const { isMainThread, parentPort } = require('worker_threads');
-const Redis = require('../../service/cache/redis');
+import { isMainThread, parentPort } from 'worker_threads';
+import Redis from '../../service/cache/redis';
+import { JSONObject } from 'kuzzle-sdk';
 
-class IDCardRenewer {
-  constructor() {
-    this.disposed = false;
-    this.redis = null;
-    this.refreshTimer = null;
-    this.nodeIdKey = null;
-    this.refreshDelay = 2000;
+export class IDCardRenewer {
+  private disposed = false;
+  private redis : Redis = null;
+  private refreshTimer : ReturnType<typeof setInterval>;
+  private nodeIdKey : string = null;
+  private refreshDelay = 2000;
+  private parentPort : any = null;
 
+  constructor () {
     this.parentPort = parentPort;
   }
 
-  async init(config) {
+  async init (config: {
+    redis: JSONObject;
+    refreshDelay: number;
+    nodeIdKey: string;
+  }) {
     this.disposed = false;
     this.nodeIdKey = config.nodeIdKey;
     this.refreshDelay = config.refreshDelay;
@@ -23,7 +28,8 @@ class IDCardRenewer {
     * so we need to have an instance of Redis similar to the one used in the Cache Engine
     */
     try {
-      await this.initRedis(config.redis);
+      const redisConf = config.redis || {};
+      await this.initRedis(redisConf.config, redisConf.name);
     }
     catch (error) {
       this.parentPort.postMessage({
@@ -44,12 +50,12 @@ class IDCardRenewer {
     }
   }
 
-  async initRedis({ config, name } = {}) {
+  async initRedis (config: JSONObject, name: string) {
     this.redis = new Redis(config, name);
     await this.redis.init();
   }
 
-  async renewIDCard() {
+  async renewIDCard () {
     try {
       if (!this.disposed) {
         const refreshed = await this.redis.commands.pexpire(
@@ -71,7 +77,7 @@ class IDCardRenewer {
     }
   }
 
-  async dispose() {
+  async dispose () {
     if (!this.disposed) {
       this.disposed = true;
       clearInterval(this.refreshTimer);
@@ -107,5 +113,3 @@ if (!isMainThread) {
     }
   });  
 }
-
-module.exports = IDCardRenewer;
