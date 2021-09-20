@@ -37,7 +37,7 @@ describe('ClusterIdCardHandler', () => {
         .withArgs('core:cache:internal:pexpire')
         .resolves(1);
 
-      idCardHandler._constructWorker = async (path) => {
+      idCardHandler._constructWorker = (path) => {
         return new WorkerMock(path);
       };
     });
