@@ -135,8 +135,8 @@ export class TokenManager {
   /**
    * Link a connection and a token.
    * If one or another expires, associated subscriptions are cleaned up
-   * @paramtoken
-   * @paramconnectionId
+   * @param token
+   * @param connectionId
    */
   link (token: Token, connectionId: string) {
     // Embedded SDK does not use tokens
