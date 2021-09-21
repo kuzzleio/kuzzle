@@ -15,7 +15,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 const MutexMock = require('../../mocks/mutex.mock');
 
-const Token = require('../../../lib/model/security/token');
+const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const Repository = require('../../../lib/core/shared/repository');
 const ApiKey = require('../../../lib/model/storage/apiKey');

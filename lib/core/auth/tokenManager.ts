@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import SortedArray from 'sorted-array';
 
 import '../../types/Global';

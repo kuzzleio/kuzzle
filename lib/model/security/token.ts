@@ -19,9 +19,12 @@
  * limitations under the License.
  */
 
-'use strict';
-
 export interface TokenContent {
+  /**
+   * Token ID (also Redis key)
+   * 
+   * @example `${userId}#${jwt}`
+   */
   _id?: string;
   expiresAt?: number;
   ttl?: number;
