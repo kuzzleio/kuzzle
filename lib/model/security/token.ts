@@ -21,29 +21,48 @@
 
 'use strict';
 
+export interface TokenContent {
+  _id?: string;
+  expiresAt?: number;
+  ttl?: number;
+  userId?: string;
+  connectionIds?: string[];
+  jwt?: string;
+  refreshed?: boolean;
+}
+
 /**
- * @class Token
+ * Represents a token that identify an user.
  */
-class Token {
-  constructor(data = {}) {
+export class Token implements TokenContent {
+  _id: string;
+  expiresAt: number;
+  ttl: number;
+  userId: string;
+  jwt: string;
+  refreshed: boolean;
+
+  constructor(data: TokenContent = {}) {
     this._id = data._id || null;
     this.expiresAt = data.expiresAt || null;
     this.ttl = data.ttl || null;
     this.userId = data.userId || null;
-    this.connectionId = data.connectionId || null;
     this.jwt = data.jwt || null;
     this.refreshed = Boolean(data.refreshed);
   }
 
-  get type() {
+  get type (): 'apiKey' | 'authToken' {
     if (this.jwt && this.jwt.startsWith(Token.APIKEY_PREFIX)) {
       return 'apiKey';
     }
+
     return 'authToken';
   }
+
+  static get AUTH_PREFIX () {
+    return 'kauth-';
+  }
+  static get APIKEY_PREFIX () {
+    return 'kapikey-';
+  }
 }
-
-Token.AUTH_PREFIX = 'kauth-';
-Token.APIKEY_PREFIX = 'kapikey-';
-
-module.exports = Token;
