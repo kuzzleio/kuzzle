@@ -82,32 +82,54 @@ Reflect.defineProperty(global, 'kuzzle', {
  * @extends EventEmitter
  */
 export class Kuzzle extends KuzzleEventEmitter {
-  private config: JSONObject;
-  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  private log: Logger;
-  private rootPath: string;
-  private internalIndex: InternalIndexHandler;
-  private pluginsManager: PluginsManager;
-  private tokenManager: TokenManager;
-  private passport: PassportWrapper;
-  private funnel: Funnel;
-  private router: Router;
-  private statistics: Statistics;
-  private entryPoint: EntryPoint;
-  private validation: Validation;
-  private dumpGenerator: DumpGenerator;
-  private vault: vault;
-  private asyncStore: AsyncStore;
-  private version: string;
-  private importTypes: {
+  public config: JSONObject;
+  public _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  public log: Logger;
+  public rootPath: string;
+  // Internal index bootstrapper and accessor
+  public internalIndex: InternalIndexHandler;
+
+  public pluginsManager: PluginsManager;
+  public tokenManager: TokenManager;
+  public passport: PassportWrapper;
+
+  // The funnel dispatches messages to API controllers
+  public funnel: Funnel;
+
+  // The router listens to client requests and pass them to the funnel
+  public router: Router;
+
+  // Statistics core component
+  public statistics: Statistics;
+
+  // Network entry point
+  public entryPoint: EntryPoint;
+
+  // Validation core component
+  public validation: Validation;
+  
+  // Dump generator
+  public dumpGenerator: DumpGenerator;
+
+  // Vault component (will be initialized after bootstrap)
+  public vault: vault;
+
+  // AsyncLocalStorage wrapper
+  public asyncStore: AsyncStore;
+
+  // Kuzzle version
+  public version: string;
+
+  // List of differents imports types and their associated method
+  public importTypes: {
     [key: string]: (config: {
         toImport: ImportConfig,
         toSupport: SupportConfig}
       ) => Promise<void>;
   };
-  private koncorde : Koncorde;
-  private id : string;
-  private secret : string;
+  public koncorde : Koncorde;
+  public id : string;
+  public secret : string;
 
   constructor (config: JSONObject) {
     super(
@@ -123,42 +145,21 @@ export class Kuzzle extends KuzzleEventEmitter {
     this.log = new Logger();
 
     this.rootPath = path.resolve(path.join(__dirname, '../..'));
-
-    // Internal index bootstrapper and accessor
+    
     this.internalIndex = new InternalIndexHandler();
-
     this.pluginsManager = new PluginsManager();
     this.tokenManager = new TokenManager();
     this.passport = new PassportWrapper();
-
-    // The funnel dispatches messages to API controllers
     this.funnel = new Funnel();
-
-    // The router listens to client requests and pass them to the funnel
     this.router = new Router();
-
-    // Statistics core component
     this.statistics = new Statistics();
-
-    // Network entry point
     this.entryPoint = new EntryPoint();
-
-    // Validation core component
     this.validation = new Validation();
-
-    // Dump generator
     this.dumpGenerator = new DumpGenerator();
-
-    // Vault component (will be initialized after bootstrap)
     this.vault = null;
-
-    // AsyncLocalStorage wrapper
     this.asyncStore = new AsyncStore();
-
-    // Kuzzle version
     this.version = version;
 
-    // List of differents imports types and their associated method;
     this.importTypes = {
       fixtures: this._importFixtures.bind(this),
       mappings: this._importMappings.bind(this),
