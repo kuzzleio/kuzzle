@@ -19,9 +19,7 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const path = require('path');
+import path from 'path';
 
 import { murmurHash128 as murmur } from 'murmurhash-native';
 import stringify from 'json-stable-stringify';
@@ -53,7 +51,8 @@ import SecurityModule from '../core/security';
 import RealtimeModule from '../core/realtime';
 import Cluster from '../cluster';
 import { JSONObject } from './index';
-import { KuzzleTypes }from '../types/Kuzzle';
+import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from '../types/Kuzzle';
+import { version } from '../../package.json';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -83,24 +82,29 @@ Reflect.defineProperty(global, 'kuzzle', {
  * @extends EventEmitter
  */
 export class Kuzzle extends KuzzleEventEmitter {
-  private config : JSONObject;
-  private _state : kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  private log : Logger;
-  private rootPath : string;
-  private internalIndex : InternalIndexHandler;
-  private pluginsManager : PluginsManager;
-  private tokenManager : TokenManager;
-  private passport : PassportWrapper;
-  private funnel : Funnel;
-  private router : Router;
-  private statistics : Statistics;
-  private entryPoint : EntryPoint;
-  private validation : Validation;
-  private dumpGenerator : DumpGenerator;
-  private vault : vault;
-  private asyncStore : AsyncStore;
-  private version : string;
-  private importTypes : { [key : string] : Function };
+  private config: JSONObject;
+  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  private log: Logger;
+  private rootPath: string;
+  private internalIndex: InternalIndexHandler;
+  private pluginsManager: PluginsManager;
+  private tokenManager: TokenManager;
+  private passport: PassportWrapper;
+  private funnel: Funnel;
+  private router: Router;
+  private statistics: Statistics;
+  private entryPoint: EntryPoint;
+  private validation: Validation;
+  private dumpGenerator: DumpGenerator;
+  private vault: vault;
+  private asyncStore: AsyncStore;
+  private version: string;
+  private importTypes: {
+    [key: string]: (config: {
+        toImport: ImportConfig,
+        toSupport: SupportConfig}
+      ) => Promise<void>;
+  };
   private koncorde : Koncorde;
   private id : string;
   private secret : string;
@@ -152,14 +156,14 @@ export class Kuzzle extends KuzzleEventEmitter {
     this.asyncStore = new AsyncStore();
 
     // Kuzzle version
-    this.version = require('../../package.json').version;
+    this.version = version;
 
     // List of differents imports types and their associated method;
     this.importTypes = {
-      userMappings: this._importUserMappings.bind(this),
-      mappings: this._importMappings.bind(this),
       fixtures: this._importFixtures.bind(this),
+      mappings: this._importMappings.bind(this),
       permissions: this._importPermissions.bind(this),
+      userMappings: this._importUserMappings.bind(this),
     };
   }
 
@@ -171,7 +175,7 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @this {Kuzzle}
    */
-  async start (application: any, options: KuzzleTypes.StartOptions = { import: {} }) {
+  async start (application: any, options: StartOptions = { import: {} }) {
     this.registerSignalHandlers();
 
     try {
@@ -287,11 +291,7 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install (installations: Array<{
-    id: string,
-    handler: Function,
-    description?: string
-  }>): Promise<void> {
+  async install (installations: Array<InstallationConfig>): Promise<void> {
     if (! installations || ! installations.length) {
       return;
     }
@@ -339,10 +339,11 @@ export class Kuzzle extends KuzzleEventEmitter {
   }
 
   async _importUserMappings(config: {
-    toImport: KuzzleTypes.ImportConfig,
-    toSupport: KuzzleTypes.SupportConfig
+    toImport: ImportConfig,
+    toSupport: SupportConfig
   }): Promise<void> {
     const toImport = config.toImport;
+
     if (! _.isEmpty(toImport.userMappings)) {
       await this.internalIndex.updateMapping('users', toImport.userMappings);
       await this.internalIndex.refreshCollection('users');
@@ -351,11 +352,12 @@ export class Kuzzle extends KuzzleEventEmitter {
   }
 
   async _importMappings(config: {
-    toImport: KuzzleTypes.ImportConfig,
-    toSupport: KuzzleTypes.SupportConfig
+    toImport: ImportConfig,
+    toSupport: SupportConfig
   }): Promise<void> {
     const toImport = config.toImport;
-    const toSupport = config.toSupport
+    const toSupport = config.toSupport;
+
     if (! _.isEmpty(toSupport.mappings) && ! _.isEmpty(toImport.mappings)) {
       throw kerror.get(
         'plugin',
@@ -383,10 +385,10 @@ export class Kuzzle extends KuzzleEventEmitter {
   }
 
   async _importFixtures(config: {
-    toImport: KuzzleTypes.ImportConfig,
-    toSupport: KuzzleTypes.SupportConfig
+    toImport: ImportConfig,
+    toSupport: SupportConfig
   }): Promise<void> {
-    const toSupport = config.toSupport
+    const toSupport = config.toSupport;
     
     if (! _.isEmpty(toSupport.fixtures)) {
       await super.ask('core:storage:public:document:import', toSupport.fixtures);
@@ -395,8 +397,8 @@ export class Kuzzle extends KuzzleEventEmitter {
   }
 
   async _importPermissions(config: {
-    toImport: KuzzleTypes.ImportConfig,
-    toSupport: KuzzleTypes.SupportConfig
+    toImport: ImportConfig,
+    toSupport: SupportConfig
   }): Promise<void> {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
@@ -453,8 +455,8 @@ export class Kuzzle extends KuzzleEventEmitter {
    * @returns {Promise<void>}
    */
   async import (
-    toImport: KuzzleTypes.ImportConfig = {},
-    toSupport: KuzzleTypes.SupportConfig = {}
+    toImport: ImportConfig = {},
+    toSupport: SupportConfig = {}
   ): Promise<void> {
     const lockedMutex = [];
 
