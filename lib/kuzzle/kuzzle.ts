@@ -81,7 +81,7 @@ Reflect.defineProperty(global, 'kuzzle', {
  * @class Kuzzle
  * @extends EventEmitter
  */
-export class Kuzzle extends KuzzleEventEmitter {
+class Kuzzle extends KuzzleEventEmitter {
   public config: JSONObject;
   public _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
   public log: Logger;
@@ -181,7 +181,7 @@ export class Kuzzle extends KuzzleEventEmitter {
 
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
-      await super.pipe('kuzzle:state:start');
+      await this.pipe('kuzzle:state:start');
       
 
       // Koncorde realtime engine
@@ -227,7 +227,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       // credentials related error which would prevent Kuzzle from starting
       await this.import(options.import, options.support);
 
-      await super.ask('core:security:verify');
+      await this.ask('core:security:verify');
 
       this.router.init();
 
@@ -236,18 +236,18 @@ export class Kuzzle extends KuzzleEventEmitter {
       await this.install(options.installations);
 
       // @deprecated
-      await super.pipe('kuzzle:start');
+      await this.pipe('kuzzle:start');
 
-      await super.pipe('kuzzle:state:live');
+      await this.pipe('kuzzle:state:live');
 
       await this.entryPoint.startListening();
 
-      await super.pipe('kuzzle:state:ready');
+      await this.pipe('kuzzle:state:ready');
 
       this.log.info(`[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`);
 
       // @deprecated
-      super.emit('core:kuzzleStart', 'Kuzzle is ready to accept requests');
+      this.emit('core:kuzzleStart', 'Kuzzle is ready to accept requests');
 
       this._state = kuzzleStateEnum.RUNNING;
     }
@@ -267,10 +267,10 @@ export class Kuzzle extends KuzzleEventEmitter {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info('Initiating shutdown...');
-    await super.pipe('kuzzle:shutdown');
+    await this.pipe('kuzzle:shutdown');
 
     // @deprecated
-    super.emit('core:shutdown');
+    this.emit('core:shutdown');
 
     // Ask the network layer to stop accepting new request
     this.entryPoint.dispatch('shutdown');
@@ -302,7 +302,7 @@ export class Kuzzle extends KuzzleEventEmitter {
 
     try {
       for (const installation of installations) {
-        const isAlreadyInstalled = await super.ask(
+        const isAlreadyInstalled = await this.ask(
           'core:storage:private:document:exist',
           'kuzzle',
           'installations',
@@ -320,7 +320,7 @@ export class Kuzzle extends KuzzleEventEmitter {
               installation.id, error);
           }
 
-          await super.ask(
+          await this.ask(
             'core:storage:private:document:create',
             'kuzzle',
             'installations',
@@ -339,7 +339,22 @@ export class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async _importUserMappings(config: {
+  // For testing purpose
+  async ask(...args: any[]) {
+    return this.ask(...args);
+  }
+
+  // For testing purpose
+  async emit(...args: any[]) {
+    return this.emit(...args);
+  }
+
+  // For testing purpose
+  async pipe(...args: any[]) {
+    return this.pipe(...args);
+  }
+
+  private async _importUserMappings(config: {
     toImport: ImportConfig,
     toSupport: SupportConfig
   }): Promise<void> {
@@ -352,7 +367,7 @@ export class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async _importMappings(config: {
+  private async _importMappings(config: {
     toImport: ImportConfig,
     toSupport: SupportConfig
   }): Promise<void> {
@@ -368,7 +383,7 @@ export class Kuzzle extends KuzzleEventEmitter {
         'import.mappings');
     }
     else if (! _.isEmpty(toSupport.mappings)) {
-      await super.ask(
+      await this.ask(
         'core:storage:public:mappings:import',
         toSupport.mappings,
         {
@@ -378,26 +393,26 @@ export class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Mappings import successful');
     }
     else if (! _.isEmpty(toImport.mappings)) {
-      await super.ask('core:storage:public:mappings:import',
+      await this.ask('core:storage:public:mappings:import',
         toImport.mappings,
         { refresh: true });
       this.log.info('[✔] Mappings import successful');
     }
   }
 
-  async _importFixtures(config: {
+  private async _importFixtures(config: {
     toImport: ImportConfig,
     toSupport: SupportConfig
   }): Promise<void> {
     const toSupport = config.toSupport;
     
     if (! _.isEmpty(toSupport.fixtures)) {
-      await super.ask('core:storage:public:document:import', toSupport.fixtures);
+      await this.ask('core:storage:public:document:import', toSupport.fixtures);
       this.log.info('[✔] Fixtures import successful');
     }
   }
 
-  async _importPermissions(config: {
+  private async _importPermissions(config: {
     toImport: ImportConfig,
     toSupport: SupportConfig
   }): Promise<void> {
@@ -424,7 +439,7 @@ export class Kuzzle extends KuzzleEventEmitter {
         'import profiles roles or users');
     }
     else if (isPermissionsToSupport) {
-      await super.ask('core:security:load', toSupport.securities,
+      await this.ask('core:security:load', toSupport.securities,
         {
           force: true,
           refresh: 'wait_for'
@@ -432,7 +447,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Securities import successful');
     }
     else if (isPermissionsToImport) {
-      await super.ask('core:security:load',
+      await this.ask('core:security:load',
         {
           profiles: toImport.profiles,
           roles: toImport.roles,
@@ -444,6 +459,22 @@ export class Kuzzle extends KuzzleEventEmitter {
           refresh: 'wait_for',
         });
       this.log.info('[✔] Permissions import successful');
+    }
+  }
+  /**
+   * Check if every import has been done, if one of them is not finished yet, wait for it
+   */
+  private async _waitForImportToFinish() {
+    const importTypes = Object.keys(this.importTypes);
+
+    while (importTypes.length) {
+      // If the import is done, we pop it from the queue to check the next one
+      if (await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${importTypes[0]}`)) {
+        importTypes.shift();
+        continue;
+      }
+      
+      await Bluebird.delay(1000);
     }
   }
 
@@ -464,36 +495,18 @@ export class Kuzzle extends KuzzleEventEmitter {
     try {
       for (const [type, importMethod] of Object.entries(this.importTypes)) {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
-        if (! await super.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)
+        if (! await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)
           && await mutex.lock()
         ) {
           lockedMutex.push(mutex);
           await importMethod({ toImport, toSupport });
-          await super.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
+          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
         }
       }
 
       
       this.log.info('[✔] Waiting for imports to be finished');
-      /**
-       * Check if every import has been done, if one of them is not finished yet, wait for it
-       */
-      let initialized = false;
-      while (! initialized) {
-        initialized = true;
-
-        for (const type of Object.keys(this.importTypes)) {
-          if (! await super.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)) {
-            initialized = false;
-            break;
-          }
-        }
-
-        if (! initialized) {
-          await Bluebird.delay(1000);
-        }
-      }
-
+      await this._waitForImportToFinish();
       this.log.info('[✔] Import successful');
     } finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
@@ -526,7 +539,7 @@ export class Kuzzle extends KuzzleEventEmitter {
 
   set state (value) {
     this._state = value;
-    super.emit('kuzzle:state:change', value);
+    this.emit('kuzzle:state:change', value);
   }
 
   /**
@@ -609,3 +622,5 @@ export class Kuzzle extends KuzzleEventEmitter {
     await this.shutdown();
   }
 }
+
+module.exports = Kuzzle;

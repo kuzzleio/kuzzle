@@ -21,7 +21,7 @@
 
 import fs from 'fs';
 
-import { Kuzzle } from '../../kuzzle';
+import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import kerror from '../../kerror';
 import { JSONObject } from '../../../index';
