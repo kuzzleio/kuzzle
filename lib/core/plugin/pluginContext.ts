@@ -521,7 +521,7 @@ function curryAddStrategy(pluginName) {
       });
     }
     finally {
-      mutex.unlock();
+      await mutex.unlock();
     }
   };
 }
@@ -547,7 +547,7 @@ function curryRemoveStrategy(pluginName) {
       return await global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
     }
     finally {
-      mutex.unlock();
+      await mutex.unlock();
     }
   };
 }
