@@ -340,18 +340,18 @@ class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask(...args: any[]) {
-    return this.ask(...args);
+  async ask (...args: any[]) {
+    return super.ask(...args);
   }
 
   // For testing purpose
-  async emit(...args: any[]) {
-    return this.emit(...args);
+  async emit (...args: any[]) {
+    return super.emit(...args);
   }
 
   // For testing purpose
-  async pipe(...args: any[]) {
-    return this.pipe(...args);
+  async pipe (...args: any[]) {
+    return super.pipe(...args);
   }
 
   private async _importUserMappings(config: {
