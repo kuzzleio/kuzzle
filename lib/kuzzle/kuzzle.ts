@@ -23,35 +23,37 @@
 
 const path = require('path');
 
-const { murmurHash128: murmur } = require('murmurhash-native');
-const stringify = require('json-stable-stringify');
-const { Koncorde } = require('koncorde');
-const Bluebird = require('bluebird');
-const segfaultHandler = require('segfault-handler');
-const _ = require('lodash');
+import { murmurHash128 as murmur } from 'murmurhash-native';
+import stringify from 'json-stable-stringify';
+import { Koncorde } from 'koncorde';
+import Bluebird from 'bluebird';
+import segfaultHandler from 'segfault-handler';
+import _ from 'lodash';
 
-const kuzzleStateEnum = require('./kuzzleStateEnum');
-const KuzzleEventEmitter = require('./event/kuzzleEventEmitter');
-const EntryPoint = require('../core/network/entryPoint');
-const Funnel = require('../api/funnel');
-const PassportWrapper = require('../core/auth/passportWrapper');
-const PluginsManager = require('../core/plugin/pluginsManager');
-const Router = require('../core/network/router');
-const Statistics = require('../core/statistics');
-const { TokenManager } = require('../core/auth/tokenManager');
-const Validation = require('../core/validation');
-const Logger = require('./log');
-const vault = require('./vault');
-const DumpGenerator = require('./dumpGenerator');
-const AsyncStore = require('../util/asyncStore');
-const { Mutex } = require('../util/mutex');
-const kerror = require('../kerror');
-const InternalIndexHandler = require('./internalIndexHandler');
-const CacheEngine = require('../core/cache/cacheEngine');
-const StorageEngine = require('../core/storage/storageEngine');
-const SecurityModule = require('../core/security');
-const RealtimeModule = require('../core/realtime');
-const Cluster = require('../cluster');
+import kuzzleStateEnum from './kuzzleStateEnum';
+import KuzzleEventEmitter from './event/kuzzleEventEmitter';
+import EntryPoint from '../core/network/entryPoint';
+import Funnel from '../api/funnel';
+import PassportWrapper from '../core/auth/passportWrapper';
+import PluginsManager from '../core/plugin/pluginsManager';
+import Router from '../core/network/router';
+import Statistics from '../core/statistics';
+import { TokenManager } from '../core/auth/tokenManager';
+import Validation from '../core/validation';
+import Logger from './log';
+import vault from './vault';
+import DumpGenerator from './dumpGenerator';
+import AsyncStore from '../util/asyncStore';
+import { Mutex } from '../util/mutex';
+import kerror from '../kerror';
+import InternalIndexHandler from './internalIndexHandler';
+import CacheEngine from '../core/cache/cacheEngine';
+import StorageEngine from '../core/storage/storageEngine';
+import SecurityModule from '../core/security';
+import RealtimeModule from '../core/realtime';
+import Cluster from '../cluster';
+import { JSONObject } from './index';
+import { KuzzleTypes }from '../types/Kuzzle';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -80,8 +82,30 @@ Reflect.defineProperty(global, 'kuzzle', {
  * @class Kuzzle
  * @extends EventEmitter
  */
-class Kuzzle extends KuzzleEventEmitter {
-  constructor (config) {
+export class Kuzzle extends KuzzleEventEmitter {
+  private config : JSONObject;
+  private _state : kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  private log : Logger;
+  private rootPath : string;
+  private internalIndex : InternalIndexHandler;
+  private pluginsManager : PluginsManager;
+  private tokenManager : TokenManager;
+  private passport : PassportWrapper;
+  private funnel : Funnel;
+  private router : Router;
+  private statistics : Statistics;
+  private entryPoint : EntryPoint;
+  private validation : Validation;
+  private dumpGenerator : DumpGenerator;
+  private vault : vault;
+  private asyncStore : AsyncStore;
+  private version : string;
+  private importTypes : { [key : string] : Function };
+  private koncorde : Koncorde;
+  private id : string;
+  private secret : string;
+
+  constructor (config: JSONObject) {
     super(
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
@@ -147,12 +171,13 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @this {Kuzzle}
    */
-  async start (application, options = { import: {} }) {
-    this.registerSignalHandlers(this);
+  async start (application: any, options: KuzzleTypes.StartOptions = { import: {} }) {
+    this.registerSignalHandlers();
 
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
-      await this.pipe('kuzzle:state:start');
+      await super.pipe('kuzzle:state:start');
+      
 
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
@@ -197,7 +222,7 @@ class Kuzzle extends KuzzleEventEmitter {
       // credentials related error which would prevent Kuzzle from starting
       await this.import(options.import, options.support);
 
-      await this.ask('core:security:verify');
+      await super.ask('core:security:verify');
 
       this.router.init();
 
@@ -206,18 +231,18 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.install(options.installations);
 
       // @deprecated
-      await this.pipe('kuzzle:start');
+      await super.pipe('kuzzle:start');
 
-      await this.pipe('kuzzle:state:live');
+      await super.pipe('kuzzle:state:live');
 
       await this.entryPoint.startListening();
 
-      await this.pipe('kuzzle:state:ready');
+      await super.pipe('kuzzle:state:ready');
 
       this.log.info(`[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`);
 
       // @deprecated
-      this.emit('core:kuzzleStart', 'Kuzzle is ready to accept requests');
+      super.emit('core:kuzzleStart', 'Kuzzle is ready to accept requests');
 
       this._state = kuzzleStateEnum.RUNNING;
     }
@@ -233,14 +258,14 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise}
    */
-  async shutdown () {
+  async shutdown (): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info('Initiating shutdown...');
-    await this.pipe('kuzzle:shutdown');
+    await super.pipe('kuzzle:shutdown');
 
     // @deprecated
-    this.emit('core:shutdown');
+    super.emit('core:shutdown');
 
     // Ask the network layer to stop accepting new request
     this.entryPoint.dispatch('shutdown');
@@ -262,7 +287,11 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install (installations) {
+  async install (installations: Array<{
+    id: string,
+    handler: Function,
+    description?: string
+  }>): Promise<void> {
     if (! installations || ! installations.length) {
       return;
     }
@@ -272,7 +301,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     try {
       for (const installation of installations) {
-        const isAlreadyInstalled = await this.ask(
+        const isAlreadyInstalled = await super.ask(
           'core:storage:private:document:exist',
           'kuzzle',
           'installations',
@@ -290,7 +319,7 @@ class Kuzzle extends KuzzleEventEmitter {
               installation.id, error);
           }
 
-          await this.ask(
+          await super.ask(
             'core:storage:private:document:create',
             'kuzzle',
             'installations',
@@ -309,7 +338,11 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async _importUserMappings({ toImport } = { toImport: {} }) {
+  async _importUserMappings(config: {
+    toImport: KuzzleTypes.ImportConfig,
+    toSupport: KuzzleTypes.SupportConfig
+  }): Promise<void> {
+    const toImport = config.toImport;
     if (! _.isEmpty(toImport.userMappings)) {
       await this.internalIndex.updateMapping('users', toImport.userMappings);
       await this.internalIndex.refreshCollection('users');
@@ -317,7 +350,12 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async _importMappings({ toImport, toSupport } = { toImport: {}, toSupport: {} }) {
+  async _importMappings(config: {
+    toImport: KuzzleTypes.ImportConfig,
+    toSupport: KuzzleTypes.SupportConfig
+  }): Promise<void> {
+    const toImport = config.toImport;
+    const toSupport = config.toSupport
     if (! _.isEmpty(toSupport.mappings) && ! _.isEmpty(toImport.mappings)) {
       throw kerror.get(
         'plugin',
@@ -327,7 +365,7 @@ class Kuzzle extends KuzzleEventEmitter {
         'import.mappings');
     }
     else if (! _.isEmpty(toSupport.mappings)) {
-      await this.ask(
+      await super.ask(
         'core:storage:public:mappings:import',
         toSupport.mappings,
         {
@@ -337,21 +375,32 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Mappings import successful');
     }
     else if (! _.isEmpty(toImport.mappings)) {
-      await this.ask('core:storage:public:mappings:import',
+      await super.ask('core:storage:public:mappings:import',
         toImport.mappings,
         { refresh: true });
       this.log.info('[✔] Mappings import successful');
     }
   }
 
-  async _importFixtures({ toSupport } = { toSupport: {} }) {
+  async _importFixtures(config: {
+    toImport: KuzzleTypes.ImportConfig,
+    toSupport: KuzzleTypes.SupportConfig
+  }): Promise<void> {
+    const toSupport = config.toSupport
+    
     if (! _.isEmpty(toSupport.fixtures)) {
-      await this.ask('core:storage:public:document:import', toSupport.fixtures);
+      await super.ask('core:storage:public:document:import', toSupport.fixtures);
       this.log.info('[✔] Fixtures import successful');
     }
   }
 
-  async _importPermissions({ toImport, toSupport } = { toImport: {}, toSupport: {} }) {
+  async _importPermissions(config: {
+    toImport: KuzzleTypes.ImportConfig,
+    toSupport: KuzzleTypes.SupportConfig
+  }): Promise<void> {
+    const toImport = config.toImport;
+    const toSupport = config.toSupport;
+
     const isPermissionsToImport = !(
       _.isEmpty(toImport.profiles)
       && _.isEmpty(toImport.roles)
@@ -372,7 +421,7 @@ class Kuzzle extends KuzzleEventEmitter {
         'import profiles roles or users');
     }
     else if (isPermissionsToSupport) {
-      await this.ask('core:security:load', toSupport.securities,
+      await super.ask('core:security:load', toSupport.securities,
         {
           force: true,
           refresh: 'wait_for'
@@ -380,7 +429,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Securities import successful');
     }
     else if (isPermissionsToImport) {
-      await this.ask('core:security:load',
+      await super.ask('core:security:load',
         {
           profiles: toImport.profiles,
           roles: toImport.roles,
@@ -403,18 +452,21 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (toImport = {}, toSupport = {}) {
+  async import (
+    toImport: KuzzleTypes.ImportConfig = {},
+    toSupport: KuzzleTypes.SupportConfig = {}
+  ): Promise<void> {
     const lockedMutex = [];
 
     try {
       for (const [type, importMethod] of Object.entries(this.importTypes)) {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
-        if (! await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)
+        if (! await super.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)
           && await mutex.lock()
         ) {
           lockedMutex.push(mutex);
           await importMethod({ toImport, toSupport });
-          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
+          await super.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
         }
       }
 
@@ -428,7 +480,7 @@ class Kuzzle extends KuzzleEventEmitter {
         initialized = true;
 
         for (const type of Object.keys(this.importTypes)) {
-          if (! await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)) {
+          if (! await super.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)) {
             initialized = false;
             break;
           }
@@ -449,7 +501,7 @@ class Kuzzle extends KuzzleEventEmitter {
     return this.dumpGenerator.dump(suffix);
   }
 
-  hash (input) {
+  hash (input: any) {
     let inString;
 
     switch (typeof input) {
@@ -471,7 +523,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
   set state (value) {
     this._state = value;
-    this.emit('kuzzle:state:change', value);
+    super.emit('kuzzle:state:change', value);
   }
 
   /**
@@ -479,8 +531,6 @@ class Kuzzle extends KuzzleEventEmitter {
    * - system signals
    * - unhandled-rejection
    * - uncaught-exception
-   *
-   * @param {Kuzzle} kuzzle
    */
   registerSignalHandlers () {
     process.removeAllListeners('unhandledRejection');
@@ -556,5 +606,3 @@ class Kuzzle extends KuzzleEventEmitter {
     await this.shutdown();
   }
 }
-
-module.exports = Kuzzle;
