@@ -347,7 +347,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
-        { refresh: true });
+        {
+          refresh: true,
+          propagate: false,
+          indexCacheOnly: false
+        });
       should(kuzzle.ask).calledWith('core:security:load',
         {
           profiles: toImport.profiles,
@@ -366,6 +370,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       await kuzzle.import({}, toSupport);
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
+        indexCacheOnly: false,
+        propagate: false,
         rawMappings: true,
         refresh: true,
       });
