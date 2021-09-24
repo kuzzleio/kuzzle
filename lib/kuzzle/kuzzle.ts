@@ -81,55 +81,87 @@ Reflect.defineProperty(global, 'kuzzle', {
  * @class Kuzzle
  * @extends EventEmitter
  */
+
+type ImportStatus = {
+  isLocked?: boolean,
+  isInitialized?: boolean,
+  isFirstCall?: boolean,
+}
 class Kuzzle extends KuzzleEventEmitter {
-  public config: JSONObject;
-  public _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  public log: Logger;
-  public rootPath: string;
-  // Internal index bootstrapper and accessor
-  public internalIndex: InternalIndexHandler;
+  private config: JSONObject;
+  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  private log: Logger;
+  private rootPath: string;
+  /**
+   * Internal index bootstrapper and accessor
+   */
+  private internalIndex: InternalIndexHandler;
 
-  public pluginsManager: PluginsManager;
-  public tokenManager: TokenManager;
-  public passport: PassportWrapper;
+  private pluginsManager: PluginsManager;
+  private tokenManager: TokenManager;
+  private passport: PassportWrapper;
 
-  // The funnel dispatches messages to API controllers
-  public funnel: Funnel;
+  /**
+   * The funnel dispatches messages to API controllers
+   */
+  private funnel: Funnel;
 
-  // The router listens to client requests and pass them to the funnel
-  public router: Router;
+  /**
+   * The router listens to client requests and pass them to the funnel
+   */
+  private router: Router;
 
-  // Statistics core component
-  public statistics: Statistics;
+  /**
+   * Statistics core component
+   */
+  private statistics: Statistics;
 
-  // Network entry point
-  public entryPoint: EntryPoint;
+  /**
+   * Network entry point
+   */
+  private entryPoint: EntryPoint;
 
-  // Validation core component
-  public validation: Validation;
+  /**
+   * Validation core component
+   */
+  private validation: Validation;
   
-  // Dump generator
-  public dumpGenerator: DumpGenerator;
+  /**
+   * Dump generator
+   */
+  private dumpGenerator: DumpGenerator;
 
-  // Vault component (will be initialized after bootstrap)
-  public vault: vault;
+  /**
+   * Vault component (will be initialized after bootstrap)
+   */
+  private vault: vault;
 
-  // AsyncLocalStorage wrapper
-  public asyncStore: AsyncStore;
+  /**
+   * AsyncLocalStorage wrapper
+   */
+  private asyncStore: AsyncStore;
 
-  // Kuzzle version
-  public version: string;
+  /**
+   * Kuzzle version
+   */
+  private version: string;
 
-  // List of differents imports types and their associated method
-  public importTypes: {
-    [key: string]: (config: {
+  /**
+   * List of differents imports types and their associated method
+   */
+  private importTypes: {
+    [key: string]: (
+      config: {
         toImport: ImportConfig,
-        toSupport: SupportConfig}
-      ) => Promise<void>;
+        toSupport: SupportConfig
+      },
+      status: ImportStatus
+    ) => Promise<void>;
   };
-  public koncorde : Koncorde;
-  public id : string;
-  public secret : string;
+
+  private koncorde : Koncorde;
+  private id : string;
+  private secret : string;
 
   constructor (config: JSONObject) {
     super(
@@ -161,10 +193,10 @@ class Kuzzle extends KuzzleEventEmitter {
     this.version = version;
 
     this.importTypes = {
-      fixtures: this._importFixtures.bind(this),
-      mappings: this._importMappings.bind(this),
-      permissions: this._importPermissions.bind(this),
-      userMappings: this._importUserMappings.bind(this),
+      fixtures: this.importFixtures.bind(this),
+      mappings: this.importMappings.bind(this),
+      permissions: this.importPermissions.bind(this),
+      userMappings: this.importUserMappings.bind(this),
     };
   }
 
@@ -292,7 +324,7 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install (installations: Array<InstallationConfig>): Promise<void> {
+  async install (installations: InstallationConfig[]): Promise<void> {
     if (! installations || ! installations.length) {
       return;
     }
@@ -354,10 +386,17 @@ class Kuzzle extends KuzzleEventEmitter {
     return super.pipe(...args);
   }
 
-  private async _importUserMappings(config: {
-    toImport: ImportConfig,
-    toSupport: SupportConfig
-  }): Promise<void> {
+  private async importUserMappings (
+    config: {
+      toImport: ImportConfig,
+      toSupport: SupportConfig
+    },
+    status: ImportStatus
+  ): Promise<void> {
+    if (! status.isFirstCall) {
+      return;
+    }
+
     const toImport = config.toImport;
 
     if (! _.isEmpty(toImport.userMappings)) {
@@ -367,10 +406,13 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  private async _importMappings(config: {
-    toImport: ImportConfig,
-    toSupport: SupportConfig
-  }): Promise<void> {
+  private async importMappings (
+    config: {
+      toImport: ImportConfig,
+      toSupport: SupportConfig
+    },
+    status: ImportStatus
+  ): Promise<void> {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
@@ -387,23 +429,45 @@ class Kuzzle extends KuzzleEventEmitter {
         'core:storage:public:mappings:import',
         toSupport.mappings,
         {
+          /**
+           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
+           * we just want to load the mapping in our own index cache and not in the database.
+           */
+          indexCacheOnly: !status.isInitialized && !status.isLocked,
+          propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
-          refresh: true
+          refresh: true,
         });
       this.log.info('[✔] Mappings import successful');
     }
     else if (! _.isEmpty(toImport.mappings)) {
       await this.ask('core:storage:public:mappings:import',
         toImport.mappings,
-        { refresh: true });
+        {
+          /**
+           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
+           * we just want to load the mapping in our own index cache and not in the database.
+           */
+          indexCacheOnly: !status.isInitialized && !status.isLocked,
+          propagate: false, // Each node needs to do the import themselves
+          refresh: true,
+
+        });
       this.log.info('[✔] Mappings import successful');
     }
   }
 
-  private async _importFixtures(config: {
-    toImport: ImportConfig,
-    toSupport: SupportConfig
-  }): Promise<void> {
+  private async importFixtures (
+    config: {
+      toImport: ImportConfig,
+      toSupport: SupportConfig
+    },
+    status: ImportStatus
+  ): Promise<void> {
+    if (! status.isFirstCall) {
+      return;
+    }
+
     const toSupport = config.toSupport;
     
     if (! _.isEmpty(toSupport.fixtures)) {
@@ -412,10 +476,17 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  private async _importPermissions(config: {
-    toImport: ImportConfig,
-    toSupport: SupportConfig
-  }): Promise<void> {
+  private async importPermissions (
+    config: {
+      toImport: ImportConfig,
+      toSupport: SupportConfig
+    },
+    status: ImportStatus
+  ): Promise<void> {
+    if (! status.isFirstCall) {
+      return;
+    }
+
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
@@ -495,11 +566,20 @@ class Kuzzle extends KuzzleEventEmitter {
     try {
       for (const [type, importMethod] of Object.entries(this.importTypes)) {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
-        if (! await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`)
-          && await mutex.lock()
-        ) {
+        const isInitialized = await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`);
+        const isLocked = await mutex.lock();
+        
+        await importMethod(
+          { toImport, toSupport },
+          {
+            isFirstCall: ! isInitialized && isLocked,
+            isInitialized,
+            isLocked,
+          }
+        );
+
+        if (! isInitialized && isLocked) {
           lockedMutex.push(mutex);
-          await importMethod({ toImport, toSupport });
           await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
         }
       }
