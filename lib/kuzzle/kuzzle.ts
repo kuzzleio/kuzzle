@@ -155,7 +155,7 @@ class Kuzzle extends KuzzleEventEmitter {
         toImport: ImportConfig,
         toSupport: SupportConfig
       },
-      status: ImportStatus
+      status?: ImportStatus
     ) => Promise<void>;
   };
 
@@ -410,8 +410,7 @@ class Kuzzle extends KuzzleEventEmitter {
     config: {
       toImport: ImportConfig,
       toSupport: SupportConfig
-    },
-    status: ImportStatus
+    }
   ): Promise<void> {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
