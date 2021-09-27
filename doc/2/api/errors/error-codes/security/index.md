@@ -23,6 +23,7 @@ description: Error codes definitions
 | security.token.generation_failed<br/><pre>0x07010005</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Error while generating token: %s | Unable to generate the requested authentication token |
 | security.token.expired<br/><pre>0x07010006</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Token expired | The provided authentication token has expired |
 | security.token.verification_error<br/><pre>0x07010007</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Error verifying token: %s | An unexpected error occured while verifying an authentication token |
+| security.token.refresh_forbidden<br/><pre>0x07010008</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Token cannot be refreshed. | The provided token cannot be refreshed. |
 
 ---
 
