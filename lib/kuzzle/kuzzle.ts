@@ -429,30 +429,13 @@ class Kuzzle extends KuzzleEventEmitter {
         'core:storage:public:mappings:import',
         toSupport.mappings,
         {
-          /**
-           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-           * we just want to load the mapping in our own index cache and not in the database.
-           */
-          indexCacheOnly: !status.isInitialized && !status.isLocked,
-          propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
         });
       this.log.info('[✔] Mappings import successful');
     }
     else if (! _.isEmpty(toImport.mappings)) {
-      await this.ask('core:storage:public:mappings:import',
-        toImport.mappings,
-        {
-          /**
-           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-           * we just want to load the mapping in our own index cache and not in the database.
-           */
-          indexCacheOnly: !status.isInitialized && !status.isLocked,
-          propagate: false, // Each node needs to do the import themselves
-          refresh: true,
-
-        });
+      await this.ask('core:storage:public:mappings:import', toImport.mappings, { refresh: true });
       this.log.info('[✔] Mappings import successful');
     }
   }
