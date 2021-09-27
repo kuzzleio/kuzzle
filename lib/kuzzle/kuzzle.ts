@@ -433,7 +433,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized && !status.locked,
+          indexCacheOnly: status.initialized || !status.locked,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
@@ -448,7 +448,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized && !status.locked,
+          indexCacheOnly: status.initialized || !status.locked,
           propagate: false, // Each node needs to do the import themselves
           refresh: true,
 
