@@ -661,6 +661,28 @@ describe('Test: security/tokenRepository', () => {
       should(tokenRepository.generateToken).not.called();
       should(tokenRepository.persistToCache).not.called();
     });
+
+    it('should refuse to refresh an API Key', async () => {
+      const oldToken = new Token();
+      oldToken.jwt = 'kapikey-jwt';
+
+      await should(tokenRepository.refresh('user', oldToken, '10m'))
+        .rejectedWith(UnauthorizedError, {id: 'security.token.refresh_forbidden'});
+
+      should(tokenRepository.generateToken).not.called();
+      should(tokenRepository.persistToCache).not.called();
+    });
+
+    it('should refuse to refresh a token with an infinite TTL', async () => {
+      const oldToken = new Token();
+      oldToken.ttl = -1;
+
+      await should(tokenRepository.refresh('user', oldToken, '10m'))
+        .rejectedWith(UnauthorizedError, {id: 'security.token.refresh_forbidden'});
+
+      should(tokenRepository.generateToken).not.called();
+      should(tokenRepository.persistToCache).not.called();
+    });
   });
 
   describe('#_loadApiKeys', () => {
