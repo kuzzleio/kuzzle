@@ -27,6 +27,15 @@ import { isPlainObject } from '../../../lib/util/safeObject';
 const assertionError = kerror.wrap('validation', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
+export type DefaultMappings = {
+  [index: string]: {
+    [collection: string]: {
+      mappings: JSONObject;
+      settings?: JSONObject;
+    }
+  }
+};
+
 export class BackendImport extends ApplicationManager {
 
   /**
@@ -45,7 +54,7 @@ export class BackendImport extends ApplicationManager {
    *
    * @param mappings Object containing index and their collections mappings
    */
-  mappings (mappings: JSONObject) : void {
+  mappings (mappings: DefaultMappings) : void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }

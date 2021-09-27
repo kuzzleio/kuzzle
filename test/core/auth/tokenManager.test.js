@@ -5,8 +5,8 @@ const sinon = require('sinon');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const Token = require('../../../lib/model/security/token');
-const TokenManager = require('../../../lib/core/auth/tokenManager');
+const { Token } = require('../../../lib/model/security/token');
+const { TokenManager } = require('../../../lib/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
   const anonymousToken = new Token({ _id: '-1' });
@@ -466,15 +466,15 @@ describe('Test: token manager core component', () => {
     it('should return a matching token', () => {
       tokenManager.link(token, 'foo');
 
-      const response = tokenManager.getConnectedUserToken(token.userId, 'foo');
-      should(response).be.an.instanceOf(Token);
-      should(response).match({
+      const ret = tokenManager.getConnectedUserToken(token.userId, 'foo');
+
+      should(ret).match({
         _id: token._id,
         expiresAt: token.expiresAt,
         ttl: null,
         userId: token.userId,
         jwt: token.jwt,
-        connectionId: 'foo',
+        connectionIds: new Set(['foo']),
       });
     });
 

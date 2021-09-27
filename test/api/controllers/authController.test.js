@@ -15,7 +15,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controllers/authController');
-const Token = require('../../../lib/model/security/token');
+const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 

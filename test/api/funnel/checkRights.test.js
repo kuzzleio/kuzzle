@@ -11,7 +11,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = require('../../../lib/api/funnel');
-const Token = require('../../../lib/model/security/token');
+const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 
 describe('funnel.checkRights', () => {

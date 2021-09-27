@@ -85,54 +85,73 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      kuzzle.install = sinon.stub().resolves();
-      kuzzle.import = sinon.stub().resolves();
-      const options = {
-        import: { something: 'here' },
-        installations: [{ id: 'foo', handler: () => {} }],
-        support: { something: 'here' }
-      };
+      const Koncorde = sinon.stub();
+      const stubbedKuzzle = Kuzzle.__with__({
+        koncorde_1: { Koncorde },
+        vault_1: { default: { load: () => {} }}
+      });
 
-      should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
+      await stubbedKuzzle(async () => {
+        kuzzle = await _mockKuzzle(Kuzzle);
 
-      await kuzzle.start(application, options);
+        kuzzle.install = sinon.stub().resolves();
+        kuzzle.import = sinon.stub().resolves();
+        const options = {
+          import: { something: 'here' },
+          installations: [{ id: 'foo', handler: () => {} }],
+          support: { something: 'here' }
+        };
 
-      sinon.assert.callOrder(
-        kuzzle.pipe, // kuzzle:state:start
-        kuzzle.internalIndex.init,
-        kuzzle.validation.init,
-        kuzzle.tokenManager.init,
-        kuzzle.funnel.init,
-        kuzzle.statistics.init,
-        kuzzle.validation.curateSpecification,
-        kuzzle.entryPoint.init,
-        kuzzle.pluginsManager.init,
-        kuzzle.import.withArgs(options.import, options.support),
-        kuzzle.ask.withArgs('core:security:verify'),
-        kuzzle.router.init,
-        kuzzle.install.withArgs(options.installations),
-        kuzzle.pipe.withArgs('kuzzle:start'),
-        kuzzle.pipe.withArgs('kuzzle:state:live'),
-        kuzzle.entryPoint.startListening,
-        kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart')
-      );
+        kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-      should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
+        should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
+
+        await kuzzle.start(application, options);
+
+        sinon.assert.callOrder(
+          kuzzle.pipe, // kuzzle:state:start
+          kuzzle.internalIndex.init,
+          kuzzle.validation.init,
+          kuzzle.tokenManager.init,
+          kuzzle.funnel.init,
+          kuzzle.statistics.init,
+          kuzzle.validation.curateSpecification,
+          kuzzle.entryPoint.init,
+          kuzzle.pluginsManager.init,
+          kuzzle.import.withArgs(options.import, options.support),
+          kuzzle.ask.withArgs('core:security:verify'),
+          kuzzle.router.init,
+          kuzzle.install.withArgs(options.installations),
+          kuzzle.pipe.withArgs('kuzzle:start'),
+          kuzzle.pipe.withArgs('kuzzle:state:live'),
+          kuzzle.entryPoint.startListening,
+          kuzzle.pipe.withArgs('kuzzle:state:ready'),
+          kuzzle.emit.withArgs('core:kuzzleStart')
+        );
+
+        should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
+      });
     });
 
     // @deprecated
     it('should instantiate Koncorde with PCRE support if asked to', async () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
-        Koncorde,
-        vault: { load: () => {} }
+        koncorde_1: { Koncorde },
+        vault_1: { default: { load: () => {} }}
       });
 
       await stubbedKuzzle(async () => {
-        await _mockKuzzle(Kuzzle).start();
+        const baseKuzzle = _mockKuzzle(Kuzzle);
+
+        baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
+
+        await baseKuzzle.start();
 
         const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+
+        kuzzleWithPCRE.ask = sinon.stub().resolves();
+        kuzzleWithPCRE.ask.withArgs('core:cache:internal:get').resolves(1);
 
         kuzzleWithPCRE.config =
           JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
@@ -163,6 +182,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         }
       })(() => {
         kuzzle = _mockKuzzle(Kuzzle);
+        kuzzle._waitForImportToFinish = sinon.stub().resolves();
+
         return kuzzle.start();
       })
         .then(() => {
@@ -320,12 +341,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should load correctly toImport mappings and permissions', async () => {
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
       await kuzzle.import(toImport, {});
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
-        { refresh: true });
+        {
+          refresh: true,
+        });
       should(kuzzle.ask).calledWith('core:security:load',
         {
           profiles: toImport.profiles,
@@ -340,6 +364,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
       await kuzzle.import({}, toSupport);
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {

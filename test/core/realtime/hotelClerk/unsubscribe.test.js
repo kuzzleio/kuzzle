@@ -45,7 +45,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
 
     hotelClerk._removeRoomFromRealtimeEngine = sinon.spy();
 
-    kuzzle.tokenManager.getToken.returns({});
+    kuzzle.tokenManager.getKuidFromConnection.returns(null);
 
     return hotelClerk.init();
   });
@@ -89,7 +89,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', async () => {
-    kuzzle.tokenManager.getToken.returns({ userId: 'Umraniye' });
+    kuzzle.tokenManager.getKuidFromConnection.returns('Umraniye');
     hotelClerk.customers.set(connectionId, new Map([
       [ roomId, null ]
     ]));

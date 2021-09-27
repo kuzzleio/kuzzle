@@ -137,3 +137,5 @@ lib/util/koncordeCompat.js
 features-sdk/support/application/functional-tests-app.js
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
+lib/model/security/token.js
+lib/core/auth/tokenManager.js
