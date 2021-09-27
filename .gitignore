@@ -77,6 +77,7 @@ upgrade-*.report
 /index.js
 lib/api/request/*.js
 lib/kerror/errors/*.js
+lib/kuzzle/kuzzle.js
 lib/core/backend/applicationManager.js
 lib/core/backend/backend.js
 lib/core/backend/backendCluster.js
@@ -121,6 +122,7 @@ lib/types/Deprecation.js
 lib/types/EventHandler.js
 lib/types/InternalLogger.js
 lib/types/Plugin.js
+lib/types/Kuzzle.js
 lib/types/PluginManifest.js
 lib/types/RequestPayload.js
 lib/types/ResponsePayload.js
