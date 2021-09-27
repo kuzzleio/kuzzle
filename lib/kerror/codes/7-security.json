@@ -47,7 +47,7 @@
           "class": "InternalError"
         },
         "refresh_forbidden": {
-          "description": "The provided token cannot be refreshed.",
+          "description": "The provided token cannot be refreshed: %s cannot be refreshed.",
           "code": 8,
           "message": "Token cannot be refreshed.",
           "class": "UnauthorizedError"
