@@ -45,6 +45,8 @@ describe('Test: hotelClerk.unsubscribe', () => {
 
     hotelClerk._removeRoomFromRealtimeEngine = sinon.spy();
 
+    kuzzle.tokenManager.getKuidFromConnection.returns(null);
+
     return hotelClerk.init();
   });
 
@@ -52,13 +54,13 @@ describe('Test: hotelClerk.unsubscribe', () => {
     sinon.stub(hotelClerk, 'unsubscribe');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:unsubscribe', 'cnx', 'room', null, 'notify');
+    await kuzzle.ask('core:realtime:unsubscribe', 'cnx', 'room', 'notify');
 
-    should(hotelClerk.unsubscribe).calledWith('cnx', 'room', null, 'notify');
+    should(hotelClerk.unsubscribe).calledWith('cnx', 'room', 'notify');
   });
 
   it('should reject if the customer cannot be found', () => {
-    return hotelClerk.unsubscribe('connectionId', 'idontexist', null)
+    return hotelClerk.unsubscribe('connectionId', 'idontexist')
       .should.be.rejectedWith(PreconditionError, {
         id: 'core.realtime.not_subscribed',
       });
@@ -67,7 +69,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
   it('should reject if the customer did not subscribe to the room', async () => {
     hotelClerk.customers.set(connectionId, new Map([]));
 
-    await should(hotelClerk.unsubscribe(connectionId, roomId, null))
+    await should(hotelClerk.unsubscribe(connectionId, roomId))
       .rejectedWith(PreconditionError, { id: 'core.realtime.not_subscribed' });
 
     should(hotelClerk.rooms).have.key(roomId);
@@ -80,18 +82,19 @@ describe('Test: hotelClerk.unsubscribe', () => {
       [ 'nowhere', null ]
     ]));
 
-    return hotelClerk.unsubscribe(connectionId, 'nowhere', null)
+    return hotelClerk.unsubscribe(connectionId, 'nowhere')
       .should.be.rejectedWith(NotFoundError, {
         id: 'core.realtime.room_not_found',
       });
   });
 
   it('should remove the room from the customer list and remove the connection entry if empty', async () => {
+    kuzzle.tokenManager.getKuidFromConnection.returns('Umraniye');
     hotelClerk.customers.set(connectionId, new Map([
       [ roomId, null ]
     ]));
 
-    await hotelClerk.unsubscribe(connectionId, roomId, 'Umraniye');
+    await hotelClerk.unsubscribe(connectionId, roomId);
 
     should(hotelClerk.customers).be.empty();
 
@@ -146,7 +149,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
     hotelClerk.rooms.set('anotherRoom', {});
     hotelClerk.roomsCount = 2;
 
-    await hotelClerk.unsubscribe(connectionId, roomId, null);
+    await hotelClerk.unsubscribe(connectionId, roomId);
 
     should(hotelClerk.customers.get('connectionId')).have.value(
       'anotherRoom',
@@ -180,7 +183,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
     ]));
     hotelClerk.rooms.get(roomId).customers.add('foobar');
 
-    await hotelClerk.unsubscribe(connectionId, roomId, null);
+    await hotelClerk.unsubscribe(connectionId, roomId);
 
     should(hotelClerk.rooms).have.key(roomId);
     should(hotelClerk.rooms.get(roomId).customers).have.size(1);

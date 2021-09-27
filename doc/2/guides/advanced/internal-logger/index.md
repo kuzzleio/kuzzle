@@ -25,7 +25,6 @@ By default, the **logs are printed to stdout**.
 ## Usage in an Application
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 ::: info
 The Internal Logger is available only during the `runtime` phase, after the application has started.

@@ -223,11 +223,11 @@ app.import.users(functionalFixtures.users, { onExistingUsers: 'overwrite' })
 
 loadAdditionalPlugins()
   .then(() => app.start())
-  .then(() => {
+  .then(async () => {
     // post-start methods here
 
     // Cluster synchronization
-    app.cluster.on('sync:hello', (payload) => {
+    await app.cluster.on('sync:hello', (payload) => {
       syncedHello = payload.name;
     });
   })

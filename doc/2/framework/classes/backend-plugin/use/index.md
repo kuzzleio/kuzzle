@@ -8,7 +8,6 @@ description: BackendPlugin.use method
 # `use()`
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Adds a plugin to this application.
 

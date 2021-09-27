@@ -52,8 +52,8 @@ interface EmbeddedRealtime extends RealtimeController {
    *    - `scope` Subscribe to document entering or leaving the scope. (default: 'all')
    *    - `users` Subscribe to users entering or leaving the room. (default: 'none')
    *    - `subscribeToSelf` Subscribe to notifications fired by our own queries. (default: true)
-   *    - `volatile` Subscription information sent alongside notifications
-   *    - `propagate` Propagate the callback execution on each cluster node
+   *    - `volatile` Subscription information sent alongside notifications. (default: `{}`)
+   *    - `propagate` Propagate the callback execution on each cluster node. (default: false)
    *
    * @returns A string containing the room ID
    */
