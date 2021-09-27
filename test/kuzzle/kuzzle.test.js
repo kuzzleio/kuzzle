@@ -349,8 +349,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
         {
           refresh: true,
-          propagate: false,
-          indexCacheOnly: false
         });
       should(kuzzle.ask).calledWith('core:security:load',
         {
@@ -370,8 +368,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       await kuzzle.import({}, toSupport);
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
-        indexCacheOnly: false,
-        propagate: false,
         rawMappings: true,
         refresh: true,
       });
