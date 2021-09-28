@@ -580,7 +580,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
         if (! initialized && locked) {
           lockedMutex.push(mutex);
-          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
+          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1, { ttl: 5 * 60 * 1000 });
         }
       }
 
