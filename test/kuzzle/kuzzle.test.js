@@ -348,11 +348,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
         {
-<<<<<<< HEAD
-=======
           indexCacheOnly: false,
           propagate: false,
->>>>>>> 2-dev
           refresh: true,
         });
       should(kuzzle.ask).calledWith('core:security:load',
