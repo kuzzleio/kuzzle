@@ -83,9 +83,9 @@ Reflect.defineProperty(global, 'kuzzle', {
  */
 
 type ImportStatus = {
-  isLocked?: boolean,
-  isInitialized?: boolean,
-  isFirstCall?: boolean,
+  locked?: boolean,
+  initialized?: boolean,
+  firstCall?: boolean,
 }
 class Kuzzle extends KuzzleEventEmitter {
   private config: JSONObject;
@@ -155,7 +155,7 @@ class Kuzzle extends KuzzleEventEmitter {
         toImport: ImportConfig,
         toSupport: SupportConfig
       },
-      status?: ImportStatus
+      status: ImportStatus
     ) => Promise<void>;
   };
 
@@ -393,7 +393,7 @@ class Kuzzle extends KuzzleEventEmitter {
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.isFirstCall) {
+    if (! status.firstCall) {
       return;
     }
 
@@ -410,7 +410,8 @@ class Kuzzle extends KuzzleEventEmitter {
     config: {
       toImport: ImportConfig,
       toSupport: SupportConfig
-    }
+    },
+    status: ImportStatus
   ): Promise<void> {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
@@ -428,13 +429,30 @@ class Kuzzle extends KuzzleEventEmitter {
         'core:storage:public:mappings:import',
         toSupport.mappings,
         {
+          /**
+           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
+           * we just want to load the mapping in our own index cache and not in the database.
+           */
+          indexCacheOnly: status.initialized || !status.locked,
+          propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
         });
       this.log.info('[✔] Mappings import successful');
     }
     else if (! _.isEmpty(toImport.mappings)) {
-      await this.ask('core:storage:public:mappings:import', toImport.mappings, { refresh: true });
+      await this.ask('core:storage:public:mappings:import',
+        toImport.mappings,
+        {
+          /**
+           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
+           * we just want to load the mapping in our own index cache and not in the database.
+           */
+          indexCacheOnly: status.initialized || !status.locked,
+          propagate: false, // Each node needs to do the import themselves
+          refresh: true,
+
+        });
       this.log.info('[✔] Mappings import successful');
     }
   }
@@ -446,7 +464,7 @@ class Kuzzle extends KuzzleEventEmitter {
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.isFirstCall) {
+    if (! status.firstCall) {
       return;
     }
 
@@ -465,7 +483,7 @@ class Kuzzle extends KuzzleEventEmitter {
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.isFirstCall) {
+    if (! status.firstCall) {
       return;
     }
 
@@ -548,21 +566,21 @@ class Kuzzle extends KuzzleEventEmitter {
     try {
       for (const [type, importMethod] of Object.entries(this.importTypes)) {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
-        const isInitialized = await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`);
-        const isLocked = await mutex.lock();
+        const initialized = await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`) === '1';
+        const locked = await mutex.lock();
         
         await importMethod(
           { toImport, toSupport },
           {
-            isFirstCall: ! isInitialized && isLocked,
-            isInitialized,
-            isLocked,
+            firstCall: ! initialized && locked,
+            initialized,
+            locked,
           }
         );
 
-        if (! isInitialized && isLocked) {
+        if (! initialized && locked) {
           lockedMutex.push(mutex);
-          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1);
+          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1, { ttl: 5 * 60 * 1000 });
         }
       }
 

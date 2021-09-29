@@ -123,6 +123,7 @@ describe('#core/storage/ClientAdapter', () => {
 
           should(adapter.client.createIndex).calledWith('foo');
           should(adapter.cache.addIndex).calledWith('foo');
+          should(kuzzle.emit).be.calledWith('core:storage:index:create:after', { index: 'foo', scope: adapter.scope });
         }
       });
 
@@ -133,6 +134,26 @@ describe('#core/storage/ClientAdapter', () => {
           .rejectedWith(PreconditionError, {
             id: 'services.storage.index_already_exists',
           });
+      });
+
+      it('should not call core:storage:index:create:after if propagate option is false', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(`core:storage:${adapter.scope}:index:create`, 'foo', { propagate: false });
+
+          should(adapter.client.createIndex).calledWith('foo');
+          should(adapter.cache.addIndex).calledWith('foo');
+          should(kuzzle.emit).not.be.calledWith('core:storage:index:create:after');
+        }
+      });
+
+      it('should not create index inside database if indexCacheOnly option is true', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(`core:storage:${adapter.scope}:index:create`, 'foo', { indexCacheOnly: true });
+
+          should(adapter.client.createIndex).not.be.called();
+          should(adapter.cache.addIndex).calledWith('foo');
+          should(kuzzle.emit).be.calledWith('core:storage:index:create:after', { index: 'foo', scope: adapter.scope });
+        }
       });
     });
 
@@ -225,22 +246,70 @@ describe('#core/storage/ClientAdapter', () => {
   });
 
   describe('#collection handling events', () => {
-    it('#collection:create', async () => {
-      for (const adapter of [publicAdapter, privateAdapter]) {
-        await kuzzle.ask(
-          `core:storage:${adapter.scope}:collection:create`,
-          'foo',
-          'bar',
-          'opts');
 
-        should(publicAdapter.client.createCollection)
-          .calledOnce()
-          .calledWith('foo', 'bar', 'opts');
+    describe('#collection:create', () => {
 
-        should(publicAdapter.cache.addCollection).calledWith('foo', 'bar');
-      }
+      it('should register a "collection:create" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:collection:create`,
+            'foo',
+            'bar',
+            'opts');
+  
+          should(publicAdapter.client.createCollection)
+            .calledOnce()
+            .calledWith('foo', 'bar', 'opts');
+  
+          should(publicAdapter.cache.addCollection).calledWith('foo', 'bar');
+          should(kuzzle.emit).be.calledWith('core:storage:collection:create:after', {
+            collection: 'bar',
+            index: 'foo',
+            scope: adapter.scope,
+          });
+        }
+      });
+
+      it('should not call core:storage:collection:create:after if propagate option is false', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:collection:create`,
+            'foo',
+            'bar',
+            'opts',
+            { propagate: false });
+  
+          should(publicAdapter.client.createCollection)
+            .calledOnce()
+            .calledWith('foo', 'bar', 'opts');
+  
+          should(publicAdapter.cache.addCollection).calledWith('foo', 'bar');
+          should(kuzzle.emit).not.be.calledWith('core:storage:collection:create:after');
+        }
+      });
+
+      it('should not create collection inside database if indexCacheOnly option is true', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:collection:create`,
+            'foo',
+            'bar',
+            'opts',
+            { indexCacheOnly: true });
+  
+          should(publicAdapter.client.createCollection)
+            .not.be.called();
+  
+          should(publicAdapter.cache.addCollection).calledWith('foo', 'bar');
+          should(kuzzle.emit).be.calledWith('core:storage:collection:create:after', {
+            collection: 'bar',
+            index: 'foo',
+            scope: adapter.scope,
+          });
+        }
+      });
     });
-
+    
     describe('#collection:delete', () => {
       it('should register a "collection:delete" event', async () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
@@ -436,7 +505,11 @@ describe('#core/storage/ClientAdapter', () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:mappings:import`,
-            mappings);
+            mappings,
+            {
+              propagate: true,
+              indexCacheOnly: false,
+            });
 
           should(adapter.client.createIndex).calledWith('index');
           should(adapter.client.createCollection)
