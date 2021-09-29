@@ -45,14 +45,13 @@ class RoomSubscriptions {
    * @constructor
    * 
    * @param messageId ID of the last message that updated this room
-   * @param [subscribers]
+   * @param subscribers
    */
   constructor (nodeId: string, messageId: Long, subscribers: number) {
     this.nodeId = nodeId;
 
     this._subscribers = subscribers;
 
-    // type: Long
     this._messageId = messageId;
   }
 
@@ -96,7 +95,6 @@ class RoomSubscriptions {
 export type SerializedRoomSubscriptions = {
   nodeId: string;
 
-  // @todo check this in JSON
   messageId: Long;
 
   subscribers: number;
@@ -133,7 +131,7 @@ class RoomState {
    * 
    * @param nodeId
    * @param messageId
-   * @param [subscribers] -- number of subscribers
+   * @param subscribers -- number of subscribers
    */
   addNode (nodeId: string, messageId: Long, subscribers: number) {
     if (this.nodes.has(nodeId)) {
