@@ -24,6 +24,7 @@ import { JSONObject } from 'kuzzle-sdk';
 import Long from 'long';
 
 import kerror from '../kerror';
+import '../types/Global';
 
 import { toKoncordeIndex } from '../util/koncordeCompat';
 
@@ -47,6 +48,8 @@ class RoomSubscriptions {
    * @param [subscribers]
    */
   constructor (nodeId: string, messageId: Long, subscribers: number) {
+    this.nodeId = nodeId;
+
     this._subscribers = subscribers;
 
     // type: Long
@@ -191,11 +194,8 @@ class RoomState {
       roomId: this.id,
     };
 
-    for (const [nodeId, nodeSubs] of this.nodes) {
-      result.nodes.push({
-        nodeId,
-        ...nodeSubs.serialize(),
-      });
+    for (const nodeSubs of this.nodes.values()) {
+      result.nodes.push(nodeSubs.serialize());
     }
 
     return result;
