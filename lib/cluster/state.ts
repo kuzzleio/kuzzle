@@ -38,12 +38,12 @@ class RoomSubscriptions {
   private nodeId: string;
 
   private _subscribers: number;
-  
+
   private _messageId: Long;
 
   /**
    * @constructor
-   * 
+   *
    * @param messageId ID of the last message that updated this room
    * @param subscribers
    */
@@ -109,16 +109,16 @@ class RoomState {
   public index: string;
 
   public collection: string;
-  
+
   public filters: JSONObject;
 
   /**
    * List of nodes having subscriptions on this room
-   * 
+   *
    * Map<nodeId, RoomSubscriptions>
    */
   public nodes = new Map<string, RoomSubscriptions>();
-  
+
   constructor (roomId: string, index: string, collection: string, filters: JSONObject) {
     this.id = roomId;
     this.index = index;
@@ -128,7 +128,7 @@ class RoomState {
 
   /**
    * Adds a new node to the state
-   * 
+   *
    * @param nodeId
    * @param messageId
    * @param subscribers -- number of subscribers
@@ -204,7 +204,7 @@ export type SerializedRoomState = {
   collection: string;
 
   filters: string;
-  
+
   index: string;
 
   nodes: SerializedRoomSubscriptions[];
@@ -219,22 +219,22 @@ export default class State {
   /**
    * State of realtime rooms.
    *
-   * Each room state contains the node IDs subscribing to the room. 
-   * 
+   * Each room state contains the node IDs subscribing to the room.
+   *
    * Map<roomId, RoomState>
    */
   private realtime = new Map<string, RoomState>();
 
   /**
    * State of authentication strategies
-   * 
+   *
    * Map<strategyName, strategyDefinition>
    */
   private strategies = new Map<string, JSONObject>();
 
   /**
    * Adds a new realtime room to the state
-   * 
+   *
    * @param roomId
    * @param index
    * @param collection
@@ -242,10 +242,10 @@ export default class State {
    * @param node
    */
   addRealtimeRoom (
-    roomId: string, 
-    index: string, 
-    collection: string, 
-    filters: JSONObject, 
+    roomId: string,
+    index: string,
+    collection: string,
+    filters: JSONObject,
     node: SerializedRoomSubscriptions
   ) {
     let room = this.realtime.get(roomId);
@@ -321,13 +321,7 @@ export default class State {
   }
 
   listRealtimeRooms () {
-    const list: {
-      [index: string]: {
-        [collection: string]: {
-          [roomId: string]: number
-        }
-      }
-    } = {};
+    const list: RealtimeRoomsList = {};
 
     for (const room of this.realtime.values()) {
       if (!list[room.index]) {
@@ -430,6 +424,17 @@ export default class State {
     }
   }
 }
+
+export type RealtimeRoomsList = {
+  [index: string]: {
+    [collection: string]: {
+      /**
+       * Number of subscriptions per room
+       */
+      [roomId: string]: number
+    }
+  }
+};
 
 export type SerializedState = {
   authStrategies: JSONObject[];
