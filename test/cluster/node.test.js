@@ -74,6 +74,7 @@ class ClusterStateMock {
     this.removeNode = sinon.stub();
     this.removeRealtimeRoom = sinon.stub();
     this.removeRealtimeSubscription = sinon.stub();
+    this.serialize = sinon.stub();
   }
 }
 
