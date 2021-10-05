@@ -756,7 +756,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should be able to connect to existing nodes and get a fullstate', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
@@ -797,7 +797,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should retry getting a fullstate if unable to get one the first time', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
@@ -870,7 +870,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should sync with nodes that answered the handshake, and discard the rest', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
