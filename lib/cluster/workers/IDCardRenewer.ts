@@ -60,7 +60,7 @@ export class IDCardRenewer {
       if (!this.disposed) {
         const refreshed = await this.redis.commands.pexpire(
           this.nodeIdKey,
-          this.refreshDelay * 1.5);
+          this.refreshDelay * 3);
         // Unable to refresh the key in time before it expires
         // => this node is too slow, we need to remove it from the cluster
         if (refreshed === 0) {
