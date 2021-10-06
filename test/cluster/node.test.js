@@ -1145,7 +1145,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should shutdown if part of a smaller split because one node does not exists anymore', async () => {
-      node.idCardHandler.idCard.topology = new Set(['I']);
+      node.idCardHandler.idCard.topology = new Set(['I', 'B']);
       node.idCardHandler.getRemoteIdCards.resolves([
         new IdCard({ id: 'B', topology: ['A'] }),
         new IdCard({ id: 'C', topology: ['D', 'E'] }),
