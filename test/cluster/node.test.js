@@ -1144,7 +1144,7 @@ describe('#Cluster Node', () => {
       should(kuzzle.shutdown).calledOnce();
     });
 
-    it.only('should shutdown if part of a smaller split because one node does not exists anymore', async () => {
+    it('should shutdown if part of a smaller split because one node does not exists anymore', async () => {
       node.idCardHandler.idCard.topology = new Set(['I']);
       node.idCardHandler.getRemoteIdCards.resolves([
         new IdCard({ id: 'B', topology: ['A'] }),
