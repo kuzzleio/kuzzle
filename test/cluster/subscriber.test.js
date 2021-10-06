@@ -74,7 +74,7 @@ describe('ClusterSubscriber', () => {
       should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.BUFFERING);
 
       should(subscriber.lastHeartbeat).be.approximately(Date.now(), 100);
-      should(subscriber.heartbeatDelay).be.eql(localNode.heartbeatDelay * 1.5);
+      should(subscriber.heartbeatDelay).be.eql(localNode.heartbeatDelay * 3);
 
       should(subscriber.handlers).be.eql({
         AddCollection: subscriber.handleCollectionAddition,
@@ -110,7 +110,7 @@ describe('ClusterSubscriber', () => {
 
       await subscriber.init();
 
-      await new Promise(resolve => setTimeout(resolve, localNode.heartbeatDelay * 1.6));
+      await new Promise(resolve => setTimeout(resolve, localNode.heartbeatDelay * 3.1));
       should(subscriber.protoroot).not.be.null();
       should(subscriber.socket.connect)
         .be.calledWith(subscriber.remoteNodeAddress);

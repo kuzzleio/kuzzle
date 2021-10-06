@@ -113,7 +113,7 @@ describe('ClusterIDCardRenewer', () => {
         .be.calledOnce()
         .and.be.calledWith(
           'foo',
-          150
+          300
         );
 
       should(idCardRenewer.dispose).not.be.called();
