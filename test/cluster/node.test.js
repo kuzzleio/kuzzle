@@ -1144,6 +1144,22 @@ describe('#Cluster Node', () => {
       should(kuzzle.shutdown).calledOnce();
     });
 
+    it.only('should shutdown if part of a smaller split because one node does not exists anymore', async () => {
+      node.idCardHandler.idCard.topology = new Set(['I']);
+      node.idCardHandler.getRemoteIdCards.resolves([
+        new IdCard({ id: 'B', topology: ['A'] }),
+        new IdCard({ id: 'C', topology: ['D', 'E'] }),
+        new IdCard({ id: 'D', topology: ['C', 'E'] }),
+        new IdCard({ id: 'E', topology: ['C', 'D'] }),
+      ]);
+
+      await node.enforceClusterConsistency();
+
+      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(kuzzle.shutdown).calledOnce();
+    });
+
+
     it('should shutdown if multiple splits have the same size, and if the youngest node', async () => {
       node.idCardHandler.idCard.topology = new Set(['B']);
       node.idCardHandler.idCard.birthdate = 900;
