@@ -37,9 +37,15 @@ message FullStateResponse {
     optional string reason = 5;
   }
 
+  message NodeState {
+    string id = 1;
+    uint64 lastMessageId = 2;
+  }
+
   repeated RealtimeRoom rooms = 1;
   repeated sync.NewAuthStrategy authStrategies = 2;
   repeated Activity activity = 3;
+  repeated NodeState nodesState = 4;
 }
 
 // Handshake Request

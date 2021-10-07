@@ -74,6 +74,7 @@ class ClusterStateMock {
     this.removeNode = sinon.stub();
     this.removeRealtimeRoom = sinon.stub();
     this.removeRealtimeSubscription = sinon.stub();
+    this.serialize = sinon.stub();
   }
 }
 
@@ -755,7 +756,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should be able to connect to existing nodes and get a fullstate', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
@@ -796,7 +797,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should retry getting a fullstate if unable to get one the first time', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
@@ -869,7 +870,7 @@ describe('#Cluster Node', () => {
     });
 
     it('should sync with nodes that answered the handshake, and discard the rest', async () => {
-      const fullstate = { full: 'state', activity: [] };
+      const fullstate = { full: 'state', activity: [], nodesState: [{id: 'qux', lastMessageId: 'quxLastMessageId'}] };
       const nodes = [
         new IdCard({ id: 'bar', ip: '2.3.4.1'}),
         new IdCard({ id: 'baz', ip: '2.3.4.2'}),
@@ -897,7 +898,7 @@ describe('#Cluster Node', () => {
         should(subscriber.__id).oneOf('bar', 'qux');
         should(subscriber.__ip).oneOf('2.3.4.1', '2.3.4.3');
         should(subscriber.sync).calledOnce();
-        should(subscriber.sync.firstCall.args[0]).oneOf('barmsgid', 'quxmsgid');
+        should(subscriber.sync.firstCall.args[0]).oneOf('barmsgid', 'quxLastMessageId');
       }
 
       should(node.command.getFullState).calledOnce();
@@ -1142,6 +1143,22 @@ describe('#Cluster Node', () => {
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
+
+    it('should shutdown if part of a smaller split because one node does not exists anymore', async () => {
+      node.idCardHandler.idCard.topology = new Set(['I', 'B']);
+      node.idCardHandler.getRemoteIdCards.resolves([
+        new IdCard({ id: 'B', topology: ['A'] }),
+        new IdCard({ id: 'C', topology: ['D', 'E'] }),
+        new IdCard({ id: 'D', topology: ['C', 'E'] }),
+        new IdCard({ id: 'E', topology: ['C', 'D'] }),
+      ]);
+
+      await node.enforceClusterConsistency();
+
+      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(kuzzle.shutdown).calledOnce();
+    });
+
 
     it('should shutdown if multiple splits have the same size, and if the youngest node', async () => {
       node.idCardHandler.idCard.topology = new Set(['B']);
