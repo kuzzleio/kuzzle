@@ -30,7 +30,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-NODE_VERSION: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
