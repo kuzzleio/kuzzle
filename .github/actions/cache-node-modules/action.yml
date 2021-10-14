@@ -1,6 +1,11 @@
 name: Cache Node Modules
 description: Cache Node Modules
 
+inputs:
+  node-version:
+    description: node version
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -10,7 +15,7 @@ runs:
         cache-name: cache-node-modules
       with:
         path: node_modules
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('package-lock.json') }}-${{ inputs.node-version }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
