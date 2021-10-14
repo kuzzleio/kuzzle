@@ -13,7 +13,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -30,7 +30,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          node-NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
@@ -48,7 +48,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:legacy:${{ matrix.test_set }}
@@ -69,7 +69,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -82,7 +82,7 @@ jobs:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -106,7 +106,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          node-version: ${{ matrix.node-version }}
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
