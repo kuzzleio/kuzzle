@@ -14,7 +14,7 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
-        - uses: ./.github/actions/cache-node-modules
+      - uses: ./.github/actions/cache-node-modules
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
