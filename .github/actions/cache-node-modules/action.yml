@@ -17,6 +17,6 @@ runs:
         path: node_modules
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}
+          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
 
 
