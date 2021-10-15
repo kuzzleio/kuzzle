@@ -6,8 +6,6 @@ runs:
   steps:
     - run: npm install
       shell: bash
-    - run: npm rebuild
-      shell: bash
     - run: npm run build
       shell: bash
     - run: npm run test:unit:coverage
