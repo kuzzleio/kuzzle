@@ -180,7 +180,7 @@ describe('ClusterIDCardRenewer', () => {
       should(idCardRenewer.redis.commands.del).not.be.called();
     });
 
-    it.only('should not do anything if not initialized before calling dispose', async () => {
+    it('should not do anything if not initialized before calling dispose', async () => {
       const clearIntervalStub = sinon.spy(global, 'clearInterval');
       idCardRenewer = new IDCardRenewer();
 
