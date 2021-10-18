@@ -33,9 +33,11 @@ class WebSocketApi extends WsApiBase {
 
       this.sockets[name].on('message', message => {
         const data = JSON.parse(message);
-        this.responses = data;
 
         if (data.scope || data.type === 'user' || data.type === 'TokenExpired') {
+          if (data.type === 'TokenExpired') {
+            this.responses = data;
+          }
           // notification
           const channel = data.room;
           const roomId = channel.split('-')[0];
