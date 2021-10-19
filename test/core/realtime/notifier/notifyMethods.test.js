@@ -299,7 +299,7 @@ describe('notify methods', () => {
       should(notifier.notifyTokenExpired).calledWith('connectionId');
     });
 
-    it('should notify kuzzle:notification:channel', async () => {
+    it('should notify on channel kuzzle:notification:server', async () => {
       hotelClerk.customers.set('foobar', new Map([
         ['nonMatching', null],
         ['alwaysMatching', null],
@@ -315,7 +315,7 @@ describe('notify methods', () => {
       should(dispatch.firstCall.args[1].connectionId).be.eql('foobar');
 
       should(dispatch.firstCall.args[1].channels).match(
-        ['kuzzle:notification:channel']);
+        ['kuzzle:notification:server']);
 
       const notification = dispatch.firstCall.args[1].payload;
 
