@@ -153,7 +153,7 @@ describe('funnel.checkRights', () => {
     loadedUser.profileIds = ['admin'];
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
-    await funnel.checkRights(request)
+    await funnel.checkRights(request);
 
     should(kuzzle.pipe).be.calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
