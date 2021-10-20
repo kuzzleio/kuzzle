@@ -166,9 +166,9 @@
           "class": "UnauthorizedError"
         },
         "too_many_logins_requests": {
-          "description": "The request was denied because the number of login attempts per second was exceeded for this user.",
+          "description": "The request was denied because the maximum number of login attempts per second has been exceeded.",
           "code": 13,
-          "message": "Rejected: The limit of requests per second has been exceeded for this user.",
+          "message": "Rejected: Too many login attempts per second",
           "class": "TooManyRequestsError"
         }
       }

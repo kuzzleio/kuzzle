@@ -50,5 +50,6 @@ description: Error codes definitions
 | api.process.incomplete_multiple_request<br/><pre>0x0202000a</pre>  | [MultipleErrorsError](/core/2/api/errors/error-codes#multipleerrorserror) <pre>(400)</pre> | At least one of the %s actions failed. | Failed to execute some or all actions requested |
 | api.process.not_enough_nodes<br/><pre>0x0202000b</pre>  | [ServiceUnavailableError](/core/2/api/errors/error-codes#serviceunavailableerror) <pre>(503)</pre> | Rejected: this cluster is disabled because there aren't enough nodes connected. | The Kuzzle cluster has not enough nodes available, and no new requests can be processed until new nodes are added |
 | api.process.unauthorized_origin<br/><pre>0x0202000c</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | The origin "%s" is not authorized. | The domain reaching out to Kuzzle is not authorized |
+| api.process.too_many_logins_requests<br/><pre>0x0202000d</pre>  | [TooManyRequestsError](/core/2/api/errors/error-codes#toomanyrequestserror) <pre>(429)</pre> | Rejected: Too many login attempts per second | The request was denied because the maximum number of login attempts per second has been exceeded. |
 
 ---
