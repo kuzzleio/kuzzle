@@ -38,6 +38,7 @@ describe('funnel.checkRights', () => {
     loadedUser = new User();
     loadedUser._id = 'foo';
     loadedUser._source = { bar: 'qux' };
+    loadedUser.profileIds = ['default'];
 
     verifiedToken = new Token({
       _id: 'token',
@@ -55,6 +56,10 @@ describe('funnel.checkRights', () => {
     getUserStub = kuzzle.ask
       .withArgs(getUserEvent, verifiedToken.userId)
       .resolves(loadedUser);
+  });
+
+  afterEach(() => {
+    global.kuzzle.config.plugins.common.failsafeMode = false;
   });
 
   it('should reject with an UnauthorizedError if an anonymous user is not allowed to execute the action', async () => {
@@ -128,6 +133,29 @@ describe('funnel.checkRights', () => {
     should(getUserStub).calledOnce();
 
     should(kuzzle.pipe).calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+  });
+
+  it('should reject if non admin user use the API during failsafe mode', async () => {
+    global.kuzzle.config.plugins.common.failsafeMode = true;
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({
+      id: 'security.rights.failsafe_mode_admin_only'
+    });
+
+    should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
+    should(kuzzle.pipe).be.calledWith('request:onUnauthorized', request);
+  });
+
+  it('should allow admin user to use the API during failsafe mode', async () => {
+    global.kuzzle.config.plugins.common.failsafeMode = true;
+    loadedUser.profileIds = ['admin'];
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request)
+
+    should(kuzzle.pipe).be.calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
   });
 

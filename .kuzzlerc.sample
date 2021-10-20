@@ -108,8 +108,8 @@
     //   * failsafeMode
     //        If true, Kuzzle will not load custom plugin and features (including
     //        the ones defined in the application).
-    //        This mode should be used carefuly when Kuzzle won't boot because of
-    //        the startup startup sequence.
+    //        The API will only be available to administrators ("admin" profile)
+    //        during failsafe mode.
     //   * bootstrapLockTimeout
     //        Maximum amount of time (in milliseconds)
     //        to wait for a concurrent plugin bootstrap
