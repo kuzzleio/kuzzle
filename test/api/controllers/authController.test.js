@@ -15,7 +15,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const AuthController = require('../../../lib/api/controllers/authController');
-const Token = require('../../../lib/model/security/token');
+const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 
@@ -170,6 +170,68 @@ describe('Test the auth controller', () => {
 
       should(kuzzle.tokenManager.getConnectedUserToken).be.called();
       should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
+    });
+
+    it('should send back the same token if it already exists and it is an API Key', async () => {
+      const existingToken = new Token({
+        _id: 'foobar#foo',
+        jwt: 'kapikey-foo',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+
+      createTokenStub.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      const response = await authController.login(request);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(response).match({
+        _id: 'foobar',
+        jwt: 'kapikey-foo',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+      should(kuzzle.tokenManager.refresh).not.be.called();
+    });
+
+    it('should send back the same token if it already exists and it has an infinite TTL', async () => {
+      const existingToken = new Token({
+        _id: 'foobar#foo',
+        jwt: 'foo',
+        userId: 'foobar',
+        expiresAt: -1,
+        ttl: -1,
+      });
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+
+      createTokenStub.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      const response = await authController.login(request);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(response).match({
+        _id: 'foobar',
+        jwt: 'foo',
+        expiresAt: -1,
+        ttl: -1,
+      });
+      should(kuzzle.tokenManager.refresh).not.be.called();
     });
 
     it('should modify the result according to auth:strategyAuthenticated pipe events', async () => {
@@ -347,6 +409,80 @@ describe('Test the auth controller', () => {
         _id: 'foobar',
         expiresAt: 4567,
         ttl: 1234
+      });
+
+    });
+
+    it('should send back the same token if it is an API Key and not refresh it', async () => {
+      const existingToken = new Token({
+        _id: 'foobar#foo',
+        jwt: 'kapikey-foo',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+
+      createTokenStub.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      const response = await authController.login(requestcookieAuth);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(kuzzle.tokenManager.refresh).not.be.called();
+
+      should.exists(requestcookieAuth.response.headers);
+      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
+      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
+        .and.match(/authToken=kapikey-foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+
+      should(response).be.deepEqual({
+        _id: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234
+      });
+
+    });
+
+    it('should send back the same token if it has an infinite TTL and not refresh it', async () => {
+      const existingToken = new Token({
+        _id: 'foobar#foo',
+        jwt: 'foo',
+        userId: 'foobar',
+        expiresAt: -1,
+        ttl: -1,
+      });
+      const token = new Token({
+        _id: 'foobar#bar',
+        jwt: 'bar',
+        userId: 'foobar',
+        expiresAt: 4567,
+        ttl: 1234,
+      });
+
+      createTokenStub.resolves(token);
+      kuzzle.tokenManager.getConnectedUserToken.returns(existingToken);
+
+      const response = await authController.login(requestcookieAuth);
+
+      should(kuzzle.tokenManager.getConnectedUserToken).be.called();
+      should(kuzzle.tokenManager.refresh).not.be.called();
+
+      should.exists(requestcookieAuth.response.headers);
+      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
+      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
+        .and.match(/authToken=foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+
+      should(response).be.deepEqual({
+        _id: 'foobar',
+        expiresAt: -1,
+        ttl: -1
       });
 
     });

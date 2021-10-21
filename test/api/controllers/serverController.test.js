@@ -2,7 +2,7 @@
 
 const should = require('should');
 const sinon = require('sinon');
-const yaml = require('js-yaml');
+const yaml = require('yaml');
 
 const {
   Request,
@@ -371,7 +371,7 @@ describe('ServerController', () => {
       request.input.args.format = 'yaml';
       return serverController.openapi(request)
         .then((response) => {
-          const parsedResponse = yaml.load(response);
+          const parsedResponse = yaml.parse(response);
           parsedResponse.should.be.an.Object();
           parsedResponse.openapi.should.be.a.String();
         });

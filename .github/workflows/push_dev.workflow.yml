@@ -14,6 +14,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -28,6 +31,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
@@ -43,6 +49,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:legacy:${{ matrix.test_set }}
@@ -61,6 +70,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -83,6 +95,9 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
@@ -133,7 +148,10 @@ jobs:
         run: |
           echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
           echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/deploy-doc
         with:
           owner: kuzzleio
           repo: documentation

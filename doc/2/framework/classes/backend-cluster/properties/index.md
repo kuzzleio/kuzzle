@@ -8,7 +8,6 @@ description: BackendCluster class properties
 # BackendCluster
 
 <SinceBadge version="2.9.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `BackendCluster` class handles cluster interactions.
 

@@ -63,3 +63,6 @@ lib/util/mutex.js
 lib/util/inflector.js
 lib/util/koncordeCompat.js
 features/support/application/functional-tests-app.js
+lib/model/security/token.js
+lib/core/auth/tokenManager.js
+lib/core/cluster/state.js

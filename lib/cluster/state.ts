@@ -19,25 +19,39 @@
  * limitations under the License.
  */
 
-'use strict';
+import { NormalizedFilter } from 'koncorde';
+import { JSONObject } from 'kuzzle-sdk';
+import Long from 'long';
 
-const { NormalizedFilter } = require('koncorde');
+import kerror from '../kerror';
+import '../types/Global';
 
-const kerror = require('../kerror').wrap('cluster', 'fatal');
-const { toKoncordeIndex } = require('../util/koncordeCompat');
+import { toKoncordeIndex } from '../util/koncordeCompat';
 
-// Private class aiming at maintaining both the number of a node's subscriptions
-// to a room, and the node's last message ID to detect desyncs.
+const errorFatal = kerror.wrap('cluster', 'fatal');
+
+/**
+ * Private class aiming at maintaining both the number of a node's subscriptions
+ * to a room, and the node's last message ID to detect desyncs.
+ */
 class RoomSubscriptions {
+  private nodeId: string;
+
+  private _subscribers: number;
+
+  private _messageId: Long;
+
   /**
    * @constructor
-   * @param  {Number} messageId     -- ID of the last message that updated this
-   *                                   room
-   * @param  {Number} [subscribers]
+   *
+   * @param messageId ID of the last message that updated this room
+   * @param subscribers
    */
-  constructor (messageId, subscribers) {
+  constructor (nodeId: string, messageId: Long, subscribers: number) {
+    this.nodeId = nodeId;
+
     this._subscribers = subscribers;
-    // type: Long
+
     this._messageId = messageId;
   }
 
@@ -49,7 +63,7 @@ class RoomSubscriptions {
     return this._messageId;
   }
 
-  incr (messageId) {
+  incr (messageId: Long) {
     // may happen when resyncing: ignore older messages
     if (messageId.greaterThan(this._messageId)) {
       this._subscribers++;
@@ -59,7 +73,7 @@ class RoomSubscriptions {
     return this._subscribers;
   }
 
-  decr (messageId) {
+  decr (messageId: Long) {
     // may happen when resyncing: ignore older messages
     if (messageId.greaterThan(this._messageId)) {
       this._subscribers--;
@@ -69,71 +83,97 @@ class RoomSubscriptions {
     return this._subscribers;
   }
 
-  serialize () {
+  serialize (): SerializedRoomSubscriptions {
     return {
       messageId: this._messageId,
+      nodeId: this.nodeId,
       subscribers: this._subscribers,
     };
   }
 }
 
-// Private class representing a single realtime room state
+export type SerializedRoomSubscriptions = {
+  nodeId: string;
+
+  messageId: Long;
+
+  subscribers: number;
+}
+
+/**
+ * Private class representing a single realtime room state
+ */
 class RoomState {
-  constructor (roomId, index, collection, filters) {
+  public id: string;
+
+  public index: string;
+
+  public collection: string;
+
+  public filters: JSONObject;
+
+  /**
+   * List of nodes having subscriptions on this room
+   *
+   * Map<nodeId, RoomSubscriptions>
+   */
+  public nodes = new Map<string, RoomSubscriptions>();
+
+  constructor (roomId: string, index: string, collection: string, filters: JSONObject) {
     this.id = roomId;
     this.index = index;
     this.collection = collection;
     this.filters = filters;
-    this.nodes = new Map();
   }
 
   /**
    * Adds a new node to the state
-   * @param {String} nodeId
-   * @param {Number} messageId
-   * @param {Number} [subscribers] -- number of subscribers
+   *
+   * @param nodeId
+   * @param messageId
+   * @param subscribers -- number of subscribers
    */
-  addNode (nodeId, messageId, subscribers) {
+  addNode (nodeId: string, messageId: Long, subscribers: number) {
     if (this.nodes.has(nodeId)) {
-      throw kerror.get('desync', `cannot add node ${nodeId} to room ${this.id} (duplicate node)`);
+      throw errorFatal.get('desync', `cannot add node ${nodeId} to room ${this.id} (duplicate node)`);
     }
 
-    this.nodes.set(nodeId, new RoomSubscriptions(messageId, subscribers));
+    this.nodes.set(nodeId, new RoomSubscriptions(nodeId, messageId, subscribers));
   }
 
-  removeNode (nodeId) {
+  removeNode (nodeId: string) {
     this.nodes.delete(nodeId);
   }
 
-  incr (nodeId, messageId) {
+  incr (nodeId: string, messageId: Long) {
     const node = this.nodes.get(nodeId);
 
-    if (!node) {
+    if (! node) {
       // die
-      throw kerror.get('desync', `cannot add subscription to room ${this.id} (unknown node ${nodeId})`);
+      throw errorFatal.get('desync', `cannot add subscription to room ${this.id} (unknown node ${nodeId})`);
     }
 
     node.incr(messageId);
   }
 
-  decr (nodeId, messageId) {
+  decr (nodeId: string, messageId: Long) {
     const node = this.nodes.get(nodeId);
 
-    if (!node) {
+    if (! node) {
       // die
-      throw kerror.get('desync', `cannot remove subscription from room ${this.id} (unknown node ${nodeId})`);
+      throw errorFatal.get('desync', `cannot remove subscription from room ${this.id} (unknown node ${nodeId})`);
     }
 
     if (node.decr(messageId) < 0) {
-      throw kerror.get('desync', `node ${nodeId} has a negative subscribers count on room ${this.id}`);
+      throw errorFatal.get('desync', `node ${nodeId} has a negative subscribers count on room ${this.id}`);
     }
   }
 
-  hasNodes () {
+  hasNodes (): boolean {
     return this.nodes.size > 0;
   }
 
-  countSubscriptions () {
+  countSubscriptions (): number {
     let result = 0;
 
     for (const nodeSubs of this.nodes.values()) {
@@ -143,8 +183,8 @@ class RoomState {
     return result;
   }
 
-  serialize () {
-    const result = {
+  serialize (): SerializedRoomState {
+    const result: SerializedRoomState = {
       collection: this.collection,
       filters: JSON.stringify(this.filters),
       index: this.index,
@@ -152,44 +192,72 @@ class RoomState {
       roomId: this.id,
     };
 
-    for (const [nodeId, nodeSubs] of this.nodes) {
-      result.nodes.push({
-        nodeId,
-        ...nodeSubs.serialize(),
-      });
+    for (const nodeSubs of this.nodes.values()) {
+      result.nodes.push(nodeSubs.serialize());
     }
 
     return result;
   }
 }
 
-// Object maintaining the complete cluster state
-class State {
-  constructor () {
-    this.realtime = new Map();
-    this.strategies = new Map();
-  }
+export type SerializedRoomState = {
+  collection: string;
+
+  filters: string;
+
+  index: string;
+
+  nodes: SerializedRoomSubscriptions[];
+
+  roomId: string;
+}
+
+/**
+ * Class maintaining the complete cluster state
+ */
+export default class State {
+  /**
+   * State of realtime rooms.
+   *
+   * Each room state contains the node IDs subscribing to the room.
+   *
+   * Map<roomId, RoomState>
+   */
+  private realtime = new Map<string, RoomState>();
+
+  /**
+   * State of authentication strategies
+   *
+   * Map<strategyName, strategyDefinition>
+   */
+  private strategies = new Map<string, JSONObject>();
 
   /**
    * Adds a new realtime room to the state
-   * @param {string} roomId
-   * @param {string} index
-   * @param {string} collection
-   * @param {Object} filters       -- precomputed Koncorde filters
-   * @param {{nodeId: string, subscribers: Number, messageId: Long}} node
-   * @returns {void}
+   *
+   * @param roomId
+   * @param index
+   * @param collection
+   * @param filters Precomputed Koncorde filters
+   * @param node
    */
-  addRealtimeRoom (roomId, index, collection, filters, node) {
+  addRealtimeRoom (
+    roomId: string,
+    index: string,
+    collection: string,
+    filters: JSONObject,
+    node: SerializedRoomSubscriptions
+  ) {
     let room = this.realtime.get(roomId);
 
-    if (!room) {
+    if (! room) {
       room = new RoomState(roomId, index, collection, filters);
       this.realtime.set(roomId, room);
     }
 
     const kindex = toKoncordeIndex(index, collection);
 
-    if (!global.kuzzle.koncorde.hasFilterId(roomId, kindex)) {
+    if (! global.kuzzle.koncorde.hasFilterId(roomId, kindex)) {
       global.kuzzle.koncorde.store(new NormalizedFilter(filters, roomId, kindex));
     }
 
@@ -199,13 +267,12 @@ class State {
   /**
    * Retrieves a room in the same format than Koncorde.normalize
    *
-   * @param  {string} roomId
-   * @return {Object}
+   * @param roomId
    */
-  getNormalizedFilters (roomId) {
+  getNormalizedFilters (roomId: string): NormalizedFilter | null {
     const room = this.realtime.get(roomId);
 
-    if (!room) {
+    if (! room) {
       return null;
     }
 
@@ -218,33 +285,35 @@ class State {
   /**
    * Removes a room in the full state, for a given node.
    *
-   * @param  {string} roomId
-   * @param  {string} nodeId
+   * @param roomId
+   * @param nodeId
    */
-  removeRealtimeRoom (roomId, nodeId) {
+  removeRealtimeRoom (roomId: string, nodeId: string) {
     const room = this.realtime.get(roomId);
 
     /**
      * If a local room gets deleted, there aren't sync data about it
+     * @todo investigate this
      */
-    if (!room) {
+    if (! room) {
       return;
     }
 
     room.removeNode(nodeId);
 
-    if (!room.hasNodes()) {
+    if (! room.hasNodes()) {
       this.realtime.delete(roomId);
+
       global.kuzzle.koncorde.remove(
         roomId,
         toKoncordeIndex(room.index, room.collection));
     }
   }
 
-  countRealtimeSubscriptions (roomId) {
+  countRealtimeSubscriptions (roomId: string): number {
     const room = this.realtime.get(roomId);
 
-    if (!room) {
+    if (! room) {
       return 0;
     }
 
@@ -252,7 +321,7 @@ class State {
   }
 
   listRealtimeRooms () {
-    const list = {};
+    const list: RealtimeRoomsList = {};
 
     for (const room of this.realtime.values()) {
       if (!list[room.index]) {
@@ -269,21 +338,21 @@ class State {
     return list;
   }
 
-  addRealtimeSubscription (roomId, nodeId, messageId) {
+  addRealtimeSubscription (roomId: string, nodeId: string, messageId: Long) {
     const room = this.realtime.get(roomId);
 
-    if (!room) {
-      throw kerror.get('desync', `cannot add subscription to room ${roomId} (room doesn't exist)`);
+    if (! room) {
+      throw errorFatal.get('desync', `cannot add subscription to room ${roomId} (room doesn't exist)`);
     }
 
     room.incr(nodeId, messageId);
   }
 
-  removeRealtimeSubscription (roomId, nodeId, messageId) {
+  removeRealtimeSubscription (roomId: string, nodeId: string, messageId: Long) {
     const room = this.realtime.get(roomId);
 
-    if (!room) {
-      throw kerror.get('desync', `cannot remove subscription from room ${roomId} (room doesn't exist)`);
+    if (! room) {
+      throw errorFatal.get('desync', `cannot remove subscription from room ${roomId} (room doesn't exist)`);
     }
 
     room.decr(nodeId, messageId);
@@ -292,10 +361,9 @@ class State {
   /**
    * Removes a node from the full state
    *
-   * @param  {string} nodeId
-   * @return {void}
+   * @param  nodeId
    */
-  removeNode (nodeId) {
+  removeNode (nodeId: string) {
     for (const roomId of this.realtime.keys()) {
       this.removeRealtimeRoom(roomId, nodeId);
     }
@@ -304,14 +372,12 @@ class State {
   /**
    * Adds a new dynamic strategy to the full state
    *
-   * @param {string} strategyName
-   * @param {Buffer} message
    */
-  addAuthStrategy (strategyObject) {
+  addAuthStrategy (strategyObject: JSONObject) {
     this.strategies.set(strategyObject.strategyName, strategyObject);
   }
 
-  removeAuthStrategy (strategyName) {
+  removeAuthStrategy (strategyName: string) {
     this.strategies.delete(strategyName);
   }
 
@@ -330,10 +396,9 @@ class State {
    * could otherwise not be known to this node (e.g. if only 1 subscription
    * exists and made on another node)
    *
-   * @param {Object} serialized POJO object of a full realtime state
-   * @returns {void}
+   * @param serialized POJO object of a full realtime state
    */
-  loadFullState (serialized) {
+  loadFullState (serialized: SerializedState) {
     if (serialized.rooms) {
       for (const state of serialized.rooms) {
         for (const node of state.nodes) {
@@ -359,5 +424,22 @@ class State {
     }
   }
 }
+
+export type RealtimeRoomsList = {
+  [index: string]: {
+    [collection: string]: {
+      /**
+       * Number of subscriptions per room
+       */
+      [roomId: string]: number
+    }
+  }
+};
+
+export type SerializedState = {
+  authStrategies: JSONObject[];
+
+  rooms: SerializedRoomState[];
+};
 
 module.exports = State;

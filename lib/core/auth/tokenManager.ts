@@ -19,11 +19,46 @@
  * limitations under the License.
  */
 
-'use strict';
+import SortedArray from 'sorted-array';
 
-const SortedArray = require('sorted-array');
+import '../../types/Global';
+import { Token } from '../../model/security/token';
 
-const Token = require('../../model/security/token');
+interface ISortedArray<T> {
+  array: T[];
+
+  search (item: any): number;
+
+  insert (item: T): void;
+}
+
+/**
+ * Extends the Token model with a set of linked connection IDs.
+ */
+class ManagedToken extends Token {
+  /**
+   * Unique string to identify the token and sort it by expiration date 
+   */
+  idx: string;
+
+  /**
+   * Set of connection ID that use this token.
+   */
+  connectionIds: Set<string>;
+
+  constructor (token: Token, connectionIds: Set<string>) {
+    super(token);
+
+    this.connectionIds = connectionIds;
+  }
+
+  /**
+   * Returns an unique string that identify a token and allows to sort them by expiration date.
+   */
+  static indexFor (token: Token) {
+    return `${token.expiresAt};${token._id}`;
+  }
+}
 
 /*
  Maximum delay of a setTimeout call. If larger than this value,
@@ -36,23 +71,25 @@ const Token = require('../../model/security/token');
 const TIMEOUT_MAX = Math.pow(2, 31) - 1;
 
 /**
- * Maintains a list of valid tokens used by real-time subscriptions
+ * Maintains a list of valid tokens used by connected protocols.
+ * 
  * When a token expires, this module cleans up the corresponding connection's
- * subscriptions, and notify the user
- *
- * @class TokenManager
+ * subscriptions if any, and notify the user
  */
-class TokenManager {
-  constructor () {
-    this.anonymousUserId = null;
+export class TokenManager {
+  private tokens: ISortedArray<ManagedToken>;
+  private anonymousUserId: string = null;
+  private tokensByConnection = new Map<string, ManagedToken>();
+  private timer: NodeJS.Timeout = null;
 
+  constructor () {
     /*
      * Tokens are sorted by their expiration date
      *
      * The token id is added to the key to handle
      * equality between different tokens sharing
      * the exact same expiration date
-     * 
+     *
      * We should always put infinite duration token at the end of the array
      * because the loop that checks if a token is expired is always verifiying the first element of the array.
      * Since an infinite token cannot be expired, if there is an infinite duration token at the first element
@@ -74,9 +111,6 @@ class TokenManager {
 
       return a.idx < b.idx ? -1 : 1;
     });
-    this.tokensByConnection = new Map();
-
-    this.timer = null;
   }
 
   async init () {
@@ -99,56 +133,57 @@ class TokenManager {
   /**
    * Link a connection and a token.
    * If one or another expires, associated subscriptions are cleaned up
-   * @param {Token} token
-   * @param {String} connectionId
+   * @param token
+   * @param connectionId
    */
-  link (token, connectionId) {
+  link (token: Token, connectionId: string) {
     // Embedded SDK does not use tokens
     if (! token || token._id === this.anonymousUserId) {
       return;
     }
 
-    const idx = getTokenIndex(token);
+    const idx = ManagedToken.indexFor(token);
     const currentToken = this.tokensByConnection.get(connectionId);
-    
+
     if (currentToken) {
       if (currentToken._id === token._id) {
         return; // Connection and Token already linked
       }
-      this._removeConnectionLinkedToToken(connectionId, currentToken);
+      this.removeConnectionLinkedToToken(connectionId, currentToken);
     }
-    const pos = this.tokens.search({idx});
+    const pos = this.tokens.search({ idx });
 
     if (pos === -1) {
-      this._add(token, [connectionId]);
+      this.add(token, new Set([connectionId]));
     }
     else {
-      const data = this.tokens.array[pos];
-      data.connectionIds.add(connectionId);
-      this.tokensByConnection.set(connectionId, data);
+      const managedToken = this.tokens.array[pos];
+      managedToken.connectionIds.add(connectionId);
+
+      this.tokensByConnection.set(connectionId, managedToken);
     }
   }
 
   /**
    * Unlink a connection from its associated token
    *
-   * @param  {Token} token
-   * @param  {String} connectionId
+   * @param token
+   * @param connectionId
    */
-  unlink (token, connectionId) {
+  unlink (token: Token, connectionId: string) {
     // Embedded SDK does not use tokens
     if (! token || token._id === this.anonymousUserId) {
       return;
     }
 
-    const idx = getTokenIndex(token);
+    const idx = ManagedToken.indexFor(token);
     const pos = this.tokens.search({ idx });
 
     if (pos === -1) {
       return;
     }
 
-    this._removeConnectionLinkedToToken(connectionId, this.tokens.array[pos]);
+    this.removeConnectionLinkedToToken(connectionId, this.tokens.array[pos]);
 
     const currentToken = this.tokensByConnection.get(connectionId);
     if (currentToken && currentToken._id === token._id) {
@@ -164,36 +199,35 @@ class TokenManager {
    *
    * @param token
    */
-  async expire (token) {
+  async expire (token: Token) {
     if (token._id === this.anonymousUserId) {
       return;
     }
 
-    const idx = getTokenIndex(token);
+    const idx = ManagedToken.indexFor(token);
     const searchResult = this.tokens.search({idx});
 
     if (searchResult > -1) {
-      const data = this.tokens.array[searchResult];
+      const managedToken = this.tokens.array[searchResult];
 
-      for (const connectionId of data.connectionIds) {
+      for (const connectionId of managedToken.connectionIds) {
         this.tokensByConnection.delete(connectionId);
         await global.kuzzle.ask('core:realtime:user:remove', connectionId);
       }
 
-      this._deleteByIndex(searchResult);
+      this.deleteByIndex(searchResult);
     }
   }
 
   /**
    * Refresh an existing token with a new one
    *
-   * @param  {Token} oldToken
-   * @param  {Token} newToken
+   * @param oldToken
+   * @param newToken
    */
-  refresh (oldToken, newToken) {
-    const
-      oldIndex = getTokenIndex(oldToken),
-      pos = this.tokens.search({idx: oldIndex});
+  refresh (oldToken: Token, newToken: Token) {
+    const oldIndex = ManagedToken.indexFor(oldToken);
+    const pos = this.tokens.search({ idx: oldIndex });
 
     // If the old token has been created and then refreshed within the same
     // second, then it has the exact same characteristics than the new one.
@@ -205,14 +239,14 @@ class TokenManager {
     if (pos > -1 && oldToken._id !== newToken._id) {
       const connectionIds = this.tokens.array[pos].connectionIds;
 
-      this._add(newToken, connectionIds);
+      this.add(newToken, connectionIds);
 
       // Delete old token
-      this._deleteByIndex(pos);
+      this.deleteByIndex(pos);
     }
   }
 
-  async checkTokensValidity() {
+  async checkTokensValidity () {
     const arr = this.tokens.array;
 
     // API key can never expire (-1)
@@ -224,7 +258,9 @@ class TokenManager {
       for (const connectionId of connectionIds) {
         await global.kuzzle.ask('core:realtime:tokenExpired:notify', connectionId);
       }
+
       setImmediate(() => this.checkTokensValidity());
+
       return;
     }
 
@@ -235,69 +271,64 @@ class TokenManager {
 
   /**
    * Gets the token matching user & connection if any
-   *
-   * @param {string} userId
-   * @param {string} connectionId
-   * @returns {Token}
    */
-  getConnectedUserToken(userId, connectionId) {
-    const data = this.tokensByConnection.get(connectionId);
+  getConnectedUserToken (userId: string, connectionId: string): Token | null {
+    const token = this.tokensByConnection.get(connectionId);
 
-    return data && data.userId === userId 
-      ? new Token({...data, connectionId})
-      : null;
+    return token && token.userId === userId ? token : null;
+  }
+
+  /**
+   * Returns the kuid associated to a connection
+   */
+  getKuidFromConnection (connectionId: string): string | null {
+    const token = this.tokensByConnection.get(connectionId);
+
+    if (! token) {
+      return null;
+    }
+
+    return token.userId;
   }
 
   /**
    * Adds token to internal collections
    *
-   * @param {Token} token
-   * @param {string} connectionId
-   * @private
+   * @param token
+   * @param connectionId
    */
-  _add(token, connectionIds) {
-    const data = Object.assign({}, token, {
+  private add (token: Token, connectionIds: Set<string>) {
+    const orderedToken = Object.assign({}, token, {
       connectionIds: new Set(connectionIds),
-      idx: getTokenIndex(token)
+      idx: ManagedToken.indexFor(token)
     });
 
     for (const connectionId of connectionIds) {
-      this.tokensByConnection.set(connectionId, data);
+      this.tokensByConnection.set(connectionId, orderedToken);
     }
-    this.tokens.insert(data);
+    this.tokens.insert(orderedToken);
 
-    if (this.tokens.array[0].idx === data.idx) {
+    if (this.tokens.array[0].idx === orderedToken.idx) {
       this.runTimer();
     }
   }
 
-  _removeConnectionLinkedToToken(connectionId, token) {
-    token.connectionIds.delete(connectionId);
+  private removeConnectionLinkedToToken (connectionId: string, managedToken: ManagedToken) {
+    managedToken.connectionIds.delete(connectionId);
 
-    if (token.connectionIds.size === 0) {
-      const pos = this.tokens.search({ idx: token.idx });
-      this._deleteByIndex(pos);
+    if (managedToken.connectionIds.size === 0) {
+      const pos = this.tokens.search({ idx: managedToken.idx });
+      this.deleteByIndex(pos);
     }
   }
 
-  _deleteByIndex(index) {
-    const data = this.tokens.array[index];
+  private deleteByIndex (index: number) {
+    const orderedToken = this.tokens.array[index];
 
-    if (!data) {
+    if (! orderedToken) {
       return;
     }
 
     this.tokens.array.splice(index, 1);
   }
 }
-
-/**
- * Calculate a simple sortable token index
- * @param token
- * @returns {string}
- */
-function getTokenIndex(token) {
-  return `${token.expiresAt};${token._id}`;
-}
-
-module.exports = TokenManager;

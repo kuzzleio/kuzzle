@@ -8,7 +8,6 @@ description: BackendConfig class properties
 # BackendConfig
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `BackendConfig` class handles an application configuration.  
 

@@ -170,7 +170,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       getConnectedUserToken: sinon.stub(),
       link: sinon.stub(),
       refresh: sinon.stub(),
-      unlink: sinon.stub()
+      unlink: sinon.stub(),
+      getKuidFromConnection: sinon.stub(),
     };
 
     this.validation = {

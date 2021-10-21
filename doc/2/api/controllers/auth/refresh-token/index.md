@@ -10,9 +10,13 @@ title: refreshToken
 
 Refreshes an authentication token:
 
-* a valid, non-expired authentication must be provided
+* a valid, non-expired authentication token must be provided
 * the provided authentication token is revoked
 * a new authentication token is generated and returned
+
+::: warning
+API Keys and token with infinite duration cannot be refreshed
+:::
 
 ---
 

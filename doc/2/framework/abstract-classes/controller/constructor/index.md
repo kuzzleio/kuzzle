@@ -8,7 +8,6 @@ description: Controller abstract class constructor
 # constructor
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 Constructor method of the `Controller` abstract class. It must be called with the [Backend](/core/2/framework/classes/backend) class instantiated by the application.
 
