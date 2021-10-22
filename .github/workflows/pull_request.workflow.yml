@@ -35,7 +35,6 @@ jobs:
       - uses: ./.github/actions/cache-node-modules
         with:
           NODE_VERSION: ${{ matrix.node-version }}
-          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
       - uses: ./.github/actions/start-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}

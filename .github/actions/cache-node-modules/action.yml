@@ -5,9 +5,6 @@ inputs:
   NODE_VERSION:
     description: node version
     required: true
-  KUZZLE_IMAGE:
-    description: Kuzzle image
-    required: false
 
 runs:
   using: "composite"
@@ -18,8 +15,8 @@ runs:
         cache-name: cache-node-modules
       with:
         path: node_modules
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.KUZZLE_IMAGE }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.KUZZLE_IMAGE }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
 
 
