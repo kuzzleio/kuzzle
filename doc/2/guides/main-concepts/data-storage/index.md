@@ -10,7 +10,7 @@ order: 200
 
 Kuzzle uses Elasticsearch as a **NoSQL document storage**.
 
-The data storage is organized in 4 levels: 
+The data storage is organized in 4 levels:
   - Indexes
   - Collections
   - Documents
@@ -35,23 +35,25 @@ Elasticsearch is **primarily designed to be a search engine**, so there are **li
 
 ## Internal Representation
 
-Elasticsearch does not have this notion of our two levels document-oriented storage.  
+Elasticsearch does not have this notion of our two levels document-oriented storage.
 
 ::: info
 As the word index refers to Kuzzle indexes but also Elasticsearch indexes, we will rather **use the term indices for Elasticsearch indexes** to avoid confusion (also present in Elasticsearch documentation).
 :::
 
 Kuzzle indexes and collections are emulated in Elasticsearch in the following way:
- - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`)
+ - **indexes does not physically exist in Elasticsearch** but are only logical application containers. When an index is created, an empty indice is created in Elasticsearch to reserve the index name (e.g. `&nyc-open-data._kuzzle_keep`) as long as an alias name (e.g. `@&nyc-open-data._kuzzle_keep`)
  - **collections correspond to Elasticsearch indexes** with all their properties (e.g. [mappings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/mapping.html), [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/index-modules.html#index-modules-settings), etc)
 
-Kuzzle distinguishes two types of storage: 
+Kuzzle distinguishes two types of storage:
   - **private**: internal Kuzzle index, plugin private indexes. Those indexes can never be accessed directly from the Kuzzle API
   - **public**: indexes available through the Kuzzle API
 
 Elasticsearch indices must comply to the following naming convention:
  - **private**: `%<kuzzle-index-name>.<kuzzle-collection-name>`
  - **public**: `&<kuzzle-index-name>.<kuzzle-collection-name>`
+
+Each indice is doubled with an alias allowing more flexibility and maintainability. Aliases are formatted with an `@` prefix followed by their associated indice name.
 
 You can list Elasticsearch indices with this command:
 ```bash
@@ -156,7 +158,7 @@ Refer to the Elasticsearch documentation for an exhaustive list of available typ
 
 #### Arrays
 
-With Elasticsearch, **every field can be an array**. 
+With Elasticsearch, **every field can be an array**.
 
 To store an array of values, you can just send it as-is instead of a single value:
 ```bash
@@ -175,7 +177,7 @@ kourou document:update ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-If you need to frequently insert and remove values to a field then you should either use a nested object instead or use a [scripting language](https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting-painless.html) to modify the array.  
+If you need to frequently insert and remove values to a field then you should either use a nested object instead or use a [scripting language](https://www.elastic.co/guide/en/elasticsearch/reference/master/modules-scripting-painless.html) to modify the array.
 For security reasons, Kuzzle does not provide any access to scripts through its API. Scripts are only supported through the [Integrated Elasticsearch Client](/core/2/guides/main-concepts/data-storage#integrated-elasticsearch-client) available to applications and to plugins.
 :::
 
@@ -213,7 +215,7 @@ kourou collection:create ktm-open-data thamel-taxi '{
 For each collection, you can set the **policy against new fields that are not referenced** in the collection mapping by modifying the `dynamic` root field.
 
 The value of this configuration will change the way Elasticsearch manages the creation of new fields that are not declared in the collection mappings.
-  - `"true"`: stores the document and updates the collection mapping with the inferred type 
+  - `"true"`: stores the document and updates the collection mapping with the inferred type
   - `"false"`: stores the document and does not update the collection mappings (fields are not indexed)
   - `"strict"`: rejects the document
 
@@ -226,7 +228,7 @@ Refer to Elasticsearch documentation for more informations: [Elasticsearch dynam
 The default policy for new collections is `"true"` and is configurable in the [kuzzlerc](/core/2/guides/advanced/configuration) file under the key `services.storageEngine.commonMapping.dynamic`.
 
 ::: warning
-We advise not to let Elasticsearch dynamically infer the type of new fields in production.  
+We advise not to let Elasticsearch dynamically infer the type of new fields in production.
 Allowing dynamic fields can be a problem because then the mappings cannot be modified, not to mention the cost of indexing potentially unwanted new fields.
 :::
 
@@ -295,9 +297,9 @@ kourou collection:getMapping ktm-open-data thamel-taxi
 
 ### Load Mappings
 
-It is possible to **load mappings from several collections** at once using the [admin:loadMappings](/core/2/api/controllers/admin/load-mappings) action.  
+It is possible to **load mappings from several collections** at once using the [admin:loadMappings](/core/2/api/controllers/admin/load-mappings) action.
 
-This action takes as parameter a definition of a set of indexes and collections with their associated mappings.  
+This action takes as parameter a definition of a set of indexes and collections with their associated mappings.
 
 The expected format is the following:
 ```js
@@ -347,7 +349,7 @@ kourou admin:loadMappings < mappings.json
 Kourou can read file content and put it the request body.
 :::
 
-<!-- 
+<!--
   @todo load at startup with Kaaf
 -->
 
@@ -364,7 +366,7 @@ kourou collection:create ktm-open-data:yellow-taxi '{
     "analysis": {
       "analyzer": {
         "my_custom_analyzer": {
-          "type": "custom", 
+          "type": "custom",
           "tokenizer": "standard",
           "char_filter": [
             "html_strip"
@@ -390,7 +392,7 @@ While updating the collection settings, the collection will be [closed](https://
 Whenever a **document is created, updated or deleted**, Kuzzle will **add or update the document's metadata**. These metadata provide information about the document's lifecycle.
 
 ::: info
-You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions.
+You can bypass metadata automatic creation by using [bulk:write](/core/2/api/controllers/bulk/write), [bulk:mWrite](/core/2/api/controllers/bulk/m-write) or [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query) actions.
 :::
 
 Metadata can be viewed in the document's `_kuzzle_info` field and contains the following properties:
@@ -427,8 +429,8 @@ kourou document:create ktm-open-data thamel-taxi '{
 ```
 
 ::: info
-Metadata cannot be edited manually (except with [bulk:write](/core/2/api/controllers/bulk/write) or [bulk:mWrite](/core/2/api/controllers/bulk/m-write) actions). Kuzzle will discard any `_kuzzle_info` property sent in document content.  
-::: 
+Metadata cannot be edited manually (except with [bulk:write](/core/2/api/controllers/bulk/write), [bulk:mWrite](/core/2/api/controllers/bulk/m-write) or [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query) actions). Kuzzle will discard any `_kuzzle_info` property sent in document content.
+:::
 
 ### Metadata mappings
 
@@ -466,7 +468,7 @@ For example, to sort documents by creation date, we can use the following search
 
 ```bash
 kourou document:search ktm-open-data thamel-taxi --sort '{
-  "_kuzzle_info.createdAt": "asc" 
+  "_kuzzle_info.createdAt": "asc"
 }'
 ```
 
@@ -502,7 +504,7 @@ kourou document:update ktm-open-data thamel-taxi '{
 
 ### Write Multiple Documents
 
-If you need to **write multiple documents at once**, it is recommended to use one of the `m*` actions.  
+If you need to **write multiple documents at once**, it is recommended to use one of the `m*` actions.
 
 ::: info
 If you need to create large volume of documents the fastest way possible then you should use the [bulk:import](/core/2/api/controllers/bulk/import) action.
@@ -512,7 +514,7 @@ These actions work in the same way as single document actions (`createOrReplace`
 
 **Example:** _Create multiple documents with the [document:mCreate](/core/2/api/controllers/document/m-create) action_
 
-<!-- 
+<!--
   @todo deprecate "body" and use "content" instead
 -->
 
@@ -606,7 +608,7 @@ To perform lower level actions, it is possible to use the [bulk](/core/2/api/con
 
 The actions of this controller may not follow some of the API principles such as:
  - adding [Kuzzle Metadata](/core/2/guides/main-concepts/data-storage#kuzzle-metadata)
- - triggering [Database Notifications](/core/2/guides/main-concepts/realtime-engine#database-notifications) 
+ - triggering [Database Notifications](/core/2/guides/main-concepts/realtime-engine#database-notifications)
  - application of [Data Validation](/core/2/guides/advanced/data-validation) rules
  - respect of [write limit](/core/2/guides/main-concepts/data-storage#write-limit)
 
@@ -615,15 +617,16 @@ The following actions are available:
  - [bulk:mWrite](/core/2/api/controllers/bulk/m-write): write multiple documents
  - [bulk:import](/core/2/api/controllers/bulk/import): import documents as fast as possible
  - [bulk:deleteByQuery](/core/2/api/controllers/bulk/write): delete large volume of documents matching a query
+ - [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query): update large volume of documents matching a query
 
 ::: warning
-Bulk actions are intended to be used by administrators and scripts.  
+Bulk actions are intended to be used by administrators and scripts.
 It is considered harmful to let end users execute those actions.
 :::
 
 ## Integrated Elasticsearch Client
 
-Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html). 
+Kuzzle uses and exposes the [Elasticsearch Javascript SDK](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
 
 It is possible to **interact directly with Elasticsearch** through clients exposed in the [Backend.storage](/core/2/framework/classes/backend-storage) property.
 

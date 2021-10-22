@@ -25,6 +25,7 @@ import Bluebird from 'bluebird';
 
 import kerror from '../kerror';
 import buildDebug from './debug';
+import '../types/Global';
 
 const debug = buildDebug('kuzzle:mutex');
 const fatal = kerror.wrap('core', 'fatal');

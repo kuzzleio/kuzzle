@@ -8,7 +8,14 @@ title: searchRoles
 
 
 
-Searches security roles, optionally returning only those allowing access to the provided controllers.
+Searches security roles, returning only those allowing access to the provided controllers.
+
+<SinceBadge version="2.14.1"/>
+
+Support for search using a search query with the `query` property.
+
+This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.  
+Koncorde filters will be translated into an Elasticsearch query.  
 
 ---
 
@@ -24,9 +31,16 @@ Body:
 
 ```js
 {
-  // optional: retrieve only roles giving access to the
+  // retrieve only roles giving access to the
   // provided controller names
-  "controllers": ["document", "security"]
+  "controllers": ["document", "security"],
+
+  // OR use a search query 
+  "query": {
+    "terms": {
+      "tags": "moderator"
+    }
+  }
 }
 ```
 
@@ -37,9 +51,17 @@ Body:
   "controller": "security",
   "action": "searchRoles",
   "body": {
-    // optional: search for roles allowing access to the provided
+    // search for roles allowing access to the provided
     // list of controllers
-    "controllers": ["document", "security"]
+    "controllers": ["document", "security"],
+
+    // OR use a search query 
+    "query": {
+      "terms": {
+        "tags": "moderator"
+      }
+    }
+
   },
   // optional: result pagination configuration
   "from": 0,
@@ -55,6 +77,7 @@ Body:
 
 - `from`: the offset from the first result you want to fetch. Usually used with the `size` argument
 - `size`: the maximum number of profiles returned in one response page
+- `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.14.1"/>
 
 ---
 
@@ -63,6 +86,14 @@ Body:
 ### Optional:
 
 - `controllers`: an array of controller names. Restrict the search to roles linked to the provided controllers.
+
+- `query`: search query using the [ElasticSearch Query DSL](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) or the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) syntax.
+
+If the body is left empty, the result will return all available roles.
+
+::: warning
+You cannot use both `controllers` and `query` properties at the same time.
+::: 
 
 ---
 

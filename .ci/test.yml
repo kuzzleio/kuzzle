@@ -27,6 +27,7 @@ services:
       - kuzzle_limits__loginsPerSecond=50
       - kuzzle_server__protocols__mqtt__enabled=true
       - kuzzle_server__protocols__mqtt__developmentMode=false
+      - kuzzle_http__accessControlAllowOrigin=localhost
       - NODE_ENV=development
       - NODE_VERSION=${NODE_VERSION:-}
       - DEBUG
@@ -43,7 +44,7 @@ services:
       - TRAVIS_REPO_SLUG
 
   redis:
-    image: redis:5
+    image: redis:6
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

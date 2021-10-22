@@ -16,7 +16,11 @@ Rather than developing the same standard features over and over again each time 
 
 The majority of Kuzzle's features are available via its [API](/core/2/guides/main-concepts/api) for various external clients.
 
-This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**.
+This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**:
+ - [HTTP](/core/2/api/protocols/http/)
+ - [WebSocket](/core/2/api/protocols/websocket/)
+ - [MQTT](/core/2/api/protocols/mqtt/)
+ - Or [any IP protocol](https://docs.kuzzle.io/core/2/guides/write-protocols/start-writing-protocols/)
 
 Whether it is the creation and modification of the database or the management of users and rights, **everything is available through the different controllers of the API**.
 
@@ -186,18 +190,18 @@ Or start to develop a client application by using one of our [SDKs](/sdk):
  - [Node.js](/sdk/js/7/getting-started/node-js)
  - [Java](/sdk/jvm/1/getting-started/java)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
- - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
+ - [C# .NET Core](/sdk/csharp/2/getting-started/standalone)
  
 ### Frontend Web
- - [React.js](/sdk/js/7/getting-started/react/standalone/)
- - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone/)
- - [Webpack](/sdk/js/7/getting-started/webpack/)
- - [Vanilla JS](/sdk/js/7/getting-started/raw-web/)
+ - [React.js](/sdk/js/7/getting-started/react/standalone)
+ - [Vue.js](/sdk/js/7/getting-started/vuejs/standalone)
+ - [Webpack](/sdk/js/7/getting-started/webpack)
+ - [Vanilla JS](/sdk/js/7/getting-started/raw-web)
 
 ### Frontend Mobile
 
- - [React Native](/sdk/js/7/getting-started/react-native/)
- - [Flutter](/sdk/dart/2/getting-started/flutter/)
+ - [React Native](/sdk/js/7/getting-started/react-native)
+ - [Flutter](/sdk/dart/2/getting-started/flutter)
  - [Kotlin](/sdk/jvm/1/getting-started/kotlin)
  - [Java](/sdk/jvm/1/getting-started/java)
- - [C# .NET Core](/sdk/csharp/2/getting-started/standalone/)
+ - [C# .NET Core](/sdk/csharp/2/getting-started/standalone)

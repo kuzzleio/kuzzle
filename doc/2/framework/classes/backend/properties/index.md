@@ -6,7 +6,6 @@ description: Backend class properties
 ---
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 # Properties
 
@@ -25,13 +24,13 @@ This property is an instance of the [BackendCluster](/core/2/framework/classes/b
 |-------------------|-----------------------------------|
 | <pre>string</pre> | Current GIT commit (if available) |
 
-Contains the current GIT commit hash if the application is run from a GIT repository.  
+Contains the current GIT commit hash if the application is run from a GIT repository.
 
 The framework will try to go 3 level upper to find a valid GIT repository.
 
 ## `config`
 
-This property is an instance of the [BackendConfig](/core/2/framework/classes/backend-config) class that allows to read or set the configuration values.  
+This property is an instance of the [BackendConfig](/core/2/framework/classes/backend-config) class that allows to read or set the configuration values.
 
 | Type                                                                 | Description            |
 |----------------------------------------------------------------------|------------------------|
@@ -41,7 +40,7 @@ See also the [Configuration](/core/2/guides/advanced/configuration) guide.
 
 ## `controller`
 
-This property is an instance of the [BackendController](/core/2/framework/classes/backend-controller) class that allows to use or register API controllers.  
+This property is an instance of the [BackendController](/core/2/framework/classes/backend-controller) class that allows to use or register API controllers.
 
 | Type                                                                         | Description                |
 |------------------------------------------------------------------------------|----------------------------|
@@ -51,7 +50,7 @@ See also the [API Controllers](/core/2/guides/develop-on-kuzzle/api-controllers)
 
 ## `hook`
 
-This property is an instance of the [BackendHook](/core/2/framework/classes/backend-hook) class that allows to register hooks.  
+This property is an instance of the [BackendHook](/core/2/framework/classes/backend-hook) class that allows to register hooks.
 
 | Type                                                             | Description          |
 |------------------------------------------------------------------|----------------------|
@@ -59,17 +58,24 @@ This property is an instance of the [BackendHook](/core/2/framework/classes/back
 
 See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#hook) guide.
 
+## `import`
 
-<!-- 
+This property is an instance of the [BackendImport](/core/2/framework/classes/backend-import) class that allows to import mappings and security configuration.
+
+| Type                                                                 | Description            |
+|----------------------------------------------------------------------|------------------------|
+| <pre>[BackendImport](/core/2/framework/classes/backend-import)</pre> | BackendImport instance |
+
+<!--
 
 @todo Document this property once the ErrorManager has been converted to TS
-## `kerror` 
+## `kerror`
 
 -->
 
 ## `log`
 
-This property is an instance of the [BackendLog](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.  
+This property is an instance of the [BackendLog](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.
 
 | Type                                                              | Description         |
 |-------------------------------------------------------------------|---------------------|
@@ -87,7 +93,7 @@ Application name.
 
 ## `pipe`
 
-This property is an instance of the [BackendPipe](/core/2/framework/classes/backend-pipe) class that allows to register pipes.  
+This property is an instance of the [BackendPipe](/core/2/framework/classes/backend-pipe) class that allows to register pipes.
 
 | Type                                                             | Description          |
 |------------------------------------------------------------------|----------------------|
@@ -97,7 +103,7 @@ See also the [Event System](/core/2/guides/develop-on-kuzzle/event-system#pipe) 
 
 ## `plugin`
 
-This property is an instance of the [BackendPlugin](/core/2/framework/classes/backend-plugin) class that allows to add plugins to the application.  
+This property is an instance of the [BackendPlugin](/core/2/framework/classes/backend-plugin) class that allows to add plugins to the application.
 
 | Type                                                                 | Description            |
 |----------------------------------------------------------------------|------------------------|
@@ -107,7 +113,7 @@ See also the [Plugins](/core/2/guides/develop-on-kuzzle/external-plugins) guide.
 
 ## `sdk`
 
-This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) class that allows to interact with the Kuzzle API.  
+This property is an instance of the [EmbeddedSDK](/core/2/framework/classes/embedded-sdk) class that allows to interact with the Kuzzle API.
 
 | Type                                                             | Description          |
 |------------------------------------------------------------------|----------------------|
@@ -117,7 +123,7 @@ See also the [Embedded SDK](/core/2/guides/develop-on-kuzzle/embedded-sdk) guide
 
 ## `storage`
 
-This property is an instance of the [BackendStorage](/core/2/framework/classes/backend-storage) class that allows to interact directly with Elasticsearch.  
+This property is an instance of the [BackendStorage](/core/2/framework/classes/backend-storage) class that allows to interact directly with Elasticsearch.
 
 | Type                                                                   | Description             |
 |------------------------------------------------------------------------|-------------------------|
@@ -127,7 +133,7 @@ See also the [Data Storage](/core/2/guides/main-concepts/data-storage#integrated
 
 ## `vault`
 
-This property is an instance of the [BackendVault](/core/2/framework/classes/backend-vault) class that allows to use the secrets vault.  
+This property is an instance of the [BackendVault](/core/2/framework/classes/backend-vault) class that allows to use the secrets vault.
 
 | Type                                                               | Description           |
 |--------------------------------------------------------------------|-----------------------|

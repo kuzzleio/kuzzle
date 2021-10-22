@@ -32,8 +32,12 @@ You can install Kourou globally by using NPM: `npm install -g kourou`
 
 ::: warning
 Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.  
-For the sake of simplicity we will use a Docker and Docker Compose throughout this guide.  
+For the sake of simplicity we will use a Docker and Docker Compose throughout this guide. 
 ::: 
+
+::: info
+If you encounter issues about permissions when trying to use Docker, please follow the [Docker as a non root user guide](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
+:::
 
 ### Let's go!
 
@@ -110,6 +114,26 @@ Click on `Create Connection` and then select your connection on the dropdown men
 When asked for credentials, just choose `Login as Anonymous`.
 
 You are now connected to your local Kuzzle application with the Admin Console! Everything is empty but we are gonna change that in the next section.
+
+::: info
+The minimum rights required by an user to connect to the Kuzzle Admin Console are:
+
+```js
+{
+  "controllers": {
+    "auth": {
+      "actions": {
+        "login": true,
+        "checkToken": true,
+        "getCurrentUser": true,
+        "getMyRights": true
+      }
+    }
+  }
+}
+```
+
+:::
 
 <GuidesLinks 
   :next="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"

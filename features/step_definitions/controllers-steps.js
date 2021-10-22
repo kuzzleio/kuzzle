@@ -189,22 +189,45 @@ Then('The response should contains a {string} equals to undefined', async functi
   should(this.props.response[key]).equal(undefined);
 });
 
+Then('The raw response should match:', function(dataTable) {
+  const expectedResult = this.parseObject(dataTable);
+
+  should(this.props.rawResponse).not.be.undefined();
+
+  should(this.props.rawResponse).matchObject(expectedResult);
+});
+
 Then('I send a HTTP {string} request with:', async function (method, dataTable) {
   const body = this.parseObject(dataTable);
 
   const options = {
     url: `http://${this._host}:${this._port}/_query`,
     json: true,
+    resolveWithFullResponse: true,
     method,
-    body,
+    body: {
+      jwt: this.sdk.jwt,
+      ...body,
+    },
+    headers: body.headers,
   };
+
+  delete body.headers;
 
   const response = await requestPromise(options);
 
-  this.props.result = response.result;
-  this.props.response = response;
+  this.props.result = response.body.result;
+  this.props.response = response.body;
+  this.props.rawResponse = response;
 });
 
 Then('I wait {int} milliseconds', async function (ms) {
   await Bluebird.delay(ms);
+});
+
+Then(/I have .* in the app before startup/, function () {
+  // Do nothing, purpose here is only readability
+  // To check what have been done, refer to:
+  // - docker/scripts/start-kuzzle-dev
+  // - features/fixtures/imports
 });

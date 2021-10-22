@@ -23,6 +23,7 @@ description: Error codes definitions
 | security.token.generation_failed<br/><pre>0x07010005</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Error while generating token: %s | Unable to generate the requested authentication token |
 | security.token.expired<br/><pre>0x07010006</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Token expired | The provided authentication token has expired |
 | security.token.verification_error<br/><pre>0x07010007</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Error verifying token: %s | An unexpected error occured while verifying an authentication token |
+| security.token.refresh_forbidden<br/><pre>0x07010008</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s cannot be refreshed. | The provided token cannot be refreshed |
 
 ---
 
@@ -91,5 +92,15 @@ description: Error codes definitions
 | security.profile.cannot_hydrate<br/><pre>0x07060004</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Unable to hydrate the profile "%s": missing role(s) in the database | Database inconsistency error: a profile is referencing non-existing roles |
 | security.profile.missing_anonymous_role<br/><pre>0x07060005</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The anonymous profile must include the anonymous role | The anonymous profile must include the anonymous role |
 | security.profile.uninitialized<br/><pre>0x07060006</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cannot get roles for uninitialized profile "%s" | Attempted to access to an unitialized Profile object |
+
+---
+
+
+### Subdomain: 0x0707: cookie
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| security.cookie.invalid<br/><pre>0x07070001</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Invalid cookie. | Invalid authentication cookie. |
+| security.cookie.unsupported<br/><pre>0x07070002</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cookie authentication not supported. | Cookie authentication not supported. |
 
 ---

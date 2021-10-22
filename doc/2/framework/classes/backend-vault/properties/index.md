@@ -8,7 +8,6 @@ description: BackendVault class properties
 # BackendVault
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `BackendVault` class handles the secrets vault.  
 
@@ -41,7 +40,3 @@ This property is only available before the application is started.
 | Type                  | Description       | get / set |
 |-----------------------|-------------------|-----------|
 | <pre>JSONObject</pre> | Decrypted secrets | get       |
-
-::: info
-This property is only available after the application started up.
-:::

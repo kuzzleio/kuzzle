@@ -12,6 +12,8 @@ export * from './lib/kerror/errors';
 
 export * from './lib/util/mutex';
 
-export * from 'koncorde';
+export * from './lib/util/inflector';
 
 export * from 'kuzzle-sdk';
+
+export * from './lib/core/shared/KoncordeWrapper';

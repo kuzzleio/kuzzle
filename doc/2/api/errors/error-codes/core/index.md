@@ -34,7 +34,7 @@ description: Error codes definitions
 | core.realtime.invalid_state<br/><pre>0x00010003</pre> <DeprecatedBadge version="2.0.0"/> | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Invalid value for the "state" parameter (allowed: "all", "done", "pending"). | An invalid value has been provided to the "state" argument |
 | core.realtime.invalid_scope<br/><pre>0x00010004</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Invalid value for the "scope" parameter (allowed: "all", "in", "out", "none"). | An invalid value has been provided to the "scope" argument |
 | core.realtime.invalid_users<br/><pre>0x00010005</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Invalid value for the "users" parameter (allowed: "all", "in", "out", "none"). | An invalid value has been provided to the "users" argument |
-| core.realtime.too_many_terms<br/><pre>0x00010006</pre>  | [SizeLimitError](/core/2/api/errors/error-codes#sizelimiterror) <pre>(413)</pre> | Unable to subscribe: maximum number of terms exceeded (max %s, received %s). | The number of filter terms exceeds the configured server limit |
+| core.realtime.too_many_terms<br/><pre>0x00010006</pre> <DeprecatedBadge version="2.12.3"/> | [SizeLimitError](/core/2/api/errors/error-codes#sizelimiterror) <pre>(413)</pre> | Unable to subscribe: maximum number of terms exceeded (max %s, received %s). | The number of filter terms exceeds the configured server limit |
 | core.realtime.too_many_rooms<br/><pre>0x00010007</pre>  | [SizeLimitError](/core/2/api/errors/error-codes#sizelimiterror) <pre>(413)</pre> | Unable to subscribe: maximum number of unique rooms reached. | The configured number of unique rooms has been reached |
 | core.realtime.not_subscribed<br/><pre>0x00010008</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | User "%s" has not subscribed to "%s". | Tried to manage a room while not having subscribed to it |
 
@@ -58,6 +58,7 @@ description: Error codes definitions
 | core.configuration.invalid_type<br/><pre>0x00030001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Invalid type for the configuration parameter "%s" (expected: %s) | Wrong configuration parameter type |
 | core.configuration.out_of_range<br/><pre>0x00030002</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | The configuration value set for "%s" is outside the allowed range (allowed: %s) | A configuration value exceeds the allowed range |
 | core.configuration.cannot_parse<br/><pre>0x00030003</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Unable to read kuzzlerc configuration file: %s | The kuzzlerc configuration file is badly formatted. |
+| core.configuration.incompatible<br/><pre>0x00030004</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Incompatible configuration: %s | The kuzzlerc configuration file has incompatible configurations |
 
 ---
 

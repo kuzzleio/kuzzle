@@ -11,7 +11,7 @@ const {
 } = require('../../../index');
 const Plugin = require('../../../lib/core/plugin/plugin');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const { BaseController } = require('../../../lib/api/controller/base');
+const { BaseController } = require('../../../lib/api/controllers/baseController');
 
 describe('Plugin', () => {
   let kuzzle;
@@ -165,7 +165,7 @@ describe('Plugin', () => {
 
       should(pluginsManager._initApi).be.calledWith(application);
       should(pluginsManager._initHooks).be.calledWith(application);
-      should(pluginsManager._initPipes).be.calledWith(application, 42);
+      should(pluginsManager._initPipes).be.calledWith(application);
       should(pluginsManager._initControllers).be.calledWith(plugin);
       should(pluginsManager._initAuthenticators).be.calledWith(plugin);
       should(pluginsManager._initStrategies).be.calledWith(plugin);
@@ -220,22 +220,87 @@ describe('Plugin', () => {
           // generated route
           action: 'send',
           controller: 'email',
+          openapi: undefined,
           path: '/_/email/send',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/path-from-root',
           verb: 'get'
         },
         {
           action: 'receive',
           controller: 'email',
+          openapi: undefined,
           path: '/_/path-with-leading-underscore',
           verb: 'post'
         }
       ]);
+    });
+
+    it('should register openapi when defined', async () => {
+      const openapi = {
+        description: 'Example',
+        responses: {
+          200: {
+            description: 'OK',
+            content: {
+              'application/json': {
+                schema: {
+                  type: 'string',
+                }
+              }
+            }
+          }
+        }
+      };
+
+      // HTTP route level
+      plugin.instance.api.email.actions.receive.http[0].openapi = openapi;
+
+      await pluginsManager._initApi(plugin);
+
+      should(pluginsManager.routes).match([
+        {
+          // generated route
+          action: 'send',
+          controller: 'email',
+          openapi: undefined,
+          path: '/_/email/send',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi,
+          path: '/path-from-root',
+          verb: 'get'
+        },
+        {
+          action: 'receive',
+          controller: 'email',
+          openapi : undefined,
+          path: '/_/path-with-leading-underscore',
+          verb: 'post'
+        }
+      ]);
+    });
+
+    it('should throw an error if the openAPI specification is invalid', () => {
+      plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: 'specification'};
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.controller.invalid_openapi_schema' });
+    });
+
+    it('should throw an error if the openAPI specification is not an object', () => {
+      plugin.instance.api.email.actions.receive.http[0].openapi = true;
+
+      should(pluginsManager._initApi(plugin))
+        .be.rejectedWith({ id: 'plugin.assert.invalid_controller_definition' });
     });
 
     it('should throw an error if the controller definition is invalid', () => {
@@ -418,9 +483,12 @@ describe('Plugin', () => {
       plugin.instance.functionName = () => {};
       plugin.instance.foo = () => {};
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.invalid_action',
+        message: /Did you mean "foo"/,
+      });
     });
 
     it('should not add an invalid route to the API', () => {
@@ -430,47 +498,53 @@ describe('Plugin', () => {
         }
       };
 
+      global.NODE_ENV = 'development';
+
       plugin.instance.functionName = () => {};
 
       plugin.instance.routes = [
         {vert: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "verb"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.unexpected_route_property',
+        message: /Did you mean "verb"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError(PluginImplementationError);
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.invalid_route_property',
+      });
 
       plugin.instance.routes = [
         {verb: 'posk', url: '/bar', controller: 'foo', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "post"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.unsupported_verb',
+        message: /Did you mean "post"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'baz'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "bar"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.undefined_action',
+        message: /Did you mean "bar"/,
+      });
 
       plugin.instance.routes = [
         {verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar'}
       ];
 
-      should(() => {
-        pluginsManager._initControllers(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      should(() => pluginsManager._initControllers(plugin)).throw({
+        id: 'plugin.controller.undefined_controller',
+        message: /Did you mean "foo"/,
+      });
 
       plugin.instance.routes = [
         { verb: 'get', url: '/bar/:name', controler: 'foo', action: 'bar' }
@@ -1113,10 +1187,11 @@ describe('Plugin', () => {
 
       plugin.instance.foo = () => {};
 
-      return should(() => {
-        pluginsManager._initHooks(plugin);
-      })
-        .be.throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+      should(() => pluginsManager._initHooks(plugin)).throw({
+        id: 'plugin.assert.invalid_hook',
+        message: /Did you mean "foo"/,
+      });
     });
   });
 
@@ -1227,9 +1302,11 @@ describe('Plugin', () => {
 
       plugin.instance.foo = () => {};
 
-      return should(() => {
-        pluginsManager._initPipes(plugin);
-      }).throwError({ message: /Did you mean "foo"/ });
+      global.NODE_ENV = 'development';
+      should(() => pluginsManager._initPipes(plugin)).throw({
+        id: 'plugin.assert.invalid_pipe',
+        message: /Did you mean "foo"/,
+      });
     });
 
     it('should attach pipes event and reject if an attached function return an error', () => {
@@ -1264,17 +1341,16 @@ describe('Plugin', () => {
     });
 
     it('should log a warning in case a pipe plugin exceeds the warning delay', async () => {
-      plugin.instance.pipes = {
-        'foo:bar': 'foo',
-      };
-
-      plugin.instance.foo = () => {};
-
-      const fooStub = sinon.stub(plugin.instance, 'foo').callsFake((ev, cb) => {
+      const fooStub = sinon.stub().callsFake((ev, cb) => {
         setTimeout(() => cb(null), 15);
       });
+      plugin.instance.pipes = {
+        'foo:bar': fooStub,
+      };
 
-      await pluginsManager._initPipes(plugin, 10);
+      plugin.config.pipeWarnTime = 10;
+
+      await pluginsManager._initPipes(plugin);
       await kuzzle.pipe('foo:bar');
 
       should(fooStub).be.calledOnce();

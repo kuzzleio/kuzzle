@@ -5,13 +5,25 @@
 *.js.map
 
 /index.js
-lib/core/backend/index.js
+lib/core/backend/applicationManager.js
 lib/core/backend/backend.js
 lib/core/backend/backendCluster.js
+lib/core/backend/backendConfig.js
+lib/core/backend/backendController.js
+lib/core/backend/backendHook.js
+lib/core/backend/backendPipe.js
+lib/core/backend/backendPlugin.js
+lib/core/backend/backendPlugin.js
+lib/core/backend/backendStorage.js
+lib/core/backend/backendVault.js
+lib/core/backend/index.js
+lib/core/backend/internalLogger.js
 lib/core/shared/sdk/embeddedSdk.js
+lib/core/shared/KoncordeWrapper.js
 lib/core/plugin/pluginContext.js
 lib/api/request/index.js
 lib/api/request/kuzzle-request.js
+lib/api/request/kuzzleRequest.js
 lib/api/request/requestContext.js
 lib/api/request/requestInput.js
 lib/api/request/requestResponse.js
@@ -22,6 +34,7 @@ lib/kerror/errors/gatewayTimeoutError.js
 lib/kerror/errors/index.js
 lib/kerror/errors/internalError.js
 lib/kerror/errors/kuzzleError.js
+lib/kerror/errors/multipleErrorsError.js
 lib/kerror/errors/notFoundError.js
 lib/kerror/errors/partialError.js
 lib/kerror/errors/pluginImplementationError.js
@@ -47,4 +60,9 @@ lib/types/Global.d.ts
 lib/types/Global.js
 lib/util/interfaces.js
 lib/util/mutex.js
+lib/util/inflector.js
+lib/util/koncordeCompat.js
 features/support/application/functional-tests-app.js
+lib/model/security/token.js
+lib/core/auth/tokenManager.js
+lib/core/cluster/state.js

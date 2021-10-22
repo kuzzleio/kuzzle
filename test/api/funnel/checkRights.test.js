@@ -11,7 +11,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = require('../../../lib/api/funnel');
-const Token = require('../../../lib/model/security/token');
+const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 
 describe('funnel.checkRights', () => {
@@ -91,7 +91,7 @@ describe('funnel.checkRights', () => {
     should(kuzzle.pipe).calledWith('request:onUnauthorized', request);
   });
 
-  it('should forward a token:verify exception', async () => {
+  it('should forward a token:verify exception and trigger event', async () => {
     const error = new Error('foo');
 
     verifyTokenStub.rejects(error);
@@ -102,7 +102,7 @@ describe('funnel.checkRights', () => {
     should(getUserEvent).not.called();
 
     should(kuzzle.pipe).not.calledWith('request:onAuthorized', request);
-    should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+    should(kuzzle.pipe).be.calledWith('request:onUnauthorized', request);
   });
 
   it('should forward a user:get exception', async () => {
@@ -129,5 +129,162 @@ describe('funnel.checkRights', () => {
 
     should(kuzzle.pipe).calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+  });
+
+  it('should use the token in the cookie when cookieAuth is true and internal.cookieAuthentication is true and only the cookie is present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = null;
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should use the token when cookieAuth is true and internal.cookieAuthentication is true and only the token is present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should throw security.token.verification_error when cookieAuth is true and internal.cookieAuthentication is true and both cookie that belongs to kuzzle and token are present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'authToken=foobar; randomToken=test' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.token.verification_error' });
+  });
+
+  it('should not throw security.token.verification_error when cookieAuth is true and internal.cookieAuthentication is true and both cookie that does not belongs to kuzzle and token are present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'randomToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.token.verification_error' });
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should use the token when cookieAuth is true and internal.cookieAuthentication is true and both cookie and token are present, but cookie is set to null', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'authToken=null;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should not throw security.cookie.unsupported and use the token when cookieAuth is false and internal.cookieAuthentication is false and cookies are present but none of them belongs to kuzzle', async () => {
+    kuzzle.config.http.cookieAuthentication = false;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'randomToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.cookie.unsupported' });
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should throw security.cookie.unsupported when cookieAuth is true and internal.cookieAuthentication is false', async () => {
+    kuzzle.config.http.cookieAuthentication = false;
+
+    request.input.jwt = null;
+    request.input.args.cookieAuth = true;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
+
+  });
+
+  it('should throw security.token.verification_error when cookieAuth is false and internal.cookieAuthentication is true and both cookie and token are present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.token.verification_error' });
+  });
+
+  it('should use the token in the cookie when cookieAuth is false and internal.cookieAuthentication is true and only the cookie is present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = null;
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should use the token in the jwt when cookieAuth is false and internal.cookieAuthentication is true and only the token is present', async () => {
+    kuzzle.config.http.cookieAuthentication = true;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
+  });
+
+  it('should throw security.cookie.unsupported when cookieAuth is false and internal.cookieAuthentication is false and both cookie and token are present', async () => {
+    kuzzle.config.http.cookieAuthentication = false;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
+  });
+
+  it('should throw security.cookie.unsupported when cookieAuth is false and internal.cookieAuthentication is false and only the cookie is present', async () => {
+    kuzzle.config.http.cookieAuthentication = false;
+
+    request.input.jwt = null;
+    request.input.args.cookieAuth = false;
+    request.input.headers = {cookie: 'authToken=foobar;' };
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
+  });
+
+  it('should use the token in the jwt when cookieAuth is false and internal.cookieAuthentication is false and only the token is present', async () => {
+    kuzzle.config.http.cookieAuthentication = false;
+
+    request.input.jwt = 'hashed JWT';
+    request.input.args.cookieAuth = false;
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+
+    await funnel.checkRights(request);
+
+    should(request.input.jwt).and.be.a.String().and.be.eql('hashed JWT');
   });
 });

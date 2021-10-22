@@ -20,9 +20,9 @@ Use `core:realtime:user:subscribe:after` instead.
 
 <DeprecatedBadge version="2.5.0">
 
-| Arguments  | Type              | Description                           |
-| ---------- | ----------------- | ------------------------------------- |
-| `subscription`     | <pre>object</pre> | Contains information about the added subscription |
+| Arguments      | Type              | Description                                       |
+|----------------|-------------------|---------------------------------------------------|
+| `subscription` | <pre>object</pre> | Contains information about the added subscription |
 
 Triggered whenever a [subscription](/core/2/api/controllers/realtime/subscribe) is added.
 
@@ -30,13 +30,13 @@ Triggered whenever a [subscription](/core/2/api/controllers/realtime/subscribe) 
 
 The provided `subscription` object has the following properties:
 
-| Properties     | Type                 | Description                                                                                                       |
-| -------------- | -------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `roomId`       | <pre>string</pre>    | Room unique identifier                                                                                    |
-| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier                          |
-| `index`        | <pre>string</pre>    | Index                                                                                                             |
-| `collection`   | <pre>string</pre>    | Collection                                                                                                        |
-| `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)  |
+| Properties     | Type               | Description                                                                                                |
+|----------------|--------------------|------------------------------------------------------------------------------------------------------------|
+| `roomId`       | <pre>string</pre>  | Room unique identifier                                                                                     |
+| `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier              |
+| `index`        | <pre>string</pre>  | Index                                                                                                      |
+| `collection`   | <pre>string</pre>  | Collection                                                                                                 |
+| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
 
 </DeprecatedBadge>
 
@@ -50,10 +50,10 @@ Use `core:realtime:user:unsubscribe:after` instead.
 
 <DeprecatedBadge version="2.5.0">
 
-| Arguments        | Type              | Description                                                                                  |
-| -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
+| Arguments        | Type              | Description                                                                     |
+|------------------|-------------------|---------------------------------------------------------------------------------|
 | `RequestContest` | <pre>object</pre> | [requestContext](/core/2/guides/write-protocols/context/requestcontext/) object |
-| `room`           | <pre>object</pre> | Joined room information in Koncorde format                                                   |
+| `room`           | <pre>object</pre> | Joined room information in Koncorde format                                      |
 
 Triggered whenever a user is removed from a room. 
 
@@ -61,11 +61,11 @@ Triggered whenever a user is removed from a room.
 
 The provided `room` object has the following properties:
 
-| Properties     | Type                 | Description             |
-| -------------- | -------------------- | ----------------------- |
-| `id`           | <pre>string</pre>    | Room unique identifier  |
-| `index`        | <pre>string</pre>    | Index                   |
-| `collection`   | <pre>string</pre>    | Collection              |
+| Properties   | Type              | Description            |
+|--------------|-------------------|------------------------|
+| `id`         | <pre>string</pre> | Room unique identifier |
+| `index`      | <pre>string</pre> | Index                  |
+| `collection` | <pre>string</pre> | Collection             |
 
 </DeprecatedBadge>
 
@@ -82,7 +82,7 @@ Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description             |
-| --------- | ----------------- | ----------------------- |
+|-----------|-------------------|-------------------------|
 | `room`    | <pre>object</pre> | Joined room information |
 
 ### room
@@ -90,7 +90,7 @@ Pipes cannot listen to this event, only hooks can.
 The provided `room` object has the following properties:
 
 | Properties   | Type              | Description                    |
-| ------------ | ----------------- | ------------------------------ |
+|--------------|-------------------|--------------------------------|
 | `index`      | <pre>string</pre> | Index name                     |
 | `collection` | <pre>string</pre> | Collection name                |
 | `roomId`     | <pre>string</pre> | The new room unique identifier |
@@ -108,7 +108,7 @@ Pipes cannot listen to this event, only hooks can.
 :::
 
 | Arguments | Type              | Description            |
-| --------- | ----------------- | ---------------------- |
+|-----------|-------------------|------------------------|
 | `roomId`  | <pre>string</pre> | Room unique identifier |
 
 
@@ -118,24 +118,29 @@ Pipes cannot listen to this event, only hooks can.
 
 Triggered whenever a user makes a new [subscription](/core/2/api/controllers/realtime/subscribe).
 
+:::info
+Pipes cannot listen to this event, only hooks can.
+:::
+
 <SinceBadge version="2.5.0"/>
 
-| Arguments  | Type              | Description                           |
-| ---------- | ----------------- | ------------------------------------- |
-| `subscription`     | <pre>object</pre> | Contains information about the added subscription |
+| Arguments      | Type              | Description                                       |
+|----------------|-------------------|---------------------------------------------------|
+| `subscription` | <pre>object</pre> | Contains information about the added subscription |
 
 
 ### subscription
 
 The provided `subscription` object has the following properties:
 
-| Properties     | Type                 | Description                                                                                                       |
-| -------------- | -------------------- | --------------------------------------------------------------------------------------------------------- |
-| `roomId`       | <pre>string</pre>    | Room unique identifier                                                                                    |
-| `connectionId` | <pre>integer</pre>   | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier                      |
-| `index`        | <pre>string</pre>    | Index                                                                                                     |
-| `collection`   | <pre>string</pre>    | Collection                                                                                                |
-| `filters`      | <pre>object</pre>    | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier)|
+| Properties     | Type               | Description                                                                                                |
+|----------------|--------------------|------------------------------------------------------------------------------------------------------------|
+| `roomId`       | <pre>string</pre>  | Room unique identifier                                                                                     |
+| `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier              |
+| `index`        | <pre>string</pre>  | Index                                                                                                      |
+| `collection`   | <pre>string</pre>  | Collection                                                                                                 |
+| `filters`      | <pre>object</pre>  | Filters in [Koncorde's normalized format](https://www.npmjs.com/package/koncorde#filter-unique-identifier) |
+| `kuid`         | <pre>string</pre>  | ID of the user <SinceBadge version="2.14.1" />                                                       |
 
 ---
 
@@ -143,30 +148,47 @@ The provided `subscription` object has the following properties:
 
 Triggered whenever a user leaves a room.
 
+:::info
+Pipes cannot listen to this event, only hooks can.
+:::
+
 <SinceBadge version="2.5.0"/>
 
-| Arguments        | Type              | Description                                                                                  |
-| -----------------| ----------------- | -------------------------------------------------------------------------------------------- |
-| `RequestContest` | <pre>object</pre> | [requestContext](/core/2/guides/write-protocols/context/requestcontext/) object |
-| `room`           | <pre>object</pre> | Joined room information in Koncorde format                                                   |
+| Arguments        | Type              | Description                                                                                                                |
+|------------------|-------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `RequestContest` | <pre>object</pre> | [RequestContext](/core/2/guides/write-protocols/context/requestcontext/) object <DeprecatedBadge version="2.14.1" /> |
+| `room`           | <pre>object</pre> | Joined room information in Koncorde format <DeprecatedBadge version="2.14.1" />                                      |
+| `subscription`   | <pre>object</pre> | Contains information about the removed subscription <SinceBadge version="2.14.1" />                                  |
 
 ### room
 
 The provided `room` object has the following properties:
 
-| Properties     | Type                 | Description             |
-| -------------- | -------------------- | ----------------------- |
-| `id`           | <pre>string</pre>    | Room unique identifier  |
-| `index`        | <pre>string</pre>    | Index                   |
-| `collection`   | <pre>string</pre>    | Collection              |
+| Properties   | Type              | Description            |
+|--------------|-------------------|------------------------|
+| `id`         | <pre>string</pre> | Room unique identifier |
+| `index`      | <pre>string</pre> | Index                  |
+| `collection` | <pre>string</pre> | Collection             |
+
+### subscription
+
+The provided `subscription` object has the following properties:
+
+| Properties     | Type               | Description                                                                                   |
+|----------------|--------------------|-----------------------------------------------------------------------------------------------|
+| `roomId`       | <pre>string</pre>  | Room unique identifier                                                                        |
+| `connectionId` | <pre>integer</pre> | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier |
+| `index`        | <pre>string</pre>  | Index                                                                                         |
+| `collection`   | <pre>string</pre>  | Collection                                                                                    |
+| `kuid`         | <pre>string</pre>  | ID of the user                                                                                |
 
 ---
 
 ## notify:dispatch
 
-| Arguments | Type                                                                     | Description                           |
-| --------- | ------------------------------------------------------------------------ | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| Arguments | Type                                                                    | Description                           |
+|-----------|-------------------------------------------------------------------------|---------------------------------------|
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time notification is about to be sent.
 
@@ -174,9 +196,9 @@ Triggered whenever a real-time notification is about to be sent.
 
 ## notify:document
 
-| Arguments | Type                                                                      | Description                           |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| Arguments | Type                                                                    | Description                           |
+|-----------|-------------------------------------------------------------------------|---------------------------------------|
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time document notification is about to be sent.
 
@@ -184,9 +206,9 @@ Triggered whenever a real-time document notification is about to be sent.
 
 ## notify:server
 
-| Arguments | Type                                                                      | Description                           |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| Arguments | Type                                                                    | Description                           |
+|-----------|-------------------------------------------------------------------------|---------------------------------------|
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time server notification is about to be sent.
 
@@ -194,9 +216,9 @@ Triggered whenever a real-time server notification is about to be sent.
 
 ## notify:user
 
-| Arguments | Type                                                                      | Description                           |
-| --------- | ------------------------------------------------------------------------- | ------------------------------------- |
-| `message` | [`Notification`](/core/2/api/payloads/notifications) | The normalized real-time notification |
+| Arguments | Type                                                                    | Description                           |
+|-----------|-------------------------------------------------------------------------|---------------------------------------|
+| `message` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification |
 
 Triggered whenever a real-time user notification is about to be sent.
 
@@ -212,7 +234,7 @@ Use `core:realtime:room:create:after` instead.
 
 
 | Arguments | Type              | Description             |
-| --------- | ----------------- | ----------------------- |
+|-----------|-------------------|-------------------------|
 | `room`    | <pre>object</pre> | Joined room information |
 
 Triggered whenever a new [subscription](/core/2/api/controllers/realtime/subscribe) is created.
@@ -226,7 +248,7 @@ Pipes cannot listen to this event, only hooks can.
 The provided `room` object has the following properties:
 
 | Properties   | Type              | Description                    |
-| ------------ | ----------------- | ------------------------------ |
+|--------------|-------------------|--------------------------------|
 | `index`      | <pre>string</pre> | Index name                     |
 | `collection` | <pre>string</pre> | Collection name                |
 | `roomId`     | <pre>string</pre> | The new room unique identifier |
@@ -244,7 +266,7 @@ Use `core:realtime:room:remove:before` instead.
 <DeprecatedBadge version="2.5.0">
 
 | Arguments | Type              | Description            |
-| --------- | ----------------- | ---------------------- |
+|-----------|-------------------|------------------------|
 | `roomId`  | <pre>string</pre> | Room unique identifier |
 
 Triggered whenever a real-time subscription is cancelled.

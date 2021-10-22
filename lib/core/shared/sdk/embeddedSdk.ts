@@ -32,6 +32,7 @@ import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import kerror from '../../../kerror';
+import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
 
@@ -51,8 +52,8 @@ interface EmbeddedRealtime extends RealtimeController {
    *    - `scope` Subscribe to document entering or leaving the scope. (default: 'all')
    *    - `users` Subscribe to users entering or leaving the room. (default: 'none')
    *    - `subscribeToSelf` Subscribe to notifications fired by our own queries. (default: true)
-   *    - `volatile` Subscription information sent alongside notifications
-   *    - `propagate` Propagate the callback execution on each cluster node
+   *    - `volatile` Subscription information sent alongside notifications. (default: `{}`)
+   *    - `propagate` Propagate the callback execution on each cluster node. (default: false)
    *
    * @returns A string containing the room ID
    */
@@ -92,24 +93,22 @@ interface EmbeddedRealtime extends RealtimeController {
 export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
-  /**
-   * @param user - User to impersonate the SDK with
-   */
-  constructor (user?) {
-    super(new FunnelProtocol(user), { autoResubscribe: false });
+  constructor () {
+    super(new FunnelProtocol(), { autoResubscribe: false });
   }
 
   /**
    * Returns a new SDK impersonated with the provided user.
    *
    * @param user - User to impersonate the SDK with
+   * @param options - Optional sdk arguments
    */
-  as (user: { _id: string }): EmbeddedSDK {
+  as (user: { _id: string }, options = { checkRights: false }): EmbeddedSDK {
     if (! isPlainObject(user) || typeof user._id !== 'string') {
       throw contextError.get('invalid_user');
     }
 
-    return new EmbeddedSDK(user);
+    return new ImpersonatedSDK(user._id, options) as EmbeddedSDK;
   }
 
   /**

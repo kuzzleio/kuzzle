@@ -12,14 +12,25 @@
     // * accessControlAllowOrigin:
     //    sets the default Access-Control-Allow-Origin HTTP
     //    header used to send responses to the client
+    // * accessControlAllowOriginUseRegExp
+    //    Allow the usage of Regular Expressions to verify the origin
+    //    based on Access-Control-Allow-Origin.
+    //    /!\ This convert every string in Access-Control-Allow-Origin into Regular Expressions
+    //    be careful with the Regular Expressions that you use.
     // * accessControlAllowMethods:
     //    sets the default Access-Control-Allow-Method header
     // * accessControlAllowHeaders:
     //    sets the default Access-Control-Allow-Headers
     // (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+    // * cookieAuthentication:
+    //    Allows browser clients to connect to Kuzzle with cookies.
+    //    /!\ This should not be allowed if the "http.accessControlAllowOrigin"
+    //    configuration contains a wildcard ("*").
     "accessControlAllowOrigin": "*",
-    "accessControlAllowMethods": "GET,POST,PUT,DELETE,OPTIONS,HEAD",
-    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
+    "accessControlAllowOriginUseRegExp": false,
+    "accessControlAllowMethods": "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
+    "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
+    "cookieAuthentication": true
   },
 
   // Kuzzle configured limits
@@ -55,10 +66,6 @@
     //      NB: A condition is either a "simple" operator (anything but "and",
     //          "or" and "bool"), or a boolean condition that contains only
     //          simple operators.
-    // * subscriptionMinterms
-    //      Maximum number of minterms (AND) clauses after the filters are
-    //      transformed in their Canonical Disjunctive Normal Form (CDNF).
-    //      Set to 0 for no limit.
     // * subscriptionRooms
     //      Maximum number of different subscription rooms
     //      (i.e. different index+collection+filters subscription
@@ -66,7 +73,7 @@
     //      Depends primarily on available memory.
     //      If set to 0, an unlimited number of rooms can be created
     // * subscriptionDocumentTTL
-    //      Maximum time (in seconds) a document will be kept in cache for
+    //      Maximum time (in milliseconds) a document will be kept in cache for
     //      real-time subscriptions.
     //      This cache is used to notify subscriber when a document enters or
     //      leaves a scope after an update.
@@ -83,10 +90,9 @@
     "loginsPerSecond": 1,
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
-    "subscriptionConditionsCount": 16,
-    "subscriptionMinterms": 0,
+    "subscriptionConditionsCount": 100,
     "subscriptionRooms": 1000000,
-    "subscriptionDocumentTTL": 259200 // 72 * 60 * 60
+    "subscriptionDocumentTTL": 259200000 // 72 * 60 * 60 * 1000
   },
 
   // The application section lets you configure your application
@@ -196,12 +202,12 @@
   "repositories": {
     // [Common]
     //   * cacheTTL:
-    //      Time to live (in seconds) of cached objects.
+    //      Time to live (in milliseconds) of cached objects.
     //      Decreasing this value will lower Redis memory and
     //      disk consumption, at the cost of increasing
     //      queries rate to the database and response times
     "common": {
-      "cacheTTL": 1440
+      "cacheTTL": 1440000
     }
   },
 
@@ -239,6 +245,15 @@
       "gracePeriod": 1000,
       "maxTTL": -1,
       "secret": null
+    },
+    // [apiKey]
+    // API Keys configuration
+    //
+    //   * maxTTL:
+    //      Maximum time to live of an API Key, in milliseconds
+    //      If set to -1 (default), API Keys can be created with an infinite duration.
+    "apiKey": {
+      "maxTTL": -1
     },
     // [default]
     // The default role defines permissions for all users,
@@ -372,16 +387,6 @@
     // protocols can be extended and configured in this section.
     "protocols": {
       "http": {
-        // * enabled:
-        //    Set to "false" to disable HTTP support
-        // * maxFormFileSize:
-        //    Maximum size of requests sent via http forms
-        // * maxEncodingLayers:
-        //    Maximum number of encoding layers that can be applied
-        //    to an http message, using the Content-Encoding header.
-        //    This parameter is meant to prevent abuses by setting an
-        //    abnormally large number of encodings, forcing Kuzzle to
-        //    allocate as many decoders to handle the incoming request.
         // * allowCompression:
         //    Enable support for compressed requests, using the
         //    Content-Encoding header
@@ -389,10 +394,20 @@
         //      gzip, deflate, identity
         //    Note: "identity" is always an accepted value, even if
         //    compression support is disabled
+        // * enabled:
+        //    Set to "false" to disable HTTP support
+        // * maxEncodingLayers:
+        //    Maximum number of encoding layers that can be applied
+        //    to an http message, using the Content-Encoding header.
+        //    This parameter is meant to prevent abuses by setting an
+        //    abnormally large number of encodings, forcing Kuzzle to
+        //    allocate as many decoders to handle the incoming request.
+        // * maxFormFileSize:
+        //    Maximum size of requests sent via http forms
+        "allowCompression": true,
         "enabled": true,
-        "maxFormFileSize": "1mb",
         "maxEncodingLayers": 3,
-        "allowCompression": true
+        "maxFormFileSize": "1mb"
       },
       "mqtt": {
         // * enabled:
@@ -411,6 +426,8 @@
         // * server
         //    Constructor options passed to underlying MQTT server.
         //    See aedes documentation for further reference: https://github.com/moscajs/aedes
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
         "enabled": false,
         "allowPubSub": false,
         "developmentMode": false,
@@ -419,31 +436,34 @@
         "responseTopic": "Kuzzle/response",
         "server": {
           "port": 1883
-        }
+        },
+        "realtimeNotifications": true
       },
       "websocket": {
+        // * compression:
+        //    Enable/Disable per message compression
         // * enabled:
         //    Set to true to enable WebSocket support
         // * idleTimeout:
         //    The maximum time (in milliseconds) without sending or receiving a
         //    message from a client. Once reached, the client's socket is
         //    forcibly closed.
-        //    Contrary to heartbeats (see below), this is a passive check,
-        //    forcing all clients to actively send either PINGs or messages to
-        //    maintain their connection active.
-        //    Set the value to 0 to disable this feature (should only be
-        //    activated if heartbeat is disabled)
-        // * heartbeat:
-        //    The time, in milliseconds, between the server's PING requests to
-        //    clients, to make sure they are still active.
-        //    Setting this value to 0 disables PING requests from the server
-        //    (it will still respond with a PONG to PING requests from clients).
-        //    If heartbeat is deactivated, then setting a non-zero value to
-        //    idleTimeout is strongly recommended to detect and remove
-        //    dead sockets.
+        //    If a client socket is inactive for too long, the server will send
+        //    a PING request before closing the socket.
+        //    Minimum value: 1000 (but it's strongly advised to not set a value
+        //    this low to forcibly close idle client sockets)
+        // * rateLimit:
+        //    The maximum number of messages per second a single socket can
+        //    submit to the server.
+        //    Requests exceeding that rate limit are rejected.
+        //    Disabled if set to 0.
+        // * realtimeNotifications:
+        //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
+        "compression": false,
         "enabled": true,
-        "idleTimeout": 0,
-        "heartbeat": 60000
+        "idleTimeout": 60000,
+        "rateLimit": 0,
+        "realtimeNotifications": true
       }
     }
   },
@@ -476,19 +496,29 @@
     // (see also https://github.com/luin/ioredis)
     //
     // 1. using a single Redis database:
-    //   node:
+    //   * node:
     //     * host:
     //         The host on which Redis can be reached.
     //         Can take an IP address, an URI or a hostname
     //     * port:
     //         The port on which Redis is running its database:
-    //     * (optional) database:
+    //     * (optional, deprecated) database:
     //         ID of the redis database (default: 0)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Use 'options.db' instead. If both options are set, then
+    //               "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     "internalCache": {
       "backend": "redis",
       "node": {
         "host": "localhost",
         "port": 6379
+      },
+      "options": {
+        "db": 0
       }
     },
     // 2. using a master/slaves Redis instance with Redis sentinels
@@ -504,8 +534,15 @@
     //     * name:
     //         Group of Redis instances composed of a master and one
     //         or more slaves
-    //     * (optional) database:
+    //     * (optional, deprecated) database:
     //         ID of the redis database (default: 0)
+    //         NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //               Use 'options.db' instead. If both options are set, then
+    //               "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
     //"internalCache": {
     //  "backend": "redis",
     //  "node": {
@@ -515,6 +552,9 @@
     //      {"host": "sentinel-host-3", "port": 26379}
     //    ],
     //    "name": "kuzzle"
+    //  },
+    //  "options": {
+    //    "db": 0
     //  }
     //},
     // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
@@ -524,13 +564,37 @@
     //         Can be an IP address, an URI or a hostname
     //     * port:
     //        Network port opened by the redis cluster node
+    //   * (optional, deprecated) database:
+    //       ID of the redis database (default: 0)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Use 'options.db' instead. If both options are set, then
+    //             "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
+    //   * (optional) clusterOptions:
+    //       Redis Cluster specific options compatible with IORedis.
+    //       See Redis Cluster client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
+    //   * (optional) overrideDnsLookup:
+    //       Only available when using a Redis Cluster config.
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
+    //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
+    //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     //"internalCache": {
     //  "backend": "redis",
     //  "nodes": [
     //    {"host": "redis-1", "port": 6379},
     //    {"host": "redis-2", "port": 6379},
     //    {"host": "redis-3", "port": 6379}
-    //  ]
+    //  ],
+    //  "options": {
+    //    "db": 0
+    //  },
+    //  "clusterOptions": {
+    //    "enableReadyCheck": true
+    //  }
     //},
 
     // [memoryStorage]
@@ -538,14 +602,109 @@
     // (see "internalCache" above for sample settings)
     // By default, the memoryStorage engine uses the same Redis server
     // as internalCache, on database ID "5"
+    //
+    // 1. using a single Redis database:
+    //   * node:
+    //     * host:
+    //         The host on which Redis can be reached.
+    //         Can take an IP address, an URI or a hostname
+    //     * port:
+    //         The port on which Redis is running its database:
+    //   * (optional, deprecated) database:
+    //       ID of the redis database (default: 5)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Use 'options.db' instead. If both options are set, then
+    //             "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
     "memoryStorage": {
       "backend": "redis",
-      "database": 5,
       "node": {
         "host": "localhost",
         "port": 6379
+      },
+      "options": {
+        "db": 5
       }
     },
+    // 2. using a master/slaves Redis instance with Redis sentinels
+    //    (cf. http://redis.io/topics/sentinel):
+    //   * node:
+    //     * sentinels:
+    //         array of sentinels instances:
+    //           * host:
+    //               Host name/address of the sentinel server
+    //               Can be an IP address, an URI or a hostname
+    //           * port:
+    //               Network port opened by Redis on the sentinel server
+    //     * name:
+    //         Group of Redis instances composed of a master and one
+    //         or more slaves
+    //   * (optional, deprecated) database:
+    //       ID of the redis database (default: 5)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Use 'options.db' instead. If both options are set, then
+    //             "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
+    //"memoryStorage": {
+    //  "backend": "redis",
+    //  "node": {
+    //    "sentinels": [
+    //      {"host": "sentinel-host-1", "port": 26379},
+    //      {"host": "sentinel-host-2", "port": 26379},
+    //      {"host": "sentinel-host-3", "port": 26379}
+    //    ],
+    //    "name": "kuzzle"
+    //  },
+    //  "options": {
+    //    "db": 5
+    //  }
+    //},
+    // 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
+    //   * nodes: array of master nodes of the cluster
+    //     * host:
+    //         Host name/address of a redis cluster node
+    //         Can be an IP address, an URI or a hostname
+    //     * port:
+    //        Network port opened by the redis cluster node
+    //   * (optional, deprecated) database:
+    //       ID of the redis database (default: 5)
+    //       NOTE: this option is deprecated and will be removed in Kuzzle v3.
+    //             Use 'options.db' instead. If both options are set, then
+    //             "options.db" will take precedence.
+    //   * (optional) options:
+    //       Redis specific options compatible with IORedis.
+    //       See Redis client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
+    //   * (optional) clusterOptions:
+    //       Redis Cluster specific options compatible with IORedis.
+    //       See Redis Cluster client constructor available options:
+    //       https://github.com/luin/ioredis/blob/master/API.md#new-clusterstartupnodes-options
+    //   * (optional) overrideDnsLookup:
+    //       Only available when using a Redis Cluster config.
+    //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
+    //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
+    //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
+    //"memoryStorage": {
+    //  "backend": "redis",
+    //  "nodes": [
+    //    {"host": "redis-1", "port": 6379},
+    //    {"host": "redis-2", "port": 6379},
+    //    {"host": "redis-3", "port": 6379}
+    //  ],
+    //  "options": {
+    //    "db": 5
+    //  },
+    //  "clusterOptions": {
+    //    "enableReadyCheck": true
+    //  }
+    //},
+
     // [storageEngine]
     // The default storage layer is Elasticsearch and it is
     // currently the only storage layer we support.
@@ -741,5 +900,77 @@
   //
   "realtime": {
     "pcreSupport": false
+  },
+
+  // [cluster]
+  // Kuzzle Cluster configuration
+  //   * activityHistory:
+  //       Depth of nodes activity (addition or removal) to keep in memory for
+  //       the cluster:status API action
+  //   * heartbeat:
+  //       Delay between 2 heartbeat frames. A higher value means less
+  //       reactivity for detecting dead nodes, while a lower value might mean
+  //       erroneous node evictions on slow networks.
+  //   * interface:
+  //      Network interface to use as the node IP address.
+  //      If the configured interface cannot be found, the node will refuse to
+  //      start.
+  //      Accepted values:
+  //        * interface name (e.g. eth0, wlan0, vmnet1, ...)
+  //        * IP address (v4 or v6)
+  //        * MAC address
+  //        * null value: no preferred network interface
+  //   * ipv6:
+  //       If true, asks nodes to use IPv6 to connect to each others
+  //   * ip:
+  //       The type of IP address to use.
+  //       If no suitable IP address can be found, the node will refuse to
+  //       start.
+  //       Accepted values:
+  //         * 'public': will target only public IPs
+  //         * 'private': will target only private IPs (private addresses,
+  //           ULAs and link-local addresses)
+  //         * null (or blank string): no target preference. If this
+  //           property is left to null, it is advised to configure an interface
+  //   * joinTimeout:
+  //       The cluster join timeout (in ms): if that timeout is reached before
+  //       the node could join the cluster, it will kill itself.
+  //   * minimumNodes:
+  //       The minimum number of nodes required by the cluster. It should be set
+  //       to AT LEAST to ((total number of nodes / 2) + 1), to ensure that the
+  //       cluster continues to work correctly even in the face of a network
+  //       split. If there are fewer nodes available than the configured
+  //       minimum, the entire cluster stops accepting requests, until there are
+  //       enough nodes available again.
+  //       In this example, we plan to run a cluster of 3 nodes.
+  //  * ports:
+  //       The network TCP ports allowing cluster nodes to send messages to each
+  //       others. Cluster nodes MUST be able to open those ports between
+  //       themselves.
+  //       There is no need to expose these ports publicly.
+  //       * command:
+  //          used for issuing commands between nodes (handshakes, full
+  //          state requests, ...)
+  //       * sync:
+  //          one-way port to propagate sync information from a node to the
+  //          other ones
+  //  * syncTimeout:
+  //      The maximum time (in milliseconds) for a new node to receive a
+  //      fullstate from another node. If the cluster holds a very large number
+  //      of realtime subscriptions, it might be necessary to allow more time
+  //      for a fullstate to be sent to new nodes.
+  "cluster": {
+    "activityDepth": 50,
+    "heartbeat": 2000,
+    "interface": null,
+    "ipv6": false,
+    "ip": "private",
+    "joinTimeout": 60000,
+    "minimumNodes": 2,
+    "ports": {
+      "command": 7510,
+      "sync": 7511
+    },
+    "syncTimeout": 5000
   }
 }

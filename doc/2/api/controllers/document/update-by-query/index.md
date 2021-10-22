@@ -23,7 +23,12 @@ Koncorde `bool` operator and `regexp` clause are not supported for search querie
 
 The request fails if the number of documents returned by the search query exceeds the `documentsWriteCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
 
-To update a greater number of documents, either change the server configuration, or split the search query.
+To update a greater number of documents:
+
+- Change the server configuration
+- Split the search query
+- Use a paginated [document:search](/core/2/api/controllers/document/search) with [document:mUpdate](/core/2/api/controllers/document/m-update)
+- Use [bulk:updateByQuery](/core/2/api/controllers/bulk/update-by-query)
 
 ---
 
@@ -65,6 +70,13 @@ Body:
     }
   }
 }
+```
+
+### Kourou
+
+```bash
+kourou document:updateByQuery <index> <collection> <body>
+kourou document:updateByQuery <index> <collection> <body> -a silent=true
 ```
 
 ---

@@ -110,6 +110,9 @@ When authentication is successful, **Kuzzle returns an authentication token**. T
 It is possible to request an authentication token valid for more than 1 hours with the argument `expiresIn`.  
 The default validity period is configurable under the key `security.jwt.expiresIn`.  
 It is also possible to set a maximum validity period for a token under the key `security.jwt.maxTTL`.
+Possible values: 
+  - `<= -1`: disable the use of maxTTL
+  - `>= 0`: enable maxTTL with setted value (`0` will invalid all your authentication tokens at their creation)
 :::
 
 
@@ -168,6 +171,15 @@ kourou auth:login -a strategy=local --body '{
   password: "password"
 }'
 ```
+
+<SinceBadge version="2.10.0"/>
+### Authentication Token in the Browser
+
+When you're sending HTTP requests from a browser you can instruct Kuzzle
+to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
+This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/checkToken), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
+
+You can disable the cookie authentication by setting `http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 
 ### `local` Strategy Configuration
 

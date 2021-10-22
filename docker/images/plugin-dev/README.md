@@ -42,7 +42,7 @@ services:
       - KUZZLE_PLUGIN_NAME=your-plugin-name
 
   redis:
-    image: redis:5
+    image: redis:6
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

@@ -1,0 +1,62 @@
+// messages definition for issuing node commands and receiving the
+// corresponding responses
+package command;
+
+syntax="proto3";
+
+import "sync.proto";
+
+// Full state response
+message FullStateResponse {
+  // Describes the nodes that have subscribed to a given realtime room
+  message NodeSubscribers {
+    string nodeId = 1;
+    uint32 subscribers = 2;
+    uint64 messageId = 3;
+  }
+
+  // Describes a realtime room
+  message RealtimeRoom {
+    string roomId = 1;
+    string index = 2;
+    string collection = 3;
+
+    // array of polymorphic objects, needs to be stringified beforehand until
+    // this PR is merged: https://github.com/protobufjs/protobuf.js/pull/1495
+    string filters = 4;
+
+    repeated NodeSubscribers nodes = 5;
+  }
+
+  // Describes a cluster activity event
+  message Activity {
+    string id = 1;
+    string date = 2;
+    string address = 3;
+    uint32 event = 4;
+    optional string reason = 5;
+  }
+
+  message NodeState {
+    string id = 1;
+    uint64 lastMessageId = 2;
+  }
+
+  repeated RealtimeRoom rooms = 1;
+  repeated sync.NewAuthStrategy authStrategies = 2;
+  repeated Activity activity = 3;
+  repeated NodeState nodesState = 4;
+}
+
+// Handshake Request
+message HandshakeRequest {
+  string nodeId = 1;
+  uint64 lastMessageId = 2;
+  string ip = 3;
+}
+
+// Handshake response
+message HandshakeResponse {
+  bool added = 1;
+  uint64 lastMessageId = 2;
+}

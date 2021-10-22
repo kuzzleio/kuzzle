@@ -8,7 +8,6 @@ description: RequestPayload type definition
 # RequestPayload
 
 <SinceBadge version="2.8.0" />
-<CustomBadge type="error" text="Experimental: non-backward compatible changes or removal may occur in any future release."/>
 
 The `RequestPayload` type represents an API request sent to Kuzzle in JSON format.
 

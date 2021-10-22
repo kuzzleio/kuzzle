@@ -4,12 +4,14 @@ const should = require('should');
 
 const { Request } = require('../../../../index');
 const Router = require('../../../../lib/core/network/router');
-const { HttpMessage } = require('../../../../lib/core/network/protocols/http');
+const HttpMessage = require('../../../../lib/core/network/protocols/httpMessage');
+
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const { MockHttpRequest } = require('../../../mocks/uWS.mock');
 
 describe('Test: router.httpRequest', () => {
+  const connection = { id: 'requestId' };
   let kuzzle;
-  let httpRequest;
   let routeController;
 
   beforeEach(() => {
@@ -24,25 +26,28 @@ describe('Test: router.httpRequest', () => {
       callback(null, request);
     });
 
-    kuzzle.config.http.accessControlAllowOrigin = 'foobar';
+    kuzzle.config.http.accessControlAllowOrigin = ['foobar'];
+    kuzzle.config.internal.allowAllOrigins = false; // Set automaticaly in the config when accessControlAllowOrigin has no wildcard
 
     routeController = new Router();
     routeController.init();
-
-    httpRequest = new HttpMessage(
-      {id: 'requestId'},
-      {url: '', method: '', headers: {}});
   });
 
   it('should register GET routes from the config/httpRoutes file', done => {
-    httpRequest.url = '/ms/_getrange/someId?start=start&end=end';
-    httpRequest.method = 'GET';
+    const req = new MockHttpRequest(
+      'GET',
+      '/ms/_getrange/someId?start=start&end=end',
+      undefined,
+      {
+        'origin': 'foobar'
+      });
+    const httpMessage = new HttpMessage(connection, req);
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('ms');
         should(request.input.action).be.eql('getrange');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type'])
           .be.eql('application/json');
         should(request.response.headers['Access-Control-Allow-Origin'])
@@ -60,15 +65,15 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register POST routes from the config/httpRoutes file', (done) => {
-    httpRequest.url = '/my-index/my-collection/_count';
-    httpRequest.method = 'POST';
-    httpRequest.addChunk('{"filter": "foobar"}');
+    const req = new MockHttpRequest('post', '/my-index/my-collection/_count');
+    const httpMessage = new HttpMessage(connection, req);
+    httpMessage.content = { filter: 'foobar' };
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('document');
         should(request.input.action).be.eql('count');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type'])
           .be.eql('application/json');
         should(request.response.status).be.eql(1234);
@@ -84,15 +89,15 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register PUT routes from the config/httpRoutes file', done => {
-    httpRequest.url = '/_updateSelf';
-    httpRequest.method = 'PUT';
-    httpRequest.addChunk('{"foo": "bar"}');
+    const req = new MockHttpRequest('put', '/_updateSelf');
+    const httpMessage = new HttpMessage(connection, req);
+    httpMessage.content = {foo: 'bar'};
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('auth');
         should(request.input.action).be.eql('updateSelf');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type']).be.eql('application/json');
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -107,14 +112,14 @@ describe('Test: router.httpRequest', () => {
   });
 
   it('should register DELETE routes from the config/httpRoutes file', done => {
-    httpRequest.url = '/foobar';
-    httpRequest.method = 'DELETE';
+    const req = new MockHttpRequest('delete', '/foobar');
+    const httpMessage = new HttpMessage(connection, req);
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('index');
         should(request.input.action).be.eql('delete');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type']).be.eql('application/json');
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -128,15 +133,15 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
-  it('should register the base route /_serverInfo', (done) => {
-    httpRequest.url = '/_serverInfo';
-    httpRequest.method = 'GET';
+  it('should register the base route /_serverInfo', done => {
+    const req = new MockHttpRequest('get', '/_serverInfo');
+    const httpMessage = new HttpMessage(connection, req);
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('server');
         should(request.input.action).be.eql('info');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type']).be.eql('application/json');
         should(request.response.status).be.eql(1234);
         done();
@@ -147,15 +152,15 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
-  it('should register plugins HTTP routes', (done) => {
-    httpRequest.url = '/foo/bar/baz';
-    httpRequest.method = 'GET';
+  it('should register plugins HTTP routes', done => {
+    const req = new MockHttpRequest('get', '/foo/bar/baz');
+    const httpMessage = new HttpMessage(connection, req);
 
-    routeController.http.route(httpRequest, request => {
+    routeController.http.route(httpMessage, request => {
       try {
         should(request.input.controller).be.eql('foo');
         should(request.input.action).be.eql('bar');
-        should(request.response.requestId).be.eql(httpRequest.requestId);
+        should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers['content-type']).be.eql('application/json');
         should(request.response.status).be.eql(1234);
         done();
@@ -166,13 +171,13 @@ describe('Test: router.httpRequest', () => {
     });
   });
 
-  it('should return a 404 if the requested route does not exist', (done) => {
-    httpRequest.url = '/a/b/c/d';
-    httpRequest.method = 'GET';
+  it('should return a 404 if the requested route does not exist', done => {
+    const req = new MockHttpRequest('get', '/a/b/c/d');
+    const httpMessage = new HttpMessage(connection, req);
 
-    routeController.http.route(httpRequest, result => {
+    routeController.http.route(httpMessage, result => {
       try {
-        should(result.response.requestId).be.eql(httpRequest.requestId);
+        should(result.response.requestId).be.eql(httpMessage.requestId);
         should(result.response.headers['content-type']).be.eql('application/json');
         should(result.response.status).be.eql(404);
         should(result.response.error.message).be.eql('API URL not found: /a/b/c/d.');

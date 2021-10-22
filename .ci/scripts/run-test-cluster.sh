@@ -5,14 +5,19 @@ set -ex
 
 if [ -z "$NODE_VERSION" ];
 then
-  echo "Missing NODE_VERSION, use default NODE_12_VERSION"
-  export NODE_VERSION=$NODE_12_VERSION
+  echo "Missing NODE_VERSION, use default NODE_14_VERSION"
+  export NODE_VERSION=$NODE_14_VERSION
 fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 echo "Installing dependencies..."
-npm ci --silent --unsafe-perm
+npm install --unsafe-perm
+
+if [ "$REBUILD" == "true" ];
+then
+  npm rebuild
+fi
 
 ./.ci/scripts/install-plugins.sh
 

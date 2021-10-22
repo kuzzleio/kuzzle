@@ -45,6 +45,12 @@
           "code": 7,
           "message": "Error verifying token: %s",
           "class": "InternalError"
+        },
+        "refresh_forbidden": {
+          "description": "The provided token cannot be refreshed",
+          "code": 8,
+          "message": "%s cannot be refreshed.",
+          "class": "UnauthorizedError"
         }
       }
     },
@@ -240,6 +246,23 @@
           "description": "Attempted to access to an unitialized Profile object",
           "code": 6,
           "message": "Cannot get roles for uninitialized profile \"%s\"",
+          "class": "InternalError"
+        }
+      }
+    },
+    "cookie": {
+      "code": 7,
+      "errors": {
+        "invalid": {
+          "description": "Invalid authentication cookie.",
+          "code": 1,
+          "message": "Invalid cookie.",
+          "class": "UnauthorizedError"
+        },
+        "unsupported": {
+          "description": "Cookie authentication not supported.",
+          "code": 2,
+          "message": "Cookie authentication not supported.",
           "class": "InternalError"
         }
       }

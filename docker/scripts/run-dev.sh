@@ -6,6 +6,12 @@ if [ -n "$WITHOUT_KUZZLE" ]; then
   exit 0
 fi
 
+if [ -z "$NODE_VERSION" ];
+then
+  echo "Missing NODE_VERSION, use default NODE_12_VERSION"
+  n $NODE_12_VERSION
+fi
+
 if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
@@ -26,10 +32,9 @@ else
   ENABLED_PLUGINS=functional-test-plugin
 fi
 
-node docker/scripts/reloader.js \
-    --inspect=0.0.0.0:9229 \
-    -r ts-node/register docker/scripts/start-kuzzle-dev.ts \
-    --mappings /fixtures/mappings.json \
-    --fixtures /fixtures/fixtures.json \
-    --securities /fixtures/securities.json \
-    --enable-plugins $ENABLED_PLUGINS
+npx ergol docker/scripts/start-kuzzle-dev.ts \
+  -c ./config/ergol.config.json \
+  --script-args=--mappings /fixtures/mappings.json \
+  --script-args=--fixtures /fixtures/fixtures.json \
+  --script-args=--securities /fixtures/securities.json \
+  --script-args=--enable-plugins $ENABLED_PLUGINS

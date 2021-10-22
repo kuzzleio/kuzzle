@@ -70,17 +70,25 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mReplace <index> <collection> <body>
+kourou document:mReplace <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
 
 - `collection`: collection name
 - `index`: index name
-- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ### Optional:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the replacements are indexed
+- `strict`: if set, an error will occur if at least one document has not been replaced <SinceBadge version="2.11.0" />
+- `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ---
 
@@ -111,6 +119,8 @@ Each errored document is an object of the `errors` array with the following prop
 ::: warning
 Errored documents are not guaranteed to be in the same orded as in the initial request.
 :::
+
+If `strict` mode is enabled, will rather return an error if at least one document has not been replaced.
 
 ```js
 {

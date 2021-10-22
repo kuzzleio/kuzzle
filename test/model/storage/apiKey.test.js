@@ -62,12 +62,12 @@ describe('ApiKey', () => {
         user,
         'expiresIn',
         'Sigfox API key',
-        { creatorId: 'aschen', refresh: 'wait_for' });
+        { creatorId: 'aschen', refresh: 'wait_for', bypassMaxTTL: true });
 
       should(createTokenStub).be.calledWith(
         createTokenEvent,
         user,
-        { expiresIn: 'expiresIn', bypassMaxTTL: true });
+        { expiresIn: 'expiresIn', bypassMaxTTL: true, type: 'apiKey' });
 
       should(saveStub)
         .be.calledWith({ userId: 'aschen', refresh: 'wait_for' });
@@ -81,6 +81,19 @@ describe('ApiKey', () => {
       });
     });
 
+    it('should be able to create a new API key with a bypassMaxTTL option', async () => {
+      await ApiKey.create(
+        user,
+        'expiresIn',
+        'Sigfox API key',
+        { creatorId: 'aschen', refresh: 'wait_for', bypassMaxTTL: false });
+
+      should(createTokenStub).be.calledWith(
+        createTokenEvent,
+        user,
+        { expiresIn: 'expiresIn', bypassMaxTTL: false, type: 'apiKey' });
+    });
+
     it('should allow to specify the API key ID', async () => {
       const apiKey = await ApiKey.create(
         user,
@@ -89,6 +102,15 @@ describe('ApiKey', () => {
         { apiKeyId: 'my-api-key-id' });
 
       should(apiKey._id).be.eql('my-api-key-id');
+    });
+
+    it('should use the fingerprint as default API key ID', async () => {
+      const apiKey = await ApiKey.create(
+        user,
+        'expiresIn',
+        'Sigfox API key',
+        {});
+      should(apiKey._id).be.eql(apiKey._source.fingerprint);
     });
   });
 

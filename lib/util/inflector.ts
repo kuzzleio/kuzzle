@@ -19,39 +19,30 @@
  * limitations under the License.
  */
 
-/**
- * Convert a string to kebab-case
- * https://gist.github.com/thevangelist/8ff91bac947018c9f3bfaad6487fa149#gistcomment-2659294
- *
- * @param string - String to convert to kebab-case
- *
- * @returns kebab-case-string
- */
-export function kebabCase (string: string): string {
-  return string
-    // get all lowercase letters that are near to uppercase ones
-    .replace(/([a-z])([A-Z])/g, '$1-$2')
-    // replace all spaces and low dash
-    .replace(/[\s_]+/g, '-')
-    .toLowerCase();
-}
-
-/**
- * Convert a string to camelCase
- * https://stackoverflow.com/questions/2970525/converting-any-string-into-camel-case
- *
- * @param string - String to convert to camelCase
- *
- * @returns camelCaseString
- */
-export function camelize (str: string, options: { upperFirst?: boolean } = {}): string {
-  const camelString = str.replace('-', ' ').replace(/(?:^\w\|[A-Z]|\b\w)/g, function (word, index) {
-    return index === 0 ? word.toLowerCase() : word.toUpperCase();
-  }).replace(/\s+/g, '');
-
-  if (options.upperFirst) {
-    return `${camelString.charAt(0).toUpperCase()}${camelString.substr(1)}`;
+export class Inflector {
+  /**
+   * Converts a string to kebab-case
+   * https://gist.github.com/thevangelist/8ff91bac947018c9f3bfaad6487fa149#gistcomment-2659294
+   *
+   * @param string - String to convert to kebab-case
+   *
+   * @returns kebab-case-string
+   */
+  static kebabCase(string: string): string {
+    return string
+      // get all lowercase letters that are near to uppercase ones
+      .replace(/([a-z])([A-Z])/g, '$1-$2')
+      // replace all spaces and low dash
+      .replace(/[\s_]+/g, '-')
+      .toLowerCase();
   }
 
-  return camelString;
+  /**
+   * Returns a string with the first letter in uppercase
+   *
+   * @param string String to transform the first letter in uppercase
+   */
+  static upFirst(string: string): string {
+    return string.charAt(0).toUpperCase() + string.slice(1);
+  }
 }

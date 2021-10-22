@@ -11,22 +11,12 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -34,26 +24,16 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
@@ -61,27 +41,17 @@ jobs:
     needs: [unit-tests]
     strategy:
       matrix:
-        test_set: [http, websocket, mqtt, cluster]
-        node-version: ['12.16.3', '12.20.0']
+        test_set: [http, websocket, mqtt]
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:legacy:${{ matrix.test_set }}
@@ -93,29 +63,43 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: ['12.16.3', '12.20.0']
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
+          node-version: ${{ matrix.node-version }}
+
+  cluster-monkey-tests:
+    name: Cluster Monkey Tests
+    needs: [functional-tests-legacy, functional-tests]
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
+    steps:
+      - uses: actions/checkout@v2
+      - name: Cloning Monkey Tester
+        uses: actions/checkout@v2
+        with:
+          repository: kuzzleio/kuzzle-monkey-tests
+          path: 'kuzzle-monkey-tests'
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/monkey-tests
+        with:
           node-version: ${{ matrix.node-version }}
 
   error-codes-check:
@@ -123,46 +107,19 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
   documentation-production:
     name: Deploy Documentation to production
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/deploy-doc
         with:
           REGION: us-west-2
@@ -174,27 +131,13 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
-          node-version: 12
+          node-version: ${{ matrix.node-version }}
       - name: Get branch name
         # Github expose branch name with this format '/ref/branch/branchName'
         # So we need to extract the wanted part (branchName)
@@ -208,24 +151,10 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    needs: [functional-tests-legacy, functional-tests, functional-tests-cluster]
+    needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node modules
-        uses: actions/cache@v2
-        env:
-          cache-name: cache-node-modules
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.npm
-            **/node_modules
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-build-${{ env.cache-name }}-
-            ${{ runner.os }}-build-
-            ${{ runner.os }}-
       - uses: actions/setup-node@v1
         with:
           node-version: '12.x'

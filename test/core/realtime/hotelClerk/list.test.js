@@ -8,8 +8,6 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.list', () => {
-  const index = '%test';
-  const collection = 'user';
   let kuzzle;
   let hotelClerk;
   let user;
@@ -36,38 +34,24 @@ describe('Test: hotelClerk.list', () => {
   });
 
   it('should return an empty object if there is no room', async () => {
-    const response = await hotelClerk.list(user);
+    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({});
 
-    should(response).be.empty().Object();
+    should(await hotelClerk.list(user)).be.empty().Object();
   });
 
   it('should return a correct list according to subscribe on filter', async () => {
-    kuzzle.koncorde.getIndexes.returns(['index', 'anotherIndex']);
-    kuzzle.koncorde.getCollections.withArgs('index').returns(['collection']);
-    kuzzle.koncorde.getCollections
-      .withArgs('anotherIndex')
-      .returns(['anotherCollection']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('index', 'collection')
-      .returns(['foo', 'bar']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('anotherIndex', 'anotherCollection')
-      .returns(['baz']);
-
-    hotelClerk.rooms.set('foo', {
-      index,
-      collection,
-      customers: new Set(['a', 'b', 'c'])
-    });
-    hotelClerk.rooms.set('bar', {
-      index,
-      collection,
-      customers: new Set(['a', 'd'])
-    });
-    hotelClerk.rooms.set('baz', {
-      index: 'anotherIndex',
-      collection: 'anotherCollection',
-      customers: new Set(['a', 'c'])
+    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({
+      anotherIndex: {
+        anotherCollection: {
+          baz: 42,
+        },
+      },
+      index: {
+        collection: {
+          foo: 12,
+          bar: 24,
+        },
+      },
     });
 
     const response = await hotelClerk.list(user);
@@ -75,47 +59,40 @@ describe('Test: hotelClerk.list', () => {
     should(response).match({
       index: {
         collection: {
-          foo: 3,
-          bar: 2
+          foo: 12,
+          bar: 24,
         }
       },
       anotherIndex: {
         anotherCollection: {
-          baz: 2
+          baz: 42,
         }
       }
     });
   });
 
   it('should return a correct list according to subscribe on filter and user right', async () => {
-    kuzzle.koncorde.getIndexes
-      .returns(['index', 'anotherIndex', 'andAnotherOne']);
-    kuzzle.koncorde.getCollections
-      .withArgs('index')
-      .returns(['collection', 'forbidden']);
-    kuzzle.koncorde.getCollections
-      .withArgs('anotherIndex')
-      .returns(['anotherCollection']);
-    kuzzle.koncorde.getCollections
-      .withArgs('andAnotherOne')
-      .returns(['collection']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('index', 'collection')
-      .returns(['foo', 'bar']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('index', 'forbidden')
-      .returns(['foo']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('anotherIndex', 'anotherCollection')
-      .returns(['baz']);
-    kuzzle.koncorde.getFilterIds
-      .withArgs('andAnotherOne', 'collection')
-      .returns(['foobar']);
-
-    hotelClerk.rooms.set('foo', { customers: new Set(['a', 'b', 'c']) });
-    hotelClerk.rooms.set('bar', { customers: new Set(['b', 'd', 'e', 'f']) });
-    hotelClerk.rooms.set('baz', { customers: new Set(['d', 'e']) });
-    hotelClerk.rooms.set('foobar', { customers: new Set(['a', 'c']) });
+    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({
+      andAnotherOne: {
+        collection: {
+          foobar: 26,
+        },
+      },
+      anotherIndex: {
+        anotherCollection: {
+          baz: 42,
+        },
+      },
+      index: {
+        collection: {
+          foo: 12,
+          bar: 24,
+        },
+        forbidden: {
+          foo: 54,
+        },
+      },
+    });
 
     user.isActionAllowed
       .onSecondCall()
@@ -129,13 +106,13 @@ describe('Test: hotelClerk.list', () => {
     should(response).match({
       index: {
         collection: {
-          foo: 3,
-          bar: 4
+          foo: 12,
+          bar: 24,
         }
       },
       andAnotherOne: {
         collection: {
-          foobar: 2
+          foobar: 26,
         }
       }
     });

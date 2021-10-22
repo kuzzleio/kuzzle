@@ -43,6 +43,10 @@ describe('Test: hotelClerk.join', () => {
     }, {connectionId, token: null});
 
     kuzzle.config.limits.subscriptionMinterms = 0;
+
+    kuzzle.koncorde.normalize.returns({
+      id: 'foobar', index: 'foo/bar', filter: []
+    });
   });
 
   it('should register a "join" event', async () => {
@@ -115,18 +119,18 @@ describe('Test: hotelClerk.join', () => {
       action: 'join',
       body: {roomId: 'i-exist'}
     }, context);
-    const response = { cluster: false, diff: 'diff', data: 'data'};
+    const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});
     sinon.stub(hotelClerk, '_subscribeToRoom').resolves(response);
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.pipe).not.be.called();
+    should(kuzzle.emit).not.be.called();
 
     response.cluster = true;
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.pipe).be.calledWith('core:realtime:user:join:after', 'diff');
+    should(kuzzle.emit).be.calledWith('core:realtime:subscribe:after', 'i-exist');
   });
 });

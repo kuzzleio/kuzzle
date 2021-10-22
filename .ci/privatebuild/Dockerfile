@@ -45,14 +45,6 @@ RUN  set -x \
   && sha1=$(git ls-remote ${repo} refs/heads/${KONCORDE_BRANCH} | awk '{ print $1 }') \
   && npm i git://${repo}#${sha1} \
   \
-  && echo "Replace cluster with its last security version" \
-  && rm -rf /var/app/plugins/available/kuzzle-plugin-cluster \
-  && git clone --recursive \
-    -b ${CLUSTER_BRANCH} \
-    git@github.com:kuzzleio/cluster-security-patch.git \
-    /var/app/plugins/available/kuzzle-plugin-cluster \
-  && rm -rf /var/app/plugins/available/kuzzle-plugin-cluster/.git \
-  \
   && npm ci \
   && for plugin in plugins/available/*/; do  \
       npm ci --prefix $plugin; \

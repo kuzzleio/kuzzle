@@ -7,7 +7,10 @@ const rewire = require('rewire');
 const Bluebird = require('bluebird');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
+const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
+const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
+
 const config = require('../../lib/config').load();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
@@ -57,6 +60,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
     mockrequire('../../lib/core/security', coreModuleStub);
     mockrequire('../../lib/core/realtime', coreModuleStub);
+    mockrequire('../../lib/cluster', coreModuleStub);
+    mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
     Kuzzle = rewire('../../lib/kuzzle/kuzzle');
@@ -80,53 +85,73 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
   describe('#start', () => {
     it('should init the components in proper order', async () => {
-      const options = {
-        mappings: {},
-        fixtures: {},
-        securities: {}
-      };
+      const Koncorde = sinon.stub();
+      const stubbedKuzzle = Kuzzle.__with__({
+        koncorde_1: { Koncorde },
+        vault_1: { default: { load: () => {} }}
+      });
 
-      should(kuzzle.state).be.eql(Kuzzle.states.STARTING);
+      await stubbedKuzzle(async () => {
+        kuzzle = await _mockKuzzle(Kuzzle);
 
-      await kuzzle.start(application, options);
+        kuzzle.install = sinon.stub().resolves();
+        kuzzle.import = sinon.stub().resolves();
+        const options = {
+          import: { something: 'here' },
+          installations: [{ id: 'foo', handler: () => {} }],
+          support: { something: 'here' }
+        };
 
-      sinon.assert.callOrder(
-        kuzzle.pipe, // kuzzle:state:start
-        kuzzle.internalIndex.init,
-        kuzzle.validation.init,
-        kuzzle.tokenManager.init,
-        kuzzle.funnel.init,
-        kuzzle.statistics.init,
-        kuzzle.validation.curateSpecification,
-        kuzzle.ask.withArgs('core:storage:public:mappings:import'),
-        kuzzle.ask.withArgs('core:storage:public:document:import'),
-        kuzzle.ask.withArgs('core:security:load'),
-        kuzzle.entryPoint.init,
-        kuzzle.pluginsManager.init,
-        kuzzle.ask.withArgs('core:security:verify'),
-        kuzzle.router.init,
-        kuzzle.pipe.withArgs('kuzzle:start'),
-        kuzzle.pipe.withArgs('kuzzle:state:live'),
-        kuzzle.entryPoint.startListening,
-        kuzzle.pipe.withArgs('kuzzle:state:ready'),
-        kuzzle.emit.withArgs('core:kuzzleStart')
-      );
+        kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-      should(kuzzle.state).be.eql(Kuzzle.states.RUNNING);
+        should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
+
+        await kuzzle.start(application, options);
+
+        sinon.assert.callOrder(
+          kuzzle.pipe, // kuzzle:state:start
+          kuzzle.internalIndex.init,
+          kuzzle.validation.init,
+          kuzzle.tokenManager.init,
+          kuzzle.funnel.init,
+          kuzzle.statistics.init,
+          kuzzle.validation.curateSpecification,
+          kuzzle.entryPoint.init,
+          kuzzle.pluginsManager.init,
+          kuzzle.import.withArgs(options.import, options.support),
+          kuzzle.ask.withArgs('core:security:verify'),
+          kuzzle.router.init,
+          kuzzle.install.withArgs(options.installations),
+          kuzzle.pipe.withArgs('kuzzle:start'),
+          kuzzle.pipe.withArgs('kuzzle:state:live'),
+          kuzzle.entryPoint.startListening,
+          kuzzle.pipe.withArgs('kuzzle:state:ready'),
+          kuzzle.emit.withArgs('core:kuzzleStart')
+        );
+
+        should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
+      });
     });
 
     // @deprecated
     it('should instantiate Koncorde with PCRE support if asked to', async () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
-        Koncorde,
-        vault: { load: () => {} }
+        koncorde_1: { Koncorde },
+        vault_1: { default: { load: () => {} }}
       });
 
       await stubbedKuzzle(async () => {
-        await _mockKuzzle(Kuzzle).start();
+        const baseKuzzle = _mockKuzzle(Kuzzle);
+
+        baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
+
+        await baseKuzzle.start();
 
         const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+
+        kuzzleWithPCRE.ask = sinon.stub().resolves();
+        kuzzleWithPCRE.ask.withArgs('core:cache:internal:get').resolves(1);
 
         kuzzleWithPCRE.config =
           JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
@@ -157,6 +182,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         }
       })(() => {
         kuzzle = _mockKuzzle(Kuzzle);
+        kuzzle._waitForImportToFinish = sinon.stub().resolves();
+
         return kuzzle.start();
       })
         .then(() => {
@@ -216,7 +243,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         await kuzzle.shutdown();
 
         should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
-        should(kuzzle.emit).calledWith('kuzzle:shutdown');
+        should(kuzzle.pipe).calledWith('kuzzle:shutdown');
         should(Bluebird.delay.callCount).approximately(5, 1);
 
         // @deprecated
@@ -228,6 +255,144 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         process.exit.restore();
         Bluebird.delay.restore();
       }
+    });
+  });
+
+  describe('#install', () => {
+    let handler;
+
+    beforeEach(() => {
+      handler = sinon.stub().resolves();
+      sinon.stub(Date, 'now').returns(Date.now());
+
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(false);
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:create']).resolves();
+    });
+
+    afterEach(() => {
+      Date.now.restore();
+    });
+
+    it('should call the handler and work properly', async () => {
+      await kuzzle.install([{ id: 'id', handler, description: 'description'}]);
+
+      should(kuzzle.ask).be.calledTwice();
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:exist',
+        'kuzzle',
+        'installations',
+        'id');
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { description: 'description', handler: handler.toString(), installedAt: Date.now() },
+        { id: 'id' });
+      should(handler).be.calledOnce();
+      should(kuzzle.log.info).be.calledOnce();
+    });
+
+    it('should handle situation when handler has already been executed', async () => {
+      kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
+
+      await kuzzle.install([{ id: 'id', handler}]);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:private:document:exist',
+        'kuzzle',
+        'installations',
+        'id');
+      should(kuzzle.ask).be.neverCalledWith(
+        'core:storage:private:document:create',
+        'kuzzle',
+        'installations',
+        { handler: handler.toString(), installedAt: Date.now() },
+        { id: 'id' });
+      should(handler).not.be.called();
+      should(kuzzle.log.info).not.be.called();
+    });
+  });
+
+  describe('#import', () => {
+    let toImport;
+    let toSupport;
+
+    beforeEach(() => {
+      toImport = {
+        mappings: { something: 'here' },
+        onExistingUsers: 'skip',
+        profiles: { something: 'here' },
+        roles: { something: 'here' },
+        userMappings: { something: 'here' },
+        user: { something: 'here' },
+      };
+      toSupport = {
+        mappings: { something: 'here' },
+        fixtures: { something: 'here' },
+        securities: {
+          profiles: { something: 'here' },
+          roles: { something: 'here' },
+          user: { something: 'here' }
+        }
+      };
+
+      kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
+      kuzzle.internalIndex.refreshCollection = sinon.stub().resolves();
+    });
+
+    it('should load correctly toImport mappings and permissions', async () => {
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      await kuzzle.import(toImport, {});
+
+      should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
+      should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
+        {
+          indexCacheOnly: false,
+          propagate: false,
+          refresh: true,
+        });
+      should(kuzzle.ask).calledWith('core:security:load',
+        {
+          profiles: toImport.profiles,
+          roles: toImport.roles,
+          users: toImport.users,
+        },
+        {
+          onExistingUsers: toImport.onExistingUsers,
+          onExistingUsersWarning: true,
+          refresh: 'wait_for',
+        });
+    });
+
+    it('should load correctly toSupport mappings, fixtures and securities', async () => {
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      await kuzzle.import({}, toSupport);
+
+      should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
+        indexCacheOnly: false,
+        propagate: false,
+        rawMappings: true,
+        refresh: true,
+      });
+      should(kuzzle.ask).calledWith('core:storage:public:document:import', toSupport.fixtures);
+      should(kuzzle.ask).calledWith('core:security:load', toSupport.securities, {
+        force: true,
+        refresh: 'wait_for'
+      });
+    });
+
+    it('should prevent mappings to be loaded from import and support simultaneously', () => {
+      return should(kuzzle.import(toImport, { mappings: { something: 'here' } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
+    });
+
+    it('should prevent permissions to be loaded from import and support simultaneously', () => {
+      return should(
+        kuzzle.import(
+          { profiles: { something: 'here' } },
+          { securities: { roles: { something: 'here'} } }))
+        .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
   });
 });

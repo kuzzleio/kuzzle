@@ -25,24 +25,22 @@ const _ = require('lodash');
 
 module.exports = async function check (context) {
   let action = false;
-  const
-    warn = msg => context.log.warn(`[CONFIG. FILES] ${msg}`),
-    renamed = {
-      'services.db': 'services.storageEngine',
-      'services.internalEngine': 'services.internalIndex',
-      'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info',
-      'services.storageEngine.dynamic': 'services.storageEngine.commonMapping.dynamic'
-    },
-    deprecated = [
-      'realtime',
-      'server.entryPoints',
-      'server.protocols.socketio',
-      'server.proxy',
-      'services.garbageCollector',
-      'services.storageEngine.client.apiVersion',
-      'services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt',
-      'services.storageEngine.commonMapping.properties._kuzzle_info.active'
-    ];
+  const warn = msg => context.log.warn(`[CONFIG. FILES] ${msg}`);
+  const renamed = {
+    'services.db': 'services.storageEngine',
+    'services.internalEngine': 'services.internalIndex',
+    'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info',
+    'services.storageEngine.dynamic': 'services.storageEngine.commonMapping.dynamic'
+  };
+  const deprecated = [
+    'server.entryPoints',
+    'server.protocols.socketio',
+    'server.proxy',
+    'services.garbageCollector',
+    'services.storageEngine.client.apiVersion',
+    'services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt',
+    'services.storageEngine.commonMapping.properties._kuzzle_info.active'
+  ];
 
 
   for (const [oldName, newName] of Object.entries(renamed)) {

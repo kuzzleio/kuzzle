@@ -8,7 +8,7 @@ order: 300
 
 # Querying
 
-Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way. 
+Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way.
 
 It is possible for a client to send requests to **retrieve documents from any authorized collection**.
 
@@ -21,12 +21,12 @@ Elasticsearch supports many keywords in a search query root level. For security 
   - `explain`
   - `from`
   - `highlight`
-  - `inner_hits`
   - `query`
   - `search_after`
   - `search_timeout`
   - `size`
   - `sort`
+  - `suggest`
   - `_name`
   - `_source`
   - `_source_excludes`
@@ -57,7 +57,7 @@ Most of the actions of the document controller accept an additional option that 
 
 When the value of this option is `wait_for`, then Elasticsearch (and thus Kuzzle) will **respond to the request only when the document has been indexed**.
 
-**Example:** _Create a document and wait for the collection to be refreshed_ 
+**Example:** _Create a document and wait for the collection to be refreshed_
 ```bash
 kourou sdk:execute '
   await sdk.document.createOrReplace(
@@ -66,10 +66,10 @@ kourou sdk:execute '
     "document-1",
     {
       age: 27,
-      city: "Tirana" 
+      city: "Tirana"
     },
     { refresh: "wait_for" });
-  
+
   return sdk.document.search("ktm-open-data", "thamel-taxi");
 '
 ```
@@ -85,7 +85,7 @@ It is possible to request a manual refresh of the documents of a collection with
 
 This action **can take up to a second** to refresh the underlying Elasticsearch indice.
 
-**Example:** _Create documents and then refresh the collection before searching it_ 
+**Example:** _Create documents and then refresh the collection before searching it_
 ```bash
 kourou sdk:execute '
   for (let i = 20; i--; ) {
@@ -95,12 +95,12 @@ kourou sdk:execute '
       "document-" + i,
       {
         age: 27 + i,
-        city: "Tirana" 
+        city: "Tirana"
       });
   }
 
   await sdk.collection.refresh("ktm-open-data", "thamel-taxi");
-  
+
   return sdk.document.search("ktm-open-data", "thamel-taxi");
 '
 ```
@@ -142,7 +142,7 @@ kourou collection:create ktm-open-data thamel-taxi '{
 
 kourou document:mCreate ktm-open-data thamel-taxi '{
   documents: [
-    { 
+    {
       _id: "aschen",
       body: {
         city: "Tirana",
@@ -151,7 +151,7 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
         description: "Ruby is life"
       }
     },
-    { 
+    {
       _id: "jenow",
       body: {
         city: "Tirana",
@@ -160,7 +160,7 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
         description: "Java is my only love"
       }
     },
-    { 
+    {
       _id: "liia",
       body: {
         city: "Kathmandu",
@@ -169,7 +169,7 @@ kourou document:mCreate ktm-open-data thamel-taxi '{
         description: "Little Princes is great"
       }
     },
-    { 
+    {
       _id: "domisol",
       body: {
         city: "Siccieu",
@@ -194,11 +194,11 @@ This clause should be used on fields with the [keyword](/core/2/guides/main-conc
 You can use the `term` clause to find documents based on a precise value such as a price, a product ID, or a username.
 :::
 
-**Example:** _Search for documents containing an exact field value_ 
+**Example:** _Search for documents containing an exact field value_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   term: { name: "Jenow" }
-}'
+}' --lang elasticsearch
 ```
 
 ::: info
@@ -222,11 +222,11 @@ The match query is the standard query for **performing a full-text search**. As 
 The `match` clause as well as the content of a `text` fields are [analyzed](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/analysis-analyzers.html) by Elasticsearch before performing the query.
 :::
 
-**Example:** _Search for documents roughly matching the provided field value_ 
+**Example:** _Search for documents roughly matching the provided field value_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   match: { description: "java" }
-}'
+}' --lang elasticsearch
 ```
 
 ### `range` clause
@@ -237,7 +237,7 @@ It can be used with `number` or `date` fields (but not limited to).
 
 Range boundaries are defined using `gt` (greather than), `lt` (lower than), `gte` (greather than or equal) and `lte` (lower than or equal).
 
-**Example:** _Search for documents where the "age" field is between 30 and 42_ 
+**Example:** _Search for documents where the "age" field is between 30 and 42_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   range: {
@@ -246,20 +246,20 @@ kourou document:search ktm-open-data thamel-taxi '{
       lte: 42
     }
   }
-}'
+}' --lang elasticsearch
 ```
 
 ### `ids` clause
 
 The [ids](https://www.elastic.co/guide/en/elasticsearch/reference/current/query-dsl-ids-query.html) clause allows to search documents **based on their IDs** (`_id` field).
 
-**Example:** _Search for documents by id_ 
+**Example:** _Search for documents by id_
 ```bash
 kourou document:search ktm-open-data thamel-taxi '{
   ids: {
     values: ["aschen", "liia"]
   }
-}'
+}' --lang elasticsearch
 ```
 
 ::: info
@@ -297,14 +297,14 @@ kourou document:search ktm-open-data thamel-taxi '{
       { term: { city: "Kathmandu" } },
     ]
   }
-}'
+}' --lang elasticsearch
 ```
 
 ## Koncorde Query
 
 <SinceBadge version="2.8.0"/>
 
-It is also possible to use [Koncorde Filters Syntax](/core/2/api/koncorde-filters-syntax) to search documents.  
+It is also possible to use [Koncorde Filters Syntax](/core/2/api/koncorde-filters-syntax) to search documents.
 
 To use a Koncorde filter instead of an Elasticsearch query, you have to pass the argument `lang` with the value `koncorde` to the API action.
 
@@ -321,7 +321,7 @@ kourou document:search ktm-open-data thamel-taxi '{
     { equals: { city: "Tirana" } },
     { range: { age: { gte: 32 } } }
   ]
-}' --arg lang=koncorde
+}'
 ```
 
 ## Sorting
@@ -359,9 +359,9 @@ kourou document:search ktm-open-data thamel-taxi --sort '[
 They allow to find all documents matching a search query.
 
 ::: info
-By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.  
-The number of returned documents can be changed with the `size` option.  
-Elasticsearch does not allow a `search` request to return more than 10000 documents, no matter what pagination parameters are set.  
+By default, the [document:search](/core/2/api/controllers/document/search) action returns only 10 documents.
+The number of returned documents can be changed with the `size` option.
+Elasticsearch does not allow a `search` request to return more than 10000 documents, no matter what pagination parameters are set.
 See the available [Pagination](/core/2/guides/main-concepts/querying#pagination) action methods to get more results.
 :::
 
@@ -482,7 +482,7 @@ Pagination can be done by incrementing the `from` parameter value to retrieve fu
 It's the fastest pagination method available, but also the less consistent.
 
 ::: info
-Because this method does not freeze the search results between two calls, there can be missing or duplicated documents between two result pages.  
+Because this method does not freeze the search results between two calls, there can be missing or duplicated documents between two result pages.
 Also it's not possible to retrieve more than 10000 documents with this method.
 :::
 
@@ -559,15 +559,15 @@ kourou sdk:query document:search \
 ```
 
 ::: info
-Because this method does not freeze the search results between two calls, **there can be missing or duplicated documents between two result pages**.  
-This method efficiently mitigates the costs of scroll searches, but returns less consistent results: it's a middle ground, **ideal for real-time search requests**.  
+Because this method does not freeze the search results between two calls, **there can be missing or duplicated documents between two result pages**.
+This method efficiently mitigates the costs of scroll searches, but returns less consistent results: it's a middle ground, **ideal for real-time search requests**.
 :::
 
 ### Paginate with Scroll Cursor
 
 The `scroll` parameter can be specified in the search query to allow the usage of the [document:scroll](/core/2/api/controllers/document/scroll) action. This option creates **a forward-only cursor** to move through paginated results.
 
-The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.  
+The **results from a scroll request are frozen**, and reflect the state of the collection at the time the initial search request.
 For that reason, this action is **guaranteed to return consistent results**, even if documents are updated or deleted in the database between two pages retrieval.
 
 This is the **most consistent way to paginate results**, however, this comes at a **higher computing cost** for the server.
@@ -575,7 +575,7 @@ This is the **most consistent way to paginate results**, however, this comes at 
 To use this pagination method, you need to pass a `scroll` parameter with a duration. This duration corresponds to the **time during which Elasticsearch will keep your results frozen**. This duration will be refreshed at each call of the [document:scroll](/core/2/api/controllers/document/scroll) action.
 
 ::: info
-The value of the `scroll` option should be the time needed to process one page of results.  
+The value of the `scroll` option should be the time needed to process one page of results.
 This value has a maximum value which can be modified under the `services.storage.maxScrollDuration` [configuration](/core/2/guides/advanced/configuration) key.
 :::
 
@@ -630,10 +630,10 @@ kourou sdk:query document:scroll -a scrollId=<scroll-id>
 
 ::: warning
 When using a cursor with the `scroll` option, Elasticsearch has to duplicate the transaction log to keep consistent results during the entire scroll session.
-It **can lead to memory issues** if a scroll duration too high is provided, or if too many scroll sessions are open simultaneously.  
+It **can lead to memory issues** if a scroll duration too high is provided, or if too many scroll sessions are open simultaneously.
 
 
-By default, Kuzzle sets a maximum scroll duration of 1 minute.  
+By default, Kuzzle sets a maximum scroll duration of 1 minute.
 This can be changed in the kuzzlerc configuration file under the key `services.storageEngine.maxScrollDuration`.
 :::
 

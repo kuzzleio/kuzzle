@@ -70,6 +70,13 @@ Body:
 }
 ```
 
+### Kourou
+
+```bash
+kourou document:mCreateOrReplace <index> <collection> <body>
+kourou document:mCreateOrReplace <index> <collection> <body> -a silent=true
+```
+
 ---
 
 ## Arguments
@@ -81,6 +88,7 @@ Body:
 
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
 - `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
+- `strict`: if set, an error will occur if at least one document has not been created/replaced <SinceBadge version="2.11.0" />
 
 ---
 
@@ -108,6 +116,8 @@ Each errored document is an object of the `errors` array with the following prop
 - `document`: original document that caused the error
 - `status`: HTTP error status code
 - `reason`: human readable reason
+
+If `strict` mode is enabled, will rather return an error if at least one document has not been created/replaced.
 
 ### Example
 

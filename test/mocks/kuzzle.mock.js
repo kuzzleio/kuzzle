@@ -3,8 +3,8 @@
 const sinon = require('sinon');
 const Bluebird = require('bluebird');
 
-const Kuzzle = require('../../lib/kuzzle/kuzzle');
 const KuzzleEventEmitter = require('../../lib/kuzzle/event/kuzzleEventEmitter');
+const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const configLoader = require('../../lib/config');
 
 const foo = { foo: 'bar' };
@@ -22,7 +22,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       writable: true,
     });
 
-    this.id = 'nasty-author-4242';
+    this.id = 'knode-nasty-author-4242';
+    this.state = kuzzleStateEnum.RUNNING;
 
     // we need a deep copy here
     this.config = JSON.parse(JSON.stringify(config));
@@ -47,6 +48,7 @@ class KuzzleMock extends KuzzleEventEmitter {
 
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
+    sinon.spy(this, 'onPipe');
 
     // ============================
 
@@ -60,15 +62,15 @@ class KuzzleMock extends KuzzleEventEmitter {
     };
 
     this.koncorde = {
-      test: sinon.stub().returns([]),
-      register: sinon.stub().resolves(),
-      remove: sinon.stub().resolves(),
-      normalize: sinon.stub().resolves({id: 'foobar'}),
-      store: sinon.stub().returns({id: 'foobar'}),
-      getCollections: sinon.stub().returns([]),
-      getIndexes: sinon.stub().returns([]),
       getFilterIds: sinon.stub().returns([]),
-      validate: sinon.stub().resolves(),
+      getIndexes: sinon.stub().returns([]),
+      hasFilterId: sinon.stub().returns(false),
+      normalize: sinon.stub().returns({id: 'foobar'}),
+      register: sinon.stub().returns('foobar'),
+      remove: sinon.stub(),
+      store: sinon.stub().returns('foobar'),
+      test: sinon.stub().returns([]),
+      validate: sinon.stub(),
     };
 
     this.entryPoint = {
@@ -168,7 +170,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       getConnectedUserToken: sinon.stub(),
       link: sinon.stub(),
       refresh: sinon.stub(),
-      unlink: sinon.stub()
+      unlink: sinon.stub(),
+      getKuidFromConnection: sinon.stub(),
     };
 
     this.validation = {
@@ -207,7 +210,5 @@ class KuzzleMock extends KuzzleEventEmitter {
     this.running = sinon.stub().returns(false);
   }
 }
-
-KuzzleMock.states = Kuzzle.states;
 
 module.exports = KuzzleMock;

@@ -37,7 +37,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
   });
 
   it('should notify subscribers when an updated document entered their scope', async () => {
-    const _id = request.input.resource._id;
+    const _id = request.input.args._id;
 
     kuzzle.koncorde.test.returns(['foo']);
 
@@ -52,7 +52,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
 
     should(kuzzle.koncorde.test)
       .calledOnce()
-      .calledWith('foo', 'bar', {foo: 'bar'}, _id);
+      .calledWith({_id, foo: 'bar'}, 'foo/bar');
 
     should(notifier.notifyDocument.callCount).be.eql(2);
     should(notifier.notifyDocument.getCall(0))
@@ -74,7 +74,7 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
     const rooms = await notifier.notifyDocumentUpdate(
       request,
       {
-        _id: request.input.resource._id,
+        _id: request.input.args._id,
         _source: { foo: 'bar' }
       },
       JSON.stringify(['foo', 'bar']));

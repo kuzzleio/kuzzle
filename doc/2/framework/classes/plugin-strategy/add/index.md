@@ -52,6 +52,7 @@ const strategy = {
     create: 'create',
     delete: 'delete',
     exists: 'exists',
+    search: 'search',
     update: 'update',
     validate: 'validate',
     verify: 'verify'

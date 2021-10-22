@@ -1,21 +1,29 @@
 'use strict';
 
 const should = require('should');
+const mockrequire = require('mock-require');
 
-const { Backend} = require('../../../lib/core/backend');
+class DummyPlugin {
+  constructor () {}
+  init () {}
+}
+
+class FoobarPlugin {
+  constructor () {}
+  init () {}
+}
 
 describe('BackendPlugin', () => {
   let application;
+  let Backend;
 
   beforeEach(() => {
+    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
+
     application = new Backend('black-mesa');
   });
 
   describe('#use', () => {
-    class DummyPlugin {
-      constructor () {}
-      init () {}
-    }
     class WrongPlugin {
       constructor () {}
     }
@@ -58,6 +66,56 @@ describe('BackendPlugin', () => {
       should(() => {
         application.plugin.use(new WrongPlugin());
       }).throwError({ id: 'plugin.assert.init_not_found' });
+    });
+  });
+
+  describe('#get', () => {
+    let dummyPlugin;
+    let foobarPlugin;
+
+    beforeEach(() => {
+      dummyPlugin = new DummyPlugin();
+      foobarPlugin = new FoobarPlugin();
+
+      application.plugin.use(dummyPlugin);
+      application.plugin.use(foobarPlugin);
+    });
+
+    it('should return the loaded plugin instance', () => {
+      const plugin = application.plugin.get('dummy');
+
+      should(plugin).be.eql(dummyPlugin);
+    });
+
+    it('should throw an error if the plugin does not exists', () => {
+      const nodeEnv = global.NODE_ENV;
+      global.NODE_ENV = 'development';
+
+      should(() => {
+        application.plugin.get('foubar');
+      }).throwError({
+        id: 'plugin.assert.plugin_not_found',
+        message: 'Plugin "foubar" not found. Did you mean "foobar"?',
+      });
+
+      global.NODE_ENV = nodeEnv;
+    });
+  });
+
+  describe('#list', () => {
+    let dummyPlugin;
+    let foobarPlugin;
+
+    beforeEach(() => {
+      dummyPlugin = new DummyPlugin();
+      foobarPlugin = new FoobarPlugin();
+
+      application.plugin.use(dummyPlugin);
+      application.plugin.use(foobarPlugin);
+    });
+
+    it('should list loaded plugins', () => {
+      should(application.plugin.list()).be.eql(['dummy', 'foobar']);
     });
   });
 });

@@ -26,7 +26,7 @@ Kuzzle is able to integrate to its API any protocol operating on [IP](https://en
 More info on [Writing Protocol Plugin](/core/2/guides/write-protocols/start-writing-protocols).  
 :::
 
-## KuzzleRequest Format
+## Request Format
 
 Except for HTTP, Kuzzle expects the exact same request format for all communication protocols.
 
@@ -151,18 +151,19 @@ Kuzzle Response are **standardized**. This format is shared by all API actions, 
 
 A Kuzzle Response is a **JSON object** with the following format:
 
-| Property     | Description                                                                                         |
-|--------------|-----------------------------------------------------------------------------------------------------|
-| `action`     | API action                                                                                          |
-| `collection` | Collection name, or `null` if no collection was involved                                            |
-| `controller` | API controller                                                                                      |
-| `error`      | [KuzzleError](/core/2/guides/main-concepts#handling-errors) object, or `null` if there was no error |
-| `index`      | Index name, or `null` if no index was involved                                                      |
-| `node`       | Unique identifier of the node who processed the request                                             |
-| `requestId`  | KuzzleRequest unique identifier                                                                     |
-| `result`     | Action result, or `null` if an error occured                                                        |
-| `status`     | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
-| `volatile`   | Arbitrary data repeated from the initial request                                                    |
+| Property       | Description                                                                                         |
+|----------------|-----------------------------------------------------------------------------------------------------|
+| `action`       | API action                                                                                          |
+| `collection`   | Collection name, or `null` if no collection was involved                                            |
+| `controller`   | API controller                                                                                      |
+| `deprecations` | If any, array of deprecation messages related to this action (only if NODE_ENV=development)         |
+| `error`        | [KuzzleError](/core/2/guides/main-concepts#handling-errors) object, or `null` if there was no error |
+| `index`        | Index name, or `null` if no index was involved                                                      |
+| `node`         | Unique identifier of the node who processed the request                                             |
+| `requestId`    | KuzzleRequest unique identifier                                                                     |
+| `result`       | Action result, or `null` if an error occured                                                        |
+| `status`       | Response status, using [HTTP status codes](https://en.wikipedia.org/wiki/List_of_HTTP_status_codes) |
+| `volatile`     | Arbitrary data repeated from the initial request                                                    |
 
 **Example:** _Display the entire response content of server:now action with Kourou_
 
@@ -177,7 +178,7 @@ kourou sdk:request server:now --display ""
 #   "action": "now",
 #   "collection": null,
 #   "index": null,
-#   "node": "nasty-author-4242",
+#   "node": "knode-nasty-author-4242",
 #   "volatile": {
 #     "sdkInstanceId": "d301a7c7-ed99-4ede-94c4-fb1dc2156789",
 #     "sdkName": "js@7.4.1"
@@ -237,7 +238,7 @@ The `result` object is the notification content, and it has the following struct
   "timestamp": 1497513122738,
   "volatile": null,
   "scope": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result":{
     "_source":{
       "some": "document content",
@@ -295,7 +296,7 @@ The `result` object is the notification content, and it has the following struct
   "protocol": "websocket",
   "timestamp": 1497517009931,
   "user": "in",
-  "node": "nasty-author-4242",
+  "node": "knode-nasty-author-4242",
   "result": {
     "count": 42
   },

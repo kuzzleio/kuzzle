@@ -45,6 +45,10 @@ describe('Test: hotelClerk.subscribe', () => {
       }
     }, {connectionId, token: null});
 
+    kuzzle.koncorde.normalize.returns({
+      id: 'foobar', index: 'foo/bar', filter: []
+    });
+
     kuzzle.config.limits.subscriptionMinterms = 0;
   });
 
@@ -64,13 +68,19 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should register a new room and customer', async () => {
+    request['context\u200b'].user = { _id: 'Umraniye' };
+    request.input.args.propagate = false;
     kuzzle.koncorde.normalize
-      .onFirstCall().resolves({id: 'foobar'})
-      .onSecondCall().resolves({id: 'barfoo'});
+      .onFirstCall().returns({id: 'foobar', index: 'foo/bar', filter: []})
+      .onSecondCall().returns({id: 'barfoo', index: 'foo/bar', filter: []});
 
     kuzzle.koncorde.store
       .onFirstCall().returns({id: 'foobar'})
       .onSecondCall().returns({id: 'barfoo'});
+
+    kuzzle.koncorde.store
+      .onFirstCall().returns('foobar')
+      .onSecondCall().returns('barfoo');
 
     let response = await hotelClerk.subscribe(request);
 
@@ -87,6 +97,7 @@ describe('Test: hotelClerk.subscribe', () => {
       { count: 1 });
 
     const roomId = hotelClerk.rooms.get(response.roomId).id;
+
     const customer = hotelClerk.customers.get(connectionId);
 
     should(customer).have.value(roomId, request.input.volatile);
@@ -110,6 +121,21 @@ describe('Test: hotelClerk.subscribe', () => {
       request,
       'in',
       { count: 1 });
+
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:room:create:after', {
+      id: 'foobar',
+      index: 'foo/bar',
+      filter: []
+    });
+
+    should(kuzzle.emit).be.calledWithMatch('core:realtime:user:subscribe:after', {
+      index: request.input.args.index,
+      collection: request.input.args.collection,
+      filters: request.input.body,
+      roomId,
+      connectionId,
+      kuid: 'Umraniye',
+    });
   });
 
   it('should return the same response when the user has already subscribed to the filter', async () => {
@@ -129,20 +155,20 @@ describe('Test: hotelClerk.subscribe', () => {
   });
 
   it('should reject when Koncorde throws an error', () => {
-    kuzzle.koncorde.normalize.rejects(new Error('test'));
+    kuzzle.koncorde.normalize.throws(new Error('test'));
 
     return should(hotelClerk.subscribe(request)).be.rejected();
   });
 
   it('should reject if no index is provided', () => {
-    request.input.resource.index = null;
+    request.input.args.index = null;
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',
     });
   });
 
   it('should reject with an error if no collection is provided', () => {
-    request.input.resource.collection = null;
+    request.input.args.collection = null;
 
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'api.assert.missing_argument',
@@ -175,26 +201,6 @@ describe('Test: hotelClerk.subscribe', () => {
 
     return should(hotelClerk.subscribe(request)).rejectedWith(BadRequestError, {
       id: 'core.realtime.invalid_users',
-    });
-  });
-
-  it('should reject the subscription if the number of minterms exceeds the configured limit', () => {
-    kuzzle.config.limits.subscriptionMinterms = 8;
-
-    const normalized = [];
-    for (let i = 0; i < 9; i++) {
-      normalized.push([]);
-    }
-
-    kuzzle.koncorde.normalize.resolves({
-      normalized,
-      index: 'index',
-      collection: 'collection',
-      id: 'foobar',
-    });
-
-    return should(hotelClerk.subscribe(request)).rejectedWith(SizeLimitError, {
-      id: 'core.realtime.too_many_terms',
     });
   });
 

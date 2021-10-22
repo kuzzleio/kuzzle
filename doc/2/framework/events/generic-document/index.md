@@ -36,8 +36,8 @@ All generic events share the same payload signature, and pipes plugged to them m
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing document `_id`) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered after documents have been deleted.
 
@@ -54,7 +54,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents deleted in the foo:bar 
         // collection
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents deleted in foo:bar`);
@@ -80,8 +80,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing documents `_id` and `_source`) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing documents `_id` and `_source`) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered after documents are fetched.
 
@@ -98,7 +98,7 @@ class PipePlugin {
         // 
         // Example: removes sensitive information from documents of the
         //          foo:bar collectin
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           documents.forEach(d => delete d._source.foo);
@@ -124,8 +124,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered after partial updates are applied to documents.
 
@@ -142,7 +142,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents updated in the foo:bar 
         // collection
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents updated in foo:bar`);
@@ -169,8 +169,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered after documents have been created or replaced.
 
@@ -187,7 +187,7 @@ class PipePlugin {
         // 
         // Example: logs the number of documents created in the foo:bar 
         // collection
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           context.log.info(`${documents.length} documents written in foo:bar`);
@@ -216,8 +216,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing document `_id`) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered before documents are deleted.
 
@@ -232,7 +232,7 @@ class PipePlugin {
         // deleted.
         // 
         // Example: forbids deletions of documents containing a "foo:bar" field
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         const response = await context.accessors.sdk.document.mGet(
           index, 
@@ -264,8 +264,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing document `_id`) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered before documents are fetched.
 
@@ -281,7 +281,7 @@ class PipePlugin {
         // 
         // Example: refuses to fetch documents with ids starting with "foobar_"
         //          in collection foo:bar
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           for (const document of documents) {
@@ -310,8 +310,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document `_id` and `_source` fields) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 Triggered before partial updates are applied to documents.
 
@@ -328,7 +328,7 @@ class PipePlugin {
         // 
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           documents.forEach(d => (d._source.foo = 'bar'));
@@ -354,8 +354,8 @@ class PipePlugin {
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
-| documents | `Array` | Array of documents (containing a document's `_id` and `_source` fields) |
-| request | `KuzzleRequest` | [KuzzleRequest](/core/2/framework/classes/kuzzle-request) |
+| `documents` | <pre>Array</pre> | Array of documents (containing a document's `_id` and `_source` fields) |
+| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
 
 
 Triggered before documents are created or replaced.
@@ -372,7 +372,7 @@ class PipePlugin {
         // 
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
-        const {index, collection} = request.input.resource;
+        const { index, collection } = request.input.args;
 
         if (index === 'foo' && collection === 'bar') {
           documents.forEach(d => (d._source.foo = 'bar'));
