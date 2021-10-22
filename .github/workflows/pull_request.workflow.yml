@@ -18,7 +18,7 @@ jobs:
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
-  
+
   start-kuzzle:
     needs: [lint]
     name: Start kuzzle
@@ -38,7 +38,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
-    needs: [lint]
+    needs: [start-kuzzle]
     strategy:
       matrix:
         node-version: ['14.17.0', '12.16.3', '12.20.0']
