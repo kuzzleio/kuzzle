@@ -23,8 +23,6 @@ fi
 
 npm run build-ts
 
-npm prune --production
-
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
 trap 'docker-compose -f ./.ci/test-cluster.yml logs' err

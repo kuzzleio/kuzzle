@@ -19,7 +19,6 @@ runs:
       run: |
         npm install
         npm run build-ts
-        npm prune --production
       shell: bash
     - name: Build and deploy Docker images
       run: |

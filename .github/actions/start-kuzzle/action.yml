@@ -1,0 +1,16 @@
+name: Start kuzzle server
+description: Start kuzzle server
+
+runs:
+  using: "composite"
+  steps:
+    - run: npm install
+      shell: bash
+    - run: npm run build
+      shell: bash
+    - run: npm prune --production
+      shell: bash
+    - run: docker-compose -f ./.ci/services.yml up -d
+      shell: bash
+    - run: node app.js
+      shell: bash
