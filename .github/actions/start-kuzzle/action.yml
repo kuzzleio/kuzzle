@@ -17,7 +17,7 @@ runs:
       shell: bash
     - run: |
         export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
-        docker-compose -f ./.ci/services.yml up -d --build
+        docker-compose -f ./.ci/services.yml up -d
       shell: bash
     - run: |
         trap 'docker-compose -f ./.ci/services.yml logs' err
