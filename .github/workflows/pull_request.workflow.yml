@@ -19,6 +19,23 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
+  start-kuzzle:
+    needs: [lint]
+    name: Start kuzzle
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: ['14.17.0']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/start-kuzzle
+
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
     needs: [lint]
@@ -36,26 +53,9 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
-  start-kuzzle:
-    needs: [unit-tests]
-    name: Start kuzzle
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        node-version: ['14.17.0']
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/start-kuzzle
-
   functional-tests-legacy:
     name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, start-kuzzle]
     strategy:
       matrix:
         test_set: [http, websocket, mqtt]
@@ -76,7 +76,7 @@ jobs:
 
   functional-tests:
     name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, start-kuzzle]
     strategy:
       matrix:
         test_set: [http, websocket]

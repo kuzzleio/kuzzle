@@ -12,11 +12,7 @@ runs:
       shell: bash
     - run: docker-compose -f ./.ci/services.yml up -d
       shell: bash
-    - run: ./bin/start-kuzzle-server&
-      shell: bash
     - run: ./bin/wait-kuzzle
-      shell: bash
-    - run: killall node
       shell: bash
     - run: docker-compose -f ./.ci/services.yml down
       shell: bash

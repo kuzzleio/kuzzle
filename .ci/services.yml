@@ -1,6 +1,23 @@
 version: '3'
 
 services:
+  kuzzle:
+    build: ./docker/images/kuzzle
+    command: ["kuzzle", "start"]
+    volumes:
+      - "..:/var/app"
+    cap_add:
+      - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
+    ports:
+      - "7512:7512"
+    depends_on:
+      - redis
+      - elasticsearch
+
   redis:
     image: redis:6
     ports:
