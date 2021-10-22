@@ -12,20 +12,18 @@ services:
       nofile: 65536
     sysctls:
       - net.core.somaxconn=8192
-    ports:
-      - "7512:7512"
+    environment:
+      - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
     depends_on:
       - redis
       - elasticsearch
 
   redis:
     image: redis:6
-    ports:
-      - "6379:6379"
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
-    ports:
-      - "9200:9200"
     ulimits:
       nofile: 65536
