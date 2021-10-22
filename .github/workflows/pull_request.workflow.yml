@@ -19,8 +19,25 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
-  start-kuzzle:
+  unit-tests:
+    name: Unit Tests - Node.js v${{ matrix.node-version }}
     needs: [lint]
+    strategy:
+      matrix:
+        node-version: ['14.17.0', '12.16.3', '12.20.0']
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/unit-tests
+
+  start-kuzzle:
+    needs: [unit-tests]
     name: Start kuzzle
     runs-on: ubuntu-18.04
     strategy:
@@ -35,23 +52,6 @@ jobs:
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/start-kuzzle
-
-  unit-tests:
-    name: Unit Tests - Node.js v${{ matrix.node-version }}
-    needs: [start-kuzzle]
-    strategy:
-      matrix:
-        node-version: ['14.17.0', '12.16.3', '12.20.0']
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/unit-tests
 
   functional-tests-legacy:
     name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}

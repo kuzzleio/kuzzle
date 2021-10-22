@@ -51,6 +51,7 @@
     "eventemitter3": "^4.0.7",
     "inquirer": "^8.2.0",
     "ioredis": "^4.27.10",
+    "js-yaml": "^4.1.0",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
