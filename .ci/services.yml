@@ -3,7 +3,7 @@ version: '3'
 services:
   kuzzle:
     build:
-      dockerfile: ../docker/images/${KUZZLE_IMAGE}
+      dockerfile: ../docker/images/${KUZZLE_IMAGE}/Dockerfile
       context: ..
 
     command: ["kuzzle", "start"]
