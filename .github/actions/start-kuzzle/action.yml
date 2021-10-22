@@ -23,5 +23,7 @@ runs:
         export MAX_TRIES=120
         ./bin/wait-kuzzle
       shell: bash
+    - run: docker-compose -f ./.ci/services.yml logs
+      shell: bash
     - run: docker-compose -f ./.ci/services.yml down
       shell: bash
