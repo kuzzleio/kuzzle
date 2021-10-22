@@ -17,9 +17,11 @@ runs:
       shell: bash
     - run: |
         export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
-        docker-compose -f ./.ci/services.yml up -d
+        docker-compose -f ./.ci/services.yml up -d --build
       shell: bash
-    - run: ./bin/wait-kuzzle
+    - run: |
+        export MAX_TRIES=120
+        ./bin/wait-kuzzle
       shell: bash
     - run: docker-compose -f ./.ci/services.yml down
       shell: bash
