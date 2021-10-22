@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.14.8",
+  "version": "2.14.9",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -51,6 +51,7 @@
     "eventemitter3": "^4.0.7",
     "inquirer": "^8.2.0",
     "ioredis": "^4.27.10",
+    "js-yaml": "^4.1.0",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",

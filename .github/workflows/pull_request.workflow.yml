@@ -6,6 +6,9 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: ['14.17.0']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -15,6 +18,26 @@ jobs:
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
+
+  build-and-run-kuzzle:
+    needs: [unit-tests]
+    name: Build and Run ${{ matrix.kuzzle-image }} - Node.js v${{ matrix.node-version }}
+    runs-on: ubuntu-18.04
+    strategy:
+      matrix:
+        node-version: ['14.17.0']
+        kuzzle-image: ['kuzzle']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/build-and-run-kuzzle
+        with:
+          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
@@ -86,7 +109,7 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests-legacy, functional-tests]
+    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-18.04
     strategy:
       matrix:
