@@ -179,5 +179,27 @@ describe('ClusterIDCardRenewer', () => {
 
       should(idCardRenewer.redis.commands.del).not.be.called();
     });
+
+    it('should not do anything if not initialized before calling dispose', async () => {
+      const clearIntervalStub = sinon.spy(global, 'clearInterval');
+      idCardRenewer = new IDCardRenewer();
+
+      idCardRenewer.initRedis = async () => {
+        idCardRenewer.redis = {
+          commands: {
+            pexpire: sinon.stub().resolves(1),
+            del: sinon.stub().resolves(),
+          }
+        };
+      };
+
+      should(idCardRenewer.disposed).be.true();
+
+      await idCardRenewer.dispose();
+
+      should(idCardRenewer.disposed).be.true();
+      should(clearIntervalStub).not.be.called();
+
+    });
   });
 });

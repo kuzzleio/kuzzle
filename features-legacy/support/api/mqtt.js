@@ -120,6 +120,9 @@ class MqttApi extends ApiBase {
           }
         }
         else {
+          if (message.type === 'TokenExpired') {
+            this.responses = message;
+          }
           // notification
           const channel = topic;
           const roomId = topic.split('-')[0];

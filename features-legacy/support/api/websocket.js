@@ -35,6 +35,9 @@ class WebSocketApi extends WsApiBase {
         const data = JSON.parse(message);
 
         if (data.scope || data.type === 'user' || data.type === 'TokenExpired') {
+          if (data.type === 'TokenExpired') {
+            this.responses = data;
+          }
           // notification
           const channel = data.room;
           const roomId = channel.split('-')[0];

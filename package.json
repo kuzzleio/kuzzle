@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.14.7",
+  "version": "2.14.8",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -96,7 +96,6 @@
     "cucumber": "^6.0.5",
     "ergol": "^1.0.1",
     "eslint": "^7.32.0",
-    "js-yaml": "^4.1.0",
     "mocha": "^9.1.2",
     "mock-require": "^3.0.3",
     "mqtt": "^4.2.8",
@@ -109,7 +108,8 @@
     "sinon": "^11.1.2",
     "strip-json-comments": "3.1.1",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "typescript": "^4.4.3",
+    "yaml": "^1.10.2"
   },
   "engines": {
     "node": ">= 12.13.0"

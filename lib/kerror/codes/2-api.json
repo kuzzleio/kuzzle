@@ -164,6 +164,12 @@
           "code": 12,
           "message": "The origin \"%s\" is not authorized.",
           "class": "UnauthorizedError"
+        },
+        "too_many_logins_requests": {
+          "description": "The request was denied because the maximum (\"limits.loginsPerSecond\") number of login attempts per second has been exceeded.",
+          "code": 13,
+          "message": "Rejected: Too many login attempts per second",
+          "class": "TooManyRequestsError"
         }
       }
     }
