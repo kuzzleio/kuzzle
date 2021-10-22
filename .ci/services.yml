@@ -2,7 +2,10 @@ version: '3'
 
 services:
   kuzzle:
-    build: ../docker/images/${KUZZLE_IMAGE}
+    build:
+      dockerfile: ../docker/images/${KUZZLE_IMAGE}
+      context: ..
+
     command: ["kuzzle", "start"]
     volumes:
       - "..:/var/app"
