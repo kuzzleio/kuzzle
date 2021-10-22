@@ -8,6 +8,8 @@ runs:
       shell: bash
     - run: npm run build
       shell: bash
+    - run : npm prune --production
+      shell: bash
     - run: npm run test:unit:coverage
       shell: bash
     - run: npm run codecov
