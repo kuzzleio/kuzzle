@@ -10,7 +10,7 @@ runs:
       shell: bash
     - run: npm prune --production
       shell: bash
-    - run: docker-compose -f ./.ci/services.yml up -d
+    - run: docker-compose -f ../../.ci/services.yml up -d
       shell: bash
-    - run: node app.js
+    - run: ./../../bin/start-kuzzle-server
       shell: bash
