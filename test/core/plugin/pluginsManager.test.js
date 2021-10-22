@@ -112,7 +112,7 @@ describe('Plugin', () => {
       const localPlugin = createPlugin('kuzzle-plugin-auth-passport-local');
       pluginsManager.loadPlugins.returns(new Map([[loggerPlugin.name, loggerPlugin], [localPlugin.name, localPlugin]]));
       pluginsManager._plugins.set(plugin.name, plugin);
-      pluginsManager.config.failsafeMode = true;
+      pluginsManager.config.common.failsafeMode = true;
 
       await pluginsManager.init();
 
