@@ -1,5 +1,5 @@
-name: Start kuzzle server
-description: Start kuzzle server
+name: Build and Run Kuzzle image
+description: Build and Run Kuzzle image
 
 inputs:
   KUZZLE_IMAGE:
