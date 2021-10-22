@@ -22,7 +22,7 @@ runs:
     - run: |
         trap 'docker-compose -f ./.ci/services.yml logs' err
 
-        export MAX_TRIES=120
+        export MAX_TRIES=60
         ./bin/wait-kuzzle
 
         trap - err

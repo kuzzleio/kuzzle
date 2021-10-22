@@ -19,6 +19,8 @@ services:
     depends_on:
       - redis
       - elasticsearch
+    ports:
+      - "7512:7512"
 
   redis:
     image: redis:6
