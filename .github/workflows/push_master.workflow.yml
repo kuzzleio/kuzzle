@@ -26,6 +26,7 @@ jobs:
     strategy:
       matrix:
         node-version: ['14.17.0']
+        kuzzle-mage: ['kuzzle', 'kuzzle.alpine', 'kuzzle.scratch', 'plugin-dev']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -35,6 +36,8 @@ jobs:
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/start-kuzzle
+        with:
+          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}

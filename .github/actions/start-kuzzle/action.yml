@@ -1,6 +1,11 @@
 name: Start kuzzle server
 description: Start kuzzle server
 
+inputs:
+  KUZZLE_IMAGE:
+    description: Kuzzle image target
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -10,7 +15,9 @@ runs:
       shell: bash
     - run: npm prune --production
       shell: bash
-    - run: docker-compose -f ./.ci/services.yml up -d
+    - run: |
+        export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
+        docker-compose -f ./.ci/services.yml up -d
       shell: bash
     - run: ./bin/wait-kuzzle
       shell: bash
