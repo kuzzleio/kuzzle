@@ -16,6 +16,8 @@ nvm use $NODE_VERSION
 
 npm run build
 
+npm prune --production
+
 node -r ts-node/register docker/scripts/start-kuzzle-dev.ts &
 
 echo "[$(date)] - Starting Kuzzle..."
