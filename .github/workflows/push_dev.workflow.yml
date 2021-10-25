@@ -44,7 +44,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ['14.17.0', '12.16.3', '12.20.0']
+        node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -61,8 +61,8 @@ jobs:
     needs: [unit-tests]
     strategy:
       matrix:
-        test_set: ['http', 'websocket', 'mqtt']
-        node-version: ['14.17.0', '12.16.3', '12.20.0']
+        test_set: ["http", "websocket", "mqtt"]
+        node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -83,7 +83,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: ['14.17.0', '12.16.3', '12.20.0']
+        node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -104,14 +104,14 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ['14.17.0', '12.16.3', '12.20.0']
+        node-version: ["14.17.0", "12.16.3", "12.20.0"]
     steps:
       - uses: actions/checkout@v2
       - name: Cloning Monkey Tester
         uses: actions/checkout@v2
         with:
           repository: kuzzleio/kuzzle-monkey-tests
-          path: 'kuzzle-monkey-tests'
+          path: "kuzzle-monkey-tests"
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -131,25 +131,51 @@ jobs:
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
-  documentation-staging:
-    name: Deploy Documentation to staging
-    needs: [error-codes-check]
+  doc-dead-links:
+    name: Check dead-links
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
         with:
-          node-version: ${{ matrix.node-version }}
+          fetch-depth: 0
+      - name: Extract references from context
+        shell: bash
+        id: extract-refs
+        run: |
+          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
+          echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
+      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+        with:
+          owner: kuzzleio
+          repo: documentation
+          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+          workflow_file_name: dead_links.workflow.yml
+          ref: ${{ steps.extract-refs.outputs.fw-branch }}
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+
+  doc-deploy:
+    name: Deployment Doc to Next
+    runs-on: ubuntu-18.04
+    needs: [cluster-monkey-tests, doc-dead-links]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Extract references from context
+        shell: bash
+        id: extract-refs
+        run: |
+          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
       - uses: ./.github/actions/cache-node-modules
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/deploy-doc
         with:
-          REGION: us-west-2
-          S3_BUCKET: docs-next.kuzzle.io
-          CLOUDFRONT_ID: E2ZCCEK9GRB49U
-          FRAMEWORK_BRANCH: develop
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        env:
-          NODE_OPTIONS: --max-old-space-size=8096
+          owner: kuzzleio
+          repo: documentation
+          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+          workflow_file_name: child_repo.workflow.yml
+          ref: master
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
