@@ -102,7 +102,7 @@
         "failed_init": {
           "description": "An exception was thrown by a plugin's init function",
           "code": 1,
-          "message": "Something went wrong during initialization of \"%s\" plugin.",
+          "message": "Something went wrong during initialization of \"%s\" plugin. Set \"plugins.common.failsafeMode\" to true to bypass plugin initialization.",
           "class": "PluginImplementationError"
         },
         "unexpected_error": {

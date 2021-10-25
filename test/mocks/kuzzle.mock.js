@@ -133,7 +133,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       application: {
         info: sinon.stub()
       },
-      routes: []
+      routes: [],
+      loadedPlugins: []
     };
 
     this.rootPath = '/kuzzle';

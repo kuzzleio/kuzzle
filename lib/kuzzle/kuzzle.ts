@@ -125,7 +125,7 @@ class Kuzzle extends KuzzleEventEmitter {
    * Validation core component
    */
   private validation: Validation;
-  
+
   /**
    * Dump generator
    */
@@ -177,7 +177,7 @@ class Kuzzle extends KuzzleEventEmitter {
     this.log = new Logger();
 
     this.rootPath = path.resolve(path.join(__dirname, '../..'));
-    
+
     this.internalIndex = new InternalIndexHandler();
     this.pluginsManager = new PluginsManager();
     this.tokenManager = new TokenManager();
@@ -214,7 +214,7 @@ class Kuzzle extends KuzzleEventEmitter {
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe('kuzzle:state:start');
-      
+
 
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
@@ -253,7 +253,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.pluginsManager.application = application;
       await this.pluginsManager.init(options.plugins);
-      this.log.info(`[✔] Successfully loaded ${this.pluginsManager.plugins.length} plugins: ${this.pluginsManager.plugins.map(p => p.name).join(', ')}`);
+      this.log.info(`[✔] Successfully loaded ${this.pluginsManager.loadedPlugins.length} plugins: ${this.pluginsManager.loadedPlugins.join(', ')}`);
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
@@ -469,7 +469,7 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     const toSupport = config.toSupport;
-    
+
     if (! _.isEmpty(toSupport.fixtures)) {
       await this.ask('core:storage:public:document:import', toSupport.fixtures);
       this.log.info('[✔] Fixtures import successful');
@@ -544,7 +544,7 @@ class Kuzzle extends KuzzleEventEmitter {
         importTypes.shift();
         continue;
       }
-      
+
       await Bluebird.delay(1000);
     }
   }
@@ -568,7 +568,7 @@ class Kuzzle extends KuzzleEventEmitter {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
         const initialized = await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`) === '1';
         const locked = await mutex.lock();
-        
+
         await importMethod(
           { toImport, toSupport },
           {
@@ -584,7 +584,7 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-      
+
       this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
       this.log.info('[✔] Import successful');
