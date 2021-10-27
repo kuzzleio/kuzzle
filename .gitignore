@@ -142,4 +142,4 @@ docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
 lib/model/security/token.js
 lib/core/auth/tokenManager.js
-lib/core/cluster/state.js
+lib/cluster/state.js
