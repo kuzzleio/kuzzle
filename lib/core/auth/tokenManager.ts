@@ -37,7 +37,7 @@ interface ISortedArray<T> {
  */
 class ManagedToken extends Token {
   /**
-   * Unique string to identify the token and sort it by expiration date 
+   * Unique string to identify the token and sort it by expiration date
    */
   idx: string;
 
@@ -72,13 +72,16 @@ const TIMEOUT_MAX = Math.pow(2, 31) - 1;
 
 /**
  * Maintains a list of valid tokens used by connected protocols.
- * 
+ *
  * When a token expires, this module cleans up the corresponding connection's
  * subscriptions if any, and notify the user
  */
 export class TokenManager {
   private tokens: ISortedArray<ManagedToken>;
   private anonymousUserId: string = null;
+  /**
+   * Map<connectionId, ManagedToken>
+   */
   private tokensByConnection = new Map<string, ManagedToken>();
   private timer: NodeJS.Timeout = null;
 
@@ -192,6 +195,20 @@ export class TokenManager {
   }
 
   /**
+   * Remove token associated with a connection.
+   */
+  async removeConnection (connectionId: string) {
+    const managedToken = this.tokensByConnection.get(connectionId);
+
+    // Anonymous connection does not have associated token
+    if (! managedToken) {
+      return;
+    }
+
+    await this.expire(managedToken);
+  }
+
+  /**
    * Called when a token expires before its time (e.g. following a
    * auth:logout action)
    * This method removes all maintained links and cleans up the
@@ -205,7 +222,7 @@ export class TokenManager {
     }
 
     const idx = ManagedToken.indexFor(token);
-    const searchResult = this.tokens.search({idx});
+    const searchResult = this.tokens.search({ idx });
 
     if (searchResult > -1) {
       const managedToken = this.tokens.array[searchResult];
@@ -251,12 +268,13 @@ export class TokenManager {
 
     // API key can never expire (-1)
     if (arr.length > 0 && (arr[0].expiresAt > 0 && arr[0].expiresAt < Date.now())) {
-      const connectionIds = arr[0].connectionIds;
+      const managedToken = arr[0];
 
       arr.shift();
 
-      for (const connectionId of connectionIds) {
+      for (const connectionId of managedToken.connectionIds) {
         await global.kuzzle.ask('core:realtime:tokenExpired:notify', connectionId);
+        this.tokensByConnection.delete(connectionId);
       }
 
       setImmediate(() => this.checkTokensValidity());
