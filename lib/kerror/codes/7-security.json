@@ -91,6 +91,12 @@
           "code": 2,
           "message": "Insufficient permissions to execute the action \"%s:%s\" (User \"%s\").",
           "class": "ForbiddenError"
+        },
+        "failsafe_mode_admin_only": {
+          "description": "Only administrators (\"admin\" profile) can use the API in failsafe mode. Authenticate as admin or reboot without failsafe mode (\"config.plugins.common.failsafeMode\") to access the API.",
+          "code": 3,
+          "message": "Only administrators (\"admin\" profile) can use the API in failsafe mode.",
+          "class": "ForbiddenError"
         }
       }
     },
