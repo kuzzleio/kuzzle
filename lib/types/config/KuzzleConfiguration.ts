@@ -1,9 +1,9 @@
-import { JSONObject } from '../../index';
+import { JSONObject } from '../../../index';
 import {
   PasswordPolicy,
   RoleDefinition,
   ProfileDefinition
-} from './index';
+} from '../index';
 
 export interface IKuzzleConfiguration {
   /**
