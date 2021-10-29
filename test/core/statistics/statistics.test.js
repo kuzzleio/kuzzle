@@ -383,7 +383,7 @@ describe('Test: statistics core component', () => {
 
     await stats.writeStats();
 
-    should(kuzzle.ask).not.be.called()
+    should(kuzzle.ask).not.be.called();
   });
 
   it('should reject the promise if the cache returns an error', () => {
