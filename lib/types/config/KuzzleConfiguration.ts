@@ -161,7 +161,7 @@ export interface IKuzzleConfiguration {
   /**
    * The application section lets you configure your application.
    */
-  application: JSONObject;
+  application: Record<string, unknown>,
 
   /**
    * The plugins section lets you define plugins behaviors.
@@ -626,7 +626,7 @@ export interface IKuzzleConfiguration {
       accessLogIpOffset: number
     },
 
-    protocols: {}
+    protocols: Record<string, unknown>,
   },
 }
 
