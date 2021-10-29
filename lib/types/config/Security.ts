@@ -1,9 +1,9 @@
-import { JSONObject } from './../../index';
+import { JSONObject } from './../../../index';
 
 import {
   RoleDefinition,
   ProfileDefinition,
-} from './index';
+} from '../index';
 
 export type Security = {
   /**

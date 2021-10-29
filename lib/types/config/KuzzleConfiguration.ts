@@ -6,7 +6,7 @@ import {
   Security,
   DumpConfiguration,
   HttpConfiguration
-} from './index';
+} from '../index';
 
 export type IKuzzleConfiguration = {
   /**

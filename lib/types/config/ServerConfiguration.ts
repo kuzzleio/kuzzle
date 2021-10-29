@@ -1,4 +1,4 @@
-import { JSONObject } from './../../index';
+import { JSONObject } from '../../../index';
 
 
 export type ServerConfiguration = {

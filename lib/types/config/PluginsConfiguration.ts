@@ -1,6 +1,6 @@
-import { JSONObject } from './../../index';
+import { JSONObject } from '../../../index';
 
-import { PasswordPolicy } from './index';
+import { PasswordPolicy } from '../index';
 
 export type PluginsConfiguration = {
     /**
