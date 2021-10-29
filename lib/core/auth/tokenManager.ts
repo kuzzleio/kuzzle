@@ -140,8 +140,7 @@ export class TokenManager {
    * @param connectionId
    */
   link (token: Token, connectionId: string) {
-    // Embedded SDK does not use tokens
-    if (! token || token._id === this.anonymousUserId) {
+    if (! token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -174,8 +173,7 @@ export class TokenManager {
    * @param connectionId
    */
   unlink (token: Token, connectionId: string) {
-    // Embedded SDK does not use tokens
-    if (! token || token._id === this.anonymousUserId) {
+    if (! token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -217,7 +215,7 @@ export class TokenManager {
    * @param token
    */
   async expire (token: Token) {
-    if (token._id === this.anonymousUserId) {
+    if (token.userId === this.anonymousUserId) {
       return;
     }
 
