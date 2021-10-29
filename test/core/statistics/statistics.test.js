@@ -41,6 +41,7 @@ describe('Test: statistics core component', () => {
 
     kuzzle = new Kuzzle();
     stats = new Statistics();
+    stats.enabled = true;
   });
 
   afterEach(() => {
