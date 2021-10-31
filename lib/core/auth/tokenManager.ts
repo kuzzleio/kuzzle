@@ -37,7 +37,7 @@ interface ISortedArray<T> {
  */
 class ManagedToken extends Token {
   /**
-   * Unique string to identify the token and sort it by expiration date 
+   * Unique string to identify the token and sort it by expiration date
    */
   idx: string;
 
@@ -72,7 +72,7 @@ const TIMEOUT_MAX = Math.pow(2, 31) - 1;
 
 /**
  * Maintains a list of valid tokens used by connected protocols.
- * 
+ *
  * When a token expires, this module cleans up the corresponding connection's
  * subscriptions if any, and notify the user
  */
@@ -212,7 +212,7 @@ export class TokenManager {
 
       for (const connectionId of managedToken.connectionIds) {
         this.tokensByConnection.delete(connectionId);
-        await global.kuzzle.ask('core:realtime:user:remove', connectionId);
+        await global.kuzzle.ask('core:realtime:connection:remove', connectionId);
       }
 
       this.deleteByIndex(searchResult);
