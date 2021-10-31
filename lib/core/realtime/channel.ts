@@ -39,6 +39,53 @@ const realtimeError = kerror.wrap('core', 'realtime');
  * @property cluster
  */
 export class Channel {
+  /**
+   * Dummy hash function since we only need to keep the channel configuration.
+   *
+   * This is 10x faster than murmur.
+   */
+  static hash (channel: Channel) {
+    let str = '';
+
+    switch (channel.scope) {
+      case 'all':
+        str += '1';
+        break;
+      case 'in':
+        str += '2';
+        break;
+      case 'out':
+        str += '3';
+        break;
+    }
+
+    switch (channel.users) {
+      case 'all':
+        str += '1';
+        break;
+      case 'in':
+        str += '2';
+        break;
+      case 'out':
+        str += '3';
+        break;
+      case 'none':
+        str += '3';
+        break;
+    }
+
+    switch (channel.cluster) {
+      case true:
+        str += '1';
+        break;
+      case false:
+        str += '2';
+        break;
+    }
+
+    return str;
+  }
+
   static USERS_ALLOWED_VALUES = ['all', 'in', 'out', 'none'];
 
   static SCOPE_ALLOWED_VALUES = Channel.USERS_ALLOWED_VALUES;
@@ -74,7 +121,7 @@ export class Channel {
    */
   public cluster: boolean;
 
-  constructor (
+  constructor(
     roomId: string,
     {
       scope = 'all',
@@ -86,14 +133,14 @@ export class Channel {
     this.users = users;
     this.cluster = propagate;
 
-    if (! Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
+    if (!Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
       throw realtimeError.get('invalid_scope');
     }
 
-    if (! Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
+    if (!Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
       throw realtimeError.get('invalid_users');
     }
 
-    this.name = `${roomId}-${global.kuzzle.hash(this)}`;
+    this.name = `${roomId}-${Channel.hash(this)}`;
   }
 }
