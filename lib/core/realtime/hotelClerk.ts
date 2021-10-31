@@ -19,20 +19,18 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import Bluebird from 'bluebird';
 import { JSONObject } from 'kuzzle-sdk';
 import { Koncorde, NormalizedFilter } from 'koncorde';
 
-import { KuzzleRequest, Request, RequestContext }  from '../../api/request';
-import kerror  from '../../kerror';
+import { KuzzleRequest, Request, RequestContext } from '../../api/request';
+import kerror from '../../kerror';
 import createDebug from '../../util/debug';
 import {
   fromKoncordeIndex,
   getCollections,
   toKoncordeIndex,
-}  from '../../util/koncordeCompat';
+} from '../../util/koncordeCompat';
 import { RealtimeScope, RealtimeUsers, User } from '../../types';
 
 const realtimeError = kerror.wrap('core', 'realtime');
@@ -51,6 +49,52 @@ const CHANNEL_ALLOWED_VALUES = ['all', 'in', 'out', 'none'];
  *  - should I propagate the notification to other cluster nodes
  */
 class Channel {
+  /**
+   * Dummy hash function since we only need to keep the channel configuration.
+   * This is 10x faster than murmur.
+   */
+  static hash (channel: Channel) {
+    let str = '';
+
+    switch (channel.scope) {
+      case 'all':
+        str += '1';
+        break;
+      case 'in':
+        str += '2';
+        break;
+      case 'out':
+        str += '3';
+        break;
+    }
+
+    switch (channel.users) {
+      case 'all':
+        str += '1';
+        break;
+      case 'in':
+        str += '2';
+        break;
+      case 'out':
+        str += '3';
+        break;
+      case 'none':
+        str += '3';
+        break;
+    }
+
+    switch (channel.cluster) {
+      case true:
+        str += '1';
+        break;
+      case false:
+        str += '2';
+        break;
+    }
+
+    return str;
+  }
+
   /**
    * Identifier of the channel.
    *
@@ -85,9 +129,9 @@ class Channel {
   constructor (
     roomId: string,
     {
+      propagate=true,
       scope='all',
       users='none',
-      propagate=true,
     }: { scope?: RealtimeScope, users?: RealtimeUsers, propagate?: boolean } = {}
   ) {
     this.scope = scope;
@@ -102,7 +146,7 @@ class Channel {
       throw realtimeError.get('invalid_users');
     }
 
-    this.name = `${roomId}-${global.kuzzle.hash(this)}`;
+    this.name = `${roomId}-${Channel.hash(this)}`;
   }
 }
 
@@ -257,7 +301,7 @@ export class HotelClerk {
    *
    * Used with the "subscriptionRooms" configuration limit.
    */
-  private roomsCount: number = 0;
+  private roomsCount = 0;
 
   /**
    * Current realtime rooms.
@@ -357,6 +401,14 @@ export class HotelClerk {
       (connectionId, roomId, notify) => {
         return this.unsubscribe(connectionId, roomId, notify);
       });
+
+    /**
+     * Clear subscriptions when a connection is dropped
+     */
+    global.kuzzle.on('connection:remove', connection => {
+      this.removeUser(connection.id)
+        .catch(err => global.kuzzle.log.info(err));
+    });
   }
 
   /**
@@ -458,7 +510,7 @@ export class HotelClerk {
    * The room may exists on another cluster node, if it's the case, the normalized
    * filters will be fetched from the cluster.
    */
-  async join (request: KuzzleRequest): Promise<{ roomId, channel }> {
+  async join (request: KuzzleRequest): Promise<{ channel, roomId }> {
     const roomId = request.input.body.roomId;
 
     if (! this.rooms.has(roomId)) {
@@ -480,8 +532,8 @@ export class HotelClerk {
     }
 
     return {
-      roomId,
       channel,
+      roomId,
     };
   }
 
@@ -738,7 +790,7 @@ export class HotelClerk {
     const { scope, users, propagate } = request.input.args;
     const connectionId = request.context.connection.id;
 
-    const channel = new Channel(roomId, { scope, users, propagate });
+    const channel = new Channel(roomId, { propagate, scope, users });
     const customer = this.customers.get(connectionId);
     const room = this.rooms.get(roomId);
 

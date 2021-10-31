@@ -119,6 +119,11 @@ export class TokenManager {
   async init () {
     const anonymous = await global.kuzzle.ask('core:security:user:anonymous:get');
     this.anonymousUserId = anonymous._id;
+
+    global.kuzzle.on('connection:remove', connection => {
+      this.removeConnection(connection.id)
+        .catch(err => global.kuzzle.log.info(err));
+    });
   }
 
   runTimer () {
