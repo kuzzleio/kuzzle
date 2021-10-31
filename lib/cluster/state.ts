@@ -22,7 +22,7 @@
 import { NormalizedFilter } from 'koncorde';
 import { JSONObject } from 'kuzzle-sdk';
 
-import { RoomList } from '../core/realtime/hotelClerk';
+import { RoomList } from '../types';
 import Long from 'long';
 
 import kerror from '../kerror';

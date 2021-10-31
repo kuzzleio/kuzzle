@@ -232,7 +232,7 @@ export class TokenManager {
 
       for (const connectionId of managedToken.connectionIds) {
         this.tokensByConnection.delete(connectionId);
-        await global.kuzzle.ask('core:realtime:user:remove', connectionId);
+        await global.kuzzle.ask('core:realtime:connection:remove', connectionId);
       }
 
       this.deleteByIndex(searchResult);

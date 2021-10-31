@@ -215,8 +215,8 @@ describe('Test: token manager core component', () => {
       await tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(kuzzle.ask)
-        .calledWith('core:realtime:user:remove', 'foo')
-        .and.calledWith('core:realtime:user:remove', 'bar');
+        .calledWith('core:realtime:connection:remove', 'foo')
+        .and.calledWith('core:realtime:connection:remove', 'bar');
 
       should(tokenManager.tokensByConnection.size).equal(0);
     });
