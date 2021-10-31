@@ -65,4 +65,7 @@ lib/util/koncordeCompat.js
 features/support/application/functional-tests-app.js
 lib/model/security/token.js
 lib/core/auth/tokenManager.js
-lib/core/cluster/state.js
+lib/cluster/state.js
+lib/core/realtime/hotelClerk.js
+lib/types/realtime/RealtimeScope.js
+lib/types/realtime/RealtimeUsers.js
