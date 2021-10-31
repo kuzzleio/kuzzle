@@ -452,7 +452,7 @@ export class HotelClerk {
     await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
 
     // Do not send an unsubscription notification if the room has been destroyed
-    // @todo Why ?
+    // @aschen Why ?
     if ( notify
       && this.rooms.has(roomId)
       && room.channels.size > 0
