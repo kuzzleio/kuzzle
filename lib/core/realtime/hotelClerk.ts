@@ -21,27 +21,80 @@
 
 'use strict';
 
-const Bluebird = require('bluebird');
+import Bluebird from 'bluebird';
+import { JSONObject } from 'kuzzle-sdk';
+import { Koncorde, NormalizedFilter } from 'koncorde';
 
-const { Request, RequestContext } = require('../../api/request');
-const kerror = require('../../kerror');
-const debug = require('../../util/debug')('kuzzle:realtime:hotelClerk');
-const {
+import { KuzzleRequest, Request, RequestContext }  from '../../api/request';
+import kerror  from '../../kerror';
+import createDebug from '../../util/debug';
+import {
+  fromKoncordeIndex,
   getCollections,
   toKoncordeIndex,
-} = require('../../util/koncordeCompat');
+}  from '../../util/koncordeCompat';
+import { RealtimeScope, RealtimeUsers, User } from '../../types';
 
 const realtimeError = kerror.wrap('core', 'realtime');
 
+const debug = createDebug('kuzzle:realtime:hotelClerk');
+
 const CHANNEL_ALLOWED_VALUES = ['all', 'in', 'out', 'none'];
 
+/**
+ * A channel define how notifications should be send for a particular realtime
+ * room.
+ *
+ * Channels define with more granularity if a room notification should be sent:
+ *  - is the document entering or leaving the scope
+ *  - should I notify when users join or leave the room
+ *  - should I propagate the notification to other cluster nodes
+ */
 class Channel {
-  constructor (roomId, { scope='all', users='none', propagate=true } = {}) {
+  /**
+   * Identifier of the channel.
+   *
+   * Result of roomId + hash(channel)
+   */
+  public name: string;
+
+  /**
+   * Define if notification should be send when documents are entering or leaving
+   * the subscription scope.
+   *
+   * @default "all"
+   */
+  public scope: RealtimeScope;
+
+  /**
+   * Define if notification should be send when users join or leave the channel.
+   *
+   * @default "none"
+   */
+  public users: RealtimeUsers;
+
+  /**
+   * Define if the notification should be propagated on other cluster nodes or
+   * only to connection subscribing on this node.
+   *
+   * This is used by the EmbeddedSDK realtime subscription to propagate or not
+   * callback execution among other nodes.
+   */
+  public cluster: boolean;
+
+  constructor (
+    roomId: string,
+    {
+      scope='all',
+      users='none',
+      propagate=true,
+    }: { scope?: RealtimeScope, users?: RealtimeUsers, propagate?: boolean } = {}
+  ) {
     this.scope = scope;
     this.users = users;
     this.cluster = propagate;
 
-    if (! CHANNEL_ALLOWED_VALUES.includes(this.scope)) {
+    if (! CHANNEL_ALLOWED_VALUES.includes(this.scope) || this.scope as any === 'none') {
       throw realtimeError.get('invalid_scope');
     }
 
@@ -53,79 +106,188 @@ class Channel {
   }
 }
 
+/**
+ * Represents a realtime subscription from a connection to a room
+ */
 class Subscription {
-  constructor (index, collection, filters, roomId, connectionId, user) {
+  public connectionId: string;
+  public roomId: string;
+
+  public index: string;
+  public collection: string;
+  public filters: JSONObject;
+
+  public kuid: string;
+
+  constructor (
+    index: string,
+    collection: string,
+    filters: JSONObject,
+    roomId: string,
+    connectionId: string,
+    user: { _id: string },
+  ) {
+    this.connectionId = connectionId;
+    this.roomId = roomId;
+
     this.index = index;
     this.collection = collection;
     this.filters = filters;
-    this.roomId = roomId;
-    this.connectionId = connectionId;
+
     this.kuid = user && user._id || null;
   }
 }
 
-class HotelClerk {
-  constructor (realtimeModule) {
-    this.module = realtimeModule;
+/**
+ * List of realtime rooms and the number of connections subscribing
+ *
+ * @example
+ * {
+ *   <index>: {
+ *     <collection>: {
+ *       <roomId>: <number of connections>
+ *     }
+ *   }
+ * }
+ *
+ */
+export type RoomList = {
+  [index: string]: {
+    [collection: string]: {
+      [roomId: string]: number
+    }
+  }
+};
 
-    /**
-     * Number of created rooms. Used with the "subscriptionRooms"
-     * configuration limit
-     */
-    this.roomsCount = 0;
+/**
+ * A room represents a subscription scope made on a combination of:
+ *  - index
+ *  - collection
+ *  - filters
+ *
+ * A room may contain differents channels that describe which notifications should
+ * be sent. (e.g. only document leaving the scope, users joining the room)
+ *
+ * The rooms also contains the list of connections who subscribed to it.
+ */
+class Room {
+  /**
+   * Room unique identifier.
+   *
+   * Koncorde hash for the desired scope (index + collection + filters)
+   */
+  public id: string;
+  public index: string;
+  public collection: string;
 
-    /**
-     * A simple list of rooms, containing their associated filter and how many
-     * users have subscribed to it
-     *
-     * Example: subscribing to a chat room where the subject is Kuzzle
-     *  rooms = Map<roomId, room>
-     *
-     * Where:
-     *   - the room ID is the filter ID (e.g. 'f45de4d8ef4f3ze4ffzer85d4fgkzm41')
-     *   - room is an object with the following properties:
-     *   {
-     *      // list of users subscribing to this room
-     *      customers: Set([ 'connectionId' ]),
-     *
-     *      // room channels
-     *      channels: {
-     *
-     *        // channel ID
-     *        'roomId-<configurationHash>': {
-     *
-     *          // request scope filter, default: 'all'
-     *          scope: 'all|in|out|none',
-     *
-     *          // filter users notifications, default: 'none'
-     *          users: 'all|in|out|none',
-     *
-     *          // should propagate notification to the cluster
-     *          // (used for plugin subscriptions)
-     *          cluster: true|false
-     *        }
-     *      },
-     *      index: 'index',
-     *      collection: 'collection',
-     *      // the room unique identifier
-     *      id: 'id',
-     *    }
-     *  }
-     */
-    this.rooms = new Map();
+  /**
+   * List of connections subscribing to this room.
+   */
+  private customers = new Set<string>();
 
-    /**
-     * In addition to this.rooms, this.customers allows managing users and their rooms
-     * Example for a customer who subscribes to the room 'chat-room-kuzzle'
-     * customers = Map.<connection id, customer rooms>
-     *
-     * Where a customer room is an object with the following properties:
-     *   Map.<customer ID, Map.<room Id, volatile data>>
-     */
-    this.customers = new Map();
+  /**
+   * Map of channels configuration for this room.
+   *
+   * Map<channel, Channel>
+   *
+   * @example
+   *
+   * channels: {
+   *   '<channel>': {
+   *
+   *     // request scope filter, default: 'all'
+   *     scope: 'all|in|out|none',
+   *
+   *     // filter users notifications, default: 'none'
+   *     users: 'all|in|out|none',
+   *
+   *     // should propagate notification to the cluster
+   *     // (used for plugin subscriptions)
+   *     cluster: true|false
+   *   }
+   * },
+   */
+  public channels = new Map<string, Channel>();
+
+  constructor (id: string, index: string, collection: string) {
+    this.id = id;
+    this.index = index;
+    this.collection = collection;
   }
 
-  async init () {
+  /**
+   * Number of connections subscribing to the room
+   */
+  get size (): number {
+    return this.customers.size;
+  }
+
+  /**
+   * Creates a new configuration channel on the room if it doesn't already exists
+   */
+  createChannel (channel: Channel): void {
+    if (this.channels.has(channel.name)) {
+      return;
+    }
+
+    this.channels.set(channel.name, channel);
+  }
+
+  addConnection (connectionId: string): void {
+    this.customers.add(connectionId);
+  }
+
+  removeConnection (connectionId: string): void {
+    this.customers.delete(connectionId);
+  }
+}
+
+/**
+ * Represents a connection subscribing to a room with a set of volatile data.
+ *
+ * Map<roomId, volatiles>
+ */
+type Subscriber = Map<string, JSONObject>;
+
+export class HotelClerk {
+  private module: any;
+
+  /**
+   * Number of created rooms.
+   *
+   * Used with the "subscriptionRooms" configuration limit.
+   */
+  private roomsCount: number = 0;
+
+  /**
+   * Current realtime rooms.
+   *
+   * Map<roomId, Room>
+   */
+  private rooms = new Map<string, Room>();
+
+  /**
+   * Current connections handled by the HotelClerk.
+   *
+   * Each connection can be a subscriber to many rooms with different volatile data.
+   */
+  private customers = new Map<string, Subscriber>();
+
+  /**
+   * Shortcut to the Koncorde instance on the global object.
+   */
+  private koncorde: Koncorde;
+
+  constructor (realtimeModule: any) {
+    this.module = realtimeModule;
+
+    this.koncorde = global.kuzzle.koncorde;
+  }
+
+  /**
+   * Registers the ask events.
+   */
+  async init (): Promise<void> {
     /**
      * Create a new, empty room.
      * @param {string} index
@@ -198,18 +360,18 @@ class HotelClerk {
   }
 
   /**
-   * Link a user connection to a room.
-   * Create a new room if one doesn't already exist.
+   * Subscribe a connection to a realtime room.
+   *
+   * The room will be created if it does not already exists.
+   *
    * Notify other subscribers on this room about this new subscription
    *
-   * @param {Request} request
-   * @return {Promise.<UserNotification|null>}
    * @throws Throws if the user has already subscribed to this room name
    *         (just for rooms with same name, there is no error if the room
    *         has a different name with same filter) or if there is an error
    *         during room creation
    */
-  async subscribe (request) {
+  async subscribe (request: KuzzleRequest): Promise<{ channel: string, roomId: string }> {
     const { index, collection } = request.input.resource;
 
     if (! index) {
@@ -235,10 +397,10 @@ class HotelClerk {
       return null;
     }
 
-    let normalized;
+    let normalized: NormalizedFilter;
 
     try {
-      normalized = global.kuzzle.koncorde.normalize(
+      normalized = this.koncorde.normalize(
         request.input.body,
         toKoncordeIndex(index, collection));
     }
@@ -246,9 +408,9 @@ class HotelClerk {
       throw kerror.get('api', 'assert', 'koncorde_dsl_error', e.message);
     }
 
-    this._createRoom(normalized);
+    this.createRoom(normalized);
 
-    const { channel, subscribed } = await this._subscribeToRoom(
+    const { channel, subscribed } = await this.subscribeToRoom(
       normalized.id,
       request);
 
@@ -256,7 +418,7 @@ class HotelClerk {
       global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
 
       // @deprecated -- to be removed in next major version
-      // we have to recreate the old "diff" object -_-
+      // we have to recreate the old "diff" object
       await global.kuzzle.pipe('core:hotelClerk:addSubscription', {
         changed: subscribed,
         collection,
@@ -284,152 +446,125 @@ class HotelClerk {
   }
 
   /**
-   * Given an index, returns an array of collections on which some filters are
-   * registered
-   * @param {string} index
-   * @returns {Array.<string>}
+   * Returns the list of collections of an index with realtime rooms.
    */
-  listCollections (index) {
-    return getCollections(global.kuzzle.koncorde, index);
+  listCollections (index: string): string[] {
+    return getCollections(this.koncorde, index);
   }
 
   /**
-   * Joins an existing room.
+   * Joins an existing realtime room.
    *
-   * @param {Request} request
-   * @returns {Promise.<Object>}
+   * The room may exists on another cluster node, if it's the case, the normalized
+   * filters will be fetched from the cluster.
    */
-  async join (request) {
+  async join (request: KuzzleRequest): Promise<{ roomId, channel }> {
     const roomId = request.input.body.roomId;
 
     if (! this.rooms.has(roomId)) {
-      const normalized = await global.kuzzle.ask(
+      const normalized: NormalizedFilter = await global.kuzzle.ask(
         'cluster:realtime:filters:get',
         roomId);
 
-      if (!normalized) {
+      if (! normalized) {
         throw realtimeError.get('room_not_found', roomId);
       }
 
-      this._createRoom(normalized);
+      this.createRoom(normalized);
     }
 
-    const response = await this._subscribeToRoom(roomId, request);
+    const { channel, cluster, subscribed } = await this.subscribeToRoom(roomId, request);
 
-    if (response.cluster && response.subscribed) {
+    if (cluster && subscribed) {
       global.kuzzle.emit('core:realtime:subscribe:after', roomId);
     }
 
     return {
-      channel: response.channel,
       roomId,
+      channel,
     };
   }
 
   /**
-   * Return the list of index, collection, rooms (+ their number of subscribers)
+   * Return the list of index, collection, rooms and subscribing connections
    * on all index/collection pairs that the requesting user is allowed to
-   * subscribe
-   *
-   * Returned object looks like this:
-   *   {
-   *     <index>: {
-   *       <collection>: {
-   *         <roomId>: <number of subscribers>
-   *       }
-   *     }
-   *   }
-   *
-   * @param {User} user
-   * @returns {Promise.<Object>} resolve an object listing all rooms subscribed
-   *                             by the connected user
+   * subscribe.
    */
-  async list (user) {
+  async list (user: User): Promise<RoomList> {
     // We need the room list from the cluster's full state, NOT the one stored
     // in Koncorde: the latter also contains subscriptions created by the
     // framework (or by plugins), and we don't want those to appear in the API
-    const list = await global.kuzzle.ask('cluster:realtime:room:list');
+    const fullStateRooms: RoomList = await global.kuzzle.ask('cluster:realtime:room:list');
 
-    const isAllowedRequest = new Request({
+    const isAllowedRequest = new KuzzleRequest({
       action: 'subscribe',
       controller: 'realtime',
-    });
+    }, {});
 
-    for (const index of Object.keys(list)) {
+    for (const [index, collections] of Object.entries(fullStateRooms)) {
       isAllowedRequest.input.resource.index = index;
 
       const toRemove = await Bluebird.filter(
-        Object.keys(list[index]),
+        Object.keys(collections),
         collection => {
           isAllowedRequest.input.resource.collection = collection;
 
-          return !user.isActionAllowed(isAllowedRequest);
+          return ! user.isActionAllowed(isAllowedRequest);
         });
 
       for (const collection of toRemove) {
-        delete list[index][collection];
+        delete fullStateRooms[index][collection];
       }
     }
 
-    return list;
+    return fullStateRooms;
   }
 
   /**
-   * This function will delete a user from this.customers, and
-   * decrement the subscribers count in all rooms where he has subscribed to
-   * Usually called on a user disconnection event
+   * Removes a connections and unsubscribe it from every subscribed rooms.
    *
-   * @param {string} connectionId
+   * Usually called when an user has been disconnected from Kuzzle.
    */
-  async removeUser (connectionId) {
+  async removeUser (connectionId: string): Promise<void> {
     const customer = this.customers.get(connectionId);
 
-    if (!customer) {
+    if (! customer) {
       // No need to raise an error if the connection has already been cleaned up
       return;
     }
 
-    await Bluebird.map(customer.keys(), roomId => {
-      return this.unsubscribe(connectionId, roomId)
-        .catch(err => global.kuzzle.log.error(err));
-    });
+    await Bluebird.map(customer.keys(), (roomId: string) => (
+      this.unsubscribe(connectionId, roomId).catch(global.kuzzle.log.error)
+    ));
   }
 
   /**
    * Associate the room to the connection id in this.clients
    * Allow to manage later disconnection and delete socket/rooms/...
-   *
-   * @param {string} connectionId
-   * @param {string} roomId
-   * @param {object} volatile
    */
-  _addRoomForCustomer (connectionId, roomId, volatile) {
+  private addRoomForCustomer (connectionId: string, roomId: string, volatile: JSONObject): void {
     debug('Add room %s for customer %s', roomId, connectionId);
 
     let customer = this.customers.get(connectionId);
 
     if (! customer) {
-      customer = new Map();
+      customer = new Map<string, Subscriber>();
       this.customers.set(connectionId, customer);
     }
 
-    this.rooms.get(roomId).customers.add(connectionId);
     customer.set(roomId, volatile);
+
+    this.rooms.get(roomId).addConnection(connectionId);
   }
 
   /**
    * Create new room if needed
    *
-   * @this HotelClerk
-   *
-   * @param {NormalizedFilter} normalized - Obtained with Koncorde.normalize
-   * @param {Object} [options]
-   *
    * @returns {void}
    */
-  _createRoom (normalized) {
+  private createRoom (normalized: NormalizedFilter): void {
     const { index: koncordeIndex, id: roomId } = normalized;
-    const [index, collection] = koncordeIndex.split('/');
+    const { index, collection } = fromKoncordeIndex(koncordeIndex);
 
     if (this.rooms.has(normalized.id)) {
       return;
@@ -437,11 +572,11 @@ class HotelClerk {
 
     const roomsLimit = global.kuzzle.config.limits.subscriptionRooms;
 
-    if ( roomsLimit > 0 && this.roomsCount >= roomsLimit ) {
+    if (roomsLimit > 0 && this.roomsCount >= roomsLimit) {
       throw realtimeError.get('too_many_rooms');
     }
 
-    global.kuzzle.koncorde.store(normalized);
+    this.koncorde.store(normalized);
 
     global.kuzzle.emit('core:realtime:room:create:after', normalized);
 
@@ -462,16 +597,12 @@ class HotelClerk {
   }
 
   /**
-   * Remove the room from subscribed room from the user
-   * Return the roomId in user mapping
+   * Remove a connection from a room.
    *
-   * @this HotelClerk
-   * @param {string} connectionId
-   * @param {string} roomId
-   * @param {Boolean} [notify]
-   * @returns {Promise}
+   * Also delete the rooms if it was the last connection subscribing to it.
+   *
    */
-  async unsubscribe (connectionId, roomId, notify = true) {
+  async unsubscribe (connectionId: string, roomId: string, notify = true) {
     const customer = this.customers.get(connectionId);
     const requestContext = new RequestContext({
       connection: { id: connectionId }
@@ -497,7 +628,7 @@ class HotelClerk {
     const room = this.rooms.get(roomId);
 
     if (! room) {
-      global.kuzzle.log.error(`[hotelClerk] Cannot remove room "${roomId}": room not found`);
+      global.kuzzle.log.error(`Cannot remove room "${roomId}": room not found`);
       throw realtimeError.get('room_not_found', roomId);
     }
 
@@ -505,16 +636,10 @@ class HotelClerk {
       global.kuzzle.entryPoint.leaveChannel(channel, connectionId);
     }
 
-    if (room.customers.size === 1) {
-      this.roomsCount--;
-      this.rooms.delete(roomId);
+    room.removeConnection(connectionId);
 
-      await this._removeRoomFromRealtimeEngine(roomId);
-
-      room.customers = new Set();
-    }
-    else {
-      room.customers.delete(connectionId);
+    if (room.size === 0) {
+      await this.removeRoom(roomId);
     }
 
     // even if the room is deleted for this node, another one may need the
@@ -529,11 +654,10 @@ class HotelClerk {
       },
       requestContext);
 
-    await this.module.notifier.notifyUser(roomId, request, 'out', {
-      count: room.customers.size
-    });
+    await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
 
     // Do not send an unsubscription notification if the room has been destroyed
+    // @todo Why ?
     if ( notify
       && this.rooms.has(roomId)
       && Object.keys(room.channels).length > 0
@@ -577,10 +701,11 @@ class HotelClerk {
   /**
    * Deletes a room if no user has subscribed to it, and removes it also from the
    * real-time engine
-   *
-   * @param {string} roomId
    */
-  async _removeRoomFromRealtimeEngine (roomId) {
+  private async removeRoom (roomId: string): Promise<void> {
+    this.roomsCount--;
+    this.rooms.delete(roomId);
+
     // @deprecated -- to be removed in the next major version
     try {
       await global.kuzzle.pipe('room:remove', roomId);
@@ -597,29 +722,35 @@ class HotelClerk {
   }
 
   /**
-   * Subscribes a user to an existing room.
+   * Subscribes a connection to an existing room.
    *
-   * @param {string} roomId
-   * @param {Request} request
-   * @returns {Promise.<Object>}
+   * The subscription is made on a configuration channel who will be created
+   * on the room if it does not already exists.
+   *
    */
-  async _subscribeToRoom (roomId, request) {
+  private async subscribeToRoom (
+    roomId: string,
+    request: KuzzleRequest
+  ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
-    const channel = new Channel(roomId, request.input.args);
+
+    const { scope, users, propagate } = request.input.args;
     const connectionId = request.context.connection.id;
+
+    const channel = new Channel(roomId, { scope, users, propagate });
     const customer = this.customers.get(connectionId);
     const room = this.rooms.get(roomId);
 
-    if ( !customer || !customer.has(roomId)) {
+    if (! customer || ! customer.has(roomId)) {
       subscribed = true;
-      this._addRoomForCustomer(connectionId, roomId, request.input.volatile);
+      this.addRoomForCustomer(connectionId, roomId, request.input.volatile);
 
       notifyPromise = this.module.notifier.notifyUser(
         roomId,
         request,
         'in',
-        { count: room.customers.size });
+        { count: room.size });
     }
     else {
       notifyPromise = Bluebird.resolve();
@@ -627,9 +758,7 @@ class HotelClerk {
 
     global.kuzzle.entryPoint.joinChannel(channel.name, connectionId);
 
-    if (! room.channels[channel.name]) {
-      room.channels[channel.name] = channel;
-    }
+    room.createChannel(channel);
 
     await notifyPromise;
 
@@ -656,21 +785,13 @@ class HotelClerk {
   }
 
   /**
-   * Create an empty room in the RAM cache
-   * @param  {string} index
-   * @param  {string  } collection
-   * @param  {string} roomId
-   * @returns {boolean}
+   * Create an empty room in the RAM cache if it doesn't exists
+   *
+   * @returns True if a new room has been created
    */
-  newRoom (index, collection, roomId) {
-    if (!this.rooms.has(roomId)) {
-      this.rooms.set(roomId, {
-        channels: {},
-        collection,
-        customers: new Set(),
-        id: roomId,
-        index,
-      });
+  private newRoom (index: string, collection: string, roomId: string): boolean {
+    if (! this.rooms.has(roomId)) {
+      this.rooms.set(roomId, new Room(roomId, index, collection));
 
       return true;
     }
@@ -678,5 +799,3 @@ class HotelClerk {
     return false;
   }
 }
-
-module.exports = HotelClerk;

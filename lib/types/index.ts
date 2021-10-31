@@ -29,3 +29,5 @@ export * from './EventHandler';
 export * from './User';
 export * from './Token';
 export * from './Global';
+export * from './realtime/RealtimeScope';
+export * from './realtime/RealtimeUsers';
