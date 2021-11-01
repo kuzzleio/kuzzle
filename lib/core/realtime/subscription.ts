@@ -22,7 +22,10 @@
 import { JSONObject } from 'kuzzle-sdk';
 
 /**
- * Represents a realtime subscription of a connection to a room
+ * Represents a realtime subscription of a connection to a room.
+ *
+ * This object is used in the Internal Event System to give informations about
+ * added/removed subscriptions.
  *
  * @property connectionId
  * @property roomId

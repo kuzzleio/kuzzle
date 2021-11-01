@@ -105,6 +105,8 @@ app.hook.register('custom:event', async (name) => {
   });
 });
 
+app.hook.register('core:realtime:user:unsubscribe:after', () => console.log('UNSUBSCRIBE'))
+
 let syncedHello = 'World';
 let dynamicPipeId;
 

@@ -28,6 +28,13 @@ const realtimeError = kerror.wrap('core', 'realtime');
  * A channel define how notifications should be send for a particular realtime
  * room.
  *
+ * Channel names are sent back to users who subscribe to realtime notification,
+ * then each notification sent to them contains the associated channel.
+ *
+ * It allows to makes two subscriptions on index + collection + filters but one
+ * for documents entering the scope and the other for documents exiting the scope
+ * for example.
+ *
  * Channels define with more granularity if a room notification should be sent:
  *  - is the document entering or leaving the scope
  *  - should I notify when users join or leave the room
