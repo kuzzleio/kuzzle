@@ -124,7 +124,7 @@
           "class": "NotFoundError"
         },
         "incompatible_sdk_version": {
-          "description": "SDK is incompatible with the current Kuzzle version",
+          "description": "SDK is incompatible with the current Kuzzle version. You can set \"config.server.strictSdkVersion\" to false to disable this safety check at your own risk.",
           "code": 6,
           "message": "Incompatible SDK client. Your SDK version (%s) does not match Kuzzle requirement (%s).",
           "class": "BadRequestError"

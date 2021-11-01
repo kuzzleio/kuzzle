@@ -356,8 +356,11 @@
     //       ("gb") or terabytes ("tb")
     //   * port:
     //       The listening port for HTTP and WebSocket
+    //   * strictSdkVersion:
+    //       Raise an error when an incompatible SDK is used.
     "maxRequestSize": "1mb",
     "port": 7512,
+    "strictSdkVersion": true,
     // [logs]
     // Configuration section for Kuzzle access logs
     //   * transports:
