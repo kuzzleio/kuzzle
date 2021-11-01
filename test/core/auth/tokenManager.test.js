@@ -38,6 +38,17 @@ describe('Test: token manager core component', () => {
     }
   });
 
+  describe('events', () => {
+    it('should register a listener on "connection:remove"', done => {
+      tokenManager.removeConnection = async connectionId => {
+        should(connectionId).be.eql('connection-id');
+        done();
+      };
+
+      kuzzle.emit('connection:remove', { id: 'connection-id' });
+    });
+  });
+
   describe('#removeConnection', () => {
     it('should expire the token if it exists', async () => {
       sinon.stub(tokenManager, 'expire').resolves();
@@ -316,8 +327,8 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
       should(runTimerStub).be.calledOnce();
-      should(tokenManager.tokensByConnection.has('connectionId1')).be.true();
-      should(tokenManager.tokensByConnection.has('connectionId2')).be.false();
+      should(tokenManager.tokensByConnection).have.key('connectionId1');
+      should(tokenManager.tokensByConnection).not.have.key('connectionId2');
     });
 
     it('should not expire API key', async () => {

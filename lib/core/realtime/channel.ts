@@ -47,18 +47,6 @@ export class Channel {
   static hash (channel: Channel) {
     let str = '';
 
-    switch (channel.scope) {
-      case 'all':
-        str += '1';
-        break;
-      case 'in':
-        str += '2';
-        break;
-      case 'out':
-        str += '3';
-        break;
-    }
-
     switch (channel.users) {
       case 'all':
         str += '1';
@@ -80,6 +68,18 @@ export class Channel {
         break;
       case false:
         str += '2';
+        break;
+    }
+
+    switch (channel.scope) {
+      case 'all':
+        str += '1';
+        break;
+      case 'in':
+        str += '2';
+        break;
+      case 'out':
+        str += '3';
         break;
     }
 
