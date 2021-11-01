@@ -128,7 +128,7 @@ export class Channel {
    */
   public cluster: boolean;
 
-  constructor(
+  constructor (
     roomId: string,
     {
       scope = 'all',
