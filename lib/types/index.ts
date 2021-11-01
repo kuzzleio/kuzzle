@@ -32,3 +32,4 @@ export * from './Global';
 export * from './realtime/RealtimeScope';
 export * from './realtime/RealtimeUsers';
 export * from './realtime/RoomList';
+export * from './KuzzleDocument';

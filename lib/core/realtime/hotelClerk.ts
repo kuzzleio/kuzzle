@@ -41,6 +41,19 @@ const realtimeError = kerror.wrap('core', 'realtime');
 
 const debug = createDebug('kuzzle:realtime:hotelClerk');
 
+/**
+ * The HotelClerk is responsible of keeping the list of rooms and subscriptions
+ * made to those rooms.
+ *
+ * When a subscription is made to a room, the HotelClerk link the connection
+ * to a channel of this room. Each channel represents a specific configuration
+ * about which kind of notification the subscriber should receive (e.g. scope in/out)
+ *
+ * When an user is subscribing, we send him back the channel he is subscribing to.
+ *
+ * Here stop the role of the HotelClerk, then the notifier will select the channels
+ * according to the notification and notify them.
+ */
 export class HotelClerk {
   private module: any;
 
@@ -54,6 +67,10 @@ export class HotelClerk {
   /**
    * Current realtime rooms.
    *
+   * This object is used by the notifier to list wich channel has to be notified
+   * when a subscription scope is matching.
+   * It's also used to notify channels when an user join/exit a room.
+   *
    * Map<roomId, Room>
    */
   private rooms = new Map<string, Room>();
@@ -62,6 +79,9 @@ export class HotelClerk {
    * Current subscribing connections handled by the HotelClerk.
    *
    * Each connection can subscribe to many rooms with different volatile data.
+   *
+   * This object is used to keep track of all subscriptions made by a connection
+   * to be able to unsubscribe when a connection is removed.
    *
    * Map<connectionId, ConnectionRooms>
    */
