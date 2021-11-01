@@ -10,7 +10,7 @@ const {
 } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.subscribe', () => {
   const connectionId = 'connectionid';
@@ -63,8 +63,8 @@ describe('Test: hotelClerk.subscribe', () => {
 
   it('should initialize base structures', () => {
     should(hotelClerk.rooms).be.empty();
-    should(hotelClerk.customers).be.empty();
-    should(hotelClerk.roomsCount).be.a.Number().and.be.eql(0);
+    should(hotelClerk.subscriptions).be.empty();
+    should(hotelClerk.roomsCount).be.eql(0);
   });
 
   it('should register a new room and customer', async () => {
@@ -98,17 +98,18 @@ describe('Test: hotelClerk.subscribe', () => {
 
     const roomId = hotelClerk.rooms.get(response.roomId).id;
 
-    const customer = hotelClerk.customers.get(connectionId);
+    const connectionRooms = hotelClerk.subscriptions.get(connectionId);
 
-    should(customer).have.value(roomId, request.input.volatile);
+    should(connectionRooms.getVolatile(roomId)).be.eql(request.input.volatile);
 
     const room = hotelClerk.rooms.get(roomId);
-    should(room.channels).be.an.Object().and.not.be.undefined();
-    should(Object.keys(room.channels).length).be.exactly(1);
+    should(room.channels).not.be.undefined();
+    should(Array.from(room.channels.keys()).length).be.exactly(1);
 
-    const channel = Object.keys(room.channels)[0];
-    should(room.channels[channel].scope).be.exactly('all');
-    should(room.channels[channel].users).be.exactly('none');
+    const channelName = Array.from(room.channels.keys())[0];
+    const channel = room.channels.get(channelName);
+    should(channel.scope).be.eql('all');
+    should(channel.users).be.eql('none');
 
     response = await hotelClerk.subscribe(request);
 
@@ -221,10 +222,10 @@ describe('Test: hotelClerk.subscribe', () => {
 
   it('should discard the request if the associated connection is no longer active', async () => {
     kuzzle.router.isConnectionAlive.returns(false);
-    sinon.stub(hotelClerk, '_createRoom');
+    sinon.stub(hotelClerk, 'createRoom');
 
     await hotelClerk.subscribe(request);
 
-    should(hotelClerk._createRoom).not.called();
+    should(hotelClerk.createRoom).not.be.called();
   });
 });
