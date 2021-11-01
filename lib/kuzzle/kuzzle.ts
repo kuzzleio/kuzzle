@@ -307,6 +307,8 @@ class Kuzzle extends KuzzleEventEmitter {
     // Ask the network layer to stop accepting new request
     this.entryPoint.dispatch('shutdown');
 
+    await this.ask('core:realtime:shutdown');
+
     while (this.funnel.remainingRequests !== 0) {
       this.log.info(`[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`);
       await Bluebird.delay(1000);

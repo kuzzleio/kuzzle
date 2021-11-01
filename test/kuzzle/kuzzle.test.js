@@ -219,7 +219,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
   });
 
-  describe('#kuzzle/shutdown', () => {
+  describe('#shutdown', () => {
     it('should exit only when there is no request left in the funnel', async () => {
       sinon.stub(process, 'exit');
 
@@ -245,6 +245,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         should(kuzzle.entryPoint.dispatch).calledOnce().calledWith('shutdown');
         should(kuzzle.pipe).calledWith('kuzzle:shutdown');
         should(Bluebird.delay.callCount).approximately(5, 1);
+
+        should(kuzzle.ask).be.calledWith('core:realtime:shutdown');
 
         // @deprecated
         should(kuzzle.emit).calledWith('core:shutdown');

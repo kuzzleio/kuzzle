@@ -62,6 +62,17 @@ describe('funnel.checkRights', () => {
     global.kuzzle.config.plugins.common.failsafeMode = false;
   });
 
+  it('should link the token to the connection for realtime protocols', async () => {
+    sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
+    request.context.connection.id = 'connection-id';
+    request.context.connection.protocol = 'websocket';
+
+    await funnel.checkRights(request);
+
+    should(global.kuzzle.tokenManager.link)
+      .be.calledWith(request.context.token, 'connection-id');
+  });
+
   it('should reject with an UnauthorizedError if an anonymous user is not allowed to execute the action', async () => {
     verifiedToken.userId = '-1';
 
@@ -134,6 +145,7 @@ describe('funnel.checkRights', () => {
 
     should(kuzzle.pipe).calledWith('request:onAuthorized', request);
     should(kuzzle.pipe).not.calledWith('request:onUnauthorized', request);
+    should(global.kuzzle.tokenManager.link).not.be.called();
   });
 
   it('should reject if non admin user use the API during failsafe mode', async () => {
