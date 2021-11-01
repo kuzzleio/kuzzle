@@ -75,3 +75,12 @@ description: Error codes definitions
 | services.cache.write_failed<br/><pre>0x01030004</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cache write fail: %s | An attempt to write to the cache failed |
 
 ---
+
+
+### Subdomain: 0x0104: statistics
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| services.statistics.not_available<br/><pre>0x01040001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Statistics module is not available. | The statistics module is not enabled. See "config.stats.enabled". |
+
+---
