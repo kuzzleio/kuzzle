@@ -10,7 +10,7 @@ const { ConnectionRooms } = require('../../../../lib/core/realtime/connectionRoo
 const { Room } = require('../../../../lib/core/realtime/room');
 const { Channel } = require('../../../../lib/core/realtime/channel');
 
-describe('Test: hotelClerk.removeUser', () => {
+describe('Test: hotelClerk.removeConnection', () => {
   const connectionId = 'connectionid';
   const collection = 'user';
   const index = '%test';

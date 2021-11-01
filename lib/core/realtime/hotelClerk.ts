@@ -173,6 +173,11 @@ export class HotelClerk {
       });
 
     /**
+     * Clear the hotel clerk and properly disconnect connections.
+     */
+    global.kuzzle.onAsk('core:realtime:shutdown', () => this.clearConnections());
+
+    /**
      * Clear subscriptions when a connection is dropped
      */
     global.kuzzle.on('connection:remove', connection => {
@@ -357,6 +362,17 @@ export class HotelClerk {
 
     await Bluebird.map(connectionRooms.roomIds, (roomId: string) => (
       this.unsubscribe(connectionId, roomId).catch(global.kuzzle.log.error)
+    ));
+  }
+
+  /**
+   * Clear all connections made to this node:
+   *   - trigger appropriate core events
+   *   - send user exit room notifications
+   */
+  async clearConnections (): Promise<void> {
+    await Bluebird.map(this.subscriptions.keys(), (connectionId: string) => (
+      this.removeConnection(connectionId)
     ));
   }
 
