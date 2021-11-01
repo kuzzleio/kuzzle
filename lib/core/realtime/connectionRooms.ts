@@ -22,8 +22,11 @@
 import { JSONObject } from 'kuzzle-sdk';
 
 /**
- * Represents a subscription made by a connection on a particular room with
- * a set of volatile data.
+ * Each connection can subscribe to many rooms with different sets of volatile
+ * data.
+ *
+ * This object is responsible to keep the association between each rooms and the
+ * associated volatile data.
  *
  * @property rooms
  */
