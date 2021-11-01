@@ -79,6 +79,9 @@ const TIMEOUT_MAX = Math.pow(2, 31) - 1;
 export class TokenManager {
   private tokens: ISortedArray<ManagedToken>;
   private anonymousUserId: string = null;
+  /**
+   * Map<connectionId, ManagedToken>
+   */
   private tokensByConnection = new Map<string, ManagedToken>();
   private timer: NodeJS.Timeout = null;
 
@@ -116,6 +119,11 @@ export class TokenManager {
   async init () {
     const anonymous = await global.kuzzle.ask('core:security:user:anonymous:get');
     this.anonymousUserId = anonymous._id;
+
+    global.kuzzle.on('connection:remove', connection => {
+      this.removeConnection(connection.id)
+        .catch(err => global.kuzzle.log.info(err));
+    });
   }
 
   runTimer () {
@@ -137,8 +145,7 @@ export class TokenManager {
    * @param connectionId
    */
   link (token: Token, connectionId: string) {
-    // Embedded SDK does not use tokens
-    if (! token || token._id === this.anonymousUserId) {
+    if (! token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -171,8 +178,7 @@ export class TokenManager {
    * @param connectionId
    */
   unlink (token: Token, connectionId: string) {
-    // Embedded SDK does not use tokens
-    if (! token || token._id === this.anonymousUserId) {
+    if (! token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -192,6 +198,20 @@ export class TokenManager {
   }
 
   /**
+   * Remove token associated with a connection.
+   */
+  async removeConnection (connectionId: string) {
+    const managedToken = this.tokensByConnection.get(connectionId);
+
+    // Anonymous connection does not have associated token
+    if (! managedToken) {
+      return;
+    }
+
+    await this.expire(managedToken);
+  }
+
+  /**
    * Called when a token expires before its time (e.g. following a
    * auth:logout action)
    * This method removes all maintained links and cleans up the
@@ -200,12 +220,12 @@ export class TokenManager {
    * @param token
    */
   async expire (token: Token) {
-    if (token._id === this.anonymousUserId) {
+    if (token.userId === this.anonymousUserId) {
       return;
     }
 
     const idx = ManagedToken.indexFor(token);
-    const searchResult = this.tokens.search({idx});
+    const searchResult = this.tokens.search({ idx });
 
     if (searchResult > -1) {
       const managedToken = this.tokens.array[searchResult];
@@ -251,12 +271,13 @@ export class TokenManager {
 
     // API key can never expire (-1)
     if (arr.length > 0 && (arr[0].expiresAt > 0 && arr[0].expiresAt < Date.now())) {
-      const connectionIds = arr[0].connectionIds;
+      const managedToken = arr[0];
 
       arr.shift();
 
-      for (const connectionId of connectionIds) {
+      for (const connectionId of managedToken.connectionIds) {
         await global.kuzzle.ask('core:realtime:tokenExpired:notify', connectionId);
+        this.tokensByConnection.delete(connectionId);
       }
 
       setImmediate(() => this.checkTokensValidity());

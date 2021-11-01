@@ -75,7 +75,6 @@ describe('Test: router', () => {
       router.connections.set(connectionId, requestContext);
       router.removeConnection(requestContext);
 
-      should(kuzzle.ask).calledWith('core:realtime:connection:remove', connectionId);
       should(kuzzle.statistics.dropConnection)
         .calledOnce()
         .calledWith(requestContext);

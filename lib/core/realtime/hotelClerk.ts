@@ -171,6 +171,14 @@ export class HotelClerk {
       (connectionId, roomId, notify) => {
         return this.unsubscribe(connectionId, roomId, notify);
       });
+
+    /**
+     * Clear subscriptions when a connection is dropped
+     */
+    global.kuzzle.on('connection:remove', connection => {
+      this.removeConnection(connection.id)
+        .catch(err => global.kuzzle.log.info(err));
+    });
   }
 
   /**
@@ -272,7 +280,7 @@ export class HotelClerk {
    * The room may exists on another cluster node, if it's the case, the normalized
    * filters will be fetched from the cluster.
    */
-  async join (request: KuzzleRequest): Promise<{ roomId, channel }> {
+  async join (request: KuzzleRequest): Promise<{ channel, roomId }> {
     const roomId = request.input.body.roomId;
 
     if (! this.rooms.has(roomId)) {
