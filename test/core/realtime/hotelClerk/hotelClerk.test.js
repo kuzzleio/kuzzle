@@ -30,8 +30,8 @@ describe('HotelClerk', () => {
     it('should have been registered with the "core:realtime:shutdown" event', async () => {
       sinon.stub(hotelClerk, 'clearConnections').resolves();
 
-      kuzzle.ask.restore();
-      await kuzzle.ask('core:realtime:shutdown');
+      kuzzle.pipe.restore();
+      await kuzzle.pipe('kuzzle:shutdown');
 
       should(hotelClerk.clearConnections).be.calledOnce();
     });
