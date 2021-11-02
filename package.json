@@ -39,7 +39,7 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "7.15.0",
+    "@elastic/elasticsearch": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
     "aedes": "^0.46.1",
     "bluebird": "^3.7.2",
     "cli-color": "^2.0.1",
