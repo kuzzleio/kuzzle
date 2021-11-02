@@ -246,8 +246,6 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         should(kuzzle.pipe).calledWith('kuzzle:shutdown');
         should(Bluebird.delay.callCount).approximately(5, 1);
 
-        should(kuzzle.ask).be.calledWith('core:realtime:shutdown');
-
         // @deprecated
         should(kuzzle.emit).calledWith('core:shutdown');
 

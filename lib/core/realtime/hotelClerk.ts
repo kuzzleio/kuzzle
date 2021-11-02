@@ -175,7 +175,7 @@ export class HotelClerk {
     /**
      * Clear the hotel clerk and properly disconnect connections.
      */
-    global.kuzzle.onAsk('core:realtime:shutdown', () => this.clearConnections());
+    global.kuzzle.on('kuzzle:shutdown', () => this.clearConnections());
 
     /**
      * Clear subscriptions when a connection is dropped
