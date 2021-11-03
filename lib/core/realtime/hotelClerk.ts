@@ -352,7 +352,7 @@ export class HotelClerk {
    *
    * Usually called when an user has been disconnected from Kuzzle.
    */
-  async removeConnection (connectionId: string): Promise<void> {
+  async removeConnection (connectionId: string, notify = true): Promise<void> {
     const connectionRooms = this.subscriptions.get(connectionId);
 
     if (! connectionRooms) {
@@ -361,7 +361,7 @@ export class HotelClerk {
     }
 
     await Bluebird.map(connectionRooms.roomIds, (roomId: string) => (
-      this.unsubscribe(connectionId, roomId).catch(global.kuzzle.log.error)
+      this.unsubscribe(connectionId, roomId, notify).catch(global.kuzzle.log.error)
     ));
   }
 
@@ -372,7 +372,7 @@ export class HotelClerk {
    */
   async clearConnections (): Promise<void> {
     await Bluebird.map(this.subscriptions.keys(), (connectionId: string) => (
-      this.removeConnection(connectionId)
+      this.removeConnection(connectionId, false)
     ));
   }
 
