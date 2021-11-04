@@ -19,26 +19,24 @@
  * limitations under the License.
  */
 
-'use strict';
+import Bluebird from 'bluebird';
 
-const Bluebird = require('bluebird');
-
-const kerror = require('../../kerror');
-const { get } = require('../../util/safeObject');
+import { KuzzleRequest } from '../request';
+import kerror from '../../kerror';
+import { get } from '../../util/safeObject';
+import { JSONObject } from 'kuzzle-sdk';
 
 const assertionError = kerror.wrap('api', 'assert');
 
 // Base class for all controllers
-class BaseController {
-  constructor() {
-    this.__actions = new Set();
-  }
+export class BaseController {
+  protected __actions = new Set<string>();
 
-  get _actions() {
+  get _actions () {
     return this.__actions;
   }
 
-  _addAction (name, fn) {
+  _addAction (name: string, fn: (request: KuzzleRequest) => any) {
     this.__actions.add(name);
     this[name] = fn;
   }
@@ -48,20 +46,23 @@ class BaseController {
    * This check's purpose is to prevent actions leak by making actions exposure
    * explicit.
    *
-   * @param  {string} name
-   * @returns {boolean}
+   * @param name
    */
-  _isAction (name) {
+  _isAction (name: string): boolean {
     return this.__actions.has(name);
   }
 }
 
-class NativeController extends BaseController {
-  constructor(actions = []) {
+export class NativeController extends BaseController {
+  public ask: (event: string, ...any) => Promise<any>;
+  public pipe: (event: string, ...any) => Promise<any>;
+
+  constructor(actions: string[] = []) {
     super();
 
     this.ask = global.kuzzle.ask.bind(global.kuzzle);
     this.pipe = global.kuzzle.pipe.bind(global.kuzzle);
+
     this.__actions = new Set(actions);
   }
 
@@ -72,11 +73,11 @@ class NativeController extends BaseController {
    *
    * @returns {Promise}
    */
-  init () {
+  init (): Promise<void> {
     return Bluebird.resolve();
   }
 
-  async translateKoncorde (koncordeFilters) {
+  async translateKoncorde (koncordeFilters: JSONObject): Promise<JSONObject> {
     if (Object.keys(koncordeFilters).length === 0) {
       return {};
     }
@@ -113,7 +114,7 @@ class NativeController extends BaseController {
    * @param {Request} request
    * @param  {...any} paths
    */
-  assertBodyHasNotAttributes (request, ...paths) {
+  assertBodyHasNotAttributes (request: KuzzleRequest, ...paths) {
     if (request.input.body !== null) {
       for (const path of paths) {
         if (get(request.input.body, path)) {
@@ -129,7 +130,7 @@ class NativeController extends BaseController {
    * @todo move this method in some kind of "Security" class
    * @param {String} strategy
    */
-  assertIsStrategyRegistered (strategy) {
+  assertIsStrategyRegistered (strategy: string) {
     if (! global.kuzzle.pluginsManager.listStrategies().includes(strategy)) {
       throw kerror.get('security', 'credentials', 'unknown_strategy', strategy);
     }
@@ -141,7 +142,7 @@ class NativeController extends BaseController {
    * @param {Number} asked
    * @throws
    */
-  assertNotExceedMaxFetch (asked) {
+  assertNotExceedMaxFetch (asked: number) {
     const limit = global.kuzzle.config.limits.documentsFetchCount;
 
     if (asked > limit) {
@@ -155,7 +156,7 @@ class NativeController extends BaseController {
    * @param {Number} asked
    * @throws
    */
-  assertNotExceedMaxWrite (asked) {
+  assertNotExceedMaxWrite (asked: number) {
     const limit = global.kuzzle.config.limits.documentsWriteCount;
 
     if (asked > limit) {
@@ -163,5 +164,3 @@ class NativeController extends BaseController {
     }
   }
 }
-
-module.exports = { BaseController, NativeController };

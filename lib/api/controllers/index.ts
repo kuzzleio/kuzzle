@@ -19,18 +19,15 @@
  * limitations under the License.
  */
 
-'use strict';
+export * as AuthController from './authController';
+export * as BulkController from './bulkController';
+export * as ClusterController from './clusterController';
+export * as CollectionController from './collectionController';
+export * as DocumentController from './documentController';
+export * as IndexController from './indexController';
+export * as MemoryStorageController from './memoryStorageController';
+export * as RealtimeController from './realtimeController';
+export * as SecurityController from './securityController';
+export * as ServerController from './serverController';
 
-module.exports = {
-  AdminController: require('./adminController'),
-  AuthController: require('./authController'),
-  BulkController: require('./bulkController'),
-  ClusterController: require('./clusterController'),
-  CollectionController: require('./collectionController'),
-  DocumentController: require('./documentController'),
-  IndexController: require('./indexController'),
-  MemoryStorageController: require('./memoryStorageController'),
-  RealtimeController: require('./realtimeController'),
-  SecurityController: require('./securityController'),
-  ServerController: require('./serverController'),
-};
+export * from './adminController';

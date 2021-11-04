@@ -19,18 +19,17 @@
  * limitations under the License.
  */
 
-'use strict';
+import Bluebird from 'bluebird';
+import { JSONObject } from 'kuzzle-sdk';
 
-const Bluebird = require('bluebird');
+import kerror from '../../kerror';
+import { NativeController } from './baseController';
+import { Mutex } from '../../util/mutex';
+import { KuzzleRequest } from '../request';
 
-const kerror = require('../../kerror');
-const { NativeController } = require('./baseController');
-const { Mutex } = require('../../util/mutex');
+export class AdminController extends NativeController {
+  private shuttingDown = false;
 
-/**
- * @class AdminController
- */
-class AdminController extends NativeController {
   constructor() {
     super([
       'dump',
@@ -42,14 +41,12 @@ class AdminController extends NativeController {
       'resetSecurity',
       'shutdown'
     ]);
-
-    this.shuttingDown = false;
   }
 
   /**
    * Reset Redis cache
    */
-  async resetCache (request) {
+  async resetCache (request: KuzzleRequest) {
     const database = request.getString('database');
 
     // @todo allow only memoryStorage
@@ -72,24 +69,18 @@ class AdminController extends NativeController {
   async resetSecurity () {
     const mutex = new Mutex('resetSecurity', { timeout: 0 });
 
-    if (!await mutex.lock()) {
+    if (! await mutex.lock()) {
       throw kerror.get('api', 'process', 'action_locked', 'Kuzzle is already reseting roles, profiles and users.');
     }
 
-    const result = {};
+    const result: JSONObject = {};
 
     try {
       const options = { refresh: 'wait_for' };
 
-      result.deletedUsers = await this.ask(
-        'core:security:user:truncate',
-        options);
-      result.deletedProfiles = await this.ask(
-        'core:security:profile:truncate',
-        options);
-      result.deletedRoles = await this.ask(
-        'core:security:role:truncate',
-        options);
+      result.deletedUsers = await this.ask('core:security:user:truncate', options);
+      result.deletedProfiles = await this.ask('core:security:profile:truncate', options);
+      result.deletedRoles = await this.ask('core:security:role:truncate', options);
 
       await global.kuzzle.internalIndex.createInitialSecurities();
     }
@@ -106,7 +97,7 @@ class AdminController extends NativeController {
   async resetDatabase () {
     const mutex = new Mutex('resetDatabase', { timeout: 0 });
 
-    if (!await mutex.lock()) {
+    if (! await mutex.lock()) {
       throw kerror.get('api', 'process', 'action_locked', 'Kuzzle is already reseting all indexes.');
     }
 
@@ -125,8 +116,8 @@ class AdminController extends NativeController {
    * Generate a dump
    * Kuzzle will throw a PreconditionError if a dump is already running
    */
-  dump (request) {
-    const waitForRefresh = request.input.args.refresh === 'wait_for';
+  dump (request: KuzzleRequest) {
+    const waitForRefresh = request.getRefresh('true');
     const suffix = request.getString('suffix', 'manual-api-action');
 
     const promise = global.kuzzle.dump(suffix);
@@ -147,7 +138,7 @@ class AdminController extends NativeController {
     return { acknowledge: true };
   }
 
-  loadFixtures (request) {
+  loadFixtures (request: KuzzleRequest) {
     const fixtures = request.getBody();
 
     return this._waitForAction(
@@ -155,7 +146,7 @@ class AdminController extends NativeController {
       global.kuzzle.ask('core:storage:public:document:import', fixtures));
   }
 
-  loadMappings (request) {
+  loadMappings (request: KuzzleRequest) {
     const mappings = request.getBody();
 
     return this._waitForAction(
@@ -166,7 +157,7 @@ class AdminController extends NativeController {
         { rawMappings: true }));
   }
 
-  async loadSecurities (request) {
+  async loadSecurities (request: KuzzleRequest) {
     const permissions = request.getBody();
     const user = request.getUser();
     const onExistingUsers = request.input.args.onExistingUsers;
@@ -182,7 +173,7 @@ class AdminController extends NativeController {
     return this._waitForAction(waitForRefresh, promise);
   }
 
-  _waitForAction (waitForRefresh, promise) {
+  _waitForAction (waitForRefresh: 'wait_for' | 'false' | 'true', promise: any) {
     const result = { acknowledge: true };
 
     if (waitForRefresh === 'false') {
@@ -198,5 +189,3 @@ class AdminController extends NativeController {
   }
 
 }
-
-module.exports = AdminController;
