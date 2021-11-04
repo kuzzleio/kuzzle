@@ -2,7 +2,8 @@ import { JSONObject } from '../../../index';
 import {
   PasswordPolicy,
   RoleDefinition,
-  ProfileDefinition
+  ProfileDefinition,
+  ServicesConfiguration
 } from '../index';
 
 export interface IKuzzleConfiguration {
@@ -628,6 +629,11 @@ export interface IKuzzleConfiguration {
 
     protocols: Record<string, unknown>,
   },
+
+  /**
+   * Services are the external components Kuzzle relies on.
+   */
+  services: ServicesConfiguration
 }
 
 export type KuzzleConfiguration = Partial<IKuzzleConfiguration>
