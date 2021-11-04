@@ -173,6 +173,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       refresh: sinon.stub(),
       unlink: sinon.stub(),
       getKuidFromConnection: sinon.stub(),
+      removeConnection: sinon.stub().resolves(),
     };
 
     this.validation = {

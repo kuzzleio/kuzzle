@@ -356,8 +356,11 @@
     //       ("gb") or terabytes ("tb")
     //   * port:
     //       The listening port for HTTP and WebSocket
+    //   * strictSdkVersion:
+    //       Raise an error when an incompatible SDK is used.
     "maxRequestSize": "1mb",
     "port": 7512,
+    "strictSdkVersion": true,
     // [logs]
     // Configuration section for Kuzzle access logs
     //   * transports:
@@ -820,11 +823,14 @@
   },
 
   // Configuration of the Kuzzle's internal statistics module
+  //   * enabled:
+  //      Enable or disable the stats module
   //   * ttl:
   //      Time to live (in seconds) of a statistics frame
   //   * statsInterval:
   //      Time (in seconds) between statistics snapshots
   "stats": {
+    "enabled": true,
     "ttl": 3600,
     "statsInterval": 10
   },

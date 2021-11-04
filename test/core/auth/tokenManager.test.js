@@ -9,7 +9,7 @@ const { Token } = require('../../../lib/model/security/token');
 const { TokenManager } = require('../../../lib/core/auth/tokenManager');
 
 describe('Test: token manager core component', () => {
-  const anonymousToken = new Token({ _id: '-1' });
+  const anonymousToken = new Token({ _id: null, userId: '-1' });
   let kuzzle;
   let token;
   let tokenManager;
@@ -38,6 +38,28 @@ describe('Test: token manager core component', () => {
     }
   });
 
+  describe('events', () => {
+    it('should register a listener on "connection:remove"', done => {
+      tokenManager.removeConnection = async connectionId => {
+        should(connectionId).be.eql('connection-id');
+        done();
+      };
+
+      kuzzle.emit('connection:remove', { id: 'connection-id' });
+    });
+  });
+
+  describe('#removeConnection', () => {
+    it('should expire the token if it exists', async () => {
+      sinon.stub(tokenManager, 'expire').resolves();
+      tokenManager.link(token, 'connectionId');
+
+      await tokenManager.removeConnection('connectionId');
+
+      should(tokenManager.expire.getCall(0).args[0]._id).be.eql(token._id);
+    });
+  });
+
   describe('#link', () => {
     it('should do nothing if the token is not set', () => {
       tokenManager.link(null, 'foo');
@@ -47,6 +69,7 @@ describe('Test: token manager core component', () => {
 
     it('should not add a link to an anonymous token', () => {
       tokenManager.link(anonymousToken, 'foo');
+
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(tokenManager.tokensByConnection.size).equal(0);
     });
@@ -55,6 +78,7 @@ describe('Test: token manager core component', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(token, 'foo');
+
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.match([{
@@ -76,8 +100,8 @@ describe('Test: token manager core component', () => {
     });
 
     it('should add the connection ID to the list if an entry already exists for this token', () => {
-      
-      
+
+
       tokenManager.link(token, 'foo');
       tokenManager.link(token, 'bar');
 
@@ -139,7 +163,7 @@ describe('Test: token manager core component', () => {
           userId: tokenAfter.userId,
         }])
         .and.have.length(2);
-      
+
       should(tokenManager.tokensByConnection.get('foo2')).match({
         idx: `${tokenAfter.expiresAt};${tokenAfter._id}`,
         connectionIds: new Set(['foo2']),
@@ -202,9 +226,9 @@ describe('Test: token manager core component', () => {
       await tokenManager.expire(token);
       should(tokenManager.tokens.array).be.an.Array().and.be.empty();
       should(kuzzle.ask)
-        .calledWith('core:realtime:user:remove', 'foo')
-        .and.calledWith('core:realtime:user:remove', 'bar');
-      
+        .calledWith('core:realtime:connection:remove', 'foo')
+        .and.calledWith('core:realtime:connection:remove', 'bar');
+
       should(tokenManager.tokensByConnection.size).equal(0);
     });
 
@@ -303,6 +327,8 @@ describe('Test: token manager core component', () => {
       should(tokenManager.tokens.array.length).be.eql(1);
       should(tokenManager.tokens.array[0]._id).be.eql('bar');
       should(runTimerStub).be.calledOnce();
+      should(tokenManager.tokensByConnection).have.key('connectionId1');
+      should(tokenManager.tokensByConnection).not.have.key('connectionId2');
     });
 
     it('should not expire API key', async () => {

@@ -219,7 +219,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
   });
 
-  describe('#kuzzle/shutdown', () => {
+  describe('#shutdown', () => {
     it('should exit only when there is no request left in the funnel', async () => {
       sinon.stub(process, 'exit');
 

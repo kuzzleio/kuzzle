@@ -5,9 +5,12 @@ const sinon = require('sinon');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
+const { ConnectionRooms } = require('../../../../lib/core/realtime/connectionRooms');
+const { Room } = require('../../../../lib/core/realtime/room');
+const { Channel } = require('../../../../lib/core/realtime/channel');
 
-describe('Test: hotelClerk.removeUser', () => {
+describe('Test: hotelClerk.removeConnection', () => {
   const connectionId = 'connectionid';
   const collection = 'user';
   const index = '%test';
@@ -26,62 +29,61 @@ describe('Test: hotelClerk.removeUser', () => {
 
     hotelClerk = new HotelClerk(realtimeModule);
 
-    hotelClerk.customers.set(connectionId, new Map([
+    hotelClerk.subscriptions.set(connectionId, new ConnectionRooms(new Map([
       [ 'foo', { volatile: 'room foo' } ],
       [ 'bar', { volatile: 'room bar' } ]
-    ]));
-    hotelClerk.customers.set('a', new Map([['foo', null]]));
-    hotelClerk.customers.set('b', new Map([['foo', null]]));
+    ])));
 
-    hotelClerk.rooms.set('foo', {
-      customers: new Set([connectionId, 'a', 'b']),
+    hotelClerk.subscriptions.set('a', new ConnectionRooms(new Map([['foo', null]])));
+    hotelClerk.subscriptions.set('b', new ConnectionRooms(new Map([['foo', null]])));
+
+    hotelClerk.rooms.set('foo', new Room(
+      'foo',
       index,
       collection,
-      channels: ['foobar']
-    });
-    hotelClerk.rooms.set('bar', {
-      customers: new Set([connectionId]),
+      new Map([['foobar', new Channel('foo')]]),
+      new Set([connectionId, 'a', 'b']),
+    ));
+    hotelClerk.rooms.set('bar', new Room(
+      'bar',
       index,
       collection,
-      channels: ['barfoo']
-    });
+      new Map([['barfoo', new Channel('bar')]]),
+      new Set([connectionId]),
+    ));
 
     hotelClerk.roomsCount = 2;
 
     return hotelClerk.init();
   });
 
-  it('should register a "user:remove" event', async () => {
-    sinon.stub(hotelClerk, 'removeUser');
+  it('should register a "connection:remove" event', async () => {
+    sinon.stub(hotelClerk, 'removeConnection');
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:user:remove', 'connectionId');
+    await kuzzle.ask('core:realtime:connection:remove', 'connectionId');
 
-    should(hotelClerk.removeUser).calledWith('connectionId');
+    should(hotelClerk.removeConnection).calledWith('connectionId');
   });
 
   it('should do nothing when a bad connectionId is given', async () => {
     sinon.stub(hotelClerk, 'unsubscribe');
 
-    await hotelClerk.removeUser('nope');
+    await hotelClerk.removeConnection('nope');
 
     should(hotelClerk.unsubscribe).not.be.called();
     should(hotelClerk.roomsCount).be.eql(2);
   });
 
-  it('should clean up customers, rooms object', async () => {
-    await hotelClerk.removeUser(connectionId);
+  it('should clean up subscriptions, rooms object', async () => {
+    await hotelClerk.removeConnection(connectionId);
 
-    should(hotelClerk.rooms).have.value('foo', {
-      customers: new Set(['a', 'b']),
-      index,
-      collection,
-      channels: ['foobar']
-    });
+    should(hotelClerk.rooms).have.key('foo');
     should(hotelClerk.rooms).not.have.key('bar');
 
-    should(hotelClerk.customers.get('a')).have.value('foo', null);
-    should(hotelClerk.customers.get('b')).have.value('foo', null);
+    should(hotelClerk.subscriptions).have.key('a');
+    should(hotelClerk.subscriptions).have.key('b');
+    should(hotelClerk.subscriptions).not.have.key(connectionId);
     should(hotelClerk.roomsCount).be.eql(1);
 
     should(realtimeModule.notifier.notifyUser).calledWithMatch(
@@ -115,7 +117,7 @@ describe('Test: hotelClerk.removeUser', () => {
     const error = new Error('Mocked error');
     realtimeModule.notifier.notifyUser.throws(error);
 
-    await hotelClerk.removeUser(connectionId);
+    await hotelClerk.removeConnection(connectionId);
 
     should(kuzzle.log.error).be.calledWith(error);
   });

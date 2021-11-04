@@ -299,13 +299,14 @@ class Kuzzle extends KuzzleEventEmitter {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
     this.log.info('Initiating shutdown...');
+
+    // Ask the network layer to stop accepting new request
+    this.entryPoint.dispatch('shutdown');
+
     await this.pipe('kuzzle:shutdown');
 
     // @deprecated
     this.emit('core:shutdown');
-
-    // Ask the network layer to stop accepting new request
-    this.entryPoint.dispatch('shutdown');
 
     while (this.funnel.remainingRequests !== 0) {
       this.log.info(`[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`);

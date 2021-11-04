@@ -306,6 +306,17 @@
           "class": "InternalError"
         }
       }
+    },
+    "statistics": {
+      "code": 4,
+      "errors": {
+        "not_available": {
+          "description": "The statistics module is not enabled. See \"config.stats.enabled\".",
+          "code": 1,
+          "message": "Statistics module is not available.",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
