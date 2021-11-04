@@ -605,7 +605,7 @@ export interface IKuzzleConfiguration {
       accessLogIpOffset: number
     },
 
-    protocols: Record<string, unknown>
+    protocols: Record<string, unknown>,
   },
 }
 
