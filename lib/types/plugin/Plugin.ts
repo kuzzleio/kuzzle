@@ -20,10 +20,10 @@
  */
 
 import { PluginContext } from '../../core/plugin/pluginContext';
-import { ControllerDefinition } from './ControllerDefinition';
+import { ControllerDefinition } from '../ControllerDefinition';
 import { PluginManifest } from './PluginManifest';
-import { StrategyDefinition } from './StrategyDefinition';
-import { EventHandler } from './EventHandler';
+import { StrategyDefinition } from '../StrategyDefinition';
+import { EventHandler } from '../EventHandler';
 import { JSONObject} from '../../../index';
 import kerror from '../../kerror';
 import { has } from '../../util/safeObject';
