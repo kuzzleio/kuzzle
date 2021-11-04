@@ -507,7 +507,7 @@ export interface IKuzzleConfiguration {
       accessLogIpOffset: number
     },
 
-    protocols: {}
+    protocols: Record<string, unknown>,
   },
 }
 
