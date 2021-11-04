@@ -33,4 +33,4 @@ export * from './config/PasswordPolicy';
 export * from './config/KuzzleConfiguration';
 export * from './config/RoleDefinition';
 export * from './config/ProfileDefinition';
-export * from './config/Security';
+export * from './config/SecurityConfiguration';

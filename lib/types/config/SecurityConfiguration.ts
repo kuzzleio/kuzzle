@@ -1,11 +1,11 @@
-import { JSONObject } from './../../../index';
+import { JSONObject } from '../../../index';
 
 import {
   RoleDefinition,
   ProfileDefinition,
 } from '../index';
 
-export type Security = {
+export type SecurityConfiguration = {
   /**
    * The profileIds applied to a user created with the API action
    * `security:createRestrictedUser`.

@@ -1,7 +1,7 @@
 import { JSONObject } from '../../../index';
 import {
   PasswordPolicy,
-  Security
+  SecurityConfiguration
 } from '../index';
 
 export interface IKuzzleConfiguration {
@@ -374,7 +374,7 @@ export interface IKuzzleConfiguration {
    * system.
    *
    */
-  security: Security,
+  security: SecurityConfiguration,
 
   /**
    * Kuzzle server is the entry point for incoming requests.
