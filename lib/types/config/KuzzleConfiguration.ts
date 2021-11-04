@@ -1,8 +1,6 @@
 import { JSONObject } from '../../../index';
 import {
   PasswordPolicy,
-  RoleDefinition,
-  ProfileDefinition,
   Security
 } from '../index';
 
