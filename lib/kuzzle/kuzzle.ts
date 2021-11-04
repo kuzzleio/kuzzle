@@ -51,7 +51,7 @@ import SecurityModule from '../core/security';
 import RealtimeModule from '../core/realtime';
 import Cluster from '../cluster';
 import { JSONObject } from './index';
-import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from '../types/Kuzzle';
+import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from '../types/config/Kuzzle';
 import { version } from '../../package.json';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
