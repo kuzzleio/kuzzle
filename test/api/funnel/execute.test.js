@@ -224,6 +224,31 @@ describe('funnelController.execute', () => {
       });
     });
 
+    it('should reject limit of requests per second has been exceeded for this user.', done => {
+      funnel.rateLimiter.isAllowed.resolves(false);
+      
+      request = new Request({
+        controller: 'auth',
+        action: 'login'
+      }, {
+        connection: {id: 'connectionid'},
+        token: null
+      });
+      funnel.execute(request, (err, res) => {
+        try {
+          should(res).eql(request);
+          should(err).be.instanceOf(TooManyRequestsError);
+          should(err.id).eql('api.process.too_many_logins_requests');
+          should(funnel.processRequest).not.called();
+          should(funnel.overloaded).be.false();
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
     it('should run the request in asyncStore.run context and set the request in async storage', done => {
       funnel.execute(request, (err, res) => {
         try {

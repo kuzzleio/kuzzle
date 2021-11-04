@@ -45,6 +45,7 @@ description: Error codes definitions
 | --------- | -------------- | --------| ----------- |
 | security.rights.unauthorized<br/><pre>0x07030001</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Unauthorized: authentication required to execute the action "%s:%s". | Authentication required to execute this action |
 | security.rights.forbidden<br/><pre>0x07030002</pre>  | [ForbiddenError](/core/2/api/errors/error-codes#forbiddenerror) <pre>(403)</pre> | Insufficient permissions to execute the action "%s:%s" (User "%s"). | Insufficient permissions to execute this action |
+| security.rights.failsafe_mode_admin_only<br/><pre>0x07030003</pre>  | [ForbiddenError](/core/2/api/errors/error-codes#forbiddenerror) <pre>(403)</pre> | Only administrators ("admin" profile) can use the API in failsafe mode. | Only administrators ("admin" profile) can use the API in failsafe mode. Authenticate as admin or reboot without failsafe mode ("config.plugins.common.failsafeMode") to access the API. |
 
 ---
 
