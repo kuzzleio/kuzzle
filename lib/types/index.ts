@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-export * from './plugin/Plugin';
+export * from './Plugin';
 export * from './Controller';
 export * from './ControllerDefinition';
 export * from './RequestPayload';
