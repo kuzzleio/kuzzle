@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-export * from './config/Plugin';
+export * from './config/plugin/Plugin';
 export * from './Controller';
 export * from './config/ControllerDefinition';
 export * from './config/RequestPayload';
@@ -33,4 +33,4 @@ export * from './config/PasswordPolicy';
 export * from './config/KuzzleConfiguration';
 export * from './config/RoleDefinition';
 export * from './config/ProfileDefinition';
-export * from './config/PluginsConfiguration';
+export * from './config/plugin/PluginsConfiguration';
