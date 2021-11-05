@@ -4,11 +4,12 @@ const should = require('should');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 
-const generateOpenApi = require('../../lib/api/openApiGenerator');
+const { generateOpenApi } = require('../../lib/api/openApiGenerator');
 
 describe('OpenApiGenerator', () => {
   let kuzzle;
   let generatedApi;
+  let request;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
@@ -38,7 +39,7 @@ describe('OpenApiGenerator', () => {
       ]
     };
 
-    generatedApi = generateOpenApi();
+    generatedApi = generateOpenApi(request);
 
     should(generatedApi.paths).be.an.Object();
   });
