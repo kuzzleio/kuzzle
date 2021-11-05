@@ -1,33 +1,27 @@
-DocumentCreate:
+DocumentCount:
   post:
-    summary: "Creates a new document in the persistent data storage."
+    summary: "Counts documents in a collection."
     tags:
       - document
     parameters:
       - name: body
         in: "body"
-        description: "Creates a new document in the persistent data storage."
+        description: "Counts documents in a collection."
         required: true
         schema:
-          $ref: "#/components/schemas/DocumentCreateRequest"
+          $ref: "#/components/schemas/CountRequest"
     responses:
       200:
-        description: "Creates a new document in the persistent data storage."
+        description: "Counts documents in a collection."
         schema:
-            $ref: "#/components/schemas/DocumentCreateResponse"
+          $ref: "#/components/schemas/CountResponse"
 
-# DocumentCreateRequest
 components:
   schemas:
-    DocumentCreateRequest:
+    CountRequest:
       allOf:
         - $ref: "./definitions.yaml#/definitions/BasicRequest"
-        - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
-    DocumentCreateResponse:
+    CountResponse:
       allOf:
         - $ref: "./definitions.yaml#/definitions/BasicResponse"
         - type: "object"
@@ -35,10 +29,5 @@ components:
             result:
               type: "object"
               properties:
-                _id:
-                  type: "string"
-                  description: "documentId"
-                _version:
+                count:
                   type: "integer"
-                _sources:
-                  type: "object"
