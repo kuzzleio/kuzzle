@@ -18,9 +18,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-const _ = require('lodash');
+import _ from 'lodash';
 import { KuzzleRequest } from './request';
-import { DocumentCount, DefinitionsDocument } from './swagger/documents/document'
+import {
+  DocumentCount,
+  DefinitionsDocument, 
+  DocumentCountComponent, 
+} from './swagger/documents/document'
 
 const routeUrlMatch = /:([^/]*)/g;
 
@@ -74,21 +78,20 @@ export function generateOpenApi(request: KuzzleRequest): any {
     tags: [
       {
         name: 'document',
-        description: 'controller document'
+        description: 'document controller'
       }
     ],
     paths: {
       '/count': {
-        DocumentCount,
-      }
+        DocumentCount
+      },
     },
     components: {
       DefinitionsDocument,
       schemas: {
-
+        DocumentCountComponent,
       }
     }
-
   };
   /* eslint-enable sort-keys */
 
