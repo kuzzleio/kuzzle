@@ -1,4 +1,4 @@
-import { readYamlfile } from "../tools";
+import { readYamlfile } from '../tools';
 
 export const DocumentCount = readYamlfile('./lib/api/swagger/documents/count.yaml').DocumentCreate;
 export const DocumentCountComponent = readYamlfile('./lib/api/swagger/documents/count.yaml').components.schemas;

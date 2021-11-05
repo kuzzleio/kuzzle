@@ -20,11 +20,12 @@
  */
 import _ from 'lodash';
 import { KuzzleRequest } from './request';
+import { version } from './../../package.json';
 import {
   DocumentCount,
   DefinitionsDocument, 
   DocumentCountComponent, 
-} from './swagger/documents/document'
+} from './swagger/documents/document';
 
 const routeUrlMatch = /:([^/]*)/g;
 
@@ -33,7 +34,9 @@ const routeUrlMatch = /:([^/]*)/g;
  *
  * @returns {object} openApi object
  */
-export function generateOpenApi(request: KuzzleRequest): any {
+/* eslint-disable @typescript-eslint/no-unused-vars */
+export function generateOpenApi(_request: KuzzleRequest): any {
+/* eslint-enable @typescript-eslint/no-unused-vars */
   const routes = [];
 
   global.kuzzle.config.http.routes.forEach(_route => routes.push({ ..._route }));
@@ -54,7 +57,7 @@ export function generateOpenApi(request: KuzzleRequest): any {
         name: 'Apache 2',
         url: 'http://opensource.org/licenses/apache2.0'
       },
-      version: require('../../package').version
+      version: version
     },
     externalDocs: {
       description: 'Kuzzle API Documentation',
