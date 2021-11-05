@@ -18,10 +18,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-'use strict';
-
 const _ = require('lodash');
+import { KuzzleRequest } from './request';
+import { DocumentCount, DefinitionsDocument } from './swagger/documents/document'
 
 const routeUrlMatch = /:([^/]*)/g;
 
@@ -30,7 +29,7 @@ const routeUrlMatch = /:([^/]*)/g;
  *
  * @returns {object} openApi object
  */
-module.exports = function generateOpenApi () {
+export function generateOpenApi(request: KuzzleRequest): any {
   const routes = [];
 
   global.kuzzle.config.http.routes.forEach(_route => routes.push({ ..._route }));
@@ -72,8 +71,24 @@ module.exports = function generateOpenApi () {
 
       }
     ],
-    tags: [],
-    paths: {},
+    tags: [
+      {
+        name: 'document',
+        description: 'controller document'
+      }
+    ],
+    paths: {
+      '/count': {
+        DocumentCount,
+      }
+    },
+    components: {
+      DefinitionsDocument,
+      schemas: {
+
+      }
+    }
+
   };
   /* eslint-enable sort-keys */
 
@@ -155,4 +170,4 @@ module.exports = function generateOpenApi () {
   });
 
   return response;
-};
+}
