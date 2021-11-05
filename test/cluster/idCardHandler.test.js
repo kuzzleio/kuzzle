@@ -48,7 +48,7 @@ describe('ClusterIdCardHandler', () => {
       }
     });
 
-    it('should create a new uniq IdCard and store it in Redis', async () => {
+    it('should create a new uniq IdCard and store it in Redis and update the index', async () => {
       await idCardHandler.createIdCard();
 
       should(idCardHandler.nodeId).be.String();
@@ -64,6 +64,11 @@ describe('ClusterIdCardHandler', () => {
           onlyIfNew: true,
           ttl: refreshDelay * 4
         });
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:execute',
+        'sadd',
+        '{cluster/node}/id-cards-index',
+        `{cluster/node}/${idCardHandler.nodeId}`);
     });
 
     it('should avoid collision for nodeIdKey', async () => {
@@ -74,10 +79,11 @@ describe('ClusterIdCardHandler', () => {
 
       await idCardHandler.createIdCard();
 
-      should(kuzzle.ask).be.calledTwice();
+      should(kuzzle.ask.callCount).be.eql(3);
       const args0 = kuzzle.ask.getCall(0).args;
       const args1 = kuzzle.ask.getCall(1).args;
       should(args0[1]).not.eql(args1[1]);
+      should(kuzzle.ask.getCall(2).args[0]).be.eql('core:cache:internal:execute');
     });
 
     it('should evict the node an error is received from the refresh worker', async () => {
@@ -118,20 +124,26 @@ describe('ClusterIdCardHandler', () => {
       idCardHandler.idCard = idCard1;
       idCardHandler.nodeIdKey = 'redis/id1';
       kuzzle.ask
-        .withArgs('core:cache:internal:searchKeys')
-        .resolves(['redis/id1', 'redis/id2', 'redis/id3']);
+        .withArgs('core:cache:internal:execute')
+        .resolves(['redis/id1', 'redis/id2', 'redis/id3', 'redis/id4']);
       kuzzle.ask
         .withArgs('core:cache:internal:mget')
-        .resolves([idCard2.serialize(), idCard3.serialize()]);
+        .resolves([idCard2.serialize(), idCard3.serialize(), null]);
 
       const remoteCards = await idCardHandler.getRemoteIdCards();
 
       should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:searchKeys',
-        '{cluster/node}/*');
+        'core:cache:internal:execute',
+        'smembers',
+        '{cluster/node}/id-cards-index');
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:mget',
-        ['redis/id2', 'redis/id3']);
+        ['redis/id2', 'redis/id3', 'redis/id4']);
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:execute',
+        'srem',
+        '{cluster/node}/id-cards-index',
+        'redis/id4');
       should(remoteCards).be.eql([idCard2, idCard3]);
     });
   });

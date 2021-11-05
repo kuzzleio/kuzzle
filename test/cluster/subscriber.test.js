@@ -220,6 +220,9 @@ describe('ClusterSubscriber', () => {
         subscriber.handlers = {
           [topic]: addIndexHandler
         };
+        subscriber.localNode.fullState = {
+          serialize: sinon.stub()
+        };
       });
 
       it('should validate the message and call the appropriate handler', async () => {
