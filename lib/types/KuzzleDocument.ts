@@ -1,8 +1,6 @@
-import { JSONObject } from 'kuzzle-sdk';
-
 // Should be in the SDK instead
-export interface KuzzleDocument {
+export interface KuzzleDocument<T> {
   _id: string;
 
-  _source: JSONObject;
+  _source: T;
 }
