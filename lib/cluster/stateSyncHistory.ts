@@ -101,10 +101,10 @@ export class StateSyncHistory {
       try {
         const [ historyTTL, maxEntries ] = await Promise.all([
           global.kuzzle.ask(
-            'core:cache:internal:get',
+            'core:cache:public:get',
             StateSyncHistory.REDIS_KEY_SYNC_HISTORY_TTL),
           global.kuzzle.ask(
-            'core:cache:internal:get',
+            'core:cache:public:get',
             StateSyncHistory.REDIS_KEY_SYNC_HISTORY_MAX_ENTRIES)
         ]);
 
@@ -172,7 +172,7 @@ export class StateSyncHistory {
 
     try {
       await global.kuzzle.ask(
-        'core:cache:internal:store',
+        'core:cache:public:store',
         this.redisKeySyncHistory,
         serialized,
         { ttl: this.historyTTL });
