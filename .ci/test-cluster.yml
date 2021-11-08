@@ -52,7 +52,7 @@ services:
     ports:
       - "7512:7512"
     volumes:
-      - ../docker/nginx-dev:/etc/nginx/conf.d
+      - ./nginx:/etc/nginx/conf.d
 
   kuzzle_node_1:
     <<: *kuzzle-config
