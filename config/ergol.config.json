@@ -1,5 +1,5 @@
 {
-  "killDelay": "5000",
+  "killDelay": "3000",
   "nodeArgs": [
     "--inspect=0.0.0.0:9229",
     "-r",

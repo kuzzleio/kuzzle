@@ -1,91 +1,118 @@
 version: '3.4'
 
-x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/core-dev:2
-  command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
-  volumes:
-    - ".:/var/app"
-    - "./docker/scripts/run-dev.sh:/run-dev.sh"
-    - "./docker/fixtures:/fixtures"
-  cap_add:
-    - SYS_PTRACE
-  ulimits:
-    nofile: 65536
-  sysctls:
-    - net.core.somaxconn=8192
-  depends_on:
-    - redis
-    - elasticsearch
-  environment:
-    - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
-    - kuzzle_services__storageEngine__commonMapping__dynamic=true
-    - kuzzle_services__internalCache__node__host=redis
-    - kuzzle_services__memoryStorage__node__host=redis
-    - kuzzle_server__protocols__mqtt__enabled=true
-    - kuzzle_server__protocols__mqtt__developmentMode=false
-    - kuzzle_limits__loginsPerSecond=50
-    - NODE_ENV=${NODE_ENV:-development}
-    - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:network:protocols:websocket,-kuzzle:events}
-    # - DEBUG=${DEBUG:-none}
-    - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
-    - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
-    - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
-    - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
-    - DEBUG_COLORS=${DEBUG_COLORS:-on}
-    - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
-    - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features/fixtures/secrets.enc.json}
-    # Variables used by the development scripts
-    - NODE_12_VERSION=12.20.0
-    - NODE_14_VERSION=14.17.0
-    - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
-    - REBUILD # Force a rebuild of npm modules
 
 services:
-  nginx:
-    image: nginx:1.19-alpine
-    container_name: kuzzle_nginx
-    depends_on:
-      - kuzzle_node_1
-      - kuzzle_node_2
-      - kuzzle_node_3
+  traefik:
+    image: traefik
+    container_name: traefik
     ports:
       - "7512:7512"
+      - "1883:1883"
+    command:
+      - --log.level=DEBUG
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.endpoint=unix:///var/run/docker.sock
+      - --entrypoints.kuzzle_http.address=:7512
+      - --entrypoints.kuzzle_mqtt.address=:1883
+    depends_on:
+      kuzzle:
+        condition: service_healthy
     volumes:
-      - ./docker/nginx-dev:/etc/nginx/conf.d
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
-  kuzzle_node_1:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_1
-    ports:
-      - "17510:7512" # Kuzzle API port
-      - "1883:1883" # Kuzzle MQTT port
-      - "9229:9229" # Debug port
+  kuzzle_installer:
+    image: kuzzleio/core-dev:2
+    command: bash /kuzzle-installer.sh 
+    volumes:
+      - ".:/var/app"
+      - "./docker/scripts/kuzzle-installer.sh:/kuzzle-installer.sh"
+    environment:
+      - NODE_12_VERSION=12.20.0
+      - NODE_14_VERSION=14.17.0
 
-  kuzzle_node_2:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_2
-    ports:
-      - "17511:7512" # Kuzzle API port
-      - "11883:1883" # Kuzzle MQTT port
-      - "9230:9229" # Debug port
-
-  kuzzle_node_3:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_3
-    ports:
-      - "17512:7512" # Kuzzle API port
-      - "11884:1883" # Kuzzle MQTT port
-      - "9231:9229" # Debug port
+  kuzzle:
+    image: kuzzleio/core-dev:2
+    command: bash /run-dev.sh
+    volumes:
+      - ".:/var/app:ro"
+      - "./docker/scripts/run-dev.sh:/run-dev.sh"
+      - "./docker/fixtures:/fixtures:ro"
+    cap_add:
+      - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://kuzzle:7512/_healthCheck"]
+      timeout: 1s
+      interval: 2s
+      retries: 10
+    depends_on:
+      redis:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+      kuzzle_installer:
+        condition: service_completed_successfully
+    labels:
+      - "traefik.enable=true"
+      # Kuzzle HTTP/WS
+      - "traefik.http.services.kuzzle_http.loadbalancer.server.port=7512"
+      - "traefik.http.services.kuzzle_http.loadbalancer.healthCheck.path=/_healthCheck"
+      - "traefik.http.services.kuzzle_http.loadbalancer.healthCheck.interval=5s"
+      - "traefik.http.routers.kuzzle.entrypoints=kuzzle_http"
+      - "traefik.http.routers.kuzzle.rule=Host(`localhost`)"
+      - "traefik.http.routers.kuzzle.service=kuzzle_http"
+      # Kuzzle MQTT
+      - "traefik.tcp.services.kuzzle_mqtt.loadbalancer.server.port=1883"
+      - "traefik.tcp.routers.kuzzle.entrypoints=kuzzle_mqtt"
+      - "traefik.tcp.routers.kuzzle.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.kuzzle.service=kuzzle_mqtt"
+    environment:
+      - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__storageEngine__commonMapping__dynamic=true
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+      - kuzzle_server__protocols__mqtt__enabled=true
+      - kuzzle_server__protocols__mqtt__developmentMode=false
+      - kuzzle_limits__loginsPerSecond=50
+      - NODE_ENV=${NODE_ENV:-development}
+      - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:network:protocols:websocket,-kuzzle:events}
+      # - DEBUG=${DEBUG:-none}
+      - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
+      - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
+      - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
+      - DEBUG_SHOW_HIDDEN={$DEBUG_SHOW_HIDDEN:-on}
+      - DEBUG_COLORS=${DEBUG_COLORS:-on}
+      - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
+      - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features/fixtures/secrets.enc.json}
+      # Variables used by the development scripts
+      - NODE_12_VERSION=12.20.0
+      - NODE_14_VERSION=14.17.0
+      - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
+      - REBUILD # Force a rebuild of npm modules
 
   redis:
     image: redis:6
     container_name: kuzzle_redis
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 1s
+      timeout: 3s
+      retries: 30
     ports:
       - "6379:6379"
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
     container_name: kuzzle_elasticsearch
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 2s
+      timeout: 2s
+      retries: 10
     ports:
       - "9200:9200"
     ulimits:
