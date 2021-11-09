@@ -20,10 +20,10 @@ components:
   schemas:
     CountRequest:
       allOf:
-        - $ref: "./definitions.yaml#/definitions/BasicRequest"
+        - $ref: "./definitions.yaml#/definitions/RequestPayload"
     CountResponse:
       allOf:
-        - $ref: "./definitions.yaml#/definitions/BasicResponse"
+        - $ref: "./definitions.yaml#/definitions/ResponsePayload"
         - type: "object"
           properties:
             result:
