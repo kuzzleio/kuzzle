@@ -1,0 +1,42 @@
+DocumentDelete:
+  delete:
+    summary: "Deletes a document."
+    tags:
+      - document
+    parameters:
+      - name: body
+        in: "body"
+        description: "Deletes a document."
+        required: true
+        schema:
+          $ref: "#/components/schemas/DocumentDeleteRequest"
+    responses:
+      200:
+        description: "Deletes a document."
+        schema:
+          $ref: "#/components/schemas/DocumentDeleteResponse"
+
+components:
+  schemas:
+    DocumentDeleteRequest:
+      allOf:
+        - $ref: "#/components/RequestPayload"
+        - type: "object"
+          properties:
+            _id:
+              type: "string"
+              description: "documentId"
+            refresh:
+              type: "string"
+              description: " if set to wait_for, Kuzzle will not respond until the created/replaced document is indexed"
+    DocumentDeleteResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                _id:
+                  type: "string"
+                  description: "documentId"
