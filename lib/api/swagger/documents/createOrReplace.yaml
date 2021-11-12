@@ -1,0 +1,48 @@
+DocumentCreateOrReplace:
+  put:
+    summary: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
+    tags:
+      - document
+    parameters:
+      - name: body
+        in: "body"
+        description: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
+        required: true
+        schema:
+          $ref: "#/components/schemas/DocumentCreateOrReplaceRequest"
+    responses:
+      200:
+        description: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
+        schema:
+          $ref: "#/components/schemas/DocumentCreateOrReplaceResponse"
+
+components:
+  schemas:
+    DocumentCreateOrReplaceRequest:
+      allOf:
+        - $ref: "#/components/RequestPayload"
+        - type: "object"
+          properties:
+            _id:
+              type: "string"
+              description: "documentId"
+            refresh:
+              type: "string"
+              description: " if set to wait_for, Kuzzle will not respond until the created/replaced document is indexed"
+    DocumentCreateOrReplaceResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                _id:
+                  type: "string"
+                  description: "documentId"
+                _version:
+                  type: "integer"
+                _sources:
+                  type: "object"
+                created:
+                  type: "boolean"

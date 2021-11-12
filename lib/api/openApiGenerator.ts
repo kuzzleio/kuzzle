@@ -24,7 +24,9 @@ import { version } from './../../package.json';
 import {
   DocumentCount,
   DefinitionsDocument, 
-  DocumentCountComponent, 
+  DocumentCountComponent,
+  DocumentCreateOrReplace,
+  DocumentCreateOrReplaceComponent,
 } from './swagger/documents/document';
 
 const routeUrlMatch = /:([^/]*)/g;
@@ -86,13 +88,17 @@ export function generateOpenApi(_request: KuzzleRequest): any {
     ],
     paths: {
       '/count': {
-        DocumentCount
+        DocumentCount,
       },
+      '/createOrReplace': {
+        DocumentCreateOrReplace,
+      }
     },
     components: {
       DefinitionsDocument,
       schemas: {
         DocumentCountComponent,
+        DocumentCreateOrReplaceComponent,
       }
     }
   };
