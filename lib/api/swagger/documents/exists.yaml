@@ -1,5 +1,5 @@
 DocumentExists:
-  post:
+  get:
     summary: "Checks if a document exists."
     tags:
       - document
