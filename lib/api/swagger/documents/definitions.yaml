@@ -7,7 +7,7 @@ definitions:
         enum: "document"
       action:
         type: "string"
-        enum: "count"
+        enum: "foo"
       index:
         type: "string"
       collection:
