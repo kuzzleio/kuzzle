@@ -90,7 +90,7 @@ export function generateOpenApi(_request: KuzzleRequest): any {
       '/count': {
         DocumentCount
       },
-      '/delete': {
+      '/Delete': {
         DocumentDelete,
       }
     },
