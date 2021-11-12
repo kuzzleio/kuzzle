@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const { NotFoundError, Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.join', () => {
   const connectionId = 'connectionid';
@@ -121,7 +121,7 @@ describe('Test: hotelClerk.join', () => {
     }, context);
     const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});
-    sinon.stub(hotelClerk, '_subscribeToRoom').resolves(response);
+    sinon.stub(hotelClerk, 'subscribeToRoom').resolves(response);
 
     await hotelClerk.join(joinRequest);
 

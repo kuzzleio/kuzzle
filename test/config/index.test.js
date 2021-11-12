@@ -35,6 +35,28 @@ describe('lib/config/index.js', () => {
     mockRequire.reRequire('../../lib/config');
   });
 
+  describe('#processRedisOptions', () => {
+    it('should use old database option and put it in redis client options when provided', async () => {
+      mockedConfigContent = {
+        services: {
+          internalCache: {
+            node: { host: 'foobar', port: 6379 },
+            database: 4
+          },
+          memoryStorage: {
+            node: { host: 'foobar', port: 6379 },
+            database: 4
+          },
+        }
+      };
+
+      const result = config.load();
+
+      should(result.services.internalCache.options.db).be.eql(4);
+      should(result.services.memoryStorage.options.db).be.eql(4);
+    });
+  });
+
   describe('#loadConfig', () => {
     it('should invoke "rc" to load both the default and custom configs', () => {
       config.load();

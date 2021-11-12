@@ -21,6 +21,8 @@
 
 import { NormalizedFilter } from 'koncorde';
 import { JSONObject } from 'kuzzle-sdk';
+
+import { RoomList } from '../types';
 import Long from 'long';
 
 import kerror from '../kerror';
@@ -321,7 +323,7 @@ export default class State {
   }
 
   listRealtimeRooms () {
-    const list: RealtimeRoomsList = {};
+    const list: RoomList = {};
 
     for (const room of this.realtime.values()) {
       if (!list[room.index]) {
@@ -424,17 +426,6 @@ export default class State {
     }
   }
 }
-
-export type RealtimeRoomsList = {
-  [index: string]: {
-    [collection: string]: {
-      /**
-       * Number of subscriptions per room
-       */
-      [roomId: string]: number
-    }
-  }
-};
 
 export type SerializedState = {
   authStrategies: JSONObject[];
