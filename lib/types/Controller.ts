@@ -20,7 +20,7 @@
  */
 
 import { Backend } from '../core/backend';
-import { ControllerDefinition } from './config/ControllerDefinition';
+import { ControllerDefinition } from './ControllerDefinition';
 import { EmbeddedSDK } from '../core/shared/sdk/embeddedSdk';
 
 /**

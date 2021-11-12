@@ -20,7 +20,7 @@
  */
 
 import { JSONObject } from 'kuzzle-sdk';
-import { KuzzleRequest } from '../../api/request';
+import { KuzzleRequest } from '../api/request';
 
 /**
  * API controller definition.
