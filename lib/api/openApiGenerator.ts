@@ -25,6 +25,8 @@ import {
   DocumentCount,
   DefinitionsDocument, 
   DocumentCountComponent, 
+  DocumentDeleteByQuery,
+  DocumentDeleteByQueryComponent,
 } from './swagger/documents/document';
 
 const routeUrlMatch = /:([^/]*)/g;
@@ -88,11 +90,15 @@ export function generateOpenApi(_request: KuzzleRequest): any {
       '/count': {
         DocumentCount
       },
+      '/deleteByQuery': {
+        DocumentDeleteByQuery
+      }
     },
     components: {
       DefinitionsDocument,
       schemas: {
         DocumentCountComponent,
+        DocumentDeleteByQueryComponent
       }
     }
   };

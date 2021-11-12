@@ -1,0 +1,43 @@
+DocumentDeleteByQuery:
+  delete:
+    summary: "Deletes documents matching the provided search query."
+    tags:
+      - document
+    parameters:
+      - name: body
+        in: "body"
+        description: "Deletes documents matching the provided search query."
+        required: true
+        schema:
+          $ref: "#/components/schemas/DocumentDeleteByQueryRequest"
+    responses:
+      200:
+        description: "Deletes documents matching the provided search query."
+        schema:
+          $ref: "#/components/schemas/DocumentDeleteByQueryResponse"
+
+components:
+  schemas:
+    DocumentDeleteByQueryRequest:
+      allOf:
+        - $ref: "#/components/RequestPayload"
+        - type: "object"
+          properties:
+            body:
+              type: "object"
+              properties:
+                query:
+                  type: "object"
+                  description: "documents matching this search query will be deleted. Uses the ElasticSearch Query DSL syntax."
+    DocumentDeleteByQueryResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                ids:
+                  type: "array"
+                  items:
+                    type: "string"
