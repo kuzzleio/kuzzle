@@ -107,6 +107,21 @@ describe('Plugin', () => {
       pluginsManager.loadPlugins = sinon.stub().returns(new Map());
     });
 
+    it('should only load core plugins in failsafe mode', async () => {
+      const loggerPlugin = createPlugin('kuzzle-plugin-logger');
+      const localPlugin = createPlugin('kuzzle-plugin-auth-passport-local');
+      pluginsManager.loadPlugins.returns(new Map([[loggerPlugin.name, loggerPlugin], [localPlugin.name, localPlugin]]));
+      pluginsManager._plugins.set(plugin.name, plugin);
+      pluginsManager.config.common.failsafeMode = true;
+
+      await pluginsManager.init();
+
+      should(pluginsManager.loadedPlugins).be.eql([
+        'kuzzle-plugin-logger',
+        'kuzzle-plugin-auth-passport-local',
+      ]);
+    });
+
     it('should loads plugins with existing plugins', async () => {
       const otherPlugin = createPlugin('other-plugin');
       pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin]]));
@@ -116,6 +131,10 @@ describe('Plugin', () => {
 
       should(pluginsManager._plugins.get(plugin.name)).be.eql(plugin);
       should(pluginsManager._plugins.get(otherPlugin.name)).be.eql(otherPlugin);
+      should(pluginsManager.loadedPlugins).be.eql([
+        'other-plugin',
+        'test-plugin',
+      ]);
     });
 
     it('should registers handlers on hook events ', async () => {

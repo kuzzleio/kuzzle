@@ -5,7 +5,7 @@ const sinon = require('sinon');
 
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
 
 describe('Test: hotelClerk.listCollections', () => {
   let kuzzle;

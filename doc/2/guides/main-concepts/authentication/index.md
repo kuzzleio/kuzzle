@@ -177,7 +177,7 @@ kourou auth:login -a strategy=local --body '{
 
 When you're sending HTTP requests from a browser you can instruct Kuzzle
 to `load` and `store` authentication tokens within an [HTTP Cookie](https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies).
-This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/checkToken), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
+This is possible thanks to the option [cookieAuth](/core/2/api/protocols/http#cookieAuth) in [auth:login](/core/2/api/controllers/auth/login), [auth:logout](/core/2/api/controllers/auth/logout), [auth:checkToken](/core/2/api/controllers/auth/check-token), [auth:refreshToken](/core/2/api/controllers/auth/refresh-token)
 
 You can disable the cookie authentication by setting `http.cookieAuthentication` to `false` in [Kuzzle Configuration](/core/2/guides/advanced/configuration).
 

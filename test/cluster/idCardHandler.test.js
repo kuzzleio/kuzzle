@@ -62,7 +62,7 @@ describe('ClusterIdCardHandler', () => {
         idCardHandler.idCard.serialize(),
         {
           onlyIfNew: true,
-          ttl: refreshDelay * 3
+          ttl: refreshDelay * 4
         });
     });
 
