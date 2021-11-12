@@ -101,8 +101,8 @@ describe('Test: ElasticSearch Wrapper', () => {
         global.NODE_ENV = nodeEnv;
       });
 
-      it('should log the source error for easier support & debugging', () => {
-        kuzzle.log.info.resetHistory();
+      it('should emit the source error for easier support & debugging', () => {
+        kuzzle.emit.resetHistory();
 
         const error = new Error('test');
         error.meta = {
@@ -116,25 +116,25 @@ describe('Test: ElasticSearch Wrapper', () => {
 
         esWrapper.formatESError(error);
 
-        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+        should(kuzzle.emit).be.calledWith('services:storage:error', {
           message: `Elasticsearch Client error: ${error.message}`,
           meta: error.meta,
           stack: error.stack,
-        }));
+        });
       });
 
       it('should be able to log errors without meta', () => {
-        kuzzle.log.info.resetHistory();
+        kuzzle.emit.resetHistory();
 
         const error = new Error('test');
 
         esWrapper.formatESError(error);
 
-        should(kuzzle.log.info).be.calledWith(JSON.stringify({
+        should(kuzzle.emit).be.calledWith('services:storage:error', {
           message: `Elasticsearch Client error: ${error.message}`,
           meta: null,
           stack: error.stack,
-        }));
+        });
       });
     });
   });

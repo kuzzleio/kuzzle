@@ -6,12 +6,15 @@ const sinon = require('sinon');
 const { Request } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
-const HotelClerk = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
+const { Channel } = require('../../../../lib/core/realtime/channel');
+const { Room } = require('../../../../lib/core/realtime/room');
 const Notifier = require('../../../../lib/core/realtime/notifier');
 const {
   DocumentNotification,
   UserNotification,
 } = require('../../../../lib/core/realtime/notification');
+const { ConnectionRooms } = require('../../../../lib/core/realtime/connectionRooms');
 
 describe('notify methods', () => {
   let kuzzle;
@@ -23,7 +26,7 @@ describe('notify methods', () => {
     kuzzle = new KuzzleMock();
 
     hotelClerk = new HotelClerk();
-    sinon.stub(hotelClerk, 'removeUser');
+    sinon.stub(hotelClerk, 'removeConnection');
 
     notifier = new Notifier({ hotelClerk });
 
@@ -35,35 +38,47 @@ describe('notify methods', () => {
       action: 'action'
     }, {protocol: 'protocol'});
 
-    hotelClerk.rooms.set('matchingSome', {
-      channels: {
-        matching_all: {state: 'all', scope: 'all', users: 'all', cluster: true },
-        matching_in: {state: 'all', scope: 'in', users: 'none', cluster: true },
-        matching_out: {state: 'all', scope: 'out', users: 'none', cluster: true },
-        matching_none: {state: 'none', scope: 'none', users: 'none', cluster: true },
-        matching_userIn: {state: 'none', scope: 'none', users: 'in', cluster: true },
-        matching_userOut: {state: 'none', scope: 'none', users: 'out', cluster: true }
-      }
-    });
+    hotelClerk.rooms.set('matchingSome', new Room(
+      'matchingSome',
+      'index',
+      'collection',
+      new Map([
+        ['matching_all', new Channel('matchingSome', { scope: 'all', users: 'all', propagate: true })],
+        ['matching_in', new Channel('matchingSome', { scope: 'in', users: 'none', propagate: true })],
+        ['matching_out', new Channel('matchingSome', { scope: 'out', users: 'none', propagate: true })],
+        ['matching_none', new Channel('matchingSome', { scope: 'none', users: 'none', propagate: true })],
+        ['matching_userIn', new Channel('matchingSome', { scope: 'none', users: 'in', propagate: true })],
+        ['matching_userOut', new Channel('matchingSome', { scope: 'none', users: 'out', propagate: true })],
+      ]),
+    ));
 
-    hotelClerk.rooms.set('nonMatching', {
-      channels: {
-        foobar: { cluster: true }
-      }
-    });
+    hotelClerk.rooms.set('nonMatching', new Room(
+      'nonMatching',
+      'index',
+      'collection',
+      new Map([
+        ['foobar', new Channel('nonMatching', { scope: 'none', propagate: true })],
+      ]),
+    ));
 
-    hotelClerk.rooms.set('cluster', {
-      channels: {
-        clusterOn: {state: 'all', scope: 'all', users: 'all', cluster: true },
-        clusterOff: {state: 'all', scope: 'all', users: 'all', cluster: false },
-      }
-    });
+    hotelClerk.rooms.set('cluster', new Room(
+      'cluster',
+      'index',
+      'collection',
+      new Map([
+        ['clusterOn', new Channel('cluster', { scope: 'all', users: 'all', propagate: true }) ],
+        ['clusterOff', new Channel('cluster', { scope: 'all', users: 'all', propagate: false }) ],
+      ]),
+    ));
 
-    hotelClerk.rooms.set('alwaysMatching', {
-      channels: {
-        always: {state: 'all', scope: 'all', cluster: true }
-      }
-    });
+    hotelClerk.rooms.set('alwaysMatching', new Room(
+      'alwaysMatching',
+      'index',
+      'collection',
+      new Map([
+        ['always', new Channel('alwaysMatching', { scope: 'all', propagate: true })],
+      ]),
+    ));
 
     return notifier.init();
   });
@@ -300,10 +315,10 @@ describe('notify methods', () => {
     });
 
     it('should notify on channel kuzzle:notification:server', async () => {
-      hotelClerk.customers.set('foobar', new Map([
+      hotelClerk.subscriptions.set('foobar', new ConnectionRooms(new Map([
         ['nonMatching', null],
         ['alwaysMatching', null],
-      ]));
+      ])));
 
       await notifier.notifyTokenExpired('foobar');
 

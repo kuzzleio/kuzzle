@@ -102,19 +102,18 @@ describe('ClusterIDCardRenewer', () => {
         nodeIdKey: 'foo',
         redis: {},
         refreshDelay: 100,
+        refreshMultiplier: 4
       });
     });
 
     it('should call pexpire to refresh the key expiration time', async () => {
       idCardRenewer.redis.commands.pexpire.resetHistory();
+
       await idCardRenewer.renewIDCard();
 
       should(idCardRenewer.redis.commands.pexpire)
         .be.calledOnce()
-        .and.be.calledWith(
-          'foo',
-          300
-        );
+        .and.be.calledWith('foo', 400);
 
       should(idCardRenewer.dispose).not.be.called();
       should(idCardRenewer.parentPort.postMessage).not.be.called();
@@ -123,7 +122,7 @@ describe('ClusterIDCardRenewer', () => {
     it('should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card', async () => {
       idCardRenewer.redis.commands.pexpire.resolves(0); // Failed to renew the ID Card before the key expired
       await idCardRenewer.renewIDCard();
-      
+
       should(idCardRenewer.redis.commands.pexpire).be.called();
 
       should(idCardRenewer.dispose).be.called();

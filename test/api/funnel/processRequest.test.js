@@ -291,6 +291,17 @@ describe('funnel.processRequest', () => {
           volatile: {}
         }
       };
+      kuzzle.config.server.strictSdkVersion = true;
+    });
+
+    it('should not check SDK version if "config.server.strictSdkVersion" is false', () => {
+      kuzzle.config.server.strictSdkVersion = false;
+      funnel.sdkCompatibility = { js: { min: 8 } };
+
+      request.input.volatile.sdkName = 'js@7.4.2';
+
+      should(() => funnel._checkSdkVersion(request))
+        .not.throw(BadRequestError, { id: 'api.process.incompatible_sdk_version' });
     });
 
     it('should not throw if sdkName is in incorrect format', () => {

@@ -19,18 +19,22 @@
  * limitations under the License.
  */
 
-export * from './config/Plugin';
+export * from './Plugin';
 export * from './Controller';
-export * from './config/ControllerDefinition';
-export * from './config/RequestPayload';
-export * from './config/ResponsePayload';
-export * from './config/Deprecation';
-export * from './config/EventHandler';
+export * from './ControllerDefinition';
+export * from './RequestPayload';
+export * from './ResponsePayload';
+export * from './Deprecation';
+export * from './EventHandler';
 export * from './User';
 export * from './Token';
 export * from './Global';
-export * from './config/PasswordPolicy';
+export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
-export * from './config/RoleDefinition';
-export * from './config/ProfileDefinition';
 export * from './config/ServerConfiguration';
+export * from './RoleDefinition';
+export * from './ProfileDefinition';
+export * from './realtime/RealtimeScope';
+export * from './realtime/RealtimeUsers';
+export * from './realtime/RoomList';
+export * from './KuzzleDocument';

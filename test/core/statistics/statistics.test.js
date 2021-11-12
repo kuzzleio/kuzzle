@@ -41,6 +41,7 @@ describe('Test: statistics core component', () => {
 
     kuzzle = new Kuzzle();
     stats = new Statistics();
+    stats.enabled = true;
   });
 
   afterEach(() => {
@@ -76,6 +77,15 @@ describe('Test: statistics core component', () => {
     should(stats.currentStats.ongoingRequests).be.empty();
   });
 
+  it('should do nothing for startRequest if module is disabled', () => {
+    request.context.protocol = 'foobar';
+    stats.enabled = false;
+
+    stats.startRequest();
+
+    should(stats.currentStats.ongoingRequests).be.empty();
+  });
+
   it('should handle completed requests', () => {
     stats.currentStats.ongoingRequests.set('foobar', 2);
     request.context.protocol = 'foobar';
@@ -92,6 +102,16 @@ describe('Test: statistics core component', () => {
     should(stats.currentStats.completedRequests).be.empty();
 
     stats.completedRequest(request);
+    should(stats.currentStats.completedRequests).be.empty();
+  });
+
+  it('should do nothing for completedRequest if module is disabled', () => {
+    stats.currentStats.ongoingRequests.set('foobar', 2);
+    request.context.protocol = 'foobar';
+    stats.enabled = false;
+
+    stats.completedRequest();
+
     should(stats.currentStats.completedRequests).be.empty();
   });
 
@@ -115,12 +135,31 @@ describe('Test: statistics core component', () => {
     should(stats.currentStats.failedRequests).be.empty();
   });
 
+  it('should do nothing for failedRequest if module is disabled', () => {
+    stats.currentStats.ongoingRequests.set('foobar', 2);
+    request.context.protocol = 'foobar';
+    stats.enabled = false;
+
+    stats.failedRequest(request);
+
+    should(stats.currentStats.failedRequests).be.empty();
+  });
+
   it('should handle new connections', () => {
     const context = new RequestContext({connection: {protocol: 'foobar'}});
     stats.newConnection(context);
     should(stats.currentStats.connections.get('foobar')).not.be.undefined().and.be.exactly(1);
     stats.newConnection(context);
     should(stats.currentStats.connections.get('foobar')).not.be.undefined().and.be.exactly(2);
+  });
+
+  it('should not handle new connections if module is disabled', () => {
+    const context = new RequestContext({connection: {protocol: 'foobar'}});
+    stats.enabled = false;
+
+    stats.newConnection(context);
+
+    should(stats.currentStats.connections.get('foobar')).be.undefined();
   });
 
   it('should be able to unregister a connection', () => {
@@ -131,6 +170,16 @@ describe('Test: statistics core component', () => {
     should(stats.currentStats.connections.get('foobar')).be.exactly(1);
     stats.dropConnection(context);
     should(stats.currentStats.connections.get('foobar')).be.undefined();
+  });
+
+  it('should not handle unregister a connection if module is disabled', () => {
+    const context = new RequestContext({connection: {protocol: 'foobar'}});
+    stats.currentStats.connections.set('foobar', 2);
+    stats.enabled = false;
+
+    stats.dropConnection(context);
+
+    should(stats.currentStats.connections.get('foobar')).be.exactly(2);
   });
 
   it('should return the current frame when there is still no statistics in cache', () => {
@@ -327,6 +376,15 @@ describe('Test: statistics core component', () => {
       '{stats/}' + stats.lastFrame,
       JSON.stringify(fakeStats),
       { ttl: stats.ttl });
+  });
+
+  it('should not write statistics frames in cache if module is disabled', async () => {
+    stats.currentStats = Object.assign({}, fakeStats);
+    stats.enabled = false;
+
+    await stats.writeStats();
+
+    should(kuzzle.ask).not.be.called();
   });
 
   it('should reject the promise if the cache returns an error', () => {
