@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { PluginContext } from '../../../core/plugin/pluginContext';
-import { ControllerDefinition } from '../ControllerDefinition';
+import { PluginContext } from '../core/plugin/pluginContext';
+import { ControllerDefinition } from './ControllerDefinition';
 import { PluginManifest } from './PluginManifest';
-import { StrategyDefinition } from '../StrategyDefinition';
-import { EventHandler } from '../EventHandler';
-import { JSONObject} from '../../../../index';
-import kerror from '../../../kerror';
-import { has } from '../../../util/safeObject';
+import { StrategyDefinition } from './StrategyDefinition';
+import { EventHandler } from './EventHandler';
+import { JSONObject} from '../../index';
+import kerror from '../kerror';
+import { has } from '../util/safeObject';
 
 /**
  * Allows to define plugins controllers and actions
@@ -90,7 +90,7 @@ export abstract class Plugin {
    *   }
    * }
    */
-  public api?: PluginApiDefinition
+  public api?: PluginApiDefinition;
 
   /**
    * Define hooks on Kuzzle events.
@@ -103,7 +103,7 @@ export abstract class Plugin {
    *   'security:afterCreateUser': async (request: Request) => ...
    * }
    */
-  public hooks?: PluginHookDefinition
+  public hooks?: PluginHookDefinition;
 
   /**
    * Define pipes on Kuzzle events.
@@ -116,7 +116,7 @@ export abstract class Plugin {
    *   'document:afterCreate': async (request: Request) => ...
    * }
    */
-  public pipes?: PluginPipeDefinition
+  public pipes?: PluginPipeDefinition;
 
   /**
    * Define authenticator classes used by strategies.
@@ -127,15 +127,15 @@ export abstract class Plugin {
     /**
      * The key is the authenticator name and the value is the class.
      */
-    [name: string]: any
-  }
+    [name: string]: any;
+  };
 
   /**
    * Define authentications strategies.
    *
    * @see https://docs.kuzzle.io/core/2/plugins/guides/strategies/overview
    */
-  public strategies?: StrategyDefinition
+  public strategies?: StrategyDefinition;
 
   /**
    * Plugin initialization method.

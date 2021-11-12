@@ -105,6 +105,11 @@
   // (see https://docs.kuzzle.io/core/2/guides/write-plugins)
   "plugins": {
     // [Common]
+    //   * failsafeMode
+    //        If true, Kuzzle will not load custom plugin and features (including
+    //        the ones defined in the application).
+    //        The API will only be available to administrators ("admin" profile)
+    //        during failsafe mode.
     //   * bootstrapLockTimeout
     //        Maximum amount of time (in milliseconds)
     //        to wait for a concurrent plugin bootstrap
@@ -131,6 +136,7 @@
     //        Maximum number of pipes that can be delayed. If full, new pipes
     //        are rejected.
     "common": {
+      "failsafeMode": false,
       "bootstrapLockTimeout": 30000,
       "pipeWarnTime": 40,
       "initTimeout": 2000,
@@ -350,8 +356,11 @@
     //       ("gb") or terabytes ("tb")
     //   * port:
     //       The listening port for HTTP and WebSocket
+    //   * strictSdkVersion:
+    //       Raise an error when an incompatible SDK is used.
     "maxRequestSize": "1mb",
     "port": 7512,
+    "strictSdkVersion": true,
     // [logs]
     // Configuration section for Kuzzle access logs
     //   * transports:
@@ -814,11 +823,14 @@
   },
 
   // Configuration of the Kuzzle's internal statistics module
+  //   * enabled:
+  //      Enable or disable the stats module
   //   * ttl:
   //      Time to live (in seconds) of a statistics frame
   //   * statsInterval:
   //      Time (in seconds) between statistics snapshots
   "stats": {
+    "enabled": true,
     "ttl": 3600,
     "statsInterval": 10
   },
