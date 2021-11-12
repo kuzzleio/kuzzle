@@ -1,0 +1,35 @@
+DocumentExists:
+  post:
+    summary: "Checks if a document exists."
+    tags:
+      - document
+    parameters:
+      - name: body
+        in: "body"
+        description: "Counts documents in a collection."
+        required: true
+        schema:
+          $ref: "#/components/schemas/DocumentCountRequest"
+    responses:
+      200:
+        description: "Counts documents in a collection."
+        schema:
+          $ref: "#/components/schemas/DocumentCountResponse"
+
+components:
+  schemas:
+    DocumentExistsRequest:
+      allOf:
+        - $ref: "#/components/RequestPayload"
+        - type: "object"
+          properties:
+            _id:
+              type: "string"
+              description: "documentId"
+    DocumentExistsResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "boolean"
