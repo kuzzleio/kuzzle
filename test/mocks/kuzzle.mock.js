@@ -133,7 +133,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       application: {
         info: sinon.stub()
       },
-      routes: []
+      routes: [],
+      loadedPlugins: []
     };
 
     this.rootPath = '/kuzzle';
@@ -172,6 +173,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       refresh: sinon.stub(),
       unlink: sinon.stub(),
       getKuidFromConnection: sinon.stub(),
+      removeConnection: sinon.stub().resolves(),
     };
 
     this.validation = {
