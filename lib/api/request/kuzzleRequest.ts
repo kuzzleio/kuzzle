@@ -740,7 +740,7 @@ export class KuzzleRequest {
   /**
    * Gets the refresh value.
    */
-  getRefresh (defaultValue: 'false' | 'wait_for' | 'true' = 'false'): 'false' | 'wait_for' | 'true' {
+  getRefresh (defaultValue: 'false' | 'wait_for' = 'false'): 'false' | 'wait_for' {
     if (this.input.args.refresh === undefined) {
       return defaultValue;
     }
@@ -752,7 +752,7 @@ export class KuzzleRequest {
       return 'false';
     }
 
-    return this.input.args.refresh;
+    return 'wait_for';
   }
 
   /**
