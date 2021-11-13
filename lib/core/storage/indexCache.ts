@@ -19,31 +19,30 @@
  * limitations under the License.
  */
 
-'use strict';
+import kerror from '../../kerror';
 
-const kerror = require('../../kerror').wrap('services', 'storage');
+const storageError = kerror.wrap('services', 'storage');
 
-class IndexCache {
+export class IndexCache {
   /**
-   * @param  {storeScopeEnum} scope
+   * Index map: each entry holds a set of collection names
    */
-  constructor (scope) {
+  private indexes = new Map<string, Set<string>>();
+
+  private scope: 'public' | 'private';
+
+  constructor (scope: 'public' | 'private') {
     this.scope = scope;
 
-    /**
-     * Index map: each entry holds a set of collection names
-     * @type {Map.<String, Set>}
-     */
     this.indexes = new Map();
   }
 
   /**
    * Cache a new index
-   * @param {string} index
-   * @return {boolean} true if an index was added, false if there is no
-   *                   modification
+   *
+   * @return true if an index was added, false if there is no modification
    */
-  addIndex (index) {
+  addIndex (index: string): boolean {
     if (this.indexes.has(index)) {
       return false;
     }
@@ -55,10 +54,8 @@ class IndexCache {
 
   /**
    * Cache a new collection
-   * @param {string} index
-   * @param {string} collection
    */
-  addCollection (index, collection) {
+  addCollection (index: string, collection: string): void {
     this.addIndex(index);
     const collections = this.indexes.get(index);
 
@@ -67,23 +64,18 @@ class IndexCache {
 
   /**
    * Check an index existence
-   * @param {string} index
-   * @returns {boolean}
    */
-  hasIndex (index) {
+  hasIndex (index: string): boolean {
     return this.indexes.has(index);
   }
 
   /**
    * Check a collection existence
-   * @param {string} index
-   * @param {string} collection
-   * @returns {boolean}
    */
-  hasCollection (index, collection) {
+  hasCollection (index: string, collection: string): boolean {
     const collections = this.indexes.get(index);
 
-    if (!collections) {
+    if (! collections) {
       return false;
     }
 
@@ -92,19 +84,17 @@ class IndexCache {
 
   /**
    * Return the list of cached indexes
-   * @returns {string[]}
    */
-  listIndexes () {
+  listIndexes (): string[] {
     return Array.from(this.indexes.keys());
   }
 
   /**
    * Return the list of an index' collections
-   * @param {string} index
-   * @returns {string[]}
+   *
    * @throws If the provided index does not exist
    */
-  listCollections (index) {
+  listCollections (index: string): string[] {
     this.assertIndexExists(index);
 
     return Array.from(this.indexes.get(index));
@@ -112,18 +102,15 @@ class IndexCache {
 
   /**
    * Remove an index from the cache
-   * @param  {string} index
    */
-  removeIndex (index) {
+  removeIndex (index: string): void {
     this.indexes.delete(index);
   }
 
   /**
    * Remove a collection from the cache
-   * @param {string} index
-   * @param {string} collection
    */
-  removeCollection (index, collection) {
+  removeCollection (index: string, collection: string) {
     const collections = this.indexes.get(index);
 
     if (collections) {
@@ -133,27 +120,23 @@ class IndexCache {
 
   /**
    * Assert that the provided index exists
-   * @param  {string} index
+   *
    * @throws If the index does not exist
    */
-  assertIndexExists (index) {
-    if (!this.indexes.has(index)) {
-      throw kerror.get('unknown_index', index);
+  assertIndexExists (index: string) {
+    if (! this.indexes.has(index)) {
+      throw storageError.get('unknown_index', index);
     }
   }
 
   /**
    * Assert that the provided index and collection exist
-   * @param {string} index
-   * @param {string} collection
    */
-  assertCollectionExists (index, collection) {
+  assertCollectionExists (index: string, collection: string) {
     this.assertIndexExists(index);
 
-    if (!this.indexes.get(index).has(collection)) {
-      throw kerror.get('unknown_collection', index, collection);
+    if (! this.indexes.get(index).has(collection)) {
+      throw storageError.get('unknown_collection', index, collection);
     }
   }
 }
-
-module.exports = IndexCache;

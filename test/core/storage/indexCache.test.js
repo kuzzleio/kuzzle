@@ -5,7 +5,7 @@ const should = require('should');
 const { PreconditionError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const IndexCache = require('../../../lib/core/storage/indexCache');
+const { IndexCache } = require('../../../lib/core/storage/indexCache');
 const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 
 describe('#core/storage/indexCache', () => {

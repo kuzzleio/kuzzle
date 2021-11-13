@@ -177,3 +177,7 @@ message ClusterWideEvent {
   string event = 2;
   string payload = 3;
 }
+
+message RefreshIndexCache {
+  uint64 messageId = 1;
+}
