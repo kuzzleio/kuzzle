@@ -27,6 +27,33 @@ describe('ClusterIdCardHandler', () => {
     });
   });
 
+  describe('#startTemporaryRefresh', () => {
+    beforeEach(() => {
+      idCardHandler.refreshDelay = 1;
+
+      sinon.stub(idCardHandler, 'save').resolves();
+
+      idCardHandler.refreshWorker = new WorkerMock('some/path');
+    });
+
+    it('should start a timer to refresh the ID Card', done => {
+      idCardHandler.startTemporaryRefresh();
+
+      setTimeout(() => {
+        should(idCardHandler.save).be.calledOnce();
+        done();
+      }, 3);
+    });
+
+    it('should stop the timer when the worker has started', () => {
+      idCardHandler.startTemporaryRefresh();
+
+      idCardHandler.refreshWorker.emit('message', { initialized: true });
+
+      should(idCardHandler.refreshTimer).be.null();
+    });
+  });
+
   describe('#createIdCard', () => {
     beforeEach(() => {
       kuzzle.ask
@@ -37,9 +64,11 @@ describe('ClusterIdCardHandler', () => {
         .withArgs('core:cache:internal:pexpire')
         .resolves(1);
 
-      idCardHandler._constructWorker = (path) => {
+      idCardHandler.constructWorker = path => {
         return new WorkerMock(path);
       };
+
+      sinon.stub(idCardHandler, 'startTemporaryRefresh');
     });
 
     afterEach(() => {
@@ -62,7 +91,7 @@ describe('ClusterIdCardHandler', () => {
         JSON.stringify(idCardHandler.idCard.serialize()),
         {
           onlyIfNew: true,
-          ttl: refreshDelay * 4
+          ttl: refreshDelay * 2
         });
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:execute',

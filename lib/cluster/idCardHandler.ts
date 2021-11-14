@@ -97,7 +97,7 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID Card
    */
-  private idCard: IdCard;
+  private idCard: IdCard = null;
 
   /**
    * Local node IP address
@@ -114,22 +114,27 @@ export class ClusterIdCardHandler {
    * Multiplier used to ensure the node has enough time to refresh it's ID Card
    * before the ID Card refresh delay
    */
-  private refreshMultiplier: number;
+  private refreshMultiplier = 2;
 
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
    */
-  private refreshWorker: WorkerThread;
+  private refreshWorker: WorkerThread = null;
+
+  /**
+   * Hold the timer in charge of refreshing the ID Card before the worker starts
+   */
+  private refreshTimer: any = null;
 
   /**
    * Local node ID
    */
-  private nodeId: string;
+  private nodeId: string = null;
 
   /**
    * Local node Redis key
    */
-  private nodeIdKey: string;
+  private nodeIdKey: string = null;
 
   /**
    * Flag to prevent updating the id card if it has been disposed.
@@ -137,20 +142,12 @@ export class ClusterIdCardHandler {
    * the id card is been disposed because the node is evicting itself from the
    * cluster
    */
-  private disposed: boolean;
+  private disposed = false;
 
   constructor (node: any) {
     this.node = node;
-    this.idCard = null;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
-    this.refreshWorker = null;
-    this.nodeId = null;
-    this.nodeIdKey = null;
-
-    this.disposed = false;
-
-    this.refreshMultiplier = 4;
   }
 
   /**
@@ -175,7 +172,7 @@ export class ClusterIdCardHandler {
 
     await this.addIdCardToIndex();
 
-    this.refreshWorker = this._constructWorker(`${__dirname}/workers/IDCardRenewer.js`);
+    this.refreshWorker = this.constructWorker(`${__dirname}/workers/IDCardRenewer.js`);
     this.refreshWorker.unref();
 
     this.refreshWorker.on('message', async message => {
@@ -200,11 +197,39 @@ export class ClusterIdCardHandler {
       refreshDelay: this.refreshDelay,
       refreshMultiplier: this.refreshMultiplier,
     });
+
+    this.startTemporaryRefresh();
   }
 
-  // Used to Mock the creation of a worker for the tests
-  _constructWorker (path) {
+  /**
+   * Helper method to mock worker instantiation in unit tests
+   */
+  private constructWorker (path: string) {
     return new WorkerThread(path);
+  }
+
+  /**
+   * Start refreshing the ID Card before the worker starts to ensure the ID Card
+   * is refreshed.
+   *
+   * Once the worker starts, this timer will be stopped.
+   */
+  private startTemporaryRefresh () {
+    this.refreshTimer = setInterval(async () => {
+      try {
+        await this.save();
+      }
+      catch (error) {
+        global.kuzzle.log.error(`Cannot refresh the ID Card before the worker starts: ${error}`);
+      }
+    }, this.refreshDelay * this.refreshMultiplier);
+
+    this.refreshWorker.on('message', ({ initialized }) => {
+      if (initialized) {
+        clearInterval(this.refreshTimer);
+        this.refreshTimer = null;
+      }
+    });
   }
 
   async dispose (): Promise<void> {
@@ -213,10 +238,6 @@ export class ClusterIdCardHandler {
     if (this.refreshWorker) {
       this.refreshWorker.postMessage({action: 'dispose'});
     }
-  }
-
-  private async refreshIdCard () {
-
   }
 
   /**
