@@ -26,14 +26,12 @@ const storageError = kerror.wrap('services', 'storage');
 export class IndexCache {
   /**
    * Index map: each entry holds a set of collection names
+   *
+   * Map<index, Set<collection>>
    */
   private indexes = new Map<string, Set<string>>();
 
-  private scope: 'public' | 'private';
-
-  constructor (scope: 'public' | 'private') {
-    this.scope = scope;
-
+  constructor () {
     this.indexes = new Map();
   }
 
@@ -90,7 +88,7 @@ export class IndexCache {
   }
 
   /**
-   * Return the list of an index' collections
+   * Return the list of an index collections
    *
    * @throws If the provided index does not exist
    */

@@ -6,7 +6,6 @@ const { PreconditionError } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const { IndexCache } = require('../../../lib/core/storage/indexCache');
-const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 
 describe('#core/storage/indexCache', () => {
   let indexCache;
@@ -14,7 +13,7 @@ describe('#core/storage/indexCache', () => {
   beforeEach(() => {
     new KuzzleMock();
 
-    indexCache = new IndexCache(scopeEnum.PUBLIC);
+    indexCache = new IndexCache();
   });
 
   describe('#addIndex', () => {

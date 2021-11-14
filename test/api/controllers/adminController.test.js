@@ -45,6 +45,15 @@ describe('AdminController', () => {
     });
   });
 
+  describe('#refreshIndexCache', () => {
+    it('should trigger the corresponding event', async () => {
+      await adminController.refreshIndexCache();
+
+      should(kuzzle.ask)
+        .be.calledWith('core:storage:public:cache:refresh');
+    });
+  });
+
   describe('#resetCache', () => {
     beforeEach(() => {
       request.input.action = 'resetCache';
