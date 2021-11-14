@@ -334,8 +334,12 @@ export class ClusterIdCardHandler {
    *
    * @returns True if the key was set
    */
-  private save ({ creation } = { creation: false }): Promise<boolean> {
-    return global.kuzzle.ask(
+  private async save ({ creation } = { creation: false }): Promise<boolean> {
+    if (! this.idCard) {
+      return false;
+    }
+
+    return await global.kuzzle.ask(
       'core:cache:internal:store',
       this.nodeIdKey,
       JSON.stringify(this.idCard.serialize()),
