@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import { generateRandomName } from '../util/name-generator';
 import { Worker as WorkerThread } from 'worker_threads';
 import Bluebird from 'bluebird';
