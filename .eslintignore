@@ -74,3 +74,4 @@ lib/core/realtime/connectionRooms.js
 lib/core/realtime/room.js
 lib/core/realtime/subscription.js
 lib/types/realtime/RoomList.js
+lib/cluster/idCardHandler.js
