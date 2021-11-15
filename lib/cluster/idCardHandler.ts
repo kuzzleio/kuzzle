@@ -218,7 +218,7 @@ export class ClusterIdCardHandler {
         await this.save();
       }
       catch (error) {
-        global.kuzzle.log.error(`Cannot refresh the ID Card before the worker starts: ${error}`);
+        global.kuzzle.log.error(`An error occurred while refreshing the ID card during WorkerThread startup: ${error}`);
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
