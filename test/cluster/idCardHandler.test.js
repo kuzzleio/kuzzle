@@ -27,6 +27,33 @@ describe('ClusterIdCardHandler', () => {
     });
   });
 
+  describe('#startTemporaryRefresh', () => {
+    beforeEach(() => {
+      idCardHandler.refreshDelay = 1;
+
+      sinon.stub(idCardHandler, 'save').resolves();
+
+      idCardHandler.refreshWorker = new WorkerMock('some/path');
+    });
+
+    it('should start a timer to refresh the ID Card', done => {
+      idCardHandler.startTemporaryRefresh();
+
+      setTimeout(() => {
+        should(idCardHandler.save).be.calledOnce();
+        done();
+      }, 3);
+    });
+
+    it('should stop the timer when the worker has started', () => {
+      idCardHandler.startTemporaryRefresh();
+
+      idCardHandler.refreshWorker.emit('message', { initialized: true });
+
+      should(idCardHandler.refreshTimer).be.null();
+    });
+  });
+
   describe('#createIdCard', () => {
     beforeEach(() => {
       kuzzle.ask
@@ -37,9 +64,11 @@ describe('ClusterIdCardHandler', () => {
         .withArgs('core:cache:internal:pexpire')
         .resolves(1);
 
-      idCardHandler._constructWorker = (path) => {
+      idCardHandler.constructWorker = path => {
         return new WorkerMock(path);
       };
+
+      sinon.stub(idCardHandler, 'startTemporaryRefresh');
     });
 
     afterEach(() => {
@@ -59,10 +88,10 @@ describe('ClusterIdCardHandler', () => {
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
         `{cluster/node}/${idCardHandler.nodeId}`,
-        idCardHandler.idCard.serialize(),
+        JSON.stringify(idCardHandler.idCard.serialize()),
         {
           onlyIfNew: true,
-          ttl: refreshDelay * 4
+          ttl: refreshDelay * 2
         });
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:execute',
@@ -128,7 +157,7 @@ describe('ClusterIdCardHandler', () => {
         .resolves(['redis/id1', 'redis/id2', 'redis/id3', 'redis/id4']);
       kuzzle.ask
         .withArgs('core:cache:internal:mget')
-        .resolves([idCard2.serialize(), idCard3.serialize(), null]);
+        .resolves([JSON.stringify(idCard2.serialize()), JSON.stringify(idCard3.serialize()), null]);
 
       const remoteCards = await idCardHandler.getRemoteIdCards();
 
@@ -150,63 +179,63 @@ describe('ClusterIdCardHandler', () => {
 
   describe('#addNode', () => {
     it('should add the remote node to known topology and save the IdCard', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.idCard = new IdCard({ id: 'id1', ip: 'ip1', birthdate: 1001 });
 
       await idCardHandler.addNode('remoteNodeId');
 
       should(idCardHandler.idCard.topology.has('remoteNodeId')).be.true();
-      should(idCardHandler._save).be.called();
+      should(idCardHandler.save).be.called();
     });
 
     it('should not add the remote node if it is already known', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.idCard = new IdCard({ id: 'id1', ip: 'ip1', birthdate: 1001 });
       idCardHandler.idCard.topology.add('remoteNodeId');
 
       await idCardHandler.addNode('remoteNodeId');
 
-      should(idCardHandler._save).not.be.called();
+      should(idCardHandler.save).not.be.called();
     });
 
     it('should not add the remote node if the IdCard is disposed', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.disposed = true;
 
       await idCardHandler.addNode('remoteNodeId');
 
-      should(idCardHandler._save).not.be.called();
+      should(idCardHandler.save).not.be.called();
     });
   });
 
   describe('#removeNode', () => {
     it('should remove the remote node to known topology and save the IdCard', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.idCard = new IdCard({ id: 'id1', ip: 'ip1', birthdate: 1001 });
       idCardHandler.idCard.topology.add('remoteNodeId');
 
       await idCardHandler.removeNode('remoteNodeId');
 
       should(idCardHandler.idCard.topology.has('remoteNodeId')).be.false();
-      should(idCardHandler._save).be.called();
+      should(idCardHandler.save).be.called();
     });
 
     it('should not remove the remote node if it is not present', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.idCard = new IdCard({ id: 'id1', ip: 'ip1', birthdate: 1001 });
 
       await idCardHandler.removeNode('remoteNodeId');
 
-      should(idCardHandler._save).not.be.called();
+      should(idCardHandler.save).not.be.called();
     });
 
     it('should not remove the remote node if the IdCard is disposed', async () => {
-      idCardHandler._save = sinon.stub().resolves();
+      sinon.stub(idCardHandler, 'save').resolves();
       idCardHandler.disposed = true;
 
       await idCardHandler.removeNode('remoteNodeId');
 
-      should(idCardHandler._save).not.be.called();
+      should(idCardHandler.save).not.be.called();
     });
   });
 });

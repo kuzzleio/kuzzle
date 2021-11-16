@@ -19,79 +19,141 @@
  * limitations under the License.
  */
 
-'use strict';
+import { generateRandomName } from '../util/name-generator';
+import { Worker as WorkerThread } from 'worker_threads';
+import Bluebird from 'bluebird';
 
-const { generateRandomName } = require('../util/name-generator');
-const { Worker } = require('worker_threads');
-const Bluebird = require('bluebird');
+import '../types';
 
 const REDIS_PREFIX = '{cluster/node}/';
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + 'id-cards-index';
 
-/**
- * @typedef {IdCard}
- */
-class IdCard {
+export type SerializedIdCard = {
+  id: string;
+  ip: string;
+  birthdate: number;
+  topology: string[];
+}
+
+export class IdCard {
   /**
-   * @param {Object} obj - contains the ID card description
-   * @param {string} obj.id - node identifier
-   * @param {string} obj.ip - node IP address
-   * @param {Number} obj.birthdate - node creation timestamp
-   * @param {Array.<string>} obj.topology - node's known topology
+   * Node unique identifier
+   *
+   * @example
+   *
+   * knode-pensive-einstein-844221
    */
-  constructor (obj) {
-    this.id = obj.id;
-    this.ip = obj.ip;
-    this.birthdate = obj.birthdate;
-    this.topology = new Set(obj.topology);
+  private id: string;
+
+  /**
+   * Node IP address
+   */
+  private ip: string;
+
+  /**
+   * Node creation timestamp
+   */
+  private birthdate: number;
+
+  /**
+   * Node known topology composed of node IDs
+   *
+   * Set<node-id>
+   */
+  public topology: Set<string>;
+
+  constructor ({ id, ip, birthdate, topology }: SerializedIdCard) {
+    this.id = id;
+    this.ip = ip;
+    this.birthdate = birthdate;
+    this.topology = new Set(topology);
   }
 
-  serialize () {
-    return JSON.stringify({
+  serialize (): SerializedIdCard {
+    return {
       birthdate: this.birthdate,
       id: this.id,
       ip: this.ip,
       topology: Array.from(this.topology),
-    });
+    };
   }
 
-  static unserialize (value) {
-    return new IdCard(JSON.parse(value));
+  static unserialize (serialized: SerializedIdCard): IdCard {
+    return new IdCard(serialized);
   }
 }
 
 /**
  * Handles the ID Key stored in Redis, holding node information
  */
-class ClusterIdCardHandler {
-  constructor (node) {
+export class ClusterIdCardHandler {
+  /**
+   * Node instance. Represents the local node.
+   */
+  private node: any;
+
+  /**
+   * Local node ID Card
+   */
+  private idCard: IdCard = null;
+
+  /**
+   * Local node IP address
+   */
+  private ip: string;
+
+  /**
+   * Delay for refreshing the ID Card. The heartbeat timer is run on this delay
+   * and the node ID Card should be available on Redis otherwise it will be evicted.
+   */
+  private refreshDelay: number;
+
+  /**
+   * Multiplier used to ensure the node has enough time to refresh it's ID Card
+   * before the ID Card refresh delay
+   */
+  private refreshMultiplier = 2;
+
+  /**
+   * Worker thread in charge of refreshing the ID Card once the node has started
+   */
+  private refreshWorker: WorkerThread = null;
+
+  /**
+   * Hold the timer in charge of refreshing the ID Card before the worker starts
+   */
+  private refreshTimer: any = null;
+
+  /**
+   * Local node ID
+   */
+  private nodeId: string = null;
+
+  /**
+   * Local node Redis key
+   */
+  private nodeIdKey: string = null;
+
+  /**
+   * Flag to prevent updating the id card if it has been disposed.
+   * Prevents race condition if a topology update occurs at the same time as
+   * the id card is been disposed because the node is evicting itself from the
+   * cluster
+   */
+  private disposed = false;
+
+  constructor (node: any) {
     this.node = node;
-    this.idCard = null;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
-    this.refreshWorker = null;
-    this.nodeId = null;
-    this.nodeIdKey = null;
-
-    // Flag to prevent updating the id card if it has been disposed.
-    // Prevents race condition if a topology update occurs at the same time as
-    // the id card is been disposed because the node is evicting itself from the
-    // cluster
-    this.disposed = false;
-
-    // Add a delay for key expiration to make sure the node have the time to
-    // refresh it
-    this.refreshMultiplier = 4;
   }
 
   /**
    * Generates and reserves a unique ID for this node instance.
    * Makes sure that the ID is not already taken by another node instance.
-   *
-   * @return {void}
    */
-  async createIdCard () {
-    let reserved;
+  async createIdCard (): Promise<void> {
+    let reserved = false;
 
     do {
       this.nodeId = generateRandomName('knode');
@@ -103,12 +165,12 @@ class ClusterIdCardHandler {
         topology: [],
       });
 
-      reserved = await this._save({ creation: true });
-    } while (!reserved);
+      reserved = await this.save({ creation: true });
+    } while (! reserved);
 
     await this.addIdCardToIndex();
 
-    this.refreshWorker = this._constructWorker(`${__dirname}/workers/IDCardRenewer.js`);
+    this.refreshWorker = this.constructWorker(`${__dirname}/workers/IDCardRenewer.js`);
     this.refreshWorker.unref();
 
     this.refreshWorker.on('message', async message => {
@@ -133,15 +195,44 @@ class ClusterIdCardHandler {
       refreshDelay: this.refreshDelay,
       refreshMultiplier: this.refreshMultiplier,
     });
+
+    this.startTemporaryRefresh();
   }
 
-  // Used to Mock the creation of a worker for the tests
-  _constructWorker (path) {
-    return new Worker(path);
+  /**
+   * Helper method to mock worker instantiation in unit tests
+   */
+  private constructWorker (path: string) {
+    return new WorkerThread(path);
   }
 
-  async dispose () {
+  /**
+   * Start refreshing the ID Card before the worker starts to ensure the ID Card
+   * is refreshed.
+   *
+   * Once the worker starts, this timer will be stopped.
+   */
+  private startTemporaryRefresh () {
+    this.refreshTimer = setInterval(async () => {
+      try {
+        await this.save();
+      }
+      catch (error) {
+        global.kuzzle.log.error(`An error occurred while refreshing the ID card during WorkerThread startup: ${error}`);
+      }
+    }, this.refreshDelay * this.refreshMultiplier);
+
+    this.refreshWorker.on('message', ({ initialized }) => {
+      if (initialized) {
+        clearInterval(this.refreshTimer);
+        this.refreshTimer = null;
+      }
+    });
+  }
+
+  async dispose (): Promise<void> {
     this.disposed = true;
+
     if (this.refreshWorker) {
       this.refreshWorker.postMessage({action: 'dispose'});
     }
@@ -164,10 +255,10 @@ class ClusterIdCardHandler {
    *
    * @return {Array.<IdCard>}
    */
-  async getRemoteIdCards () {
-    const idCards = [];
+  async getRemoteIdCards (): Promise<IdCard[]> {
+    const idCards: IdCard[] = [];
 
-    let keys = await global.kuzzle.ask(
+    let keys: string[] = await global.kuzzle.ask(
       'core:cache:internal:execute',
       'smembers',
       REDIS_ID_CARDS_INDEX);
@@ -178,14 +269,14 @@ class ClusterIdCardHandler {
       return idCards;
     }
 
-    const values = await global.kuzzle.ask('core:cache:internal:mget', keys);
-    const expiredIdCards = [];
+    const rawIdCards: string[] = await global.kuzzle.ask('core:cache:internal:mget', keys);
+    const expiredIdCards: string[] = [];
 
     for (let i = 0; i < keys.length; i++) {
       // filter keys that might have expired between the key search and their
       // values retrieval
-      if (values[i] !== null) {
-        idCards.push(IdCard.unserialize(values[i]));
+      if (rawIdCards[i] !== null) {
+        idCards.push(IdCard.unserialize(JSON.parse(rawIdCards[i])));
       }
       else {
         expiredIdCards.push(keys[i]);
@@ -207,22 +298,22 @@ class ClusterIdCardHandler {
   /**
    * Adds a remote node IdCard to the node known topology
    */
-  async addNode (id) {
+  async addNode (id: string): Promise<void> {
     if (this.disposed || this.idCard.topology.has(id)) {
       return;
     }
 
     this.idCard.topology.add(id);
 
-    await this._save();
+    await this.save();
   }
 
   /**
    * Removes a remote node IdCard from the node known topology
    */
-  async removeNode (id) {
-    if (!this.disposed && this.idCard.topology.delete(id)) {
-      await this._save();
+  async removeNode (id: string): Promise<void> {
+    if (! this.disposed && this.idCard.topology.delete(id)) {
+      await this.save();
     }
   }
 
@@ -231,7 +322,7 @@ class ClusterIdCardHandler {
    *
    * This set is an index to retrieve ID Cards faster.
    */
-  async addIdCardToIndex () {
+  async addIdCardToIndex (): Promise<void> {
     await global.kuzzle.ask(
       'core:cache:internal:execute',
       'sadd',
@@ -240,14 +331,18 @@ class ClusterIdCardHandler {
 
   /**
    * Saves the local node IdCard into Redis
+   *
+   * @returns True if the key was set
    */
-  _save ({ creation } = { creation: false }) {
-    return global.kuzzle.ask(
+  private async save ({ creation } = { creation: false }): Promise<boolean> {
+    if (! this.idCard) {
+      return false;
+    }
+
+    return await global.kuzzle.ask(
       'core:cache:internal:store',
       this.nodeIdKey,
-      this.idCard.serialize(),
+      JSON.stringify(this.idCard.serialize()),
       { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier });
   }
 }
-
-module.exports = { ClusterIdCardHandler, IdCard };
