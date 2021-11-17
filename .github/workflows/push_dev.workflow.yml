@@ -10,6 +10,7 @@ jobs:
     name: Lint
     runs-on: ubuntu-18.04
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -28,6 +29,7 @@ jobs:
         node-version: ["14.17.0"]
         kuzzle-image: ["kuzzle", "kuzzle.alpine", "kuzzle.scratch"]
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -47,6 +49,7 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -65,6 +68,7 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -86,6 +90,7 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
@@ -106,6 +111,7 @@ jobs:
       matrix:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - name: Cloning Monkey Tester
         uses: actions/checkout@v2
@@ -126,6 +132,7 @@ jobs:
     name: Documentation - Error codes check
     runs-on: ubuntu-18.04
     steps:
+      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
       - run: npm install
       - name: Test error codes
@@ -139,6 +146,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: ./.github/actions/install-packages
       - name: Extract references from context
         shell: bash
         id: extract-refs

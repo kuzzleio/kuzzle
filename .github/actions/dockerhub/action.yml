@@ -15,8 +15,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: sudo apt-get install -y libunwind-dev
-      shell: bash
     - name: Create JS from TS files
       run: |
         npm install

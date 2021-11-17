@@ -8,8 +8,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: sudo apt-get install -y libunwind-dev
-      shell: bash
     - run: ./.ci/scripts/run-monkey-tests.sh
       env:
         NODE_VERSION: ${{ inputs.node-version }}

@@ -1,0 +1,8 @@
+name: Install Packages
+description: Install necessary packages inside the CI
+
+runs:
+  using: "composite"
+  steps:
+    - run: sudo apt-get install -y libunwind-dev
+      shell: bash
