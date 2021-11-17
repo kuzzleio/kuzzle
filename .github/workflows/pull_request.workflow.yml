@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ["14.17.0"]
+        node-version: ['14.17.0']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -25,8 +25,8 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ["14.17.0"]
-        kuzzle-image: ["kuzzle", "kuzzle.alpine", "kuzzle.scratch"]
+        node-version: ['14.17.0']
+        kuzzle-image: ['kuzzle', 'kuzzle.alpine', 'kuzzle.scratch']
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -152,4 +152,4 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: dead_links.workflow.yml
           ref: ${{ steps.extract-refs.outputs.fw-branch }}
-          inputs: "{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}"
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
