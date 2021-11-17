@@ -52,6 +52,10 @@ FROM node:12.18.1-alpine3.11
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"
 
+RUN set -x \
+  && apt-get update && apt-get install -y \
+    libunwind-dev
+
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint

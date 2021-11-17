@@ -89,6 +89,10 @@ FROM scratch
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with scratch image"
 
+RUN set -x \
+  && apt-get update && apt-get install -y \
+    libunwind-dev
+
 ENV NODE_ENV=production
 
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint

@@ -67,6 +67,10 @@ FROM bitnami/minideb:stretch
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
+RUN set -x \
+  && apt-get update && apt-get install -y \
+    libunwind-dev
+
 COPY --from=minifier /lib /lib
 COPY --from=minifier /usr /usr
 COPY --from=minifier /app /var/app
