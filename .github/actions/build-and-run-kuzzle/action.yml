@@ -9,7 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: apt-get install -y libunwind-dev
+    - run: sudo apt-get install -y libunwind-dev
       shell: bash
     - run: npm install
       shell: bash

@@ -14,7 +14,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: apt-get install -y libunwind-dev
+    - run: sudo apt-get install -y libunwind-dev
       shell: bash
     - run: ./.ci/scripts/run-test-cluster.sh
       env:
