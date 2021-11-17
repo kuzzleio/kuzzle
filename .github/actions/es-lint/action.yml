@@ -4,7 +4,7 @@ description: Run ESLint
 runs:
   using: "composite"
   steps:
-    - run: python -c 'from ctypes.util import find_library;print(find_library("unwind")!=None and "-lunwind" or "")'
+    - run: python -c 'from ctypes.util import find_library;print(find_library("unwind"))'
       shell: bash
     - run: npm install
       shell: bash
