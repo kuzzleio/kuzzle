@@ -10,6 +10,7 @@ RUN  set -x \
        g++ \
        python \
        libzmq3-dev \
+       libunwind-dev \
   && npm install -g --unsafe-perm --production \
     nodemon \
     kourou \

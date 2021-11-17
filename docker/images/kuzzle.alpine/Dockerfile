@@ -12,8 +12,7 @@ RUN  set -x \
       xz \
       zeromq-dev \
       binutils \
-      libexecinfo-dev \
-      libexecinfo \
+      libunwind-dev \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
   && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/
