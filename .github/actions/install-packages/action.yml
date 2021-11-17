@@ -4,5 +4,5 @@ description: Install necessary packages inside the CI
 runs:
   using: "composite"
   steps:
-    - run: sudo apt-get install -y libunwind-dev
+    - run: sudo apt remove libunwind-dev libunwind8
       shell: bash
