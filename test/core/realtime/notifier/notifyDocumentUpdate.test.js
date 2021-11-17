@@ -63,7 +63,11 @@ describe('Test: notifier.notifyDocumentUpdate', () => {
       });
 
     should(notifier.notifyDocument.getCall(1))
-      .calledWith(['bar'], request, 'out', 'update', { _id });
+      .calledWith(['bar'], request, 'out', 'update', {
+        _id,
+        _source: { foo: 'bar' },
+        _updatedFields: ['foo']
+      });
 
     should(rooms).match(['foo']);
   });
