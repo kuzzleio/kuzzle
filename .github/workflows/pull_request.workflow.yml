@@ -10,8 +10,8 @@ jobs:
       matrix:
         node-version: ['14.17.0']
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -29,8 +29,8 @@ jobs:
         node-version: ['14.17.0']
         kuzzle-image: ['kuzzle', 'kuzzle.alpine', 'kuzzle.scratch']
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -49,8 +49,8 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -68,8 +68,8 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -90,8 +90,8 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     runs-on: ubuntu-18.04
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -107,8 +107,8 @@ jobs:
     name: Documentation - Error codes check
     runs-on: ubuntu-18.04
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -121,8 +121,8 @@ jobs:
       matrix:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     steps:
-      - uses: ./.github/actions/install-packages
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - name: Cloning Monkey Tester
         uses: actions/checkout@v2
         with:
