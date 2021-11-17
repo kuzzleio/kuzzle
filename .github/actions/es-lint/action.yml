@@ -4,6 +4,8 @@ description: Run ESLint
 runs:
   using: "composite"
   steps:
+    - run: apt-get install -y libunwind-dev
+      shell: bash
     - run: npm install
       shell: bash
     - run: npm run test:lint

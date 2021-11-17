@@ -14,6 +14,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - run: apt-get install -y libunwind-dev
+      shell: bash
     - run: ./.ci/scripts/run-test-cluster.sh
       env:
         KUZZLE_FUNCTIONAL_TESTS: ${{ inputs.test-set }}
