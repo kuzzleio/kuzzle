@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         node-version: ['14.17.0']
-        kuzzle-image: ['kuzzle', 'kuzzle.alpine']
+        kuzzle-image: ['kuzzle']
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages

@@ -4,7 +4,7 @@
 FROM node:12.18.1-alpine3.11 as builder
 
 RUN  set -x \
-  && apk add --no-cache \
+  && apk add --no-cache --no-progress --virtual .gyp \
       curl \
       python \
       make \
@@ -53,7 +53,7 @@ LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"
 
 RUN set -x \
-  && apk add --no-cache --no-progress --virtual \
+  && apk add --no-cache --no-progress --virtual .gyp \
     libunwind-dev
 
 ENV NODE_ENV=production
