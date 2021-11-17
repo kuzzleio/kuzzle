@@ -53,7 +53,7 @@ LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"
 
 RUN set -x \
-  && apt-get update && apt-get install -y \
+  && apk add --no-cache --no-progress --virtual \
     libunwind-dev
 
 ENV NODE_ENV=production
