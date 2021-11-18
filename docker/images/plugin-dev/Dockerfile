@@ -10,6 +10,7 @@ RUN  set -x \
        g++ \
        python \
        libzmq3-dev \
+       libunwind-dev \
   && npm install -g --unsafe-perm --production \
     nodemon \
     kourou \
@@ -50,6 +51,10 @@ LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
 
 WORKDIR /var/app
+
+RUN set -x \
+  && apt-get update && apt-get install -y \
+    libunwind-dev
 
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
