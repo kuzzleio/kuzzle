@@ -34,6 +34,7 @@ export * from './config/KuzzleConfiguration';
 export * from './config/ServicesConfiguration';
 export * from './RoleDefinition';
 export * from './ProfileDefinition';
+export * from './config/HttpConfiguration';
 export * from './realtime/RealtimeScope';
 export * from './realtime/RealtimeUsers';
 export * from './realtime/RoomList';
