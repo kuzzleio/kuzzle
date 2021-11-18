@@ -84,15 +84,11 @@ export function generateOpenApi(_request: KuzzleRequest): any {
         description: 'document controller'
       }
     ],
-    paths: {
-      '/count': {
-        DocumentCount
-      },
-    },
+    paths: {},
     components: {
-      DefinitionsDocument,
+      ...DefinitionsDocument,
       schemas: {
-        DocumentCountComponent,
+        ...DocumentCountComponent,
       }
     }
   };
