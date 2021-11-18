@@ -13,22 +13,20 @@ DocumentCreate:
     responses:
       200:
         description: "Creates a new document in the persistent data storage."
-        schema:
-            $ref: "#/components/schemas/DocumentCreateResponse"
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/DocumentCreateResponse"
 
 components:
   schemas:
     DocumentCreateRequest:
       allOf:
-        - $ref: "#/definitions/RequestPayload"
         - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
+          description: "document content"
     DocumentCreateResponse:
       allOf:
-        - $ref: "#/definitions/ResponsePayload"
+        - $ref: "#/components/ResponsePayload"
         - type: "object"
           properties:
             result:
