@@ -14,6 +14,10 @@ describe('ClusterIDCardRenewer', () => {
       idCardRenewer = new IDCardRenewer();
       idCardRenewer.initRedis = sinon.stub().resolves();
       idCardRenewer.renewIDCard = sinon.stub().resolves();
+
+      idCardRenewer.parentPort = {
+        postMessage: sinon.stub(),
+      };
     });
 
     it('should initialize the redis client', async () => {
@@ -75,6 +79,22 @@ describe('ClusterIDCardRenewer', () => {
         .be.calledOnce()
         .and.be.calledWith(sinon.match.func, 1);
     });
+
+    it('should notify parent when initialization is finished', async () => {
+      await idCardRenewer.init({
+        redis: {
+          config: {
+            initTimeout: 42
+          },
+          name: 'foo'
+        },
+        nodeIdKey: 'nodeIdKey',
+        refreshDelay: 1,
+      });
+
+      should(idCardRenewer.parentPort.postMessage)
+        .be.calledWith({ initialized: true });
+    });
   });
 
   describe('#renewIDCard', () => {
@@ -96,34 +116,35 @@ describe('ClusterIDCardRenewer', () => {
         postMessage: sinon.stub(),
       };
 
-      idCardRenewer.dispose = sinon.stub().resolves();
+      sinon.stub(idCardRenewer, 'dispose').resolves();
 
       await idCardRenewer.init({
         nodeIdKey: 'foo',
         redis: {},
         refreshDelay: 100,
+        refreshMultiplier: 4
       });
     });
 
     it('should call pexpire to refresh the key expiration time', async () => {
       idCardRenewer.redis.commands.pexpire.resetHistory();
+
       await idCardRenewer.renewIDCard();
 
       should(idCardRenewer.redis.commands.pexpire)
         .be.calledOnce()
-        .and.be.calledWith(
-          'foo',
-          300
-        );
+        .and.be.calledWith('foo', 400);
 
       should(idCardRenewer.dispose).not.be.called();
-      should(idCardRenewer.parentPort.postMessage).not.be.called();
+      should(idCardRenewer.parentPort.postMessage)
+        .be.calledOnce()
+        .be.calledWith({ initialized: true });
     });
 
     it('should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card', async () => {
       idCardRenewer.redis.commands.pexpire.resolves(0); // Failed to renew the ID Card before the key expired
       await idCardRenewer.renewIDCard();
-      
+
       should(idCardRenewer.redis.commands.pexpire).be.called();
 
       should(idCardRenewer.dispose).be.called();
@@ -139,7 +160,9 @@ describe('ClusterIDCardRenewer', () => {
 
       should(idCardRenewer.redis.commands.pexpire).not.be.called();
       should(idCardRenewer.dispose).not.be.called();
-      should(idCardRenewer.parentPort.postMessage).not.be.called();
+      should(idCardRenewer.parentPort.postMessage)
+        .be.calledOnce()
+        .be.calledWith({ initialized: true });
     });
   });
 
@@ -156,6 +179,10 @@ describe('ClusterIDCardRenewer', () => {
             del: sinon.stub().resolves(),
           }
         };
+      };
+
+      idCardRenewer.parentPort = {
+        postMessage: sinon.stub(),
       };
 
       await idCardRenewer.init({

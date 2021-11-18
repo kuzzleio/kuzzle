@@ -433,6 +433,14 @@ describe('#Cluster Node', () => {
       return node.init();
     });
 
+    it('should propagate index cache refresh', () => {
+      sinon.stub(node, 'onIndexCacheRefreshed');
+
+      kuzzle.emit('admin:afterRefreshIndexCache');
+
+      should(node.onIndexCacheRefreshed).be.calledOnce();
+    });
+
     it('should synchronize realtime room creations', () => {
       node.publisher.sendNewRealtimeRoom.returns('msgid');
 

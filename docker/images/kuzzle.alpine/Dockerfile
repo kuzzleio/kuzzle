@@ -4,7 +4,7 @@
 FROM node:12.18.1-alpine3.11 as builder
 
 RUN  set -x \
-  && apk add --no-cache \
+  && apk add --no-cache --no-progress --virtual .gyp \
       curl \
       python \
       make \
@@ -12,8 +12,7 @@ RUN  set -x \
       xz \
       zeromq-dev \
       binutils \
-      libexecinfo-dev \
-      libexecinfo \
+      libunwind-dev \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
   && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
   && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/
@@ -52,6 +51,10 @@ FROM node:12.18.1-alpine3.11
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode with alpine"
+
+RUN set -x \
+  && apk add --no-cache --no-progress --virtual .gyp \
+    libunwind-dev
 
 ENV NODE_ENV=production
 
