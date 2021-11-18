@@ -38,3 +38,6 @@ export * from './realtime/RealtimeScope';
 export * from './realtime/RealtimeUsers';
 export * from './realtime/RoomList';
 export * from './KuzzleDocument';
+export * from './config/MemoryStorageConfiguration';
+export * from './config/InternalCacheConfiguration';
+export * from './config/elasticsearch/StorageService';
