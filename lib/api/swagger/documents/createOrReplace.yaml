@@ -13,22 +13,17 @@ DocumentCreateOrReplace:
     responses:
       200:
         description: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
-        schema:
-          $ref: "#/components/schemas/DocumentCreateOrReplaceResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentCreateOrReplaceResponse"
 
 components:
   schemas:
     DocumentCreateOrReplaceRequest:
       allOf:
-        - $ref: "#/components/RequestPayload"
         - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
-            refresh:
-              type: "string"
-              description: " if set to wait_for, Kuzzle will not respond until the created/replaced document is indexed"
+          description: "document content"
     DocumentCreateOrReplaceResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
@@ -44,5 +39,6 @@ components:
                   type: "integer"
                 _sources:
                   type: "object"
+                  description: "document content"
                 created:
                   type: "boolean"

@@ -22,10 +22,8 @@ import _ from 'lodash';
 import { KuzzleRequest } from './request';
 import { version } from './../../package.json';
 import {
-  DocumentCount,
   DefinitionsDocument, 
   DocumentCountComponent,
-  DocumentCreateOrReplace,
   DocumentCreateOrReplaceComponent,
 } from './swagger/documents/document';
 
@@ -86,19 +84,12 @@ export function generateOpenApi(_request: KuzzleRequest): any {
         description: 'document controller'
       }
     ],
-    paths: {
-      '/count': {
-        DocumentCount,
-      },
-      '/createOrReplace': {
-        DocumentCreateOrReplace,
-      }
-    },
+    paths: {},
     components: {
-      DefinitionsDocument,
+      ...DefinitionsDocument,
       schemas: {
-        DocumentCountComponent,
-        DocumentCreateOrReplaceComponent,
+        ...DocumentCountComponent,
+        ...DocumentCreateOrReplaceComponent,
       }
     }
   };
