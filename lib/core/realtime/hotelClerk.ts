@@ -73,7 +73,7 @@ export class HotelClerk {
    *
    * Map<roomId, Room>
    */
-  protected rooms = new Map<string, Room>();
+  private rooms = new Map<string, Room>();
 
   /**
    * Current subscribing connections handled by the HotelClerk.
@@ -85,7 +85,7 @@ export class HotelClerk {
    *
    * Map<connectionId, ConnectionRooms>
    */
-  protected subscriptions = new Map<string, ConnectionRooms>();
+  private subscriptions = new Map<string, ConnectionRooms>();
 
   /**
    * Shortcut to the Koncorde instance on the global object.
