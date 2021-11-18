@@ -4,23 +4,48 @@ DocumentDelete:
     tags:
       - document
     parameters:
-      - name: body
-        in: "body"
-        description: "Deletes a document."
-        required: true
+      - in: path
+        name: index
         schema:
-          $ref: "#/components/schemas/DocumentDeleteRequest"
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
+      - in: path
+        name: documentId
+        schema:
+          type: string
+      - in: path
+        name: refresh
+        schema:
+          type: string
+        description: " if set to wait_for, Kuzzle will not respond until the deletion has been indexed"
+        required: false
+      - in: path
+        name: source
+        schema:
+          type: boolean
+        description: "if set to true Kuzzle will return the deleted document body in the response."
+        required: false
+      - in: path
+        name: silent
+        schema:
+          type: boolean
+        description: "if set, then Kuzzle will not generate notifications. Available since 2.9.2"
+        required: false
     responses:
       200:
         description: "Deletes a document."
-        schema:
-          $ref: "#/components/schemas/DocumentDeleteResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentDeleteResponse"
 
 components:
   schemas:
     DocumentDeleteRequest:
       allOf:
-        - $ref: "#/components/RequestPayload"
         - type: "object"
           properties:
             _id:
