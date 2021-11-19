@@ -3,7 +3,8 @@ import {
   PasswordPolicy,
   RoleDefinition,
   ProfileDefinition,
-  LimitsConfiguration
+  LimitsConfiguration,
+  HttpConfiguration
 } from '../index';
 
 export interface IKuzzleConfiguration {
@@ -11,29 +12,7 @@ export interface IKuzzleConfiguration {
    * The HTTP section lets you configure how Kuzzle should
    * handle HTTP requests.
    */
-  http: {
-    /**
-     * Sets the default Access-Control-Allow-Origin HTTP
-     * header used to send responses to the client.
-     *
-     * @default "*"
-     */
-    accessControlAllowOrigin: string;
-
-    /**
-     * Sets the default Access-Control-Allow-Method header.
-     *
-     * @default "GET,POST,PUT,DELETE,OPTIONS,HEAD"
-     */
-    accessControlAllowMethods: string;
-
-    /**
-     * Sets the default Access-Control-Allow-Headers.
-     *
-     * @default "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile"
-     */
-    accessControlAllowHeaders: string;
-  },
+  http: HttpConfiguration
 
   /**
    * Kuzzle configured limits.
