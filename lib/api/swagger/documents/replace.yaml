@@ -4,6 +4,30 @@ DocumentReplace:
     tags:
       - document
     parameters:
+      - in: path
+        name: index
+        schema:
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
+      - in: path
+        name: documentId
+        schema:
+          type: string
+      - in: path
+        name: refresh
+        schema:
+          type: string
+        description: " if set to wait_for, Kuzzle will not respond until the deletion has been indexed"
+        required: false
+      - in: path
+        name: silent
+        schema:
+          type: boolean
+        description: "if set, then Kuzzle will not generate notifications. Available since 2.9.2"
+        required: false
       - name: body
         in: "body"
         description: "Replaces the content of an existing document."
@@ -13,24 +37,17 @@ DocumentReplace:
     responses:
       200:
         description: "Replaces the content of an existing document."
-        schema:
-          $ref: "#/components/schemas/DocumentReplaceResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentReplaceResponse"
 
 components:
   schemas:
     DocumentReplaceRequest:
       allOf:
-        - $ref: "#/components/RequestPayload"
         - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
-            refresh:
-              type: "string"
-              description: " if set to wait_for, Kuzzle will not respond until the created/replaced document is indexed"
-            body:
-              type: "string"
+          description: "new document content"
     DocumentReplaceResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
