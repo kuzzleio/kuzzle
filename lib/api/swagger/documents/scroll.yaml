@@ -4,33 +4,28 @@ DocumentScroll:
     tags:
       - document
     parameters:
-      - name: body
-        in: "body"
-        description: "Moves a search cursor forward."
-        required: true
+      - in: path
+        name: "scrollId"
         schema:
-          $ref: "#/components/schemas/DocumentScrollRequest"
+          type: integer
+        description: "cursor unique identifier, obtained by either a search or a scroll query"
+        required: true
+      - in: path
+        name: "scroll"
+        schema:
+          type: integer
+        description: "refresh the cursor duration, using the time to live syntax."
+        required: false
     responses:
       200:
         description: "Moves a search cursor forward."
-        schema:
-          $ref: "#/components/schemas/DocumentScrollResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentScrollResponse"
 
 components:
   schemas:
-    DocumentScrollRequest:
-      allOf:
-        - type: "object"
-          properties:
-            type: "string"
-            enum: "document"
-          action:
-            type: "string"
-            enum: "foo"
-          scrollId:
-            type: "string"
-          scroll:
-            type: "integer"
     DocumentScrollResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
@@ -47,11 +42,11 @@ components:
                   type: "array"
                   items:
                     type: "object"
-                  properties:
-                    _id:
-                      type: "string"
-                    _score:
-                      type: "integer"
-                    _source:
-                      type: "object"
-                      description: "document content"
+                    properties:
+                      _id:
+                        type: "string"
+                      _score:
+                        type: "integer"
+                      _source:
+                        type: "object"
+                        description: "document content"
