@@ -4,6 +4,14 @@ DocumentCount:
     tags:
       - document
     parameters:
+      - in: path
+        name: index
+        schema:
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
       - name: body
         in: "body"
         description: "Counts documents in a collection."
