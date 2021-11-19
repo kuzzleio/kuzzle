@@ -22,10 +22,8 @@ import _ from 'lodash';
 import { KuzzleRequest } from './request';
 import { version } from './../../package.json';
 import {
-  DocumentCount,
   DefinitionsDocument, 
   DocumentCountComponent,
-  DocumentExists,
   DocumentExistsComponent,
 } from './swagger/documents/document';
 
@@ -86,19 +84,12 @@ export function generateOpenApi(_request: KuzzleRequest): any {
         description: 'document controller'
       }
     ],
-    paths: {
-      '/count': {
-        DocumentCount
-      },
-      '/exists': {
-        DocumentExists,
-      }
-    },
+    paths: {},
     components: {
-      DefinitionsDocument,
+      ...DefinitionsDocument,
       schemas: {
-        DocumentCountComponent,
-        DocumentExistsComponent
+        ...DocumentCountComponent,
+        ...DocumentExistsComponent
       }
     }
   };

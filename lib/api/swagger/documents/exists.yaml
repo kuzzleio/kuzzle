@@ -4,28 +4,28 @@ DocumentExists:
     tags:
       - document
     parameters:
-      - name: body
-        in: "body"
-        description: "Counts documents in a collection."
-        required: true
+      - in: path
+        name: index
         schema:
-          $ref: "#/components/schemas/DocumentCountRequest"
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
+      - in: path
+        name: _id
+        schema:
+          type: integer
     responses:
       200:
         description: "Counts documents in a collection."
-        schema:
-          $ref: "#/components/schemas/DocumentCountResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentExistsResponse"
 
 components:
   schemas:
-    DocumentExistsRequest:
-      allOf:
-        - $ref: "#/components/RequestPayload"
-        - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
     DocumentExistsResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
