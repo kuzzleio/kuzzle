@@ -4,31 +4,28 @@ DocumentGet:
     tags:
       - document
     parameters:
-      - name: body
-        in: "body"
-        description: "Gets a document."
-        required: true
+      - in: path
+        name: index
         schema:
-          $ref: "#/components/schemas/DocumentGetRequest"
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
+      - in: path
+        name: documentId
+        schema:
+          type: string
     responses:
       200:
         description: "Gets a document."
-        schema:
-            $ref: "#/components/schemas/DocumentGetResponse"
+        content:
+          application/json:
+            schema:
+                $ref: "#/components/schemas/DocumentGetResponse"
 
 components:
   schemas:
-    DocumentGetRequest:
-      allOf:
-        - $ref: "#/components/RequestPayload"
-        - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
-            includeTrash:
-              type: "boolean"
-              description: "if true, documents in the trashcan can be returned"
     DocumentGetResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
@@ -56,3 +53,16 @@ components:
                     _kuzzle_info:
                       type: "object"
                       description: "Information about the Kuzzle documents"
+                      properties:
+                        author:
+                          type: string
+                        createdAt:
+                          type: integer
+                        updatedAt:
+                          type:
+                            - integer
+                            - null
+                        updater:
+                          type:
+                            - integer
+                            - null
