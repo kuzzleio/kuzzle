@@ -160,7 +160,7 @@ export type PluginsConfiguration = {
      *
      * @default false
      */
-    requirePassword: false;
+    requirePassword: boolean;
 
     /**
      * A positive time representation of the delay after which a
