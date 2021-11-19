@@ -4,6 +4,14 @@ DocumentCount:
     tags:
       - document
     parameters:
+      - in: path
+        name: index
+        schema:
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
       - name: body
         in: "body"
         description: "Counts documents in a collection."
@@ -13,14 +21,23 @@ DocumentCount:
     responses:
       200:
         description: "Counts documents in a collection."
-        schema:
-          $ref: "#/components/schemas/DocumentCountResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentCountResponse"
 
 components:
   schemas:
     DocumentCountRequest:
       allOf:
-        - $ref: "#/components/RequestPayload"
+        - type: "object"
+          properties:
+            query:
+              type: "object"
+              properties:
+                match_all:
+                  type: "object"
+
     DocumentCountResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"

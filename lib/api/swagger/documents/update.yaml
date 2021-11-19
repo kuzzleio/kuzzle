@@ -4,6 +4,42 @@ DocumentUpdate:
     tags:
       - document
     parameters:
+      - in: path
+        name: index
+        schema:
+          type: string
+      - in: path
+        name: collection
+        schema:
+          type: string
+      - in: path
+        name: documentId
+        schema:
+          type: string
+      - in: path
+        name: refresh
+        schema:
+          type: string
+        description: " if set to wait_for, Kuzzle will not respond until the deletion has been indexed"
+        required: false
+      - in: path
+        name: silent
+        schema:
+          type: boolean
+        description: "if set, then Kuzzle will not generate notifications. Available since 2.9.2"
+        required: false
+      - in: path
+        name: source
+        schema:
+          type: boolean
+        required: false
+        description: "if set to true Kuzzle will return the entire updated document body in the response."
+      - in: path
+        name: retryOnConflict
+        schema:
+          type: integer
+        description: "conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the retryOnConflict optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error."
+        required: false
       - name: body
         in: "body"
         description: "Updates a document content."
@@ -13,27 +49,17 @@ DocumentUpdate:
     responses:
       200:
         description: "Updates a document content."
-        schema:
-          $ref: "#/components/schemas/DocumentUpdateResponse"
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdateResponse"
 
 components:
   schemas:
     DocumentUpdateRequest:
       allOf:
-        - $ref: "#/components/RequestPayload"
         - type: "object"
-          properties:
-            _id:
-              type: "string"
-              description: "documentId"
-            refresh:
-              type: "string"
-              description: " if set to wait_for, Kuzzle will not respond until the created/replaced document is indexed"
-            body:
-              type: "string"
-            retryOnConflict:
-              type: "string"
-              description: "conflicts may occur if the same document gets updated multiple times within a short timespan, in a database cluster. You can set the retryOnConflict optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error."
+          description: "document changes"
     DocumentUpdateResponse:
       allOf:
         - $ref: "#/components/ResponsePayload"
@@ -47,3 +73,6 @@ components:
                   description: "documentId"
                 _version:
                   type: "integer"
+                _source:
+                  type: string
+                  description: "partial or entire document"
