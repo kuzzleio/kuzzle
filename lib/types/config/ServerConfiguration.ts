@@ -57,7 +57,7 @@ export type ServerConfiguration = {
     *
     * @default "combined"
     */
-    accessLogFormat: string;
+    accessLogFormat: 'combined' | 'logstash';
 
     /**
     * The offset to use as the client ip, from the FORWARDED-FOR chain,
@@ -89,23 +89,23 @@ export type ServerConfiguration = {
        * 
        * @default true
        */
-        enabled: true
+      enabled: boolean
 
-        /**
-        * Maximum number of encoding layers that can be applied to an http message, using the Content-Encoding header. 
-        * This parameter is meant to prevent abuses by setting an abnormally large number 
-        * of encodings, forcing Kuzzle to  allocate as many decoders to handle the incoming request.
-        * 
-        * @default 3
-        */
-        maxEncodingLayers: number
+      /**
+       * Maximum number of encoding layers that can be applied to an http message, using the Content-Encoding header. 
+       * This parameter is meant to prevent abuses by setting an abnormally large number 
+       * of encodings, forcing Kuzzle to  allocate as many decoders to handle the incoming request.
+       * 
+       * @default 3
+       */
+      maxEncodingLayers: number
 
-        /**
-        * Maximum size of requests sent via http forms
-        * 
-        * @default "1MB"
-        */
-        maxFormFileSize: string
+      /**
+       * Maximum size of requests sent via http forms
+       * 
+       * @default "1MB"
+       */
+      maxFormFileSize: string
     }
     mqtt: {
       /**
@@ -207,7 +207,7 @@ export type ServerConfiguration = {
                * 
                * @default true
                */
-                realtimeNotifications: boolean
+              realtimeNotifications: boolean
         }
     }
   }
