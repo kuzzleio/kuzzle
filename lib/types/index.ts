@@ -32,6 +32,7 @@ export * from './Global';
 export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
 export * from './config/SecurityConfiguration';
+export * from './config/HttpConfiguration';
 export * from './RoleDefinition';
 export * from './ProfileDefinition';
 export * from './realtime/RealtimeScope';
