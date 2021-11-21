@@ -25,6 +25,7 @@ import {
   DefinitionsDocument, 
   DocumentCountComponent, 
 } from './swagger/documents/document';
+import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
 
@@ -83,6 +84,10 @@ export function generateOpenApi(_request: KuzzleRequest): any {
         description: 'document controller'
       }
     ],
+    schemes: [
+      "https",
+      "http"
+    ],
     paths: {},
     components: {
       ...DefinitionsDocument,
@@ -93,7 +98,7 @@ export function generateOpenApi(_request: KuzzleRequest): any {
   };
   /* eslint-enable sort-keys */
 
-  routes.forEach(route => {
+  for (const route of routes) {
     // Make sure route verbs are lowercase
     if (route.verb !== undefined) {
       route.verb = route.verb.toLowerCase();
@@ -111,40 +116,41 @@ export function generateOpenApi(_request: KuzzleRequest): any {
     }
 
     // If custom specification, return as it is
-    if (route.openapi) {
-      response.paths[route.formattedPath][route.verb] = route.openapi;
-      return;
-    }
+    // decomments when the swagger file is corrected
+    // if (route.openapi) {
+    //   response.paths[route.formattedPath][route.verb] = route.openapi;
+    //   return;
+    // }
 
-    if (route.info === undefined) {
-      route.info = {};
+    if (route.openapi === undefined) {
+      route.openapi = {};
     }
     if (route.controller !== undefined) {
       if (!_.some(response.tags, {name: route.controller})) {
-        const capitalizedController = route.controller.charAt(0).toUpperCase() + route.controller.slice(1);
+        const capitalizedController = Inflector.upFirst(route.controller);
         response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
       }
-      if (route.info.tags === undefined) {
-        route.info.tags = [];
+      if (route.openapi.tags === undefined) {
+        route.openapi.tags = [];
       }
-      if (!route.info.tags.includes(route.controller)) {
-        route.info.tags.push(route.controller);
+      if (!route.openapi.tags.includes(route.controller)) {
+        route.openapi.tags.push(route.controller);
       }
     }
 
-    if (route.info.description === undefined) {
-      route.info.description = `Controller: ${route.controller}.`;
+    if (route.openapi.description === undefined) {
+      route.openapi.description = `Controller: ${route.controller}.`;
     }
-    if (route.info.summary === undefined) {
-      route.info.summary = `Action: ${route.action}.`;
+    if (route.openapi.summary === undefined) {
+      route.openapi.summary = `Action: ${route.action}.`;
     }
-    if (route.info.parameters === undefined) {
-      route.info.parameters = [];
+    if (route.openapi.parameters === undefined) {
+      route.openapi.parameters = [];
 
       let m = routeUrlMatch.exec(route.path);
       while (m !== null) {
         routeUrlMatch.lastIndex++;
-        route.info.parameters.push({
+        route.openapi.parameters.push({
           in: 'path',
           name: m[1],
           required: true,
@@ -155,20 +161,20 @@ export function generateOpenApi(_request: KuzzleRequest): any {
       }
     }
 
-    if (route.info.parameters.length === 0) {
-      route.info.parameters = undefined;
+    if (route.openapi.parameters.length === 0) {
+      route.openapi.parameters = undefined;
     }
 
-    if (route.info.responses === undefined) {
-      route.info.responses = {
+    if (route.openapi.responses === undefined) {
+      route.openapi.responses = {
         '200': {
           description: 'OK'
         }
       };
     }
 
-    response.paths[route.formattedPath][route.verb] = route.info;
-  });
+    response.paths[route.formattedPath][route.verb] = route.openapi;
+  }
 
   return response;
 }
