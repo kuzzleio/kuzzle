@@ -5033,7 +5033,7 @@ describe('Test: ElasticSearch service', () => {
 
         should(() => publicES._sanitizeSearchBody(searchParams))
           .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
-        });
+      });
 
       it('should throw if any deeply nested script keyword is found in the query', () => {
         const searchParams = {
