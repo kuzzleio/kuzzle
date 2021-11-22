@@ -4978,16 +4978,31 @@ describe('Test: ElasticSearch service', () => {
     });
 
     describe('#_scriptCheck', () => {
-      let object;
+      it('should allows stored-scripts', () => {
+        const searchParams = {
+          query: {
+            match: {
+              script: {
+                id: 'count-documents',
+                params: {
+                  length: 25
+                }
+              }
+            }
+          }
+        };
 
-      it('should not throw when there is not a single script', () => {
-        object = { foo: 'bar' };
-
-        should(() => publicES._scriptCheck(object)).not.throw();
+        should(() => publicES._scriptCheck(searchParams)).not.throw();
       });
 
-      it('should throw if any script keyword is found in the query', () => {
-        object = {
+      it('should not throw when there is not a single script', () => {
+        const searchParams = { foo: 'bar' };
+
+        should(() => publicES._scriptCheck(searchParams)).not.throw();
+      });
+
+      it('should throw if any script is found in the query', () => {
+        let searchParams = {
           query: {
             match: {
               script: {
@@ -5000,12 +5015,28 @@ describe('Test: ElasticSearch service', () => {
           }
         };
 
-        should(() => publicES._sanitizeSearchBody(object))
+        should(() => publicES._sanitizeSearchBody(searchParams))
           .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
-      });
+
+        searchParams = {
+          query: {
+            match: {
+              script: {
+                source: 'doc[message.keyword].value.length() > params.length',
+                params: {
+                  length: 25
+                }
+              }
+            }
+          }
+        };
+
+        should(() => publicES._sanitizeSearchBody(searchParams))
+          .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
+        });
 
       it('should throw if any deeply nested script keyword is found in the query', () => {
-        object = {
+        const searchParams = {
           query: {
             bool: {
               filter: [
@@ -5024,7 +5055,7 @@ describe('Test: ElasticSearch service', () => {
           }
         };
 
-        should(() => publicES._sanitizeSearchBody(object))
+        should(() => publicES._sanitizeSearchBody(searchParams))
           .throw(BadRequestError, { id: 'services.storage.invalid_query_keyword'});
       });
     });
