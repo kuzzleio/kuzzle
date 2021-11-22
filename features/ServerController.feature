@@ -59,6 +59,21 @@ Feature: Server Controller
       | memoryStorage | "green" |
       | storageEngine | "green" |
 
+  # server:metrics ==========================================================================
+  @realtime
+  Scenario: Get Kuzzle node metrics
+    Given I subscribe to "functional-test":"hooks" notifications
+    When I execute the action "server":"metrics"
+    Then The property "funnel" of the result should match:
+      | concurrentRequests | 1 |
+      | pendingRequests    | 0 |
+    Then The property "hotelClerk" of the result should match:
+      | rooms         | 1 |
+      | subscriptions | 1 |
+    Then The property "router.connections" of the result should match:
+      | websocket | 2 |
+      | internal  | 1 |
+
   # server:openapi ========================================================================
   @http
   Scenario: Get our API in OpenApi format as a raw response
@@ -79,3 +94,4 @@ Feature: Server Controller
   Scenario: Http call onto deprecated method should not print a warning when NODE_ENV=production
     When I execute the action "server":"publicApi"
     Then The response should contains a "deprecations" equals to undefined
+ 
