@@ -47,4 +47,13 @@ describe('HotelClerk', () => {
         .be.calledWith('b');
     });
   });
+
+  describe('#metrics', () => {
+    it('should return the metrics object', () => {
+      const metrics = hotelClerk.metrics();
+      should(metrics).be.an.Object();
+      should(metrics.subscriptions).be.a.Number();
+      should(metrics.rooms).be.a.Number();
+    });
+  });
 });

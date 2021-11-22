@@ -378,6 +378,36 @@ describe('ServerController', () => {
     });
   });
 
+  describe('#metrics', () => {
+    it('should return a properly formatted metrics object', () => {
+      kuzzle.ask.withArgs('kuzzle:api:funnel:metrics').resolves({
+        concurrentRequests: 2,
+        pendingRequests: 42,
+      });
+
+      kuzzle.ask.withArgs('core:network:router:metrics').resolves({
+        connections: {
+          internal: 1,
+          http: 1,
+        }
+      });
+
+      kuzzle.ask.withArgs('core:realtime:hotelClerk:metrics').resolves({
+        rooms: 1,
+        subscriptions: 1
+      });
+
+      return serverController.metrics()
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).not.be.null();
+          should(response.funnel).be.an.Object();
+          should(response.hotelClerk).be.an.Object();
+          should(response.router).be.an.Object();
+        });
+    });
+  });
+
   describe('#_buildApiDefinition', () => {
     it('should return api definition for the provided controllers', () => {
       const nativeController = new NativeController();

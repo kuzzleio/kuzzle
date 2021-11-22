@@ -173,6 +173,14 @@ export class HotelClerk {
       });
 
     /**
+     * Returns inner metrics from the HotelClerk
+     * @return {Object}
+     */
+    global.kuzzle.onAsk(
+      'core:realtime:hotelClerk:metrics',
+      () => this.metrics());
+
+    /**
      * Clear the hotel clerk and properly disconnect connections.
      */
     global.kuzzle.on('kuzzle:shutdown', () => this.clearConnections());
@@ -535,6 +543,17 @@ export class HotelClerk {
       },
       subscription,
     });
+  }
+
+  /**
+   * Returns inner metrics from the HotelClerk
+   * @returns {JSONObject}
+   */
+  metrics (): JSONObject {
+    return {
+      rooms: this.roomsCount,
+      subscriptions: this.subscriptions.size,    
+    };
   }
 
   /**
