@@ -61,9 +61,8 @@ Returns the found statistic snapshots in the following format:
     },
     "network": {
       "connections": {
-        "internal": 1,
         "websocket": 1,
-        "HTTP/1.1": 1
+        "http/1.1": 1
       }
     },
     "realtime": {
