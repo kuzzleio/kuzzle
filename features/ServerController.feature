@@ -64,13 +64,13 @@ Feature: Server Controller
   Scenario: Get Kuzzle node metrics
     Given I subscribe to "functional-test":"hooks" notifications
     When I execute the action "server":"metrics"
-    Then The property "funnel" of the result should match:
+    Then The property "api" of the result should match:
       | concurrentRequests | 1 |
       | pendingRequests    | 0 |
-    Then The property "hotelClerk" of the result should match:
+    Then The property "realtime" of the result should match:
       | rooms         | 1 |
       | subscriptions | 1 |
-    Then The property "router.connections" of the result should match:
+    Then The property "network.connections" of the result should match:
       | websocket | 2 |
       | internal  | 1 |
 
