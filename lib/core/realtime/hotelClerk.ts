@@ -174,7 +174,7 @@ export class HotelClerk {
 
     /**
      * Returns inner metrics from the HotelClerk
-     * @return {Object}
+     * @return {{rooms: number, subscriptions: number}}
      */
     global.kuzzle.onAsk(
       'core:realtime:hotelClerk:metrics',
@@ -547,9 +547,8 @@ export class HotelClerk {
 
   /**
    * Returns inner metrics from the HotelClerk
-   * @returns {JSONObject}
    */
-  metrics (): JSONObject {
+  metrics (): {rooms: number, subscriptions: number} {
     return {
       rooms: this.roomsCount,
       subscriptions: this.subscriptions.size,    

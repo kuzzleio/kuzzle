@@ -10,12 +10,9 @@ describe('funnel.metrics', () => {
     kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
 
     const funnel = new Funnel();
-    const metrics = funnel.metrics();
-
-    should(metrics).be.an.Object();
-    should(metrics.concurrentRequests).be.a.Number();
-    should(metrics.concurrentRequests).be.equal(0);
-    should(metrics.pendingRequests).be.a.Number();
-    should(metrics.pendingRequests).be.equal(0);
+    should(funnel.metrics()).match({
+      concurrentRequests: 0,
+      pendingRequests: 0,
+    });
   });
 });

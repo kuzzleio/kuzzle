@@ -401,9 +401,9 @@ describe('ServerController', () => {
         .then(response => {
           should(response).be.instanceof(Object);
           should(response).not.be.null();
-          should(response.funnel).be.an.Object();
-          should(response.hotelClerk).be.an.Object();
-          should(response.router).be.an.Object();
+          should(response.api).be.an.Object();
+          should(response.realtime).be.an.Object();
+          should(response.network).be.an.Object();
         });
     });
   });

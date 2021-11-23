@@ -6,7 +6,7 @@ title: metrics
 
 # metrics
 
-
+<SinceBadge version="auto-version"/>
 
 Returns inner metrics directly from the current Kuzzle node core components.
 
@@ -36,14 +36,14 @@ Method: GET
 
 Returns the found statistic snapshots in the following format:
 
-- `funnel`: current node API funnel metrics
+- `api`: current node API funnel metrics
   - `concurrentRequests`: number of concurrent requests currently executed.
   - `pendingRequests`: number of requests waiting for execution
-- `hotelClerk`: current node realtime hotelClerk metrics
+- `network`: current node router metrics
+  - `connections`: number of active connections, per network protocol
+- `realtime`: current node realtime hotelClerk metrics
   - `rooms`: number of active realtime rooms
   - `subscriptions`: number of active subscriptions 
-- `router`: current node router metrics
-  - `connections`: number of active connections, per network protocol
 
 
 
@@ -55,20 +55,20 @@ Returns the found statistic snapshots in the following format:
   "controller": "server",
   "requestId": "<unique request identifier>",
   "result": {
-    "funnel":{
+    "api":{
       "concurrentRequests": 1,
       "pendingRequests": 0
     },
-    "hotelClerk": {
-     "rooms": 1,
-     "subscriptions": 1
-    },
-    "router": {
+    "network": {
       "connections": {
         "internal": 1,
         "websocket": 1,
         "HTTP/1.1": 1
       }
+    },
+    "realtime": {
+     "rooms": 1,
+     "subscriptions": 1
     }
   }
 }
