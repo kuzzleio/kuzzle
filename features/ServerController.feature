@@ -70,9 +70,7 @@ Feature: Server Controller
     Then The property "realtime" of the result should match:
       | rooms         | 1 |
       | subscriptions | 1 |
-    Then The property "network.connections" of the result should match:
-      | websocket | 2 |
-      | internal  | 1 |
+
 
   # server:openapi ========================================================================
   @http
