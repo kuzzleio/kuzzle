@@ -7,8 +7,6 @@ title: resetDatabase
 
 # resetDatabase
 
-<SinceBadge version="1.4.0" />
-
 Asynchronously deletes all indexes created by users.
 
 Neither Kuzzle internal indexes nor Plugin indexes are deleted.

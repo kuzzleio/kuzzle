@@ -6,8 +6,6 @@ title: loadSecurities
 
 # loadSecurities
 
-<SinceBadge version="1.7.0" />
-
 Load roles, profiles and users into the storage layer.
 
 <!-- Duplicate section with /core/2/guides/main-concepts/3-permissions -->
@@ -19,7 +17,7 @@ The roles, profiles and users definitions follow the same structure as in the bo
  - [security:createUser](/core/2/api/controllers/security/create-user)
 
 ::: warning
-By default, Kuzzle prevents existing user overwriting.  
+By default, Kuzzle prevents existing user overwriting.
 You can either skip or overwrite existing users with the `onExistingUsers` option.
 :::
 

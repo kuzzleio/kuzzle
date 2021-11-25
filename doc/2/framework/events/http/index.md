@@ -10,8 +10,6 @@ order: 100
 
 ## http:delete
 
-<SinceBadge version="1.2.0" />
-
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
@@ -19,8 +17,6 @@ order: 100
 Triggered whenever a request has been submitted through HTTP DELETE methods.
 
 ## http:get
-
-<SinceBadge version="1.2.0" />
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
@@ -30,8 +26,6 @@ Triggered whenever a request has been submitted through HTTP GET methods.
 
 ## http:head
 
-<SinceBadge version="1.2.0" />
-
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
@@ -39,8 +33,6 @@ Triggered whenever a request has been submitted through HTTP GET methods.
 Triggered whenever a request has been submitted through HTTP HEAD methods.
 
 ## http:options
-
-<SinceBadge version="1.2.0" />
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
@@ -50,8 +42,6 @@ Triggered whenever a request has been submitted through HTTP OPTIONS methods.
 
 ## http:patch
 
-<SinceBadge version="1.2.0" />
-
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/roperties>KuzzleRequest</a></pre> | The normalized API request |
@@ -60,8 +50,6 @@ Triggered whenever a request has been submitted through HTTP PATCH methods.
 
 ## http:post
 
-<SinceBadge version="1.2.0" />
-
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |
 | `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The normalized API request |
@@ -69,8 +57,6 @@ Triggered whenever a request has been submitted through HTTP PATCH methods.
 Triggered whenever a request has been submitted through HTTP POST methods.
 
 ## http:put
-
-<SinceBadge version="1.2.0" />
 
 | Arguments | Type                                                           | Description                |
 | --------- | -------------------------------------------------------------- | -------------------------- |

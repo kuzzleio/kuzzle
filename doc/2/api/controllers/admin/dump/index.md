@@ -6,9 +6,7 @@ title: dump
 
 # dump
 
-<SinceBadge version="1.4.0" />
-
-Asynchronously creates a snapshot of Kuzzle's state.  
+Asynchronously creates a snapshot of Kuzzle's state.
 Depending on the configuration of Kuzzle, this may include the following:
 
 * a coredump of Kuzzle running process
@@ -19,7 +17,7 @@ Depending on the configuration of Kuzzle, this may include the following:
 * plugins configurations
 * usage statistics of the dumped instance
 
-The generated directory can be used to feed a complete report to the support team.  
+The generated directory can be used to feed a complete report to the support team.
 
 ---
 
@@ -53,8 +51,8 @@ Returns an acknowledgement.
   "error": null,
   "controller": "admin",
   "action": "dump",
-  "result": { 
-    "acknowledge": true 
+  "result": {
+    "acknowledge": true
   }
 }
 ```
