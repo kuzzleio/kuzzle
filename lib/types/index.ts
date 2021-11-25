@@ -31,6 +31,7 @@ export * from './Token';
 export * from './Global';
 export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
+export * from './config/ServerConfiguration';
 export * from './config/ServicesConfiguration';
 export * from './config/SecurityConfiguration';
 export * from './config/HttpConfiguration';

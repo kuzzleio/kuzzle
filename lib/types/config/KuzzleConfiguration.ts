@@ -1,5 +1,5 @@
-import { JSONObject } from '../../../index';
 import {
+  ServerConfiguration,
   ServicesConfiguration,
   SecurityConfiguration,
   HttpConfiguration,
@@ -58,76 +58,7 @@ export interface IKuzzleConfiguration {
   /**
    * Kuzzle server is the entry point for incoming requests.
    */
-  server: {
-    /**
-     * The maximum size of an incoming request.
-     *
-     * Units can be expressed in bytes ("b" or none), kilobytes ("kb"),
-     * megabytes ("mb"), gigabytes ("gb") or terabytes ("tb").
-     *
-     * @default "1mb"
-     */
-    maxRequestSize: string;
-
-    /**
-     * The listening port for HTTP and WebSocket protocols.
-     *
-     * @default 7512
-     */
-    port: number;
-
-    /**
-     * Configuration section for Kuzzle access logs.
-     */
-    logs: {
-      /**
-       * An array of Winston transports configurations to output access
-       * logs.
-       *
-       * Possible transport types are: console, file, elasticsearch and syslog.
-       *
-       * Please refer to https://github.com/winstonjs/winston/blob/master/docs/transports.md
-       * for more information on transports configuration.
-       *
-       * @default
-       *
-       * [
-          {
-            transport: 'console',
-            level: 'info',
-            stderrLevels: [],
-            silent: true
-          }
-        ]
-       *
-       */
-      transports: JSONObject[];
-
-      /**
-       * Access log format.
-       *
-       * Currently supported are "combined" (=Apache combined logs format)
-       * and "logstash".
-       *
-       * "logstash" will output the whole request input to JSON, ready to
-       * be consumed by logstash agent.
-       *
-       * @default "combined"
-       */
-      accessLogFormat: string;
-
-      /**
-       * The offset to use as the client ip, from the FORWARDED-FOR chain,
-       * beginning from the right (0 = the ip address of the last
-       * client|proxy which connected to Kuzzle.
-       *
-       * @default 0
-       */
-      accessLogIpOffset: number
-    },
-
-    protocols: Record<string, unknown>,
-  },
+  server: ServerConfiguration,
 
   /**
    * Services are the external components Kuzzle relies on.
