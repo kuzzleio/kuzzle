@@ -24,7 +24,7 @@ import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
   DocumentCountComponent, 
-} from './swagger/documents/document';
+} from './openapi/documents/document';
 import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
