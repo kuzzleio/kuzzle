@@ -1,3 +1,5 @@
+import { JSONObject } from '../../../../index';
+
 export type StorageServiceElasticsearch = {
   /**
    * @default ['storageEngine']
@@ -14,27 +16,9 @@ export type StorageServiceElasticsearch = {
    * Elasticsearch config options, this object is passed through to the
    * Elasticsearch constructor and can contain all options/keys outlined here:
    * @see https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
+   * 
   */
-  client: {
-    /**
-     * @default "http://localhost:9200"
-    */
-    node: string
-    /**
-     * @default 5
-     */
-    maxRetries: number,
-
-    /**
-     * @default 60000
-     */
-    requestTimeout: number,
-
-    /**
-     * @default true
-     */
-    sniffOnStart: boolean
-  }
+  client: JSONObject
   /**
    * Default policy against new fields that are not referenced in the
    * collection mapping.
