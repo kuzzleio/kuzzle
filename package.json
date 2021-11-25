@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.14.16",
+  "version": "2.15.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -75,7 +75,7 @@
     "sorted-array": "^2.0.4",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.0.0.tar.gz",
     "uuid": "^8.3.2",
-    "validator": "^13.6.0",
+    "validator": "^13.7.0",
     "winston": "^3.3.3",
     "winston-elasticsearch": "0.15.9",
     "winston-syslog": "^2.4.4",
@@ -88,9 +88,9 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.176",
-    "@typescript-eslint/eslint-plugin": "^5.2.0",
-    "@typescript-eslint/parser": "^5.2.0",
+    "@types/lodash": "^4.14.177",
+    "@typescript-eslint/eslint-plugin": "^5.4.0",
+    "@typescript-eslint/parser": "^5.4.0",
     "async": "^3.2.2",
     "chokidar": "^3.5.2",
     "codecov": "^3.8.3",
@@ -106,10 +106,10 @@
     "rewire": "^5.0.0",
     "should": "13.2.3",
     "should-sinon": "0.0.6",
-    "sinon": "^11.1.2",
-    "strip-json-comments": "3.1.1",
+    "sinon": "^12.0.1",
+    "strip-json-comments": "https://github.com/sindresorhus/strip-json-comments/archive/refs/tags/v3.1.1.tar.gz",
     "ts-node": "^10.4.0",
-    "typescript": "^4.4.4",
+    "typescript": "^4.5.2",
     "yaml": "^1.10.2"
   },
   "engines": {
