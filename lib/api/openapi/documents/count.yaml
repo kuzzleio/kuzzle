@@ -12,8 +12,8 @@ DocumentCount:
         name: collection
         schema:
           type: string
-      - name: body
-        in: "body"
+      - in: body
+        name: "body"
         description: "Counts documents in a collection."
         required: true
         schema:

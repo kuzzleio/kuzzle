@@ -44,7 +44,7 @@ export function generateOpenApi(_request: KuzzleRequest): any {
 
   /* eslint-disable sort-keys */
   const response = {
-    openapi: '3.0.1',
+    swagger: '2.0',
     info: {
       title: 'Kuzzle API',
       description: 'The Kuzzle HTTP API',
