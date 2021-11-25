@@ -72,7 +72,7 @@ export type InternalCacheConfiguration = {
   /**
    * @default 'redis'
   */
-  backend: string
+  backend: 'redis'
 
   clusterOptions: {
   /**

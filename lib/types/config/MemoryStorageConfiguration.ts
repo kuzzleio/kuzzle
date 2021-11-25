@@ -2,7 +2,7 @@ export type MemoryStorageConfiguration = {
     /**
      * @default 'redis'
     */
-    backend: string
+    backend: 'redis'
     
     clusterOptions: {
     /**

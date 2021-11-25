@@ -7,7 +7,7 @@ export type StorageServiceElasticsearch = {
   /**
    * @default "elasticsearch"
   */
-  backend: string
+  backend: 'elasticsearch'
 
   /**
    * Elasticsearch constructor options. Use this field to specify your
@@ -20,6 +20,20 @@ export type StorageServiceElasticsearch = {
      * @default "http://localhost:9200"
     */
     node: string
+    /**
+     * @default 5
+     */
+    maxRetries: number,
+
+    /**
+     * @default 60000
+     */
+    requestTimeout: number,
+
+    /**
+     * @default true
+     */
+    sniffOnStart: boolean
   }
   /**
    * Default policy against new fields that are not referenced in the
@@ -84,7 +98,7 @@ export type StorageServiceElasticsearch = {
            *   }
            * ]
            */
-              updatedAt: number
+            updatedAt: number
         }
       }
       }
