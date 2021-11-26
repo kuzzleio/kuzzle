@@ -22,6 +22,7 @@
 import { JSONObject } from 'kuzzle-sdk';
 
 import { InternalError } from '../../kerror/errors/internalError';
+import assert from '../../util/assertType';
 
 // any property not listed here will be copied into
 // RequestInput.args
@@ -274,11 +275,7 @@ export class RequestInput {
     if (data.body) {
       this.body = data.body;
     }
-    if (data.controller) {
-      this.controller = data.controller;
-    }
-    if (data.action) {
-      this.action = data.action;
-    }
+    this.controller = assert.assertString('controller', data.controller);
+    this.action = assert.assertString('controller', data.action);
   }
 }

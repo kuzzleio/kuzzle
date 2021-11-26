@@ -117,12 +117,12 @@ export class RequestContext {
   /**
    * Authentication token
    */
-  public token: Token | null;
+  public token: Token | null = null;
 
   /**
    * Associated user
    */
-  public user: User | null;
+  public user: User | null = null;
 
   constructor(options: any = {}) {
     this.token = null;
@@ -131,8 +131,12 @@ export class RequestContext {
 
     Object.seal(this);
 
-    this.token = options.token;
-    this.user = options.user;
+    if (options.token) {
+      this.token = options.token;
+    }
+    if (options.user) {
+      this.user = options.user;
+    }
 
     // @deprecated - backward compatibility only
     if (options.connectionId) {

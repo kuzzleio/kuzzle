@@ -46,7 +46,7 @@ export class Headers {
     });
 
     // eslint-disable-next-line dot-notation
-    if (global['_kuzzle']) {
+    if (global['_kuzzle'] && global.kuzzle) {
       this.setHeader('X-Kuzzle-Node', global.kuzzle.id);
     }
   }
