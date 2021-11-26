@@ -97,13 +97,6 @@ describe('#Request', () => {
     should(function () { new Request({}, 123.45); }).throw('Request options must be an object');
   });
 
-  it('should throw if an invalid optional status is provided', () => {
-    should(function () { new Request({}, { status: [] }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: {} }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: 'foobar' }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: 123.45 }); }).throw('Attribute status must be an integer');
-  });
-
   it('should set an error properly', () => {
     let foo = new KuzzleError('bar', 666);
 
@@ -149,13 +142,6 @@ describe('#Request', () => {
 
   it('should throw if trying to set an error object as a result', () => {
     should(function () { rq.setResult(new Error('foobar')); }).throw(/cannot set an error/);
-  });
-
-  it('should throw if trying to set a non-integer status', () => {
-    should(function () { rq.setResult('foobar', { status: {} }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: [] }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: true }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: 123.45 }); }).throw('Attribute status must be an integer');
   });
 
   it('should throw if trying to set some non-object headers', () => {

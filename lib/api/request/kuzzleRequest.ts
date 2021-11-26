@@ -54,30 +54,75 @@ const _deprecations = 'deprecations\u200b';
  *
  */
 export class KuzzleRequest {
+/**
+ * Deprecation warnings for the API action
+ */
+  public deprecations: Deprecation[] | undefined;
+
   /**
-   * Request external ID (specified by "requestId" or random uuid)
-   */
+  * Request timestamp (in Epoch-Micro)
+  */
+  public timestamp: number;
+
+  /**
+  * Request HTTP status
+  */
+  public status;
+
+  /**
+  * Request input
+  */
+  public input: RequestInput;
+
+  /**
+ * Request context
+ */
+  public context: RequestContext;
+
+  /**
+  * Request error
+  */
+  public error: KuzzleError;
+
+  /**
+  * Request result
+  */
+  public result: any;
+
+  /**
+  * Request response
+  */
+  public response;
+
+  /**
+  * Request internal ID
+  */
+  public internalId;
+
+  /**
+  * Request external ID (specified by "requestId" or random uuid)
+  */
   public id: string;
 
   constructor (data: any, options: any) {
-    this[_internalId] = nanoid();
-    this[_status] = 102;
-    this[_input] = new RequestInput(data);
-    this[_context] = new RequestContext(options);
-    this[_error] = null;
-    this[_result] = null;
-    this[_response] = null;
-    this[_deprecations] = undefined;
+    this.internalId = nanoid();
+    this.status = 102;
+    this.input = new RequestInput(data);
+    this.context = new RequestContext(options);
+    this.error = null;
+    this.result = null;
+    this.response = new RequestResponse(this);
+    this.deprecations = undefined;
 
     // @deprecated - Backward compatibility with the RequestInput.headers
     // property
-    this[_input].headers = this[_context].connection.misc.headers;
+    this.input.headers = this.context.connection.misc.headers;
 
     this.id = data.requestId
       ? assert.assertString('requestId', data.requestId)
       : nanoid();
 
-    this[_timestamp] = data.timestamp || Date.now();
+    this.timestamp = data.timestamp || Date.now();
 
     // handling provided options
     if (options !== undefined && options !== null) {
@@ -123,77 +168,6 @@ export class KuzzleRequest {
   }
 
   /**
-   * Request internal ID
-   */
-  get internalId (): string {
-    return this[_internalId];
-  }
-
-  /**
-   * Deprecation warnings for the API action
-   */
-  get deprecations(): Deprecation[] | void {
-    return this[_deprecations];
-  }
-
-  /**
-   * Request timestamp (in Epoch-micro)
-   */
-  get timestamp(): number {
-    return this[_timestamp];
-  }
-
-  /**
-   * Request HTTP status
-   */
-  get status(): number {
-    return this[_status];
-  }
-
-  set status(i: number) {
-    this[_status] = assert.assertInteger('status', i);
-  }
-
-  /**
-   * Request input
-   */
-  get input (): RequestInput {
-    return this[_input];
-  }
-
-  /**
-   * Request context
-   */
-  get context (): RequestContext {
-    return this[_context];
-  }
-
-  /**
-   * Request error
-   */
-  get error (): KuzzleError | null {
-    return this[_error];
-  }
-
-  /**
-   * Request result
-   */
-  get result (): any | null {
-    return this[_result];
-  }
-
-  /**
-   * Request response
-   */
-  get response (): RequestResponse {
-    if (this[_response] === null) {
-      this[_response] = new RequestResponse(this);
-    }
-
-    return this[_response];
-  }
-
-  /**
    * Adds an error to the request, and sets the request's status to the error one.
    */
   setError (error: Error) {
@@ -201,15 +175,15 @@ export class KuzzleRequest {
       throw new InternalError('Cannot set non-error object as a request\'s error');
     }
 
-    this[_error] = error instanceof KuzzleError ? error : new InternalError(error);
-    this.status = this[_error].status;
+    this.error = error instanceof KuzzleError ? error : new InternalError(error);
+    this.status = this.error.status;
   }
 
   /**
    * Sets the request error to null and status to 200
    */
   clearError () {
-    this[_error] = null;
+    this.error = null;
     this.status = 200;
   }
 
@@ -255,7 +229,7 @@ export class KuzzleRequest {
       this.response.raw = options.raw;
     }
 
-    this[_result] = result;
+    this.result = result;
   }
 
   /**
@@ -275,7 +249,7 @@ export class KuzzleRequest {
     };
 
     if (! this.deprecations) {
-      this[_deprecations] = [deprecation];
+      this.deprecations = [deprecation];
     }
     else {
       this.deprecations.push(deprecation);
@@ -290,28 +264,28 @@ export class KuzzleRequest {
   serialize (): { data: JSONObject, options: JSONObject } {
     const serialized = {
       data: {
-        _id: this[_input].args._id,
-        action: this[_input].action,
-        body: this[_input].body,
-        collection: this[_input].args.collection,
-        controller: this[_input].controller,
-        index: this[_input].args.index,
-        jwt: this[_input].jwt,
+        _id: this.input.args._id,
+        action: this.input.action,
+        body: this.input.body,
+        collection: this.input.args.collection,
+        controller: this.input.controller,
+        index: this.input.args.index,
+        jwt: this.input.jwt,
         requestId: this.id,
-        timestamp: this[_timestamp],
-        volatile: this[_input].volatile,
+        timestamp: this.timestamp,
+        volatile: this.input.volatile,
       },
       // @deprecated - duplicate of options.connection.misc.headers
-      headers: this[_input].headers,
+      headers: this.input.headers,
       options: {
-        error: this[_error],
-        result: this[_result],
-        status: this[_status],
+        error: this.error,
+        result: this.result,
+        status: this.status,
       },
     };
 
-    Object.assign(serialized.data, this[_input].args);
-    Object.assign(serialized.options, this[_context].toJSON());
+    Object.assign(serialized.data, this.input.args);
+    Object.assign(serialized.options, this.context.toJSON());
 
     return serialized;
   }

@@ -20,6 +20,8 @@
  */
 
 import { JSONObject } from 'kuzzle-sdk';
+
+import '../../../lib/types/Global';
 import * as assert from '../../util/assertType';
 import { Deprecation } from '../../types';
 import { KuzzleError } from '../../kerror/errors/kuzzleError';
@@ -43,7 +45,10 @@ export class Headers {
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
-    this.setHeader('X-Kuzzle-Node', (global as any).kuzzle.id);
+    // eslint-disable-next-line dot-notation
+    if (global['_kuzzle']) {
+      this.setHeader('X-Kuzzle-Node', global.kuzzle.id);
+    }
   }
 
   /**
@@ -154,7 +159,11 @@ export class RequestResponse {
 
   constructor (request) {
     this.raw = false;
-    this[_request] = request;
+
+    Reflect.defineProperty(this, _request, {
+      value: request,
+    });
+
     this[_headers] = new Headers();
 
     Object.seal(this);

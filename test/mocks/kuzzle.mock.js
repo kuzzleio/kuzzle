@@ -17,6 +17,11 @@ class KuzzleMock extends KuzzleEventEmitter {
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
 
+    Reflect.defineProperty(global, '_kuzzle', {
+      value: this,
+      writable: true,
+    });
+
     Reflect.defineProperty(global, 'kuzzle', {
       value: this,
       writable: true,
