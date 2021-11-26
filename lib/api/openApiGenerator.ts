@@ -22,7 +22,8 @@ import _ from 'lodash';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
-  DocumentCountComponent,
+  DocumentCountComponent, 
+  DocumentDeleteByQueryComponent,
   DocumentDeleteComponent,
   DocumentScrollComponent,
   DocumentExistsComponent,
@@ -169,6 +170,7 @@ export function generateOpenApi(): any {
       ...DefinitionsDocument,
       schemas: {
         ...DocumentCountComponent,
+        ...DocumentDeleteByQueryComponent,
         ...DocumentDeleteComponent,
         ...DocumentScrollComponent,
         ...DocumentExistsComponent,

@@ -54,5 +54,11 @@ const deleteObject = readYamlFile('./lib/api/openapi/documents/delete.yaml');
 export const DocumentDelete = deleteObject.DocumentDelete;
 export const DocumentDeleteComponent = deleteObject.components.schemas;
 
+// reading the description of the DeleteByQuery action in the controller document.
+// The yaml objects are then stored in the variables below
+const deleteByQueryObject = readYamlFile('./lib/api/openapi/documents/deleteByQuery.yaml');
+export const DocumentDeleteByQuery = deleteByQueryObject.DocumentDeleteByQuery;
+export const DocumentDeleteByQueryComponent = deleteByQueryObject.components.schemas;
+
 // Document definitions (reusable object for KuzzleRequest and KuzzleResponse)
 export const DefinitionsDocument = readYamlFile('./lib/api/openapi/payloads.yaml').definitions;
