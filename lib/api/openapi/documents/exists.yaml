@@ -1,0 +1,35 @@
+DocumentExists:
+  summary: "Checks if a document exists."
+  tags:
+    - document
+  parameters:
+    - in: path
+      name: index
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: collection
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: _id
+      schema:
+        type: integer
+      required: true
+  responses:
+    200:
+      description: "Checks if a document exists."
+      schema:
+        $ref: "#/components/schemas/DocumentExistsResponse"
+
+components:
+  schemas:
+    DocumentExistsResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "boolean"
