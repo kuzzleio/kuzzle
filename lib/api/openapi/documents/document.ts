@@ -6,4 +6,4 @@ const countObject = readYamlfile('./lib/api/openapi/documents/count.yaml');
 export const DocumentCount = countObject.DocumentCount;
 export const DocumentCountComponent = countObject.components.schemas;
 // Document definitions (reusable object for KuzzleRequest and KuzzleResponse)
-export const DefinitionsDocument = readYamlfile('./lib/api/openapi/documents/definitions.yaml').definitions;
+export const DefinitionsDocument = readYamlfile('./lib/api/openapi/payloads.yaml').definitions;
