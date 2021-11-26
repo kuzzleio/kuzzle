@@ -52,7 +52,7 @@ export function generateOpenApi(): any {
         name: 'Kuzzle team',
         url: 'http://kuzzle.io',
         email: 'hello@kuzzle.io',
-        discord: 'http://join.discord.kuzzle.io'
+        discord: 'http://join.discord.kuzzle.io',
       },
       license: {
         name: 'Apache 2',
@@ -113,15 +113,14 @@ export function generateOpenApi(): any {
     }
 
     if (response.paths[route.formattedPath][route.verb] !== undefined) {
-      return;
+      continue;
     }
 
     // If custom specification, return as it is
-    // decomments when the swagger file is corrected
-    // if (route.openapi) {
-    //   response.paths[route.formattedPath][route.verb] = route.openapi;
-    //   return;
-    // }
+    if (route.openapi) {
+      response.paths[route.formattedPath][route.verb] = route.openapi;
+      continue;
+    }
 
     if (route.openapi === undefined) {
       route.openapi = {};
