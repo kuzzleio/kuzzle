@@ -34,18 +34,6 @@ import { get, isPlainObject } from '../../util/safeObject';
 
 const assertionError = kerror.wrap('api', 'assert');
 
-// private properties
-// \u200b is a zero width space, used to masquerade console.log output
-const _internalId = 'internalId\u200b';
-const _status = 'status\u200b';
-const _input = 'input\u200b';
-const _error = 'error\u200b';
-const _result = 'result\u200b';
-const _context = 'context\u200b';
-const _timestamp = 'timestamp\u200b';
-const _response = 'response\u200b';
-const _deprecations = 'deprecations\u200b';
-
 /**
  * The `KuzzleRequest` class represents a request being processed by Kuzzle.
  *
