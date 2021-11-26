@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 import _ from 'lodash';
-import { KuzzleRequest } from './request';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
