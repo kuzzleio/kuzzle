@@ -23,6 +23,7 @@ import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
   DocumentCountComponent,
+  DocumentDeleteComponent,
   DocumentScrollComponent,
   DocumentExistsComponent,
   DocumentUpdateComponent,
@@ -168,6 +169,7 @@ export function generateOpenApi(): any {
       ...DefinitionsDocument,
       schemas: {
         ...DocumentCountComponent,
+        ...DocumentDeleteComponent,
         ...DocumentScrollComponent,
         ...DocumentExistsComponent,
         ...DocumentUpdateComponent,

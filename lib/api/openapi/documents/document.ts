@@ -48,5 +48,11 @@ const scrollObject = readYamlFile('./lib/api/openapi/documents/scroll.yaml');
 export const DocumentScroll = scrollObject.DocumentScroll;
 export const DocumentScrollComponent = scrollObject.components.schemas;
 
+// reading the description of the Delete action in the controller document.
+// The yaml objects are then stored in the variables below
+const deleteObject = readYamlFile('./lib/api/openapi/documents/delete.yaml');
+export const DocumentDelete = deleteObject.DocumentDelete;
+export const DocumentDeleteComponent = deleteObject.components.schemas;
+
 // Document definitions (reusable object for KuzzleRequest and KuzzleResponse)
 export const DefinitionsDocument = readYamlFile('./lib/api/openapi/payloads.yaml').definitions;
