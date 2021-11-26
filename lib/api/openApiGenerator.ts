@@ -19,15 +19,86 @@
  * limitations under the License.
  */
 import _ from 'lodash';
-import { KuzzleRequest } from './request';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
   DocumentCountComponent,
   DocumentReplaceComponent,
-} from './swagger/documents/document';
+  DocumentGetComponent,
+  DocumentCreateOrReplaceComponent,
+  DocumentCreateComponent,
+} from './openapi/documents/document';
+import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
+
+/**
+ * Genrate basic openApi Controller
+ */
+function generateController(route: any, response: any) {
+  if (route.controller !== undefined) {
+    if (!_.some(response.tags, {name: route.controller})) {
+      const capitalizedController = Inflector.upFirst(route.controller);
+      response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
+    }
+    if (route.openapi.tags === undefined) {
+      route.openapi.tags = [];
+    }
+    if (!route.openapi.tags.includes(route.controller)) {
+      route.openapi.tags.push(route.controller);
+    }
+  }
+}
+
+/**
+ * Genrate basic openApi Summary
+ */
+function generateSummary(route: any) {
+  if (route.openapi.description === undefined) {
+    route.openapi.description = `Controller: ${route.controller}.`;
+  }
+  if (route.openapi.summary === undefined) {
+    route.openapi.summary = `Action: ${route.action}.`;
+  }
+}
+
+/**
+ * Genrate basic openApi Parameters
+ */
+function generateParameters(route: any) {
+  if (route.openapi.parameters === undefined) {
+    route.openapi.parameters = [];
+
+    let m = routeUrlMatch.exec(route.path);
+    while (m !== null) {
+      routeUrlMatch.lastIndex++;
+      route.openapi.parameters.push({
+        in: 'path',
+        name: m[1],
+        required: true,
+        schema: {type: 'string'}
+      });
+
+      m = routeUrlMatch.exec(route.path);
+    }
+  }
+  if (route.openapi.parameters.length === 0) {
+    route.openapi.parameters = undefined;
+  }
+}
+
+/**
+ * Genrate basic openApi Response
+ */
+function generateResponse(route: any) {
+  if (route.openapi.responses === undefined) {
+    route.openapi.responses = {
+      '200': {
+        description: 'OK'
+      }
+    };
+  }
+}
 
 /**
  * Generates JSON OpenApi object
@@ -35,7 +106,7 @@ const routeUrlMatch = /:([^/]*)/g;
  * @returns {object} openApi object
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-export function generateOpenApi(_request: KuzzleRequest): any {
+export function generateOpenApi(): any {
 /* eslint-enable @typescript-eslint/no-unused-vars */
   const routes = [];
 
@@ -44,14 +115,15 @@ export function generateOpenApi(_request: KuzzleRequest): any {
 
   /* eslint-disable sort-keys */
   const response = {
-    openapi: '3.0.1',
+    swagger: '2.0',
     info: {
       title: 'Kuzzle API',
       description: 'The Kuzzle HTTP API',
       contact: {
         name: 'Kuzzle team',
         url: 'http://kuzzle.io',
-        email: 'hello@kuzzle.io'
+        email: 'hello@kuzzle.io',
+        discord: 'http://join.discord.kuzzle.io'
       },
       license: {
         name: 'Apache 2',
@@ -84,18 +156,25 @@ export function generateOpenApi(_request: KuzzleRequest): any {
         description: 'document controller'
       }
     ],
+    schemes: [
+      'https',
+      'http'
+    ],
     paths: {},
     components: {
       ...DefinitionsDocument,
       schemas: {
         ...DocumentCountComponent,
         ...DocumentReplaceComponent,
+        ...DocumentGetComponent,
+        ...DocumentCreateOrReplaceComponent,
+        ...DocumentCreateComponent,
       }
     }
   };
   /* eslint-enable sort-keys */
 
-  routes.forEach(route => {
+  for (const route of routes) {
     // Make sure route verbs are lowercase
     if (route.verb !== undefined) {
       route.verb = route.verb.toLowerCase();
@@ -109,68 +188,29 @@ export function generateOpenApi(_request: KuzzleRequest): any {
     }
 
     if (response.paths[route.formattedPath][route.verb] !== undefined) {
-      return;
+      continue;
     }
 
     // If custom specification, return as it is
     if (route.openapi) {
       response.paths[route.formattedPath][route.verb] = route.openapi;
-      return;
+      continue;
     }
 
-    if (route.info === undefined) {
-      route.info = {};
-    }
-    if (route.controller !== undefined) {
-      if (!_.some(response.tags, {name: route.controller})) {
-        const capitalizedController = route.controller.charAt(0).toUpperCase() + route.controller.slice(1);
-        response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
-      }
-      if (route.info.tags === undefined) {
-        route.info.tags = [];
-      }
-      if (!route.info.tags.includes(route.controller)) {
-        route.info.tags.push(route.controller);
-      }
+    if (route.openapi === undefined) {
+      route.openapi = {};
     }
 
-    if (route.info.description === undefined) {
-      route.info.description = `Controller: ${route.controller}.`;
-    }
-    if (route.info.summary === undefined) {
-      route.info.summary = `Action: ${route.action}.`;
-    }
-    if (route.info.parameters === undefined) {
-      route.info.parameters = [];
+    generateController(route, response);
 
-      let m = routeUrlMatch.exec(route.path);
-      while (m !== null) {
-        routeUrlMatch.lastIndex++;
-        route.info.parameters.push({
-          in: 'path',
-          name: m[1],
-          required: true,
-          schema: {type: 'string'}
-        });
+    generateSummary(route);
 
-        m = routeUrlMatch.exec(route.path);
-      }
-    }
+    generateParameters(route);
 
-    if (route.info.parameters.length === 0) {
-      route.info.parameters = undefined;
-    }
+    generateResponse(route);
 
-    if (route.info.responses === undefined) {
-      route.info.responses = {
-        '200': {
-          description: 'OK'
-        }
-      };
-    }
-
-    response.paths[route.formattedPath][route.verb] = route.info;
-  });
+    response.paths[route.formattedPath][route.verb] = route.openapi;
+  }
 
   return response;
 }
