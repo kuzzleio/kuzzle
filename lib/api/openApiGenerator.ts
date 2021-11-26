@@ -28,6 +28,9 @@ import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
 
+/**
+ * Genrate basic openApi Controller
+ */
 function generateController(route: any, response: any) {
   if (route.controller !== undefined) {
     if (!_.some(response.tags, {name: route.controller})) {
@@ -40,6 +43,56 @@ function generateController(route: any, response: any) {
     if (!route.openapi.tags.includes(route.controller)) {
       route.openapi.tags.push(route.controller);
     }
+  }
+}
+
+/**
+ * Genrate basic openApi Summary
+ */
+function generateSummary(route: any) {
+  if (route.openapi.description === undefined) {
+    route.openapi.description = `Controller: ${route.controller}.`;
+  }
+  if (route.openapi.summary === undefined) {
+    route.openapi.summary = `Action: ${route.action}.`;
+  }
+}
+
+/**
+ * Genrate basic openApi Parameters
+ */
+function generateParameters(route: any) {
+  if (route.openapi.parameters === undefined) {
+    route.openapi.parameters = [];
+
+    let m = routeUrlMatch.exec(route.path);
+    while (m !== null) {
+      routeUrlMatch.lastIndex++;
+      route.openapi.parameters.push({
+        in: 'path',
+        name: m[1],
+        required: true,
+        schema: {type: 'string'}
+      });
+
+      m = routeUrlMatch.exec(route.path);
+    }
+  }
+  if (route.openapi.parameters.length === 0) {
+    route.openapi.parameters = undefined;
+  }
+}
+
+/**
+ * Genrate basic openApi Response
+ */
+function generateResponse(route: any) {
+  if (route.openapi.responses === undefined) {
+    route.openapi.responses = {
+      '200': {
+        description: 'OK'
+      }
+    };
   }
 }
 
@@ -142,40 +195,11 @@ export function generateOpenApi(): any {
 
     generateController(route, response);
 
-    if (route.openapi.description === undefined) {
-      route.openapi.description = `Controller: ${route.controller}.`;
-    }
-    if (route.openapi.summary === undefined) {
-      route.openapi.summary = `Action: ${route.action}.`;
-    }
-    if (route.openapi.parameters === undefined) {
-      route.openapi.parameters = [];
+    generateSummary(route);
 
-      let m = routeUrlMatch.exec(route.path);
-      while (m !== null) {
-        routeUrlMatch.lastIndex++;
-        route.openapi.parameters.push({
-          in: 'path',
-          name: m[1],
-          required: true,
-          schema: {type: 'string'}
-        });
+    generateParameters(route);
 
-        m = routeUrlMatch.exec(route.path);
-      }
-    }
-
-    if (route.openapi.parameters.length === 0) {
-      route.openapi.parameters = undefined;
-    }
-
-    if (route.openapi.responses === undefined) {
-      route.openapi.responses = {
-        '200': {
-          description: 'OK'
-        }
-      };
-    }
+    generateResponse(route);
 
     response.paths[route.formattedPath][route.verb] = route.openapi;
   }
