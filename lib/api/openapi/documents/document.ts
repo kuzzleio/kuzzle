@@ -30,6 +30,12 @@ const replaceObject = readYamlFile('./lib/api/openapi/documents/replace.yaml');
 export const DocumentReplace = replaceObject.DocumentReplace;
 export const DocumentReplaceComponent = replaceObject.components.schemas;
 
+// reading the description of the Exists action in the controller document.
+// The yaml objects are then stored in the variables below
+const existsObject = readYamlFile('./lib/api/openapi/documents/exists.yaml');
+export const DocumentExists = existsObject.DocumentExists;
+export const DocumentExistsComponent = existsObject.components.schemas;
+
 // reading the description of the Replace action in the controller document.
 // The yaml objects are then stored in the variables below
 const updateObject = readYamlFile('./lib/api/openapi/documents/update.yaml');
