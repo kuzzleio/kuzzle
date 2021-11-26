@@ -23,6 +23,7 @@ import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
   DocumentCountComponent,
+  DocumentCreateOrReplaceComponent,
   DocumentCreateComponent,
 } from './openapi/documents/document';
 import { Inflector } from './../util/inflector';
@@ -162,6 +163,7 @@ export function generateOpenApi(): any {
       ...DefinitionsDocument,
       schemas: {
         ...DocumentCountComponent,
+        ...DocumentCreateOrReplaceComponent,
         ...DocumentCreateComponent,
       }
     }
