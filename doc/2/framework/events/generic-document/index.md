@@ -8,11 +8,9 @@ order: 100
 
 # Generic Document Events
 
-<SinceBadge version="1.9.0" />
-
 Some actions in the document controller trigger generic events. Generic events can be used to apply modifications homogeneously on documents processed by this API controller, without having to write dedicated pipes for each action, independently.
 
-There are 4 types of generic events, depending on the action performed on documents: 
+There are 4 types of generic events, depending on the action performed on documents:
 * get: when documents are fetched
 * write: when documents are created or replaced
 * update: when partial updates are applied to documents
@@ -51,8 +49,8 @@ class PipePlugin {
       'generic:document:afterDelete': async (documents, request) => {
         // The "documents" argument contains the documents that have been
         // deleted.
-        // 
-        // Example: logs the number of documents deleted in the foo:bar 
+        //
+        // Example: logs the number of documents deleted in the foo:bar
         // collection
         const { index, collection } = request.input.args;
 
@@ -95,7 +93,7 @@ class PipePlugin {
       'generic:document:afterGet': async (documents, request) => {
         // The "documents" argument contains the documents that have been
         // fetched.
-        // 
+        //
         // Example: removes sensitive information from documents of the
         //          foo:bar collectin
         const { index, collection } = request.input.args;
@@ -139,8 +137,8 @@ class PipePlugin {
       'generic:document:afterUpdate': async (documents, request) => {
         // The "documents" argument contains the documents that have been
         // updated, and it can be changed by this pipe function.
-        // 
-        // Example: logs the number of documents updated in the foo:bar 
+        //
+        // Example: logs the number of documents updated in the foo:bar
         // collection
         const { index, collection } = request.input.args;
 
@@ -182,10 +180,10 @@ class PipePlugin {
   init(customConfig, context) {
     this.pipes = {
       'generic:document:afterWrite': async (documents, request) => {
-        // The "documents" argument contains the documents that have been 
+        // The "documents" argument contains the documents that have been
         // created/replaced, and it can be updated by this pipe function.
-        // 
-        // Example: logs the number of documents created in the foo:bar 
+        //
+        // Example: logs the number of documents created in the foo:bar
         // collection
         const { index, collection } = request.input.args;
 
@@ -201,7 +199,7 @@ class PipePlugin {
 }
 ```
 
-### Triggered by 
+### Triggered by
 
 - [document:create](/core/2/api/controllers/document/create)
 - [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
@@ -228,14 +226,14 @@ class PipePlugin {
   init(customConfig, context) {
     this.pipes = {
       'generic:document:beforeDelete': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
+        // The "documents" argument contains the documents about to be
         // deleted.
-        // 
+        //
         // Example: forbids deletions of documents containing a "foo:bar" field
         const { index, collection } = request.input.args;
 
         const response = await context.accessors.sdk.document.mGet(
-          index, 
+          index,
           collection,
           documents.map(d => d._id));
 
@@ -276,9 +274,9 @@ class PipePlugin {
   init(customConfig, context) {
     this.pipes = {
       'generic:document:beforeGet': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
+        // The "documents" argument contains the documents about to be
         // fetched.
-        // 
+        //
         // Example: refuses to fetch documents with ids starting with "foobar_"
         //          in collection foo:bar
         const { index, collection } = request.input.args;
@@ -299,7 +297,7 @@ class PipePlugin {
 }
 ```
 
-### Triggered by 
+### Triggered by
 
 - [document:get](/core/2/api/controllers/document/get)
 - [document:mGet](/core/2/api/controllers/document/m-get)
@@ -323,9 +321,9 @@ class PipePlugin {
   init(customConfig, context) {
     this.pipes = {
       'generic:document:beforeUpdate': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
+        // The "documents" argument contains the documents about to be
         // updated, and it can be changed by this pipe function.
-        // 
+        //
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
         const { index, collection } = request.input.args;
@@ -367,9 +365,9 @@ class PipePlugin {
   init(customConfig, context) {
     this.pipes = {
       'generic:document:beforeWrite': async (documents, request) => {
-        // The "documents" argument contains the documents about to be 
+        // The "documents" argument contains the documents about to be
         // created/replaced, and it can be updated by this pipe function.
-        // 
+        //
         // Example: adds a "foo: 'bar'" key/value to all documents' content
         // if added to the foo:bar collection
         const { index, collection } = request.input.args;

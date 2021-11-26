@@ -16,8 +16,6 @@ Use non-documented events at you own risk, we may remove them or change the payl
 
 ## core:auth:strategyAdded
 
-<SinceBadge version="1.2.0" />
-
 | Arguments  | Type              | Description                         |
 | ---------- | ----------------- | ----------------------------------- |
 | `strategy` | <pre>object</pre> | Authentication strategy information |
@@ -41,8 +39,6 @@ The provided `strategy` object has the following properties:
 | `strategy`   | <pre>object</pre> | Authentication [strategy properties](/core/2/guides/write-plugins/integrate-authentication-strategy#managing-credentials)           |
 
 ## core:auth:strategyRemoved
-
-<SinceBadge version="1.2.0" />
 
 | Arguments  | Type              | Description                         |
 | ---------- | ----------------- | ----------------------------------- |

@@ -8,8 +8,6 @@ title: getMapping
 
 Returns a collection mapping.
 
-<SinceBadge version="1.7.1" />
-
 Also returns the collection [dynamic mapping policy](/core/2/guides/main-concepts/data-storage#mappings-dynamic-policy) and [collection additional metadata](/core/2/guides/main-concepts/data-storage#mappings-metadata).
 
 ---

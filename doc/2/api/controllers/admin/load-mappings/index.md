@@ -6,8 +6,6 @@ title: loadMappings
 
 # loadMappings
 
-<SinceBadge version="1.7.0" />
-
 Apply mappings to the storage layer.
 
 **Notes:**
