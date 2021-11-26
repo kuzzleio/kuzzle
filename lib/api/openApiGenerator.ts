@@ -51,7 +51,7 @@ export function generateOpenApi(): any {
         name: 'Kuzzle team',
         url: 'http://kuzzle.io',
         email: 'hello@kuzzle.io',
-        discord: 'http://join.discord.kuzzle.io',
+        discord: 'http://join.discord.kuzzle.io'
       },
       license: {
         name: 'Apache 2',
