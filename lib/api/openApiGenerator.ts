@@ -22,7 +22,8 @@ import _ from 'lodash';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
-  DocumentCountComponent, 
+  DocumentCountComponent,
+  DocumentCreateComponent,
 } from './openapi/documents/document';
 import { Inflector } from './../util/inflector';
 
@@ -153,14 +154,15 @@ export function generateOpenApi(): any {
       }
     ],
     schemes: [
-      "https",
-      "http"
+      'https',
+      'http'
     ],
     paths: {},
     components: {
       ...DefinitionsDocument,
       schemas: {
         ...DocumentCountComponent,
+        ...DocumentCreateComponent,
       }
     }
   };
