@@ -154,8 +154,8 @@ export function generateOpenApi(): any {
       }
     ],
     schemes: [
-      "https",
-      "http"
+      'https',
+      'http'
     ],
     paths: {},
     components: {
