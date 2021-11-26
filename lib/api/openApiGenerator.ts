@@ -24,6 +24,7 @@ import {
   DefinitionsDocument, 
   DocumentCountComponent,
   DocumentExistsComponent,
+  DocumentUpdateComponent,
   DocumentReplaceComponent,
   DocumentGetComponent,
   DocumentCreateOrReplaceComponent,
@@ -167,6 +168,7 @@ export function generateOpenApi(): any {
       schemas: {
         ...DocumentCountComponent,
         ...DocumentExistsComponent,
+        ...DocumentUpdateComponent,
         ...DocumentReplaceComponent,
         ...DocumentGetComponent,
         ...DocumentCreateOrReplaceComponent,

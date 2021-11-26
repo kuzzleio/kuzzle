@@ -36,5 +36,11 @@ const existsObject = readYamlFile('./lib/api/openapi/documents/exists.yaml');
 export const DocumentExists = existsObject.DocumentExists;
 export const DocumentExistsComponent = existsObject.components.schemas;
 
+// reading the description of the Replace action in the controller document.
+// The yaml objects are then stored in the variables below
+const updateObject = readYamlFile('./lib/api/openapi/documents/update.yaml');
+export const DocumentUpdate = updateObject.DocumentUpdate;
+export const DocumentUpdateComponent = updateObject.components.schemas;
+
 // Document definitions (reusable object for KuzzleRequest and KuzzleResponse)
 export const DefinitionsDocument = readYamlFile('./lib/api/openapi/payloads.yaml').definitions;
