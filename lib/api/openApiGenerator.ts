@@ -35,7 +35,7 @@ const routeUrlMatch = /:([^/]*)/g;
  * @returns {object} openApi object
  */
 /* eslint-disable @typescript-eslint/no-unused-vars */
-export function generateOpenApi(_request: KuzzleRequest): any {
+export function generateOpenApi(): any {
 /* eslint-enable @typescript-eslint/no-unused-vars */
   const routes = [];
 

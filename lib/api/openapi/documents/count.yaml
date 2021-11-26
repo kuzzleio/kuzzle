@@ -21,10 +21,8 @@ DocumentCount:
     responses:
       200:
         description: "Counts documents in a collection."
-        content:
-          application/json:
-            schema:
-              $ref: "#/components/schemas/DocumentCountResponse"
+        schema:
+          $ref: "#/components/schemas/DocumentCountResponse"
 
 components:
   schemas:
