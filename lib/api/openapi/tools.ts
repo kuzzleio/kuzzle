@@ -1,7 +1,7 @@
 import { readFileSync } from 'fs';
 import { load } from 'js-yaml';
+import { JSONObject } from 'kuzzle-sdk';
 
-export function readYamlfile(path: string): any {
-  const yaml = load(readFileSync(path, 'utf-8')) as any;
-  return yaml;
+export function readYamlFile(path: string): JSONObject {
+  return load(readFileSync(path, 'utf-8')) as JSONObject;
 }
