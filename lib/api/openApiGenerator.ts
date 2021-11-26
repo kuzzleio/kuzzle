@@ -28,6 +28,21 @@ import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
 
+function generateController(route: any, response: any) {
+  if (route.controller !== undefined) {
+    if (!_.some(response.tags, {name: route.controller})) {
+      const capitalizedController = Inflector.upFirst(route.controller);
+      response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
+    }
+    if (route.openapi.tags === undefined) {
+      route.openapi.tags = [];
+    }
+    if (!route.openapi.tags.includes(route.controller)) {
+      route.openapi.tags.push(route.controller);
+    }
+  }
+}
+
 /**
  * Generates JSON OpenApi object
  *
@@ -124,18 +139,8 @@ export function generateOpenApi(): any {
     if (route.openapi === undefined) {
       route.openapi = {};
     }
-    if (route.controller !== undefined) {
-      if (!_.some(response.tags, {name: route.controller})) {
-        const capitalizedController = Inflector.upFirst(route.controller);
-        response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
-      }
-      if (route.openapi.tags === undefined) {
-        route.openapi.tags = [];
-      }
-      if (!route.openapi.tags.includes(route.controller)) {
-        route.openapi.tags.push(route.controller);
-      }
-    }
+
+    generateController(route, response);
 
     if (route.openapi.description === undefined) {
       route.openapi.description = `Controller: ${route.controller}.`;
