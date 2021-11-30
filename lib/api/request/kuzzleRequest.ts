@@ -46,6 +46,11 @@ const _timestamp = 'timestamp\u200b';
 const _response = 'response\u200b';
 const _deprecations = 'deprecations\u200b';
 
+type Target = {
+  index: string,
+  collections?: string[]
+};
+
 /**
  * The `KuzzleRequest` class represents a request being processed by Kuzzle.
  *
@@ -606,6 +611,13 @@ export class KuzzleRequest {
       collection: this.input.args.collection,
       index: this.input.args.index,
     };
+  }
+
+  /**
+   * Returns a list of targets
+   */
+  getTargets(): Target[] {
+    return this.getArray('targets', []);
   }
 
   /**
