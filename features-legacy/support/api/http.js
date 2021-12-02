@@ -5,7 +5,7 @@ const zlib = require('zlib');
 const _ = require('lodash');
 const rp = require('request-promise');
 
-const routes = require('../../../lib/config/httpRoutes');
+const routes = require('../../../lib/api/httpRoutes');
 
 function checkAlgorithm(algorithm) {
   const
