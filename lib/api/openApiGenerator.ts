@@ -22,16 +22,16 @@ import _ from 'lodash';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
-  DocumentCountComponent, 
-  DocumentDeleteByQueryComponent,
-  DocumentDeleteComponent,
-  DocumentScrollComponent,
-  DocumentExistsComponent,
-  DocumentUpdateComponent,
-  DocumentReplaceComponent,
-  DocumentGetComponent,
-  DocumentCreateOrReplaceComponent,
-  DocumentCreateComponent,
+  OpenapiDocumentCountComponent, 
+  OpenapiDocumentDeleteByQueryComponent,
+  OpenapiDocumentDeleteComponent,
+  OpenapiDocumentScrollComponent,
+  OpenapiDocumentExistsComponent,
+  OpenapiDocumentUpdateComponent,
+  OpenapiDocumentReplaceComponent,
+  OpenapiDocumentGetComponent,
+  OpenapiDocumentCreateOrReplaceComponent,
+  OpenapiDocumentCreateComponent,
 } from './openapi/documents/document';
 import { Inflector } from './../util/inflector';
 
@@ -169,16 +169,16 @@ export function generateOpenApi(): any {
     components: {
       ...DefinitionsDocument,
       schemas: {
-        ...DocumentCountComponent,
-        ...DocumentDeleteByQueryComponent,
-        ...DocumentDeleteComponent,
-        ...DocumentScrollComponent,
-        ...DocumentExistsComponent,
-        ...DocumentUpdateComponent,
-        ...DocumentReplaceComponent,
-        ...DocumentGetComponent,
-        ...DocumentCreateOrReplaceComponent,
-        ...DocumentCreateComponent,
+        ...OpenapiDocumentCountComponent,
+        ...OpenapiDocumentDeleteByQueryComponent,
+        ...OpenapiDocumentDeleteComponent,
+        ...OpenapiDocumentScrollComponent,
+        ...OpenapiDocumentExistsComponent,
+        ...OpenapiDocumentUpdateComponent,
+        ...OpenapiDocumentReplaceComponent,
+        ...OpenapiDocumentGetComponent,
+        ...OpenapiDocumentCreateOrReplaceComponent,
+        ...OpenapiDocumentCreateComponent,
       }
     }
   };
