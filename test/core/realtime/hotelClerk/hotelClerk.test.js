@@ -47,4 +47,13 @@ describe('HotelClerk', () => {
         .be.calledWith('b');
     });
   });
+
+  describe('#metrics', () => {
+    it('should return the metrics object', () => {
+      should(hotelClerk.metrics()).match({
+        rooms: 0,
+        subscriptions: 2,
+      });
+    });
+  });
 });

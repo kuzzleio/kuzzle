@@ -93,6 +93,7 @@ lib/core/backend/internalLogger.js
 lib/core/backend/index.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/KoncordeWrapper.js
+lib/core/storage/indexCache.js
 lib/core/plugin/pluginContext.js
 lib/cluster/workers/IDCardRenewer.js
 lib/api/request/index.js
@@ -124,6 +125,7 @@ lib/types/EventHandler.js
 lib/types/InternalLogger.js
 lib/types/Plugin.js
 lib/types/Kuzzle.js
+lib/types/KuzzleDocument.js
 lib/types/PluginManifest.js
 lib/types/RequestPayload.js
 lib/types/ResponsePayload.js

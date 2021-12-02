@@ -6,7 +6,7 @@ title: getAllStats
 
 # getAllStats
 
-
+<DeprecatedBadge version="auto-version" />
 
 Gets all stored internal statistic snapshots.
 
