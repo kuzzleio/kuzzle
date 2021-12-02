@@ -11,6 +11,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -29,6 +30,7 @@ jobs:
         kuzzle-image: ["kuzzle"]
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -48,6 +50,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -87,6 +90,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -107,6 +111,7 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - name: Cloning Monkey Tester
         uses: actions/checkout@v2
         with:
@@ -127,6 +132,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -137,6 +143,7 @@ jobs:
     needs: [cluster-monkey-tests]
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
         with:
           fetch-depth: 0
       - name: Extract references from context
@@ -161,6 +168,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -181,6 +189,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: "14.x"

@@ -25,7 +25,7 @@ import { murmurHash128 as murmur } from 'murmurhash-native';
 import stringify from 'json-stable-stringify';
 import { Koncorde } from 'koncorde';
 import Bluebird from 'bluebird';
-import segfaultHandler from 'segfault-handler';
+import segfaultHandler from 'node-segfault-handler';
 import _ from 'lodash';
 
 import kuzzleStateEnum from './kuzzleStateEnum';

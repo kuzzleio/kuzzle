@@ -11,6 +11,7 @@ jobs:
         node-version: ['14.17.0']
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -29,6 +30,7 @@ jobs:
         kuzzle-image: ['kuzzle']
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -48,6 +50,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -87,6 +90,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
           node-version: ${{ matrix.node-version }}
@@ -103,6 +107,7 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -116,6 +121,7 @@ jobs:
         node-version: ["14.17.0", "12.16.3", "12.20.0"]
     steps:
       - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
       - name: Cloning Monkey Tester
         uses: actions/checkout@v2
         with:
@@ -138,6 +144,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
+      - uses: ./.github/actions/install-packages
       - name: Extract references from context
         shell: bash
         id: extract-refs

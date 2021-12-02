@@ -89,6 +89,7 @@ describe('ClusterSubscriber', () => {
         NewRealtimeRoom: subscriber.handleNewRealtimeRoom,
         NodeEvicted: subscriber.handleNodeEviction,
         NodeShutdown: subscriber.handleNodeShutdown,
+        RefreshIndexCache: subscriber.handleRefreshIndexCache,
         RefreshValidators: subscriber.handleRefreshValidators,
         RemoveAuthStrategy: subscriber.handleAuthStrategyRemoval,
         RemoveCollection: subscriber.handleCollectionRemoval,
@@ -219,6 +220,9 @@ describe('ClusterSubscriber', () => {
         subscriber.validateMessage = sinon.stub().resolves(true);
         subscriber.handlers = {
           [topic]: addIndexHandler
+        };
+        subscriber.localNode.fullState = {
+          serialize: sinon.stub()
         };
       });
 

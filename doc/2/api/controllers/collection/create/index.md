@@ -6,8 +6,6 @@ title: create
 
 # create
 
-<SinceBadge version="1.0.0"/>
-
 Creates a new [collection](/core/2/guides/main-concepts/data-storage), in the provided `index`.
 
 Collection names must meet the following criteria:
