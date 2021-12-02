@@ -354,7 +354,7 @@ describe('ServerController', () => {
       return serverController.openapi(request)
         .then((response) => {
           should(response).be.an.Object();
-          should(response.openapi).be.a.String();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -363,7 +363,7 @@ describe('ServerController', () => {
       return serverController.openapi(request)
         .then((response) => {
           should(response).be.an.Object();
-          should(response.openapi).be.a.String();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -373,7 +373,7 @@ describe('ServerController', () => {
         .then((response) => {
           const parsedResponse = yaml.parse(response);
           should(parsedResponse).be.an.Object();
-          should(parsedResponse.openapi).be.a.String();
+          should(parsedResponse.swagger).be.a.String();
         });
     });
   });
