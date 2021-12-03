@@ -150,65 +150,69 @@ export type ServerConfiguration = {
        * 
        * @default 'Kuzzle/response'
        */
-        responseTopic: string
+      responseTopic: string
 
         /**
         * Constructor options passed to underlying MQTT server. 
         * See aedes documentation for further reference: https://github.com/moscajs/aedes
         */
-        serveur: {
-          /**
-          * @default 1883
-          */
-          port: number
-        }
-
+      server: {
         /**
-        * Set to "true" to enable realtime notifications like "TokenExpired" notifications
-        * 
-        * @default true
-        */
-        realtimeNotifications: boolean
-        
-        websocket: {
-          /**
-           * Set to true to enable WebSocket support
-           * 
-           * @default true
-           */
-            enabled: boolean
+         * @default 1883
+         */
+        port: number
+      }
 
-            /**
-            * The maximum time (in milliseconds) without sending or receiving a message from a client. 
-            * Once reached, the client's socket is forcibly closed. 
-            * If a client socket is inactive for too long, the server will send a PING request before closing the socket. 
-            * Minimum value: 1000 (but it's strongly advised to not set a value this low to forcibly close idle client sockets)
-            * 
-            * @default 60000
-            */
-            idleTimeout: number
+      /**
+       * Set to "true" to enable realtime notifications like "TokenExpired" notifications
+       * 
+       * @default true
+       */
+      realtimeNotifications: boolean
+    }
+    websocket: {
+      /**
+       * Set to true to enable WebSocket support
+       * 
+       * @default true
+       */
+      enabled: boolean
 
-            /**
-             * Enable/Disable per message compression
-             * 
-             * @default false
-             */
-              compression: boolean
+      /**
+      * The maximum time (in milliseconds) without sending or receiving a message from a client. 
+      * Once reached, the client's socket is forcibly closed. 
+      * If a client socket is inactive for too long, the server will send a PING request before closing the socket. 
+      * Minimum value: 1000 (but it's strongly advised to not set a value this low to forcibly close idle client sockets)
+      * 
+      * @default 60000
+      */
+      idleTimeout: number
 
-              /**
-              * The maximum number of messages per second a single socket can
-              * submit to the server.
-              * @default 0
-              */
-              rateLimit: number
+      /**
+       * Enable/Disable per message compression
+       * 
+       * @default false
+       */
+      compression: boolean
 
-              /**
-               * Set to "true" to enable realtime notifications like "TokenExpired" notifications
-               * 
-               * @default true
-               */
-              realtimeNotifications: boolean
-        }
+      /**
+      * The maximum number of messages per second a single socket can
+      * submit to the server.
+      * @default 0
+      */
+      rateLimit: number
+
+      /**
+       * Set to "true" to enable realtime notifications like "TokenExpired" notifications
+       * 
+       * @default true
+       */
+      realtimeNotifications: boolean
     }
   }
+
+  /**
+   * @default true
+   */
+   strictSdkVersion: boolean
 }

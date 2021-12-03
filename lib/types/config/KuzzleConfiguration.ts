@@ -5,10 +5,21 @@ import {
   HttpConfiguration,
   PluginsConfiguration,
   LimitsConfiguration,
+  DumpConfiguration,
 } from '../index';
 
 
 export interface IKuzzleConfiguration {
+
+  realtime: {
+    /**
+     * @default false
+     */
+    pcreSupport: boolean
+  },
+
+  dump: DumpConfiguration
+
   /**
    * The HTTP section lets you configure how Kuzzle should
    * handle HTTP requests.
@@ -36,16 +47,17 @@ export interface IKuzzleConfiguration {
    * permissions, configuration etc.)
    */
   repositories: {
-
-    /**
-     * Time to live (in seconds) of cached objects.
-     *
-     * Decreasing this value will lower Redis memory and disk consumption,
-     * at the cost of increasing queries rate to the database and response times.
-     *
-     * @default 1440
-     */
-    cacheTTL: number;
+    common: {
+      /**
+       * Time to live (in seconds) of cached objects.
+       *
+       * Decreasing this value will lower Redis memory and disk consumption,
+       * at the cost of increasing queries rate to the database and response times.
+       *
+       * @default 1440000
+       */
+      cacheTTL: number;
+    }
   },
 
   /**
@@ -64,6 +76,86 @@ export interface IKuzzleConfiguration {
    * Services are the external components Kuzzle relies on.
    */
   services: ServicesConfiguration
+
+  stats: {
+    /**
+     * @default true
+     */
+    enabled: boolean
+
+    /**
+     * @default 3600
+     */
+    ttl: number
+
+    /**
+     * @default 10
+     */
+    statsInterval: number
+  }
+
+  cluster: {
+    /**
+     * @default 50
+     */
+    activityDepth: number
+
+    /**
+     * @default 2000
+     */
+    heartbeat: number
+
+    /**
+     * @default null
+     */
+    interface: any
+
+    /**
+     * @default false
+     */
+    ipv6: boolean
+
+    /**
+     * @default 'private'
+     */
+    ip: string
+
+    /**
+     * @default 60000
+     */
+    joinTimeout: number
+
+    /**
+     * @default 1
+     */
+    minimumNodes: number
+
+    ports: {
+      /**
+       * @default 7510
+       */
+      command: number
+
+      /**
+       * @default 7511
+       */
+      sync: number
+    },
+
+    /**
+     * @default 5000
+     */
+    syncTimeout: number
+  }
+
+  internal: {
+    // hash: {
+    //   seed: number | ArrayBuffer,
+    // }
+    hash: any
+  }
+
+  validation: Record<string, unknown>,
 }
 
 export type KuzzleConfiguration = Partial<IKuzzleConfiguration>

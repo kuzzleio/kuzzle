@@ -8,6 +8,16 @@ export type PluginsConfiguration = {
    */
   common: {
     /**
+     * If true, Kuzzle will not load custom plugin and features (including
+     * the ones defined in the application).
+     * The API will only be available to administrators ("admin" profile)
+     * during failsafe mode.
+     * 
+     * @default false
+     */
+    failsafeMode: boolean,
+  
+    /**
      * Maximum amount of time (in milliseconds) to wait
      * for a concurrent plugin bootstrap.
      *

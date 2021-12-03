@@ -49,7 +49,9 @@ export type StorageServiceElasticsearch = {
            *   }
            * ]
            */
-          author: string
+          author: {
+            type: string
+          }
 
           /**
            * @default 
@@ -60,7 +62,9 @@ export type StorageServiceElasticsearch = {
            *   }
            * ]
            */
-            createdAt: number
+            createdAt: {
+              type: string
+            }
 
             /**
            * @default 
@@ -71,7 +75,9 @@ export type StorageServiceElasticsearch = {
            *   }
            * ]
            */
-            updater: string
+            updater: {
+              type: string
+            }
   
             /**
            * @default 
@@ -82,7 +88,9 @@ export type StorageServiceElasticsearch = {
            *   }
            * ]
            */
-            updatedAt: number
+            updatedAt: {
+              type: string
+            }
         }
       }
       }
@@ -111,9 +119,77 @@ export type StorageServiceElasticsearch = {
               *   }
               * ]
               */
-            profileIds: string[]
+            profileIds: {
+              type: string,
+            }
           }
         }
+        profiles: {
+          dynamic: 'false',
+          properties: {
+            tags: { type: 'keyword' },
+            policies: {
+              properties:  {
+                roleId: { type: 'keyword' },
+                restrictedTo: {
+                  type: 'nested',
+                  properties: {
+                    index: { type: 'keyword' },
+                    collections: { type: 'keyword' }
+                  }
+                }
+              }
+            }
+          }
+        },
+        roles: {
+          dynamic: 'false',
+          properties: {
+            tags: { type: 'keyword' },
+            controllers: {
+              dynamic: 'false',
+              properties: {}
+            }
+          }
+        },
+        validations: {
+          properties: {
+            index: { type: 'keyword' },
+            collection: { type: 'keyword' },
+            validations: {
+              dynamic: 'false',
+              properties: {}
+            }
+          }
+        },
+        config: {
+          dynamic: 'false',
+          properties: {}
+        },
+        'api-keys': {
+          dynamic: 'false',
+          properties: {
+            userId: { type: 'keyword' },
+            hash: { type: 'keyword' },
+            description: { type: 'text' },
+            expiresAt: { type: 'long' },
+            ttl: { type: 'keyword' },
+            token: { type: 'keyword' }
+          }
+        },
+        installations: {
+          dynamic: 'strict',
+          properties: {
+            description: { type: 'text' },
+            handler: { type: 'text' },
+            installedAt: { type: 'date' }
+          },
+        }
       }
+    },
+    maxScrollDuration: '1m',
+    defaults: {
+      onUpdateConflictRetries: 0,
+      scrollTTL: '15s'
     }
-  }
+}

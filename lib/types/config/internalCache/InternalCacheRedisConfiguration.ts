@@ -87,16 +87,16 @@ export type InternalCacheConfiguration = {
   database: number
   
   node: {
-  /**
-   * @default "localhost"
-  */
-  host: string
-     
-  /**
-  * @default 6379
-  */
-  port: number
-  
+    /**
+     * @default "localhost"
+     */
+    host: string
+
+    /**
+     * @default 6379
+     */
+    port: number
+  }
   /**
    * * (optional) options:
    *    Redis specific options compatible with IORedis.
@@ -105,7 +105,7 @@ export type InternalCacheConfiguration = {
    * 
   */
   options?: Record<string, unknown>,
-   
+
   /**
   * Only available when using a Redis Cluster config.
   * Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
@@ -114,5 +114,4 @@ export type InternalCacheConfiguration = {
   * @default false
   */
   overrideDnsLookup: boolean
-  }
 }

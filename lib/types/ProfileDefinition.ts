@@ -36,7 +36,7 @@ export type ProfileDefinition = {
     /**
      * List of indexes and collections to restrict this role on.
      */
-    restrictedTo: Array<{
+    restrictedTo?: Array<{
       /**
        * Index name.
        */

@@ -25,6 +25,9 @@ import kerror from '../../kerror';
 import kuzzleConfig from '../../config';
 import { JSONObject } from '../../../index';
 import { ApplicationManager, Backend } from './index';
+import { KuzzleConfiguration } from '../../types/config/KuzzleConfiguration';
+import config from '../../config/defaultTsConfig';
+import { load } from '../../config/index.js'
 
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
@@ -32,12 +35,12 @@ export class BackendConfig extends ApplicationManager {
   /**
    * Configuration content
    */
-  public content: JSONObject;
+  public content: KuzzleConfiguration;
 
   constructor (application: Backend) {
     super(application);
 
-    this.content = kuzzleConfig.load();
+    this.content = load();
   }
 
   /**
@@ -59,7 +62,7 @@ export class BackendConfig extends ApplicationManager {
    *
    * @param config - Configuration object to merge
    */
-  merge (config: JSONObject) {
+  merge (config: KuzzleConfiguration) {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'config');
     }

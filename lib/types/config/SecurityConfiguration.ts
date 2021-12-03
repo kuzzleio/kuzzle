@@ -17,7 +17,7 @@ export type SecurityConfiguration = {
   /**
   * @deprecated Use `security.authToken` instead.
   */
-  jwt: JSONObject;
+  jwt?: JSONObject;
 
   /**
   * Configuration for the npm package jsonwebtoken
@@ -70,6 +70,17 @@ export type SecurityConfiguration = {
     */
     secret: string | Buffer;
   },
+
+  apiKey: {
+    /**
+    * Maximum duration in milliseconds a token can be requested to be valid.
+    *
+    * If set to -1, no maximum duration is set.
+    *
+    * @default -1
+    */
+    maxTTL: number;
+  }
 
   /**
   * The default role defines permissions for all users,
@@ -168,6 +179,8 @@ export type SecurityConfiguration = {
         }
       }
   */
+
+
   standard: {
     roles: {
       admin: RoleDefinition;
