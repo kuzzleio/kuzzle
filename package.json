@@ -40,6 +40,7 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
+    "@types/js-yaml": "^4.0.4",
     "aedes": "^0.46.1",
     "bluebird": "^3.7.2",
     "cli-color": "^2.0.1",

@@ -77,7 +77,7 @@ Feature: Server Controller
   Scenario: Get our API in OpenApi format as a raw response
     When I successfully execute the action "server":"openapi"
     Then I should receive a response matching:
-      | openapi | "3.0.1" |
+      | swagger | "2.0" |
 
   # server:publicApi ========================================================================
   @development @http

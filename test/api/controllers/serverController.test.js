@@ -353,8 +353,8 @@ describe('ServerController', () => {
     it('should return JSON formated OpenAPI specifications by default', () => {
       return serverController.openapi(request)
         .then((response) => {
-          response.should.be.an.Object();
-          response.openapi.should.be.a.String();
+          should(response).be.an.Object();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -362,8 +362,8 @@ describe('ServerController', () => {
       request.input.args.format = 'json';
       return serverController.openapi(request)
         .then((response) => {
-          response.should.be.an.Object();
-          response.openapi.should.be.a.String();
+          should(response).be.an.Object();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -372,8 +372,8 @@ describe('ServerController', () => {
       return serverController.openapi(request)
         .then((response) => {
           const parsedResponse = yaml.parse(response);
-          parsedResponse.should.be.an.Object();
-          parsedResponse.openapi.should.be.a.String();
+          should(parsedResponse).be.an.Object();
+          should(parsedResponse.swagger).be.a.String();
         });
     });
   });
