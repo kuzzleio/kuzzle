@@ -22,16 +22,16 @@ import _ from 'lodash';
 import { version } from './../../package.json';
 import {
   DefinitionsDocument, 
-  OpenapiDocumentCountComponent, 
-  OpenapiDocumentDeleteByQueryComponent,
-  OpenapiDocumentDeleteComponent,
-  OpenapiDocumentScrollComponent,
-  OpenapiDocumentExistsComponent,
-  OpenapiDocumentUpdateComponent,
-  OpenapiDocumentReplaceComponent,
-  OpenapiDocumentGetComponent,
-  OpenapiDocumentCreateOrReplaceComponent,
-  OpenapiDocumentCreateComponent,
+  OpenApiDocumentCountComponent, 
+  OpenApiDocumentDeleteByQueryComponent,
+  OpenApiDocumentDeleteComponent,
+  OpenApiDocumentScrollComponent,
+  OpenApiDocumentExistsComponent,
+  OpenApiDocumentUpdateComponent,
+  OpenApiDocumentReplaceComponent,
+  OpenApiDocumentGetComponent,
+  OpenApiDocumentCreateOrReplaceComponent,
+  OpenApiDocumentCreateComponent,
 } from './openapi/documents/document';
 import { Inflector } from './../util/inflector';
 
@@ -169,16 +169,16 @@ export function generateOpenApi(): any {
     components: {
       ...DefinitionsDocument,
       schemas: {
-        ...OpenapiDocumentCountComponent,
-        ...OpenapiDocumentDeleteByQueryComponent,
-        ...OpenapiDocumentDeleteComponent,
-        ...OpenapiDocumentScrollComponent,
-        ...OpenapiDocumentExistsComponent,
-        ...OpenapiDocumentUpdateComponent,
-        ...OpenapiDocumentReplaceComponent,
-        ...OpenapiDocumentGetComponent,
-        ...OpenapiDocumentCreateOrReplaceComponent,
-        ...OpenapiDocumentCreateComponent,
+        ...OpenApiDocumentCountComponent,
+        ...OpenApiDocumentDeleteByQueryComponent,
+        ...OpenApiDocumentDeleteComponent,
+        ...OpenApiDocumentScrollComponent,
+        ...OpenApiDocumentExistsComponent,
+        ...OpenApiDocumentUpdateComponent,
+        ...OpenApiDocumentReplaceComponent,
+        ...OpenApiDocumentGetComponent,
+        ...OpenApiDocumentCreateOrReplaceComponent,
+        ...OpenApiDocumentCreateComponent,
       }
     }
   };
