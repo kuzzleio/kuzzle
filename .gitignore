@@ -154,3 +154,5 @@ lib/core/realtime/room.js
 lib/core/realtime/subscription.js
 lib/types/realtime/RoomList.js
 lib/cluster/idCardHandler.js
+lib/types/KuzzleDocument.js
+lib/core/storage/indexCache.js
