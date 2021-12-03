@@ -49,4 +49,4 @@ export * from './KuzzleDocument';
 export * from './config/publicCache/PublicCacheRedisConfiguration';
 export * from './config/internalCache/InternalCacheRedisConfiguration';
 export * from './config/StorageService/StorageServiceElasticsearchConfiguration';
-export * from './config/DumpConfiguration'
+export * from './config/DumpConfiguration';

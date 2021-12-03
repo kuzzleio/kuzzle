@@ -1,6 +1,5 @@
-import httpRoutes from './httpRoutes'
-
-import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration'
+import httpRoutes from './httpRoutes';
+import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
 
 /* eslint-disable sort-keys */
 
@@ -91,7 +90,7 @@ const config: KuzzleConfiguration = {
         stdout: {
           level: 'info',
           addDate: true,
-          dateFormat: "YYYY-MM-DD HH-mm-ss"
+          dateFormat: 'YYYY-MM-DD HH-mm-ss'
         }
       }
     },

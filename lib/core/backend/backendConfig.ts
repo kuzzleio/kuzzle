@@ -22,12 +22,9 @@
 import _ from 'lodash';
 
 import kerror from '../../kerror';
-import kuzzleConfig from '../../config';
-import { JSONObject } from '../../../index';
 import { ApplicationManager, Backend } from './index';
 import { KuzzleConfiguration } from '../../types/config/KuzzleConfiguration';
-import config from '../../config/defaultTsConfig';
-import { load } from '../../config/index.js'
+import { load } from '../../config/index.js';
 
 const runtimeError = kerror.wrap('plugin', 'runtime');
 

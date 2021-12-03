@@ -50,7 +50,6 @@ import StorageEngine from '../core/storage/storageEngine';
 import SecurityModule from '../core/security';
 import RealtimeModule from '../core/realtime';
 import Cluster from '../cluster';
-import { JSONObject } from './index';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';

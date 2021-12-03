@@ -129,7 +129,7 @@ export type StorageServiceElasticsearch = {
           properties: {
             tags: { type: 'keyword' },
             policies: {
-              properties:  {
+              properties: {
                 roleId: { type: 'keyword' },
                 restrictedTo: {
                   type: 'nested',
@@ -148,7 +148,7 @@ export type StorageServiceElasticsearch = {
             tags: { type: 'keyword' },
             controllers: {
               dynamic: 'false',
-              properties: {}
+              properties: Record<string, unknown>,
             }
           }
         },
@@ -158,13 +158,13 @@ export type StorageServiceElasticsearch = {
             collection: { type: 'keyword' },
             validations: {
               dynamic: 'false',
-              properties: {}
+              properties: Record<string, unknown>,
             }
           }
         },
         config: {
           dynamic: 'false',
-          properties: {}
+          properties: Record<string, unknown>,
         },
         'api-keys': {
           dynamic: 'false',
