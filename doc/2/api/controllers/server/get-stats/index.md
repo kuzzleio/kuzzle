@@ -6,7 +6,7 @@ title: getStats
 
 # getStats
 
-
+<DeprecatedBadge version="auto-version" />
 
 Returns statistics snapshots within a provided timestamp range.
 

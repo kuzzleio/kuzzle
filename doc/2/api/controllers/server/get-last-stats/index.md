@@ -6,7 +6,7 @@ title: getLastStats
 
 # getLastStats
 
-
+<DeprecatedBadge version="auto-version" />
 
 Returns the most recent statistics snapshot.
 
