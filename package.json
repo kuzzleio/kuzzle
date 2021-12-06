@@ -68,7 +68,7 @@
     "murmurhash-native": "^3.5.0",
     "nanoid": "^3.1.30",
     "node-segfault-handler": "^1.0.4",
-    "openapi-enforcer": "^1.15.5",
+    "openapi-enforcer": "^1.16.0",
     "passport": "^0.5.0",
     "protobufjs": "~6.11.2",
     "rc": "1.2.8",
