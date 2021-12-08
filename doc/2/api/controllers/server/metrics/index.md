@@ -6,7 +6,7 @@ title: metrics
 
 # metrics
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.16.0"/>
 
 Returns inner metrics directly from the current Kuzzle node core components.
 
