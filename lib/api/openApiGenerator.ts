@@ -22,7 +22,7 @@ import _ from 'lodash';
 
 import { version } from './../../package.json';
 import {
-  DefinitionsDocument,
+  OpenApiPayloadsDefinitions,
   OpenApiDocumentCountComponent,
   OpenApiDocumentDeleteByQueryComponent,
   OpenApiDocumentDeleteComponent,
@@ -33,7 +33,7 @@ import {
   OpenApiDocumentGetComponent,
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
-} from './openapi/document';
+} from './openapi';
 import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;
@@ -168,7 +168,7 @@ export function generateOpenApi(): any {
     ],
     paths: {},
     components: {
-      ...DefinitionsDocument,
+      ...OpenApiPayloadsDefinitions,
       schemas: {
         ...OpenApiDocumentCountComponent,
         ...OpenApiDocumentDeleteByQueryComponent,
