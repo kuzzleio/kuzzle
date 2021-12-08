@@ -78,5 +78,5 @@ lib/cluster/idCardHandler.js
 lib/types/KuzzleDocument.js
 lib/core/storage/indexCache.js
 lib/api/openApiGenerator.js
-lib/api/openapi/documents/document.js
+lib/api/openapi/document/index.js
 lib/api/openapi/tools.js
