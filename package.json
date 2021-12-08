@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.16.0",
+  "version": "2.16.1",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -118,31 +118,16 @@
   },
   "license": "Apache-2.0",
   "files": [
-    "bin/**/*.js",
-    "bin/**/*.d.ts",
     "lib/**/*.js",
     "lib/**/*.d.ts",
     "lib/**/*.json",
     "lib/**/*.proto",
-    "plugins/kuzzle-plugin-cluster/*.js",
-    "plugins/kuzzle-plugin-cluster/*.d.ts",
-    "plugins/kuzzle-plugin-cluster/*.json",
-    "plugins/kuzzle-plugin-cluster/LICENSE.md",
-    "plugins/kuzzle-plugin-cluster/README.md",
-    "plugins/kuzzle-plugin-cluster/.keep",
-    "protocols/**/*.js",
-    "protocols/**/*.d.ts",
-    "protocols/**/*.json",
-    "protocols/**/LICENSE.md",
-    "protocols/**/README.md",
-    "protocols/**/.keep",
+    "lib/**/*.yaml",
     "package.json",
     "package-lock.json",
     "index.js",
     "index.d.ts",
-    ".kuzzlerc.sample",
     "LICENSE.md",
-    "CONTRIBUTING.md",
     "README.md"
   ]
 }

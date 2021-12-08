@@ -15,11 +15,16 @@ npm install --silent --unsafe-perm
 
 npm run build
 
-./docker/scripts/install-plugins.sh
+npm pack
+
+tar xf kuzzle-*.tgz
 
 echo "[$(date)] - Starting Kuzzle..."
 
-node -r ts-node/register docker/scripts/start-kuzzle-dev.ts --enable-plugins functional-test-plugin &
+# Use the built package for functional tests
+sed -i 's/require("..\/..\/index")/require("..\/..\/package\/index")/g' docker/scripts/start-kuzzle-dev.js
+
+node -r ts-node/register docker/scripts/start-kuzzle-dev.js --enable-plugins functional-test-plugin &
 
 ./bin/wait-kuzzle
 
