@@ -159,7 +159,10 @@ export class RequestResponse {
   constructor (request: KuzzleRequest) {
     this.raw = false;
 
-    this.request = request;
+    // Make a private property otherwise the tests are ending in recursive loop
+    Reflect.defineProperty(this, 'request', {
+      value: request,
+    });
 
     this._headers = new Headers();
   }
