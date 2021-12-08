@@ -230,14 +230,14 @@ export class RequestResponse {
    * Collection name
    */
   get collection (): string | null {
-    return this.request.input.resource.collection;
+    return this.request.getCollection();
   }
 
   /**
    * Index name
    */
   get index (): string | null {
-    return this.request.input.resource.index;
+    return this.request.getIndex();
   }
 
   /**
