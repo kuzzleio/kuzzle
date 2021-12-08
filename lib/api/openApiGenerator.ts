@@ -19,10 +19,11 @@
  * limitations under the License.
  */
 import _ from 'lodash';
+
 import { version } from './../../package.json';
 import {
-  DefinitionsDocument, 
-  OpenApiDocumentCountComponent, 
+  DefinitionsDocument,
+  OpenApiDocumentCountComponent,
   OpenApiDocumentDeleteByQueryComponent,
   OpenApiDocumentDeleteComponent,
   OpenApiDocumentScrollComponent,
@@ -32,7 +33,7 @@ import {
   OpenApiDocumentGetComponent,
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
-} from './openapi/documents/document';
+} from './openapi/document';
 import { Inflector } from './../util/inflector';
 
 const routeUrlMatch = /:([^/]*)/g;

@@ -1,4 +1,4 @@
-import { readYamlFile } from '../tools';
+import { readYamlFile } from '../../../util/readYamlFile';
 
 // reading the description of the Count action in the controller document.
 // The yaml objects are then stored in the variables below

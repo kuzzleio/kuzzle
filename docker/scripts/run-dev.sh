@@ -16,11 +16,9 @@ if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then
     npm ci --unsafe-perm
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
-    ./docker/scripts/install-plugins.sh
 elif [ ! -d "./node_modules/" ]; then
     git submodule update --init --recursive
     npm ci --unsafe-perm
-    ./docker/scripts/install-plugins.sh
 fi
 
 echo "[$(date)] - Starting Kuzzle..."

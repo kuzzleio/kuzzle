@@ -74,6 +74,10 @@ upgrade-*.report
 !lib/types/Global.d.ts
 *.js.map
 
+# NPM package
+package/*
+kuzzle-*.tgz
+
 /index.js
 lib/api/request/*.js
 lib/kerror/errors/*.js
@@ -156,3 +160,6 @@ lib/types/realtime/RoomList.js
 lib/cluster/idCardHandler.js
 lib/types/KuzzleDocument.js
 lib/core/storage/indexCache.js
+lib/api/openApiGenerator.js
+lib/api/openapi/documents/document.js
+lib/api/openapi/tools.js
