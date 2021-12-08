@@ -56,26 +56,31 @@ import { version } from '../../package.json';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
-let _kuzzle = null;
+Reflect.defineProperty(global, '_kuzzle', {
+  value: null,
+  writable: true,
+});
 
+/* eslint-disable dot-notation */
 Reflect.defineProperty(global, 'kuzzle', {
   configurable: true,
   enumerable: false,
   get () {
-    if (_kuzzle === null) {
+    if (global['_kuzzle'] === null) {
       throw new Error('Kuzzle instance not found. Did you try to use a live-only feature before starting your application?');
     }
 
-    return _kuzzle;
+    return global['_kuzzle'];
   },
   set (value) {
-    if (_kuzzle !== null) {
+    if (global['_kuzzle'] !== null) {
       throw new Error('Cannot build a Kuzzle instance: another one already exists');
     }
 
-    _kuzzle = value;
+    global['_kuzzle'] = value;
   },
 });
+/* eslint-enable dot-notation */
 
 /**
  * @class Kuzzle
