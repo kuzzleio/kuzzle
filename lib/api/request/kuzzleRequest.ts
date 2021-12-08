@@ -151,8 +151,6 @@ export class KuzzleRequest {
         this.status = options.status;
       }
     }
-
-    Object.seal(this);
   }
 
   /**

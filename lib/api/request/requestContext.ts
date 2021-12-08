@@ -73,8 +73,6 @@ export class Connection {
   public misc: ContextMisc = {};
 
   constructor (connection: any) {
-    Object.seal(this);
-
     if (typeof connection !== 'object' || connection === null) {
       return;
     }
@@ -128,8 +126,6 @@ export class RequestContext {
     this.token = null;
     this.user = null;
     this.connection = new Connection(options.connection);
-
-    Object.seal(this);
 
     if (options.token) {
       this.token = options.token;

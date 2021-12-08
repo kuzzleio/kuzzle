@@ -263,9 +263,6 @@ export class RequestInput {
       }
     }
 
-    Object.seal(this);
-
-
     if (data.jwt) {
       this.jwt = data.jwt;
     }

@@ -159,13 +159,9 @@ export class RequestResponse {
   constructor (request: KuzzleRequest) {
     this.raw = false;
 
-    Reflect.defineProperty(this, 'request', {
-      value: request,
-    });
+    this.request = request;
 
     this._headers = new Headers();
-
-    Object.seal(this);
   }
 
   /**
@@ -270,7 +266,12 @@ export class RequestResponse {
    * Node identifier
    */
   get node (): string {
-    return (global as any).kuzzle.id;
+    // eslint-disable-next-line dot-notation
+    if (global['_kuzzle'] && global.kuzzle) {
+      return (global as any).kuzzle.id;
+    }
+
+    return null;
   }
 
   /**

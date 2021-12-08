@@ -42,12 +42,6 @@ describe('#RequestResponse', () => {
       should(response.node).be.eql(kuzzle.id);
       should(response.deprecations).be.undefined();
     });
-
-    it('should throw if we try to extend the response', () => {
-      let response = new RequestResponse(req);
-
-      should(() => { response.foo = 'bar'; }).throw(TypeError);
-    });
   });
 
   describe('#properties', () => {
