@@ -353,8 +353,8 @@ describe('ServerController', () => {
     it('should return JSON formated OpenAPI specifications by default', () => {
       return serverController.openapi(request)
         .then((response) => {
-          response.should.be.an.Object();
-          response.openapi.should.be.a.String();
+          should(response).be.an.Object();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -362,8 +362,8 @@ describe('ServerController', () => {
       request.input.args.format = 'json';
       return serverController.openapi(request)
         .then((response) => {
-          response.should.be.an.Object();
-          response.openapi.should.be.a.String();
+          should(response).be.an.Object();
+          should(response.swagger).be.a.String();
         });
     });
 
@@ -372,8 +372,38 @@ describe('ServerController', () => {
       return serverController.openapi(request)
         .then((response) => {
           const parsedResponse = yaml.parse(response);
-          parsedResponse.should.be.an.Object();
-          parsedResponse.openapi.should.be.a.String();
+          should(parsedResponse).be.an.Object();
+          should(parsedResponse.swagger).be.a.String();
+        });
+    });
+  });
+
+  describe('#metrics', () => {
+    it('should return a properly formatted metrics object', () => {
+      kuzzle.ask.withArgs('kuzzle:api:funnel:metrics').resolves({
+        concurrentRequests: 2,
+        pendingRequests: 42,
+      });
+
+      kuzzle.ask.withArgs('core:network:router:metrics').resolves({
+        connections: {
+          internal: 1,
+          http: 1,
+        }
+      });
+
+      kuzzle.ask.withArgs('core:realtime:hotelClerk:metrics').resolves({
+        rooms: 1,
+        subscriptions: 1
+      });
+
+      return serverController.metrics()
+        .then(response => {
+          should(response).be.instanceof(Object);
+          should(response).not.be.null();
+          should(response.api).be.an.Object();
+          should(response.realtime).be.an.Object();
+          should(response.network).be.an.Object();
         });
     });
   });
