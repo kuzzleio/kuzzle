@@ -19,8 +19,6 @@ then
   npm rebuild
 fi
 
-./.ci/scripts/install-plugins.sh
-
 npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
