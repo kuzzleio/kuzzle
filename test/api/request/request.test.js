@@ -11,6 +11,7 @@ const { Request, KuzzleRequest } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
 const { RequestInput } = require('../../../lib/api/request');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { Koncorde } = require('koncorde');
 
 describe('#Request', () => {
   let rq;
@@ -1050,5 +1051,40 @@ describe('#Request', () => {
         should(request.getBody()).exactly(body);
       });
     });
+  });
+
+  describe.only('Usage with Koncorde', () => {
+    let koncorde;
+    let requestArgs;
+
+    beforeEach(() => {
+      koncorde = new Koncorde();
+
+      requestArgs = {
+        controller: 'document',
+        action: 'create',
+        index: 'montenegro',
+        collection: 'budva',
+        _id: 'dana',
+        body: {
+          age: 30
+        }
+      };
+    });
+
+    it('should be able to match request inputs', () => {
+      const request = new KuzzleRequest(requestArgs);
+      const id1 = koncorde.register({
+        equals: { 'input.args.collection': 'budva' }
+      });
+      const id2 = koncorde.register({
+        equals: { 'input.resource.collection': 'budva' }
+      });
+
+      const ids = koncorde.test(request);
+
+      should(ids.includes(id1)).be.true();
+      should(ids.includes(id2)).be.true();
+    })
   });
 });
