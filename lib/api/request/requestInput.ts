@@ -22,7 +22,16 @@
 import { JSONObject } from 'kuzzle-sdk';
 
 import { InternalError } from '../../kerror/errors/internalError';
-import assert from '../../util/assertType';
+import * as assert from '../../util/assertType';
+
+// private properties
+// \u200b is a zero width space, used to masquerade console.log output
+const _jwt = 'jwt\u200b';
+const _volatile = 'volatile\u200b';
+const _body = 'body\u200b';
+const _headers = 'headers\u200b';
+const _controller = 'controller\u200b';
+const _action = 'action\u200b';
 
 // any property not listed here will be copied into
 // RequestInput.args
@@ -46,7 +55,6 @@ export class RequestResource {
 
   /**
    * Document ID
-   * @deprecated
    */
   get _id (): string | null {
     return this.args._id;
@@ -58,7 +66,6 @@ export class RequestResource {
 
   /**
    * Index name
-   * @deprecated
    */
   get index (): string | null {
     return this.args.index;
@@ -70,7 +77,6 @@ export class RequestResource {
 
   /**
    * Collection name
-   * @deprecated
    */
   get collection (): string | null {
     return this.args.collection;
@@ -113,7 +119,7 @@ export class RequestInput {
   /**
    * Common arguments that identify Kuzzle resources.
    * (e.g: "_id", "index", "collection")
-   * @deprecated Use`request.getId()|getIndex()|getCollection()>` instead
+   * @deprecated Use directly`request.input.args.<_id|index|collection>` instead
    * @example
    * // original JSON request sent to Kuzzle
    * {
@@ -131,6 +137,51 @@ export class RequestInput {
    */
   public resource: RequestResource;
 
+  /**
+   * Builds a Kuzzle normalized request input object
+   *
+   * The 'data' object accepts a request content using the same
+   * format as the one used, for instance, for the Websocket protocol
+   *
+   * Any undefined option is set to null
+   */
+  constructor (data) {
+    if (! data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new InternalError('Input request data must be a non-null object');
+    }
+
+    this[_jwt] = null;
+    this[_volatile] = null;
+    this[_body] = null;
+    this[_controller] = null;
+    this[_action] = null;
+
+    // default value to null for former "resources" to avoid breaking
+    this.args = {};
+    this.resource = new RequestResource(this.args);
+
+    // copy into this.args only unrecognized properties
+    for (const k of Object.keys(data)) {
+      if (!resourceProperties.has(k)) {
+        this.args[k] = data[k];
+      }
+    }
+
+    // @deprecated - RequestContext.connection.misc.headers should be used instead
+    // initialize `_headers` property after the population of `this.args` attribute
+    // `this.headers` can contain protocol specific headers and should be
+    // set after the Request construction
+    // `args.headers` can be an attribute coming from data itself.
+    this[_headers] = null;
+
+    Object.seal(this);
+
+    this.jwt = data.jwt;
+    this.volatile = data.volatile;
+    this.body = data.body;
+    this.controller = data.controller;
+    this.action = data.action;
+  }
 
   /**
    * Authentication token.
@@ -149,7 +200,13 @@ export class RequestInput {
    *   body
    *  }
    */
-  public jwt: string | null = null;
+  get jwt (): string | null {
+    return this[_jwt];
+  }
+
+  set jwt (str: string) {
+    this[_jwt] = assert.assertString('jwt', str);
+  }
 
   /**
    * API controller name.
@@ -168,7 +225,16 @@ export class RequestInput {
    *   body
    *  }
    */
-  public controller: string | null = null;
+  get controller (): string | null {
+    return this[_controller];
+  }
+
+  set controller (str: string) {
+    // can only be set once
+    if (!this[_controller]) {
+      this[_controller] = assert.assertString('controller', str);
+    }
+  }
 
   /**
    * API action name.
@@ -187,7 +253,16 @@ export class RequestInput {
    *   body
    *  }
    */
-  public action: string | null = null;
+  get action (): string | null {
+    return this[_action];
+  }
+
+  set action (str: string) {
+    // can only be set once
+    if (!this[_action]) {
+      this[_action] = assert.assertString('action', str);
+    }
+  }
 
   /**
    * Request body.
@@ -207,12 +282,24 @@ export class RequestInput {
    *   body         <== that
    *  }
    */
-  public body: JSONObject | null = {};
+  get body (): JSONObject | null {
+    return this[_body];
+  }
+
+  set body (obj: JSONObject) {
+    this[_body] = assert.assertObject('body', obj);
+  }
 
   /**
    * Request headers (Http only).
    */
-  public headers: JSONObject | null = null;
+  get headers (): JSONObject | null {
+    return this[_headers];
+  }
+
+  set headers (obj: JSONObject) {
+    this[_headers] = assert.assertObject('headers', obj);
+  }
 
   /**
    * Volatile object.
@@ -231,48 +318,11 @@ export class RequestInput {
    *   body
    *  }
    */
-  public volatile: JSONObject | null = null;
+  get volatile (): JSONObject | null {
+    return this[_volatile];
+  }
 
-  /**
-   * Builds a Kuzzle normalized request input object
-   *
-   * The 'data' object accepts a request content using the same
-   * format as the one used, for instance, for the Websocket protocol
-   *
-   * Any undefined option is set to null
-   */
-  constructor (data) {
-    if (! data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new InternalError('Input request data must be a non-null object');
-    }
-
-    this.jwt = null;
-    this.volatile = null;
-    this.body = null;
-    this.controller = null;
-    this.action = null;
-
-    // default value to null for former "resources" to avoid breaking
-    this.args = {};
-    this.resource = new RequestResource(this.args);
-
-    // copy into this.args only unrecognized properties
-    for (const k of Object.keys(data)) {
-      if (! resourceProperties.has(k)) {
-        this.args[k] = data[k];
-      }
-    }
-
-    if (data.jwt) {
-      this.jwt = data.jwt;
-    }
-    if (data.volatile) {
-      this.volatile = data.volatile;
-    }
-    if (data.body) {
-      this.body = data.body;
-    }
-    this.controller = assert.assertString('controller', data.controller);
-    this.action = assert.assertString('controller', data.action);
+  set volatile (obj: JSONObject) {
+    this[_volatile] = assert.assertObject('volatile', obj);
   }
 }
