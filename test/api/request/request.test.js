@@ -1052,39 +1052,4 @@ describe('#Request', () => {
       });
     });
   });
-
-  describe.only('Usage with Koncorde', () => {
-    let koncorde;
-    let requestArgs;
-
-    beforeEach(() => {
-      koncorde = new Koncorde();
-
-      requestArgs = {
-        controller: 'document',
-        action: 'create',
-        index: 'montenegro',
-        collection: 'budva',
-        _id: 'dana',
-        body: {
-          age: 30
-        }
-      };
-    });
-
-    it('should be able to match request inputs', () => {
-      const request = new KuzzleRequest(requestArgs);
-      const id1 = koncorde.register({
-        equals: { 'input.args.collection': 'budva' }
-      });
-      const id2 = koncorde.register({
-        equals: { 'input.resource.collection': 'budva' }
-      });
-
-      const ids = koncorde.test(request);
-
-      should(ids.includes(id1)).be.true();
-      should(ids.includes(id2)).be.true();
-    })
-  });
 });
