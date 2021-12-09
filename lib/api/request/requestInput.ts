@@ -292,6 +292,8 @@ export class RequestInput {
 
   /**
    * Request headers (Http only).
+   *
+   * @deprecated Use RequestContext.connection.misc.headers instead
    */
   get headers (): JSONObject | null {
     return this[_headers];

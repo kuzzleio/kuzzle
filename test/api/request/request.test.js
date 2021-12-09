@@ -1052,4 +1052,27 @@ describe('#Request', () => {
       });
     });
   });
+
+  describe('#pojo', () => {
+    it.only('returns a POJO usable to match with Koncorde', () => {
+      const koncorde = new Koncorde();
+      const request = new KuzzleRequest({
+        controller: 'document',
+        action: 'create',
+        index: 'montenegro',
+        collection: 'budva',
+        _id: 'dana',
+        body: {
+          age: 30
+        }
+      });
+      const id1 = koncorde.register({
+        equals: { 'input.args.collection': 'budva' }
+      });
+
+      const ids = koncorde.test(request.pojo());
+
+      should(ids).be.eql([id1]);
+    });
+  });
 });
