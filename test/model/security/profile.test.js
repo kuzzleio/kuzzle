@@ -209,7 +209,7 @@ describe('Test: model/security/profile', () => {
       return should(profile.validateDefinition())
         .be.rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
-          message: 'Missing argument "policies[0].roleId".'
+          message: 'Missing argument "test.policies[0].roleId".'
         });
     });
 
