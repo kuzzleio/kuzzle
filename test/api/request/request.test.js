@@ -1054,7 +1054,7 @@ describe('#Request', () => {
   });
 
   describe('#pojo', () => {
-    it.only('returns a POJO usable to match with Koncorde', () => {
+    it('returns a POJO usable to match with Koncorde', () => {
       const koncorde = new Koncorde();
       const request = new KuzzleRequest({
         controller: 'document',

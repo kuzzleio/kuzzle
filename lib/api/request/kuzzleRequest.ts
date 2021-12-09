@@ -324,30 +324,30 @@ export class KuzzleRequest {
    */
   pojo () {
     return {
-      internalId: this.internalId,
-      id: this.id,
-      timestamp: this.timestamp,
-      status: this.status,
-      input: {
-        jwt: this.input.jwt,
-        volatile: this.input.volatile,
-        body: this.input.body,
-        controller: this.input.controller,
-        action: this.input.action,
-        args: this.input.args,
-      },
       context: {
+        connection: this.context.connection,
         token: this.context.token,
         user: this.context.user,
-        connection: this.context.connection,
-      },
-      error: this.error,
-      result: this.result,
-      response: {
-        raw: this.response.raw,
-        headers: this.response.headers
       },
       deprecations: this.deprecations,
+      error: this.error,
+      id: this.id,
+      input: {
+        action: this.input.action,
+        args: this.input.args,
+        body: this.input.body,
+        controller: this.input.controller,
+        jwt: this.input.jwt,
+        volatile: this.input.volatile,
+      },
+      internalId: this.internalId,
+      response: {
+        headers: this.response.headers,
+        raw: this.response.raw,
+      },
+      result: this.result,
+      status: this.status,
+      timestamp: this.timestamp,
     };
   }
 
