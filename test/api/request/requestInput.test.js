@@ -64,4 +64,46 @@ describe('#RequestInput', () => {
     should(function () { new RequestInput(123); }).throw('Input request data must be a non-null object');
     should(function () { new RequestInput(true); }).throw('Input request data must be a non-null object');
   });
+
+  it('should throw if an invalid data parameter is provided', () => {
+    // testing object-only parameters
+    ['volatile', 'body'].forEach(k => {
+      should(function () { new RequestInput({[k]: []}); }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () { new RequestInput({[k]: 123}); }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () { new RequestInput({[k]: false}); }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () { new RequestInput({[k]: 'foobar'}); }).throw(`Attribute ${k} must be of type "object"`);
+    });
+
+    // testing string-only parameters
+    ['controller', 'action', 'jwt'].forEach(k => {
+      should(function () { new RequestInput({[k]: []}); }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () { new RequestInput({[k]: 123}); }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () { new RequestInput({[k]: false}); }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () { new RequestInput({[k]: {}}); }).throw(`Attribute ${k} must be of type "string"`);
+    });
+  });
+
+  it('should not overwrite the controller value if it has already been set', () => {
+    let input = new RequestInput({});
+
+    input.controller = 'foo';
+
+    should(input.controller).eql('foo');
+
+    input.controller = 'bar';
+
+    should(input.controller).eql('foo');
+  });
+
+  it('should not overwrite the action value if it has already been set', () => {
+    let input = new RequestInput({});
+
+    input.action = 'foo';
+
+    should(input.action).eql('foo');
+
+    input.action = 'bar';
+
+    should(input.action).eql('foo');
+  });
 });

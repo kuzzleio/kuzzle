@@ -72,29 +72,6 @@ describe('Backend', () => {
         .be.eql(definition.actions.sayHello);
     });
 
-    it('should rejects if the controller definition is invalid', () => {
-      definition.actions.sayHello.handler = {};
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-
-
-      definition = getDefinition();
-      definition.actions.sayHello.htto = [];
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-
-      definition = getDefinition();
-      definition.actions.sayHello.http = [{ verp: 'POST', path: '/url' }];
-
-      should(() => {
-        application.controller.register('greeting', definition);
-      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
-    });
-
     it('should rejects if the name is already taken', () => {
       application.controller.register('greeting', definition);
 

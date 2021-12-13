@@ -20,17 +20,19 @@
  */
 
 import { JSONObject } from 'kuzzle-sdk';
-
-import '../../../lib/types/Global';
 import * as assert from '../../util/assertType';
 import { Deprecation } from '../../types';
 import { KuzzleError } from '../../kerror/errors/kuzzleError';
-import { KuzzleRequest } from './kuzzleRequest';
+
+// private properties
+// \u200b is a zero width space, used to masquerade console.log output
+const _request = 'request\u200b';
+const _headers = 'headers\u200b';
 
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
-  public proxy: any;
+  private proxy: any;
 
   constructor() {
     this.namesMap = new Map();
@@ -41,10 +43,7 @@ export class Headers {
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
-    // eslint-disable-next-line dot-notation
-    if (global['_kuzzle'] && global.kuzzle) {
-      this.setHeader('X-Kuzzle-Node', global.kuzzle.id);
-    }
+    this.setHeader('X-Kuzzle-Node', (global as any).kuzzle.id);
   }
 
   /**
@@ -52,7 +51,7 @@ export class Headers {
    *
    * @param name Header name. Could be a string (case-insensitive) or a symbol
    */
-  getHeader (name: any): string {
+  getHeader (name: any): string | void {
     if (typeof name === 'symbol') {
       return this.headers[name as unknown as string];
     }
@@ -148,38 +147,32 @@ export class Headers {
  * Kuzzle normalized API response
  */
 export class RequestResponse {
-  private request: KuzzleRequest;
-  private _headers: Headers;
-
   /**
    * If sets to true, "result" content will not be wrapped in a Kuzzle response
    */
   public raw: boolean;
 
-  constructor (request: KuzzleRequest) {
+  constructor (request) {
     this.raw = false;
+    this[_request] = request;
+    this[_headers] = new Headers();
 
-    // Make a private property otherwise the tests are ending in recursive loop
-    Reflect.defineProperty(this, 'request', {
-      value: request,
-    });
-
-    this._headers = new Headers();
+    Object.seal(this);
   }
 
   /**
    * Get the parent request deprecations
    */
-  get deprecations (): Array<Deprecation> {
-    return this.request.deprecations;
+  get deprecations (): Array<Deprecation> | void {
+    return this[_request].deprecations;
   }
 
   /**
    * Set the parent request deprecations
    * @param {Object[]} deprecations
    */
-  set deprecations (deprecations: Array<Deprecation>) {
-    this.request.deprecations = deprecations;
+  set deprecations (deprecations: Array<Deprecation> | void) {
+    this[_request].deprecations = deprecations;
   }
 
   /**
@@ -187,94 +180,89 @@ export class RequestResponse {
    * @returns {number}
    */
   get status (): number {
-    return this.request.status;
+    return this[_request].status;
   }
 
   set status (s: number) {
-    this.request.status = s;
+    this[_request].status = s;
   }
 
   /**
    * Request error
    */
   get error (): KuzzleError | null {
-    return this.request.error;
+    return this[_request].error;
   }
 
   set error (e: KuzzleError | null) {
-    this.request.setError(e);
+    this[_request].setError(e);
   }
 
   /**
    * Request external ID
    */
   get requestId (): string | null {
-    return this.request.id;
+    return this[_request].id;
   }
 
   /**
    * API controller name
    */
   get controller (): string | null {
-    return this.request.input.controller;
+    return this[_request].input.controller;
   }
 
   /**
    * API action name
    */
   get action (): string | null {
-    return this.request.input.action;
+    return this[_request].input.action;
   }
 
   /**
    * Collection name
    */
   get collection (): string | null {
-    return this.request.input.resource.collection;
+    return this[_request].input.resource.collection;
   }
 
   /**
    * Index name
    */
   get index (): string | null {
-    return this.request.input.resource.index;
+    return this[_request].input.resource.index;
   }
 
   /**
    * Volatile object
    */
   get volatile (): JSONObject | null {
-    return this.request.input.volatile;
+    return this[_request].input.volatile;
   }
 
   /**
    * Response headers
    */
   get headers (): JSONObject {
-    return this._headers.proxy;
+    return this[_headers].proxy;
   }
 
   /**
    * Request result
    */
   get result (): any {
-    return this.request.result;
+    return this[_request].result;
   }
 
   set result (r: any) {
-    this.request.setResult(r);
+    this[_request].setResult(r);
   }
 
   /**
    * Node identifier
    */
   get node (): string {
-    // eslint-disable-next-line dot-notation
-    if (global['_kuzzle'] && global.kuzzle) {
-      return (global as any).kuzzle.id;
-    }
-
-    return null;
+    return (global as any).kuzzle.id;
   }
 
   /**
@@ -313,15 +301,15 @@ export class RequestResponse {
   /**
    * Gets a header value (case-insensitive)
    */
-  getHeader (name: string): string {
-    return this._headers.getHeader(name);
+  getHeader (name: string): string | null {
+    return this[_headers].getHeader(name);
   }
 
   /**
    * Deletes a header (case-insensitive)
    */
   removeHeader (name: string) {
-    return this._headers.removeHeader(name);
+    return this[_headers].removeHeader(name);
   }
 
   /**
@@ -329,7 +317,7 @@ export class RequestResponse {
    * method (@see https://nodejs.org/api/http.html#http_response_setheader_name_value)
    */
   setHeader (name: string, value: string) {
-    return this._headers.setHeader(name, value);
+    return this[_headers].setHeader(name, value);
   }
 
   /**
@@ -355,7 +343,7 @@ export class RequestResponse {
     if (this.raw === true) {
       return {
         content: this.result,
-        headers: this._headers.headers,
+        headers: this.headers,
         raw: true,
         requestId: this.requestId,
         status: this.status,
@@ -376,7 +364,7 @@ export class RequestResponse {
         status: this.status,
         volatile: this.volatile,
       },
-      headers: this._headers.headers,
+      headers: this.headers,
       raw: false,
       requestId: this.requestId,
       status: this.status,

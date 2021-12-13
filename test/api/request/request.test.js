@@ -11,6 +11,7 @@ const { Request, KuzzleRequest } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
 const { RequestInput } = require('../../../lib/api/request');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { Koncorde } = require('koncorde');
 
 describe('#Request', () => {
   let rq;
@@ -97,6 +98,13 @@ describe('#Request', () => {
     should(function () { new Request({}, 123.45); }).throw('Request options must be an object');
   });
 
+  it('should throw if an invalid optional status is provided', () => {
+    should(function () { new Request({}, { status: [] }); }).throw('Attribute status must be an integer');
+    should(function () { new Request({}, { status: {} }); }).throw('Attribute status must be an integer');
+    should(function () { new Request({}, { status: 'foobar' }); }).throw('Attribute status must be an integer');
+    should(function () { new Request({}, { status: 123.45 }); }).throw('Attribute status must be an integer');
+  });
+
   it('should set an error properly', () => {
     let foo = new KuzzleError('bar', 666);
 
@@ -142,6 +150,13 @@ describe('#Request', () => {
 
   it('should throw if trying to set an error object as a result', () => {
     should(function () { rq.setResult(new Error('foobar')); }).throw(/cannot set an error/);
+  });
+
+  it('should throw if trying to set a non-integer status', () => {
+    should(function () { rq.setResult('foobar', { status: {} }); }).throw('Attribute status must be an integer');
+    should(function () { rq.setResult('foobar', { status: [] }); }).throw('Attribute status must be an integer');
+    should(function () { rq.setResult('foobar', { status: true }); }).throw('Attribute status must be an integer');
+    should(function () { rq.setResult('foobar', { status: 123.45 }); }).throw('Attribute status must be an integer');
   });
 
   it('should throw if trying to set some non-object headers', () => {
@@ -1035,6 +1050,29 @@ describe('#Request', () => {
 
         should(request.getBody()).exactly(body);
       });
+    });
+  });
+
+  describe('#pojo', () => {
+    it('returns a POJO usable to match with Koncorde', () => {
+      const koncorde = new Koncorde();
+      const request = new KuzzleRequest({
+        controller: 'document',
+        action: 'create',
+        index: 'montenegro',
+        collection: 'budva',
+        _id: 'dana',
+        body: {
+          age: 30
+        }
+      });
+      const id1 = koncorde.register({
+        equals: { 'input.args.collection': 'budva' }
+      });
+
+      const ids = koncorde.test(request.pojo());
+
+      should(ids).be.eql([id1]);
     });
   });
 });

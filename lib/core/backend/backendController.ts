@@ -149,10 +149,6 @@ export class BackendController extends ApplicationManager {
   }
 
   private _add (name: string, definition: ControllerDefinition) {
-    // Check definition here to throw error early
-    // with the corresponding line number
-    this._application.PluginObject.checkControllerDefinition(name, definition, { application: true });
-
     if (this._application._controllers[name]) {
       throw assertionError.get(
         'invalid_controller_definition',
