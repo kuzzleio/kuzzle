@@ -67,7 +67,7 @@ services:
     image: redis:5
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:5.6.10
+    image: kuzzleio/elasticsearch:5
     ulimits:
       nofile: 65536
     environment:
