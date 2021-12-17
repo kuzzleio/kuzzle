@@ -47,6 +47,6 @@ services:
     image: redis:6
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    image: kuzzleio/elasticsearch:7.16.1
     ulimits:
       nofile: 65536

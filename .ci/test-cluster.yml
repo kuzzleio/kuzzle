@@ -78,7 +78,7 @@ services:
     container_name: kuzzle_redis
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    image: kuzzleio/elasticsearch:7.16.1
     container_name: kuzzle_elasticsearch
     ulimits:
       nofile: 65536

@@ -87,7 +87,7 @@ services:
       - "6379:6379"
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    image: kuzzleio/elasticsearch:7.16.1
     container_name: kuzzle_elasticsearch
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9200"]
