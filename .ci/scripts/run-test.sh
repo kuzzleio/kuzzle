@@ -18,7 +18,7 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-npm i -g npm
+npm i -g npm@5
 
 npm ci --unsafe-perm
 npm install --only=dev --unsafe-perm
