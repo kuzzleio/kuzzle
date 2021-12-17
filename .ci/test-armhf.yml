@@ -39,6 +39,6 @@ services:
     image: redis:6
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
+    image: kuzzleio/elasticsearch:7.13.1-cve-2021-45046.44228
     ulimits:
       nofile: 65536
