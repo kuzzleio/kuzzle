@@ -78,11 +78,7 @@ services:
     container_name: kuzzle_redis
 
   elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:7.16.2
+    image: kuzzleio/elasticsearch:7.16.2
     container_name: kuzzle_elasticsearch
-    environment:
-      - cluster.name=kuzzle
-      - node.name=alyx
-      - discovery.type=single-node
     ulimits:
       nofile: 65536
