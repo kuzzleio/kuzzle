@@ -111,7 +111,11 @@ describe('Test: ElasticSearch service', () => {
             },
             '&test-index.test-collection': {
               total: { docs: { count: 2 }, store: { size_in_bytes: 20 } }
-            }
+            },
+            '.kibana': {
+              total: { docs: { count: 2 }, store: { size_in_bytes: 42 } }
+            },
+            '.geoip_databases': { /* This index nativement do not return anything on index:stats call */ }
           }
         }
       });
