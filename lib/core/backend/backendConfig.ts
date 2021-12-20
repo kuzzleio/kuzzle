@@ -24,7 +24,7 @@ import _ from 'lodash';
 import kerror from '../../kerror';
 import { ApplicationManager, Backend } from './index';
 import { KuzzleConfiguration } from '../../types/config/KuzzleConfiguration';
-import { load } from '../../config/index.js';
+import { loadConfig } from '../../config/index.js';
 
 const runtimeError = kerror.wrap('plugin', 'runtime');
 
@@ -37,7 +37,7 @@ export class BackendConfig extends ApplicationManager {
   constructor (application: Backend) {
     super(application);
 
-    this.content = load();
+    this.content = loadConfig();
   }
 
   /**

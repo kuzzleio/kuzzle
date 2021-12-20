@@ -29,7 +29,7 @@ const rc = require('rc');
 const inquirer = require('./inquirerExtended');
 const Logger = require('./logger');
 
-const defaultConfiguration = require('../../../lib/config/default.config.js');
+const defaultConfiguration = require('../../../lib/config/defaultTsConfig');
 const { version: currentVersion } = require('../../../package.json');
 
 class Version {

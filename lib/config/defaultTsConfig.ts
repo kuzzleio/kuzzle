@@ -14,7 +14,7 @@ import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
  * @class KuzzleConfiguration
  */
 
-const config: KuzzleConfiguration = {
+const defaultConfig: KuzzleConfiguration = {
 
   // @deprecated
   realtime: {
@@ -409,4 +409,4 @@ const config: KuzzleConfiguration = {
   },
 };
 
-export default config;
+export default defaultConfig;
