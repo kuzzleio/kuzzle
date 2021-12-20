@@ -136,28 +136,28 @@ describe('Test: model/security/role', () => {
       };
 
       should(role.isActionAllowed(req)).be.true();
-      should(role.isActionAllowed(req, restrictions)).be.true();
+      should(role.checkRestrictions(req, restrictions)).be.true();
 
       req.input.args.index = 'index';
-      should(role.isActionAllowed(req, restrictions)).be.false();
+      should(role.checkRestrictions(req, restrictions)).be.false();
 
       req.input.args.index = 'index1';
-      should(role.isActionAllowed(req, restrictions)).be.true();
+      should(role.checkRestrictions(req, restrictions)).be.true();
 
       req.input.args.index = 'index2';
-      should(role.isActionAllowed(req, restrictions)).be.true();
+      should(role.checkRestrictions(req, restrictions)).be.true();
 
       req.input.args.collection = 'collection';
-      should(role.isActionAllowed(req, restrictions)).be.false();
+      should(role.checkRestrictions(req, restrictions)).be.false();
 
       req.input.args.collection = 'collection1';
-      should(role.isActionAllowed(req, restrictions)).be.true();
+      should(role.checkRestrictions(req, restrictions)).be.true();
 
       req.input.args.collection = 'collection2';
-      should(role.isActionAllowed(req, restrictions)).be.false();
+      should(role.checkRestrictions(req, restrictions)).be.false();
 
       req.input.args.index = 'index3';
-      should(role.isActionAllowed(req, restrictions)).be.true();
+      should(role.checkRestrictions(req, restrictions)).be.true();
     });
 
     it('should properly handle overridden permissions', () => {
