@@ -71,6 +71,7 @@
     "passport": "^0.5.0",
     "protobufjs": "~6.11.2",
     "rc": "1.2.8",
+    "re2": "^1.17.1",
     "semver": "^7.3.5",
     "sorted-array": "^2.0.4",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.0.0.tar.gz",
