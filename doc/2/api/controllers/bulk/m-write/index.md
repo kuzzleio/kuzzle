@@ -6,8 +6,6 @@ title: mWrite
 
 # mWrite
 
-<SinceBadge version="1.8.0" />
-
 Create or replace multiple documents directly into the storage engine.
 
 This is a low level route intended to bypass Kuzzle actions on document creation, notably:

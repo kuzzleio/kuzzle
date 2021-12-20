@@ -1,0 +1,32 @@
+definitions:
+  RequestPayload:
+    type: "object"
+    properties:
+      controller:
+        type: "string"
+        enum: "document"
+      action:
+        type: "string"
+        enum: "foo"
+      index:
+        type: "string"
+      collection:
+        type: "string"
+  ResponsePayload:
+    type: "object"
+    properties:
+      status:
+        type: "integer"
+      error:
+        type: "object"
+      index:
+        type: "string"
+      collection:
+        type: "string"
+      controller:
+        type: "string"
+      action:
+        type: "string"
+      requestId:
+        type: "integer"
+        description: "unique request identifie"

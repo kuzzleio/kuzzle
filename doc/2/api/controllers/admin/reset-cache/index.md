@@ -7,8 +7,6 @@ title: resetCache
 
 # resetCache
 
-<SinceBadge version="1.4.0" />
-
 Asynchronously clears the cache database.
 
 ---

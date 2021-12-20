@@ -56,7 +56,7 @@ describe('Test: notifier.notifyDocumentReplace', () => {
       });
 
     should(notifier.notifyDocument.getCall(1))
-      .calledWith(['bar'], request, 'out', 'replace', { _id });
+      .calledWith(['bar'], request, 'out', 'replace', { _id, _source: request.input.body });
 
     should(result).match(['foo']);
   });

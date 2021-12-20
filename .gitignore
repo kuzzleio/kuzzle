@@ -74,6 +74,10 @@ upgrade-*.report
 !lib/types/Global.d.ts
 *.js.map
 
+# NPM package
+package/*
+kuzzle-*.tgz
+
 /index.js
 lib/api/request/*.js
 lib/kerror/errors/*.js
@@ -93,6 +97,7 @@ lib/core/backend/internalLogger.js
 lib/core/backend/index.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/KoncordeWrapper.js
+lib/core/storage/indexCache.js
 lib/core/plugin/pluginContext.js
 lib/cluster/workers/IDCardRenewer.js
 lib/api/request/index.js
@@ -124,6 +129,7 @@ lib/types/EventHandler.js
 lib/types/InternalLogger.js
 lib/types/Plugin.js
 lib/types/Kuzzle.js
+lib/types/KuzzleDocument.js
 lib/types/PluginManifest.js
 lib/types/RequestPayload.js
 lib/types/ResponsePayload.js
@@ -151,3 +157,11 @@ lib/core/realtime/connectionRooms.js
 lib/core/realtime/room.js
 lib/core/realtime/subscription.js
 lib/types/realtime/RoomList.js
+lib/cluster/idCardHandler.js
+lib/types/KuzzleDocument.js
+lib/core/storage/indexCache.js
+lib/api/openApiGenerator.js
+lib/api/openapi/document/index.js
+lib/api/openapi/tools.js
+lib/api/openapi/index.js
+lib/util/readYamlFile.js

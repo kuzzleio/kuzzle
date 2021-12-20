@@ -35,7 +35,7 @@ describe('Test: notifier.notifyDocumentDelete', () => {
 
     should(kuzzle.koncorde.test).calledWith({ ..._source, _id }, 'index/collection');
     should(notifier.notifyDocument)
-      .calledWithMatch(rooms, request, 'out', 'delete', { _id });
+      .calledWithMatch(rooms, request, 'out', 'delete', { _id, _source });
     should(result).be.an.Array().and.be.empty();
   });
 });

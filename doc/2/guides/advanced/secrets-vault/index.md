@@ -8,13 +8,11 @@ order: 300
 
 # Secrets Vault
 
-<SinceBadge version="1.8.0" />
+When you develop an application with Kuzzle, you may **need to use secrets** such as API keys or authentication information.
 
-When you develop an application with Kuzzle, you may **need to use secrets** such as API keys or authentication information.  
+Of course, it is unacceptable to version these secrets in cleartext with the rest of your source code.
 
-Of course, it is unacceptable to version these secrets in cleartext with the rest of your source code.  
-
-However, it is still practical to be able to share these secrets with the rest of your team, or to add them to the repository for automated production. 
+However, it is still practical to be able to share these secrets with the rest of your team, or to add them to the repository for automated production.
 
 Kuzzle **offers a secure storage system for these secrets**, the operation is as follows:
   - writing secrets to a JSON file,
@@ -101,12 +99,12 @@ Kuzzle start sequence ends in failure if:
 
 <SinceBadge version="2.8.0" />
 
-Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.  
+Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to your application.
 
-Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property.  
+Secrets are accessible in the [app.vault.secrets](/core/2/framework/classes/backend-vault/properties) property.
 
 ## Accessing secrets in your plugin
 
-Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to all plugins.  
+Once Kuzzle has successfully loaded the file containing the secrets, it exposes its decrypted content to all plugins.
 
-Secrets are accessible in the [secrets](/core/2/framework/classes/plugin-context/properties) property of the plugin context.  
+Secrets are accessible in the [secrets](/core/2/framework/classes/plugin-context/properties) property of the plugin context.

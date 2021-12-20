@@ -7,8 +7,6 @@ title: shutdown
 
 # shutdown
 
-<SinceBadge version="1.4.0" />
-
 Safely stops a Kuzzle instance after all remaining requests are processed.
 
 In a cluster environment, the shutdown action will be propagated across all nodes.

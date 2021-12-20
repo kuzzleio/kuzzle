@@ -6,8 +6,6 @@ title: refreshToken
 
 # refreshToken
 
-<SinceBadge version="1.7.0"/>
-
 Refreshes an authentication token:
 
 * a valid, non-expired authentication token must be provided
@@ -26,7 +24,7 @@ API Keys and token with infinite duration cannot be refreshed
 
 ```http
 URL: http://kuzzle:7512/_refreshToken[?expiresIn=<expiresIn>]
-Method: POST  
+Method: POST
 ```
 
 ### Other protocols
@@ -58,7 +56,7 @@ Method: POST
 
 The result contains the following properties:
 
-* `_id`: user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid) 
+* `_id`: user's [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 * `jwt`: encrypted authentication token, [that must then be sent in the requests](/core/2/guides/main-concepts/authentication#authentication-token)
 * `expiresAt`: new token expiration date, in Epoch-millis (UTC)
 * `ttl`: new token time to live, in milliseconds

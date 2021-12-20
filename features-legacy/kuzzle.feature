@@ -213,7 +213,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     Then I remove the document
     Then I should receive a document notification with field action equal to "delete"
-    And The notification should not have a "_source" member
+    And The notification should have a "_source" member
     And The notification should have volatile
 
   @realtime
@@ -232,7 +232,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     Then I update the document with value "Foo" in field "lastName"
     Then I should receive a document notification with field action equal to "update"
-    And The notification should not have a "_source" member
+    And The notification should have a "_source" member
     And The notification should have volatile
 
   @realtime
@@ -250,7 +250,7 @@ Feature: Kuzzle functional tests
     When I write the document "documentGrace"
     Then I replace the document with "documentAda" document
     Then I should receive a document notification with field action equal to "replace"
-    And The notification should not have a "_source" member
+    And The notification should have a "_source" member
     And The notification should have volatile
 
   @realtime
@@ -269,7 +269,7 @@ Feature: Kuzzle functional tests
     And I refresh the collection
     Then I remove documents with field "info.hobby" equals to value "computer"
     Then I should receive a document notification with field action equal to "delete"
-    And The notification should not have a "_source" member
+    And The notification should have a "_source" member
     And The notification should have volatile
 
   @realtime

@@ -6,8 +6,6 @@ title: loadFixtures
 
 # loadFixtures
 
-<SinceBadge version="1.7.0" />
-
 Load fixtures into the storage layer.
 
 **Notes:**

@@ -173,6 +173,14 @@ export class HotelClerk {
       });
 
     /**
+     * Returns inner metrics from the HotelClerk
+     * @return {{rooms: number, subscriptions: number}}
+     */
+    global.kuzzle.onAsk(
+      'core:realtime:hotelClerk:metrics',
+      () => this.metrics());
+
+    /**
      * Clear the hotel clerk and properly disconnect connections.
      */
     global.kuzzle.on('kuzzle:shutdown', () => this.clearConnections());
@@ -496,7 +504,7 @@ export class HotelClerk {
     await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
 
     // Do not send an unsubscription notification if the room has been destroyed
-    // @aschen Why ?
+    // because the other nodes already had destroyed it in the full state
     if ( notify
       && this.rooms.has(roomId)
       && room.channels.size > 0
@@ -538,12 +546,28 @@ export class HotelClerk {
   }
 
   /**
+   * Returns inner metrics from the HotelClerk
+   */
+  metrics (): {rooms: number, subscriptions: number} {
+    return {
+      rooms: this.roomsCount,
+      subscriptions: this.subscriptions.size,    
+    };
+  }
+
+  /**
    * Deletes a room if no user has subscribed to it, and removes it also from the
    * real-time engine
    */
   private async removeRoom (roomId: string): Promise<void> {
     this.roomsCount--;
     this.rooms.delete(roomId);
+
+    // We have to ask the cluster to dispatch the room removal event.
+    // The cluster will also remove the room from Koncorde if no other node
+    // uses it.
+    // (this node may have no subscribers on it, but other nodes might)
+    await global.kuzzle.ask('cluster:realtime:room:remove', roomId);
 
     // @deprecated -- to be removed in the next major version
     try {
@@ -552,12 +576,6 @@ export class HotelClerk {
     catch (e) {
       return;
     }
-
-    // We have to ask the cluster to dispatch the room removal event.
-    // The cluster will also remove the room from Koncorde if no other node
-    // uses it.
-    // (this node may have no subscribers on it, but other nodes might)
-    await global.kuzzle.ask('cluster:realtime:room:remove', roomId);
   }
 
   /**
