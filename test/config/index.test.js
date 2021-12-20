@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const { merge } = require('lodash');
 
 const { InternalError: KuzzleInternalError } = require('../../index');
-const defaultConfig = require('../../lib/config/default.config');
+const defaultConfig = require('../../lib/config/defaultTsConfig');
 
 function getcfg (cfg) {
   const defaults = JSON.parse(JSON.stringify(defaultConfig));
@@ -57,7 +57,7 @@ describe('lib/config/index.js', () => {
     });
   });
 
-  describe('#loadConfig', () => {
+  describe('#load', () => {
     it('should invoke "rc" to load both the default and custom configs', () => {
       config.load();
 
