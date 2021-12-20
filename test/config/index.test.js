@@ -11,7 +11,7 @@ const defaultConfig = require('../../lib/config/defaultTsConfig');
 function getcfg (cfg) {
   const defaults = JSON.parse(JSON.stringify(defaultConfig));
 
-  return merge(defaults, cfg);
+  return merge(defaults.default, cfg);
 }
 
 describe('lib/config/index.js', () => {
@@ -61,7 +61,7 @@ describe('lib/config/index.js', () => {
     it('should invoke "rc" to load both the default and custom configs', () => {
       config.load();
 
-      should(rcMock).calledOnce().calledWith('kuzzle', defaultConfig);
+      should(rcMock).calledOnce().calledWith('kuzzle', defaultConfig.default);
     });
 
     it('should return an intelligible error when unable to parse the configuration file', () => {
@@ -169,13 +169,12 @@ describe('lib/config/index.js', () => {
     });
 
     it('should throw on negative limit values', () => {
-      for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
+      for (const limit of Object.keys(defaultConfig.default.limits).filter(l => l !== 'requestsRate')) {
         mockedConfigContent = getcfg({
           limits: {
             [limit]: -1
           }
         });
-
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => config.load())
           .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
@@ -189,7 +188,7 @@ describe('lib/config/index.js', () => {
         'subscriptionDocumentTTL'
       ];
 
-      for (const limit of Object.keys(defaultConfig.limits).filter(l => l !== 'requestsRate')) {
+      for (const limit of Object.keys(defaultConfig.default.limits).filter(l => l !== 'requestsRate')) {
         mockedConfigContent = getcfg({
           limits: {
             [limit]: 0
