@@ -10,7 +10,7 @@ module.exports = rc('kuzzle', {
   port: 7512,
   services: {
     storageEngine: {
-      commonMapping: kuzzleConfig.loadConfig().services.storageEngine.commonMapping
+      commonMapping: kuzzleConfig.load().services.storageEngine.commonMapping
     }
   }
 });
