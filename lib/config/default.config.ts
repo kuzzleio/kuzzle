@@ -145,15 +145,15 @@ const defaultConfig: KuzzleConfiguration = {
       profiles: {
         admin: {
           rateLimit: 0,
-          policies: [ { roleID: 'admin'} ]
+          policies: [ { roleId: 'admin'} ]
         },
         default: {
           rateLimit: 10,
-          policies: [ { roleID: 'default'} ]
+          policies: [ { roleId: 'default'} ]
         },
         anonymous: {
           rateLimit: 200,
-          policies: [ { roleID: 'anonymous'} ]
+          policies: [ { roleId: 'anonymous'} ]
         }
       },
       roles: {

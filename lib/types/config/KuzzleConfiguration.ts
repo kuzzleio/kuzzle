@@ -149,9 +149,6 @@ export interface IKuzzleConfiguration {
   }
 
   internal: {
-    // hash: {
-    //   seed: number | ArrayBuffer,
-    // }
     hash: any
   }
 

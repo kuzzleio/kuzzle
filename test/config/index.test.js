@@ -6,7 +6,7 @@ const sinon = require('sinon');
 const { merge } = require('lodash');
 
 const { InternalError: KuzzleInternalError } = require('../../index');
-const defaultConfig = require('../../lib/config/defaultTsConfig');
+const defaultConfig = require('../../lib/config/default.config');
 
 function getcfg (cfg) {
   const defaults = JSON.parse(JSON.stringify(defaultConfig));

@@ -31,7 +31,7 @@ export type ProfileDefinition = {
     /**
      * Role ID
      */
-    roleID: string;
+    roleId: string;
 
     /**
      * List of indexes and collections to restrict this role on.
