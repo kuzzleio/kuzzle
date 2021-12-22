@@ -10,6 +10,7 @@ description: KuzzleRequest class getInteger() method
 <SinceBadge version="2.11.0" />
 
 Gets a parameter from a request arguments and checks that it is an integer.
+We also support lodash syntax. [(```relations.lebron[0]```)](https://lodash.com/docs/4.17.15#get)
 
 ### Arguments
 
