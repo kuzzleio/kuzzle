@@ -35,7 +35,7 @@ class KWorld {
       _init = true;
     }
 
-    this.kuzzleConfig = require('../../lib/config').load();
+    this.kuzzleConfig = require('../../lib/config').loadConfig();
     this.idPrefix = 'kuzzle-functional-tests-';
 
     this.currentUser = null;

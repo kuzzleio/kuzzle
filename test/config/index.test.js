@@ -50,7 +50,7 @@ describe('lib/config/index.js', () => {
         }
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.services.internalCache.options.db).be.eql(4);
       should(result.services.memoryStorage.options.db).be.eql(4);
@@ -59,7 +59,7 @@ describe('lib/config/index.js', () => {
 
   describe('#load', () => {
     it('should invoke "rc" to load both the default and custom configs', () => {
-      config.load();
+      config.loadConfig();
 
       should(rcMock).calledOnce().calledWith('kuzzle', defaultConfig.default);
     });
@@ -68,7 +68,7 @@ describe('lib/config/index.js', () => {
       const err = new Error('foo');
       rcMock.throws(err);
 
-      should(() => config.load()).throw(KuzzleInternalError, {
+      should(() => config.loadConfig()).throw(KuzzleInternalError, {
         id: 'core.configuration.cannot_parse',
         message: 'Unable to read kuzzlerc configuration file: foo',
       });
@@ -82,7 +82,7 @@ describe('lib/config/index.js', () => {
         anotherVersion: 'false',
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.version).be.exactly(require('../../package.json').version);
       should(result.someVersion).be.exactly('1');
@@ -95,7 +95,7 @@ describe('lib/config/index.js', () => {
         foo: 'true',
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.foo).be.true();
       should(result.bar).be.false();
@@ -107,7 +107,7 @@ describe('lib/config/index.js', () => {
         foo: '42',
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.foo).be.exactly(42);
       should(result.bar).be.exactly(0.25);
@@ -119,7 +119,7 @@ describe('lib/config/index.js', () => {
         baz: '*json:{"this": { "goes": ["to", 11] } }',
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.bar).match(['foo', null, 123, 123.45, true]);
       should(result.baz).match({this: { goes: [ 'to', 11 ] } });
@@ -130,7 +130,7 @@ describe('lib/config/index.js', () => {
         foo: '*json:{ ahah: "I am using teh internet", nothing = to see here}',
       };
 
-      should(() => config.load()).throw({
+      should(() => config.loadConfig()).throw({
         id: 'core.configuration.cannot_parse',
         message: /the key "foo" does not contain a valid stringified JSON/,
       });
@@ -147,7 +147,7 @@ describe('lib/config/index.js', () => {
         },
       };
 
-      const result = config.load();
+      const result = config.loadConfig();
 
       should(result.foo).be.exactly(42);
       should(result.nested.bar).be.true();
@@ -159,12 +159,12 @@ describe('lib/config/index.js', () => {
     it('should throw if an invalid limits configuration is submitted', () => {
       mockedConfigContent = { limits: true };
 
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
 
 
       mockedConfigContent = { limits: ['foo', 'bar'] };
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.invalid_type' });
     });
 
@@ -176,7 +176,7 @@ describe('lib/config/index.js', () => {
           }
         });
         /* eslint-disable-next-line no-loop-func -- false positive */
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
       }
     });
@@ -197,12 +197,12 @@ describe('lib/config/index.js', () => {
 
         if (canBeZero.includes(limit)) {
           /* eslint-disable-next-line no-loop-func -- false positive */
-          const result = config.load();
+          const result = config.loadConfig();
           should(result.limits[limit]).be.eql(0);
         }
         else {
           /* eslint-disable-next-line no-loop-func -- false positive */
-          should(() => config.load())
+          should(() => config.loadConfig())
             .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
         }
       }
@@ -216,7 +216,7 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
       mockedConfigContent = getcfg({
@@ -225,7 +225,7 @@ describe('lib/config/index.js', () => {
           requestsBufferSize: 1234,
         }
       });
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
 
@@ -238,7 +238,7 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
 
       mockedConfigContent = getcfg({
@@ -248,7 +248,7 @@ describe('lib/config/index.js', () => {
           requestsBufferWarningThreshold: 101,
         }
       });
-      should(() => config.load())
+      should(() => config.loadConfig())
         .throw(KuzzleInternalError, { id: 'core.configuration.out_of_range' });
     });
   });
@@ -264,7 +264,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[http] "accessControlAllowOrigin" parameter: invalid value "${bad}" (array or string expected)`);
       }
     });
@@ -282,7 +282,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[http] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
       }
     });
@@ -300,7 +300,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[http] "allowCompression" parameter: invalid value "${bad}" (boolean expected)`);
       }
     });
@@ -318,7 +318,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[http] "maxEncodingLayers" parameter: invalid value "${bad}" (integer >= 1 expected)`);
       }
     });
@@ -336,7 +336,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[http] "maxFormFileSize" parameter: cannot parse "${bad}"`);
       }
     });
@@ -356,7 +356,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`);
       }
     });
@@ -374,7 +374,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`);
       }
     });
@@ -392,7 +392,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[websocket] "compression" parameter: invalid value "${bad}" (boolean value expected)`);
       }
     });
@@ -410,7 +410,7 @@ describe('lib/config/index.js', () => {
         });
 
         // eslint-disable-next-line no-loop-func
-        should(() => config.load())
+        should(() => config.loadConfig())
           .throw(`[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`);
       }
     });
@@ -424,7 +424,7 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      config.load();
+      config.loadConfig();
 
       should(mockedConfigContent.http.accessControlAllowOrigin).be.eql([
         'foo',
@@ -439,7 +439,7 @@ describe('lib/config/index.js', () => {
         }
       });
 
-      const cfg = config.load();
+      const cfg = config.loadConfig();
 
       should(cfg.http.accessControlAllowOrigin).be.eql([
         'foo',

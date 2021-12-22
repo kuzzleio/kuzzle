@@ -16,7 +16,7 @@ class KuzzleWorld {
     this._port = process.env.KUZZLE_PORT || '7512';
     this._protocol = process.env.KUZZLE_PROTOCOL || 'websocket';
 
-    this.kuzzleConfig = config.load();
+    this.kuzzleConfig = config.loadConfig();
 
     // Intermediate steps should store values inside this object
     this.props = {};
