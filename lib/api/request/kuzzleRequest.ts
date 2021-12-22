@@ -30,7 +30,8 @@ import { KuzzleError, InternalError } from '../../kerror/errors';
 import kerror from '../../kerror';
 import { Deprecation, User } from '../../types';
 import * as assert from '../../util/assertType';
-import { get, isPlainObject } from '../../util/safeObject';
+import { isPlainObject } from '../../util/safeObject';
+import { get } from 'lodash';
 
 const assertionError = kerror.wrap('api', 'assert');
 
