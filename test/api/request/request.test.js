@@ -421,11 +421,27 @@ describe('#Request', () => {
             Valentine: 'sister'
           },
           year: '5270',
-          defeatedBugsAt: 11
+          defeatedBugsAt: 11,
+          relations: {
+            'lebron': ['james', 'curry', 'harden'],
+            'kobe': ['bryant', 'jordan', 'love']
+          },
+          powers: {
+            fire: {
+              level: 'high',
+              mana: 10,
+              damage: 10.8,
+            }
+          }
         };
       });
 
       describe('#getBodyArray', () => {
+        it('should return the array of the body (lodash parameter)', () => {
+          should(request.getBodyArray('relations.lebron'))
+            .exactly(request.input.body.relations.lebron);
+        });
+
         it('extracts the required parameter', () => {
           should(request.getBodyArray('names'))
             .exactly(request.input.body.names);
@@ -466,6 +482,21 @@ describe('#Request', () => {
       });
 
       describe('#getBodyString', () => {
+        it('should return the string of the body (lodash parameter)', () => {
+          should(request.getBodyString('relatives.Peter'))
+            .exactly(request.input.body.relatives.Peter);
+        });
+
+        it('should return the string of an array (lodash parameter)', () => {
+          should(request.getBodyString('names.0'))
+            .exactly(request.input.body.names[0]);
+        });
+
+        it('should return the string of an array (lodash parameter)', () => {
+          should(request.getBodyString('relations.lebron[0]'))
+            .exactly(request.input.body.relations.lebron[0]);
+        });
+ 
         it('extracts the required parameter', () => {
           should(request.getBodyString('fullname'))
             .exactly(request.input.body.fullname);
@@ -506,6 +537,11 @@ describe('#Request', () => {
       });
 
       describe('#getBodyObject', () => {
+        it('should return the object of the body (lodash parameter)', () => {
+          should(request.getBodyObject('powers.fire'))
+            .exactly(request.input.body.powers.fire);
+        });
+  
         it('extracts the required parameter', () => {
           should(request.getBodyObject('relatives'))
             .exactly(request.input.body.relatives);
@@ -546,6 +582,10 @@ describe('#Request', () => {
       });
 
       describe('#getBodyNumber', () => {
+        it('should return the number of the body (lodash parameter)', () => {
+          should(request.getBodyNumber('powers.fire.damage'))
+            .exactly(request.input.body.powers.fire.damage);
+        });
         it('extracts the required parameter and convert it', () => {
           should(request.getBodyNumber('age'))
             .exactly(3011.5);
@@ -589,6 +629,11 @@ describe('#Request', () => {
       });
 
       describe('#getBodyInteger', () => {
+        it('should return the integer of the body (lodash parameter)', () => {
+          should(request.getBodyInteger('powers.fire.mana'))
+            .exactly(request.input.body.powers.fire.mana);
+        });
+
         it('extracts the required parameter and convert it', () => {
           should(request.getBodyInteger('year'))
             .exactly(5270);
