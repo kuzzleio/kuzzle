@@ -77,7 +77,8 @@ Feature: Server Controller
   Scenario: Get our API in OpenApi format as a raw response
     When I successfully execute the action "server":"openapi"
     Then I should receive a response matching:
-      | swagger | "2.0" |
+      | swagger                                           | "2.0"                 |
+      | paths./_/functional-tests/hello-world.get.summary | "Action: helloWorld." |
 
   # server:publicApi ========================================================================
   @development @http
@@ -92,4 +93,3 @@ Feature: Server Controller
   Scenario: Http call onto deprecated method should not print a warning when NODE_ENV=production
     When I execute the action "server":"publicApi"
     Then The response should contains a "deprecations" equals to undefined
- 
