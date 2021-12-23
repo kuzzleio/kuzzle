@@ -201,6 +201,23 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#mExists', () => {
+    it.only('should return true', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:mExist').resolves(true);
+      request.input.args._id = 'foo';
+
+      const response = await documentController.mExists(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mExist',
+        index,
+        collection,
+        'foo');
+
+      should(response).be.True();
+    })
+  })
+
   describe('#get', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:get').resolves(({
