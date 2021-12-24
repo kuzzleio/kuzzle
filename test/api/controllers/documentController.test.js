@@ -201,7 +201,7 @@ describe('DocumentController', () => {
     });
   });
 
-  describe.only('#mExists', () => {
+  describe('#mExists', () => {
     beforeEach(() => {
       request.input.body = {
         ids: ['id', 'id2']
