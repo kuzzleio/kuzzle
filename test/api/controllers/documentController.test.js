@@ -451,7 +451,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
+        { _source: true, userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
 
       should(kuzzle.ask).be.calledWith(
         'core:realtime:document:mNotify',
@@ -473,7 +473,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false', retryOnConflict: undefined });
+        { _source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should handle errors if some actions failed', async () => {
@@ -573,7 +573,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false', retryOnConflict: 2 });
+        { _source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
     });
 
     it('should retrieve retryOnConflict param doing an upsert ', async () => {
@@ -586,7 +586,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false', retryOnConflict: 2 });
+        { _source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
     });
 
     it('should not check retryOnConflict param when not performing an update/upsert ', async () => {
@@ -599,7 +599,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { userId: null, refresh: 'false', retryOnConflict: undefined });
+        { _source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should notify with _updatedFields when updating ', async () => {
@@ -679,7 +679,7 @@ describe('DocumentController', () => {
           body: { field: 'new source' },
         }
       ]
-    }
+    };
 
     beforeEach(() => {
       documents = [
