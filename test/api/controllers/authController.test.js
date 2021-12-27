@@ -18,6 +18,8 @@ const AuthController = require('../../../lib/api/controllers/authController');
 const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
+const SecurityController = require('../../../lib/api/controllers/securityController');
+
 
 describe('Test the auth controller', () => {
   let request;
@@ -1447,6 +1449,44 @@ describe('Test the auth controller', () => {
 
         return should(authController.getMyCredentials(request)).be.rejectedWith(PluginImplementationError);
       });
+    });
+  });
+
+  describe.only('#signup', () => {
+    // api.security._persistUser has its own extensive tests above
+    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
+
+    beforeEach(() => {
+      sinon.stub(authController, '_persistUser').resolves(createdUser);
+      request.input.args._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe' }
+      };
+
+      kuzzle.config.security.restrictedProfileIds = [ 'foo', 'bar' ];
+    });
+
+    it('should return a valid response', async () => {
+      const response = await authController.signup(request);
+      should(response).eql(createdUser);
+    });
+
+    it('should allow the request to not have a body content', async () => {
+      request.input.body = null;
+
+      const response = await authController.signup(request);
+
+      should(authController._persistUser)
+        .calledOnce()
+        .calledWithMatch(
+          request,
+          kuzzle.config.security.restrictedProfileIds,
+          {});
+
+      should(authController._persistUser.firstCall.args[2])
+        .not.have.ownProperty('profileIds');
+
+      should(response).eql(createdUser);
     });
   });
 });
