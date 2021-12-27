@@ -1452,7 +1452,7 @@ describe('Test the auth controller', () => {
     });
   });
 
-  describe.only('#signup', () => {
+  describe('#signup', () => {
     // api.security._persistUser has its own extensive tests above
     const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
 
