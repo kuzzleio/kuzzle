@@ -33,6 +33,10 @@ export function binarySearch(array: any[], predicate: (value: any) => number) {
   let lowerBound = 0;
   let upperBound = array.length - 1;
 
+  if (array.length === 1) {
+    return predicate(array[0]) === 0 ? 0 : -1;
+  }
+
   while (lowerBound <= upperBound) {
     // 5x faster than Math.floor((lowerBound + upperBound) / 2)
     const index = (lowerBound + upperBound) >> 1;
