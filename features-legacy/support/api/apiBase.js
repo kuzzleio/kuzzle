@@ -766,6 +766,19 @@ class ApiBase {
     return this.send(msg);
   }
 
+  signup (body, id) {
+    const msg = {
+      controller: 'auth',
+      action: 'signup',
+      body: body
+    };
+    if (id !== undefined) {
+      msg._id = id;
+    }
+
+    return this.send(msg);
+  }
+
   login (strategy, credentials) {
     const
       msg = {

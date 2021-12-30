@@ -797,6 +797,16 @@ class HttpApi {
     return this.callApi(options);
   }
 
+  signup (body, id) {
+    const options = {
+      url: this.apiPath('users/' + id + '/_signup'),
+      method: 'POST',
+      body
+    };
+
+    return this.callApi(options);
+  }
+
   login (strategy, credentials) {
     const options = {
       url: this.apiPath(`_login/${strategy}`),
