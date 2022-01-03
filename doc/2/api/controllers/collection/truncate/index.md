@@ -10,7 +10,7 @@ Empties a collection by removing all its documents, while keeping any associated
 
 ::: info
 This action delete then recreate the related Elasticsearch index.
-Please note that deleting/creating an index cannot be done concurrently within an Elasticsearch cluster
+Please note that deleting/creating an index cannot be done concurrently within an Elasticsearch cluster, if you need to truncate a lot of collections (for your functional tests for example), then you should use `collection:refresh` and `document:deleteByQuery`
 :::
 
 ::: warning
