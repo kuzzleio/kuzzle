@@ -11,7 +11,7 @@ const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 
-const config = require('../../lib/config').load();
+const config = require('../../lib/config').loadConfig();
 
 describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
