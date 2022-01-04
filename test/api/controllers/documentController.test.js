@@ -83,7 +83,7 @@ describe('DocumentController', () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: 'services.storage.no_multi_indexes' });
+        { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
     it('should reject if collection contains a comma', () => {
@@ -92,7 +92,7 @@ describe('DocumentController', () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: 'services.storage.no_multi_collections' });
+        { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
     it('should reject if the size argument exceeds server configuration', () => {
