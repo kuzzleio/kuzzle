@@ -58,7 +58,7 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies = [{roleId: 'denyRole'}];
+    profile.optimizedPolicies = [{roleId: 'denyRole'}];
 
     kuzzle.ask
       .withArgs('core:security:role:get')
@@ -66,18 +66,17 @@ describe('Test: model/security/profile', () => {
 
     should(await profile.isActionAllowed(request)).be.false();
 
-    profile.policies.push({roleId: 'allowRole'});
+    profile.optimizedPolicies.push({roleId: 'allowRole'});
     should(await profile.isActionAllowed(request)).be.true();
 
-    profile.policies = [
+    profile.optimizedPolicies = [
       {roleId: 'denyRole'},
       {
         roleId: 'allowRole',
-        restrictedTo: [
-          {index: 'index1' },
-          {index: 'index2', collections: ['collection1']},
-          {index: 'index3', collections: ['collection1', 'collection2']}
-        ]
+        restrictedTo: new Map(Object.entries({
+          index2: ['collection1'],
+          index3: ['collection1', 'collection2'],
+        }))
       }
     ];
     should(await profile.isActionAllowed(request)).be.false();
