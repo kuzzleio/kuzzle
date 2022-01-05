@@ -121,11 +121,14 @@ describe('Test: model/security/role', () => {
           controller: 'controller',
           action: 'action'
         }, context),
-        restrictions = [
-          {index: 'index1'},
-          {index: 'index2', collections: ['collection1']},
-          {index: 'index3', collections: ['collection1', 'collection2']}
-        ];
+
+        restrictions = new Map(Object.entries(
+          {
+            index1: [],
+            index2: ['collection1'],
+            index3: ['collection1', 'collection2'],
+         }
+        ));
 
       role.controllers = {
         controller: {
@@ -138,26 +141,19 @@ describe('Test: model/security/role', () => {
       should(role.isActionAllowed(req)).be.true();
       should(role.checkRestrictions(req, restrictions)).be.true();
 
-      req.input.args.index = 'index';
-      should(role.checkRestrictions(req, restrictions)).be.false();
+      should(role.checkRestrictions('index', undefined, restrictions)).be.false();
 
-      req.input.args.index = 'index1';
-      should(role.checkRestrictions(req, restrictions)).be.true();
+      should(role.checkRestrictions('index1', undefined, restrictions)).be.true();
 
-      req.input.args.index = 'index2';
-      should(role.checkRestrictions(req, restrictions)).be.true();
+      should(role.checkRestrictions('index2', undefined, restrictions)).be.true();
 
-      req.input.args.collection = 'collection';
-      should(role.checkRestrictions(req, restrictions)).be.false();
+      should(role.checkRestrictions('index2', 'collection', restrictions)).be.false();
 
-      req.input.args.collection = 'collection1';
-      should(role.checkRestrictions(req, restrictions)).be.true();
+      should(role.checkRestrictions('index2', 'collection1', restrictions)).be.true();
 
-      req.input.args.collection = 'collection2';
-      should(role.checkRestrictions(req, restrictions)).be.false();
+      should(role.checkRestrictions('index2', 'collection2', restrictions)).be.false();
 
-      req.input.args.index = 'index3';
-      should(role.checkRestrictions(req, restrictions)).be.true();
+      should(role.checkRestrictions('index3', 'collection2', restrictions)).be.true();
     });
 
     it('should properly handle overridden permissions', () => {

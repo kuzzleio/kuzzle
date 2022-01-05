@@ -96,11 +96,14 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies.push({
+    profile.optimizedPolicies.push({
       roleId: role1._id,
-      restrictedTo: [
-        { index: 'index1', collections: ['collection1', 'collection2'] }
-      ]
+      restrictedTo: new Map(Object.entries(
+        {
+          index1: ['collection1', 'collection2']
+        }
+      )),
+      
     });
 
     role2._id = 'role2';
@@ -110,9 +113,13 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies.push({
+    profile.optimizedPolicies.push({
       roleId: role2._id,
-      restrictedTo: [{index: 'index2' }]
+      restrictedTo: new Map(Object.entries(
+        {
+          index2: []
+        }
+      )),
     });
 
     role3._id = 'role3';
@@ -124,7 +131,7 @@ describe('Test: model/security/profile', () => {
 
     profile.constructor._hash = obj => kuzzle.hash(obj);
 
-    profile.policies.push({roleId: role3._id});
+    profile.optimizedPolicies.push({roleId: role3._id});
 
     kuzzle.ask
       .withArgs('core:security:role:get')
