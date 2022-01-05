@@ -127,7 +127,7 @@ describe('Test: model/security/role', () => {
             index1: [],
             index2: ['collection1'],
             index3: ['collection1', 'collection2'],
-         }
+          }
         ));
 
       role.controllers = {
