@@ -134,4 +134,18 @@ describe('Test: router', () => {
       should(router.isConnectionAlive(context)).be.true();
     });
   });
+
+  describe('#metrics', () => {
+    it('should return the metrics object', () => {
+      // Fake connections
+      router.newConnection(new RequestContext({connection: {id: 'foo', protocol: 'bar'}}));
+      router.newConnection(new RequestContext({connection: {id: 'foo2', protocol: 'bar'}}));
+
+      should(router.metrics()).match({
+        connections: {
+          bar: 2,
+        }
+      });
+    });
+  });
 });

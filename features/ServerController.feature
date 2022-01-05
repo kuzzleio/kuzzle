@@ -59,12 +59,26 @@ Feature: Server Controller
       | memoryStorage | "green" |
       | storageEngine | "green" |
 
+  # server:metrics ==========================================================================
+  @realtime
+  Scenario: Get Kuzzle node metrics
+    Given I subscribe to "functional-test":"hooks" notifications
+    When I execute the action "server":"metrics"
+    Then The property "api" of the result should match:
+      | concurrentRequests | 1 |
+      | pendingRequests    | 0 |
+    Then The property "realtime" of the result should match:
+      | rooms         | 1 |
+      | subscriptions | 1 |
+
+
   # server:openapi ========================================================================
   @http
   Scenario: Get our API in OpenApi format as a raw response
     When I successfully execute the action "server":"openapi"
     Then I should receive a response matching:
-      | openapi | "3.0.1" |
+      | swagger                                           | "2.0"                 |
+      | paths./_/functional-tests/hello-world.get.summary | "Action: helloWorld." |
 
   # server:publicApi ========================================================================
   @development @http

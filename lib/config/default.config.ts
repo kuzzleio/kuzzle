@@ -1,4 +1,5 @@
-'use strict';
+import httpRoutes from '../api/httpRoutes.js';
+import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
 
 /* eslint-disable sort-keys */
 
@@ -12,7 +13,9 @@
  *
  * @class KuzzleConfiguration
  */
-module.exports = {
+
+const defaultConfig: KuzzleConfiguration = {
+
   // @deprecated
   realtime: {
     pcreSupport: false
@@ -46,7 +49,7 @@ module.exports = {
        (see https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
    */
   http: {
-    routes: require('./httpRoutes'),
+    routes: httpRoutes,
     accessControlAllowOrigin: '*',
     accessControlAllowOriginUseRegExp: false,
     accessControlAllowMethods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD',
@@ -62,6 +65,7 @@ module.exports = {
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 100,
+    subscriptionMinterms: 0,
     subscriptionRooms: 1000000,
     subscriptionDocumentTTL: 259200000
   },
@@ -84,7 +88,9 @@ module.exports = {
     'kuzzle-plugin-logger': {
       services: {
         stdout: {
-          level: 'info'
+          level: 'info',
+          addDate: true,
+          dateFormat: 'YYYY-MM-DD HH-mm-ss'
         }
       }
     },
@@ -108,6 +114,13 @@ module.exports = {
   security: {
     restrictedProfileIds: ['default'],
     jwt: {
+      algorithm: 'HS256',
+      expiresIn: '1h',
+      gracePeriod: 1000,
+      maxTTL: -1,
+      secret: null
+    },
+    authToken: {
       algorithm: 'HS256',
       expiresIn: '1h',
       gracePeriod: 1000,
@@ -391,9 +404,9 @@ module.exports = {
     },
     syncTimeout: 5000,
   },
-
   /** @type {DocumentSpecification} */
   validation: {
   },
-
 };
+
+export default defaultConfig;

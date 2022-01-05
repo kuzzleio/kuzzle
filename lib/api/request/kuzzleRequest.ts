@@ -322,6 +322,41 @@ export class KuzzleRequest {
   }
 
   /**
+   * Return a POJO representing the request.
+   *
+   * This can be used to match Koncorde filter rather than the Request object
+   * because it has properties defined with invisible unicode characters.
+   */
+  pojo () {
+    return {
+      context: {
+        connection: this.context.connection,
+        token: this.context.token,
+        user: this.context.user,
+      },
+      deprecations: this.deprecations,
+      error: this.error,
+      id: this.id,
+      input: {
+        action: this.input.action,
+        args: this.input.args,
+        body: this.input.body,
+        controller: this.input.controller,
+        jwt: this.input.jwt,
+        volatile: this.input.volatile,
+      },
+      internalId: this.internalId,
+      response: {
+        headers: this.response.headers,
+        raw: this.response.raw,
+      },
+      result: this.result,
+      status: this.status,
+      timestamp: this.timestamp,
+    };
+  }
+
+  /**
    * Returns the `lang` param of the request.
    *
    * It can only be 'elasticsearch' or 'koncorde'

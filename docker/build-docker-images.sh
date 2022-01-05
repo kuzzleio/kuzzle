@@ -94,12 +94,6 @@ if [[ "$BRANCH" == *"-dev" ]]; then
   docker_build 'kuzzle' "$BRANCH" 'kuzzle'
   docker_push 'kuzzle' "$BRANCH"
 
-  docker_build 'kuzzle' "$BRANCH-alpine" 'kuzzle.alpine'
-  docker_push 'kuzzle' "$BRANCH-alpine"
-
-  docker_build 'kuzzle' "$BRANCH-scratch" 'kuzzle.scratch'
-  docker_push 'kuzzle' "$BRANCH-scratch"
-
 elif [[ "$BRANCH" == "master" ]] || [[ "$BRANCH" == *"-stable" ]]; then
   release_tag=$(grep version package.json | head -1 | awk -F: '{ print $2 }' | sed 's/[\",]//g' | tr -d '[[:space:]]')
   major_version=$(echo $release_tag | cut -d. -f 1)
@@ -112,26 +106,15 @@ elif [[ "$BRANCH" == "master" ]] || [[ "$BRANCH" == *"-stable" ]]; then
   docker_build 'kuzzle' "$release_tag" 'kuzzle'
   docker_push 'kuzzle' "$release_tag"
 
-  docker_build 'kuzzle' "$release_tag-alpine" 'kuzzle.alpine'
-  docker_push 'kuzzle' "$release_tag-alpine"
-
-  docker_build 'kuzzle' "$release_tag-scratch" 'kuzzle.scratch'
-  docker_push 'kuzzle' "$release_tag-scratch"
-
-
   # If this is a release of the current major version
   # we can push with the 'latest' tag
   #   image name example: kuzzleio/kuzzle:latest
   if [[ "$major_version" == "$kuzzle_latest_major" ]]; then
     docker_tag 'plugin-dev' "$release_tag" 'latest'
     docker_tag 'kuzzle' "$release_tag" 'latest'
-    docker_tag 'kuzzle' "$release_tag-alpine" 'latest-alpine'
-    docker_tag 'kuzzle' "$release_tag-scratch" 'latest-scratch'
 
     docker_push 'plugin-dev' 'latest'
     docker_push 'kuzzle' 'latest'
-    docker_push 'kuzzle' 'latest-alpine'
-    docker_push 'kuzzle' 'latest-scratch'
   fi
 
   # Also push the major tag.
@@ -139,13 +122,9 @@ elif [[ "$BRANCH" == "master" ]] || [[ "$BRANCH" == *"-stable" ]]; then
   #   image name example: kuzzleio/kuzzle:1
   docker_tag 'plugin-dev' "$release_tag" "$major_version"
   docker_tag 'kuzzle' "$release_tag" "$major_version"
-  docker_tag 'kuzzle' "$release_tag-alpine" "$major_version-alpine"
-  docker_tag 'kuzzle' "$release_tag-scratch" "$major_version-scratch"
 
   docker_push 'plugin-dev' "$major_version"
   docker_push 'kuzzle' "$major_version"
-  docker_push 'kuzzle' "$major_version-alpine"
-  docker_push 'kuzzle' "$major_version-scratch"
 else
   echo "Incorrect value for BRANCH variable ("$BRANCH"). Exiting."
 fi

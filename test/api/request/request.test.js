@@ -11,6 +11,7 @@ const { Request, KuzzleRequest } = require('../../../lib/api/request');
 const { RequestContext } = require('../../../lib/api/request');
 const { RequestInput } = require('../../../lib/api/request');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { Koncorde } = require('koncorde');
 
 describe('#Request', () => {
   let rq;
@@ -1049,6 +1050,29 @@ describe('#Request', () => {
 
         should(request.getBody()).exactly(body);
       });
+    });
+  });
+
+  describe('#pojo', () => {
+    it('returns a POJO usable to match with Koncorde', () => {
+      const koncorde = new Koncorde();
+      const request = new KuzzleRequest({
+        controller: 'document',
+        action: 'create',
+        index: 'montenegro',
+        collection: 'budva',
+        _id: 'dana',
+        body: {
+          age: 30
+        }
+      });
+      const id1 = koncorde.register({
+        equals: { 'input.args.collection': 'budva' }
+      });
+
+      const ids = koncorde.test(request.pojo());
+
+      should(ids).be.eql([id1]);
     });
   });
 });
