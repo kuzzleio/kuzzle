@@ -1363,7 +1363,8 @@ describe('#core/storage/ClientAdapter', () => {
             .calledWith('index', 'collection');
 
           should(adapter.client.search)
-            .calledWith({
+            .calledWith(
+              {
                 index: 'index',
                 collection: 'collection',
                 searchBody: 'query'
