@@ -672,14 +672,6 @@ describe('DocumentController', () => {
   describe('#mCreateOrReplace', () => {
     let documents;
     let items;
-    let content = {
-      documents: [
-        {
-          _id: '_id1',
-          body: { field: 'new source' },
-        }
-      ]
-    };
 
     beforeEach(() => {
       documents = [
@@ -696,26 +688,35 @@ describe('DocumentController', () => {
         { _id: '_id3', _source: { field: '_source' }, _version: '_version', created: true, result: 'created' }
       ];
 
-      kuzzle.ask.withArgs('core:storage:public:document:mCreate').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mCreateOrReplace',
+        index,
+        collection,
+        documents,
+        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+      ).resolves(({
         items,
         errors: []
       }));
 
-      kuzzle.ask.withArgs('core:storage:public:document:mCreateOrReplace').resolves(({
-        items,
+      kuzzle.ask.withArgs(
+        'core:storage:public:document:mCreateOrReplace',
+        index,
+        collection,
+        documents,
+        { _source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
+      ).resolves(({
+        items: items.map(item => {
+          delete item._source;
+          return item;
+        }),
         errors: []
       }));
     });
 
     it('should return success result of mCreateOrReplace with _source for each documents', async () => {
       request.input.args.silent = true;
-      request.input.body = content;
-      
-      content = {
-        body: content,
-      };
 
-      await documentController._mChanges(
+      const response = await documentController._mChanges(
         request,
         'mCreateOrReplace',
         actionEnum.WRITE,
@@ -725,9 +726,32 @@ describe('DocumentController', () => {
         'core:storage:public:document:mCreateOrReplace',
         index,
         collection,
-        content,
-        { silent: true, _source: true },
+        documents,
+        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+      )
+    });
+
+    it('should return success result of mCreateOrReplace without _source for each documents', async () => {
+      request.input.args.silent = true;
+      request.input.args._source = false;
+
+      const response = await documentController._mChanges(
+        request,
+        'mCreateOrReplace',
+        actionEnum.WRITE,
       );
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreateOrReplace',
+        index,
+        collection,
+        documents,
+        { _source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
+      )
+
+      for (const item of response.successes) {
+        should.not.exists(item._source);
+      }
     });
   });
 
