@@ -4,13 +4,13 @@ type: page
 title: capabilities
 ---
 
-# Capabilities
+# capabilities
 
 
 
 Returns the current Kuzzle capabilities.
 
-This route should only be accessible to administrators, as it might return sensitive information about the backend.
+This action is accessible by all users, the purpose of this action is to inform the client what kind of limits or behavior they should expect from Kuzzle.
 
 ---
 
@@ -18,6 +18,7 @@ This route should only be accessible to administrators, as it might return sensi
 
 ### HTTP
 
+<SinceBadge version="2.16.6"/>
 ```http
 URL: http://kuzzle:7512/_capabilities
 Method: GET
