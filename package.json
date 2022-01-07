@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.16.1",
+  "version": "2.16.6",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -41,7 +41,7 @@
   "dependencies": {
     "@elastic/elasticsearch": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
     "@types/js-yaml": "^4.0.5",
-    "aedes": "^0.46.1",
+    "aedes": "^0.46.2",
     "bluebird": "^3.7.2",
     "cli-color": "^2.0.1",
     "cookie": "^0.4.1",
@@ -68,7 +68,7 @@
     "murmurhash-native": "^3.5.0",
     "nanoid": "^3.1.30",
     "node-segfault-handler": "^1.0.4",
-    "openapi-enforcer": "^1.16.0",
+    "openapi-enforcer": "^1.16.1",
     "passport": "^0.5.0",
     "protobufjs": "~6.11.2",
     "rc": "1.2.8",
@@ -89,7 +89,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.177",
+    "@types/lodash": "^4.14.178",
     "@typescript-eslint/eslint-plugin": "^5.6.0",
     "@typescript-eslint/parser": "^5.6.0",
     "async": "^3.2.2",
@@ -110,7 +110,7 @@
     "sinon": "^12.0.1",
     "strip-json-comments": "https://github.com/sindresorhus/strip-json-comments/archive/refs/tags/v3.1.1.tar.gz",
     "ts-node": "^10.4.0",
-    "typescript": "^4.5.2",
+    "typescript": "^4.5.3",
     "yaml": "^1.10.2"
   },
   "engines": {

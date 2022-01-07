@@ -163,3 +163,5 @@ lib/core/storage/indexCache.js
 lib/api/openApiGenerator.js
 lib/api/openapi/document/index.js
 lib/api/openapi/tools.js
+lib/api/openapi/index.js
+lib/util/readYamlFile.js

@@ -11,16 +11,11 @@ const foo = { foo: 'bar' };
 
 class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
-    const config = configLoader.load();
+    const config = configLoader.loadConfig();
 
     super(
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
-
-    Reflect.defineProperty(global, '_kuzzle', {
-      value: this,
-      writable: true,
-    });
 
     Reflect.defineProperty(global, 'kuzzle', {
       value: this,
