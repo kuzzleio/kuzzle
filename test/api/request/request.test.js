@@ -1024,16 +1024,16 @@ describe('#Request', () => {
         should(searchBody).be.eql({});
       });
 
-      it('should provide empty body when the route is invoked with GET with a null search body is provided', () => {
+      it('should throw a missing_argument when the route is invoked with GET with a null search body is provided', () => {
         request = new KuzzleRequest(input, {
           connection: { protocol: 'http', verb: 'GET' }
         });
         request.input.body = null;
         request.input.args.searchBody = null;
 
-        const searchBody = request.getSearchBody();
-
-        should(searchBody).be.eql({});
+        should(() => {
+          request.getSearchBody();
+        }).throw(BadRequestError, { id: 'api.assert.missing_argument'});
       });
 
       it('should have have default value', () => {

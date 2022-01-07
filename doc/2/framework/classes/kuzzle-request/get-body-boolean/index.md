@@ -7,10 +7,10 @@ description: KuzzleRequest class getBodyBoolean() method
 
 # getBodyBoolean
 
-<SinceBadge version="2.11.0" />
+<SinceBadge version="auto-version" />
 
 Gets a parameter from the request body and checks that it is a boolean.
-We also support lodash syntax. [(```relations.lebron[0]```)](https://lodash.com/docs/4.17.15#get)
+We also support lodash syntax. [(`relations.lebron[0]`)](https://lodash.com/docs/4.17.15#get)
 
 Contrary to other parameter types, an unset boolean does not trigger an
 error, instead it's considered as `false`

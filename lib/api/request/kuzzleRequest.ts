@@ -849,7 +849,7 @@ export class KuzzleRequest {
     errorName: string,
     def: number | null = null
   ): number {
-    let value = get(obj, name, def) || def;
+    let value = get(obj, name, def);
 
     if (value === undefined || value === null) {
       throw assertionError.get('missing_argument', errorName);
@@ -878,7 +878,7 @@ export class KuzzleRequest {
     errorName: string,
     def: number | null = null
   ): number {
-    let value = get(obj, name, def) || def;
+    let value = get(obj, name, def);
 
     if (value === undefined || value === null) {
       throw assertionError.get('missing_argument', errorName);
@@ -907,7 +907,7 @@ export class KuzzleRequest {
     errorName: string,
     def: string | null = null
   ): string {
-    const value = get(obj, name, def) || def;
+    const value = get(obj, name, def);
 
     if (value === undefined || value === null) {
       throw assertionError.get('missing_argument', errorName);
@@ -934,7 +934,7 @@ export class KuzzleRequest {
     errorName: string,
     def: [] | null = null
   ): any[] {
-    const value = get(obj, name, def) || def;
+    const value = get(obj, name, def);
 
     if (value === undefined || value === null) {
       throw assertionError.get('missing_argument', errorName);
@@ -961,7 +961,7 @@ export class KuzzleRequest {
     errorName: string,
     def: JSONObject | null = null
   ): JSONObject {
-    const value = get(obj, name, def) || def;
+    const value = get(obj, name, def);
 
     if (value === undefined || value === null) {
       throw assertionError.get('missing_argument', errorName);
