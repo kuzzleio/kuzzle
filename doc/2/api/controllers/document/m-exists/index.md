@@ -6,7 +6,7 @@ title: mExists
 
 # mExists
 
-Check if multiple document exists.
+Check if multiple documents exists.
 
 ::: info
 The number of documents that can be fetched by a single request is limited by the `documentsFetchCount` server configuration (see the [Configuring Kuzzle](/core/2/guides/advanced/configuration) guide).
@@ -66,7 +66,7 @@ kourou document:mExists <index> <collection> <body>
 
 ### Optional:
 
-- `strict`: if set, an error will occur if any of the documents could not be retrieved <SinceBadge version="2.11.0" />
+- `strict`: if set, an error will occur if any of the documents does not exists
 
 ---
 

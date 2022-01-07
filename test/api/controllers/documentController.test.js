@@ -207,7 +207,7 @@ describe('DocumentController', () => {
         ids: ['id', 'id2']
       };
 
-      kuzzle.ask.withArgs('core:storage:public:document:mExist').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' },
           { _id: 'id2', _source: 'source', _version: 1, some: 'some' }
@@ -220,7 +220,7 @@ describe('DocumentController', () => {
       const response = await documentController.mExists(request);
 
       should(kuzzle.ask).be.calledWith(
-        'core:storage:public:document:mExist',
+        'core:storage:public:document:mExists',
         index,
         collection,
         ['id', 'id2']);
@@ -243,7 +243,7 @@ describe('DocumentController', () => {
     });
 
     it('should handle errors if some documents are missing', async () => {
-      kuzzle.ask.withArgs('core:storage:public:document:mExist').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' }
         ],
@@ -263,7 +263,7 @@ describe('DocumentController', () => {
     it('should throw an error in strict mode if at least one document is missing', () => {
       request.input.args.strict = true;
 
-      kuzzle.ask.withArgs('core:storage:public:document:mExist').resolves(({
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
           { _id: 'id', _source: 'source', _version: 1, some: 'some' }
         ],
