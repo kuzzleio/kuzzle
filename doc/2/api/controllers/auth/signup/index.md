@@ -6,6 +6,8 @@ title: signup
 
 # signup
 
+<SinceBadge version="auto-version" />
+
 Creates a new user in Kuzzle.
 
 This method allows users with limited rights to create other accounts, but blocks them from creating accounts with unwanted privileges (e.g. an anonymous user creating his own account).

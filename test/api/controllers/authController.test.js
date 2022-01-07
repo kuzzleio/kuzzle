@@ -19,7 +19,6 @@ const { Token } = require('../../../lib/model/security/token');
 const User = require('../../../lib/model/security/user');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 
-
 describe('Test the auth controller', () => {
   let request;
   let requestcookieAuth;
