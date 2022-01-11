@@ -120,15 +120,7 @@ describe('Test: model/security/role', () => {
         req = new Request({
           controller: 'controller',
           action: 'action'
-        }, context),
-
-        restrictions = new Map(Object.entries(
-          {
-            index1: [],
-            index2: ['collection1'],
-            index3: ['collection1', 'collection2'],
-          }
-        ));
+        }, context);
 
       role.controllers = {
         controller: {
@@ -139,21 +131,6 @@ describe('Test: model/security/role', () => {
       };
 
       should(role.isActionAllowed(req)).be.true();
-      should(role.checkRestrictions(req, restrictions)).be.true();
-
-      should(role.checkRestrictions('index', undefined, restrictions)).be.false();
-
-      should(role.checkRestrictions('index1', undefined, restrictions)).be.true();
-
-      should(role.checkRestrictions('index2', undefined, restrictions)).be.true();
-
-      should(role.checkRestrictions('index2', 'collection', restrictions)).be.false();
-
-      should(role.checkRestrictions('index2', 'collection1', restrictions)).be.true();
-
-      should(role.checkRestrictions('index2', 'collection2', restrictions)).be.false();
-
-      should(role.checkRestrictions('index3', 'collection2', restrictions)).be.true();
     });
 
     it('should properly handle overridden permissions', () => {
@@ -193,6 +170,49 @@ describe('Test: model/security/role', () => {
       should(role.isActionAllowed(request)).be.false();
     });
 
+  });
+
+  describe('#checkRestrictions', () => {
+    it('should properly handle restrictions', () => {
+      const
+        role = new Role(),
+        req = new Request({
+          controller: 'controller',
+          action: 'action'
+        }, context),
+
+        restrictions = new Map(Object.entries(
+          {
+            index1: [],
+            index2: ['collection1'],
+            index3: ['collection1', 'collection2'],
+          }
+        ));
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: true
+          }
+        }
+      };
+
+      should(role.checkRestrictions(req, restrictions)).be.true();
+
+      should(role.checkRestrictions('index', undefined, restrictions)).be.false();
+
+      should(role.checkRestrictions('index1', undefined, restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', undefined, restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', 'collection', restrictions)).be.false();
+
+      should(role.checkRestrictions('index2', 'collection1', restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', 'collection2', restrictions)).be.false();
+
+      should(role.checkRestrictions('index3', 'collection2', restrictions)).be.true();
+    });
   });
 
   describe('#validateDefinition', () => {
