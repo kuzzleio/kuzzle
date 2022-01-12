@@ -520,6 +520,10 @@
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
+    //   * (optional) pingKeepAlive (default: 0):
+    //       The amount of time (in milliseconds) after which a PING command will be issued
+    //       to the Redis server to keep the connection alive.
+    //       Values <= 0 will disable the keepalive feature.
     "internalCache": {
       "backend": "redis",
       "node": {
@@ -552,6 +556,10 @@
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
+    //   * (optional) pingKeepAlive (default: 0):
+    //       The amount of time (in milliseconds) after which a PING command will be issued
+    //       to the Redis server to keep the connection alive.
+    //       Values <= 0 will disable the keepalive feature.
     //"internalCache": {
     //  "backend": "redis",
     //  "node": {
@@ -591,6 +599,10 @@
     //       Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
     //       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
     //       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
+    //   * (optional) pingKeepAlive (default: 0):
+    //       The amount of time (in milliseconds) after which a PING command will be issued
+    //       to the Redis server to keep the connection alive.
+    //       Values <= 0 will disable the keepalive feature.
     //"internalCache": {
     //  "backend": "redis",
     //  "nodes": [
@@ -628,6 +640,10 @@
     //       Redis specific options compatible with IORedis.
     //       See Redis client constructor available options:
     //       https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
+    //   * (optional) pingKeepAlive (default: 0):
+    //       The amount of time (in milliseconds) after which a PING command will be issued
+    //       to the Redis server to keep the connection alive.
+    //       Values <= 0 will disable the keepalive feature.
     "memoryStorage": {
       "backend": "redis",
       "node": {

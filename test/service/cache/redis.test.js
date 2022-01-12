@@ -28,7 +28,8 @@ describe('Redis', () => {
       node: {
         host: 'redis',
         port: 6379
-      }
+      },
+      pingKeepAlive: 60000
     };
 
     redis = new Redis(config);
