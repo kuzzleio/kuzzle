@@ -28,18 +28,6 @@ export type ControllerRight = {
 
 /**
  * A Controller Rights definition
- *
- *
- * @example
- *
- * {
- *   auth: {
- *     actions: {
- *       getCurrentUser: true,
- *       logout: true
- *     }
- *   }
- * }
  */
  export type ControllerRights = {
   [key: string]: ControllerRight
