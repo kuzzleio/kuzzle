@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import { omit } from 'lodash';
 import Bluebird from 'bluebird';
 
@@ -72,7 +70,7 @@ export default class ProfileRepository extends Repository {
 
     this.module = securityModule;
     this.profiles = new Map();
-    
+
     super.collection = 'profiles';
     super.ObjectConstructor = Profile;
   }

@@ -29,7 +29,7 @@ export type ControllerRight = {
 /**
  * A Controller Rights definition
  */
- export type ControllerRights = {
+export type ControllerRights = {
   [key: string]: ControllerRight
 };
 

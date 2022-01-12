@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import kerror from '../../kerror';
 import { has, isPlainObject } from '../../util/safeObject';
 import { binarySearch } from '../../util/array';
@@ -125,7 +123,7 @@ export default class Role {
    * @param {Map<string, string[]>} restrictedTo Restricted indexes
    * @returns {Boolean} resolves to a Boolean value
    */
-  checkRestrictions(index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean{
+  checkRestrictions(index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean {
     // If no restrictions, we allow the action:
     if (! restrictedTo || restrictedTo.size === 0) {
       return true;

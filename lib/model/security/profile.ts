@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
-
 import _ from 'lodash';
 import Bluebird from 'bluebird';
 
@@ -273,6 +271,7 @@ export default class Profile {
                 value: actionRights
               };
               const rightsObject = {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
                 [this.constructor._hash(rightsItem)]: rightsItem
               };
