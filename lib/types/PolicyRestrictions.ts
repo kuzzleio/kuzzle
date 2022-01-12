@@ -24,4 +24,9 @@ export type PolicyRestrictions = {
   collections: string[],
 };
 
+/**
+ * A policy definition
+ * the key {string} represent the index name
+ * the value {string[]} represent the collection names
+ */
 export type OptimizedPolicyRestrictions = Map<string, string[]>;
