@@ -279,13 +279,13 @@ db5:keys=1,expires=0,avg_ttl=0
   });
 
   it('should setup the keep alive at initialization', async () => {
-    redis.setupKeepAlive = sinon.stub();
+    redis._setupKeepAlive = sinon.stub();
     await redis.init();
 
-    should(redis.setupKeepAlive).be.calledOnce();
+    should(redis._setupKeepAlive).be.calledOnce();
   });
 
-  describe('#setupKeepAlive', () => {
+  describe('#_setupKeepAlive', () => {
     it('should set a interval that ping redis when connection is ready', async () => {
       redis._ping = sinon.stub().resolves();
       should(redis.pingIntervalID).be.null();
@@ -296,12 +296,12 @@ db5:keys=1,expires=0,avg_ttl=0
     });
 
     it('should clear the interval when an error occurs in the connection', async () => {
-      const clearInterval = sinon.spy(global, 'clearInterval');
       await redis.init();
 
+      should(redis.pingIntervalID).not.be.null();
       await redis.client.emit('error', new Error('foobar'));
 
-      should(clearInterval).be.calledOnce();
+      should(redis.pingIntervalID).be.null();
     });
   });
 
