@@ -33,10 +33,11 @@ import { KuzzleRequest } from '../../../index';
 
 const assertionError = kerror.wrap('api', 'assert');
 
-export type ProfilePolicy = {
+/** @internal */
+export type InternalProfilePolicy = {
   role: Role;
   restrictedTo: OptimizedPolicyRestrictions;
-}
+};
 
 /**
  * @class Profile
@@ -59,7 +60,7 @@ export default class Profile {
    *
    * @returns {Promise}
    */
-  async getPolicies(): Promise<ProfilePolicy[]> {
+  async getPolicies(): Promise<InternalProfilePolicy[]> {
     if (!global.kuzzle) {
       throw kerror.get('security', 'profile', 'uninitialized', this._id);
     }
@@ -74,7 +75,7 @@ export default class Profile {
    * @param {Request} request
    * @returns {Promise}
    */
-  async getAllowedPolicies(request: KuzzleRequest): Promise<ProfilePolicy[]> {
+  async getAllowedPolicies(request: KuzzleRequest): Promise<InternalProfilePolicy[]> {
     if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
       return [];
     }
