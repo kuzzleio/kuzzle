@@ -191,5 +191,9 @@ export type StorageServiceElasticsearch = {
     defaults: {
       onUpdateConflictRetries: 0,
       scrollTTL: '15s'
-    }
+    },
+    /**
+     * storage service version
+    */
+    version: string;
 }

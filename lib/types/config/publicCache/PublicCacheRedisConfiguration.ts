@@ -34,4 +34,9 @@ export type PublicCacheRedisConfiguration = {
    * @default false
    */
   overrideDnsLookup: boolean
+
+  /**
+   * public cache version
+   */
+   version: string
 }

@@ -10,10 +10,9 @@ title: capabilities
 
 
 
-Returns the current Kuzzle capabilities.
+This action should be accessible by all users, the purpose of this action is to inform the client what kind of limits or behavior they should expect from Kuzzle.
 
-This action is accessible by all users, the purpose of this action is to inform the client what kind of limits or behavior they should expect from Kuzzle.
-
+The SDKs are using this action to modify their behavior accordingly to Kuzzle capabilities.
 ---
 
 ## Query Syntax

@@ -267,7 +267,8 @@ const defaultConfig: KuzzleConfiguration = {
         port: 6379
       },
       options: {},
-      overrideDnsLookup: false
+      overrideDnsLookup: false,
+      version: '6.0'
     },
     memoryStorage: {
       backend: 'redis',
@@ -280,7 +281,8 @@ const defaultConfig: KuzzleConfiguration = {
         port: 6379
       },
       options: {},
-      overrideDnsLookup: false
+      overrideDnsLookup: false,
+      version: '6.0'
     },
     internalIndex: {
       bootstrapLockTimeout: 60000
@@ -380,7 +382,8 @@ const defaultConfig: KuzzleConfiguration = {
       defaults: {
         onUpdateConflictRetries: 0,
         scrollTTL: '15s'
-      }
+      },
+      version: '7.16.2',
     }
   },
 
