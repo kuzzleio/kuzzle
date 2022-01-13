@@ -6,6 +6,8 @@ title: mExists
 
 # mExists
 
+<SinceBadge version="auto-version"/>
+
 Check if multiple documents exists.
 
 ::: info

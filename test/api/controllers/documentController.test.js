@@ -209,8 +209,8 @@ describe('DocumentController', () => {
 
       kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
-          { _id: 'id', _source: 'source', _version: 1, some: 'some' },
-          { _id: 'id2', _source: 'source', _version: 1, some: 'some' }
+          { _id: 'id', _version: 1, some: 'some' },
+          { _id: 'id2', _version: 1, some: 'some' }
         ],
         errors: []
       }));
@@ -228,8 +228,8 @@ describe('DocumentController', () => {
       should(response).match({
         errors: [],
         successes: [
-          { _id: 'id', _source: 'source', _version: 1 },
-          { _id: 'id2', _source: 'source', _version: 1 }
+          { _id: 'id', _version: 1 },
+          { _id: 'id2', _version: 1 }
         ]
       });
     });
@@ -245,7 +245,7 @@ describe('DocumentController', () => {
     it('should handle errors if some documents are missing', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
-          { _id: 'id', _source: 'source', _version: 1, some: 'some' }
+          { _id: 'id', _version: 1, some: 'some' }
         ],
         errors: ['id2']
       }));
@@ -255,7 +255,7 @@ describe('DocumentController', () => {
       should(response).match({
         errors: ['id2'],
         successes: [
-          { _id: 'id', _source: 'source', _version: 1 }
+          { _id: 'id', _version: 1 }
         ]
       });
     });
@@ -265,7 +265,7 @@ describe('DocumentController', () => {
 
       kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
         items: [
-          { _id: 'id', _source: 'source', _version: 1, some: 'some' }
+          { _id: 'id', _version: 1, some: 'some' }
         ],
         errors: ['id2']
       }));
