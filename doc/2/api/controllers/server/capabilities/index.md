@@ -4,6 +4,8 @@ type: page
 title: capabilities
 ---
 
+<SinceBadge version="auto-version"/>
+
 # capabilities
 
 
@@ -18,7 +20,6 @@ This action is accessible by all users, the purpose of this action is to inform 
 
 ### HTTP
 
-<SinceBadge version="auto-version"/>
 ```http
 URL: http://kuzzle:7512/_capabilities
 Method: GET
