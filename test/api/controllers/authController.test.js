@@ -767,12 +767,18 @@ describe('Test the auth controller', () => {
       testToken = new Token({ expiresAt: 42, userId: 'durres' });
     });
 
-    it('should reject an error if no token is provided', () => {
-      return should(authController.checkToken(new Request({body: {}})))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "body.token".'
-        });
+    it('should return anonymous token if no token is specified', async () => {
+      const verifyStub = kuzzle.ask
+        .withArgs('core:security:token:verify', null)
+        .resolves(new Token({userId: '-1'}));
+
+      const response = await authController.checkToken(new Request({body: {}}));
+
+      await should(verifyStub).calledOnce();
+      await should(response).be.an.Object();
+      await should(response.kuid).be.equal('-1');
+      await should(response.expiresAt).be.equal(null);
+      await should(response.valid).be.equal(true);
     });
 
     it('should return a valid response if the token is valid', async () => {
@@ -833,12 +839,24 @@ describe('Test the auth controller', () => {
       testToken = new Token({ expiresAt: 42, userId: 'durres' });
     });
 
-    it('should reject an error if no token is provided in the cookie', () => {
-      return should(authController.checkToken(new Request({body: {}})))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "body.token".'
-        });
+    it('should return anonymous token if no token is provided in the cookie', async () => {
+      kuzzle.config.http.cookieAuthentication = true;
+      const verifyStub = kuzzle.ask
+        .withArgs('core:security:token:verify', null)
+        .resolves(new Token({userId: '-1'}));
+      
+      const req = new Request({body: {}, cookieAuth: true});
+      req.input.headers = {
+        cookie: 'authToken=;',
+      };
+
+      const response = await authController.checkToken(req);
+
+      await should(verifyStub).calledOnce();
+      await should(response).be.an.Object();
+      await should(response.kuid).be.equal('-1');
+      await should(response.expiresAt).be.equal(null);
+      await should(response.valid).be.equal(true);
     });
 
     it('should return a valid response if the token is valid', async () => {
