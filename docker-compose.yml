@@ -4,9 +4,9 @@ x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
   command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
   volumes:
-    - ".:/var/app"
-    - "./docker/scripts/run-dev.sh:/run-dev.sh"
-    - "./docker/fixtures:/fixtures"
+    - '.:/var/app'
+    - './docker/scripts/run-dev.sh:/run-dev.sh'
+    - './docker/fixtures:/fixtures'
   cap_add:
     - SYS_PTRACE
   ulimits:
@@ -14,8 +14,12 @@ x-kuzzle-config: &kuzzle-config
   sysctls:
     - net.core.somaxconn=8192
   depends_on:
-    - redis
-    - elasticsearch
+    redis:
+      condition: service_healthy
+    elasticsearch:
+      condition: service_healthy
+    kuzzle_installer:
+      condition: service_completed_successfully
   environment:
     - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
     - kuzzle_services__storageEngine__commonMapping__dynamic=true
@@ -46,47 +50,72 @@ services:
     container_name: kuzzle_nginx
     depends_on:
       - kuzzle_node_1
-      - kuzzle_node_2
-      - kuzzle_node_3
+      # - kuzzle_node_2
+      # - kuzzle_node_3
     ports:
-      - "7512:7512"
+      - '7512:7512'
     volumes:
       - ./docker/nginx-dev:/etc/nginx/conf.d
+
+  kuzzle_installer:
+    image: kuzzleio/core-dev:2
+    command: sh /kuzzle-installer.sh
+    volumes:
+      - '.:/var/app'
+      - './docker/scripts/kuzzle-installer.sh:/kuzzle-installer.sh'
+    environment:
+      - NODE_12_VERSION=12.20.0
+      - NODE_14_VERSION=14.17.0
 
   kuzzle_node_1:
     <<: *kuzzle-config
     container_name: kuzzle_node_1
     ports:
-      - "17510:7512" # Kuzzle API port
-      - "1883:1883" # Kuzzle MQTT port
-      - "9229:9229" # Debug port
+      - '17510:7512' # Kuzzle API port
+      - '1883:1883' # Kuzzle MQTT port
+      - '9229:9229' # Debug port
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
-  kuzzle_node_2:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_2
-    ports:
-      - "17511:7512" # Kuzzle API port
-      - "11883:1883" # Kuzzle MQTT port
-      - "9230:9229" # Debug port
+  # kuzzle_node_2:
+  #   <<: *kuzzle-config
+  #   container_name: kuzzle_node_2
+  #   ports:
+  #     - '17511:7512' # Kuzzle API port
+  #     - '11883:1883' # Kuzzle MQTT port
+  #     - '9230:9229' # Debug port
 
-  kuzzle_node_3:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_3
-    ports:
-      - "17512:7512" # Kuzzle API port
-      - "11884:1883" # Kuzzle MQTT port
-      - "9231:9229" # Debug port
+  # kuzzle_node_3:
+  #   <<: *kuzzle-config
+  #   container_name: kuzzle_node_3
+  #   ports:
+  #     - '17512:7512' # Kuzzle API port
+  #     - '11884:1883' # Kuzzle MQTT port
+  #     - '9231:9229' # Debug port
 
   redis:
     image: redis:6
     container_name: kuzzle_redis
     ports:
-      - "6379:6379"
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
     container_name: kuzzle_elasticsearch
     ports:
-      - "9200:9200"
+      - '9200:9200'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9200']
+      interval: 2s
+      timeout: 2s
+      retries: 10
     ulimits:
       nofile: 65536
