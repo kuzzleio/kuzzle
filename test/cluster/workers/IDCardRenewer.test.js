@@ -37,6 +37,7 @@ describe('ClusterIDCardRenewer', () => {
             initTimeout: 42
           },
           'foo');
+      should(idCardRenewer.redisReady).be.true()
     });
 
     it('should init variable based on the given config', async () => {
