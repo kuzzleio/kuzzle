@@ -13,7 +13,7 @@ then
 fi
 
 if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then
-    # npm ci --unsafe-perm
+    npm ci --unsafe-perm
     chmod -R 777 node_modules/
     npm rebuild all --unsafe-perm
 elif [ ! -d "./node_modules/" ]; then
