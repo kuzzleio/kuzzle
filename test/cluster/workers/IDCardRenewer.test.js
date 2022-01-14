@@ -37,7 +37,6 @@ describe('ClusterIDCardRenewer', () => {
             initTimeout: 42
           },
           'foo');
-      should(idCardRenewer.redisReady).be.true()
     });
 
     it('should init variable based on the given config', async () => {
@@ -199,6 +198,15 @@ describe('ClusterIDCardRenewer', () => {
       should(idCardRenewer.redis.commands.del).be.calledWith('foo');
       should(idCardRenewer.disposed).be.true();
       should(idCardRenewer.refreshTimer).be.null();
+    });
+
+    it('should not delete redis key if redis is not init', async () => {
+      const redis = idCardRenewer.redis;
+      idCardRenewer.redis = null;
+
+      await idCardRenewer.dispose();
+
+      should(redis.commands.del).not.be.called();
     });
 
     it('should do nothing when already disposed', async () => {
