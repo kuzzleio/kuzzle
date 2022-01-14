@@ -18,8 +18,6 @@ x-kuzzle-config: &kuzzle-config
       condition: service_healthy
     elasticsearch:
       condition: service_healthy
-    kuzzle_installer:
-      condition: service_completed_successfully
   environment:
     - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
     - kuzzle_services__storageEngine__commonMapping__dynamic=true
@@ -56,16 +54,6 @@ services:
       - '7512:7512'
     volumes:
       - ./docker/nginx-dev:/etc/nginx/conf.d
-
-  kuzzle_installer:
-    image: kuzzleio/core-dev:2
-    command: sh /kuzzle-installer.sh
-    volumes:
-      - '.:/var/app'
-      - './docker/scripts/kuzzle-installer.sh:/kuzzle-installer.sh'
-    environment:
-      - NODE_12_VERSION=12.20.0
-      - NODE_14_VERSION=14.17.0
 
   kuzzle_node_1:
     <<: *kuzzle-config
