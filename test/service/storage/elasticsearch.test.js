@@ -580,6 +580,51 @@ describe('Test: ElasticSearch service', () => {
     });
   });
 
+
+  describe.only('#mExists', () => {
+    it('should allow getting multiples existing documents', () => {
+      elasticsearch._client.mget.resolves({
+        body: {
+          docs: [
+            { _id: 'foo', found: true, _version: 1 },
+            { _id: 'bar', found: false }
+          ]
+        }
+      });
+
+      const promise = elasticsearch.mExists(index, collection, ['foo', 'bar']);
+
+      return promise
+        .then(result => {
+          should(elasticsearch._client.mget).be.calledWithMatch({
+            body: {
+              docs: [
+                { _id: 'foo', _index: alias },
+                { _id: 'bar', _index: alias },
+              ]
+            }
+          });
+
+          should(result).match({
+            items: [ { _id: 'foo', _version: 1 } ],
+            errors: [ 'bar' ]
+          });
+        });
+    });
+
+    it('should return a rejected promise if client.mget fails', () => {
+      elasticsearch._client.mget.rejects(esClientError);
+
+      const promise = elasticsearch.mExists(index, collection, ['foo']);
+
+      return should(promise).be.rejected()
+        .then(() => {
+          should(elasticsearch._esWrapper.formatESError)
+            .be.calledWith(esClientError);
+        });
+    });
+  });
+
   describe('#count', () => {
     it('should allow counting documents using a provided filter', () => {
       const filter = {
