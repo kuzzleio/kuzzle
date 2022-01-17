@@ -24,10 +24,10 @@ import { PolicyRestrictions, OptimizedPolicyRestrictions } from './PolicyRestric
 
 export type Policy = {
   roleId: string;
-  restrictedTo: PolicyRestrictions[];
+  restrictedTo?: PolicyRestrictions[];
 };
 
 export type OptimizedPolicy = {
   roleId: string;
-  restrictedTo: OptimizedPolicyRestrictions;
+  restrictedTo?: OptimizedPolicyRestrictions;
 }

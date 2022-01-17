@@ -8,8 +8,8 @@ const {
   PreconditionError,
 } = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
-const Profile = require('../../../lib/model/security/profile');
-const Role = require('../../../lib/model/security/role');
+const Profile = require('../../../lib/model/security/profile').default;
+const Role = require('../../../lib/model/security/role').default;
 
 describe('Test: model/security/profile', () => {
   const context = {connectionId: null, userId: null};

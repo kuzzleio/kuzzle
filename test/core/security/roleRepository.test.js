@@ -10,7 +10,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const Role = require('../../../lib/model/security/role');
+const Role = require('../../../lib/model/security/role').default;
 const RoleRepository = require('../../../lib/core/security/roleRepository');
 const Repository = require('../../../lib/core/shared/repository');
 const kuzzleStateEnum = require('../../../lib/kuzzle/kuzzleStateEnum');
@@ -731,7 +731,7 @@ describe('Test: security/roleRepository', () => {
 
     it('should register a "create" event', async () => {
       sinon.stub(roleRepository, 'create');
-
+ 
       kuzzle.ask.restore();
       await kuzzle.ask('core:security:role:create', 'foo', 'bar', 'baz');
 

@@ -3,7 +3,7 @@
 const should = require('should');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Role = require('../../../lib/model/security/role');
+const Role = require('../../../lib/model/security/role').default;
 const {
   Request,
   BadRequestError

@@ -11,9 +11,9 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const Role = require('../../../lib/model/security/role');
-const Profile = require('../../../lib/model/security/profile');
-const ProfileRepository = require('../../../lib/core/security/profileRepository');
+const Role = require('../../../lib/model/security/role').default;
+const Profile = require('../../../lib/model/security/profile').default;
+const ProfileRepository = require('../../../lib/core/security/profileRepository').default;
 const Repository = require('../../../lib/core/shared/repository');
 
 describe('Test: security/profileRepository', () => {
