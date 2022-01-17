@@ -174,6 +174,7 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
+
   describe('#fromDTO', () => {
     it('should throw if the profile contains unexisting roles', () => {
       roleRepositoryMock.loadRoles.resolves([null]);
@@ -369,6 +370,18 @@ describe('Test: security/profileRepository', () => {
       should(profileRepository.profiles).have.value('foo', testProfile);
     });
 
+    it('should compute the optimized policies', async () => {
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
+      profileRepository.persistToDatabase = sinon.stub().resolves(null);
+      profileRepository._optimizePolicies = sinon.stub().resolves([]);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
+
+      await profileRepository.validateAndSaveProfile(testProfile);
+
+      should(profileRepository._optimizePolicies).be.calledOnce();
+    });
+
     it('should reject if we try to remove the anonymous role from the anonymous profile', () => {
       const profile = new Profile();
       profile._id = 'anonymous';
@@ -435,6 +448,23 @@ describe('Test: security/profileRepository', () => {
 
       return should(profileRepository.loadOneFromDatabase('foo'))
         .rejectedWith(error);
+    });
+  });
+
+  describe('#load', () => {
+    afterEach(() => {
+      Repository.prototype.load.restore();
+    });
+
+
+    it('should compute the optimized policies', async () => {
+      sinon.stub(Repository.prototype, 'load').resolves(testProfile);
+
+      profileRepository._optimizePolicies = sinon.stub().resolves([]);
+
+      await profileRepository.load('foobar');
+
+      should(profileRepository._optimizePolicies).be.calledOnce();
     });
   });
 
@@ -662,6 +692,54 @@ describe('Test: security/profileRepository', () => {
       await should(profileRepository.truncate()).rejectedWith(error);
 
       should(profileRepository.profiles).be.empty();
+    });
+  });
+
+  describe('#_optimizePolicy', () => {
+    it('should merge restriction with same indices', () => {
+      const policy = profileRepository._optimizePolicy({
+        roleId: 'foo',
+        restrictedTo: [
+          {
+            index: 'foo',
+            collections: ['bar']
+          },
+          {
+            index: 'foo',
+            collections: ['baz']
+          }
+        ]
+      });
+
+      should(policy).match({
+        roleId: 'foo',
+        restrictedTo: new Map(Object.entries({
+          'foo': ['bar', 'baz']
+        }))
+      });
+    });
+
+    it('should remove duplicated collections and sort the collections', () => {
+      const policy = profileRepository._optimizePolicy({
+        roleId: 'foo',
+        restrictedTo: [
+          {
+            index: 'foo',
+            collections: ['qux', 'bar',]
+          },
+          {
+            index: 'foo',
+            collections: ['baz', 'bar']
+          }
+        ]
+      });
+
+      should(policy).match({
+        roleId: 'foo',
+        restrictedTo: new Map(Object.entries({
+          'foo': ['bar', 'baz', 'qux']
+        }))
+      });
     });
   });
 
