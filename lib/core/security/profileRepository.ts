@@ -26,6 +26,8 @@ import Profile from '../../model/security/profile';
 import Repository from '../shared/repository';
 import kerror from '../../kerror';
 import cacheDbEnum from '../cache/cacheDbEnum';
+import { JSONObject } from 'kuzzle-sdk';
+import { Policy, OptimizedPolicy } from '../../../index';
 
 /** @internal */
 export type CreateOrReplaceOptions = {
@@ -147,7 +149,7 @@ export default class ProfileRepository extends Repository {
      */
     global.kuzzle.onAsk(
       'core:security:profile:scroll',
-      (id, ttl) => super.scroll(id, ttl));
+      (id, ttl) => this.scroll(id, ttl));
 
     /**
      * Searches profiles
@@ -159,7 +161,7 @@ export default class ProfileRepository extends Repository {
      */
     global.kuzzle.onAsk(
       'core:security:profile:search',
-      (searchBody, opts) => super.search(searchBody, opts));
+      (searchBody, opts) => this.search(searchBody, opts));
 
     /**
      * Removes all existing profiles and invalidates the RAM cache
@@ -188,7 +190,7 @@ export default class ProfileRepository extends Repository {
    * @returns {Promise.<Promise>}
    * @throws {NotFoundError} If the corresponding profile doesn't exist
    */
-  async load (id) {
+  async load (id: string): Promise<Profile> {
     if (this.profiles.has(id)) {
       return this.profiles.get(id);
     }
@@ -222,8 +224,7 @@ export default class ProfileRepository extends Repository {
       throw kerror.get('api', 'assert', 'invalid_type', 'profileIds', 'string[]');
     }
 
-    for (let i = 0; i < profileIds.length; i++) {
-      const id = profileIds[i];
+    for (const id of profileIds) {
       let profile: Profile | Promise<Profile> = this.profiles.get(id);
 
       if (!profile) {
@@ -244,7 +245,7 @@ export default class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async loadOneFromDatabase (id) {
+  async loadOneFromDatabase (id: string): Promise<Profile> {
     try {
       return await super.loadOneFromDatabase(id);
     }
@@ -265,14 +266,14 @@ export default class ProfileRepository extends Repository {
    * @returns {Profile}
    */
   async _createOrReplace (
-    id,
-    content,
+    id: string,
+    content: JSONObject,
     {
       method,
       refresh = 'false',
       strict,
       userId = null
-    }: CreateOrReplaceOptions
+    }: CreateOrReplaceOptions = {}
   ) {
     const profile = await this.fromDTO({
       // content should be first: ignores _id and _kuzzle_info in it
@@ -297,7 +298,7 @@ export default class ProfileRepository extends Repository {
    * @param {Object} [opts]
    * @returns {Profile}
    */
-  async create (id, content, opts) {
+  async create (id: string, content: JSONObject, opts: JSONObject = {}): Promise<Profile> {
     return this._createOrReplace(id, content, {
       method: 'create',
       ...opts,
@@ -312,7 +313,7 @@ export default class ProfileRepository extends Repository {
    * @param {Object} [opts]
    * @returns {Profile}
    */
-  async createOrReplace (id, content, opts) {
+  async createOrReplace (id: string, content: JSONObject, opts: JSONObject = {}): Promise<Profile> {
     return this._createOrReplace(id, content, {
       method: 'createOrReplace',
       ...opts,
@@ -326,7 +327,16 @@ export default class ProfileRepository extends Repository {
    * @param  {Object} [opts]
    * @returns {Promise}
    */
-  async update (id, content, {refresh, retryOnConflict, strict, userId}: UpdateOptions) {
+  async update (
+    id: string,
+    content: JSONObject,
+    {
+      refresh,
+      retryOnConflict,
+      strict,
+      userId
+    }: UpdateOptions = {}
+  ) {
     const profile = await this.load(id);
     const pojo = super.toDTO(profile);
     const updated = await this.fromDTO({
@@ -356,7 +366,7 @@ export default class ProfileRepository extends Repository {
    * @param {object} [options]
    * @returns {Promise}
    */
-  async deleteById (id, options) {
+  async deleteById (id: string, options: JSONObject = {}): Promise<void> {
     const profile = await this.load(id);
     return this.delete(profile, options);
   }
@@ -364,7 +374,7 @@ export default class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async delete (profile, {
+  async delete (profile: Profile, {
     refresh = 'false',
     onAssignedUsers = 'fail',
     userId = '-1',
@@ -423,7 +433,7 @@ export default class ProfileRepository extends Repository {
       }
     }
 
-    await super.deleteFromDatabase(profile._id, {refresh});
+    await this.deleteFromDatabase(profile._id, {refresh});
 
     this.profiles.delete(profile._id);
   }
@@ -435,7 +445,7 @@ export default class ProfileRepository extends Repository {
    * @param {Profile} profile
    * @returns {object}
    */
-  serializeToDatabase (profile) {
+  serializeToDatabase (profile: Profile) {
     // avoid the profile var mutation
     return omit(profile, ['_id']);
   }
@@ -453,7 +463,7 @@ export default class ProfileRepository extends Repository {
    *                                     applied on existing indexes/collections
    * @returns {Promise<Profile>}
    **/
-  async validateAndSaveProfile (profile, { method, refresh, retryOnConflict, strict }: ValidateAndSaveProfileOptions) {
+  async validateAndSaveProfile (profile: Profile, { method, refresh, retryOnConflict, strict }: ValidateAndSaveProfileOptions = {}) {
     const policiesRoles = profile.policies.map(p => p.roleId);
 
     // Assert: all roles must exist
@@ -482,7 +492,7 @@ export default class ProfileRepository extends Repository {
    * @param {object} dto
    * @returns {Promise<Profile>}
    */
-  async fromDTO (dto) {
+  async fromDTO (dto: JSONObject): Promise<Profile> {
     const profile = await super.fromDTO(dto);
 
     // force "default" role/policy if the profile does not have any role in it
@@ -508,7 +518,7 @@ export default class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async truncate (opts) {
+  async truncate (opts: JSONObject) {
     try {
       await super.truncate(opts);
     }
@@ -541,7 +551,7 @@ export default class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param {Object[]} policies 
    */
-  _optimizePolicies(policies) {
+  _optimizePolicies(policies: Policy[]): OptimizedPolicy[] {
     if (!policies) {
       return [];
     }
@@ -557,7 +567,7 @@ export default class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param policy
    */
-  _optimizePolicy(policy) {
+  _optimizePolicy(policy: Policy): OptimizedPolicy {
     const indexes = new Map();
 
     if (!policy.restrictedTo) {
@@ -599,8 +609,25 @@ export default class ProfileRepository extends Repository {
       roleId: policy.roleId,
     };
   }
-  
+
+  // ============================================
+  // Every method described after are for testing purpose only
+  // Otherwise we cannot stub them
+  // ============================================
+
+  async toDTO(dto: Profile): Promise<JSONObject> {
+    return super.toDTO(dto);
+  }
+
+  async deleteFromDatabase(id: string, options: JSONObject) {
+    return super.deleteFromDatabase(id, options);
+  }
+
+  async search(searchBody: JSONObject, options: JSONObject) {
+    return super.search(searchBody, options);
+  }
+
+  async scroll(id: string, ttl: number) {
+    return super.scroll(id, ttl);
+  }
 }
-
-
-module.exports = ProfileRepository;
