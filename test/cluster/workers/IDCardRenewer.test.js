@@ -200,6 +200,15 @@ describe('ClusterIDCardRenewer', () => {
       should(idCardRenewer.refreshTimer).be.null();
     });
 
+    it('should not delete redis key if redis is not init', async () => {
+      const redis = idCardRenewer.redis;
+      idCardRenewer.redis = null;
+
+      await idCardRenewer.dispose();
+
+      should(redis.commands.del).not.be.called();
+    });
+
     it('should do nothing when already disposed', async () => {
       idCardRenewer.disposed = true;
       await idCardRenewer.dispose();
