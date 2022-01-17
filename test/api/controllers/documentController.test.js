@@ -95,6 +95,67 @@ describe('DocumentController', () => {
         { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
+    it('should reject if no index and collection or targets are specified', () => {
+      request.input.args.index = null;
+      request.input.args.collection = null;
+      request.input.args.targets = null;
+      request.input.action = 'search';
+
+      return should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.missing_argument' });
+    });
+
+    it('should verify that targets are valid', async () => {
+      request.input.args.index = null;
+      request.input.args.collection = null;
+      request.input.args.targets = [
+        { index: 'foo', collections: ['bar'] },
+      ];
+      request.input.action = 'search';
+
+      documentController.assertAreTargetsValid = sinon.stub();
+      kuzzle.ask
+        .withArgs('core:storage:public:document:multiSearch')
+        .resolves({
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+      await documentController.search(request);
+      return should(documentController.assertAreTargetsValid).calledWith([
+        { index: 'foo', collections: ['bar'] }
+      ]);
+    });
+
+    it('should ask document:multiSearch when specifiying targets', async () => {
+      request.input.args.index = null;
+      request.input.args.collection = null;
+      request.input.args.targets = [
+        { index: 'foo', collections: ['bar'] },
+      ];
+      request.input.action = 'search';
+
+      kuzzle.ask
+        .withArgs('core:storage:public:document:multiSearch')
+        .resolves({
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+      await documentController.search(request);
+      return should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:multiSearch',
+        [
+          { index: 'foo', collections: ['bar'] },
+        ]
+      );
+    });
+
     it('should reject if the size argument exceeds server configuration', () => {
       kuzzle.config.limits.documentsFetchCount = 1;
       request.input.args.size = 10;
