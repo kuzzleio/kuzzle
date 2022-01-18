@@ -17,6 +17,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let Kuzzle;
   let application;
+  let clusterModuleInitStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -52,6 +53,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    clusterModuleInitStub = sinon.stub().resolves();
+    const clusterModuleStub = function () {
+      return { init: clusterModuleInitStub };
+    };
+
     const coreModuleStub = function () {
       return { init: sinon.stub().resolves() };
     };
@@ -60,7 +66,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
     mockrequire('../../lib/core/security', coreModuleStub);
     mockrequire('../../lib/core/realtime', coreModuleStub);
-    mockrequire('../../lib/cluster', coreModuleStub);
+    mockrequire('../../lib/cluster', clusterModuleStub);
     mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
@@ -84,7 +90,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   });
 
   describe('#start', () => {
-    it('should init the components in proper order', async () => {
+    it.only('should init the components in proper order', async () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
         koncorde_1: { Koncorde },
@@ -92,7 +98,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       });
 
       await stubbedKuzzle(async () => {
-        kuzzle = await _mockKuzzle(Kuzzle);
+        kuzzle = _mockKuzzle(Kuzzle);
 
         kuzzle.install = sinon.stub().resolves();
         kuzzle.import = sinon.stub().resolves();
@@ -111,6 +117,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         sinon.assert.callOrder(
           kuzzle.pipe, // kuzzle:state:start
           kuzzle.internalIndex.init,
+          // clusterModuleInitStub,
           kuzzle.validation.init,
           kuzzle.tokenManager.init,
           kuzzle.funnel.init,
@@ -208,6 +215,16 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
+    });
+  });
+
+  describe('#generateId', () => {
+    it('should not initialize the cluster if disabled', async () => {
+      kuzzle.config.cluster.enabled = false;
+
+      await kuzzle.start(application, {});
+
+      should(clusterModuleInitStub).not.be.called();
     });
   });
 

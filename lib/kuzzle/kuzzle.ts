@@ -230,6 +230,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await (new SecurityModule()).init();
 
+      // This will init the cluster module if enabled
       this.id = await this.generateId();
 
       // Secret used to generate JWTs
@@ -290,7 +291,12 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
-  async generateId (): Promise<string> {
+  /**
+   * Generates the node ID.
+   *
+   * This will init the cluster if it's enabled.
+   */
+  private async generateId (): Promise<string> {
     let id;
 
     if (this.config.cluster.enabled) {
