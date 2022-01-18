@@ -1,6 +1,6 @@
-import { JSONObject } from '../../../../index';
+import { ClientOptions } from '@elastic/elasticsearch'
 
-export type StorageServiceElasticsearch = {
+export type StorageEngineElasticsearch = {
   /**
    * @default ['storageEngine']
   */
@@ -15,10 +15,18 @@ export type StorageServiceElasticsearch = {
    * Elasticsearch constructor options. Use this field to specify your
    * Elasticsearch config options, this object is passed through to the
    * Elasticsearch constructor and can contain all options/keys outlined here:
+   *
    * @see https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/client-configuration.html
-   * 
+   *
+   * @default
+   *
+   * {
+   *    node: 'http://localhost:9200'
+   * }
+   *
   */
-  client: JSONObject
+  client: ClientOptions
+
   /**
    * Default policy against new fields that are not referenced in the
    * collection mapping.
@@ -36,13 +44,13 @@ export type StorageServiceElasticsearch = {
      * @default "false"
     */
     dynamic: 'true' | 'false' | 'strict'
-  
+
     properties: {
       _kuzzle_info: {
         properties: {
           /**
-           * @default 
-           * 
+           * @default
+           *
            * [
            *   {
            *     type: 'keyword',
@@ -54,8 +62,8 @@ export type StorageServiceElasticsearch = {
           }
 
           /**
-           * @default 
-           * 
+           * @default
+           *
            * [
            *   {
            *     type: 'date',
@@ -67,8 +75,8 @@ export type StorageServiceElasticsearch = {
             }
 
             /**
-           * @default 
-           * 
+           * @default
+           *
            * [
            *   {
            *     type: 'keyword',
@@ -78,10 +86,10 @@ export type StorageServiceElasticsearch = {
             updater: {
               type: string
             }
-  
+
             /**
-           * @default 
-           * 
+           * @default
+           *
            * [
            *   {
            *     type: 'date',
@@ -101,18 +109,18 @@ export type StorageServiceElasticsearch = {
       * @default "kuzzle"
       */
       name: string
-  
+
       collections: {
         users: {
           /**
           * @default 'false'
           */
           dynamic: 'true' | 'false' | 'strict'
-  
+
           properties: {
             /**
-              * @default 
-              * 
+              * @default
+              *
               * [
               *   {
               *     type: 'keyword',

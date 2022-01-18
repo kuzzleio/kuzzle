@@ -53,6 +53,7 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import { generateRandomName } from '../util/name-generator';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -215,7 +216,6 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe('kuzzle:state:start');
 
-
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
         maxConditions: this.config.limits.subscriptionConditionsCount,
@@ -230,7 +230,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await (new SecurityModule()).init();
 
-      this.id = await (new Cluster()).init();
+      this.id = await this.generateId();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -288,6 +288,22 @@ class Kuzzle extends KuzzleEventEmitter {
 
       throw error;
     }
+  }
+
+  async generateId (): Promise<string> {
+    let id;
+
+    if (this.config.cluster.enabled) {
+      id = await (new Cluster()).init();
+
+      this.log.info('[✔] Cluster initialized');
+    }
+    else {
+      id = generateRandomName('knode');
+      this.log.info('[X] Cluster disabled: single node mode.');
+    }
+
+    return id;
   }
 
   /**
@@ -558,10 +574,16 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (
-    toImport: ImportConfig = {},
-    toSupport: SupportConfig = {}
-  ): Promise<void> {
+  async import (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
+    if ( _.isEmpty(toImport.mappings)
+      && _.isEmpty(toImport.profiles)
+      && _.isEmpty(toImport.roles)
+      && _.isEmpty(toImport.userMappings)
+      && _.isEmpty(toImport.users)
+    ) {
+      return
+    }
+
     const lockedMutex = [];
 
     try {
@@ -585,11 +607,11 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-
       this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }
