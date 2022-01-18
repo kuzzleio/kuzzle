@@ -90,7 +90,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   });
 
   describe('#start', () => {
-    it.only('should init the components in proper order', async () => {
+    it('should init the components in proper order', async () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
         koncorde_1: { Koncorde },
