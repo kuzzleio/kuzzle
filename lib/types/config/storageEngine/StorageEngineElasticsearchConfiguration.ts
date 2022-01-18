@@ -1,4 +1,4 @@
-import { ClientOptions } from '@elastic/elasticsearch'
+import { ClientOptions } from '@elastic/elasticsearch';
 
 export type StorageEngineElasticsearch = {
   /**

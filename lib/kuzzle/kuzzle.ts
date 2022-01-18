@@ -587,7 +587,7 @@ class Kuzzle extends KuzzleEventEmitter {
       && _.isEmpty(toImport.userMappings)
       && _.isEmpty(toImport.users)
     ) {
-      return
+      return;
     }
 
     const lockedMutex = [];
