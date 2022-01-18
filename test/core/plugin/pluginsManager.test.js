@@ -123,8 +123,10 @@ describe('Plugin', () => {
     });
 
     it('should loads plugins with existing plugins', async () => {
+      const application = createPlugin('my-application');
+      application._application = true;
       const otherPlugin = createPlugin('other-plugin');
-      pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin]]));
+      pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin], [application.name, application]]));
       pluginsManager._plugins.set(plugin.name, plugin);
 
       await pluginsManager.init('additional plugins');
