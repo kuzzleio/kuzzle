@@ -228,7 +228,7 @@ export default class ProfileRepository extends Repository {
       let profile: Profile | Promise<Profile> = this.profiles.get(id);
 
       if (!profile) {
-        profile = (this.loadOneFromDatabase(id) as Promise<Profile>)
+        profile = this.loadOneFromDatabase(id)
           .then(p => {
             p.optimizedPolicies = this._optimizePolicies(p.policies);
             this.profiles.set(id, p);
