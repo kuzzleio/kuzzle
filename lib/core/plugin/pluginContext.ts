@@ -155,6 +155,12 @@ export class PluginContext {
      * @type {BackendCluster}
      */
     cluster: BackendCluster,
+
+
+    /**
+     * Current Kuzzle node unique identifier
+     */
+    nodeId: string;
   };
 
   public config: JSONObject;
@@ -207,12 +213,6 @@ export class PluginContext {
   public errorsManager: any;
 
   /**
-   * Current Kuzzle node unique identifier
-   */
-  public nodeId: string;
-
-
-  /**
    * Decrypted secrets from Kuzzle Vault
    */
   public secrets: JSONObject;
@@ -233,8 +233,6 @@ export class PluginContext {
     this.config = JSON.parse(JSON.stringify(global.kuzzle.config));
 
     Object.freeze(this.config);
-
-    this.nodeId = global.kuzzle.id;
 
     // @deprecated - backward compatibility only
     this.errors = {
@@ -335,6 +333,7 @@ export class PluginContext {
 
     this.accessors = {
       cluster: new BackendCluster(),
+      nodeId: global.kuzzle.id,
       execute: (request, callback) => execute(request, callback),
       sdk: new EmbeddedSDK(),
       storage: {
