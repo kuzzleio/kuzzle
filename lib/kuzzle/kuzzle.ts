@@ -588,6 +588,9 @@ class Kuzzle extends KuzzleEventEmitter {
       && _.isEmpty(toImport.roles)
       && _.isEmpty(toImport.userMappings)
       && _.isEmpty(toImport.users)
+      && _.isEmpty(toSupport.fixtures)
+      && _.isEmpty(toSupport.mappings)
+      && _.isEmpty(toSupport.securities)
     ) {
       return;
     }
