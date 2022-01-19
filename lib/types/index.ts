@@ -31,6 +31,7 @@ export * from './Policy';
 export * from './PolicyRestrictions';
 export * from './User';
 export * from './Token';
+export * from './Target';
 export * from './Global';
 export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
