@@ -137,5 +137,3 @@ export default class User {
   }
 
 }
-
-module.exports = User;
