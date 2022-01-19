@@ -9,7 +9,7 @@ const {
   PluginImplementationError,
   ForbiddenError
 } = require('../../../../index');
-const User = require('../../../../lib/model/security/user');
+const User = require('../../../../lib/model/security/user').default;
 const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
 describe('Test: sdk/funnelProtocol', () => {
