@@ -118,28 +118,28 @@ export default class Profile {
     this.validateRateLimit();
 
     if (!this.policies) {
-      throw assertionError.get('missing_argument', 'policies');
+      throw assertionError.get('missing_argument', `${this._id}.policies`);
     }
 
     if (!Array.isArray(this.policies)) {
-      throw assertionError.get('invalid_type', 'policies', 'object[]');
+      throw assertionError.get('invalid_type', `${this._id}.policies`, 'object[]');
     }
 
     if (this.policies.length === 0) {
-      throw assertionError.get('empty_argument', 'policies');
+      throw assertionError.get('empty_argument', `${this._id}.policies`);
     }
 
     let i = 0;
     for (const policy of this.policies) {
       if (!policy.roleId) {
-        throw assertionError.get('missing_argument', `policies[${i}].roleId`);
+        throw assertionError.get('missing_argument', `${this._id}.policies[${i}].roleId`);
       }
 
       for (const member of Object.keys(policy)) {
         if (member !== 'roleId' && member !== 'restrictedTo') {
           throw assertionError.get(
             'unexpected_argument',
-            `policies[${i}].${member}`,
+            `${this._id}.policies[${i}].${member}`,
             '"roleId", "restrictedTo"');
         }
       }
@@ -148,7 +148,7 @@ export default class Profile {
         if (!Array.isArray(policy.restrictedTo)) {
           throw assertionError.get(
             'invalid_type',
-            `policies[${i}].restrictedTo`,
+            `${this._id}.policies[${i}].restrictedTo`,
             'object[]');
         }
 
@@ -157,14 +157,14 @@ export default class Profile {
           if (!isPlainObject(restriction)) {
             throw assertionError.get(
               'invalid_type',
-              `policies[${i}].restrictedTo[${restriction}]`,
+              `${this._id}.policies[${i}].restrictedTo[${restriction}]`,
               'object');
           }
 
           if (restriction.index === null || restriction.index === undefined) {
             throw assertionError.get(
               'missing_argument',
-              `policies[${i}].restrictedTo[${j}].index`);
+              `${this._id}.policies[${i}].restrictedTo[${j}].index`);
           }
 
           if (strict) {
@@ -187,7 +187,7 @@ export default class Profile {
             if (!Array.isArray(restriction.collections)) {
               throw assertionError.get(
                 'invalid_type',
-                `policies[${i}].restrictedTo[${j}].collections`,
+                `${this._id}.policies[${i}].restrictedTo[${j}].collections`,
                 'string[]');
             }
 
@@ -219,7 +219,7 @@ export default class Profile {
             if (member !== 'index' && member !== 'collections') {
               throw assertionError.get(
                 'unexpected_argument',
-                `policies[${i}].restrictedTo[${j}].${member}`,
+                `${this._id}.policies[${i}].restrictedTo[${j}].${member}`,
                 '"index", "collections"');
             }
           }
