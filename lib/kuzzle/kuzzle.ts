@@ -215,7 +215,6 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe('kuzzle:state:start');
 
-
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
         maxConditions: this.config.limits.subscriptionConditionsCount,
@@ -266,6 +265,8 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Core components loaded');
 
       await this.install(options.installations);
+
+      this.log.info(`[✔] Start "${this.pluginsManager.application.name}" application`);
 
       // @deprecated
       await this.pipe('kuzzle:start');
@@ -558,10 +559,16 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (
-    toImport: ImportConfig = {},
-    toSupport: SupportConfig = {}
-  ): Promise<void> {
+  async import (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
+    if ( _.isEmpty(toImport.mappings)
+      && _.isEmpty(toImport.profiles)
+      && _.isEmpty(toImport.roles)
+      && _.isEmpty(toImport.userMappings)
+      && _.isEmpty(toImport.users)
+    ) {
+      return;
+    }
+
     const lockedMutex = [];
 
     try {
@@ -585,11 +592,11 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-
       this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }
