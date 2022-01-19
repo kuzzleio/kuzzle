@@ -52,6 +52,10 @@ describe('Plugin Context', () => {
       should(context).be.an.instanceOf(PluginContext);
     });
 
+    it('should expose the Kuzzle Node unique identifier', () => {
+      should(context.nodeId).be.exactly(global.kuzzle.id);
+    });
+
     it('should expose the right constructors', () => {
       let repository;
       const { Koncorde } = require('../../../../lib/core/shared/KoncordeWrapper');
