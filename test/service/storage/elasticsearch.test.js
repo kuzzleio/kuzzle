@@ -352,6 +352,38 @@ describe('Test: ElasticSearch service', () => {
       searchBody = {};
     });
 
+    it('should join multi indexes and collections when specified with targets', async () => {
+
+      elasticsearch._client.search.rejects(new Error()); // Skip rest of the execution
+
+      try {
+        await elasticsearch.search({
+          targets: [
+            {
+              index: 'nyc-open-data',
+              collections: ['yellow-taxi', 'red-taxi'],
+            },
+            {
+              index: 'nyc-close-data',
+              collections: ['green-taxi', 'blue-taxi'],
+            }
+          ],
+          searchBody,
+        });
+      } catch (error) {
+        // Catch error since we throw to skip the rest of the execution
+      } finally {
+        should(elasticsearch._client.search.firstCall.args[0]).match({
+          index: '@&nyc-open-data.yellow-taxi,@&nyc-open-data.red-taxi,@&nyc-close-data.green-taxi,@&nyc-close-data.blue-taxi',
+          body: { query: { match_all: {} } },
+          from: undefined,
+          size: undefined,
+          scroll: undefined,
+          trackTotalHits: true,
+        });
+      }
+    });
+
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
