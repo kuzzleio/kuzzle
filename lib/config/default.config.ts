@@ -391,6 +391,7 @@ const defaultConfig: KuzzleConfiguration = {
   },
 
   cluster: {
+    enabled: true,
     activityDepth: 50,
     heartbeat: 2000,
     interface: null,

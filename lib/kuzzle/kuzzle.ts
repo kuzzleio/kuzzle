@@ -53,6 +53,7 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import { generateRandomName } from '../util/name-generator';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -229,7 +230,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await (new SecurityModule()).init();
 
-      this.id = await (new Cluster()).init();
+      // This will init the cluster module if enabled
+      this.id = await this.generateId();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -289,6 +291,27 @@ class Kuzzle extends KuzzleEventEmitter {
 
       throw error;
     }
+  }
+
+  /**
+   * Generates the node ID.
+   *
+   * This will init the cluster if it's enabled.
+   */
+  private async generateId (): Promise<string> {
+    let id;
+
+    if (this.config.cluster.enabled) {
+      id = await (new Cluster()).init();
+
+      this.log.info('[✔] Cluster initialized');
+    }
+    else {
+      id = generateRandomName('knode');
+      this.log.info('[X] Cluster disabled: single node mode.');
+    }
+
+    return id;
   }
 
   /**
