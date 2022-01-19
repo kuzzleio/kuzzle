@@ -131,7 +131,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       registerStrategy: sinon.stub(),
       unregisterStrategy: sinon.stub(),
       application: {
-        info: sinon.stub()
+        info: sinon.stub(),
+        name: 'my-app',
       },
       routes: [],
       loadedPlugins: []
