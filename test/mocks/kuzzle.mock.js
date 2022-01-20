@@ -11,7 +11,7 @@ const foo = { foo: 'bar' };
 
 class KuzzleMock extends KuzzleEventEmitter {
   constructor () {
-    const config = configLoader.load();
+    const config = configLoader.loadConfig();
 
     super(
       config.plugins.common.maxConcurrentPipes,
