@@ -50,9 +50,9 @@ import StorageEngine from '../core/storage/storageEngine';
 import SecurityModule from '../core/security';
 import RealtimeModule from '../core/realtime';
 import Cluster from '../cluster';
-import { JSONObject } from './index';
-import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from '../types/Kuzzle';
+import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
+import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -88,7 +88,7 @@ type ImportStatus = {
   firstCall?: boolean,
 }
 class Kuzzle extends KuzzleEventEmitter {
-  private config: JSONObject;
+  private config: KuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
   private log: Logger;
   private rootPath: string;
@@ -163,7 +163,7 @@ class Kuzzle extends KuzzleEventEmitter {
   private id : string;
   private secret : string;
 
-  constructor (config: JSONObject) {
+  constructor (config: KuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize);
@@ -611,7 +611,7 @@ class Kuzzle extends KuzzleEventEmitter {
         inString = stringify(input);
     }
 
-    return murmur(Buffer.from(inString), 'hex', this.config.internal.hash.seed);
+    return murmur(Buffer.from(inString), 'hex', this.config.internal.hash.seed as number);
   }
 
   get state () {
