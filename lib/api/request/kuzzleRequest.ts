@@ -401,11 +401,11 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a number
    */
-  getBodyNumber (name: string, def: number | null = null): number {
+  getBodyNumber (name: string, def: number | undefined = undefined): number {
     const body = this.input.body;
 
     if (body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -427,11 +427,11 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an integer
    */
-  getBodyInteger (name: string, def: number | null = null): number {
+  getBodyInteger (name: string, def: number | undefined = undefined): number {
     const body = this.input.body;
 
     if (body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -453,11 +453,11 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a string
    */
-  getBodyString (name: string, def: string | null = null): string {
+  getBodyString (name: string, def: string | undefined = undefined): string {
     const body = this.input.body;
 
     if (body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -479,11 +479,11 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
-  getBodyArray (name: string, def: [] | null = null) {
+  getBodyArray (name: string, def: [] | undefined = undefined) {
     const body = this.input.body;
 
     if (body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -505,11 +505,11 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an object
    */
-  getBodyObject (name: string, def: JSONObject | null = null): JSONObject {
+  getBodyObject (name: string, def: JSONObject | undefined = undefined): JSONObject {
     const body = this.input.body;
 
     if (body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -540,7 +540,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a number
    */
-  getNumber (name: string, def: number | null = null): number {
+  getNumber (name: string, def: number | undefined = undefined): number {
     return this._getNumber(this.input.args, name, name, def);
   }
 
@@ -554,7 +554,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an integer
    */
-  getInteger (name: string, def: number | null = null): number {
+  getInteger (name: string, def: number | undefined = undefined): number {
     return this._getInteger(this.input.args, name, name, def);
   }
 
@@ -568,7 +568,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a string
    */
-  getString (name: string, def: string | null = null) {
+  getString (name: string, def: string | undefined = undefined) {
     return this._getString(this.input.args, name, name, def);
   }
 
@@ -582,7 +582,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
-  getArray (name: string, def: [] | null = null): any[] {
+  getArray (name: string, def: [] | undefined = undefined): any[] {
     return this._getArray(this.input.args, name, name, def);
   }
 
@@ -596,7 +596,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an object
    */
-  getObject (name: string, def: JSONObject | null = null): JSONObject {
+  getObject (name: string, def: JSONObject | undefined = undefined): JSONObject {
     return this._getObject(this.input.args, name, name, def);
   }
 
@@ -652,9 +652,9 @@ export class KuzzleRequest {
    * @throws {api.assert.body_required} If the body is not set and if no default
    *                                    value is provided
    */
-  getBody (def: JSONObject | null = null): JSONObject {
+  getBody (def: JSONObject | undefined = undefined): JSONObject {
     if (this.input.body === null) {
-      if (def !== null) {
+      if (def !== undefined) {
         return def;
       }
 
@@ -847,11 +847,11 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: number | null = null
+    def: number | undefined = undefined
   ): number {
     let value = get(obj, name, def);
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw assertionError.get('missing_argument', errorName);
     }
 
@@ -876,11 +876,11 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: number | null = null
+    def: number | undefined = undefined
   ): number {
     let value = get(obj, name, def);
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw assertionError.get('missing_argument', errorName);
     }
 
@@ -905,11 +905,11 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: string | null = null
+    def: string | undefined = undefined
   ): string {
     const value = get(obj, name, def);
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw assertionError.get('missing_argument', errorName);
     }
 
@@ -932,11 +932,11 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: [] | null = null
+    def: [] | undefined = undefined
   ): any[] {
     const value = get(obj, name, def);
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw assertionError.get('missing_argument', errorName);
     }
 
@@ -959,11 +959,11 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: JSONObject | null = null
+    def: JSONObject | undefined = undefined
   ): JSONObject {
     const value = get(obj, name, def);
 
-    if (value === undefined || value === null) {
+    if (value === undefined) {
       throw assertionError.get('missing_argument', errorName);
     }
 
