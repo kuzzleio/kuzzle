@@ -581,7 +581,7 @@ describe('Test: ElasticSearch service', () => {
   });
 
 
-  describe.only('#mExists', () => {
+  describe('#mExists', () => {
     it('should allow getting multiples existing documents', () => {
       elasticsearch._client.mget.resolves({
         body: {
@@ -599,10 +599,11 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.mget).be.calledWithMatch({
             body: {
               docs: [
-                { _id: 'foo', _index: alias },
-                { _id: 'bar', _index: alias },
+                { _id: 'foo'},
+                { _id: 'bar'},
               ]
-            }
+            },
+            index: alias
           });
 
           should(result).match({
