@@ -28,7 +28,8 @@ describe('Redis', () => {
       node: {
         host: 'redis',
         port: 6379
-      }
+      },
+      pingKeepAlive: 60000
     };
 
     redis = new Redis(config);
@@ -276,6 +277,44 @@ db5:keys=1,expires=0,avg_ttl=0
 
     should(redis._buildClient).be.called();
     should(redis.client.options).match({ username: 'foo', password: 'bar' });
+  });
+
+  it('should setup the keep alive at initialization', async () => {
+    redis._setupKeepAlive = sinon.stub();
+    await redis.init();
+
+    should(redis._setupKeepAlive).be.calledOnce();
+  });
+
+  describe('#_setupKeepAlive', () => {
+    it('should set a interval that ping redis when connection is ready', async () => {
+      redis._ping = sinon.stub().resolves();
+      should(redis.pingIntervalID).be.null();
+      await redis.init();
+
+      should(redis._ping).be.calledOnce();
+      should(redis.pingIntervalID).not.be.null();
+    });
+
+    it('should clear the interval when an error occurs in the connection', async () => {
+      await redis.init();
+
+      should(redis.pingIntervalID).not.be.null();
+      await redis.client.emit('error', new Error('foobar'));
+
+      should(redis.pingIntervalID).be.null();
+    });
+  });
+
+  describe('#_ping', () => {
+    it('should ping redis', async () => {
+      await redis.init();
+      redis.client.ping = sinon.stub().resolves();
+
+      await redis._ping();
+
+      should(redis.client.ping).be.calledOnce();
+    });
   });
 
   describe('#store', () => {
