@@ -114,9 +114,4 @@ export type InternalCacheConfiguration = {
   * @default false
   */
   overrideDnsLookup: boolean
-
-  /**
-   * internal cache version
-   */
-   version: string
 }
