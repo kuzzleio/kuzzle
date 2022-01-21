@@ -59,3 +59,9 @@ export const OpenApiDocumentDeleteComponent = deleteObject.components.schemas;
 const deleteByQueryObject = readYamlFile(__dirname + '/deleteByQuery.yaml');
 export const OpenApiDocumentDeleteByQuery = deleteByQueryObject.DocumentDeleteByQuery;
 export const OpenApiDocumentDeleteByQueryComponent = deleteByQueryObject.components.schemas;
+
+// reading the description of the DeleteByQuery action in the controller document.
+// The yaml objects are then stored in the variables below
+const validateObject = readYamlFile(__dirname + '/validate.yaml');
+export const OpenApiDocumentValidate = validateObject.DocumentValidate;
+export const OpenApiDocumentValidateComponent = validateObject.components.schemas;
