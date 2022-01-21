@@ -76,7 +76,9 @@ describe('Test: security/tokenRepository', () => {
           assertIsAnonymous(result);
           done();
         })
-        .catch(err => { done(err); });
+        .catch(err => {
+          done(err); 
+        });
     });
   });
 

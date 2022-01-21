@@ -353,7 +353,9 @@ describe('Test: validation initialization', () => {
     it('should return structured fields when a collection specification is provided', () => {
       const
         indexName = 'anIndex',
-        structureCollectionValidationStub = sinon.spy(function (...args) {return args[0].fields;}),
+        structureCollectionValidationStub = sinon.spy(function (...args) {
+          return args[0].fields;
+        }),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -381,7 +383,9 @@ describe('Test: validation initialization', () => {
     it('should return structured fields when a collection specification is provided even in verbose mode', () => {
       const
         indexName = 'anIndex',
-        structureCollectionValidationStub = sinon.spy(function (...args) {return args[0].fields;}),
+        structureCollectionValidationStub = sinon.spy(function (...args) {
+          return args[0].fields;
+        }),
         collectionName = 'aCollection',
         collectionSpec = {
           fields: {
@@ -523,7 +527,9 @@ describe('Test: validation initialization', () => {
   describe('#structureCollectionValidation', () => {
     it('should return a structured collection specification if configuration is correct', () => {
       const
-        curateFieldSpecificationStub = sinon.spy(function (...args) {return {isValid: true, fieldSpec: args[0]};}),
+        curateFieldSpecificationStub = sinon.spy(function (...args) {
+          return {isValid: true, fieldSpec: args[0]};
+        }),
         collectionSpec = {
           fields: {
             aField: {a: 'field', type: 'foo'},

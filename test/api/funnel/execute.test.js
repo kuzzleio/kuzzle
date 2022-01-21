@@ -66,7 +66,8 @@ describe('funnelController.execute', () => {
           should(funnel.processRequest).be.calledOnce();
           should(funnel.processRequest.calledOnce).be.true();
           done();
-        } catch (error) {
+        }
+        catch (error) {
           done(error);
         }
       });

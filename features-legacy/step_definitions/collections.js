@@ -31,7 +31,8 @@ When('I try to create the collection {string}', async function (collection) {
     const response = await this.api.createCollection(null, collection);
 
     this.result = response;
-  } catch (error) {
+  }
+  catch (error) {
     this.result = { error };
   }
 });

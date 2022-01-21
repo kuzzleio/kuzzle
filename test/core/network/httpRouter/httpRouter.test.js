@@ -67,9 +67,13 @@ describe('core/network/httpRouter', () => {
     it('should raise an internal error when trying to add a duplicate', () => {
       router.post('/foo/bar', handler);
 
-      should(function () { router.post('/foo/bar', handler); })
+      should(function () {
+        router.post('/foo/bar', handler); 
+      })
         .throw(InternalError, { id: 'network.http.duplicate_url' });
-      should(function () { router.post('/foo/bar/', handler); })
+      should(function () {
+        router.post('/foo/bar/', handler); 
+      })
         .throw(InternalError, { id: 'network.http.duplicate_url' });
     });
   });

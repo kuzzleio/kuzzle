@@ -233,7 +233,8 @@ Given(/^I update the ?(default)* profile with id "([^"]*)" by adding the role "(
     // keep `admin`/`default`/`anonymous` roles for eponymous profiles
     // (to avoid error if we try to update anonymous profile without anonymous role)
     policies.push({roleId: profileId});
-  } else {
+  }
+  else {
     profileId = this.idPrefix + profileId;
   }
 

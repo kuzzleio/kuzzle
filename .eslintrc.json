@@ -51,7 +51,8 @@
     "strict": [2, "global"],
     "vars-on-top": 2,
     "yoda": [2, "never"],
-    "sort-keys": ["error", "asc"]
+    "sort-keys": ["error", "asc"],
+    "brace-style": ["error", "stroustrup"]
   },
   "overrides": [
     {
