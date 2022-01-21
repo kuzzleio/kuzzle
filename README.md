@@ -138,3 +138,14 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 ## License
 
 Kuzzle is published under [Apache 2 License](./LICENSE.md).
+
+## About Mac M1
+
+First of all make sure that you have at least `4GB` of ram allocated to your vm **docker desktop** and that it is running.
+
+Run the following command to install all the dependencies in your container:
+```bash
+npm run docker:install
+```
+
+finally run the command `docker-compose up` to launch your kuzzle stack.
