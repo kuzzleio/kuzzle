@@ -538,7 +538,6 @@ app.controller.register('files', {
         request.response.configure({
           format: 'raw',
           headers: {
-            'Content-Length': csv.length.toString(),
             'Content-Type': 'text/csv',
             'Content-Disposition': 'attachment; filename="export.csv"'
           }
