@@ -37,7 +37,7 @@ Given(/^A room subscription listening to the whole collection$/, function (callb
 });
 
 Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
-  var filter = {not: {exists: {field : key}}};
+  var filter = { not: { exists: { field : key } } };
 
   this.api.subscribe(filter)
     .then(body => {
@@ -85,7 +85,7 @@ Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result.count) {
+      if (! response.result.count) {
         return callback(new Error('Expected a "count" value in response'));
       }
 
@@ -107,7 +107,7 @@ Then(/^I get the list subscriptions$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -119,16 +119,16 @@ Then(/^I get the list subscriptions$/, function (callback) {
     });
 });
 
-Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
+Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function (collection, countRooms, countSubscribers, callback) {
   var
     rooms = Object.keys(this.result[this.fakeIndex][collection]),
     count = 0;
 
-  if (!this.result[this.fakeIndex]) {
+  if (! this.result[this.fakeIndex]) {
     return callback(new Error('No entry for index ' + this.fakeIndex));
   }
 
-  if (!this.result[this.fakeIndex][collection]) {
+  if (! this.result[this.fakeIndex][collection]) {
     return callback(new Error('No entry for collection ' + collection));
   }
 

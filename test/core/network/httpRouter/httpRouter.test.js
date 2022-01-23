@@ -226,7 +226,7 @@ describe('core/network/httpRouter', () => {
         'content-type': 'application/json',
       });
       const httpMessage = new HttpMessage(connection, req);
-      httpMessage.content = {foo: 'bar'};
+      httpMessage.content = { foo: 'bar' };
 
       router.route(httpMessage, () => {
         try {
@@ -505,7 +505,7 @@ describe('core/network/httpRouter', () => {
 
     it('should return an error if an exception is thrown', done => {
       const routeHandlerStub = class {
-        get request() {
+        get request () {
           throw new InternalError('HTTP internal exception.');
         }
       };

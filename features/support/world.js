@@ -116,11 +116,11 @@ class KuzzleWorld {
       this.props.error = e;
     }
 
-    if (failureExpected && !this.props.error) {
+    if (failureExpected && ! this.props.error) {
       throw new Error(message || 'Expected action to fail');
     }
 
-    if (!failureExpected && this.props.error) {
+    if (! failureExpected && this.props.error) {
       throw this.props.error;
     }
   }

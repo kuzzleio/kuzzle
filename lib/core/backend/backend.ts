@@ -353,7 +353,9 @@ export class Backend {
   /**
    * Application Name
    */
-  get name (): string { return this._name; }
+  get name (): string {
+    return this._name;
+  }
 
   /**
    * EmbeddedSDK instance

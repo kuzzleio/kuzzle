@@ -126,7 +126,7 @@ describe('Plugin Context', () => {
             error: new Error('error'),
             status: 666,
             jwt: 'jwt',
-            volatile: {foo: 'bar'}
+            volatile: { foo: 'bar' }
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -145,7 +145,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.args._id).be.eql(request.input.args._id);
         should(pluginRequest.input.args.index).be.eql(request.input.args.index);
         should(pluginRequest.input.args.collection).be.eql(request.input.args.collection);
-        should(pluginRequest.input.volatile).match({foo: 'bar'});
+        should(pluginRequest.input.volatile).match({ foo: 'bar' });
       });
 
       it('should override origin request data with provided ones', () => {
@@ -162,7 +162,7 @@ describe('Plugin Context', () => {
             error: new Error('error'),
             status: 666,
             jwt: 'jwt',
-            volatile: {foo: 'bar'}
+            volatile: { foo: 'bar' }
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -175,7 +175,7 @@ describe('Plugin Context', () => {
             size: 99,
             collection: 'pluginCollection',
             jwt: null,
-            volatile: {foo: 'overridden', bar: 'baz'}
+            volatile: { foo: 'overridden', bar: 'baz' }
           });
 
         should(pluginRequest.context.protocol).be.eql('protocol');
@@ -193,11 +193,11 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.args._id).be.eql('_id');
         should(pluginRequest.input.args.index).be.eql('index');
         should(pluginRequest.input.args.collection).be.eql('pluginCollection');
-        should(pluginRequest.input.volatile).match({foo: 'overridden', bar: 'baz'});
+        should(pluginRequest.input.volatile).match({ foo: 'overridden', bar: 'baz' });
       });
 
       it('should allow building a request without providing another one', () => {
-        const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+        const rq = new context.constructors.Request({ controller: 'foo', action: 'bar' });
 
         should(rq).be.instanceOf(KuzzleRequest);
         should(rq.input.action).be.eql('bar');
@@ -390,8 +390,8 @@ describe('Plugin Context', () => {
     describe('#execute', () => {
       it('should call the callback with a result if everything went well', done => {
         const
-          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-          result = {foo: 'bar'},
+          request = new Request({ requestId: 'request' }, { connectionId: 'connectionid' }),
+          result = { foo: 'bar' },
           callback = sinon.spy((err, res) => {
             try {
               should(callback).be.calledOnce();
@@ -401,7 +401,7 @@ describe('Plugin Context', () => {
               should(kuzzle.funnel.executePluginRequest).calledWith(request);
               done();
             }
-            catch(e) {
+            catch (e) {
               done(e);
             }
           });
@@ -413,8 +413,8 @@ describe('Plugin Context', () => {
 
       it('should resolve a Promise with a result if everything went well', () => {
         const
-          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-          result = {foo: 'bar'};
+          request = new Request({ requestId: 'request' }, { connectionId: 'connectionid' }),
+          result = { foo: 'bar' };
 
         kuzzle.funnel.executePluginRequest.resolves(result);
 
@@ -432,7 +432,7 @@ describe('Plugin Context', () => {
 
       it('should call the callback with an error if something went wrong', done => {
         const
-          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          request = new Request({ body: { some: 'request' } }, { connectionId: 'connectionid' }),
           error = new Error('error'),
           callback = sinon.spy(
             (err, res) => {
@@ -443,7 +443,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });
@@ -455,7 +455,7 @@ describe('Plugin Context', () => {
 
       it('should reject a Promise with an error if something went wrong', () => {
         const
-          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          request = new Request({ body: { some: 'request' } }, { connectionId: 'connectionid' }),
           error = new Error('error');
 
         kuzzle.funnel.executePluginRequest.rejects(error);
@@ -479,7 +479,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });
@@ -494,8 +494,8 @@ describe('Plugin Context', () => {
       });
 
       it('should reject if callback argument is not a function', () => {
-        return should(context.accessors.execute({requestId: 'request'}, 'foo'))
-          .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
+        return should(context.accessors.execute({ requestId: 'request' }, 'foo'))
+          .be.rejectedWith({ message: /^Invalid argument: Expected callback to be a function, received "string"/ });
 
       });
 
@@ -563,7 +563,7 @@ describe('Plugin Context', () => {
       it('should throw if no authenticator is provided', () => {
 
         return should(context.accessors.strategies.add('foo', null))
-          .rejectedWith(PluginImplementationError, {message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
+          .rejectedWith(PluginImplementationError, { message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.' });
       });
 
       it('should allow to remove a strategy', () => {

@@ -95,9 +95,9 @@ describe('Test: validation initialization', () => {
     beforeEach(() => {
       kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
         hits: [
-          {_id: 'anIndex#aCollection', _source: {index: 'anIndex', collection: 'aCollection', validation: {a: 'specification'}}},
-          {_id: 'anIndex#anotherCollection', _source: {index: 'anIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
-          {_id: 'anIndex#anotherCollection', _source: {index: 'anotherIndex', collection: 'anotherCollection', validation: {another: 'specification'}}},
+          { _id: 'anIndex#aCollection', _source: { index: 'anIndex', collection: 'aCollection', validation: { a: 'specification' } } },
+          { _id: 'anIndex#anotherCollection', _source: { index: 'anIndex', collection: 'anotherCollection', validation: { another: 'specification' } } },
+          { _id: 'anIndex#anotherCollection', _source: { index: 'anotherIndex', collection: 'anotherCollection', validation: { another: 'specification' } } },
         ],
         length: 3
       });
@@ -136,7 +136,7 @@ describe('Test: validation initialization', () => {
 
       validation.curateCollectionSpecification = curateCollectionSpecificationStub;
 
-      return validation.validateFormat('anIndex', 'aCollection', {a: 'specification'})
+      return validation.validateFormat('anIndex', 'aCollection', { a: 'specification' })
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.true();
@@ -148,7 +148,7 @@ describe('Test: validation initialization', () => {
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
           .rejects(new Error('Mocked Error'));
 
-      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'})
+      return validation.validateFormat('anIndex', 'aCollection', { a: 'bad specification' })
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();
@@ -158,9 +158,9 @@ describe('Test: validation initialization', () => {
     it('should resolve false and provide errors if the specification is not correct and we want some verbose errors', () => {
       const
         curateCollectionSpecificationStub = sinon.stub(validation, 'curateCollectionSpecification')
-          .resolves({isValid: false, errors: ['some error']});
+          .resolves({ isValid: false, errors: ['some error'] });
 
-      return validation.validateFormat('anIndex', 'aCollection', {a: 'bad specification'}, true)
+      return validation.validateFormat('anIndex', 'aCollection', { a: 'bad specification' }, true)
         .then(result => {
           should(curateCollectionSpecificationStub.callCount).be.eql(1);
           should(result.isValid).be.false();
@@ -442,7 +442,7 @@ describe('Test: validation initialization', () => {
         dryRun = false;
 
       checkAllowedPropertiesStub.returns(true);
-      sinon.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+      sinon.stub(validation, 'structureCollectionValidation').returns({ isValid: false, errors: ['an error'] });
 
       return should(validation.curateCollectionSpecification(indexName, collectionName, collectionSpec, dryRun))
         .be.rejectedWith(BadRequestError, {
@@ -462,7 +462,7 @@ describe('Test: validation initialization', () => {
         dryRun = false,
         verboseErrors = true;
 
-      sinon.stub(validation, 'structureCollectionValidation').returns({isValid: false, errors: ['an error']});
+      sinon.stub(validation, 'structureCollectionValidation').returns({ isValid: false, errors: ['an error'] });
 
       checkAllowedPropertiesStub.returns(true);
 
@@ -528,13 +528,13 @@ describe('Test: validation initialization', () => {
     it('should return a structured collection specification if configuration is correct', () => {
       const
         curateFieldSpecificationStub = sinon.spy(function (...args) {
-          return {isValid: true, fieldSpec: args[0]};
+          return { isValid: true, fieldSpec: args[0] };
         }),
         collectionSpec = {
           fields: {
-            aField: {a: 'field', type: 'foo'},
-            anotherField: {another: 'field'},
-            'aField/aSubField': {a: 'subField'}
+            aField: { a: 'field', type: 'foo' },
+            anotherField: { another: 'field' },
+            'aField/aSubField': { a: 'subField' }
           }
         },
         expectedRawFields = {
@@ -559,7 +559,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should return an empty object if no field is specified', () => {
-      should(validation.structureCollectionValidation({fields: {}})).be.deepEqual({});
+      should(validation.structureCollectionValidation({ fields: {} })).be.deepEqual({});
     });
 
     it('should throw an error if one of the field curation throws an error', () => {
@@ -567,9 +567,9 @@ describe('Test: validation initialization', () => {
         curateFieldSpecificationStub = sinon.stub().throws(new Error('an error')),
         collectionSpec = {
           fields: {
-            aField: {a: 'field'},
-            anotherField: {another: 'field'},
-            'aField/aSubField': {a: 'subField'}
+            aField: { a: 'field' },
+            anotherField: { another: 'field' },
+            'aField/aSubField': { a: 'subField' }
           }
         };
 
@@ -590,15 +590,15 @@ describe('Test: validation initialization', () => {
         verboseErrors = true,
         collectionSpec = {
           fields: {
-            aField: {a: 'field'},
-            anotherField: {another: 'field'},
-            'aField/aSubField': {a: 'subField'}
+            aField: { a: 'field' },
+            anotherField: { another: 'field' },
+            'aField/aSubField': { a: 'subField' }
           }
         };
 
-      curateFieldSpecificationStub.onCall(0).returns({isValid: false, errors: ['error one']});
-      curateFieldSpecificationStub.onCall(1).returns({isValid: false, errors: ['error two']});
-      curateFieldSpecificationStub.onCall(2).returns({isValid: false, errors: ['error three']});
+      curateFieldSpecificationStub.onCall(0).returns({ isValid: false, errors: ['error one'] });
+      curateFieldSpecificationStub.onCall(1).returns({ isValid: false, errors: ['error two'] });
+      curateFieldSpecificationStub.onCall(2).returns({ isValid: false, errors: ['error three'] });
 
       validation.curateFieldSpecification = curateFieldSpecificationStub;
 
@@ -616,7 +616,7 @@ describe('Test: validation initialization', () => {
 
   describe('#curateFieldSpecification', () => {
     beforeEach(() => {
-      validation.curateFieldSpecificationFormat = sinon.stub().returns({isValid: true});
+      validation.curateFieldSpecificationFormat = sinon.stub().returns({ isValid: true });
     });
 
     it('should validate and curate field specifications with default configuration', () => {
@@ -637,14 +637,14 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
+      validation.types.string = { validateFieldSpecification: typeValidateSpecValidation };
 
       should(validation.curateFieldSpecification(fieldSpec)).be.deepEqual(expectedReturn);
     });
 
     it('should validate, curate field specifications and use returned typeOptions of the field validation', () => {
       const
-        genericMock = {foo: 'bar'},
+        genericMock = { foo: 'bar' },
         typeValidateSpecValidation = sinon.stub().returns(genericMock),
         fieldSpec = {
           type: 'string'
@@ -661,7 +661,7 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
+      validation.types.string = { validateFieldSpecification: typeValidateSpecValidation };
 
       should(validation.curateFieldSpecification(fieldSpec)).be.deepEqual(expectedReturn);
     });
@@ -673,11 +673,11 @@ describe('Test: validation initialization', () => {
           type: 'string'
         };
 
-      validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
+      validation.types.string = { validateFieldSpecification: typeValidateSpecValidation };
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw(PreconditionError, {message: 'foobar'});
+      }).throw(PreconditionError, { message: 'foobar' });
     });
 
     it('should return an error if type validation returns false with verbose mode', () => {
@@ -688,7 +688,7 @@ describe('Test: validation initialization', () => {
           typeOptions: 'foobar'
         };
 
-      validation.types.string = {validateFieldSpecification: typeValidateSpecValidation};
+      validation.types.string = { validateFieldSpecification: typeValidateSpecValidation };
 
       const response = validation.curateFieldSpecification(
         fieldSpec,
@@ -703,7 +703,7 @@ describe('Test: validation initialization', () => {
 
     it('should validate typeOptions from the field type', () => {
       const
-        typeValidateSpecValidation = sinon.stub().returns({some: 'options'}),
+        typeValidateSpecValidation = sinon.stub().returns({ some: 'options' }),
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -749,7 +749,7 @@ describe('Test: validation initialization', () => {
 
       should(() => {
         validation.curateFieldSpecification(fieldSpec);
-      }).throw({message: /^The object "undefined.undefined.undefined" contains unexpected properties/ });
+      }).throw({ message: /^The object "undefined.undefined.undefined" contains unexpected properties/ });
     });
 
     it('should throw a PluginImplementationError if a type throws a non-KuzzleError error', () => {
@@ -776,7 +776,7 @@ describe('Test: validation initialization', () => {
 
     it('should return an error if a field specification format is invalid in verbose mode', () => {
       const
-        anError = {isValid: false, errors: ['an error']},
+        anError = { isValid: false, errors: ['an error'] },
         fieldSpec = {
           type: 'string',
           typeOptions: {
@@ -784,7 +784,7 @@ describe('Test: validation initialization', () => {
           }
         };
 
-      validation.curateFieldSpecificationFormat = sinon.stub().returns({isValid: false, errors: ['an error']});
+      validation.curateFieldSpecificationFormat = sinon.stub().returns({ isValid: false, errors: ['an error'] });
 
       const response = validation.curateFieldSpecification(fieldSpec, 'anIndex', 'aCollection', 'aField', true);
 
@@ -844,7 +844,7 @@ describe('Test: validation initialization', () => {
     });
 
     it('should throw an error if the field specification contains a not recognized type', () => {
-      const fieldSpec = {type: 'not_recognized'};
+      const fieldSpec = { type: 'not_recognized' };
 
       validation.types = {
         string: 'aType'
@@ -1003,7 +1003,7 @@ describe('Test: validation initialization', () => {
       const validateStub = sinon.stub();
       const index = 'anIndex';
       const collection = 'aCollection';
-      const filter = [{some: 'filters'}];
+      const filter = [{ some: 'filters' }];
       const dryRun = false;
       const expectedQuery = {
         bool: {
@@ -1029,7 +1029,7 @@ describe('Test: validation initialization', () => {
       const validateStub = sinon.stub();
       const index = 'anIndex';
       const collection= 'aCollection';
-      const filter = [{some: 'filters'}];
+      const filter = [{ some: 'filters' }];
       const dryRun = true;
       const expectedQuery = {
         bool: {

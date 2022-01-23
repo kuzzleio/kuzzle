@@ -585,11 +585,11 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-
-      this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
+
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }

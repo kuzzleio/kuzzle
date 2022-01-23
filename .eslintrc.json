@@ -52,7 +52,11 @@
     "vars-on-top": 2,
     "yoda": [2, "never"],
     "sort-keys": ["error", "asc"],
-    "brace-style": ["error", "stroustrup"]
+    "brace-style": ["error", "stroustrup"],
+    "keyword-spacing": ["error", { "before": true, "after": true }],
+    "object-curly-spacing": ["error", "always"],
+    "space-before-function-paren": ["error", "always"],
+    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }]
   },
   "overrides": [
     {

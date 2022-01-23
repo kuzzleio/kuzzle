@@ -268,8 +268,8 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository (
       collection: string,
-      ObjectConstructor: any = null)
-    {
+      ObjectConstructor: any = null
+    ) {
       if (! collection) {
         throw contextError.get('missing_collection');
       }
@@ -447,7 +447,8 @@ function instantiateRequest(request, data, options = {}) {
 
     _data = _request;
     _request = null;
-  } else {
+  }
+  else {
     Object.assign(_options, _request.context.toJSON());
   }
 
@@ -476,7 +477,8 @@ function instantiateRequest(request, data, options = {}) {
         {},
         _request.input.volatile,
         _data.volatile);
-    } else {
+    }
+    else {
       target.input.volatile = _request.input.volatile;
     }
   }

@@ -27,13 +27,13 @@ describe('funnelController.execute', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.config.limits.requestsBufferWarningThreshold = -1;
-    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({_id: '-1'});
+    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({ _id: '-1' });
 
     request = new Request({
       controller: 'foo',
       action: 'bar'
     }, {
-      connection: {id: 'connectionid'},
+      connection: { id: 'connectionid' },
       token: null
     });
 
@@ -93,8 +93,8 @@ describe('funnelController.execute', () => {
     });
 
     it('should immediately reject requests without a controller', done => {
-      request = new Request({action: 'bar'}, {
-        connection: {id: 'connectionid'},
+      request = new Request({ action: 'bar' }, {
+        connection: { id: 'connectionid' },
         token: null
       });
 
@@ -113,8 +113,8 @@ describe('funnelController.execute', () => {
     });
 
     it('should immediately reject requests without an action', done => {
-      request = new Request({controller: 'foo'}, {
-        connection: {id: 'connectionid'},
+      request = new Request({ controller: 'foo' }, {
+        connection: { id: 'connectionid' },
         token: null
       });
 
@@ -133,8 +133,8 @@ describe('funnelController.execute', () => {
     });
 
     it('should immediately reject requests with an unauthorized origin', done => {
-      request = new Request({controller: 'foo', action: 'bar'}, {
-        connection: {id: 'connectionid'},
+      request = new Request({ controller: 'foo', action: 'bar' }, {
+        connection: { id: 'connectionid' },
         token: null
       });
       request.input.headers = {
@@ -159,8 +159,8 @@ describe('funnelController.execute', () => {
     });
 
     it('should not reject requests with an authorized origin', done => {
-      request = new Request({controller: 'foo', action: 'bar'}, {
-        connection: {id: 'connectionid'},
+      request = new Request({ controller: 'foo', action: 'bar' }, {
+        connection: { id: 'connectionid' },
         token: null
       });
       request.input.headers = {
@@ -189,8 +189,8 @@ describe('funnelController.execute', () => {
         ]
       };
 
-      request = new Request({controller: 'foo', action: 'bar'}, {
-        connection: {id: 'connectionid'},
+      request = new Request({ controller: 'foo', action: 'bar' }, {
+        connection: { id: 'connectionid' },
         token: null
       });
       request.input.headers = {};
@@ -232,7 +232,7 @@ describe('funnelController.execute', () => {
         controller: 'auth',
         action: 'login'
       }, {
-        connection: {id: 'connectionid'},
+        connection: { id: 'connectionid' },
         token: null
       });
       funnel.execute(request, (err, res) => {
@@ -417,7 +417,7 @@ describe('funnelController.execute', () => {
     it('should play pending requests in order', done => {
       const
         serialized = request.serialize(),
-        secondRequest = new Request(Object.assign(serialized.data, {id: 'req-2'})),
+        secondRequest = new Request(Object.assign(serialized.data, { id: 'req-2' })),
         firstCallback = sinon.spy(),
         secondCallback = () => {
           should(firstCallback).be.calledOnce();

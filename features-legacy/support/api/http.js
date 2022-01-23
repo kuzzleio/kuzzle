@@ -7,13 +7,13 @@ const rp = require('request-promise');
 
 const routes = require('../../../lib/api/httpRoutes');
 
-function checkAlgorithm(algorithm) {
+function checkAlgorithm (algorithm) {
   const
     supported = ['identity', 'gzip', 'deflate'],
     list = algorithm.split(',').map(a => a.trim().toLowerCase());
 
-  for(const l of list) {
-    if (!supported.some(a => a === l)) {
+  for (const l of list) {
+    if (! supported.some(a => a === l)) {
       throw new Error(`Unsupported compression algorithm: ${l}`);
     }
   }
@@ -43,10 +43,10 @@ class HttpApi {
       verb = 'GET',
       result;
 
-    if (!args) {
+    if (! args) {
       args = {};
     }
-    if (!args.body) {
+    if (! args.body) {
       if (args.args) {
         args.body = args.args;
       }
@@ -68,13 +68,13 @@ class HttpApi {
             hits.push(match.substring(1));
 
             if (match === ':index') {
-              if (!index) {
+              if (! index) {
                 throw new Error('No index provided');
               }
               return index;
             }
             if (match === ':collection') {
-              if (!collection) {
+              if (! collection) {
                 throw new Error('No collection provided');
               }
               return collection;
@@ -175,7 +175,7 @@ class HttpApi {
     const options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
       method: 'POST',
-      body: {bulkData: bulk}
+      body: { bulkData: bulk }
     };
 
     return this.callApi(options);
@@ -212,7 +212,7 @@ class HttpApi {
    * @returns {Promise.<IncomingMessage>}
    */
   async callApi (options) {
-    if (!options.headers) {
+    if (! options.headers) {
       options.headers = {};
     }
 
@@ -228,7 +228,7 @@ class HttpApi {
 
       const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
 
-      for(const algorithm of algorithms) {
+      for (const algorithm of algorithms) {
         if (algorithm === 'gzip') {
           options.body = zlib.gzipSync(options.body);
         }
@@ -271,7 +271,7 @@ class HttpApi {
     const request = {
       url: this.apiPath('_checkToken'),
       method: 'POST',
-      body: {token}
+      body: { token }
     };
 
     if (this.world.currentUser && this.world.currentUser.token) {
@@ -721,7 +721,7 @@ class HttpApi {
   }
 
   getStats (dates) {
-    return this.callApi(this._getRequest(null, null, 'server', 'getStats', {body: dates}));
+    return this.callApi(this._getRequest(null, null, 'server', 'getStats', { body: dates }));
   }
 
   getUser (id) {
@@ -964,7 +964,7 @@ class HttpApi {
     });
   }
 
-  revokeTokens(id) {
+  revokeTokens (id) {
     return this.callApi({
       url: this.apiPath(`users/${id}/tokens`),
       method: 'DELETE'
@@ -1333,12 +1333,12 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  encode(algorithm) {
+  encode (algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;
   }
 
-  decode(algorithm) {
+  decode (algorithm) {
     checkAlgorithm(algorithm);
     this.expectedEncoding = algorithm;
   }

@@ -112,7 +112,7 @@ class App {
   }
 
   _wsOnOpen () {
-    if (!this._wsConfig || !this._wsConfig.open) {
+    if (! this._wsConfig || ! this._wsConfig.open) {
       throw new Error('Missing "open" handler');
     }
 
@@ -120,7 +120,7 @@ class App {
   }
 
   _wsOnClose (code, message) {
-    if (!this._wsConfig || !this._wsConfig.close) {
+    if (! this._wsConfig || ! this._wsConfig.close) {
       throw new Error('Missing "close" handler');
     }
 
@@ -128,7 +128,7 @@ class App {
   }
 
   _wsOnMessage (data) {
-    if (!this._wsConfig || !this._wsConfig.message) {
+    if (! this._wsConfig || ! this._wsConfig.message) {
       throw new Error('Missing "message" handler');
     }
 
@@ -136,7 +136,7 @@ class App {
   }
 
   _wsOnDrain () {
-    if (!this._wsConfig || !this._wsConfig.drain) {
+    if (! this._wsConfig || ! this._wsConfig.drain) {
       throw new Error('Missing "drain" handler');
     }
 
@@ -144,7 +144,7 @@ class App {
   }
 
   _wsOnUpgrade (response, request, context) {
-    if (!this._wsConfig || !this._wsConfig.upgrade) {
+    if (! this._wsConfig || ! this._wsConfig.upgrade) {
       throw new Error('Missing "upgrade" handler');
     }
 

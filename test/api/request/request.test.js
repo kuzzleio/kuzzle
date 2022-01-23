@@ -378,7 +378,7 @@ describe('#Request', () => {
         request.input.args.lang = 'turkish';
 
         should(() => request.getLangParam())
-          .throwError({ id: 'api.assert.invalid_argument'});
+          .throwError({ id: 'api.assert.invalid_argument' });
       });
     });
 
@@ -413,7 +413,7 @@ describe('#Request', () => {
 
         should(() => request.getBoolean('doha')).throw(
           BadRequestError,
-          { id: 'api.assert.invalid_type'});
+          { id: 'api.assert.invalid_type' });
       });
 
       it('returns "false" if the flag is not set (not HTTP)', () => {
@@ -1070,7 +1070,7 @@ describe('#Request', () => {
       });
 
       it('should return the request body', () => {
-        const body = {foo: 'bar'};
+        const body = { foo: 'bar' };
 
         request.input.body = body;
 

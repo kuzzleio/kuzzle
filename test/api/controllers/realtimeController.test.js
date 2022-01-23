@@ -27,8 +27,8 @@ describe('RealtimeController', () => {
         body: {}
       },
       {
-        connection: {id: 'connectionId'},
-        user: {_id: '42'},
+        connection: { id: 'connectionId' },
+        user: { _id: '42' },
       });
   });
 
@@ -199,7 +199,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.ask).be.calledWithMatch('core:realtime:publish', request);
 
-      should(response).match({published: true});
+      should(response).match({ published: true });
     });
 
     it('should add basic metadata to body', async () => {
@@ -226,7 +226,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.ask).calledWithMatch('core:realtime:publish', request);
 
-      should(response).match({published: true});
+      should(response).match({ published: true });
     });
 
   });

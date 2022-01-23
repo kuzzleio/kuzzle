@@ -33,14 +33,14 @@ const defaultConfiguration = require('../../../lib/config/default.config');
 const { version: currentVersion } = require('../../../package.json');
 
 class Version {
-  constructor() {
+  constructor () {
     this.from = null;
     this.list = [];
   }
 }
 
 class UpgradeContext {
-  constructor(args) {
+  constructor (args) {
     // copy constructor
     if (args instanceof UpgradeContext) {
       this.config = args.config;
@@ -96,7 +96,7 @@ class UpgradeContext {
       type: 'confirm'
     });
 
-    if (!retry) {
+    if (! retry) {
       this.log.error('Aborted by user action.');
       process.exit(1);
     }

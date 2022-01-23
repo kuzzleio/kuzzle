@@ -12,7 +12,7 @@ describe('AbstractManifest class', () => {
 
   let Manifest;
 
-  function mockRequireManifest(manifest) {
+  function mockRequireManifest (manifest) {
     return Manifest.__with__('require', m => {
       if (m.endsWith(`${pluginPath}/manifest.json`)) {
         return manifest;

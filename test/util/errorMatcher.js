@@ -60,7 +60,7 @@ function fromError (error) {
 
     // makes debugging easier, since sinon does not have the expectedError
     // object
-    if (!res) {
+    if (! res) {
       // eslint-disable-next-line no-console
       console.error(`Error: error objects do not match (env = ${global.NODE_ENV})
 Expected:

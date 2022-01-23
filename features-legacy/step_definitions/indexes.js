@@ -36,7 +36,7 @@ Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, funct
   var main = function (callbackAsync) {
     this.api.listIndexes()
       .then(body => {
-        if (body.error && !not) {
+        if (body.error && ! not) {
           if (body.error.message) {
             callbackAsync(body.error.message);
             return false;
@@ -46,7 +46,7 @@ Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, funct
           return false;
         }
 
-        if (!body.result || !body.result.indexes) {
+        if (! body.result || ! body.result.indexes) {
           if (not) {
             callbackAsync();
             return true;
@@ -86,7 +86,7 @@ Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, funct
   };
 
 
-  async.retry({times: 20, interval: 20}, main.bind(this), function (err) {
+  async.retry({ times: 20, interval: 20 }, main.bind(this), function (err) {
     if (err) {
       if (err.message) {
         err = err.message;

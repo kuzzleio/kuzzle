@@ -25,7 +25,7 @@ describe('funnel.executePluginRequest', () => {
   });
 
   it('should fail if an unknown controller is invoked', () => {
-    const rq = new Request({controller: 'foo', action: 'bar'});
+    const rq = new Request({ controller: 'foo', action: 'bar' });
 
     return funnel.executePluginRequest(rq)
       .then(() => Promise.reject(new Error('Should not resolve')))
@@ -37,7 +37,7 @@ describe('funnel.executePluginRequest', () => {
   });
 
   it('should execute the request', () => {
-    const rq = new Request({controller: 'testme', action: 'succeed'});
+    const rq = new Request({ controller: 'testme', action: 'succeed' });
 
     return funnel.executePluginRequest(rq)
       .then(res => {
@@ -53,7 +53,7 @@ describe('funnel.executePluginRequest', () => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.config.dump.enabled = true;
 
-    const rq = new Request({controller: 'testme', action: 'fail'});
+    const rq = new Request({ controller: 'testme', action: 'fail' });
 
     const callback = () => {
       setTimeout(() => {
@@ -82,7 +82,7 @@ describe('funnel.executePluginRequest', () => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.config.dump.enabled = false;
 
-    const rq = new Request({controller: 'testme', action: 'fail'});
+    const rq = new Request({ controller: 'testme', action: 'fail' });
 
     const callback = () => {
       setTimeout(() => {
@@ -90,7 +90,7 @@ describe('funnel.executePluginRequest', () => {
           should(kuzzle.dump).not.be.called();
           done();
         }
-        catch(e) {
+        catch (e) {
           done(e);
         }
       }, 50);

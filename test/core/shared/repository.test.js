@@ -16,8 +16,8 @@ describe('Test: repositories/repository', () => {
   let kuzzle;
   let repository;
   let ObjectConstructor;
-  const dbPojo = {_id: 'someId', _source: {some: 'source'}, found: true};
-  const cachePojo = {_id: 'someId', some: 'source'};
+  const dbPojo = { _id: 'someId', _source: { some: 'source' }, found: true };
+  const cachePojo = { _id: 'someId', some: 'source' };
 
   before(() => {
     ObjectConstructor = function () {};
@@ -103,8 +103,8 @@ describe('Test: repositories/repository', () => {
       });
 
       const results = await repository.loadMultiFromDatabase([
-        {_id:'persisted'},
-        {_id:'persisted'},
+        { _id:'persisted' },
+        { _id:'persisted' },
       ]);
 
       should(results).be.an.Array().and.not.be.empty();
@@ -121,7 +121,7 @@ describe('Test: repositories/repository', () => {
         items: [],
       });
 
-      const results = await repository.loadMultiFromDatabase([{_id:'null'}]);
+      const results = await repository.loadMultiFromDatabase([{ _id:'null' }]);
 
       should(results).be.an.Array().and.be.empty();
     });
@@ -262,7 +262,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#persistToDatabase', () => {
     it('should call the createOrReplace method of internal Engine', async () => {
-      const object = {_id: 'someId', some: 'source'};
+      const object = { _id: 'someId', some: 'source' };
 
       await repository.persistToDatabase(object);
 
@@ -327,7 +327,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#persistToCache', () => {
     it('should set the object if the ttl is false', async () => {
-      await repository.persistToCache(cachePojo, {ttl: false, key: 'someKey'});
+      await repository.persistToCache(cachePojo, { ttl: false, key: 'someKey' });
 
       should(kuzzle.ask).calledWith(
         'core:cache:internal:store',
@@ -336,7 +336,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should set the object with a ttl by default', async () => {
-      await repository.persistToCache(cachePojo, {ttl: 500, key: 'someKey'});
+      await repository.persistToCache(cachePojo, { ttl: 500, key: 'someKey' });
 
       should(kuzzle.ask).calledWith(
         'core:cache:internal:store',
@@ -348,7 +348,7 @@ describe('Test: repositories/repository', () => {
 
   describe('#refreshCacheTTL', () => {
     it('should persist the object if the ttl is set to false', async () => {
-      await repository.refreshCacheTTL(cachePojo, {ttl: false});
+      await repository.refreshCacheTTL(cachePojo, { ttl: false });
 
       should(kuzzle.ask)
         .calledWith(
@@ -357,7 +357,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should refresh the ttl with the provided TTL', async () => {
-      await repository.refreshCacheTTL(cachePojo, {ttl: 500});
+      await repository.refreshCacheTTL(cachePojo, { ttl: 500 });
 
       should(kuzzle.ask).calledWith(
         'core:cache:internal:expire',
@@ -366,7 +366,7 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should use the provided object TTL if one has been defined', async () => {
-      const pojo = Object.assign({}, cachePojo, {ttl: 1234});
+      const pojo = Object.assign({}, cachePojo, { ttl: 1234 });
 
       await repository.refreshCacheTTL(pojo);
 
@@ -377,9 +377,9 @@ describe('Test: repositories/repository', () => {
     });
 
     it('should use the provided ttl instead of the object-defined one', () => {
-      const pojo = Object.assign({}, cachePojo, {ttl: 1234});
+      const pojo = Object.assign({}, cachePojo, { ttl: 1234 });
 
-      repository.refreshCacheTTL(pojo, {ttl: 500});
+      repository.refreshCacheTTL(pojo, { ttl: 500 });
 
       should(kuzzle.ask).calledWith(
         'core:cache:internal:expire',
@@ -404,7 +404,7 @@ describe('Test: repositories/repository', () => {
       const object = Object.assign(
         new ObjectConstructor(),
         cachePojo._source,
-        {_id: cachePojo._id});
+        { _id: cachePojo._id });
       const serialized = repository.serializeToCache(object);
 
       should(Object.keys(serialized).length).be.exactly(Object.keys(object).length);
@@ -431,7 +431,7 @@ describe('Test: repositories/repository', () => {
         total: 1,
       });
 
-      const response = await repository.search({query:'noquery'});
+      const response = await repository.search({ query:'noquery' });
 
       should(response).be.an.Object();
       should(response.hits).be.an.Array();
@@ -440,7 +440,7 @@ describe('Test: repositories/repository', () => {
         'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         repository.collection,
-        {query:'noquery'},
+        { query:'noquery' },
         {});
     });
 
@@ -560,21 +560,21 @@ describe('Test: repositories/repository', () => {
       repository.delete = sinon.stub();
       repository.load = sinon.stub();
       repository.collection = 'profiles';
-      repository.search.resolves({total: 6, scrollId: 'foobarRole', hits: [
-        {_id: 'admin' },
-        {_id: 'role1' },
-        {_id: 'role2' },
-        {_id: 'role3' }
-      ]});
+      repository.search.resolves({ total: 6, scrollId: 'foobarRole', hits: [
+        { _id: 'admin' },
+        { _id: 'role1' },
+        { _id: 'role2' },
+        { _id: 'role3' }
+      ] });
       repository.scroll.onFirstCall().resolves({
         total: 1,
         scrollId: 'foobarRole2',
-        hits: [{_id: 'role4'}]
+        hits: [{ _id: 'role4' }]
       });
       repository.scroll.onSecondCall().resolves({
         total: 1,
         scrollId: 'foobarRole2',
-        hits: [{_id: 'role5'}]
+        hits: [{ _id: 'role5' }]
       });
       for (let i = 0; i < 6; i++) {
         repository.load.onCall(i).resolves({ _id: `role${i + 1}` });

@@ -19,7 +19,7 @@ const {
 describe('ServerController', () => {
   let serverController;
   let kuzzle;
-  let foo = {foo: 'bar'};
+  let foo = { foo: 'bar' };
   let index = '%text';
   let collection = 'unit-test-serverController';
   let request;
