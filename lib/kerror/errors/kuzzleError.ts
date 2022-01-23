@@ -44,7 +44,7 @@ export class KuzzleError extends Error {
    */
   public id: string;
 
-  constructor(message: string, status: number, id?: string, code?: number) {
+  constructor (message: string, status: number, id?: string, code?: number) {
     super(message);
 
     this.status = status;

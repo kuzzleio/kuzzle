@@ -109,7 +109,7 @@ export class Koncorde {
    * @param {Object} obj - object containing a geopoint
    * @returns {Coordinate} or null if no accepted format is found
    */
-  static convertGeopoint(point: string|JSONObject): { lat: number; lon: number; } {
+  static convertGeopoint (point: string|JSONObject): { lat: number; lon: number; } {
     return KoncordeV4.convertGeopoint(point);
   }
 
