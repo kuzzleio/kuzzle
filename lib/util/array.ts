@@ -43,9 +43,11 @@ export function binarySearch(array: any[], predicate: (value: any) => number) {
     const comparison = predicate(array[index]);
     if (comparison < 0) {
       upperBound = index - 1;
-    } else if (comparison > 0) {
+    }
+    else if (comparison > 0) {
       lowerBound = index + 1;
-    } else {
+    }
+    else {
       return index;
     }
   }
