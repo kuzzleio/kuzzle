@@ -35,7 +35,7 @@ Koncorde `bool` operator and `regexp` clause are not supported for search querie
 
 <SinceBadge version="auto-version">
 
-This method also support searching accross multiple `Indexes` and `Collections`
+This method also support searching accross multiple indexes and collections
 using the `targets` parameter instead of `index`, `collection` parameters.
 See [Target Format](#target-format).
 

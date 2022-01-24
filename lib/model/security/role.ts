@@ -155,9 +155,7 @@ export default class Role {
       if (collection > collectionName) {
         return 1;
       }
-      return collection < collectionName
-        ? -1
-        : 0;
+      return collection < collectionName ? -1 : 0;
     });
 
     return indexOfCollection > -1; // Collection found

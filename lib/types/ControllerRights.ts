@@ -22,7 +22,7 @@
 
 export type ControllerRight = {
   actions: {
-    [key: string]: boolean
+    [action: string]: boolean
   }
 };
 
@@ -30,6 +30,6 @@ export type ControllerRight = {
  * A Controller Rights definition
  */
 export type ControllerRights = {
-  [key: string]: ControllerRight
+  [controller: string]: ControllerRight
 };
 
