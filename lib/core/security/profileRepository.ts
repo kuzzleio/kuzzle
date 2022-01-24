@@ -197,7 +197,7 @@ export default class ProfileRepository extends Repository {
 
     const profile = await super.load(id);
 
-    profile.optimizedPolicies = this._optimizePolicies(profile.policies);
+    profile.optimizedPolicies = this.optimizePolicies(profile.policies);
     this.profiles.set(id, profile);
 
     return profile;
@@ -230,7 +230,7 @@ export default class ProfileRepository extends Repository {
       if (!profile) {
         profile = this.loadOneFromDatabase(id)
           .then(p => {
-            p.optimizedPolicies = this._optimizePolicies(p.policies);
+            p.optimizedPolicies = this.optimizePolicies(p.policies);
             this.profiles.set(id, p);
             return p;
           });
@@ -482,7 +482,7 @@ export default class ProfileRepository extends Repository {
 
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
     // Recompute optimized policies based on new policies
-    updatedProfile.optimizedPolicies = this._optimizePolicies(updatedProfile.policies);
+    updatedProfile.optimizedPolicies = this.optimizePolicies(updatedProfile.policies);
 
     this.profiles.set(profile._id, updatedProfile);
     return updatedProfile;
@@ -551,12 +551,12 @@ export default class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param {Object[]} policies 
    */
-  _optimizePolicies(policies: Policy[]): OptimizedPolicy[] {
+  private optimizePolicies(policies: Policy[]): OptimizedPolicy[] {
     if (!policies) {
       return [];
     }
     
-    return policies.map(this._optimizePolicy);
+    return policies.map(this.optimizePolicy);
   }
 
   /**
@@ -567,7 +567,7 @@ export default class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param policy
    */
-  _optimizePolicy(policy: Policy): OptimizedPolicy {
+  private optimizePolicy(policy: Policy): OptimizedPolicy {
     const indexes = new Map();
 
     if (!policy.restrictedTo) {

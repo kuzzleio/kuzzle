@@ -373,13 +373,13 @@ describe('Test: security/profileRepository', () => {
     it('should compute the optimized policies', async () => {
       profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
       profileRepository.persistToDatabase = sinon.stub().resolves(null);
-      profileRepository._optimizePolicies = sinon.stub().resolves([]);
+      profileRepository.optimizePolicies = sinon.stub().resolves([]);
       kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
       kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
 
       await profileRepository.validateAndSaveProfile(testProfile);
 
-      should(profileRepository._optimizePolicies).be.calledOnce();
+      should(profileRepository.optimizePolicies).be.calledOnce();
     });
 
     it('should reject if we try to remove the anonymous role from the anonymous profile', () => {
@@ -460,11 +460,11 @@ describe('Test: security/profileRepository', () => {
     it('should compute the optimized policies', async () => {
       sinon.stub(Repository.prototype, 'load').resolves(testProfile);
 
-      profileRepository._optimizePolicies = sinon.stub().resolves([]);
+      profileRepository.optimizePolicies = sinon.stub().resolves([]);
 
       await profileRepository.load('foobar');
 
-      should(profileRepository._optimizePolicies).be.calledOnce();
+      should(profileRepository.optimizePolicies).be.calledOnce();
     });
   });
 
@@ -695,9 +695,9 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
-  describe('#_optimizePolicy', () => {
+  describe('#optimizePolicy', () => {
     it('should merge restriction with same indices', () => {
-      const policy = profileRepository._optimizePolicy({
+      const policy = profileRepository.optimizePolicy({
         roleId: 'foo',
         restrictedTo: [
           {
@@ -720,7 +720,7 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should remove duplicated collections and sort the collections', () => {
-      const policy = profileRepository._optimizePolicy({
+      const policy = profileRepository.optimizePolicy({
         roleId: 'foo',
         restrictedTo: [
           {
