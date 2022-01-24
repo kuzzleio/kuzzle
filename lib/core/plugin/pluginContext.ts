@@ -175,6 +175,10 @@ export class PluginContext {
      */
     Koncorde: Koncorde;
     /**
+     * Mutex class
+     */
+    Mutex: Mutex;
+    /**
      * Plugin private storage space
      */
     Repository: new (collection: string, objectConstructor: any) => Repository;
@@ -308,6 +312,7 @@ export class PluginContext {
       BaseValidationType: require('../validation/baseType'),
       ESClient: PluginContextESClient as unknown as new () => Client,
       Koncorde: Koncorde as any,
+      Mutex: Mutex as any,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
