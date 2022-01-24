@@ -87,7 +87,7 @@ export class User {
     }
 
     // Every target must be allowed by at least one profile
-    return this._areTargetsAllowed(profiles, targets);
+    return this.areTargetsAllowed(profiles, targets);
   }
 
   /**
@@ -95,7 +95,7 @@ export class User {
    * while skipping the ones that includes a wildcard since they will be expanded
    * later on, based on index and collections authorized for the given user.
    */
-  async _areTargetsAllowed(profiles: Profile[], targets: Target[]) {
+  private async areTargetsAllowed(profiles: Profile[], targets: Target[]) {
     const profilesPolicies = await Bluebird.map(profiles, profile => profile.getAllowedPolicies());
 
     // Every target must be allowed by at least one profile
