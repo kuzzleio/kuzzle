@@ -649,13 +649,6 @@ export class KuzzleRequest {
   }
 
   /**
-   * Returns a list of targets
-   */
-  getTargets(): Target[] {
-    return this.getArray('targets', []);
-  }
-
-  /**
    * Returns the provided request's body
    *
    * @param def default value to return if the body is not set

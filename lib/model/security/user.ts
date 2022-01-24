@@ -73,7 +73,7 @@ export default class User {
       return false;
     }
 
-    const targets = request.getTargets();
+    const targets = request.getArray('targets', []);
 
     const profiles = await this.getProfiles();
     if (targets.length === 0) {
