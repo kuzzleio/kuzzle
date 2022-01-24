@@ -198,7 +198,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: new () => Client
+    ESClient: typeof Client
   };
 
   /**
@@ -310,7 +310,7 @@ export class PluginContext {
 
     this.constructors = {
       BaseValidationType: require('../validation/baseType'),
-      ESClient: PluginContextESClient as unknown as new () => Client,
+      ESClient: Client,
       Koncorde: Koncorde as any,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
