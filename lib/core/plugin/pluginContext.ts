@@ -155,6 +155,12 @@ export class PluginContext {
      * @type {BackendCluster}
      */
     cluster: BackendCluster,
+
+
+    /**
+     * Current Kuzzle node unique identifier
+     */
+    nodeId: string;
   };
 
   public config: JSONObject;
@@ -168,6 +174,10 @@ export class PluginContext {
      * @deprecated import directly: `import { Koncorde } from 'kuzzle'`
      */
     Koncorde: Koncorde;
+    /**
+     * Mutex class
+     */
+    Mutex: typeof Mutex;
     /**
      * Plugin private storage space
      */
@@ -188,7 +198,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: new () => Client
+    ESClient: typeof Client
   };
 
   /**
@@ -293,7 +303,7 @@ export class PluginContext {
     }
 
     // eslint-disable-next-line no-inner-declarations
-    function PluginContextESClient () {
+    function PluginContextESClient (): Client {
       return Elasticsearch
         .buildClient(global.kuzzle.config.services.storageEngine.client);
     }
@@ -302,6 +312,7 @@ export class PluginContext {
       BaseValidationType: require('../validation/baseType'),
       ESClient: PluginContextESClient as unknown as new () => Client,
       Koncorde: Koncorde as any,
+      Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
@@ -328,6 +339,7 @@ export class PluginContext {
     this.accessors = {
       cluster: new BackendCluster(),
       execute: (request, callback) => execute(request, callback),
+      nodeId: global.kuzzle.id,
       sdk: new EmbeddedSDK(),
       storage: {
         bootstrap: collections => pluginStore.init(collections),
