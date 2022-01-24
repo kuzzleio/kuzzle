@@ -93,22 +93,8 @@ const user = await context.accessors.execute(req)
 ```
 
 ## `Mutex`
+<SinceBadge version="auto-version" />
 
 Instantiates a new mutex, allowing to lock a resource. Works both with single-node and cluster environments.
 
 See [Mutex documentation](/core/2/framework/classes/mutex) for more information.
-
-### Arguments
-
-This class constructor takes no argument.
-
-### Usage
-
-```js
-// Instantiate a new mutex
-const mutex =  new context.constructors.Mutex();
-
-mutex.lock();
-// Do something that should be executed by only one Kuzzle instance at a time
-mutex.unlock();
-```

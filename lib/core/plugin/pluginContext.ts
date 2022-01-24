@@ -177,7 +177,7 @@ export class PluginContext {
     /**
      * Mutex class
      */
-    Mutex: new(resource: String, {attemptDelay, timeout, ttl}?: MutexOptions) => Mutex;
+    Mutex: typeof Mutex;
     /**
      * Plugin private storage space
      */
