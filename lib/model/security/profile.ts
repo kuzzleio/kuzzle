@@ -32,7 +32,7 @@ import { KuzzleRequest } from '../../../index';
 const assertionError = kerror.wrap('api', 'assert');
 
 /** @internal */
-export type InternalProfilePolicy = {
+type InternalProfilePolicy = {
   role: Role;
   restrictedTo: OptimizedPolicyRestrictions;
 };
@@ -42,6 +42,7 @@ export type InternalProfilePolicy = {
  */
 export default class Profile {
   public _id: string;
+  /** @deprecated use optimizedPolicies instead */
   public policies: Policy[];
   public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
