@@ -31,7 +31,7 @@ import Store from '../shared/store';
 import Elasticsearch from '../../service/storage/elasticsearch';
 import { isPlainObject } from '../../util/safeObject';
 import Promback from '../../util/promback';
-import { Mutex } from '../../util/mutex';
+import { Mutex, MutexOptions } from '../../util/mutex';
 import kerror from '../../kerror';
 import storeScopeEnum from '../storage/storeScopeEnum';
 import {
@@ -177,7 +177,7 @@ export class PluginContext {
     /**
      * Mutex class
      */
-    Mutex: Mutex;
+    Mutex: new(resource: String, {attemptDelay, timeout, ttl}?: MutexOptions) => Mutex;
     /**
      * Plugin private storage space
      */
@@ -312,7 +312,7 @@ export class PluginContext {
       BaseValidationType: require('../validation/baseType'),
       ESClient: PluginContextESClient as unknown as new () => Client,
       Koncorde: Koncorde as any,
-      Mutex: Mutex as any,
+      Mutex: Mutex as typeof Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
