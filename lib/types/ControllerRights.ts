@@ -29,6 +29,15 @@ export type ControllerRight = {
 /**
  * @internal
  * A Controller Rights definition
+ * 
+ * @example
+ * {
+ *   "document": {
+ *     actions: {
+ *       "create": true,
+ *     }
+ *   }
+ * }
  */
 export type ControllerRights = {
   [controller: string]: ControllerRight
