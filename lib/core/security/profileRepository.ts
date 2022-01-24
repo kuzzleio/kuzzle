@@ -22,7 +22,7 @@
 import { omit } from 'lodash';
 import Bluebird from 'bluebird';
 
-import Profile from '../../model/security/profile';
+import { Profile } from '../../model/security/profile';
 import Repository from '../shared/repository';
 import kerror from '../../kerror';
 import cacheDbEnum from '../cache/cacheDbEnum';
@@ -57,7 +57,7 @@ type UpdateOptions = {
  * @class ProfileRepository
  * @extends Repository
  */
-export default class ProfileRepository extends Repository {
+export class ProfileRepository extends Repository {
   private module: any;
   private profiles: Map<string, Profile>;
 

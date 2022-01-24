@@ -31,7 +31,7 @@ const assertionError = kerror.wrap('api', 'assert');
 /**
  * @class Role
  */
-export default class Role {
+export class Role {
   public controllers: ControllerRights;
   public _id: string;
 

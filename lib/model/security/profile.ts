@@ -26,7 +26,7 @@ import Rights from './rights';
 import kerror from '../../kerror';
 import { isPlainObject } from '../../util/safeObject';
 import { Policy, OptimizedPolicy, OptimizedPolicyRestrictions } from '../../types/index';
-import Role from './role';
+import { Role } from './role';
 import { KuzzleRequest } from '../../../index';
 
 const assertionError = kerror.wrap('api', 'assert');
@@ -40,7 +40,7 @@ type InternalProfilePolicy = {
 /**
  * @class Profile
  */
-export default class Profile {
+export class Profile {
   public _id: string;
   /** @deprecated use optimizedPolicies instead */
   public policies: Policy[];

@@ -23,14 +23,14 @@ import Rights from './rights';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
 import kerror from '../../kerror';
-import Profile from './profile';
+import { Profile } from './profile';
 import { KuzzleRequest } from '../../../index';
 import { Target } from '../../types';
 
 /**
  * @class User
  */
-export default class User {
+export class User {
   public _id: string;
   public profileIds: string[];
 
