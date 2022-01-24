@@ -95,28 +95,28 @@ describe('#base/native controller', () => {
     });
   });
 
-  describe('#assertAreTargetsValid', () => {
+  describe('#assertTargetsAreValid', () => {
     it('should reject if a target index is missing', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { collections: 'foo' } ]);
+        nativeController.assertTargetsAreValid([ { collections: 'foo' } ]);
       })()).rejectedWith(BadRequestError, {id: 'api.assert.missing_argument'});
     });
 
     it('should reject if target collections are missing', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index' } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index' } ]);
       })()).rejectedWith(BadRequestError, {id: 'api.assert.missing_argument'});
     });
 
     it('should reject if target collections are empty', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index', collections: [] } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index', collections: [] } ]);
       })()).rejectedWith(BadRequestError, {id: 'api.assert.empty_argument'});
     });
 
     it('should not reject if target collections are empty and empty collections are allowed', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid(
+        nativeController.assertTargetsAreValid(
           [ { index: 'index', collections: [] } ],
           {emptyCollectionsAllowed: true}
         );
@@ -125,7 +125,7 @@ describe('#base/native controller', () => {
 
     it('should not reject if target collections are missing and empty collections are allowed', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid(
+        nativeController.assertTargetsAreValid(
           [ { index: 'index' } ],
           {emptyCollectionsAllowed: true}
         );
@@ -134,25 +134,25 @@ describe('#base/native controller', () => {
 
     it('should reject if target field collections is not an array', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index', collections: '' } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index', collections: '' } ]);
       })()).rejectedWith(BadRequestError, {id: 'api.assert.invalid_type'});
     });
 
     it('should reject if one of the collections is not a string', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index', collections: [42] } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index', collections: [42] } ]);
       })()).rejectedWith(BadRequestError, {id: 'api.assert.invalid_type'});
     });
 
     it('should reject if one of a collection has multi targets characters', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index', collections: ['a,b'] } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index', collections: ['a,b'] } ]);
       })()).rejectedWith({id: 'services.storage.invalid_target_format'});
     });
 
     it('should reject if the index has multi targets characters', () => {
       should((async () => {
-        nativeController.assertAreTargetsValid([ { index: 'index,bar', collections: ['foo'] } ]);
+        nativeController.assertTargetsAreValid([ { index: 'index,bar', collections: ['foo'] } ]);
       })()).rejectedWith({id: 'services.storage.invalid_target_format'});
     });
 

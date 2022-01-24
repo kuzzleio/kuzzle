@@ -114,7 +114,7 @@ describe('DocumentController', () => {
       ];
       request.input.action = 'search';
 
-      documentController.assertAreTargetsValid = sinon.stub();
+      documentController.assertTargetsAreValid = sinon.stub();
       kuzzle.ask
         .withArgs('core:storage:public:document:multiSearch')
         .resolves({
@@ -125,7 +125,7 @@ describe('DocumentController', () => {
           total: 'total',
         });
       await documentController.search(request);
-      return should(documentController.assertAreTargetsValid).calledWith([
+      return should(documentController.assertTargetsAreValid).calledWith([
         { index: 'foo', collections: ['bar'] }
       ]);
     });
