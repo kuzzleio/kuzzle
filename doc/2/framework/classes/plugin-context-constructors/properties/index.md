@@ -27,7 +27,7 @@ See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elast
 
 This class constructor takes no argument.
 
-## Usage
+### Usage
 
 ```js
 const esRequest =  {
@@ -81,7 +81,7 @@ KuzzleRequest(originalRequest: KuzzleRequest, requestPayload: RequestPayload, op
 | `options` | <pre>JSONObject</pre> | Additional options passed to the [RequestContext](/core/2/framework/classes/request-context) constructor |
 
 
-## Usage
+### Usage
 
 ```js
 const req = new context.constructors.KuzzleRequest(request, {
@@ -96,7 +96,7 @@ const user = await context.accessors.execute(req)
 
 Constructor for [Elasticsearch SDK Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
 
-## Usage
+### Usage
 
 ```js
 const esRequest =  {
