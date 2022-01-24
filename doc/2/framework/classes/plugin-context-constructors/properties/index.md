@@ -91,24 +91,3 @@ const req = new context.constructors.KuzzleRequest(request, {
 
 const user = await context.accessors.execute(req) 
 ```
-
-## `StorageClient`
-
-Constructor for [Elasticsearch SDK Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
-
-### Usage
-
-```js
-const esRequest =  {
-  body: {
-    name: 'Aschen',
-    age: 27
-  },
-  index: '&nyc-open-data.yellow-taxi',
-  op_type: 'create'
-}
-
-// Instantiate and use a new client
-const storageClient = new app.storage.Client()
-await storageClient.index(esRequest)
-```
