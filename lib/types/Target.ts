@@ -19,7 +19,17 @@
  * limitations under the License.
  */
 
-
+/**
+ * Target definition
+ * 
+ * Target are used to specify multiple index and collection
+ * inside of a single query
+ * @example
+ * {
+ *   "index": "yellow-taxi",
+ *   "collections": ["foo", "bar"]
+ * }
+ */
 export type Target = {
   index?: string;
   collections?: string[];
