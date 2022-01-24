@@ -198,7 +198,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: typeof Client
+    ESClient: Client
   };
 
   /**
@@ -302,9 +302,15 @@ export class PluginContext {
       } as Repository;
     }
 
+    // eslint-disable-next-line no-inner-declarations
+    function PluginContextESClient () {
+      return Elasticsearch
+        .buildClient(global.kuzzle.config.services.storageEngine.client);
+    }
+
     this.constructors = {
       BaseValidationType: require('../validation/baseType'),
-      ESClient: Elasticsearch.buildClient(global.kuzzle.config.services.storageEngine.client),
+      ESClient: Elasticsearch.buildClient(global.kuzzle.config.services.storageEngine.client) as Client,
       Koncorde: Koncorde as any,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
