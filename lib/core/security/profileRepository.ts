@@ -30,7 +30,7 @@ import { JSONObject } from 'kuzzle-sdk';
 import { Policy, OptimizedPolicy } from '../../../index';
 
 /** @internal */
-export type CreateOrReplaceOptions = {
+type CreateOrReplaceOptions = {
   method?: string,
   refresh?: string,
   strict?: boolean,
@@ -38,7 +38,7 @@ export type CreateOrReplaceOptions = {
 };
 
 /** @internal */
-export type ValidateAndSaveProfileOptions = {
+type ValidateAndSaveProfileOptions = {
   method?: string,
   refresh?: string,
   strict?: boolean,
@@ -46,7 +46,7 @@ export type ValidateAndSaveProfileOptions = {
 };
 
 /** @internal */
-export type UpdateOptions = {
+type UpdateOptions = {
   userId?: string,
   refresh?: string,
   strict?: boolean,
