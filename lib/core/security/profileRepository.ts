@@ -477,7 +477,7 @@ export default class ProfileRepository extends Repository {
       throw kerror.get('security', 'profile', 'missing_anonymous_role');
     }
 
-    delete profile.optimizedPolicies; // Remove optimized policies
+    profile.optimizedPolicies = undefined; // Remove optimized policies
     await super.persistToDatabase(profile, { method, refresh, retryOnConflict });
 
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
