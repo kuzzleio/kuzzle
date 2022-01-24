@@ -312,7 +312,7 @@ export class PluginContext {
       BaseValidationType: require('../validation/baseType'),
       ESClient: PluginContextESClient as unknown as new () => Client,
       Koncorde: Koncorde as any,
-      Mutex: Mutex as typeof Mutex,
+      Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
