@@ -19,12 +19,23 @@
  * limitations under the License.
  */
 
+/**
+ * Policy Restiction definition of
+ * a index and its collections
+ * 
+ * @example
+ * {
+ *   "index": "index-yellow-taxi",
+ *   "collections": ["foo", "bar"]
+ * }
+ */
 export type PolicyRestrictions = {
   index: string,
   collections: string[],
 };
 
 /**
+ * @internal
  * A policy definition
  * the key {string} represent the index name
  * the value {string[]} represent the collection names

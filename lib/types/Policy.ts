@@ -21,12 +21,27 @@
 
 import { PolicyRestrictions, OptimizedPolicyRestrictions } from './PolicyRestrictions';
 
-
+/** 
+ * Policy definition for a role
+ * and its restrictions
+ * 
+ * @example
+ * {
+ *   "roleId": "admin",
+ *   "restrictedTo": [
+ *     {
+ *       "index": "index-yellow-taxi",
+ *       "collections": ["foo", "bar"]
+ *     }
+ *   ]
+ * }
+ */
 export type Policy = {
   roleId: string;
   restrictedTo?: PolicyRestrictions[];
 };
 
+/** @internal */
 export type OptimizedPolicy = {
   roleId: string;
   restrictedTo?: OptimizedPolicyRestrictions;

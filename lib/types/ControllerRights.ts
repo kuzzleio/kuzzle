@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-
+/** @internal */
 export type ControllerRight = {
   actions: {
     [action: string]: boolean
@@ -27,6 +27,7 @@ export type ControllerRight = {
 };
 
 /**
+ * @internal
  * A Controller Rights definition
  */
 export type ControllerRights = {
