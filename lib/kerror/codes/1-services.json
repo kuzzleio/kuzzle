@@ -277,8 +277,8 @@
           "class": "PreconditionError"
         },
         "invalid_multi_index_collection_usage": {
-          "description": "The arguments \"index\" and \"collection\" have been used instead of \"targets\" to specify multiple index and collections",
-          "message": "The arguments \"index\" and \"collection\" have been used instead of \"targets\" to specify multiple index and collections",
+          "description": "Searches on multiple collections should be achieved with the \"targets\" argument who contains list of indexes and collections to search within.",
+          "message": "Searches on multiple collections should be achieved with the \"targets\" argument who contains list of indexes and collections to search within.",
           "code": 49,
           "class": "BadRequestError"
         },
