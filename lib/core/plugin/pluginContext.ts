@@ -304,7 +304,7 @@ export class PluginContext {
 
     this.constructors = {
       BaseValidationType: require('../validation/baseType'),
-      ESClient: Elasticsearch.buildClient(global.kuzzle.config.services.storageEngine.client) as Client,
+      ESClient: Elasticsearch.buildClient(global.kuzzle.config.services.storageEngine.client),
       Koncorde: Koncorde as any,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (collection: string, objectConstructor: any) => Repository,
