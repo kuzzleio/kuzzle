@@ -58,7 +58,7 @@
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
     "koncorde": "^4.0.2",
-    "kuzzle-plugin-auth-passport-local": "^6.3.5",
+    "kuzzle-plugin-auth-passport-local": "^6.3.6",
     "kuzzle-plugin-logger": "^3.0.3",
     "kuzzle-sdk": "7.8.2",
     "kuzzle-vault": "^2.0.4",
