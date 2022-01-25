@@ -95,13 +95,13 @@ describe('DocumentController', () => {
         { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
-    it('should reject if no index and collection or targets are specified', () => {
+    it('should reject if no index and collection or targets are specified', async () => {
       request.input.args.index = null;
       request.input.args.collection = null;
       request.input.args.targets = null;
       request.input.action = 'search';
 
-      return should(documentController.search(request)).rejectedWith(
+      await should(documentController.search(request)).rejectedWith(
         BadRequestError,
         { id: 'api.assert.missing_argument' });
     });
