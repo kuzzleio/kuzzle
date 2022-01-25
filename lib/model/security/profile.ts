@@ -42,7 +42,6 @@ type InternalProfilePolicy = {
  */
 export class Profile {
   public _id: string;
-  /** @deprecated use optimizedPolicies instead */
   public policies: Policy[];
   public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
