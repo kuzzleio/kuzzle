@@ -33,6 +33,7 @@ Koncorde filters will be translated into an Elasticsearch query.
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
 :::
 
+## Multi Search
 <SinceBadge version="auto-version">
 
 This method also support searching accross multiple indexes and collections
