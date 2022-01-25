@@ -11,7 +11,7 @@ const {
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controllers/securityController');
-const Role = require('../../../../lib/model/security/role').default;
+const { Role } = require('../../../../lib/model/security/role');
 
 describe('Test: security controller - roles', () => {
   let kuzzle;

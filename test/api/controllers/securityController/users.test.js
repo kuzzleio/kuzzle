@@ -13,7 +13,7 @@ const {
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controllers/securityController');
-const User = require('../../../../lib/model/security/user').default;
+const { User } = require('../../../../lib/model/security/user');
 
 describe('Test: security controller - users', () => {
   let kuzzle;
