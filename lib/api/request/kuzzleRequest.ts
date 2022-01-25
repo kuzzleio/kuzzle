@@ -46,11 +46,6 @@ const _timestamp = 'timestamp\u200b';
 const _response = 'response\u200b';
 const _deprecations = 'deprecations\u200b';
 
-type Target = {
-  index: string,
-  collections?: string[]
-};
-
 /**
  * The `KuzzleRequest` class represents a request being processed by Kuzzle.
  *
