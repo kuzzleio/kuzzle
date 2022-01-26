@@ -95,10 +95,10 @@ describe('DocumentController', () => {
         { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
-    it('should reject if no index and collection or targets are specified', async () => {
-      request.input.args.index = null;
-      request.input.args.collection = null;
-      request.input.args.targets = null;
+    it.only('should reject if no index and collection or targets are specified', async () => {
+      request.input.args.index = undefined;
+      request.input.args.collection = undefined;
+      request.input.args.targets = undefined;
       request.input.action = 'search';
 
       await should(documentController.search(request)).rejectedWith(
