@@ -41,7 +41,7 @@ Body:
 ---
 
 <SinceBadge version="2.16.8">
-When no token is provided the method returns information about the anonymous token
+When no token is provided the method returns information about the anonymous token, instead of throwing an error.
 
 ## Body properties
 
