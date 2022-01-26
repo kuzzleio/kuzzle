@@ -288,7 +288,7 @@ describe('AdminController', () => {
         .be.calledWith(
           'core:security:load',
           { gordon: { freeman: [] } },
-          { onExistingUsers: 'overwrite', user: null, force: false });
+          { onExistingUsers: 'overwrite', refresh: 'wait_for', user: null, force: false });
     });
   });
 });

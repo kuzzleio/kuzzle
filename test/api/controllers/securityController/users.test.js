@@ -545,7 +545,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no scrollId is provided', () => {
-      request.input.args.scrollId = null;
+      delete request.input.args.scrollId;
 
       return should(securityController.scrollUsers(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -868,7 +868,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if the content does not have a profileIds attribute', async () => {
-      request.input.body.profileIds = null;
+      delete request.input.body.profileIds;
 
       await should(securityController.replaceUser(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
