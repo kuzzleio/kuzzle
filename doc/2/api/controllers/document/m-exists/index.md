@@ -87,7 +87,6 @@ The `successes` array contain the list of retrieved documents.
 Each document is an object with the following properties:
 
 - `_id`: document unique identifier
-- `_source`: document content
 - `_version`: version number of the document
 
 The `errors` array contain the IDs of not found documents.
@@ -107,16 +106,10 @@ If `strict` mode is enabled, will rather return an error if at least one documen
     "successes": [
       {
         "_id": "<documentId>",
-        "_source": {
-          // document content
-        },
         "_version": 4
       },
       {
         "_id": "<anotherDocumentId>",
-        "_source": {
-          // document content
-        },
         "_version": 2
       }
     ]
