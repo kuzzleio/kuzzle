@@ -34,6 +34,7 @@ import {
   OpenApiDocumentGetComponent,
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
+  OpenApiDocumentValidateComponent,
 } from './openapi';
 import { Inflector } from '../util/inflector';
 import { JSONObject } from '../../index';
@@ -181,6 +182,7 @@ export function generateOpenApi (): JSONObject {
         ...OpenApiDocumentGetComponent,
         ...OpenApiDocumentCreateOrReplaceComponent,
         ...OpenApiDocumentCreateComponent,
+        ...OpenApiDocumentValidateComponent,
       }
     }
   };
