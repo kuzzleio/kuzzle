@@ -143,7 +143,7 @@ describe('Test the bulk controller', () => {
         collection,
         _id,
         _source,
-        { refresh: 'false', injectKuzzleMeta: false});
+        { refresh: 'false', injectKuzzleMeta: false });
 
       should(response).match({
         _id,
@@ -326,7 +326,7 @@ describe('Test the bulk controller', () => {
         collection,
         query,
         changes,
-        { refresh: 'wait_for'});
+        { refresh: 'wait_for' });
       should(response).be.eql(esResponse);
     });
 
@@ -339,7 +339,7 @@ describe('Test the bulk controller', () => {
         collection,
         query,
         changes,
-        { refresh: 'false'});
+        { refresh: 'false' });
     });
 
     it('should throw an error if body.query is malformed', () => {

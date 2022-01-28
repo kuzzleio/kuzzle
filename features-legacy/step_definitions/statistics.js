@@ -26,7 +26,7 @@ When(/^I get the last statistics frame$/, function (callback) {
 });
 
 When(/^I get the statistics frame from a date$/, function (callback) {
-  this.api.getStats({startTime: new Date().getTime()-1000000, stopTime: undefined})
+  this.api.getStats({ startTime: new Date().getTime()-1000000, stopTime: undefined })
     .then(function (response) {
       if (response.error) {
         return callback(new Error(response.error.message));

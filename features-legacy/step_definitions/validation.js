@@ -186,7 +186,7 @@ Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, 
 
   let search = function (callbackAsync) {
     setTimeout(() => {
-      this.api.searchSpecifications({}, scroll && {scroll})
+      this.api.searchSpecifications({}, scroll && { scroll })
         .then(response => {
           if (response.error) {
             return callbackAsync(new Error(response.error.message));

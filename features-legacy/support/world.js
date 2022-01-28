@@ -1,7 +1,7 @@
 'use strict';
 
 const
-  {setWorldConstructor} = require('cucumber'),
+  { setWorldConstructor } = require('cucumber'),
   HttpApi = require('./api/http'),
   MqttApi = require('./api/mqtt'),
   WebSocketApi = require('./api/websocket');
@@ -74,13 +74,13 @@ class KWorld {
       }
     };
     this.bulk = [
-      { index:  {_id: 1 } },
+      { index:  { _id: 1 } },
       { title: 'foo' },
-      { index:  {_id: 2 } },
+      { index:  { _id: 2 } },
       { title: 'bar' },
-      { update: {_id: 1 } },
+      { update: { _id: 1 } },
       { doc: { title: 'foobar' } },
-      { delete: {_id: 2 } }
+      { delete: { _id: 2 } }
     ];
 
     this.mapping = {
@@ -131,7 +131,7 @@ class KWorld {
               '*': true
             }
           },
-          'auth': {actions: {logout: true}}
+          'auth': { actions: { logout: true } }
         }
       },
       role3: {
@@ -141,7 +141,7 @@ class KWorld {
               'search': true
             }
           },
-          'auth': {actions: {logout: true}}
+          'auth': { actions: { logout: true } }
         }
       },
       foo: {
@@ -224,24 +224,24 @@ class KWorld {
 
     this.policies = {
       profile1: [
-        {controller: '*', action: '*', index: '*', collection: '*', value: 'allowed'}
+        { controller: '*', action: '*', index: '*', collection: '*', value: 'allowed' }
       ],
       profile2: [
-        {controller: '*', action: '*', index: this.fakeIndex, collection: '*', value: 'allowed'},
-        {controller: 'document', action: '*', index: '*', collection: '*', value: 'allowed'},
-        {controller: 'auth', action: 'logout', index: '*', collection: '*', value: 'allowed'}
+        { controller: '*', action: '*', index: this.fakeIndex, collection: '*', value: 'allowed' },
+        { controller: 'document', action: '*', index: '*', collection: '*', value: 'allowed' },
+        { controller: 'auth', action: 'logout', index: '*', collection: '*', value: 'allowed' }
       ]
     };
 
     this.profiles = {
       profile1: {
-        policies: [{roleId: this.idPrefix + 'role1'}]
+        policies: [{ roleId: this.idPrefix + 'role1' }]
       },
       profile2: {
         policies: [
           {
             roleId: this.idPrefix + 'role1',
-            restrictedTo: [{index: this.fakeIndex}]
+            restrictedTo: [{ index: this.fakeIndex }]
           },
           {
             roleId: this.idPrefix + 'role2'
@@ -251,7 +251,7 @@ class KWorld {
       profile3: {
         policies: [{
           roleId: this.idPrefix + 'role2',
-          restrictedTo: [{index: this.fakeAltIndex, collections:[this.fakeCollection]}]
+          restrictedTo: [{ index: this.fakeAltIndex, collections:[this.fakeCollection] }]
         }]
       },
       profile4: {
@@ -262,38 +262,38 @@ class KWorld {
       profile5: {
         policies: [{
           roleId: this.idPrefix + 'role3',
-          restrictedTo: [{index: this.fakeIndex}]
+          restrictedTo: [{ index: this.fakeIndex }]
         }]
       },
       profile6: {
         policies: [{
           roleId: this.idPrefix + 'role3',
-          restrictedTo: [{index: this.fakeIndex, collections:[this.fakeCollection]}]
+          restrictedTo: [{ index: this.fakeIndex, collections:[this.fakeCollection] }]
         }]
       },
       invalidProfile: {
-        policies: [{roleId: 'unexisting-role'}]
+        policies: [{ roleId: 'unexisting-role' }]
       },
       emptyProfile: {
         policies: []
       },
       admin: {
-        policies: [{roleId: 'admin'}]
+        policies: [{ roleId: 'admin' }]
       },
       adminfoo: {
-        policies: [{roleId: 'admin'}, {roleId: this.idPrefix +'foo'}]
+        policies: [{ roleId: 'admin' }, { roleId: this.idPrefix +'foo' }]
       },
       default: {
-        policies: [{roleId: 'default'}]
+        policies: [{ roleId: 'default' }]
       },
       defaultfoo: {
-        policies: [{roleId: 'default'}, {roleId: this.idPrefix +'foo'}]
+        policies: [{ roleId: 'default' }, { roleId: this.idPrefix +'foo' }]
       },
       anonymous: {
-        policies: [{roleId: 'anonymous'}]
+        policies: [{ roleId: 'anonymous' }]
       },
       anonymousfoo: {
-        policies: [{roleId: 'anonymous'}, {roleId: this.idPrefix +'foo'}]
+        policies: [{ roleId: 'anonymous' }, { roleId: this.idPrefix +'foo' }]
       }
     };
 

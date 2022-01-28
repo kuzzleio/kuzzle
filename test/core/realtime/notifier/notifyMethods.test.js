@@ -31,12 +31,12 @@ describe('notify methods', () => {
     notifier = new Notifier({ hotelClerk });
 
     request = new Request({
-      volatile: {foo: 'bar'},
+      volatile: { foo: 'bar' },
       index: 'index',
       collection: 'collection',
       controller: 'controller',
       action: 'action'
-    }, {protocol: 'protocol'});
+    }, { protocol: 'protocol' });
 
     hotelClerk.rooms.set('matchingSome', new Room(
       'matchingSome',
@@ -95,7 +95,7 @@ describe('notify methods', () => {
 
     it('should emit the cluster sync event', async () => {
       notifier._notifyDocument = sinon.stub();
-      const content = {some: 'content'};
+      const content = { some: 'content' };
       const rooms = [
         'matchingSome',
         'nonMatching',
@@ -141,7 +141,7 @@ describe('notify methods', () => {
           request,
           'scope',
           'update',
-          { some: 'content'},
+          { some: 'content' },
           { fromCluster: false });
 
         should(kuzzle.entryPoint.dispatch).not.be.called();
@@ -150,7 +150,7 @@ describe('notify methods', () => {
 
       it('should notify the right channels', async () => {
         sinon.spy(notifier, '_notifyDocument');
-        const content = {some: 'content'};
+        const content = { some: 'content' };
         const documentNotification = DocumentNotification.fromRequest(
           request,
           'out',
@@ -202,7 +202,7 @@ describe('notify methods', () => {
       });
 
       it('should not notify if no channel match the provided scope argument', async () => {
-        const content = {some: 'content'};
+        const content = { some: 'content' };
 
         await notifier.notifyDocument(
           ['nonMatching', 'IAMERROR'],
@@ -218,7 +218,7 @@ describe('notify methods', () => {
 
     describe('call from the cluster', () => {
       it('should notify every channels', async () => {
-        const content = {some: 'content'};
+        const content = { some: 'content' };
         const documentNotification = DocumentNotification.fromRequest(
           request,
           'out',
@@ -252,7 +252,7 @@ describe('notify methods', () => {
     });
 
     it('should notify the right channels', async () => {
-      const content = {some: 'content'};
+      const content = { some: 'content' };
 
       await notifier.notifyUser('matchingSome', request, 'out', content);
 

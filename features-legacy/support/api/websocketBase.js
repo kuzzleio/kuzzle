@@ -90,7 +90,7 @@ class WebSocketApiBase extends ApiBase {
               this.subscribedRooms[socketName] = {};
             }
 
-            this.subscribedRooms[socketName][response.result.roomId] = {channel: response.result.channel, listener};
+            this.subscribedRooms[socketName][response.result.roomId] = { channel: response.result.channel, listener };
             this._socketOn(socket, response.result.channel, document => listener(document));
             resolve(response);
           });

@@ -78,7 +78,7 @@ describe('Test: validation/types/geoShape', () => {
       const recursiveShapeValidationStub = sinon.stub();
       geoShapeType.recursiveShapeValidation = recursiveShapeValidationStub;
 
-      geoShapeType.validate({shapeTypes: ['shape']});
+      geoShapeType.validate({ shapeTypes: ['shape'] });
 
       should (recursiveShapeValidationStub.callCount).be.eql(1);
       should (recursiveShapeValidationStub.args[0][0]).be.deepEqual(['shape']);
@@ -313,7 +313,7 @@ describe('Test: validation/types/geoShape', () => {
         shape = {
           type: 'circle',
           coordinates: ['some coordinates'],
-          radius: {not: 'valid'}
+          radius: { not: 'valid' }
         };
 
       checkStructureStub.returns(true);
@@ -336,7 +336,7 @@ describe('Test: validation/types/geoShape', () => {
         };
 
       checkStructureStub.returns(true);
-      convertDistanceStub.throws({message: 'an error'});
+      convertDistanceStub.throws({ message: 'an error' });
       GeoShapeType.__set__('isPoint', isPointStub);
 
       should(geoShapeType.recursiveShapeValidation(allowedShapes, shape, errorMessages)).be.false();
@@ -526,21 +526,21 @@ describe('Test: validation/types/geoShape', () => {
     });
 
     it('should return the typeOptions if shapeTypes is provided and valid', () => {
-      const typeOptions = {shapeTypes: ['point', 'linestring']};
+      const typeOptions = { shapeTypes: ['point', 'linestring'] };
       should(geoShapeType.validateFieldSpecification(typeOptions)).be.deepEqual(typeOptions);
     });
 
     it('should throw if a shape type is not recognized', () => {
-      should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['circle', 'multipolygon', 'invalid']}))
+      should(() => geoShapeType.validateFieldSpecification({ shapeTypes: ['circle', 'multipolygon', 'invalid'] }))
         .throw(PreconditionError, { id: 'validation.types.invalid_geoshape' });
 
-      should(() => geoShapeType.validateFieldSpecification({shapeTypes: ['invalid', 'circle', 'foo', 'multipolygon', 'bar']}))
+      should(() => geoShapeType.validateFieldSpecification({ shapeTypes: ['invalid', 'circle', 'foo', 'multipolygon', 'bar'] }))
         .throw(PreconditionError, { id: 'validation.types.invalid_geoshape' });
     });
 
     it('should throw if the provided shapeTypes list is empty or not an array', () => {
       [[], null, undefined, 'foo', 123].forEach(t => {
-        should(() => geoShapeType.validateFieldSpecification({shapeTypes: t}))
+        should(() => geoShapeType.validateFieldSpecification({ shapeTypes: t }))
           .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });

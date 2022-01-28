@@ -86,7 +86,7 @@ Then(/^I'm ?(not)* able to find the index named "([^"]*)" in index list$/, funct
   };
 
 
-  async.retry({times: 20, interval: 20}, main.bind(this), function (err) {
+  async.retry({ times: 20, interval: 20 }, main.bind(this), function (err) {
     if (err) {
       if (err.message) {
         err = err.message;

@@ -116,11 +116,11 @@ Then(/^I replace the document with "([^"]*)" document$/, function (documentName,
 });
 
 When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mCreate(body)
@@ -142,11 +142,11 @@ When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, functi
 });
 
 When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mReplace(body)
@@ -168,11 +168,11 @@ When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, funct
 });
 
 When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mUpdate(body)
@@ -194,11 +194,11 @@ When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, functi
 });
 
 When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mCreateOrReplace(body)

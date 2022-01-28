@@ -38,12 +38,12 @@ describe('Test: validation/types/object', () => {
 
   describe('#validateFieldSpecification', () => {
     it('should throw if the strict option is not a boolean', () => {
-      should(() => objectType.validateFieldSpecification({strict: 'not a boolean'}))
+      should(() => objectType.validateFieldSpecification({ strict: 'not a boolean' }))
         .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
     });
 
     it('should return the typeOptions object if it is valid', () => {
-      const opts = {strict: false};
+      const opts = { strict: false };
 
       should(objectType.validateFieldSpecification(opts)).be.eql(opts);
     });
@@ -59,7 +59,7 @@ describe('Test: validation/types/object', () => {
     });
 
     it('should return strict option if defined', () => {
-      should(objectType.getStrictness({strict: true}, false)).be.true();
+      should(objectType.getStrictness({ strict: true }, false)).be.true();
     });
   });
 });

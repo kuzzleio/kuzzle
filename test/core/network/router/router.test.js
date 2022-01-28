@@ -44,7 +44,7 @@ describe('Test: router', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      const context = new RequestContext({connection: {protocol}});
+      const context = new RequestContext({ connection: { protocol } });
       router.newConnection(context);
 
       should(kuzzle.log.error)
@@ -53,7 +53,7 @@ describe('Test: router', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      const context = new RequestContext({connection: {id: connectionId}});
+      const context = new RequestContext({ connection: { id: connectionId } });
       router.newConnection(context);
 
       should(kuzzle.log.error)
@@ -92,7 +92,7 @@ describe('Test: router', () => {
     });
 
     it('should return an error if no connectionId is provided', () => {
-      const context = new RequestContext({connection: {protocol}});
+      const context = new RequestContext({ connection: { protocol } });
       router.connections.set(connectionId, context);
       router.removeConnection(context);
 
@@ -102,7 +102,7 @@ describe('Test: router', () => {
     });
 
     it('should return an error if no protocol is provided', () => {
-      const context = new RequestContext({connection: {id: connectionId}});
+      const context = new RequestContext({ connection: { id: connectionId } });
       router.connections.set(connectionId, context);
       router.removeConnection(context);
 
@@ -138,8 +138,8 @@ describe('Test: router', () => {
   describe('#metrics', () => {
     it('should return the metrics object', () => {
       // Fake connections
-      router.newConnection(new RequestContext({connection: {id: 'foo', protocol: 'bar'}}));
-      router.newConnection(new RequestContext({connection: {id: 'foo2', protocol: 'bar'}}));
+      router.newConnection(new RequestContext({ connection: { id: 'foo', protocol: 'bar' } }));
+      router.newConnection(new RequestContext({ connection: { id: 'foo2', protocol: 'bar' } }));
 
       should(router.metrics()).match({
         connections: {

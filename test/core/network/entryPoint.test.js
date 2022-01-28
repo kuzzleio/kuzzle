@@ -110,7 +110,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
   describe('#dispatch', () => {
     it('should call _notify', () => {
-      const data = {foo: 'bar'};
+      const data = { foo: 'bar' };
 
       entrypoint._notify = sinon.spy();
       entrypoint.dispatch('notify', data);
@@ -121,7 +121,7 @@ describe('lib/core/core/network/entryPoint', () => {
     });
 
     it('should call _broadcast', () => {
-      const data = {foo: 'bar'};
+      const data = { foo: 'bar' };
 
       entrypoint._broadcast = sinon.spy();
       entrypoint.dispatch('broadcast', data);
@@ -328,7 +328,7 @@ describe('lib/core/core/network/entryPoint', () => {
     it('should load plugins as Node.js modules', () => {
       mockrequire('fs', {
         readdirSync: sinon.stub().returns(['one', 'two']),
-        statSync: sinon.stub().returns({isDirectory: () => true})
+        statSync: sinon.stub().returns({ isDirectory: () => true })
       });
 
       mockrequire(path.join(protocolDir, 'one/manifest.json'), { name: 'foo', kuzzleVersion: '>=2.0.0 <3.0.0' });
@@ -350,7 +350,7 @@ describe('lib/core/core/network/entryPoint', () => {
     it('should throw if there is no manifest.json file', () => {
       mockrequire('fs', {
         readdirSync: sinon.stub().returns(['protocol']),
-        statSync: sinon.stub().returns({isDirectory: () => true})
+        statSync: sinon.stub().returns({ isDirectory: () => true })
       });
 
       mockrequire.reRequire(entryPointDir);
@@ -372,7 +372,7 @@ describe('lib/core/core/network/entryPoint', () => {
     it('should log and reject if an error occured', () => {
       mockrequire('fs', {
         readdirSync: sinon.stub().returns(['protocol']),
-        statSync: sinon.stub().returns({isDirectory: () => true})
+        statSync: sinon.stub().returns({ isDirectory: () => true })
       });
 
       mockrequire(
@@ -413,7 +413,7 @@ describe('lib/core/core/network/entryPoint', () => {
 
       should(kuzzle.router.newConnection)
         .be.calledOnce()
-        .be.calledWithMatch(new RequestContext({connection}));
+        .be.calledWithMatch(new RequestContext({ connection }));
     });
 
     it('should dispatch connection:new event', () => {

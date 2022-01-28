@@ -33,8 +33,8 @@ describe('#api.rateLimiter', () => {
     });
 
     profiles = [
-      {_id: 'bar', rateLimit: 50},
-      {_id: 'baz', rateLimit: 200}
+      { _id: 'bar', rateLimit: 50 },
+      { _id: 'baz', rateLimit: 200 }
     ];
 
     mGetProfilesStub = kuzzle.ask
@@ -123,7 +123,7 @@ describe('#api.rateLimiter', () => {
     });
 
     it('should not limit if at least 1 profile has not a rate limit', async () => {
-      profiles.push({_id: 'over9000', rateLimit: 0});
+      profiles.push({ _id: 'over9000', rateLimit: 0 });
       request.input.controller = 'controller';
       request.input.action = 'action';
 

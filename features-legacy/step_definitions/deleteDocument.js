@@ -62,7 +62,7 @@ Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in i
 Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
   documents = JSON.parse(documents);
 
-  this.api.mDelete({ids: documents})
+  this.api.mDelete({ ids: documents })
     .then(response => {
 
       if (response.error && !withErrors) {

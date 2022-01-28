@@ -27,7 +27,7 @@ describe('#notifier.notifyDocuments', () => {
 
     notifier = new Notifier();
 
-    request = new Request({collection, index});
+    request = new Request({ collection, index });
     document = {
       _id: 'foo',
       _source: 'bar',

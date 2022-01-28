@@ -30,7 +30,7 @@ When(/^I scan the database using the (.+?) method with arguments$/, function (co
     parsed.args.cursor = 0;
   }
   else {
-    parsed.args = {cursor: 0};
+    parsed.args = { cursor: 0 };
   }
 
   this.memoryStorageResult = null;
@@ -87,7 +87,7 @@ function scanRedis (world, command, args) {
       }
 
       if (world.memoryStorageResult === null) {
-        world.memoryStorageResult = {result: response.result[1]};
+        world.memoryStorageResult = { result: response.result[1] };
       }
       else {
         world.memoryStorageResult.result.push(...response.result[1]);

@@ -72,7 +72,7 @@ describe('#RequestResponse', () => {
 
     it('should set the request result', () => {
       const
-        result = {foo: 'bar'},
+        result = { foo: 'bar' },
         response = new RequestResponse(req);
 
       response.result = result;
@@ -218,7 +218,7 @@ describe('#RequestResponse', () => {
 
     it('should stringify values passed to setHeader', () => {
       [
-        {foo: 'bar'},
+        { foo: 'bar' },
         1.42,
         true,
         ['baz', true, null],
@@ -330,7 +330,7 @@ describe('#RequestResponse', () => {
         'deprecations'
       ]);
       should(response.toJSON().raw).be.false();
-      should(response.toJSON().headers).match({'x-foo': 'bar'});
+      should(response.toJSON().headers).match({ 'x-foo': 'bar' });
     });
 
     it('should return a valid JSON object in raw format', () => {
@@ -345,7 +345,7 @@ describe('#RequestResponse', () => {
       should(response.toJSON().status).be.eql(666);
       should(response.toJSON().content).be.eql('foobar');
       should(response.toJSON().raw).be.true();
-      should(response.toJSON().headers).match({'x-foo': 'bar'});
+      should(response.toJSON().headers).match({ 'x-foo': 'bar' });
     });
   });
 

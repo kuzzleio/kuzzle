@@ -175,7 +175,7 @@ class HttpApi {
     const options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
       method: 'POST',
-      body: {bulkData: bulk}
+      body: { bulkData: bulk }
     };
 
     return this.callApi(options);
@@ -271,7 +271,7 @@ class HttpApi {
     const request = {
       url: this.apiPath('_checkToken'),
       method: 'POST',
-      body: {token}
+      body: { token }
     };
 
     if (this.world.currentUser && this.world.currentUser.token) {
@@ -721,7 +721,7 @@ class HttpApi {
   }
 
   getStats (dates) {
-    return this.callApi(this._getRequest(null, null, 'server', 'getStats', {body: dates}));
+    return this.callApi(this._getRequest(null, null, 'server', 'getStats', { body: dates }));
   }
 
   getUser (id) {

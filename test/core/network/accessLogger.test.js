@@ -428,7 +428,7 @@ describe('#AccessLogger', () => {
       });
 
       it('should forward the params to the logger when using "logstash" format output', () => {
-        const request = new KuzzleRequest({foo: 'bar'});
+        const request = new KuzzleRequest({ foo: 'bar' });
         const error = new KuzzleInternalError('test');
         const connection = new ClientConnection('protocol', ['1.2.3.4']);
 
@@ -515,7 +515,7 @@ describe('#AccessLogger', () => {
         should(parentPort.on).calledOnce();
         should(parentPortCallback).be.a.Function();
 
-        const request = new KuzzleRequest({foo: 'bar'});
+        const request = new KuzzleRequest({ foo: 'bar' });
 
         parentPortCallback({
           connection: 'connection',

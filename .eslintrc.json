@@ -54,7 +54,8 @@
     "sort-keys": ["error", "asc"],
     "keyword-spacing": 2,
     "comma-spacing": 2,
-    "brace-style": ["error", "stroustrup"]
+    "brace-style": ["error", "stroustrup"],
+    "object-curly-spacing": ["error", "always"]
   },
   "overrides": [
     {

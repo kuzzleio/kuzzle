@@ -422,7 +422,7 @@ describe('core/network/protocols/http', () => {
       result.setResult('yo');
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foo'});
+      httpWs.server._httpOnMessage('get', '/', '', { origin: 'foo' });
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -481,7 +481,7 @@ describe('core/network/protocols/http', () => {
       );
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foobar'});
+      httpWs.server._httpOnMessage('get', '/', '', { origin: 'foobar' });
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -839,7 +839,7 @@ describe('core/network/protocols/http', () => {
 
     it('should be able to handle JSON objects as raw responses', () => {
       const result = new KuzzleRequest({});
-      result.setResult({foo: 'bar'}, { raw: true });
+      result.setResult({ foo: 'bar' }, { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage('get', '/', '', {});

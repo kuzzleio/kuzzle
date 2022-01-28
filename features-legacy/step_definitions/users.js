@@ -37,7 +37,7 @@ Then(/^I change the user mapping$/, function () {
     });
 });
 
-When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
+When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, { timeout: 20000 }, function (not, isRestricted, user, id, callback) {
   var
     userObject = this.users[user],
     method;
@@ -68,7 +68,7 @@ When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeou
     .catch(error => callback(not ? null : error));
 });
 
-When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/, {timeout: 20000}, function (id, reset, callback) {
+When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/, { timeout: 20000 }, function (id, reset, callback) {
   var
     userObject = this.users.useradmin;
 
@@ -141,7 +141,7 @@ Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, functi
       .catch(error => cb(error));
   };
 
-  async.retry({times: 40, interval: 50}, run, err => {
+  async.retry({ times: 40, interval: 50 }, run, err => {
     if (err) {
       return callback(new Error(err.message));
     }
@@ -235,7 +235,7 @@ Then(/^I'm able to find my rights$/, function () {
 Given(/^A scrolled search on users$/, function () {
   this.scrollId = null;
 
-  return this.api.searchUsers({}, {scroll: '2s'})
+  return this.api.searchUsers({}, { scroll: '2s' })
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);

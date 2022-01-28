@@ -46,7 +46,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
     };
 
     mockrequire('net', netMock);
-    mockrequire('aedes', {Server: AedesMock});
+    mockrequire('aedes', { Server: AedesMock });
 
     MqttProtocol = mockrequire.reRequire('../../../../lib/core/network/protocols/mqttProtocol');
   });
@@ -181,7 +181,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
     });
 
     it('should allow any topic different than the request one, provided it does not contain any wildcard', async () => {
-      const sub = {topic: 'topic'};
+      const sub = { topic: 'topic' };
 
       await should(auth(fakeClient, sub)).fulfilledWith(sub);
 
@@ -218,7 +218,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
 
       should(protocol.aedes.publish)
         .be.calledTwice()
-        .be.calledWith({topic: 'ch1', payload: '"payload"'});
+        .be.calledWith({ topic: 'ch1', payload: '"payload"' });
     });
   });
 
@@ -247,8 +247,8 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
 
       should(client1.publish)
         .be.calledTwice()
-        .be.calledWith({payload: Buffer.from('"payload"'), topic: 'ch1'})
-        .be.calledWith({payload: Buffer.from('"payload"'), topic: 'ch2'});
+        .be.calledWith({ payload: Buffer.from('"payload"'), topic: 'ch1' })
+        .be.calledWith({ payload: Buffer.from('"payload"'), topic: 'ch2' });
 
       should(client2.publish).not.called();
     });
@@ -286,7 +286,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
     it('should remove the connection', () => {
       const clock = sinon.useFakeTimers();
 
-      protocol.connections.set(fakeClient, {id: fakeClient.id});
+      protocol.connections.set(fakeClient, { id: fakeClient.id });
       protocol.connectionsById.set(fakeClient.id, fakeClient);
 
       protocol.onDisconnection(fakeClient);
@@ -308,10 +308,10 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
 
     it('should do nothing if topic is not the request one of if the payload is not valid', () => {
       // invalid topic
-      protocol.onMessage({payload: 'payload', topic: 'topic'}, fakeClient);
+      protocol.onMessage({ payload: 'payload', topic: 'topic' }, fakeClient);
 
       // invalid payload
-      protocol.onMessage({topic: protocol.config.requestTopic}, fakeClient);
+      protocol.onMessage({ topic: protocol.config.requestTopic }, fakeClient);
 
       // no client id
       protocol.onMessage(
@@ -347,7 +347,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
 
       protocol.onMessage(
         {
-          payload: Buffer.from(JSON.stringify({foo: 'bar'})),
+          payload: Buffer.from(JSON.stringify({ foo: 'bar' })),
           topic: protocol.config.requestTopic,
         },
         fakeClient);
@@ -385,7 +385,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
         protocol._respond = sinon.spy();
 
         const client = new FakeClient(env);
-        protocol.connections.set(client, {id: client.id, protocol: 'mqtt'});
+        protocol.connections.set(client, { id: client.id, protocol: 'mqtt' });
 
         protocol.onMessage(
           {
@@ -446,7 +446,7 @@ describe('/lib/core/network/entryPoint/protocols/mqttProtocol', () => {
       protocol.broadcast = sinon.spy();
       protocol.config.developmentMode = true;
 
-      protocol._respond(fakeClient, {content: 'response'});
+      protocol._respond(fakeClient, { content: 'response' });
       global.NODE_ENV = currentEnv;
 
       should(protocol.broadcast)

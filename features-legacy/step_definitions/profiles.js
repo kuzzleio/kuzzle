@@ -37,7 +37,7 @@ Then(/^I change the profile mapping$/, function () {
     });
 });
 
-When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000}, function (profile, id) {
+When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, { timeout: 20 * 1000 }, function (profile, id) {
   if (!this.profiles[profile]) {
     throw new Error('Fixture for profile ' + profile + ' does not exists');
   }
@@ -52,7 +52,7 @@ When(/^I create a new profile "([^"]*)" with id "([^"]*)"$/, {timeout: 20 * 1000
     });
 });
 
-Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (callback) {
+Then(/^I cannot create an invalid profile$/, { timeout: 20 * 1000 }, function (callback) {
   this.api.createOrReplaceProfile('invalid-profile', this.profiles.invalidProfile)
     .then(() => {
       callback(new Error('Creating profile with unexisting role succeeded. Expected to throw.'));
@@ -60,7 +60,7 @@ Then(/^I cannot create an invalid profile$/, {timeout: 20 * 1000}, function (cal
     .catch(() => callback());
 });
 
-Then(/^I cannot create a profile with an empty set of roles$/, {timeout: 20 * 1000}, function (callback) {
+Then(/^I cannot create a profile with an empty set of roles$/, { timeout: 20 * 1000 }, function (callback) {
   this.api.createOrReplaceProfile('invalid-profile', this.profiles.empty)
     .then(() => {
       callback(new Error('Creating profile without roles succeeded. Expected to throw.'));
@@ -76,7 +76,7 @@ Then(/^I cannot get a profile without ID$/, function (callback) {
     .catch(() => callback());
 });
 
-Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, {timeout: 20 * 1000}, function (not, _default, id, profile, callback) {
+Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: with profile "([^"]*)")?$/, { timeout: 20 * 1000 }, function (not, _default, id, profile, callback) {
   if (profile && !this.profiles[profile]) {
     return callback(new Error('Fixture for profile ' + profile + ' not exists'));
   }
@@ -125,7 +125,7 @@ Then(/^I'm ?(not)* able to find the ?(default)* profile with id "([^"]*)"(?: wit
   });
 });
 
-Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, {timeout: 20 * 1000}, function (not, id) {
+Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, { timeout: 20 * 1000 }, function (not, id) {
   return this.api.getProfileRights(this.idPrefix + id)
     .then(body => {
       if (body.error) {
@@ -222,23 +222,23 @@ Then(/^I'm able to find "([\d]*)" profiles(?: containing the role with id "([^"]
   });
 });
 
-Given(/^I update the ?(default)* profile with id "([^"]*)" by adding the role "([^"]*)"$/, {timeout: 20 * 1000}, function (_default, profileId, roleId) {
+Given(/^I update the ?(default)* profile with id "([^"]*)" by adding the role "([^"]*)"$/, { timeout: 20 * 1000 }, function (_default, profileId, roleId) {
   if (!this.roles[roleId]) {
     throw new Error('Fixture for role ' + roleId + ' does not exists');
   }
 
-  const policies = [{roleId: this.idPrefix + roleId}];
+  const policies = [{ roleId: this.idPrefix + roleId }];
 
   if (_default) {
     // keep `admin`/`default`/`anonymous` roles for eponymous profiles
     // (to avoid error if we try to update anonymous profile without anonymous role)
-    policies.push({roleId: profileId});
+    policies.push({ roleId: profileId });
   }
   else {
     profileId = this.idPrefix + profileId;
   }
 
-  return this.api.createOrReplaceProfile(profileId, {policies})
+  return this.api.createOrReplaceProfile(profileId, { policies })
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);
@@ -281,7 +281,7 @@ Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" profiles$/, fun
 Given(/^A scrolled search on profiles$/, function () {
   this.scrollId = null;
 
-  return this.api.searchProfiles([], {scroll: '2s'})
+  return this.api.searchProfiles([], { scroll: '2s' })
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);

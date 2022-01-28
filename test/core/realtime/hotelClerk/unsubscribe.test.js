@@ -198,7 +198,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
       roomId,
       sinon.match.instanceOf(Request),
       'out',
-      {count: 1});
+      { count: 1 });
 
     should(kuzzle.pipe).be.calledWithMatch(
       'core:realtime:unsubscribe:after',

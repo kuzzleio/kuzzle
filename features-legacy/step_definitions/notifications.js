@@ -58,7 +58,7 @@ Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, 
   }
   else {
     console.log('Wrong notification received: ');
-    console.dir(this.api.responses, {colors: true, depth: null});
+    console.dir(this.api.responses, { colors: true, depth: null });
     callback(new Error(`The document was ${not ? 'not ' : ''} supposed to contain the member "${member}"`));
   }
 });

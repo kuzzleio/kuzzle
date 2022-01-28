@@ -42,7 +42,7 @@ describe('Plugins manifest class', () => {
   });
 
   it('should throw if an invalid privileged value is provided', () => {
-    manifest.raw = {privileged: 123};
+    manifest.raw = { privileged: 123 };
     should(() => manifest.load()).throw(PluginImplementationError, {
       id: 'plugin.manifest.invalid_privileged'
     });
@@ -50,7 +50,7 @@ describe('Plugins manifest class', () => {
 
   it('should properly set its privileged value according to the manifest.json one', () => {
     should(manifest.privileged).be.false();
-    manifest.raw = {privileged: true};
+    manifest.raw = { privileged: true };
     manifest.load();
 
     should(manifest.privileged).be.true();

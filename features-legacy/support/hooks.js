@@ -11,7 +11,7 @@ function bootstrapDatabase () {
   const
     fixtures = require('../fixtures/functionalTestsFixtures.json'),
     promises = [],
-    world = new World({parameters: parseWorldParameters()}),
+    world = new World({ parameters: parseWorldParameters() }),
     http = new Http(world);
 
   for (const index of Object.keys(fixtures)) {
@@ -34,7 +34,7 @@ function bootstrapDatabase () {
 function cleanDatabase () {
   const
     promises = [],
-    world = new World({parameters: parseWorldParameters()}),
+    world = new World({ parameters: parseWorldParameters() }),
     http = new Http(world);
 
   for (const index of [
@@ -75,40 +75,40 @@ After(function () {
   return this.api.disconnect();
 });
 
-After({tags: '@realtime'}, function () {
+After({ tags: '@realtime' }, function () {
   return this.api.unsubscribeAll()
     .catch(() => true);
 });
 
-Before({tags: '@security'}, function () {
+Before({ tags: '@security' }, function () {
   return cleanSecurity.call(this);
 });
 
-Before({tags: '@firstAdmin'}, function () {
+Before({ tags: '@firstAdmin' }, function () {
   return cleanSecurity.call(this);
 });
 
-After({tags: '@firstAdmin'}, function () {
+After({ tags: '@firstAdmin' }, function () {
   return grantDefaultRoles.call(this).then(() => cleanSecurity.call(this));
 });
 
-Before({tags: '@redis'}, function () {
+Before({ tags: '@redis' }, function () {
   return cleanRedis.call(this);
 });
 
-After({tags: '@redis'}, function () {
+After({ tags: '@redis' }, function () {
   return cleanRedis.call(this);
 });
 
-Before({tags: '@validation'}, function () {
+Before({ tags: '@validation' }, function () {
   return cleanValidations.call(this);
 });
 
-After({tags: '@validation'}, function () {
+After({ tags: '@validation' }, function () {
   return cleanValidations.call(this);
 });
 
-After({tags: '@http'}, function () {
+After({ tags: '@http' }, function () {
   this.api.encode('identity');
   this.api.decode('identity');
 });
@@ -140,13 +140,13 @@ function grantDefaultRoles () {
         this.currentUser = {};
       }
 
-      this.currentToken = {jwt: body.result.jwt};
+      this.currentToken = { jwt: body.result.jwt };
       this.currentUser.token = body.result.jwt;
 
-      return this.api.createOrReplaceRole('anonymous', {controllers: {'*': {actions: {'*': true}}}});
+      return this.api.createOrReplaceRole('anonymous', { controllers: { '*': { actions: { '*': true } } } });
     })
-    .then(() => this.api.createOrReplaceRole('default', {controllers: {'*': {actions: {'*': true}}}}))
-    .then(() => this.api.createOrReplaceRole('admin', {controllers: {'*': {actions: {'*': true}}}}));
+    .then(() => this.api.createOrReplaceRole('default', { controllers: { '*': { actions: { '*': true } } } }))
+    .then(() => this.api.createOrReplaceRole('admin', { controllers: { '*': { actions: { '*': true } } } }));
 }
 
 function cleanRedis() {

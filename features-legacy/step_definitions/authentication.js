@@ -7,7 +7,7 @@ const
   } = require('cucumber');
 
 When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
-  this.api.login('local', {username: this.idPrefix + login, password: password, expiresIn: expiration})
+  this.api.login('local', { username: this.idPrefix + login, password: password, expiresIn: expiration })
     .then(body => {
       if (body.error) {
         callback(new Error(body.error.message));
@@ -28,7 +28,7 @@ When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin
         this.currentUser = {};
       }
 
-      this.currentToken = {jwt: body.result.jwt};
+      this.currentToken = { jwt: body.result.jwt };
       this.currentUser.token = body.result.jwt;
 
       if (cantLogin) {
@@ -164,7 +164,7 @@ Then(/^I refresh the JWT Token$/, function (callback) {
         return callback(new Error('No result provided'));
       }
 
-      this.currentToken = {jwt: response.result.jwt};
+      this.currentToken = { jwt: response.result.jwt };
       this.currentUser.token = response.result.jwt;
       callback();
     })

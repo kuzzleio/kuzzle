@@ -87,7 +87,7 @@ class MqttApi extends ApiBase {
             if (!this.subscribedRooms[clientName]) {
               this.subscribedRooms[clientName] = {};
             }
-            this.subscribedRooms[clientName][response.result.roomId] = {channel: response.result.channel, listener};
+            this.subscribedRooms[clientName][response.result.roomId] = { channel: response.result.channel, listener };
             client.subscribe(response.result.channel);
 
             resolve(response);
@@ -106,7 +106,7 @@ class MqttApi extends ApiBase {
     }
 
     return new Bluebird((resolve, reject) => {
-      const client = mqtt.connect({host: this.world.config.host});
+      const client = mqtt.connect({ host: this.world.config.host });
       this.clients[name] = client;
 
       client.on('error', reject);

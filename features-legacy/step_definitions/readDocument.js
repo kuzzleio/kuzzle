@@ -49,7 +49,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
   };
 
 
-  async.retry({times: 20, interval: 20}, main.bind(this), function (err) {
+  async.retry({ times: 20, interval: 20 }, main.bind(this), function (err) {
     if (err) {
       if (err.message) {
         err = err.message;
@@ -106,7 +106,7 @@ Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value
 });
 
 Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-  const query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
+  const query = { query: { match: { [field]: (value === 'true' ? true : value) } } };
   const args = {};
 
   if (scroll) {
@@ -200,7 +200,7 @@ Then(/^I should receive a document id$/, function (callback) {
 Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callback) {
   documents = JSON.parse(documents);
 
-  this.api.mGet({ids: documents})
+  this.api.mGet({ ids: documents })
     .then(response => {
       if (response.error !== null) {
         callback(response.error.message);
