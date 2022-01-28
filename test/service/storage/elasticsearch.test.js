@@ -586,7 +586,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._client.mget.resolves({
         body: {
           docs: [
-            { _id: 'foo', found: true, _version: 1 },
+            { _id: 'foo', found: true },
             { _id: 'bar', found: false }
           ]
         }
@@ -607,7 +607,7 @@ describe('Test: ElasticSearch service', () => {
           });
 
           should(result).match({
-            items: [ { _id: 'foo', _version: 1 } ],
+            items: [ 'foo' ],
             errors: [ 'bar' ]
           });
         });
