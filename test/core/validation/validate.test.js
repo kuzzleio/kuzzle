@@ -392,7 +392,7 @@ describe('Test: validation.validate', () => {
     it('should update document with defaults only if fields are null in write/update mode', () => {
       const
         isUpdate = true,
-        documentSubset = { aField: { anotherSubField: 'some value',aSubField: null } },
+        documentSubset = { aField: { anotherSubField: 'some value', aSubField: null } },
         collectionSpecSubset = {
           aField: {
             type: 'typeChildren',

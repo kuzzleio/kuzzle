@@ -281,19 +281,19 @@ class KWorld {
         policies: [{ roleId: 'admin' }]
       },
       adminfoo: {
-        policies: [{ roleId: 'admin' }, { roleId: this.idPrefix +'foo' }]
+        policies: [{ roleId: 'admin' }, { roleId: this.idPrefix + 'foo' }]
       },
       default: {
         policies: [{ roleId: 'default' }]
       },
       defaultfoo: {
-        policies: [{ roleId: 'default' }, { roleId: this.idPrefix +'foo' }]
+        policies: [{ roleId: 'default' }, { roleId: this.idPrefix + 'foo' }]
       },
       anonymous: {
         policies: [{ roleId: 'anonymous' }]
       },
       anonymousfoo: {
-        policies: [{ roleId: 'anonymous' }, { roleId: this.idPrefix +'foo' }]
+        policies: [{ roleId: 'anonymous' }, { roleId: this.idPrefix + 'foo' }]
       }
     };
 

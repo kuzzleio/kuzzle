@@ -55,7 +55,7 @@ async function getEsClient (context) {
     },
     {
       default: '',
-      message: ({ current }) => `Enter the URL for the ${current === 'source' ? 'target': 'source'} instance:`,
+      message: ({ current }) => `Enter the URL for the ${current === 'source' ? 'target' : 'source'} instance:`,
       name: 'url',
       type: 'input',
       validate: url => {

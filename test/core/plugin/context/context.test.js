@@ -12,6 +12,7 @@ const {
   Request,
   KuzzleRequest,
   KuzzleError,
+  Mutex,
   UnauthorizedError,
   TooManyRequestsError,
   SizeLimitError,
@@ -63,9 +64,11 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
+      should(context.constructors.Mutex).be.a.Function();
 
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(KuzzleRequest);
+      should(new context.constructors.Mutex).be.instanceOf(Mutex);
 
       repository = new context.constructors.Repository(someCollection);
 
@@ -316,6 +319,10 @@ describe('Plugin Context', () => {
 
       should(subscription.register).be.a.Function();
       should(subscription.unregister).be.a.Function();
+    });
+
+    it('should expose a Kuzzle node id accessor', () => {
+      should(context.accessors.nodeId).be.exactly(global.kuzzle.id);
     });
 
     describe('#accessors.subscription functions', () => {

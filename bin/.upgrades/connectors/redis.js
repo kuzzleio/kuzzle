@@ -50,7 +50,7 @@ async function getRedisClient (context) {
     type: 'list',
   });
 
-  const remaining = current === 'source' ? 'target': 'source';
+  const remaining = current === 'source' ? 'target' : 'source';
   let answers = null;
 
   if (current !== 'source and target') {

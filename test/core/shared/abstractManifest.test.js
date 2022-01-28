@@ -101,7 +101,7 @@ describe('AbstractManifest class', () => {
     const manifest = new Manifest(pluginPath);
 
     mockRequireManifest({
-      kuzzleVersion: defaultKuzzleVersion ,
+      kuzzleVersion: defaultKuzzleVersion,
       name: 'foobar',
     })(() => {
       manifest.load();

@@ -183,11 +183,7 @@ export class Koncorde {
    * @param {JSONObject} filter
    * @return {NormalizedFilterV3}
    */
-  async normalize (
-    index: string,
-    collection: string,
-    filter: JSONObject
-  ) : Promise<NormalizedFilterV3> {
+  async normalize (index: string, collection: string, filter: JSONObject): Promise<NormalizedFilterV3> {
     return new NormalizedFilterV3(
       index,
       collection,

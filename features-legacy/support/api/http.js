@@ -1033,7 +1033,7 @@ class HttpApi {
         qs.push('size=' + args.size);
       }
 
-      options.url+= qs.join('&');
+      options.url += qs.join('&');
     }
 
     return this.callApi(options);
@@ -1077,7 +1077,7 @@ class HttpApi {
         qs.push('size=' + args.size);
       }
 
-      options.url+= qs.join('&');
+      options.url += qs.join('&');
     }
 
     return this.callApi(options);
