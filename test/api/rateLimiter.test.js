@@ -85,7 +85,7 @@ describe('#api.rateLimiter', () => {
       should(rateLimiter.frame.foobar).be.eql(2);
       should(mGetProfilesStub).not.called();
 
-      request.context.connection.id ='barfoo';
+      request.context.connection.id = 'barfoo';
       should(await rateLimiter.isAllowed(request)).be.true();
       should(rateLimiter.frame.barfoo).be.eql(1);
       should(rateLimiter.frame.foobar).be.eql(2);
@@ -108,7 +108,7 @@ describe('#api.rateLimiter', () => {
       // should use the most permissive limit
       for (let i = 0; i < 200; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
-        should(rateLimiter.frame.foo).be.eql(i+1);
+        should(rateLimiter.frame.foo).be.eql(i + 1);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();
@@ -131,7 +131,7 @@ describe('#api.rateLimiter', () => {
       for (let i = 0; i < 9001; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
         should(rateLimiter.frame.foo).be.undefined();
-        should(mGetProfilesStub.callCount).eql(i+1);
+        should(mGetProfilesStub.callCount).eql(i + 1);
       }
     });
 
@@ -158,7 +158,7 @@ describe('#api.rateLimiter', () => {
 
       for (let i = 0; i < 50; i++) {
         should(await rateLimiter.isAllowed(request)).be.true();
-        should(rateLimiter.frame['-1']).be.eql(i+1);
+        should(rateLimiter.frame['-1']).be.eql(i + 1);
       }
 
       should(await rateLimiter.isAllowed(request)).be.false();

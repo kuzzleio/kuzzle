@@ -24,7 +24,7 @@ describe('Test: token manager core component', () => {
     tokenManager = new TokenManager();
     token = new Token({
       _id: 'foo#bar',
-      expiresAt: Date.now()+1000,
+      expiresAt: Date.now() + 1000,
       jwt: 'bar',
       userId: 'foo',
     });
@@ -144,7 +144,7 @@ describe('Test: token manager core component', () => {
           _id: 'foo2#bar2',
           userId: 'foo2',
           jwt: 'bar2',
-          expiresAt: Date.now()+10000,
+          expiresAt: Date.now() + 10000,
         });
 
       tokenManager.link(tokenAfter, 'foo2');
@@ -179,7 +179,7 @@ describe('Test: token manager core component', () => {
         _id: 'foo2#bar2',
         userId: 'foo2',
         jwt: 'bar2',
-        expiresAt: Date.now()+10000,
+        expiresAt: Date.now() + 10000,
       });
 
       tokenManager.link(token, 'foo1');
@@ -257,8 +257,8 @@ describe('Test: token manager core component', () => {
         _id: 'foo2#bar2',
         userId: 'foo2',
         jwt: 'bar2',
-        expiresAt: Date.now()+1000,
-        _idx: `${Date.now()+1000}#foo2`,
+        expiresAt: Date.now() + 1000,
+        _idx: `${Date.now() + 1000}#foo2`,
       });
 
       tokenManager.tokens.array.push(token);

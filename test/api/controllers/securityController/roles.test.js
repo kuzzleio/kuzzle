@@ -356,7 +356,7 @@ describe('Test: security controller - roles', () => {
 
       for (let i = 0; i < response.hits.length; i++) {
         should(response.hits[i]).be.an.Object().and.not.instanceof(Role);
-        should(response.hits[i]._id).eql(`role${i+1}`);
+        should(response.hits[i]._id).eql(`role${i + 1}`);
       }
     });
   });

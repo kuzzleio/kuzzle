@@ -60,7 +60,7 @@ describe('Test: validation initialization', () => {
       'string',
       'url'
     ].forEach(fileName => {
-      mockRequire('../../../lib/core/validation/types/'+ fileName, validationStub);
+      mockRequire('../../../lib/core/validation/types/' + fileName, validationStub);
     });
 
     Validation = mockRequire.reRequire('../../../lib/core/validation');
@@ -1028,7 +1028,7 @@ describe('Test: validation initialization', () => {
       const registerStub = sinon.stub().returns({});
       const validateStub = sinon.stub();
       const index = 'anIndex';
-      const collection= 'aCollection';
+      const collection = 'aCollection';
       const filter = [{ some: 'filters' }];
       const dryRun = true;
       const expectedQuery = {

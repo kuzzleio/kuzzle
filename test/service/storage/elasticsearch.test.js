@@ -2673,7 +2673,7 @@ describe('Test: ElasticSearch service', () => {
       bulkReturn;
 
     beforeEach(() => {
-      getExpectedEsRequest = ({ userId=null, refresh, timeout } = {}) => ({
+      getExpectedEsRequest = ({ userId = null, refresh, timeout } = {}) => ({
         body: [
           { index: { _id: 1, _index: alias } },
           {
@@ -4546,14 +4546,14 @@ describe('Test: ElasticSearch service', () => {
         }
       };
 
-      global.NODE_ENV='development';
+      global.NODE_ENV = 'development';
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
           message: 'Invalid mapping property "mappings.properties.car.dinamic". Did you mean "dynamic"?',
           id: 'services.storage.invalid_mapping'
         });
 
-      global.NODE_ENV='production';
+      global.NODE_ENV = 'production';
       should(() => elasticsearch._checkMappings(mapping))
         .throw({
           message: 'Invalid mapping property "mappings.properties.car.dinamic".',

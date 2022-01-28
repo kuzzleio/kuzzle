@@ -32,7 +32,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
         }
 
         if (not) {
-          callbackAsync('Object with id '+ this.result._id + ' exists');
+          callbackAsync('Object with id ' + this.result._id + ' exists');
           return false;
         }
 
