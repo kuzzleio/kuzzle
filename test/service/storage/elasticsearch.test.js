@@ -599,8 +599,8 @@ describe('Test: ElasticSearch service', () => {
           should(elasticsearch._client.mget).be.calledWithMatch({
             body: {
               docs: [
-                { _id: 'foo'},
-                { _id: 'bar'},
+                { _id: 'foo' },
+                { _id: 'bar' },
               ]
             },
             index: alias
