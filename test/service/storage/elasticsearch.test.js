@@ -3825,8 +3825,8 @@ describe('Test: ElasticSearch service', () => {
 
     it('should add documents without ID to rejected documents', async () => {
       documents[1] = { changes: { city: 'Ho Chi Minh City' } };
-      esRequest.body = esRequest.body.slice(0,2);
-      toImport = toImport.slice(0,1);
+      esRequest.body = esRequest.body.slice(0, 2);
+      toImport = toImport.slice(0, 1);
       const rejected = [
         {
           document: { changes: { city: 'Ho Chi Minh City' } },

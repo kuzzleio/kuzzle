@@ -46,7 +46,9 @@ describe('#RequestResponse', () => {
     it('should throw if we try to extend the response', () => {
       let response = new RequestResponse(req);
 
-      should(() => { response.foo = 'bar'; }).throw(TypeError);
+      should(() => {
+        response.foo = 'bar'; 
+      }).throw(TypeError);
     });
   });
 

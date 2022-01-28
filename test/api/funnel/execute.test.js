@@ -66,7 +66,8 @@ describe('funnelController.execute', () => {
           should(funnel.processRequest).be.calledOnce();
           should(funnel.processRequest.calledOnce).be.true();
           done();
-        } catch (error) {
+        }
+        catch (error) {
           done(error);
         }
       });
@@ -472,7 +473,7 @@ describe('funnelController.execute', () => {
         allowAllOrigins: false
       };
 
-      kuzzle.config.http.accessControlAllowOrigin = ['foo','bar'];
+      kuzzle.config.http.accessControlAllowOrigin = ['foo', 'bar'];
       kuzzle.config.http.accessControlAllowOriginUseRegExp = false;
 
       should(funnel._isOriginAuthorized('foobar')).be.false();
@@ -483,7 +484,7 @@ describe('funnelController.execute', () => {
         allowAllOrigins: false
       };
 
-      kuzzle.config.http.accessControlAllowOrigin = ['foo','bar'];
+      kuzzle.config.http.accessControlAllowOrigin = ['foo', 'bar'];
       kuzzle.config.http.accessControlAllowOriginUseRegExp = false;
 
       should(funnel._isOriginAuthorized('bar')).be.true();

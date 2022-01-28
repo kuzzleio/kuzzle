@@ -254,7 +254,7 @@ describe('notify methods', () => {
     it('should notify the right channels', async () => {
       const content = {some: 'content'};
 
-      await notifier.notifyUser('matchingSome', request, 'out' , content);
+      await notifier.notifyUser('matchingSome', request, 'out', content);
 
       const dispatch = kuzzle.entryPoint.dispatch;
 

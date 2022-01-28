@@ -37,13 +37,15 @@ function fromError (error) {
 
       compared = compared.content;
       expectedStr = stableStringify(expectedError);
-    } else if (compared.error) { // stringified api response
+    }
+    else if (compared.error) { // stringified api response
       if (compared.error.stack) {
         compared.error.stack = 'stacktrace';
       }
 
       expectedStr = stableStringify(expectedError);
-    } else { // error object (HTTP)
+    }
+    else { // error object (HTTP)
       if (compared.stack) {
         compared.stack = 'stacktrace';
       }

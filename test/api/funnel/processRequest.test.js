@@ -148,7 +148,9 @@ describe('funnel.processRequest', () => {
     pluginsManager.controllers.get(controller).succeed.resolves(unserializable);
 
     return funnel.processRequest(request)
-      .then(() => { throw new Error('Expected test to fail'); })
+      .then(() => {
+        throw new Error('Expected test to fail'); 
+      })
       .catch(e => {
         should(e).be.an.instanceOf(PluginImplementationError);
         should(e.id).eql('plugin.controller.unserializable_response');
@@ -207,7 +209,7 @@ describe('funnel.processRequest', () => {
           should(kuzzle.statistics.failedRequest).be.called();
           done();
         }
-        catch(err) {
+        catch (err) {
           done(err);
         }
       });

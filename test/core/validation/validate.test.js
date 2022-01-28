@@ -211,7 +211,9 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+        throw new Error(arguments[2]);
+      }));
 
       return should(validation.validate(request, verbose))
         .be.rejectedWith(error);
@@ -234,7 +236,9 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+        throw new Error(arguments[2]);
+      }));
 
       return should(validation.validate(request, verbose))
         .be.rejectedWith('The document does not match validation filters.');
@@ -259,7 +263,9 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+        throw new Error(arguments[2]);
+      }));
 
       return should(validation.validate(request, verbose))
         .be.rejectedWith('The document validation is strict. Cannot add unspecified sub-field "field"');
@@ -318,7 +324,9 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {throw new Error(arguments[2]);}));
+      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+        throw new Error(arguments[2]);
+      }));
 
       return should(validation.validate(request, verbose))
         .be.rejectedWith(error);
@@ -384,7 +392,7 @@ describe('Test: validation.validate', () => {
     it('should update document with defaults only if fields are null in write/update mode', () => {
       const
         isUpdate = true,
-        documentSubset = {aField: {anotherSubField: 'some value',aSubField: null}},
+        documentSubset = {aField: {anotherSubField: 'some value', aSubField: null}},
         collectionSpecSubset = {
           aField: {
             type: 'typeChildren',

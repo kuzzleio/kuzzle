@@ -61,7 +61,8 @@ describe('funnel.executePluginRequest', () => {
           should(kuzzle.log.error).be.calledOnce();
           should(kuzzle.dump).be.called();
           done();
-        } catch (e) {
+        }
+        catch (e) {
           done(e);
         }
       }, 50);
@@ -88,7 +89,8 @@ describe('funnel.executePluginRequest', () => {
         try {
           should(kuzzle.dump).not.be.called();
           done();
-        } catch(e) {
+        }
+        catch (e) {
           done(e);
         }
       }, 50);

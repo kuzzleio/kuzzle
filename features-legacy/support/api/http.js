@@ -12,7 +12,7 @@ function checkAlgorithm(algorithm) {
     supported = ['identity', 'gzip', 'deflate'],
     list = algorithm.split(',').map(a => a.trim().toLowerCase());
 
-  for(const l of list) {
+  for (const l of list) {
     if (!supported.some(a => a === l)) {
       throw new Error(`Unsupported compression algorithm: ${l}`);
     }
@@ -228,7 +228,7 @@ class HttpApi {
 
       const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
 
-      for(const algorithm of algorithms) {
+      for (const algorithm of algorithms) {
         if (algorithm === 'gzip') {
           options.body = zlib.gzipSync(options.body);
         }

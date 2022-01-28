@@ -49,8 +49,7 @@ export function toKoncordeIndex (index: string, collection: string) : string {
  * @return {{index: string, collection: string}}
  */
 export function fromKoncordeIndex (index: string)
-  : { collection: string, index: string }
-{
+  : { collection: string, index: string } {
   const [ kindex, kcollection ] = index.split(SEPARATOR);
 
   return {

@@ -130,15 +130,21 @@ Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in 
       }
 
       if (body.result && body.result.hits && body.result.total !== 0) {
-        if (dont) { return Bluebird.reject(new Error('A document exists for the query')); }
+        if (dont) {
+          return Bluebird.reject(new Error('A document exists for the query')); 
+        }
         return Bluebird.resolve();
       }
 
-      if (dont) { return Bluebird.resolve(); }
+      if (dont) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(new Error('No result for query search'));
     })
     .catch(error => {
-      if (dont) { return Bluebird.resolve(); }
+      if (dont) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(error);
     });
 });
@@ -163,15 +169,21 @@ Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
       }
 
       if (body.result && body.result.hits && body.result.hits.length > 0) {
-        if (not) { return Bluebird.reject(new Error('A document exists for the scrollId')); }
+        if (not) {
+          return Bluebird.reject(new Error('A document exists for the scrollId')); 
+        }
         return Bluebird.resolve();
       }
 
-      if (not) { return Bluebird.resolve(); }
+      if (not) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(new Error('No result for scrollId search'));
     })
     .catch(error => {
-      if (not) { return Bluebird.resolve(); }
+      if (not) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(error);
     });
 });
@@ -194,7 +206,7 @@ Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callbac
         callback(response.error.message);
         return false;
       }
-      else if(response.result.total !== Number.parseInt(count)) {
+      else if (response.result.total !== Number.parseInt(count)) {
         callback('Document count (' + response.result.total + ') not as expected (' + count + ')');
         return false;
       }

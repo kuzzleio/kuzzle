@@ -77,7 +77,8 @@ Then(/I should( not)? see the collection "(.*?)":"(.*?)"/, async function (not, 
 
   if (not) {
     should(collectionNames).not.containEql(collection);
-  } else {
+  }
+  else {
     should(collectionNames).containEql(collection);
   }
 });

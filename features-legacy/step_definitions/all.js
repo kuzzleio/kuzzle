@@ -33,7 +33,7 @@ Then(/^The (sorted )?result should match the (regex|json) (.*?)$/, function (sor
       should(JSON.parse(pattern)).be.eql(val);
       callback();
     }
-    catch(err) {
+    catch (err) {
       if (err instanceof should.AssertionError) {
         return callback(new Error(JSON.stringify(val) + ' does not match ' + pattern));
       }
@@ -51,7 +51,7 @@ Then('The result should raise an error with message {string}', function (message
     should(val.message).be.eql(message);
     callback();
   }
-  catch(err) {
+  catch (err) {
     if (err instanceof should.AssertionError) {
       return callback(new Error(`"${val.message}" does not match "${message}"`));
     }

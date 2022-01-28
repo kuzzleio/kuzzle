@@ -283,7 +283,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     }
-    catch(error) {
+    catch (error) {
       this.log.error(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
 
       throw error;
@@ -589,7 +589,8 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }
@@ -694,7 +695,7 @@ class Kuzzle extends KuzzleEventEmitter {
       try {
         await this.dump(suffix);
       }
-      catch(error) {
+      catch (error) {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

@@ -20,7 +20,8 @@ Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*
         }
 
         callbackAsync();
-      } else {
+      }
+      else {
         callbackAsync('No notification received');
       }
     }, 100);
@@ -43,7 +44,8 @@ Then(/^I should receive a ?(.*?) notification with field ?(.*?) equal to "([^"]*
 Then(/^The notification should have "([^"]*)" array with ([\d]*) element/, function (member, n_elements, callback) {
   if (this.api.responses.result[member].length === parseInt(n_elements)) {
     callback();
-  } else {
+  }
+  else {
     console.log('Wrong notification received: ');
     console.dir(this.api.responses, { colors: true, depth: null });
     callback(new Error(`The document was supposed to contain the member "${member}" with ${n_elements} elements: Has ${this.api.responses.result[member].length}.`));
@@ -72,7 +74,8 @@ Then(/^The notification should have volatile/, function (callback) {
     if (!diff) {
       if (!this.api.responses.volatile[key]) {
         diff = true;
-      } else {
+      }
+      else {
         diff = JSON.stringify(this.volatile[key]).localeCompare(JSON.stringify(this.api.responses.volatile[key])) !== 0;
       }
     }
@@ -80,7 +83,8 @@ Then(/^The notification should have volatile/, function (callback) {
 
   if (diff) {
     callback(new Error(`Expected ${JSON.stringify(this.api.responses.volatile)} to match ${JSON.stringify(this.volatile)}`));
-  } else {
+  }
+  else {
     callback();
   }
 

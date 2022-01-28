@@ -26,7 +26,8 @@ When('I try to create the index {string}', async function (index) {
     const response = await this.api.createIndex(index);
 
     this.result = response;
-  } catch (error) {
+  }
+  catch (error) {
     this.result = { error };
   }
 });

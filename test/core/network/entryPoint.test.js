@@ -29,15 +29,21 @@ class FakeProtocol {
 }
 
 class FakeWebSocketProtocol extends FakeProtocol {
-  constructor () { super('websocket'); }
+  constructor () {
+    super('websocket'); 
+  }
 }
 
 class FakeMqttProtocol extends FakeProtocol {
-  constructor () { super('mqtt'); }
+  constructor () {
+    super('mqtt'); 
+  }
 }
 
 class FakeInternalProtocol extends FakeProtocol {
-  constructor () { super('internal'); }
+  constructor () {
+    super('internal'); 
+  }
 }
 
 describe('lib/core/core/network/entryPoint', () => {
@@ -76,7 +82,8 @@ describe('lib/core/core/network/entryPoint', () => {
         let result;
         try {
           result = fn(e);
-        } catch (err) {
+        }
+        catch (err) {
           return Promise.reject(err);
         }
         return result;

@@ -110,7 +110,9 @@ describe('Plugin Context', () => {
 
     describe('#Request', () => {
       it('should throw when trying to instantiate a Request object without providing any data', () => {
-        should(function () { new context.constructors.Request(); })
+        should(function () {
+          new context.constructors.Request(); 
+        })
           .throw(PluginImplementationError, { id: 'plugin.context.missing_request_data' });
       });
 
@@ -406,7 +408,7 @@ describe('Plugin Context', () => {
               should(kuzzle.funnel.executePluginRequest).calledWith(request);
               done();
             }
-            catch(e) {
+            catch (e) {
               done(e);
             }
           });
@@ -448,7 +450,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });
@@ -484,7 +486,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });

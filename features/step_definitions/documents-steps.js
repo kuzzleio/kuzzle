@@ -202,7 +202,8 @@ Then('I execute the search query with verb "GET"', async function () {
   if (this.kuzzleConfig.PROTOCOL === 'http') {
     request.searchBody = JSON.stringify(this.props.searchBody);
     options.verb = 'GET';
-  } else {
+  }
+  else {
     request.body = this.props.searchBody;
   }
   const { result } = await this.sdk.query(request, options);

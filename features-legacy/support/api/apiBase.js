@@ -107,7 +107,8 @@ class ApiBase {
         _.forEach(value, (item, k) => {
           msg[k] = item;
         });
-      } else {
+      }
+      else {
         msg[prop] = value;
       }
     });

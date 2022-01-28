@@ -199,7 +199,7 @@ describe('Test: validation/types/date', () => {
           should(dateType.validate(typeOptions, Date.now() - 10, [])).be.false();
           done();
         }
-        catch(e) {
+        catch (e) {
           done(e);
         }
       }, 100);
@@ -247,7 +247,7 @@ describe('Test: validation/types/date', () => {
           should(dateType.validate(typeOptions, Date.now() - 10, [])).be.true();
           done();
         }
-        catch(e) {
+        catch (e) {
           done(e);
         }
       }, 100);

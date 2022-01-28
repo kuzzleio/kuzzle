@@ -64,7 +64,7 @@ Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (
       should(JSON.parse(pattern)).be.eql(val);
       callback();
     }
-    catch(err) {
+    catch (err) {
       return callback(new Error('Error: ' + JSON.stringify(val) + ' does not match ' + pattern));
     }
   }

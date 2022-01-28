@@ -129,7 +129,7 @@ When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, functi
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -155,7 +155,7 @@ When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, funct
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -181,7 +181,7 @@ When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, functi
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -207,7 +207,7 @@ When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
