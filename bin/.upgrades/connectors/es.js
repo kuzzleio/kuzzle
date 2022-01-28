@@ -31,7 +31,7 @@ const ConnectorContext = require('../lib/connectorContext');
 
 let promise = null;
 
-async function getEsClient(context) {
+async function getEsClient (context) {
   const currentConfiguration = _.get(context.config, 'services.storageEngine.client');
 
   if (!currentConfiguration) {

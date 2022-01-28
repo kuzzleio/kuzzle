@@ -211,7 +211,7 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+      Validation.__set__('manageErrorMessage', sinon.spy(function () {
         throw new Error(arguments[2]);
       }));
 
@@ -236,7 +236,7 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').returns(true);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+      Validation.__set__('manageErrorMessage', sinon.spy(function () {
         throw new Error(arguments[2]);
       }));
 
@@ -263,7 +263,7 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+      Validation.__set__('manageErrorMessage', sinon.spy(function () {
         throw new Error(arguments[2]);
       }));
 
@@ -324,7 +324,7 @@ describe('Test: validation.validate', () => {
       };
 
       sinon.stub(validation, 'recurseFieldValidation').throws(error);
-      Validation.__set__('manageErrorMessage', sinon.spy(function() {
+      Validation.__set__('manageErrorMessage', sinon.spy(function () {
         throw new Error(arguments[2]);
       }));
 

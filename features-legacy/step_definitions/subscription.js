@@ -119,7 +119,7 @@ Then(/^I get the list subscriptions$/, function (callback) {
     });
 });
 
-Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function(collection, countRooms, countSubscribers, callback) {
+Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) subscriber$/, function (collection, countRooms, countSubscribers, callback) {
   var
     rooms = Object.keys(this.result[this.fakeIndex][collection]),
     count = 0;

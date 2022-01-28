@@ -149,7 +149,7 @@ function grantDefaultRoles () {
     .then(() => this.api.createOrReplaceRole('admin', { controllers: { '*': { actions: { '*': true } } } }));
 }
 
-function cleanRedis() {
+function cleanRedis () {
   return this.api.callMemoryStorage('keys', { args: { pattern: this.idPrefix + '*' } })
     .then(response => {
       if (_.isArray(response.result) && response.result.length) {
@@ -160,7 +160,7 @@ function cleanRedis() {
     });
 }
 
-function cleanValidations() {
+function cleanValidations () {
   return this.api.searchSpecifications({
     query: {
       match_all: { boost: 1 }
@@ -172,7 +172,7 @@ function cleanValidations() {
     ));
 }
 
-function parseWorldParameters() {
+function parseWorldParameters () {
   const worldParamIndex = process.argv.indexOf('--world-parameters');
   const worldParam = worldParamIndex > -1
     ? JSON.parse(process.argv[worldParamIndex + 1])

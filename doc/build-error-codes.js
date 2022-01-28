@@ -60,7 +60,7 @@ const errors = {
   UnauthorizedError,
 };
 
-function getHeader(title) {
+function getHeader (title) {
   return `---
 code: true
 type: page

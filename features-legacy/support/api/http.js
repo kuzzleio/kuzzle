@@ -7,7 +7,7 @@ const rp = require('request-promise');
 
 const routes = require('../../../lib/api/httpRoutes');
 
-function checkAlgorithm(algorithm) {
+function checkAlgorithm (algorithm) {
   const
     supported = ['identity', 'gzip', 'deflate'],
     list = algorithm.split(',').map(a => a.trim().toLowerCase());
@@ -964,7 +964,7 @@ class HttpApi {
     });
   }
 
-  revokeTokens(id) {
+  revokeTokens (id) {
     return this.callApi({
       url: this.apiPath(`users/${id}/tokens`),
       method: 'DELETE'
@@ -1333,12 +1333,12 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  encode(algorithm) {
+  encode (algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;
   }
 
-  decode(algorithm) {
+  decode (algorithm) {
     checkAlgorithm(algorithm);
     this.expectedEncoding = algorithm;
   }

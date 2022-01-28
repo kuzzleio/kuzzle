@@ -56,7 +56,8 @@
     "comma-spacing": 2,
     "brace-style": ["error", "stroustrup"],
     "object-curly-spacing": ["error", "always"],
-    "space-infix-ops": 2
+    "space-infix-ops": 2,
+    "space-before-function-paren": ["error", "always"]
   },
   "overrides": [
     {

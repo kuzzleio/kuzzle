@@ -6,7 +6,7 @@ const
     Then
   } = require('cucumber');
 
-When(/^I get the server timestamp$/, function(callback) {
+When(/^I get the server timestamp$/, function (callback) {
   this.api.now()
     .then(response => {
       if (response.error) {
@@ -23,7 +23,7 @@ When(/^I get the server timestamp$/, function(callback) {
     .catch(error => callback(error));
 });
 
-Then(/^I can read the timestamp$/, function(callback) {
+Then(/^I can read the timestamp$/, function (callback) {
   if (!this.result.now || !Number.isInteger(this.result.now)) {
     return callback('Expected a timestamp result, got: ' + this.result);
   }

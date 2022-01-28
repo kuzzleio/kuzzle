@@ -11,7 +11,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const AbstractManifest = require('../../../lib/core/shared/abstractManifest');
 
 class AbstractManifestStub extends AbstractManifest {
-  load() {}
+  load () {}
 }
 
 describe('Plugins manifest class', () => {

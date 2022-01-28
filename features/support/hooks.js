@@ -7,7 +7,7 @@ const
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
-async function resetSecurityDefault(sdk) {
+async function resetSecurityDefault (sdk) {
   await sdk.query({
     controller: 'admin',
     action: 'resetSecurity',

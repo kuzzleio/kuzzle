@@ -20,7 +20,7 @@ When('I send the message {string} to Kuzzle through websocket', function (messag
   this.props.client.send(message);
 });
 
-Then('I wait to receive a websocket response from Kuzzle', function() {
+Then('I wait to receive a websocket response from Kuzzle', function () {
   return new Promise((resolve) => {
     const interval = setInterval(() => {
       if (this.props.result) {

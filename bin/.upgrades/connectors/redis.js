@@ -29,7 +29,7 @@ const
 
 let promise = null;
 
-async function getRedisClient(context) {
+async function getRedisClient (context) {
   const currentConfiguration = _.get(context.config, 'services.internalCache');
 
   if (!currentConfiguration) {

@@ -107,7 +107,7 @@ describe('Test the passport Wrapper', () => {
 
   it('should return a PassportResponse if the strategy calls a HTTP redirection', () => {
     class MockupStrategy extends passport.Strategy {
-      constructor(name, verify) {
+      constructor (name, verify) {
         super(name, verify);
         this.name = name;
         this._verify = verify;
