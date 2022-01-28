@@ -201,6 +201,81 @@ describe('DocumentController', () => {
     });
   });
 
+  describe('#mExists', () => {
+    beforeEach(() => {
+      request.input.body = {
+        ids: ['id', 'id2']
+      };
+
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' },
+          { _id: 'id2', _version: 1, some: 'some' }
+        ],
+        errors: []
+      }));
+    });
+
+    it('should forward to the store module', async () => {
+      const response = await documentController.mExists(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mExists',
+        index,
+        collection,
+        ['id', 'id2']);
+
+      should(response).match({
+        errors: [],
+        successes: [
+          { _id: 'id', _version: 1 },
+          { _id: 'id2', _version: 1 }
+        ]
+      });
+    });
+
+    it('should throw an error if the number of documents to get exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      should(documentController.mExists(request)).be.rejectedWith(
+        SizeLimitError,
+        { id: 'services.storage.get_limit_exceeded' });
+    });
+
+    it('should handle errors if some documents are missing', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      const response = await documentController.mExists(request);
+
+      should(response).match({
+        errors: ['id2'],
+        successes: [
+          { _id: 'id', _version: 1 }
+        ]
+      });
+    });
+
+    it('should throw an error in strict mode if at least one document is missing', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      return should(documentController.mExists(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
+    });
+  });
+
   describe('#get', () => {
     it('should forward to the store module', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:get').resolves(({
