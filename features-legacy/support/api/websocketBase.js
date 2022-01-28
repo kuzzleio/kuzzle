@@ -17,7 +17,7 @@ class WebSocketApiBase extends ApiBase {
   }
 
   send (msg, getAnswer = true, socketName = 'client1') {
-    if (!msg.requestId) {
+    if (! msg.requestId) {
       msg.requestId = uuid.v4();
     }
 
@@ -35,7 +35,7 @@ class WebSocketApiBase extends ApiBase {
         if (getAnswer) {
           promise = new Bluebird((resolve, reject) => {
             this._socketOnce(socket, msg.requestId, result => {
-              if (!result) {
+              if (! result) {
                 const error = new Error('Returned result is null');
                 return reject(Object.assign(error, msg));
               }
@@ -62,7 +62,7 @@ class WebSocketApiBase extends ApiBase {
   }
 
   sendAndListen (msg, socketName = 'client1') {
-    if (!msg.requestId) {
+    if (! msg.requestId) {
       msg.requestId = uuid.v4();
     }
 
@@ -86,7 +86,7 @@ class WebSocketApiBase extends ApiBase {
               return reject(response.error.message);
             }
 
-            if (!this.subscribedRooms[socketName]) {
+            if (! this.subscribedRooms[socketName]) {
               this.subscribedRooms[socketName] = {};
             }
 
@@ -113,7 +113,7 @@ class WebSocketApiBase extends ApiBase {
       };
 
     const socket = this.sockets[socketName];
-    if (!socket) {
+    if (! socket) {
       return;
     }
 

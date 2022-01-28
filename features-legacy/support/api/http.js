@@ -13,7 +13,7 @@ function checkAlgorithm (algorithm) {
     list = algorithm.split(',').map(a => a.trim().toLowerCase());
 
   for (const l of list) {
-    if (!supported.some(a => a === l)) {
+    if (! supported.some(a => a === l)) {
       throw new Error(`Unsupported compression algorithm: ${l}`);
     }
   }
@@ -43,10 +43,10 @@ class HttpApi {
       verb = 'GET',
       result;
 
-    if (!args) {
+    if (! args) {
       args = {};
     }
-    if (!args.body) {
+    if (! args.body) {
       if (args.args) {
         args.body = args.args;
       }
@@ -68,13 +68,13 @@ class HttpApi {
             hits.push(match.substring(1));
 
             if (match === ':index') {
-              if (!index) {
+              if (! index) {
                 throw new Error('No index provided');
               }
               return index;
             }
             if (match === ':collection') {
-              if (!collection) {
+              if (! collection) {
                 throw new Error('No collection provided');
               }
               return collection;
@@ -212,7 +212,7 @@ class HttpApi {
    * @returns {Promise.<IncomingMessage>}
    */
   async callApi (options) {
-    if (!options.headers) {
+    if (! options.headers) {
       options.headers = {};
     }
 

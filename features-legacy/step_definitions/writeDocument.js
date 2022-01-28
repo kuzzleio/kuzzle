@@ -24,7 +24,7 @@ When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?( w
         throw body.error;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         throw new Error(`No result: ${JSON.stringify(body)}`);
       }
 
@@ -50,7 +50,7 @@ When(/^I createOrReplace it$/, function (callback) {
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }
@@ -85,7 +85,7 @@ Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index
       if (aBody.error) {
         return Bluebird.reject(aBody.error);
       }
-      if (!aBody.result) {
+      if (! aBody.result) {
         return Bluebird.reject(new Error('No result provided'));
       }
     });
@@ -102,7 +102,7 @@ Then(/^I replace the document with "([^"]*)" document$/, function (documentName,
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }
@@ -125,7 +125,7 @@ When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, functi
 
   this.api.mCreate(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
@@ -151,7 +151,7 @@ When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, funct
 
   this.api.mReplace(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
@@ -177,7 +177,7 @@ When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, functi
 
   this.api.mUpdate(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
@@ -203,7 +203,7 @@ When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$
 
   this.api.mCreateOrReplace(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }

@@ -53,7 +53,7 @@ Then(/^The notification should have "([^"]*)" array with ([\d]*) element/, funct
 });
 
 Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, member, callback) {
-  if ((this.api.responses.result[member] || not) && !(this.api.responses.result[member] && not)) {
+  if ((this.api.responses.result[member] || not) && ! (this.api.responses.result[member] && not)) {
     callback();
   }
   else {
@@ -64,15 +64,15 @@ Then(/^The notification should ?(not)* have a "([^"]*)" member/, function (not, 
 });
 
 Then(/^The notification should have volatile/, function (callback) {
-  if (!this.api.responses.volatile) {
+  if (! this.api.responses.volatile) {
     return callback(new Error('Expected volatile in the notification but none was found'));
   }
 
   let diff = Object.keys(this.volatile).length !== Object.keys(this.api.responses.volatile).length;
 
   Object.keys(this.volatile).forEach(key => {
-    if (!diff) {
-      if (!this.api.responses.volatile[key]) {
+    if (! diff) {
+      if (! this.api.responses.volatile[key]) {
         diff = true;
       }
       else {

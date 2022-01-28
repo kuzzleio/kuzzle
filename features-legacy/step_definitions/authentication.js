@@ -14,12 +14,12 @@ When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }
 
-      if (!body.result.jwt) {
+      if (! body.result.jwt) {
         callback(new Error('No token received'));
         return false;
       }
@@ -49,7 +49,7 @@ When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin
 });
 
 Then(/^I log ?out$/, function (callback) {
-  if (!this.currentUser || !this.currentUser.token) {
+  if (! this.currentUser || ! this.currentUser.token) {
     callback(new Error('Cannot retrieve jwt token'));
     return false;
   }
@@ -69,7 +69,7 @@ Then(/^I log ?out$/, function (callback) {
 });
 
 Then(/^I logout all sessions at once/, function (callback) {
-  if (!this.currentUser || !this.currentUser.token) {
+  if (! this.currentUser || ! this.currentUser.token) {
     callback(new Error('Cannot retrieve jwt token'));
     return false;
   }
@@ -89,7 +89,7 @@ Then(/^I logout all sessions at once/, function (callback) {
 });
 
 Then(/^I check the JWT Token$/, function (callback) {
-  if (!this.currentToken || !this.currentToken.jwt) {
+  if (! this.currentToken || ! this.currentToken.jwt) {
     return callback(new Error('Cannot retrieve the JWT token'));
   }
 
@@ -106,7 +106,7 @@ Then(/^I check the JWT Token$/, function (callback) {
 });
 
 Then(/^The token is (.*?)$/, function (state, callback) {
-  if (!this.currentToken || !this.currentToken.tokenValidity) {
+  if (! this.currentToken || ! this.currentToken.tokenValidity) {
     return callback(new Error('Cannot check the JWT token validity'));
   }
 
@@ -135,11 +135,11 @@ Then(/^I get the registrated authentication strategies$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
-      if (!response.result || !Array.isArray(response.result)) {
+      if (! response.result || ! Array.isArray(response.result)) {
         return callback(new Error('Invalid response format'));
       }
 
@@ -160,7 +160,7 @@ Then(/^I refresh the JWT Token$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 

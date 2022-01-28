@@ -36,7 +36,7 @@ Then(/^I remove documents with field "([^"]*)" equals to value "([^"]*)"(?: in i
             return false;
           }
 
-          if (!body.result || body.result.ids.length === 0) {
+          if (! body.result || body.result.ids.length === 0) {
             callbackAsync('No result provided');
             return false;
           }
@@ -65,11 +65,11 @@ Then(/^I remove the documents '([^']+)'( and get partial errors)?$/, function (d
   this.api.mDelete({ ids: documents })
     .then(response => {
 
-      if (response.error && !withErrors) {
+      if (response.error && ! withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if (!response.error && withErrors) {
+      else if (! response.error && withErrors) {
         callback('Should get partial error');
         return false;
       }

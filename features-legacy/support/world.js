@@ -30,7 +30,7 @@ class KWorld {
         this.config.protocol = 'websocket';
     }
 
-    if (!_init && !this.config.silent) {
+    if (! _init && ! this.config.silent) {
       console.log(`[${this.config.protocol}] ${this.config.host}:${this.config.port}`);
       _init = true;
     }

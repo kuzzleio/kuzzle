@@ -96,7 +96,7 @@ class UpgradeContext {
       type: 'confirm'
     });
 
-    if (!retry) {
+    if (! retry) {
       this.log.error('Aborted by user action.');
       process.exit(1);
     }

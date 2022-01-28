@@ -32,7 +32,7 @@ let promise = null;
 async function getRedisClient (context) {
   const currentConfiguration = _.get(context.config, 'services.internalCache');
 
-  if (!currentConfiguration) {
+  if (! currentConfiguration) {
     context.log.error('Missing Kuzzle configuration for Redis.');
     context.log.error('Missing configuration value: services.internalCache');
     context.log.error('Aborted.');
@@ -70,7 +70,7 @@ async function getRedisClient (context) {
         validate: name => {
           const i = Number.parseFloat(name);
 
-          if (!Number.isNaN(i) && Number.isInteger(i) && i > 1 && i <= 65535) {
+          if (! Number.isNaN(i) && Number.isInteger(i) && i > 1 && i <= 65535) {
             return true;
           }
 

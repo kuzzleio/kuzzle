@@ -16,11 +16,11 @@ When(/^I get the user mapping$/, function () {
         throw new Error(response.error.message);
       }
 
-      if (!response.result) {
+      if (! response.result) {
         throw new Error('No result provided');
       }
 
-      if (!response.result.mapping) {
+      if (! response.result.mapping) {
         throw new Error('No mapping provided');
       }
 
@@ -101,7 +101,7 @@ Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, m
 
         const matchingObject = JSON.parse('{' + match + '}');
 
-        if (!_.matches(matchingObject)(body.result)) {
+        if (! _.matches(matchingObject)(body.result)) {
           throw new Error('Error: ' + JSON.stringify(body.result) + ' does not match {' + match + '}');
         }
       }
@@ -131,7 +131,7 @@ Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, functi
 
           const matchFunc = _.matches(JSON.parse('{' + match + '}'));
 
-          if (!body.result.hits.every(hit => matchFunc(hit))) {
+          if (! body.result.hits.every(hit => matchFunc(hit))) {
             return cb(new Error('Error: ' + JSON.stringify(body.result.hits) + ' does not match ' + match));
           }
         }
@@ -185,7 +185,7 @@ Then(/^I am getting the current user, which matches \{(.*?)}$/, function (match)
       }
 
       match = match.replace(/#prefix#/g, this.idPrefix);
-      if (!_.matches(JSON.parse('{' + match + '}'))(body.result)) {
+      if (! _.matches(JSON.parse('{' + match + '}'))(body.result)) {
         throw new Error('Expected: ' + match + '\nGot: ' + JSON.stringify(body.result));
       }
     });
@@ -213,7 +213,7 @@ Then(/^I'm ?(not)* able to check the token for current user/, function (not, cal
 
   this.api.checkToken(this.currentUser.token)
     .then(body => {
-      if (!body.result.valid) {
+      if (! body.result.valid) {
         if (not) {
           return callback();
         }
@@ -241,7 +241,7 @@ Given(/^A scrolled search on users$/, function () {
         throw new Error(response.error.message);
       }
 
-      if (!response.result.scrollId) {
+      if (! response.result.scrollId) {
         throw new Error('No scrollId returned by the searchProfile query');
       }
 
@@ -250,7 +250,7 @@ Given(/^A scrolled search on users$/, function () {
 });
 
 Then(/^I am able to perform a scrollUsers request$/, function () {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     throw new Error('No previous scrollId found');
   }
 

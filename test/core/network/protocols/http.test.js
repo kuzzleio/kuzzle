@@ -573,7 +573,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -606,7 +606,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -639,7 +639,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -672,7 +672,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -705,7 +705,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -743,7 +743,7 @@ describe('core/network/protocols/http', () => {
 
         // the response is processed in background tasks, need to wait for it
         // to finish
-        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
 
@@ -787,7 +787,7 @@ describe('core/network/protocols/http', () => {
 
         // the response is processed in background tasks, need to wait for it
         // to finish
-        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
 

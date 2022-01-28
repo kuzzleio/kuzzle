@@ -22,7 +22,7 @@ class MqttApi extends ApiBase {
   }
 
   send (msg, getAnswer = true, clientName = 'client1') {
-    if (!msg.requestId) {
+    if (! msg.requestId) {
       msg.requestId = uuid.v4();
     }
 
@@ -38,7 +38,7 @@ class MqttApi extends ApiBase {
         if (getAnswer) {
           promise = new Bluebird((resolve, reject) => {
             this.requests[msg.requestId] = result => {
-              if (!result) {
+              if (! result) {
                 const error = new Error('Returned result is null');
                 return reject(Object.assign(error, msg));
               }
@@ -66,7 +66,7 @@ class MqttApi extends ApiBase {
   }
 
   sendAndListen (msg, clientName = 'client1') {
-    if (!msg.requestId) {
+    if (! msg.requestId) {
       msg.requestId = uuid.v4();
     }
 
@@ -84,7 +84,7 @@ class MqttApi extends ApiBase {
               return reject(response.error.message);
             }
 
-            if (!this.subscribedRooms[clientName]) {
+            if (! this.subscribedRooms[clientName]) {
               this.subscribedRooms[clientName] = {};
             }
             this.subscribedRooms[clientName][response.result.roomId] = { channel: response.result.channel, listener };
@@ -143,7 +143,7 @@ class MqttApi extends ApiBase {
 
   unsubscribe (roomId, clientName, waitForResponse = false) {
     const client = this.clients[clientName];
-    if (!client) {
+    if (! client) {
       return;
     }
 

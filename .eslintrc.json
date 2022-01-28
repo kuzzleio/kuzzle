@@ -57,7 +57,7 @@
     "brace-style": ["error", "stroustrup"],
     "object-curly-spacing": ["error", "always"],
     "space-infix-ops": 2,
-    "space-before-function-paren": ["error", "always"]
+    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }]
   },
   "overrides": [
     {

@@ -163,7 +163,7 @@ When(/^I check if i have( no)? ([^ ]+) credentials$/, function (noCredentials, s
       if (response.result === true && noCredentials) {
         throw new Error('should have no credential but has');
       }
-      if (response.result === false && !noCredentials) {
+      if (response.result === false && ! noCredentials) {
         throw new Error('should have credential but has not');
       }
     });

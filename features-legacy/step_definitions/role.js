@@ -14,11 +14,11 @@ When(/^I get the role mapping$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
-      if (!response.result.mapping) {
+      if (! response.result.mapping) {
         return callback(new Error('No mapping provided'));
       }
 
@@ -46,7 +46,7 @@ Then(/^I change the role mapping$/, function (callback) {
 });
 
 When(/^I create a new role "([^"]*)" with id "([^"]*)"$/, function (role, id, callback) {
-  if (!this.roles[role]) {
+  if (! this.roles[role]) {
     return callback('Fixture for role ' + role + ' does not exist');
   }
   id = this.idPrefix + id;
@@ -76,7 +76,7 @@ Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]
     id = this.idPrefix + id;
   }
 
-  if (object && !this[`${objectType}s`][object]) {
+  if (object && ! this[`${objectType}s`][object]) {
     return callback(`Fixture for ${objectType} ${object} not exists`);
   }
 
@@ -90,7 +90,7 @@ Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]
             return callbackAsync(body.error.message);
           }
 
-          if (!body.result) {
+          if (! body.result) {
             if (not) {
               return callbackAsync();
             }
@@ -104,7 +104,7 @@ Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]
 
           if (object) {
             controller = Object.keys(this[`${objectType}s`][object].controllers)[0];
-            if (!body.result._source.controllers[controller]) {
+            if (! body.result._source.controllers[controller]) {
               return callbackAsync(`Could not find ${objectType} ${id}`);
             }
           }
@@ -132,7 +132,7 @@ Then(/^I'm ?(not)* able to find a ?(default)* (role|profile|user) with id "([^"]
 });
 
 When(/^I update the role "([^"]*)" with the test content "([^"]*)"$/, function (id, role, callback) {
-  if (!this.roles[role]) {
+  if (! this.roles[role]) {
     return callback('Fixture for role ' + role + ' not exists');
   }
   id = this.idPrefix + id;
@@ -171,7 +171,7 @@ Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with m
             return false;
           }
 
-          if (!aBody.result.hits) {
+          if (! aBody.result.hits) {
             return callbackAsync('Expected ' + count + ' roles, got 0');
           }
 
@@ -232,7 +232,7 @@ Then(/^I'm able to do a multi get with "([^"]*)" and get "(\d*)" roles$/, functi
             return false;
           }
 
-          if (!response.result.hits || response.result.hits.length !== parseInt(count)) {
+          if (! response.result.hits || response.result.hits.length !== parseInt(count)) {
             return callbackAsync('Expected ' + count + ' roles, get ' + response.result.hits.length);
           }
 

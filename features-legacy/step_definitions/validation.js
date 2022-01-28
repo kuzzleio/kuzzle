@@ -192,7 +192,7 @@ Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, 
             return callbackAsync(new Error(response.error.message));
           }
 
-          if (scroll && !response.result.scrollId) {
+          if (scroll && ! response.result.scrollId) {
             return callbackAsync(new Error('No scrollId returned by the searchProfile query'));
           }
 
@@ -221,7 +221,7 @@ Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, 
 });
 
 Then(/^I am able to perform a scrollSpecifications request$/, function () {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     throw new Error('No previous scrollId found');
   }
 

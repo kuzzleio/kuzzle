@@ -128,11 +128,11 @@ function grantDefaultRoles () {
         return Promise.reject(new Error(body.error.message));
       }
 
-      if (!body.result) {
+      if (! body.result) {
         return Promise.reject(new Error('No result provided'));
       }
 
-      if (!body.result.jwt) {
+      if (! body.result.jwt) {
         return Promise.reject(new Error('No token received'));
       }
 

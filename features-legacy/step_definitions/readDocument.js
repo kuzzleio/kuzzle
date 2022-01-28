@@ -11,7 +11,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
   var main = function (callbackAsync) {
     this.api.get(this.result._id, index)
       .then(body => {
-        if (body.error && !not) {
+        if (body.error && ! not) {
           if (body.error.message) {
             callbackAsync(body.error.message);
             return false;
@@ -21,7 +21,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
           return false;
         }
 
-        if (!body.result || !body.result._source) {
+        if (! body.result || ! body.result._source) {
           if (not) {
             callbackAsync();
             return false;
@@ -150,7 +150,7 @@ Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in 
 });
 
 Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     if (not) {
       return Bluebird.resolve();
     }

@@ -85,7 +85,7 @@ Then(/^I can count "([^"]*)" subscription/, function (number, callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result.count) {
+      if (! response.result.count) {
         return callback(new Error('Expected a "count" value in response'));
       }
 
@@ -107,7 +107,7 @@ Then(/^I get the list subscriptions$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -124,11 +124,11 @@ Then(/^In my list there is a collection "([^"]*)" with ([\d]*) room and ([\d]*) 
     rooms = Object.keys(this.result[this.fakeIndex][collection]),
     count = 0;
 
-  if (!this.result[this.fakeIndex]) {
+  if (! this.result[this.fakeIndex]) {
     return callback(new Error('No entry for index ' + this.fakeIndex));
   }
 
-  if (!this.result[this.fakeIndex][collection]) {
+  if (! this.result[this.fakeIndex][collection]) {
     return callback(new Error('No entry for collection ' + collection));
   }
 

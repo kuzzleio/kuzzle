@@ -16,7 +16,7 @@ When(/^I list "([^"]*)" data collections(?: in index "([^"]*)")?$/, function (ty
         return false;
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -42,11 +42,11 @@ When('I create a collection named {string} in index {string}', async function (c
 });
 
 Then(/^I can ?(not)* find a ?(.*?) collection ?(.*)$/, function (not, type, collection, callback) {
-  if (!this.result.collections) {
+  if (! this.result.collections) {
     return callback('Expected a collections list result, got: ' + this.result);
   }
 
-  if (!collection) {
+  if (! collection) {
     if (this.result.collections.length === 0) {
       if (not) {
         return callback();

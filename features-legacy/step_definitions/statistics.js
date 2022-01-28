@@ -13,7 +13,7 @@ When(/^I get the last statistics frame$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -32,7 +32,7 @@ When(/^I get the statistics frame from a date$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -51,7 +51,7 @@ When(/^I get all statistics frames$/, function (callback) {
         return callback(new Error(response.error.message));
       }
 
-      if (!response.result) {
+      if (! response.result) {
         return callback(new Error('No result provided'));
       }
 
@@ -64,7 +64,7 @@ When(/^I get all statistics frames$/, function (callback) {
 });
 
 Then(/^I get at least 1 statistic frame$/, function (callback) {
-  if (!this.result) {
+  if (! this.result) {
     return callback(new Error('Expected a statistics result, got: ' + this.result));
   }
 
