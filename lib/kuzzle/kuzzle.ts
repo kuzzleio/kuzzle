@@ -298,7 +298,7 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * This will init the cluster if it's enabled.
    */
-  private async generateId (): Promise<string> {
+  private async initKuzzleNode (): Promise<string> {
     let id;
 
     if (this.config.cluster.enabled) {
