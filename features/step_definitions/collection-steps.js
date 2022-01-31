@@ -15,11 +15,11 @@ Given('a collection {string}:{string}', async function (index, collection) {
 });
 
 Given('an existing collection {string}:{string}', async function (index, collection) {
-  if (!await this.sdk.index.exists(index)) {
+  if (! await this.sdk.index.exists(index)) {
     throw new Error(`Index ${index} does not exist`);
   }
 
-  if (!await this.sdk.collection.exists(index, collection)) {
+  if (! await this.sdk.collection.exists(index, collection)) {
     throw new Error(`Collection ${index}:${collection} does not exist`);
   }
 
@@ -77,7 +77,8 @@ Then(/I should( not)? see the collection "(.*?)":"(.*?)"/, async function (not, 
 
   if (not) {
     should(collectionNames).not.containEql(collection);
-  } else {
+  }
+  else {
     should(collectionNames).containEql(collection);
   }
 });

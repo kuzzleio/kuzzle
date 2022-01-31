@@ -51,6 +51,7 @@
     "didyoumean": "^1.2.2",
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
+    "express": "^4.17.2",
     "inquirer": "^8.2.0",
     "ioredis": "^4.28.3",
     "js-yaml": "^4.1.0",

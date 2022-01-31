@@ -34,7 +34,7 @@ export class Headers {
   private namesMap: Map<string, string>;
   private proxy: any;
 
-  constructor() {
+  constructor () {
     this.namesMap = new Map();
     this.headers = {};
     this.proxy = new Proxy(this.headers, {
@@ -58,7 +58,7 @@ export class Headers {
 
     assert.assertString('header name', name);
 
-    if (!name) {
+    if (! name) {
       return;
     }
 
@@ -95,7 +95,7 @@ export class Headers {
 
     let _name = this.namesMap.get(lowerCased);
 
-    if (!_name) {
+    if (! _name) {
       this.namesMap.set(lowerCased, name);
       _name = name;
     }
@@ -122,7 +122,7 @@ export class Headers {
         this.headers[_name] = _value;
         break;
       case 'set-cookie':
-        if (!this.headers[_name]) {
+        if (! this.headers[_name]) {
           this.headers[_name] = [_value];
         }
         else {
@@ -329,7 +329,7 @@ export class RequestResponse {
     if (headers) {
       for (const name of Object.keys(headers)) {
         // When ifNotPresent is set to true, only set the header if no value has been defined before
-        if (!ifNotPresent || this.getHeader(name) === undefined) {
+        if (! ifNotPresent || this.getHeader(name) === undefined) {
           this.setHeader(name, headers[name]);
         }
       }

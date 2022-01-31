@@ -27,7 +27,7 @@ describe('funnel.processRequest', () => {
   let pluginsManager;
 
   beforeEach(() => {
-    mockrequire('elasticsearch', {Client: ElasticsearchClientMock});
+    mockrequire('elasticsearch', { Client: ElasticsearchClientMock });
     mockrequire.reRequire('../../../lib/core/plugin/pluginContext');
     mockrequire.reRequire('../../../lib/core/plugin/privilegedContext');
     const PluginsManager = mockrequire.reRequire('../../../lib/core/plugin/pluginsManager');
@@ -52,10 +52,10 @@ describe('funnel.processRequest', () => {
   });
 
   it('should reject if no controller is specified', () => {
-    const request = new Request({action: 'create'});
+    const request = new Request({ action: 'create' });
 
     return should(funnel.processRequest(request))
-      .rejectedWith(NotFoundError, {id: 'api.process.controller_not_found'})
+      .rejectedWith(NotFoundError, { id: 'api.process.controller_not_found' })
       .then(() => {
         should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
         should(kuzzle.pipe).not.calledWith('request:onError', request);
@@ -64,7 +64,7 @@ describe('funnel.processRequest', () => {
   });
 
   it('should reject if no action is specified', () => {
-    const request = new Request({controller: 'fakeController'});
+    const request = new Request({ controller: 'fakeController' });
 
     return should(funnel.processRequest(request))
       .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
@@ -95,7 +95,7 @@ describe('funnel.processRequest', () => {
   it('should throw if a plugin action does not exist', () => {
     const
       controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'create'});
+      request = new Request({ controller, action: 'create' });
 
     return should(funnel.processRequest(request))
       .rejectedWith(NotFoundError, { id: 'api.process.action_not_found' })
@@ -111,14 +111,14 @@ describe('funnel.processRequest', () => {
   it('should reject if a plugin action returns a non-thenable object', () => {
     const
       controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'succeed'});
+      request = new Request({ controller, action: 'succeed' });
 
     pluginsManager.controllers.get(controller).succeed.returns('foobar');
 
     return should(funnel.processRequest(request))
       .rejectedWith(
         PluginImplementationError,
-        {id: 'plugin.controller.invalid_action_response'})
+        { id: 'plugin.controller.invalid_action_response' })
       .then(() => {
         should(kuzzle.pipe).not.calledWith('request:onSuccess', request);
         should(kuzzle.pipe).calledWith('request:onError', request);
@@ -141,14 +141,16 @@ describe('funnel.processRequest', () => {
   it('should throw if a plugin action returns a non-serializable response', () => {
     const
       controller = 'fakePlugin/controller',
-      request = new Request({controller, action: 'succeed'}),
+      request = new Request({ controller, action: 'succeed' }),
       unserializable = {};
     unserializable.self = unserializable;
 
     pluginsManager.controllers.get(controller).succeed.resolves(unserializable);
 
     return funnel.processRequest(request)
-      .then(() => { throw new Error('Expected test to fail'); })
+      .then(() => {
+        throw new Error('Expected test to fail'); 
+      })
       .catch(e => {
         should(e).be.an.instanceOf(PluginImplementationError);
         should(e.id).eql('plugin.controller.unserializable_response');
@@ -207,7 +209,7 @@ describe('funnel.processRequest', () => {
           should(kuzzle.statistics.failedRequest).be.called();
           done();
         }
-        catch(err) {
+        catch (err) {
           done(err);
         }
       });
@@ -215,7 +217,7 @@ describe('funnel.processRequest', () => {
 
   it('should wrap a Node error on a plugin action failure', async () => {
     const controller = 'fakePlugin/controller';
-    const request = new Request({controller, action: 'fail'});
+    const request = new Request({ controller, action: 'fail' });
 
     pluginsManager.controllers.get(controller).fail.rejects(new Error('foobar'));
 
@@ -246,7 +248,7 @@ describe('funnel.processRequest', () => {
       instance: {
         init: () => {},
         pipes: {
-          'generic:document:beforeWrite': async function hello(documents) {
+          'generic:document:beforeWrite': async function hello (documents) {
             should(documents[0]._id).be.undefined();
 
             documents[0]._id = 'foobar';

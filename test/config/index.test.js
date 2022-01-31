@@ -122,7 +122,7 @@ describe('lib/config/index.js', () => {
       const result = config.loadConfig();
 
       should(result.bar).match(['foo', null, 123, 123.45, true]);
-      should(result.baz).match({this: { goes: [ 'to', 11 ] } });
+      should(result.baz).match({ this: { goes: [ 'to', 11 ] } });
     });
 
     it('should throw if an invalid JSON string is provided for parsing', () => {

@@ -22,13 +22,13 @@ describe('Test: validation/types/geoPoint', () => {
 
   describe('#validate', () => {
     it('should return true if the geoPoint is valid', () => {
-      should(geoPointType.validate({}, {lat: 25.2, lon: 17.3}), []).be.true();
+      should(geoPointType.validate({}, { lat: 25.2, lon: 17.3 }), []).be.true();
     });
 
     it('should return false if the geoPoint is not valid', () => {
       const errorMessages = [];
 
-      should(geoPointType.validate({}, {not: 'a geopoint'}, errorMessages)).be.false();
+      should(geoPointType.validate({}, { not: 'a geopoint' }, errorMessages)).be.false();
       should(errorMessages).be.deepEqual(['Invalid GeoPoint format']);
     });
   });

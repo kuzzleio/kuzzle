@@ -109,8 +109,8 @@ describe('Plugin', () => {
       const options = { name: 'lambda-core', application: true };
       instance = {
         api: 'api',
-        hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
-        pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
+        hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler' },
+        pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler' },
       };
       plugin = new Plugin(instance, options);
       plugin.version = 'version';
@@ -134,8 +134,8 @@ describe('Plugin', () => {
         },
         routes: ['routes'],
         strategies: { ldap: 'LDAP' },
-        hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler'},
-        pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler'},
+        hooks: { 'document:beforeCreate': 'handler', 'document:afterCreate': 'handler' },
+        pipes: { 'index:beforeCreate': 'handler', 'index:afterCreate': 'handler' },
       };
       plugin = new Plugin(instance, options);
       plugin.version = 'version';

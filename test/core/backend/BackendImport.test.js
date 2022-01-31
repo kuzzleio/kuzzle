@@ -34,8 +34,8 @@ describe('BackendImport', () => {
                 field: 'value',
               },
               properties: {
-                fieldA: { type: 'keyword'},
-                fieldB: { type: 'integer'}
+                fieldA: { type: 'keyword' },
+                fieldB: { type: 'integer' }
               },
             },
             settings: {
@@ -49,10 +49,10 @@ describe('BackendImport', () => {
               }
             }
           },
-          collection2: { mappings: { properties: { fieldC: { type: 'keyword'} } } },
+          collection2: { mappings: { properties: { fieldC: { type: 'keyword' } } } },
         },
         index2: {
-          collection1: { mappings: { properties: { fieldD: { type: 'integer'} } } },
+          collection1: { mappings: { properties: { fieldD: { type: 'integer' } } } },
         },
       };
     });
@@ -73,14 +73,14 @@ describe('BackendImport', () => {
     it('should merge collection mappings from different calls', () => {
       application.import.mappings(mappings);
       mappings.index1.collection3 =
-        { mappings: { properties: { fieldE: { type: 'keyword'} } } };
+        { mappings: { properties: { fieldE: { type: 'keyword' } } } };
       delete mappings.index1.collection2;
 
       application.import.mappings(mappings);
 
       should(application._import.mappings).be.deepEqual({
         index1: {
-          collection2: { mappings: { properties: { fieldC: { type: 'keyword'} } } },
+          collection2: { mappings: { properties: { fieldC: { type: 'keyword' } } } },
           ...mappings.index1
         },
         index2: mappings.index2
@@ -303,7 +303,7 @@ describe('BackendImport', () => {
             local: { username: 'bar', password: 'foobar' }
           }
         },
-        userB: { content: { profileIds: ['profileA'], name: 'bar'} },
+        userB: { content: { profileIds: ['profileA'], name: 'bar' } },
       };
     });
 
@@ -315,7 +315,7 @@ describe('BackendImport', () => {
     });
 
     it('should handle onExistingUsers option', () => {
-      application.import.users(users, { onExistingUsers: 'overwrite'});
+      application.import.users(users, { onExistingUsers: 'overwrite' });
 
       should(application._import.onExistingUsers).equals('overwrite');
     });
@@ -329,13 +329,13 @@ describe('BackendImport', () => {
 
     it('should merge users from different calls', () => {
       application.import.users(users);
-      users.userC = { content: { profileIds: ['profileC'], name: 'usr'} };
+      users.userC = { content: { profileIds: ['profileC'], name: 'usr' } };
       delete users.userB;
 
       application.import.users(users);
 
       should(application._import.users).be.deepEqual({
-        userB: { content: { profileIds: ['profileA'], name: 'bar'} },
+        userB: { content: { profileIds: ['profileA'], name: 'bar' } },
         ...users,
       });
     });

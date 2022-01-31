@@ -22,7 +22,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should be false if one of the property is not allowed', () => {
-      should(checkAllowedProperties({foo:'bar', baz: 'bar'}, ['foo'])).be.false();
+      should(checkAllowedProperties({ foo:'bar', baz: 'bar' }, ['foo'])).be.false();
     });
   });
 
@@ -35,9 +35,9 @@ describe('Test: validation utilities', () => {
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
-          1: [{path: ['aField'], type: 'object'}, {path: ['anotherField'], type: 'object'}],
-          2: [{path: ['aField', 'aSubField'], type: 'object'}, {path: ['aField', 'anotherSubField'], type: 'object'}],
-          3: [{path: ['aField', 'aSubField', 'aSubSubField'], type: 'object'}, {path: ['aField', 'aSubField', 'anotherSubSubField'], type: 'object'}]
+          1: [{ path: ['aField'], type: 'object' }, { path: ['anotherField'], type: 'object' }],
+          2: [{ path: ['aField', 'aSubField'], type: 'object' }, { path: ['aField', 'anotherSubField'], type: 'object' }],
+          3: [{ path: ['aField', 'aSubField', 'aSubSubField'], type: 'object' }, { path: ['aField', 'aSubField', 'anotherSubSubField'], type: 'object' }]
         },
         expectedStructuredFields = {
           root: true,
@@ -81,8 +81,8 @@ describe('Test: validation utilities', () => {
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
-          1: [{path: ['aField'], type: 'object'}, {path: ['anotherField'], type: 'object'}],
-          3: [{path: ['aField', 'aSubField', 'aSubSubField'], type: 'object'}, {path: ['aField', 'aSubField', 'anotherSubSubField'], type: 'object'}]
+          1: [{ path: ['aField'], type: 'object' }, { path: ['anotherField'], type: 'object' }],
+          3: [{ path: ['aField', 'aSubField', 'aSubSubField'], type: 'object' }, { path: ['aField', 'aSubField', 'anotherSubSubField'], type: 'object' }]
         };
 
       should(() => {
@@ -95,8 +95,8 @@ describe('Test: validation utilities', () => {
         maxDepth = 3,
         typeAllowChildren = ['object'],
         fields = {
-          1: [{path: ['aField'], type: 'string'}, {path: ['anotherField'], type: 'object'}],
-          2: [{path: ['aField', 'aSubField'], type: 'object'}, {path: ['aField', 'anotherSubField'], type: 'object'}]
+          1: [{ path: ['aField'], type: 'string' }, { path: ['anotherField'], type: 'object' }],
+          2: [{ path: ['aField', 'aSubField'], type: 'object' }, { path: ['aField', 'anotherSubField'], type: 'object' }]
         };
 
       should(() => {

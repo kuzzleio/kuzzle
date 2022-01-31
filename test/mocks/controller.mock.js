@@ -29,7 +29,7 @@ class MockNativeController extends NativeController {
     injectStubs(this);
   }
 
-  _isAction(name) {
+  _isAction (name) {
     return name === 'succeed' || name === 'fail';
   }
 }
@@ -41,7 +41,7 @@ class MockBaseController extends BaseController {
     injectStubs(this);
   }
 
-  _isAction(name) {
+  _isAction (name) {
     return name === 'succeed' || name === 'fail';
   }
 }

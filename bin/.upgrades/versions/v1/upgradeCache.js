@@ -37,7 +37,7 @@ async function copyKey (context, key) {
 }
 
 async function getSourceKeys (context, pattern) {
-  if (!context.source.nodes) {
+  if (! context.source.nodes) {
     return await context.source.keys(pattern);
   }
 
@@ -115,7 +115,7 @@ in any way.`);
     type: 'confirm'
   });
 
-  if (!confirm) {
+  if (! confirm) {
     context.log.error('Aborted by user.');
     process.exit(0);
   }

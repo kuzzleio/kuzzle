@@ -283,7 +283,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     }
-    catch(error) {
+    catch (error) {
       this.log.error(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
 
       throw error;
@@ -434,7 +434,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized || !status.locked,
+          indexCacheOnly: status.initialized || ! status.locked,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
@@ -449,7 +449,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized || !status.locked,
+          indexCacheOnly: status.initialized || ! status.locked,
           propagate: false, // Each node needs to do the import themselves
           refresh: true,
 
@@ -491,13 +491,13 @@ class Kuzzle extends KuzzleEventEmitter {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
-    const isPermissionsToImport = !(
+    const isPermissionsToImport = ! (
       _.isEmpty(toImport.profiles)
       && _.isEmpty(toImport.roles)
       && _.isEmpty(toImport.users)
     );
     const isPermissionsToSupport = toSupport.securities
-      && !(
+      && ! (
         _.isEmpty(toSupport.securities.profiles)
         && _.isEmpty(toSupport.securities.roles)
         && _.isEmpty(toSupport.securities.users)
@@ -536,7 +536,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Check if every import has been done, if one of them is not finished yet, wait for it
    */
-  private async _waitForImportToFinish() {
+  private async _waitForImportToFinish () {
     const importTypes = Object.keys(this.importTypes);
 
     while (importTypes.length) {
@@ -585,11 +585,11 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-
-      this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
+
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }
@@ -694,7 +694,7 @@ class Kuzzle extends KuzzleEventEmitter {
       try {
         await this.dump(suffix);
       }
-      catch(error) {
+      catch (error) {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

@@ -122,9 +122,9 @@ describe('Test: model/security/role', () => {
           action: 'action'
         }, context),
         restrictions = [
-          {index: 'index1'},
-          {index: 'index2', collections: ['collection1']},
-          {index: 'index3', collections: ['collection1', 'collection2']}
+          { index: 'index1' },
+          { index: 'index2', collections: ['collection1'] },
+          { index: 'index3', collections: ['collection1', 'collection2'] }
         ];
 
       role.controllers = {
@@ -189,7 +189,7 @@ describe('Test: model/security/role', () => {
       role.controllers = {
         '*': {
           actions: {
-            '*': {an: 'object'}
+            '*': { an: 'object' }
           }
         }
       };
@@ -205,7 +205,7 @@ describe('Test: model/security/role', () => {
       role.controllers = true;
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, {id: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controllers definition is empty', () => {

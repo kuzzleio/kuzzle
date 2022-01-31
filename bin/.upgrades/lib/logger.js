@@ -39,7 +39,7 @@ class ColorOutput {
 
     this.fileReport = null;
 
-    if (!opts.R) {
+    if (! opts.R) {
       this.notice(`Upgrade report file: ${opts.output}`);
       this.fileReport = fs.openSync(opts.output, 'w', 0o600);
     }

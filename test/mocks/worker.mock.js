@@ -3,7 +3,7 @@ const sinon = require('sinon');
 const EventEmitter = require('eventemitter3');
 
 class WorkerMock extends EventEmitter {
-  constructor(path) {
+  constructor (path) {
     super();
     this.path = path;
     this.unref = sinon.stub();

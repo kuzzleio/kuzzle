@@ -75,7 +75,7 @@ describe('Backend', () => {
         profiles: { profileA: { policies: [{ roleId: 'roleA' }] } },
         roles: { roleA: { controllers: { '*': { actions: { '*': true } } } } },
         userMappings: { properties: { fieldA: { type: 'text' } } },
-        user: { content: { profileIds: ['profileA'], name: 'bar'} },
+        user: { content: { profileIds: ['profileA'], name: 'bar' } },
       };
 
       await application.start();

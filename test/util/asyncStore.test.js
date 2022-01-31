@@ -51,26 +51,26 @@ describe('AsyncStore', () => {
 
     describe('#set', () => {
       it('should sets an item in the underlaying Map', () => {
-        asyncStore.set('REQUEST', { id: 'azerty12345 '});
+        asyncStore.set('REQUEST', { id: 'azerty12345 ' });
 
         should(asyncStore._asyncLocalStorage._store.get('REQUEST'))
-          .be.eql({ id: 'azerty12345 '});
+          .be.eql({ id: 'azerty12345 ' });
       });
     });
 
     describe('#get', () => {
       it('should gets an item from the underlaying Map', () => {
-        asyncStore.set('REQUEST', { id: 'azerty12345 '});
+        asyncStore.set('REQUEST', { id: 'azerty12345 ' });
 
         const result = asyncStore.get('REQUEST');
 
-        should(result).be.eql({ id: 'azerty12345 '});
+        should(result).be.eql({ id: 'azerty12345 ' });
       });
     });
 
     describe('#get', () => {
       it('should check if the key exists in the underlaying Map', () => {
-        asyncStore.set('REQUEST', { id: 'azerty12345 '});
+        asyncStore.set('REQUEST', { id: 'azerty12345 ' });
 
         should(asyncStore.has('REQUEST')).be.true();
         should(asyncStore.has('TSEUQER')).be.false();

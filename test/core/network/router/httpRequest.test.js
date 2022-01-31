@@ -18,11 +18,11 @@ describe('Test: router.httpRequest', () => {
     kuzzle = new KuzzleMock();
 
     kuzzle.pluginsManager.routes = [
-      {verb: 'get', path: 'foo/bar/baz', controller: 'foo', action: 'bar'}
+      { verb: 'get', path: 'foo/bar/baz', controller: 'foo', action: 'bar' }
     ];
 
     kuzzle.funnel.execute.callsFake((request, callback) => {
-      request.setResult({}, {status: 1234});
+      request.setResult({}, { status: 1234 });
       callback(null, request);
     });
 
@@ -91,7 +91,7 @@ describe('Test: router.httpRequest', () => {
   it('should register PUT routes from the config/httpRoutes file', done => {
     const req = new MockHttpRequest('put', '/_updateSelf');
     const httpMessage = new HttpMessage(connection, req);
-    httpMessage.content = {foo: 'bar'};
+    httpMessage.content = { foo: 'bar' };
 
     routeController.http.route(httpMessage, request => {
       try {
