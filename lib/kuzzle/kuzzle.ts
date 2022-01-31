@@ -582,7 +582,7 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
+  async loadInitialState (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
     if ( _.isEmpty(toImport.mappings)
       && _.isEmpty(toImport.profiles)
       && _.isEmpty(toImport.roles)
