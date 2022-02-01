@@ -33,14 +33,14 @@ const defaultConfiguration = require('../../../lib/config/default.config');
 const { version: currentVersion } = require('../../../package.json');
 
 class Version {
-  constructor() {
+  constructor () {
     this.from = null;
     this.list = [];
   }
 }
 
 class UpgradeContext {
-  constructor(args) {
+  constructor (args) {
     // copy constructor
     if (args instanceof UpgradeContext) {
       this.config = args.config;
@@ -96,7 +96,7 @@ class UpgradeContext {
       type: 'confirm'
     });
 
-    if (!retry) {
+    if (! retry) {
       this.log.error('Aborted by user action.');
       process.exit(1);
     }
@@ -119,7 +119,7 @@ class UpgradeContext {
         { withFileTypes: true })
       .filter(entry => entry.isDirectory() && entry.name.match(/^v\d+$/))
       .map(entry => entry.name)
-      .sort((a, b) => parseInt(a[0].substring(1))-parseInt(b[0].substring(1)));
+      .sort((a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1)));
 
     if (version.list.length === 1) {
       version.from = version.list[0];

@@ -39,7 +39,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
     };
     kuzzle.pluginsManager.getPluginsDescription.returns({ foo: {} });
     kuzzle.pluginsManager.plugins = { foo: {} };
-    kuzzle.statistics.getAllStats.resolves({ hits: [ {stats: 42} ] });
+    kuzzle.statistics.getAllStats.resolves({ hits: [ { stats: 42 } ] });
 
     mockrequire('fs', fsStub);
     mockrequire('dumpme', coreStub);
@@ -90,7 +90,7 @@ describe('Test: kuzzle/dumpGenerator', () => {
     should(osDump.mem).have.keys('total', 'free');
 
     should(fsStub.writeFileSync.getCall(4).args[0]).be.exactly(baseDumpPath.concat('/statistics.json'));
-    should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{stats: 42}], null, ' ').concat('\n'));
+    should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(JSON.stringify([{ stats: 42 }], null, ' ').concat('\n'));
 
     should(coreStub.firstCall.calledWith('gcore', baseDumpPath.concat('/core'))).be.true();
 

@@ -94,7 +94,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
         koncorde_1: { Koncorde },
-        vault_1: { default: { load: () => {} }}
+        vault_1: { default: { load: () => {} } }
       });
 
       await stubbedKuzzle(async () => {
@@ -145,7 +145,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       const Koncorde = sinon.stub();
       const stubbedKuzzle = Kuzzle.__with__({
         koncorde_1: { Koncorde },
-        vault_1: { default: { load: () => {} }}
+        vault_1: { default: { load: () => {} } }
       });
 
       await stubbedKuzzle(async () => {
@@ -168,8 +168,8 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         await kuzzleWithPCRE.start(application);
       });
 
-      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2'});
-      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js'});
+      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2' });
+      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: 'js' });
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
@@ -291,7 +291,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should call the handler and work properly', async () => {
-      await kuzzle.install([{ id: 'id', handler, description: 'description'}]);
+      await kuzzle.install([{ id: 'id', handler, description: 'description' }]);
 
       should(kuzzle.ask).be.calledTwice();
       should(kuzzle.ask).be.calledWith(
@@ -312,7 +312,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     it('should handle situation when handler has already been executed', async () => {
       kuzzle.ask = sinon.stub().withArgs(['core:storage:private:document:exist']).resolves(true);
 
-      await kuzzle.install([{ id: 'id', handler}]);
+      await kuzzle.install([{ id: 'id', handler }]);
 
       should(kuzzle.ask).be.calledWith(
         'core:storage:private:document:exist',
@@ -408,7 +408,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       return should(
         kuzzle.import(
           { profiles: { something: 'here' } },
-          { securities: { roles: { something: 'here'} } }))
+          { securities: { roles: { something: 'here' } } }))
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
   });

@@ -37,13 +37,15 @@ function fromError (error) {
 
       compared = compared.content;
       expectedStr = stableStringify(expectedError);
-    } else if (compared.error) { // stringified api response
+    }
+    else if (compared.error) { // stringified api response
       if (compared.error.stack) {
         compared.error.stack = 'stacktrace';
       }
 
       expectedStr = stableStringify(expectedError);
-    } else { // error object (HTTP)
+    }
+    else { // error object (HTTP)
       if (compared.stack) {
         compared.stack = 'stacktrace';
       }
@@ -58,7 +60,7 @@ function fromError (error) {
 
     // makes debugging easier, since sinon does not have the expectedError
     // object
-    if (!res) {
+    if (! res) {
       // eslint-disable-next-line no-console
       console.error(`Error: error objects do not match (env = ${global.NODE_ENV})
 Expected:

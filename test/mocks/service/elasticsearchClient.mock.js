@@ -8,7 +8,7 @@ const sinon = require('sinon');
  * @constructor
  */
 class ElasticsearchClientMock {
-  constructor() {
+  constructor () {
     this.bulk = sinon.stub().resolves();
     this.count = sinon.stub().resolves();
     this.create = sinon.stub().resolves();

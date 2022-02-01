@@ -27,7 +27,7 @@ See [Elasticsearch official documentation](https://www.elastic.co/guide/en/elast
 
 This class constructor takes no argument.
 
-## Usage
+### Usage
 
 ```js
 const esRequest =  {
@@ -81,7 +81,7 @@ KuzzleRequest(originalRequest: KuzzleRequest, requestPayload: RequestPayload, op
 | `options` | <pre>JSONObject</pre> | Additional options passed to the [RequestContext](/core/2/framework/classes/request-context) constructor |
 
 
-## Usage
+### Usage
 
 ```js
 const req = new context.constructors.KuzzleRequest(request, {
@@ -92,23 +92,9 @@ const req = new context.constructors.KuzzleRequest(request, {
 const user = await context.accessors.execute(req) 
 ```
 
-## `StorageClient`
+## `Mutex`
+<SinceBadge version="auto-version" />
 
-Constructor for [Elasticsearch SDK Client](https://www.elastic.co/guide/en/elasticsearch/client/javascript-api/current/api-reference.html).
+Instantiates a new mutex, allowing to lock a resource. Works both with single-node and cluster environments.
 
-## Usage
-
-```js
-const esRequest =  {
-  body: {
-    name: 'Aschen',
-    age: 27
-  },
-  index: '&nyc-open-data.yellow-taxi',
-  op_type: 'create'
-}
-
-// Instantiate and use a new client
-const storageClient = new app.storage.Client()
-await storageClient.index(esRequest)
-```
+See [Mutex documentation](/core/2/framework/classes/mutex) for more information.

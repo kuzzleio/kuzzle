@@ -44,7 +44,7 @@ describe('funnel.processRequest', () => {
           should(e.message).be.eql('custom error');
           done();
         }
-        catch(err) {
+        catch (err) {
           done(err);
         }
       });

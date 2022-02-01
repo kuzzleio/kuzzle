@@ -422,7 +422,7 @@ describe('core/network/protocols/http', () => {
       result.setResult('yo');
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foo'});
+      httpWs.server._httpOnMessage('get', '/', '', { origin: 'foo' });
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -481,7 +481,7 @@ describe('core/network/protocols/http', () => {
       );
       kuzzle.router.http.route.yields(result);
 
-      httpWs.server._httpOnMessage('get', '/', '', {origin: 'foobar'});
+      httpWs.server._httpOnMessage('get', '/', '', { origin: 'foobar' });
       httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
 
       should(entryPoint.newConnection).calledOnce();
@@ -573,7 +573,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -606,7 +606,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -639,7 +639,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -672,7 +672,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -705,7 +705,7 @@ describe('core/network/protocols/http', () => {
 
       // the response is processed in background tasks, need to wait for it
       // to finish
-      for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+      for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
         await new Promise(resolve => setTimeout(resolve, 200));
       }
 
@@ -743,7 +743,7 @@ describe('core/network/protocols/http', () => {
 
         // the response is processed in background tasks, need to wait for it
         // to finish
-        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
 
@@ -787,7 +787,7 @@ describe('core/network/protocols/http', () => {
 
         // the response is processed in background tasks, need to wait for it
         // to finish
-        for (let i = 0; !response.tryEnd.calledOnce && i < 10; i++) {
+        for (let i = 0; ! response.tryEnd.calledOnce && i < 10; i++) {
           await new Promise(resolve => setTimeout(resolve, 200));
         }
 
@@ -839,7 +839,7 @@ describe('core/network/protocols/http', () => {
 
     it('should be able to handle JSON objects as raw responses', () => {
       const result = new KuzzleRequest({});
-      result.setResult({foo: 'bar'}, { raw: true });
+      result.setResult({ foo: 'bar' }, { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage('get', '/', '', {});

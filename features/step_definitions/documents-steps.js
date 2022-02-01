@@ -19,7 +19,7 @@ Given(/I can( not)? create the following document:/, async function (not, dataTa
     not,
     'Document should not have been created');
 
-  if (!not) {
+  if (! not) {
     this.props.documentId = this.props.result._id;
   }
 });
@@ -117,7 +117,7 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
     throw new Error(`Document ${id} exists, but it shouldn't`);
   }
 
-  if (!not && !exists) {
+  if (! not && ! exists) {
     throw new Error(`Expected document ${id} to exist`);
   }
 });
@@ -176,7 +176,7 @@ Then('I execute the search query', async function () {
 Then('I scroll to the next page', async function () {
   // temporary use of raw results, until the "remaining" propery is made
   // available to the SearchResults SDK class
-  if (!this.props.result.scrollId) {
+  if (! this.props.result.scrollId) {
     throw new Error('No scroll ID found');
   }
 
@@ -202,7 +202,8 @@ Then('I execute the search query with verb "GET"', async function () {
   if (this.kuzzleConfig.PROTOCOL === 'http') {
     request.searchBody = JSON.stringify(this.props.searchBody);
     options.verb = 'GET';
-  } else {
+  }
+  else {
     request.body = this.props.searchBody;
   }
   const { result } = await this.sdk.query(request, options);

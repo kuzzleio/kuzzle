@@ -109,7 +109,7 @@ export class Koncorde {
    * @param {Object} obj - object containing a geopoint
    * @returns {Coordinate} or null if no accepted format is found
    */
-  static convertGeopoint(point: string|JSONObject): { lat: number; lon: number; } {
+  static convertGeopoint (point: string|JSONObject): { lat: number; lon: number; } {
     return KoncordeV4.convertGeopoint(point);
   }
 
@@ -183,9 +183,7 @@ export class Koncorde {
    * @param {JSONObject} filter
    * @return {NormalizedFilterV3}
    */
-  async normalize (index: string, collection: string, filter: JSONObject)
-    : Promise<NormalizedFilterV3>
-  {
+  async normalize (index: string, collection: string, filter: JSONObject): Promise<NormalizedFilterV3> {
     return new NormalizedFilterV3(
       index,
       collection,
@@ -201,9 +199,7 @@ export class Koncorde {
    * @param  {JSONObject} filter
    * @return {JSONObject}
    */
-  async register (index: string, collection: string, filter: JSONObject)
-    : Promise<JSONObject>
-  {
+  async register (index: string, collection: string, filter: JSONObject) : Promise<JSONObject> {
     const indexV4 = toKoncordeIndex(index, collection);
     const normalized = this.koncorde.normalize(filter, indexV4);
 

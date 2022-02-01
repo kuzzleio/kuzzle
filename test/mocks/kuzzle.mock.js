@@ -65,7 +65,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       getFilterIds: sinon.stub().returns([]),
       getIndexes: sinon.stub().returns([]),
       hasFilterId: sinon.stub().returns(false),
-      normalize: sinon.stub().returns({id: 'foobar'}),
+      normalize: sinon.stub().returns({ id: 'foobar' }),
       register: sinon.stub().returns('foobar'),
       remove: sinon.stub(),
       store: sinon.stub().returns('foobar'),
@@ -181,7 +181,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       addType: sinon.spy(),
       curateSpecification: sinon.stub().resolves(),
       init: sinon.spy(),
-      validateFormat: sinon.stub().resolves({isValid: false}),
+      validateFormat: sinon.stub().resolves({ isValid: false }),
       validate: sinon.stub().callsFake((...args) => Bluebird.resolve(args[0]))
     };
 

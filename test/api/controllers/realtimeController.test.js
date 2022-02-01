@@ -27,8 +27,8 @@ describe('RealtimeController', () => {
         body: {}
       },
       {
-        connection: {id: 'connectionId'},
-        user: {_id: '42'},
+        connection: { id: 'connectionId' },
+        user: { _id: '42' },
       });
   });
 
@@ -39,21 +39,21 @@ describe('RealtimeController', () => {
   });
 
   describe('#subscribe', () => {
-    it('should reject if no index is provided',() => {
+    it('should reject if no index is provided', () => {
       request.input.args.index = null;
 
       should(realtimeController.subscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should reject if no collection is provided',() => {
+    it('should reject if no collection is provided', () => {
       request.input.args.collection = null;
 
       should(realtimeController.subscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
-    it('should reject if no body is provided',() => {
+    it('should reject if no body is provided', () => {
       request.input.body = null;
 
       should(realtimeController.subscribe(request))
@@ -102,14 +102,14 @@ describe('RealtimeController', () => {
   });
 
   describe('#join', () => {
-    it('should reject an error if body is not provided',() => {
+    it('should reject an error if body is not provided', () => {
       request.input.body = null;
 
       return should(realtimeController.join(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should throw an error if roomId is not provided',() => {
+    it('should throw an error if roomId is not provided', () => {
       return should(realtimeController.join(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
@@ -128,14 +128,14 @@ describe('RealtimeController', () => {
   });
 
   describe('#unsubscribe', () => {
-    it('should throw an error if body is not provided',() => {
+    it('should throw an error if body is not provided', () => {
       request.input.body = null;
 
       return should(realtimeController.unsubscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should throw an error if roomId is not provided',() => {
+    it('should throw an error if roomId is not provided', () => {
       return should(realtimeController.unsubscribe(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
@@ -152,14 +152,14 @@ describe('RealtimeController', () => {
   });
 
   describe('#count', () => {
-    it('should throw an error if body is not provided',() => {
+    it('should throw an error if body is not provided', () => {
       request.input.body = null;
 
       return should(realtimeController.count(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
-    it('should throw an error if roomId is not provided',() => {
+    it('should throw an error if roomId is not provided', () => {
       return should(realtimeController.count(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
@@ -199,7 +199,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.ask).be.calledWithMatch('core:realtime:publish', request);
 
-      should(response).match({published: true});
+      should(response).match({ published: true });
     });
 
     it('should add basic metadata to body', async () => {
@@ -226,7 +226,7 @@ describe('RealtimeController', () => {
 
       should(kuzzle.ask).calledWithMatch('core:realtime:publish', request);
 
-      should(response).match({published: true});
+      should(response).match({ published: true });
     });
 
   });

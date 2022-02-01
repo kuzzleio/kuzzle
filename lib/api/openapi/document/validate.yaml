@@ -1,0 +1,42 @@
+DocumentValidate:
+  summary: "Validates data against existing validation rules."
+  tags:
+    - document
+  parameters:
+    - in: path
+      name: index
+      schema:
+        type: string
+    - in: path
+      name: collection
+      schema:
+        type: string
+    - in: body
+      name: "body"
+      description: "Document content to check."
+      required: true
+      schema:
+        $ref: "#/components/schemas/DocumentValidateRequest"
+  responses:
+    200:
+      description: "Returns the document validation status."
+      schema:
+        $ref: "#/components/schemas/DocumentValidateResponse"
+
+components:
+  schemas:
+    DocumentValidateRequest:
+      allOf:
+        - type: "object"
+          description: "document content"
+
+    DocumentValidateResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                valid:
+                  type: "boolean"

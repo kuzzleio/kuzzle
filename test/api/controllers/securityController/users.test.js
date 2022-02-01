@@ -26,8 +26,8 @@ describe('Test: security controller - users', () => {
     securityController = new SecurityController();
     securityController.anonymousId = '-1';
     request = new Request(
-      {controller: 'security'},
-      {user: new User()});
+      { controller: 'security' },
+      { user: new User() });
 
     // Random number chosen by fair dice roll. Guaranteed to be random.
     // (xkcd #221)
@@ -99,8 +99,8 @@ describe('Test: security controller - users', () => {
       profileIds = ['foo' ];
       request.input.args._id = 'test';
       request.input.body = {
-        content: {name: 'John Doe', profileIds},
-        credentials: {someStrategy: {some: 'credentials'}}
+        content: { name: 'John Doe', profileIds },
+        credentials: { someStrategy: { some: 'credentials' } }
       };
       kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
 
@@ -251,11 +251,11 @@ describe('Test: security controller - users', () => {
   });
 
   describe('#updateUserMapping', () => {
-    const foo = {foo: 'bar'};
+    const foo = { foo: 'bar' };
 
     it('should reject if the body is missing', () => {
       return should(securityController.updateUserMapping(request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.body_required'});
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should update the user mapping', async () => {
@@ -313,7 +313,7 @@ describe('Test: security controller - users', () => {
 
       should(response).match({
         _id: 'foo',
-        _source: {bar: 'baz'},
+        _source: { bar: 'baz' },
       });
     });
 
@@ -395,7 +395,7 @@ describe('Test: security controller - users', () => {
     let searchStub;
 
     beforeEach(() => {
-      request.input.body = { query: {foo: 'bar' } };
+      request.input.body = { query: { foo: 'bar' } };
       request.input.args.from = 13;
       request.input.args.size = 42;
       request.input.args.scroll = 'foo';
@@ -415,10 +415,10 @@ describe('Test: security controller - users', () => {
       should(searchStub).be.calledWithMatch(
         searchEvent,
         request.input.body,
-        {from: 13, size: 42, scroll: 'foo'});
+        { from: 13, size: 42, scroll: 'foo' });
 
       should(response).match({
-        hits: [{_id: 'admin'}],
+        hits: [{ _id: 'admin' }],
         scrollId: 'foobar',
         total: 2,
       });
@@ -432,14 +432,14 @@ describe('Test: security controller - users', () => {
       should(searchStub).be.calledWithMatch(searchEvent, {}, {});
 
       should(response).match({
-        hits: [{_id: 'admin'}],
+        hits: [{ _id: 'admin' }],
         scrollId: 'foobar',
         total: 2,
       });
     });
 
     it('should allow `aggregations` and `highlight` arguments', async () => {
-      request.input.body = {aggregations: 'aggregations'};
+      request.input.body = { aggregations: 'aggregations' };
 
       await securityController.searchUsers(request);
 
@@ -454,7 +454,7 @@ describe('Test: security controller - users', () => {
 
       // highlight only
       searchStub.resetHistory();
-      request.input.body = {highlight: 'highlight'};
+      request.input.body = { highlight: 'highlight' };
       await securityController.searchUsers(request);
 
       should(searchStub).be.calledWithMatch(
@@ -545,7 +545,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if no scrollId is provided', () => {
-      request.input.args.scrollId = null;
+      delete request.input.args.scrollId;
 
       return should(securityController.scrollUsers(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -556,7 +556,7 @@ describe('Test: security controller - users', () => {
 
       should(scrollStub).be.calledWith(scrollEvent, 'foobar', undefined);
       should(response).match({
-        hits: [{_id: 'admin'}],
+        hits: [{ _id: 'admin' }],
         scrollId: 'foobar',
         total: 2,
       });
@@ -569,7 +569,7 @@ describe('Test: security controller - users', () => {
 
       should(scrollStub).be.calledWith(scrollEvent, 'foobar', 'qux');
       should(response).match({
-        hits: [{_id: 'admin'}],
+        hits: [{ _id: 'admin' }],
         scrollId: 'foobar',
         total: 2,
       });
@@ -612,7 +612,7 @@ describe('Test: security controller - users', () => {
       const error = new Error('Mocked error');
       deleteStub.rejects(error);
 
-      return should(securityController.deleteUser(new Request({_id: 'test'})))
+      return should(securityController.deleteUser(new Request({ _id: 'test' })))
         .be.rejectedWith(error);
     });
 
@@ -629,7 +629,7 @@ describe('Test: security controller - users', () => {
 
   describe('#createUser', () => {
     // api.security._persistUser has its own extensive tests above
-    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
+    const createdUser = { _id: 'foo', _source: { bar: 'baz' } };
 
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser').resolves(createdUser);
@@ -685,7 +685,7 @@ describe('Test: security controller - users', () => {
 
   describe('#createRestrictedUser', () => {
     // api.security._persistUser has its own extensive tests above
-    const createdUser = {_id: 'foo', _source: { bar: 'baz' } };
+    const createdUser = { _id: 'foo', _source: { bar: 'baz' } };
 
     beforeEach(() => {
       sinon.stub(securityController, '_persistUser').resolves(createdUser);
@@ -762,7 +762,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should return a valid response and use default options', async () => {
-      const updatedUserContent = {foo: 'bar', baz: 'qux'};
+      const updatedUserContent = { foo: 'bar', baz: 'qux' };
 
       Object.assign(updatedUser, updatedUserContent);
 
@@ -868,7 +868,7 @@ describe('Test: security controller - users', () => {
     });
 
     it('should reject if the content does not have a profileIds attribute', async () => {
-      request.input.body.profileIds = null;
+      delete request.input.body.profileIds;
 
       await should(securityController.replaceUser(request))
         .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
@@ -898,7 +898,7 @@ describe('Test: security controller - users', () => {
 
       Object.assign(
         replacedUser,
-        {_id: request.input.args._id},
+        { _id: request.input.args._id },
         replacedUserContent);
 
       const response = await securityController.replaceUser(request);
@@ -1144,7 +1144,7 @@ describe('Test: security controller - users', () => {
       adminExistsStub.resolves(true);
 
       await should(securityController.createFirstAdmin(request))
-        .be.rejectedWith(PreconditionError, {id: 'api.process.admin_exists'});
+        .be.rejectedWith(PreconditionError, { id: 'api.process.admin_exists' });
 
       should(securityController._persistUser).not.called();
       should(createOrReplaceRoleStub).not.called();

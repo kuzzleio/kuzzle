@@ -93,16 +93,30 @@ describe('#Request', () => {
   });
 
   it('should throw if a non-object options argument is provided', () => {
-    should(function () { new Request({}, []); }).throw('Request options must be an object');
-    should(function () { new Request({}, 'foobar'); }).throw('Request options must be an object');
-    should(function () { new Request({}, 123.45); }).throw('Request options must be an object');
+    should(function () {
+      new Request({}, []); 
+    }).throw('Request options must be an object');
+    should(function () {
+      new Request({}, 'foobar'); 
+    }).throw('Request options must be an object');
+    should(function () {
+      new Request({}, 123.45); 
+    }).throw('Request options must be an object');
   });
 
   it('should throw if an invalid optional status is provided', () => {
-    should(function () { new Request({}, { status: [] }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: {} }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: 'foobar' }); }).throw('Attribute status must be an integer');
-    should(function () { new Request({}, { status: 123.45 }); }).throw('Attribute status must be an integer');
+    should(function () {
+      new Request({}, { status: [] }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      new Request({}, { status: {} }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      new Request({}, { status: 'foobar' }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      new Request({}, { status: 123.45 }); 
+    }).throw('Attribute status must be an integer');
   });
 
   it('should set an error properly', () => {
@@ -129,7 +143,9 @@ describe('#Request', () => {
   });
 
   it('should throw if attempting to set a non-error object as a request error', () => {
-    should(function () { rq.setError('foo'); }).throw(/^Cannot set non-error object.*$/);
+    should(function () {
+      rq.setError('foo'); 
+    }).throw(/^Cannot set non-error object.*$/);
   });
 
   it('should set the provided result with default status 200', () => {
@@ -149,14 +165,24 @@ describe('#Request', () => {
   });
 
   it('should throw if trying to set an error object as a result', () => {
-    should(function () { rq.setResult(new Error('foobar')); }).throw(/cannot set an error/);
+    should(function () {
+      rq.setResult(new Error('foobar')); 
+    }).throw(/cannot set an error/);
   });
 
   it('should throw if trying to set a non-integer status', () => {
-    should(function () { rq.setResult('foobar', { status: {} }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: [] }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: true }); }).throw('Attribute status must be an integer');
-    should(function () { rq.setResult('foobar', { status: 123.45 }); }).throw('Attribute status must be an integer');
+    should(function () {
+      rq.setResult('foobar', { status: {} }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      rq.setResult('foobar', { status: [] }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      rq.setResult('foobar', { status: true }); 
+    }).throw('Attribute status must be an integer');
+    should(function () {
+      rq.setResult('foobar', { status: 123.45 }); 
+    }).throw('Attribute status must be an integer');
   });
 
   it('should throw if trying to set some non-object headers', () => {
@@ -352,7 +378,7 @@ describe('#Request', () => {
         request.input.args.lang = 'turkish';
 
         should(() => request.getLangParam())
-          .throwError({ id: 'api.assert.invalid_argument'});
+          .throwError({ id: 'api.assert.invalid_argument' });
       });
     });
 
@@ -387,7 +413,7 @@ describe('#Request', () => {
 
         should(() => request.getBoolean('doha')).throw(
           BadRequestError,
-          { id: 'api.assert.invalid_type'});
+          { id: 'api.assert.invalid_type' });
       });
 
       it('returns "false" if the flag is not set (not HTTP)', () => {
@@ -421,11 +447,27 @@ describe('#Request', () => {
             Valentine: 'sister'
           },
           year: '5270',
-          defeatedBugsAt: 11
+          defeatedBugsAt: 11,
+          relations: {
+            'lebron': ['james', 'curry', 'harden'],
+            'kobe': ['bryant', 'jordan', 'love']
+          },
+          powers: {
+            fire: {
+              level: 'high',
+              mana: 10,
+              damage: 10.8,
+            }
+          }
         };
       });
 
       describe('#getBodyArray', () => {
+        it('should return the array of the body (lodash parameter)', () => {
+          should(request.getBodyArray('relations.lebron'))
+            .exactly(request.input.body.relations.lebron);
+        });
+
         it('extracts the required parameter', () => {
           should(request.getBodyArray('names'))
             .exactly(request.input.body.names);
@@ -466,6 +508,21 @@ describe('#Request', () => {
       });
 
       describe('#getBodyString', () => {
+        it('should return the string of the body (lodash parameter)', () => {
+          should(request.getBodyString('relatives.Peter'))
+            .exactly(request.input.body.relatives.Peter);
+        });
+
+        it('should return the string of an array (lodash parameter)', () => {
+          should(request.getBodyString('names.0'))
+            .exactly(request.input.body.names[0]);
+        });
+
+        it('should return the string of an array (lodash parameter)', () => {
+          should(request.getBodyString('relations.lebron[0]'))
+            .exactly(request.input.body.relations.lebron[0]);
+        });
+ 
         it('extracts the required parameter', () => {
           should(request.getBodyString('fullname'))
             .exactly(request.input.body.fullname);
@@ -506,6 +563,11 @@ describe('#Request', () => {
       });
 
       describe('#getBodyObject', () => {
+        it('should return the object of the body (lodash parameter)', () => {
+          should(request.getBodyObject('powers.fire'))
+            .exactly(request.input.body.powers.fire);
+        });
+  
         it('extracts the required parameter', () => {
           should(request.getBodyObject('relatives'))
             .exactly(request.input.body.relatives);
@@ -546,6 +608,10 @@ describe('#Request', () => {
       });
 
       describe('#getBodyNumber', () => {
+        it('should return the number of the body (lodash parameter)', () => {
+          should(request.getBodyNumber('powers.fire.damage'))
+            .exactly(request.input.body.powers.fire.damage);
+        });
         it('extracts the required parameter and convert it', () => {
           should(request.getBodyNumber('age'))
             .exactly(3011.5);
@@ -589,6 +655,11 @@ describe('#Request', () => {
       });
 
       describe('#getBodyInteger', () => {
+        it('should return the integer of the body (lodash parameter)', () => {
+          should(request.getBodyInteger('powers.fire.mana'))
+            .exactly(request.input.body.powers.fire.mana);
+        });
+
         it('extracts the required parameter and convert it', () => {
           should(request.getBodyInteger('year'))
             .exactly(5270);
@@ -979,16 +1050,16 @@ describe('#Request', () => {
         should(searchBody).be.eql({});
       });
 
-      it('should provide empty body when the route is invoked with GET with a null search body is provided', () => {
+      it('should return a {} object when the route is invoked with GET with a null search body is provided', () => {
         request = new KuzzleRequest(input, {
           connection: { protocol: 'http', verb: 'GET' }
         });
         request.input.body = null;
         request.input.args.searchBody = null;
 
-        const searchBody = request.getSearchBody();
-
-        should(searchBody).be.eql({});
+        should(() => {
+          request.getSearchBody().be.eql({});
+        });
       });
 
       it('should have have default value', () => {
@@ -1044,7 +1115,7 @@ describe('#Request', () => {
       });
 
       it('should return the request body', () => {
-        const body = {foo: 'bar'};
+        const body = { foo: 'bar' };
 
         request.input.body = body;
 

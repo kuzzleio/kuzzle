@@ -12,6 +12,7 @@ const {
   Request,
   KuzzleRequest,
   KuzzleError,
+  Mutex,
   UnauthorizedError,
   TooManyRequestsError,
   SizeLimitError,
@@ -63,9 +64,11 @@ describe('Plugin Context', () => {
       should(context.constructors.RequestInput).be.a.Function();
       should(context.constructors.BaseValidationType).be.a.Function();
       should(context.constructors.Repository).be.a.Function();
+      should(context.constructors.Mutex).be.a.Function();
 
       should(new context.constructors.Koncorde).be.instanceOf(Koncorde);
       should(new context.constructors.Request(new Request({}), {})).be.instanceOf(KuzzleRequest);
+      should(new context.constructors.Mutex).be.instanceOf(Mutex);
 
       repository = new context.constructors.Repository(someCollection);
 
@@ -107,7 +110,9 @@ describe('Plugin Context', () => {
 
     describe('#Request', () => {
       it('should throw when trying to instantiate a Request object without providing any data', () => {
-        should(function () { new context.constructors.Request(); })
+        should(function () {
+          new context.constructors.Request(); 
+        })
           .throw(PluginImplementationError, { id: 'plugin.context.missing_request_data' });
       });
 
@@ -124,7 +129,7 @@ describe('Plugin Context', () => {
             error: new Error('error'),
             status: 666,
             jwt: 'jwt',
-            volatile: {foo: 'bar'}
+            volatile: { foo: 'bar' }
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -143,7 +148,7 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.args._id).be.eql(request.input.args._id);
         should(pluginRequest.input.args.index).be.eql(request.input.args.index);
         should(pluginRequest.input.args.collection).be.eql(request.input.args.collection);
-        should(pluginRequest.input.volatile).match({foo: 'bar'});
+        should(pluginRequest.input.volatile).match({ foo: 'bar' });
       });
 
       it('should override origin request data with provided ones', () => {
@@ -160,7 +165,7 @@ describe('Plugin Context', () => {
             error: new Error('error'),
             status: 666,
             jwt: 'jwt',
-            volatile: {foo: 'bar'}
+            volatile: { foo: 'bar' }
           }, {
             protocol: 'protocol',
             connectionId: 'connectionId'
@@ -173,7 +178,7 @@ describe('Plugin Context', () => {
             size: 99,
             collection: 'pluginCollection',
             jwt: null,
-            volatile: {foo: 'overridden', bar: 'baz'}
+            volatile: { foo: 'overridden', bar: 'baz' }
           });
 
         should(pluginRequest.context.protocol).be.eql('protocol');
@@ -191,11 +196,11 @@ describe('Plugin Context', () => {
         should(pluginRequest.input.args._id).be.eql('_id');
         should(pluginRequest.input.args.index).be.eql('index');
         should(pluginRequest.input.args.collection).be.eql('pluginCollection');
-        should(pluginRequest.input.volatile).match({foo: 'overridden', bar: 'baz'});
+        should(pluginRequest.input.volatile).match({ foo: 'overridden', bar: 'baz' });
       });
 
       it('should allow building a request without providing another one', () => {
-        const rq = new context.constructors.Request({controller: 'foo', action: 'bar'});
+        const rq = new context.constructors.Request({ controller: 'foo', action: 'bar' });
 
         should(rq).be.instanceOf(KuzzleRequest);
         should(rq.input.action).be.eql('bar');
@@ -316,6 +321,10 @@ describe('Plugin Context', () => {
       should(subscription.unregister).be.a.Function();
     });
 
+    it('should expose a Kuzzle node id accessor', () => {
+      should(context.accessors.nodeId).be.exactly(global.kuzzle.id);
+    });
+
     describe('#accessors.subscription functions', () => {
       it('should call register with the right ask and argument', async () => {
         const customRequest = new Request(
@@ -388,8 +397,8 @@ describe('Plugin Context', () => {
     describe('#execute', () => {
       it('should call the callback with a result if everything went well', done => {
         const
-          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-          result = {foo: 'bar'},
+          request = new Request({ requestId: 'request' }, { connectionId: 'connectionid' }),
+          result = { foo: 'bar' },
           callback = sinon.spy((err, res) => {
             try {
               should(callback).be.calledOnce();
@@ -399,7 +408,7 @@ describe('Plugin Context', () => {
               should(kuzzle.funnel.executePluginRequest).calledWith(request);
               done();
             }
-            catch(e) {
+            catch (e) {
               done(e);
             }
           });
@@ -411,8 +420,8 @@ describe('Plugin Context', () => {
 
       it('should resolve a Promise with a result if everything went well', () => {
         const
-          request = new Request({requestId: 'request'}, {connectionId: 'connectionid'}),
-          result = {foo: 'bar'};
+          request = new Request({ requestId: 'request' }, { connectionId: 'connectionid' }),
+          result = { foo: 'bar' };
 
         kuzzle.funnel.executePluginRequest.resolves(result);
 
@@ -430,7 +439,7 @@ describe('Plugin Context', () => {
 
       it('should call the callback with an error if something went wrong', done => {
         const
-          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          request = new Request({ body: { some: 'request' } }, { connectionId: 'connectionid' }),
           error = new Error('error'),
           callback = sinon.spy(
             (err, res) => {
@@ -441,7 +450,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });
@@ -453,7 +462,7 @@ describe('Plugin Context', () => {
 
       it('should reject a Promise with an error if something went wrong', () => {
         const
-          request = new Request({body: {some: 'request'}}, {connectionId: 'connectionid'}),
+          request = new Request({ body: { some: 'request' } }, { connectionId: 'connectionid' }),
           error = new Error('error');
 
         kuzzle.funnel.executePluginRequest.rejects(error);
@@ -477,7 +486,7 @@ describe('Plugin Context', () => {
                 should(res).be.undefined();
                 done();
               }
-              catch(e) {
+              catch (e) {
                 done(e);
               }
             });
@@ -492,8 +501,8 @@ describe('Plugin Context', () => {
       });
 
       it('should reject if callback argument is not a function', () => {
-        return should(context.accessors.execute({requestId: 'request'}, 'foo'))
-          .be.rejectedWith({message: /^Invalid argument: Expected callback to be a function, received "string"/});
+        return should(context.accessors.execute({ requestId: 'request' }, 'foo'))
+          .be.rejectedWith({ message: /^Invalid argument: Expected callback to be a function, received "string"/ });
 
       });
 
@@ -561,7 +570,7 @@ describe('Plugin Context', () => {
       it('should throw if no authenticator is provided', () => {
 
         return should(context.accessors.strategies.add('foo', null))
-          .rejectedWith(PluginImplementationError, {message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.'});
+          .rejectedWith(PluginImplementationError, { message: '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.' });
       });
 
       it('should allow to remove a strategy', () => {

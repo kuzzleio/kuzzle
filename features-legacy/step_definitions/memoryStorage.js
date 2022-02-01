@@ -30,7 +30,7 @@ When(/^I scan the database using the (.+?) method with arguments$/, function (co
     parsed.args.cursor = 0;
   }
   else {
-    parsed.args = {cursor: 0};
+    parsed.args = { cursor: 0 };
   }
 
   this.memoryStorageResult = null;
@@ -64,7 +64,7 @@ Then(/^The (sorted )?ms result should match the (regex|json) (.*?)$/, function (
       should(JSON.parse(pattern)).be.eql(val);
       callback();
     }
-    catch(err) {
+    catch (err) {
       return callback(new Error('Error: ' + JSON.stringify(val) + ' does not match ' + pattern));
     }
   }
@@ -87,7 +87,7 @@ function scanRedis (world, command, args) {
       }
 
       if (world.memoryStorageResult === null) {
-        world.memoryStorageResult = {result: response.result[1]};
+        world.memoryStorageResult = { result: response.result[1] };
       }
       else {
         world.memoryStorageResult.result.push(...response.result[1]);

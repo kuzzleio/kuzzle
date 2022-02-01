@@ -103,7 +103,7 @@ describe('BaseModel', () => {
   describe('BaseModel.load', () => {
     it('should load and instantiate a model from database', async () => {
       kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
-        _id: 'mylehuong' ,
+        _id: 'mylehuong',
         _source: {
           name: 'mylehuong',
           location: 'thehive'

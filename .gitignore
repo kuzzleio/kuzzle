@@ -177,6 +177,6 @@ lib/types/config/PluginsConfiguration.js
 lib/types/config/SecurityConfiguration.js
 lib/types/config/ServerConfiguration.js
 lib/types/config/ServicesConfiguration.js
+lib/types/config/StorageService/StorageServiceElasticsearchConfiguration.js
 lib/types/config/internalCache/InternalCacheRedisConfiguration.js
 lib/types/config/publicCache/PublicCacheRedisConfiguration.js
-lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.js

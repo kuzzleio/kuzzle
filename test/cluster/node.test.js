@@ -742,9 +742,9 @@ describe('#Cluster Node', () => {
 
     it('should abort if another node has the same IP as this one', async () => {
       const nodes = [
-        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
-        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
-        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+        new IdCard({ id: 'bar', ip: '2.3.4.1' }),
+        new IdCard({ id: 'baz', ip: '2.3.4.2' }),
+        new IdCard({ id: 'qux', ip: '2.3.4.3' }),
       ];
 
       node.idCardHandler.getRemoteIdCards.resolves(nodes);
@@ -766,9 +766,9 @@ describe('#Cluster Node', () => {
     it('should be able to connect to existing nodes and get a fullstate', async () => {
       const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
-        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
-        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
-        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+        new IdCard({ id: 'bar', ip: '2.3.4.1' }),
+        new IdCard({ id: 'baz', ip: '2.3.4.2' }),
+        new IdCard({ id: 'qux', ip: '2.3.4.3' }),
       ];
 
       node.command.getFullState.resolves(fullstate);
@@ -807,9 +807,9 @@ describe('#Cluster Node', () => {
     it('should retry getting a fullstate if unable to get one the first time', async () => {
       const fullstate = { full: 'state', activity: [], nodesState: [] };
       const nodes = [
-        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
-        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
-        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+        new IdCard({ id: 'bar', ip: '2.3.4.1' }),
+        new IdCard({ id: 'baz', ip: '2.3.4.2' }),
+        new IdCard({ id: 'qux', ip: '2.3.4.3' }),
       ];
 
       node.heartbeatDelay = 10;
@@ -857,9 +857,9 @@ describe('#Cluster Node', () => {
       node.command.getFullState.resolves(null);
 
       node.idCardHandler.getRemoteIdCards.resolves([
-        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
-        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
-        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+        new IdCard({ id: 'bar', ip: '2.3.4.1' }),
+        new IdCard({ id: 'baz', ip: '2.3.4.2' }),
+        new IdCard({ id: 'qux', ip: '2.3.4.3' }),
       ]);
 
       await node.handshake();
@@ -878,11 +878,11 @@ describe('#Cluster Node', () => {
     });
 
     it('should sync with nodes that answered the handshake, and discard the rest', async () => {
-      const fullstate = { full: 'state', activity: [], nodesState: [{id: 'qux', lastMessageId: 'quxLastMessageId'}] };
+      const fullstate = { full: 'state', activity: [], nodesState: [{ id: 'qux', lastMessageId: 'quxLastMessageId' }] };
       const nodes = [
-        new IdCard({ id: 'bar', ip: '2.3.4.1'}),
-        new IdCard({ id: 'baz', ip: '2.3.4.2'}),
-        new IdCard({ id: 'qux', ip: '2.3.4.3'}),
+        new IdCard({ id: 'bar', ip: '2.3.4.1' }),
+        new IdCard({ id: 'baz', ip: '2.3.4.2' }),
+        new IdCard({ id: 'qux', ip: '2.3.4.3' }),
       ];
 
       node.command.getFullState.resolves(fullstate);
@@ -1084,8 +1084,8 @@ describe('#Cluster Node', () => {
     it('should do nothing if the cluster is consistent', async () => {
       node.idCardHandler.idCard.topology = new Set(['B', 'C']);
       node.idCardHandler.getRemoteIdCards.resolves([
-        new IdCard({ id: 'B', topology: ['A', 'C']}),
-        new IdCard({ id: 'C', topology: ['A', 'B']}),
+        new IdCard({ id: 'B', topology: ['A', 'C'] }),
+        new IdCard({ id: 'C', topology: ['A', 'B'] }),
       ]);
 
       await node.enforceClusterConsistency();
@@ -1096,8 +1096,8 @@ describe('#Cluster Node', () => {
     it('should shutdown if separated from the cluster (full split)', async () => {
       node.idCardHandler.idCard.topology = new Set([]);
       node.idCardHandler.getRemoteIdCards.resolves([
-        new IdCard({ id: 'B', topology: ['C']}),
-        new IdCard({ id: 'C', topology: ['B']}),
+        new IdCard({ id: 'B', topology: ['C'] }),
+        new IdCard({ id: 'C', topology: ['B'] }),
       ]);
 
       await node.enforceClusterConsistency();
@@ -1109,9 +1109,9 @@ describe('#Cluster Node', () => {
     it('should shutdown if separated from the cluster (partial split)', async () => {
       node.idCardHandler.idCard.topology = new Set(['B']);
       node.idCardHandler.getRemoteIdCards.resolves([
-        new IdCard({ id: 'B', topology: ['A', 'C', 'D']}),
-        new IdCard({ id: 'C', topology: ['B', 'D']}),
-        new IdCard({ id: 'D', topology: ['B', 'C']}),
+        new IdCard({ id: 'B', topology: ['A', 'C', 'D'] }),
+        new IdCard({ id: 'C', topology: ['B', 'D'] }),
+        new IdCard({ id: 'D', topology: ['B', 'C'] }),
       ]);
 
       await node.enforceClusterConsistency();
