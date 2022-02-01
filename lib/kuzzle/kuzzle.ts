@@ -231,7 +231,7 @@ class Kuzzle extends KuzzleEventEmitter {
       await (new SecurityModule()).init();
 
       // This will init the cluster module if enabled
-      this.id = await this.generateId();
+      this.id = await this.initKuzzleNode();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -258,7 +258,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.import(options.import, options.support);
+      await this.loadInitialState(options.import, options.support);
 
       await this.ask('core:security:verify');
 
