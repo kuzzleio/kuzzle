@@ -21,6 +21,10 @@ class MockHttpRequest {
     this._url = url;
     this._qs = qs;
     this._headers = headers;
+    this.response = {
+      setHeader: sinon.stub(),
+      status: '200 OK',
+    }
   }
 
   getQuery () {
@@ -58,6 +62,8 @@ class MockHttpResponse {
     this.end = sinon.stub();
     this.getRemoteAddressAsText = sinon.stub().returns('1.2.3.4');
     this.tryEnd = sinon.stub().returns([ true, null ]);
+    this.getWriteOffset = sinon.stub().returns(0);
+    this.write = sinon.stub().returns(false);
 
     this.upgrade = sinon.stub();
 
