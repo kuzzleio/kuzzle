@@ -188,7 +188,7 @@ describe('core/network/protocols/http', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
       
-      const stub = sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      const stub = sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
       should(response.cork).calledOnce();
@@ -211,7 +211,7 @@ describe('core/network/protocols/http', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 1 }), message);
 
       should(response.writeHeader).be.calledWithMatch(Buffer.from('Content-Length'), Buffer.from('1'));
@@ -221,7 +221,7 @@ describe('core/network/protocols/http', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
       should(response.writeHeader).be.calledWithMatch(Buffer.from('Transfer-Encoding'), Buffer.from('chunked'));
@@ -231,7 +231,7 @@ describe('core/network/protocols/http', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
 
       stream.write('Hello');
@@ -244,7 +244,7 @@ describe('core/network/protocols/http', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
       stream.write('Hello');
@@ -260,7 +260,7 @@ describe('core/network/protocols/http', () => {
       response.tryEnd.returns([false, false]);
       sinon.stub(stream, 'pause');
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
 
       stream.write('Hello');
@@ -276,7 +276,7 @@ describe('core/network/protocols/http', () => {
       response.write.returns(false);
       sinon.stub(stream, 'pause');
       
-      sinon.stub(httpWs, 'httpWriteRequestHeaders')
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
       stream.write('Hello');

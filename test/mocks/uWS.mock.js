@@ -24,7 +24,7 @@ class MockHttpRequest {
     this.response = {
       setHeader: sinon.stub(),
       status: '200 OK',
-    }
+    };
   }
 
   getQuery () {
