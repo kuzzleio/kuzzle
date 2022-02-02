@@ -31,7 +31,7 @@ const PUBLIC_PREFIX = '&';
 const NAME_SEPARATOR = '.';
 
 function transformProfile (profile) {
-  if (!Array.isArray(profile.policies)) {
+  if (! Array.isArray(profile.policies)) {
     return profile;
   }
 
@@ -265,7 +265,7 @@ be duplicated across all of an index upgraded collections.`);
     type: 'confirm'
   });
 
-  if (!choice) {
+  if (! choice) {
     return;
   }
 
@@ -287,7 +287,7 @@ async function upgradeDataStorage (context) {
   const upgraded = {};
   let indexes = body
     .map(b => b.index)
-    .filter(n => !n.startsWith(INTERNAL_PREFIX));
+    .filter(n => ! n.startsWith(INTERNAL_PREFIX));
 
   context.log.notice(`There are ${indexes.length} data indexes that can be upgraded`);
   const choices = {
@@ -352,7 +352,7 @@ async function upgradeDataStorage (context) {
 async function destroyPreviousStructure (context, upgraded) {
   // there is no point in destroying the previous structure if not performing
   // an in-place migration
-  if (!context.inPlace) {
+  if (! context.inPlace) {
     return;
   }
 
@@ -422,7 +422,7 @@ overwritten without notice.`);
     type: 'confirm'
   });
 
-  if (!confirm) {
+  if (! confirm) {
     context.log.error('Aborted by user.');
     process.exit(0);
   }

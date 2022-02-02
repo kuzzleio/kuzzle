@@ -261,13 +261,13 @@ describe('Test: security/roleRepository', () => {
       should(result.hits.length).be.exactly(1);
       should(result.hits).match([roles.default]);
 
-      result = await roleRepository.searchRole({ controllers: ['foo'] }, {from: 1});
+      result = await roleRepository.searchRole({ controllers: ['foo'] }, { from: 1 });
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.foo, roles.foobar]);
       should(result.hits).not.match([roles.default]);
 
-      result = await roleRepository.searchRole({ controllers: ['foo'] }, {size: 2});
+      result = await roleRepository.searchRole({ controllers: ['foo'] }, { size: 2 });
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
       should(result.hits).match([roles.default, roles.foo]);
@@ -339,7 +339,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should call thoroughly delete a role', async () => {
-      profileRepositoryMock.search.resolves({total: 0});
+      profileRepositoryMock.search.resolves({ total: 0 });
       roleRepository.roles.set(fakeRole._id, fakeRole);
 
       await roleRepository.deleteById(fakeRole._id);
@@ -397,7 +397,7 @@ describe('Test: security/roleRepository', () => {
       fakeRole.controllers = bad1;
 
       await should(roleRepository.validateAndSaveRole(fakeRole))
-        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
+        .rejectedWith(BadRequestError, { id: 'security.role.login_required' });
     });
 
     it('should throw if we update the anonymous with a role it cannot log with - case 2', async () => {
@@ -413,7 +413,7 @@ describe('Test: security/roleRepository', () => {
       fakeRole.controllers = bad;
 
       await should(roleRepository.validateAndSaveRole(fakeRole))
-        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
+        .rejectedWith(BadRequestError, { id: 'security.role.login_required' });
     });
 
     it('should throw if we update the anonymous with a role it cannot log with - case 3', async () => {
@@ -429,7 +429,7 @@ describe('Test: security/roleRepository', () => {
       fakeRole.controllers = bad;
 
       await should(roleRepository.validateAndSaveRole(fakeRole))
-        .rejectedWith(BadRequestError, {id: 'security.role.login_required'});
+        .rejectedWith(BadRequestError, { id: 'security.role.login_required' });
     });
 
     it('should allow updating the anonymous as long as it can log in', async () => {
@@ -616,7 +616,7 @@ describe('Test: security/roleRepository', () => {
         }
       };
 
-      roleRepository.checkRolePluginsRights(role, {force: true});
+      roleRepository.checkRolePluginsRights(role, { force: true });
 
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing controller "invalid_controller".');
     });
@@ -676,7 +676,7 @@ describe('Test: security/roleRepository', () => {
       role._id = 'test';
       role.controllers = controllers;
 
-      roleRepository.checkRolePluginsRights(role, {force: true});
+      roleRepository.checkRolePluginsRights(role, { force: true });
 
       should(kuzzle.log.warn).be.calledWith('The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".');
     });
@@ -851,7 +851,7 @@ describe('Test: security/roleRepository', () => {
     });
 
     it('should clear the RAM cache once the truncate succeeds', async () => {
-      const opts = {foo: 'bar'};
+      const opts = { foo: 'bar' };
 
       roleRepository.roles.set('foo', 'bar');
       roleRepository.roles.set('baz', 'qux');

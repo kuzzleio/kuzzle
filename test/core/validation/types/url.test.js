@@ -23,24 +23,24 @@ describe('Test: validation/types/url', () => {
 
   describe('#validate', () => {
     it('should return true if the value is valid', () => {
-      should(urlType.validate({notEmpty: true}, 'http://www.domain.com/', [])).be.true();
+      should(urlType.validate({ notEmpty: true }, 'http://www.domain.com/', [])).be.true();
     });
 
     it('should return true if the value is empty and optional', () => {
-      should(urlType.validate({notEmpty: false}, '', [])).be.true();
+      should(urlType.validate({ notEmpty: false }, '', [])).be.true();
     });
 
     it('should return false if the value is empty and required', () => {
       const errorMessage = [];
 
-      should(urlType.validate({notEmpty: true}, '', errorMessage)).be.false();
+      should(urlType.validate({ notEmpty: true }, '', errorMessage)).be.false();
       should(errorMessage).be.deepEqual(['The string must not be empty.']);
     });
 
     it('should return false if the value is not a valid URL address', () => {
       var errorMessage = [];
 
-      should(urlType.validate({notEmpty: true}, 'not an url address', errorMessage)).be.false();
+      should(urlType.validate({ notEmpty: true }, 'not an url address', errorMessage)).be.false();
       should(errorMessage).be.deepEqual(['The string must be a valid URL.']);
     });
 
@@ -48,7 +48,7 @@ describe('Test: validation/types/url', () => {
       [[], {}, 123, undefined, null, false].forEach(v => {
         const errorMessage = [];
 
-        should(urlType.validate({notEmpty: true}, v, errorMessage)).be.false();
+        should(urlType.validate({ notEmpty: true }, v, errorMessage)).be.false();
         should(errorMessage).be.deepEqual(['The field must be a string.']);
       });
     });
@@ -71,7 +71,7 @@ describe('Test: validation/types/url', () => {
 
     it('should throw if notEmpty is not set properly', () => {
       [[], {}, 'foo', 123, undefined, null].forEach(v => {
-        should(() => urlType.validateFieldSpecification({notEmpty: v}))
+        should(() => urlType.validateFieldSpecification({ notEmpty: v }))
           .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });

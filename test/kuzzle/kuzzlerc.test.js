@@ -12,7 +12,7 @@ describe('.kuzzlerc.sample', () => {
     try {
       JSON.parse(stripped);
     }
-    catch(e) {
+    catch (e) {
       // eslint-disable-next-line
       console.error(stripped);
       throw e;

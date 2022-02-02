@@ -25,7 +25,7 @@ export class PartialError extends KuzzleError {
   public errors: Array<KuzzleError>;
   public count: number;
 
-  constructor(message, body, id, code) {
+  constructor (message, body, id, code) {
     if (code === undefined && typeof id === 'number') {
       code = id;
       id = body;

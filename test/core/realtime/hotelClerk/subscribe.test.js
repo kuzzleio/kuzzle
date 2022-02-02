@@ -37,13 +37,13 @@ describe('Test: hotelClerk.subscribe', () => {
       controller: 'realtime',
       action: 'subscribe',
       body: {
-        equals: {firstName: 'Ada'}
+        equals: { firstName: 'Ada' }
       },
       volatile: {
         foo: 'bar',
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
-    }, {connectionId, token: null});
+    }, { connectionId, token: null });
 
     kuzzle.koncorde.normalize.returns({
       id: 'foobar', index: 'foo/bar', filter: []
@@ -71,12 +71,12 @@ describe('Test: hotelClerk.subscribe', () => {
     request['context\u200b'].user = { _id: 'Umraniye' };
     request.input.args.propagate = false;
     kuzzle.koncorde.normalize
-      .onFirstCall().returns({id: 'foobar', index: 'foo/bar', filter: []})
-      .onSecondCall().returns({id: 'barfoo', index: 'foo/bar', filter: []});
+      .onFirstCall().returns({ id: 'foobar', index: 'foo/bar', filter: [] })
+      .onSecondCall().returns({ id: 'barfoo', index: 'foo/bar', filter: [] });
 
     kuzzle.koncorde.store
-      .onFirstCall().returns({id: 'foobar'})
-      .onSecondCall().returns({id: 'barfoo'});
+      .onFirstCall().returns({ id: 'foobar' })
+      .onSecondCall().returns({ id: 'barfoo' });
 
     kuzzle.koncorde.store
       .onFirstCall().returns('foobar')

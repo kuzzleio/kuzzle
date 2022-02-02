@@ -227,7 +227,7 @@ export class ProfileRepository extends Repository {
     for (const id of profileIds) {
       let profile: Profile | Promise<Profile> = this.profiles.get(id);
 
-      if (!profile) {
+      if (! profile) {
         profile = this.loadOneFromDatabase(id)
           .then(p => {
             p.optimizedPolicies = this.optimizePolicies(p.policies);
@@ -249,7 +249,7 @@ export class ProfileRepository extends Repository {
     try {
       return await super.loadOneFromDatabase(id);
     }
-    catch(err) {
+    catch (err) {
       if (err.status === 404) {
         throw kerror.get('security', 'profile', 'not_found', id);
       }
@@ -426,14 +426,14 @@ export class ProfileRepository extends Repository {
       }
     }
     else {
-      const hits = await this.module.user.search({ query }, {from: 0, size: 1});
+      const hits = await this.module.user.search({ query }, { from: 0, size: 1 });
 
       if (hits.total > 0) {
         throw kerror.get('security', 'profile', 'in_use');
       }
     }
 
-    await this.deleteFromDatabase(profile._id, {refresh});
+    await this.deleteFromDatabase(profile._id, { refresh });
 
     this.profiles.delete(profile._id);
   }
@@ -496,8 +496,8 @@ export class ProfileRepository extends Repository {
     const profile = await super.fromDTO(dto);
 
     // force "default" role/policy if the profile does not have any role in it
-    if (!profile.policies || profile.policies.length === 0) {
-      profile.policies = [ {roleId: 'default'} ];
+    if (! profile.policies || profile.policies.length === 0) {
+      profile.policies = [ { roleId: 'default' } ];
     }
 
     if (profile.constructor._hash('') === false) {
@@ -535,7 +535,7 @@ export class ProfileRepository extends Repository {
    * @param {string} [profileId]
    */
   invalidate (profileId?: string) {
-    if (!profileId) {
+    if (! profileId) {
       this.profiles.clear();
     }
     else {

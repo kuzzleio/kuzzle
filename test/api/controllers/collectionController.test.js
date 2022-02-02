@@ -159,7 +159,7 @@ describe('Test: collection controller', () => {
       return should(collectionController.getSpecifications(request))
         .be.rejectedWith(
           NotFoundError,
-          {id: 'validation.assert.not_found'});
+          { id: 'validation.assert.not_found' });
     });
   });
 
@@ -177,7 +177,7 @@ describe('Test: collection controller', () => {
 
     it('should call internalIndex with the right data', async () => {
       kuzzle.ask.withArgs('core:storage:private:document:search').resolves({
-        hits: [{_id: 'bar'}],
+        hits: [{ _id: 'bar' }],
         scrollId: 'foobar',
         total: 123
       });
@@ -434,7 +434,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should reject the request if an invalid "type" argument is provided', () => {
-      request = new Request({index: 'index', type: 'foo'});
+      request = new Request({ index: 'index', type: 'foo' });
 
       return should(collectionController.list(request)).rejectedWith(
         BadRequestError,
@@ -442,7 +442,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should only return stored collections with type = stored', async () => {
-      request = new Request({index: 'index', type: 'stored'});
+      request = new Request({ index: 'index', type: 'stored' });
 
       const response = await collectionController.list(request);
 
@@ -453,7 +453,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should only return realtime collections with type = realtime', async () => {
-      request = new Request({index: 'index', type: 'realtime'});
+      request = new Request({ index: 'index', type: 'realtime' });
 
       const response = await collectionController.list(request);
 
@@ -468,7 +468,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if from and size are specified', async () => {
-      request = new Request({index: 'index', type: 'all', from: 2, size: 3});
+      request = new Request({ index: 'index', type: 'all', from: 2, size: 3 });
 
       kuzzle.ask
         .withArgs('core:storage:public:collection:list')
@@ -486,9 +486,9 @@ describe('Test: collection controller', () => {
 
       should(response).be.instanceof(Object);
       should(response.collections).be.deepEqual([
-        {name: 'brealtime', type: 'realtime'},
-        {name: 'bstored', type: 'stored'},
-        {name: 'crealtime', type: 'realtime'}
+        { name: 'brealtime', type: 'realtime' },
+        { name: 'bstored', type: 'stored' },
+        { name: 'crealtime', type: 'realtime' }
       ]);
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
@@ -497,7 +497,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if from is specified', async () => {
-      request = new Request({index: 'index', type: 'all', from: 8});
+      request = new Request({ index: 'index', type: 'all', from: 8 });
 
       kuzzle.ask.withArgs('core:storage:public:collection:list').resolves([
         'astored',
@@ -519,8 +519,8 @@ describe('Test: collection controller', () => {
 
       should(response.type).be.exactly('all');
       should(response.collections).be.deepEqual([
-        {name: 'erealtime', type: 'realtime'},
-        {name: 'estored', type: 'stored'}
+        { name: 'erealtime', type: 'realtime' },
+        { name: 'estored', type: 'stored' }
       ]);
       should(response).be.instanceof(Object);
       should(realtimeListCollectionsStub)
@@ -529,7 +529,7 @@ describe('Test: collection controller', () => {
     });
 
     it('should return a portion of the collection list if size is specified', async () => {
-      request = new Request({index: 'index', type: 'all', size: 2});
+      request = new Request({ index: 'index', type: 'all', size: 2 });
 
       kuzzle.ask.withArgs('core:storage:public:collection:list').resolves([
         'astored',
@@ -551,8 +551,8 @@ describe('Test: collection controller', () => {
 
       should(response).be.instanceof(Object);
       should(response.collections).be.deepEqual([
-        {name: 'arealtime', type: 'realtime'},
-        {name: 'astored', type: 'stored'}
+        { name: 'arealtime', type: 'realtime' },
+        { name: 'astored', type: 'stored' }
       ]);
       should(response.type).be.exactly('all');
       should(realtimeListCollectionsStub)
@@ -565,7 +565,7 @@ describe('Test: collection controller', () => {
         .withArgs('core:storage:public:collection:list')
         .rejects(new Error('foobar'));
 
-      request = new Request({index: 'index', type: 'stored'});
+      request = new Request({ index: 'index', type: 'stored' });
       return should(collectionController.list(request)).be.rejected();
     });
 
@@ -574,7 +574,7 @@ describe('Test: collection controller', () => {
         .withArgs('core:storage:public:collection:list')
         .rejects(new Error('foobar'));
 
-      request = new Request({index: 'index', type: 'all'});
+      request = new Request({ index: 'index', type: 'all' });
       return should(collectionController.list(request)).be.rejected();
     });
   });

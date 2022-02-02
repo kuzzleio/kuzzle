@@ -162,7 +162,7 @@ export class RequestInput {
 
     // copy into this.args only unrecognized properties
     for (const k of Object.keys(data)) {
-      if (!resourceProperties.has(k)) {
+      if (! resourceProperties.has(k)) {
         this.args[k] = data[k];
       }
     }
@@ -231,7 +231,7 @@ export class RequestInput {
 
   set controller (str: string) {
     // can only be set once
-    if (!this[_controller]) {
+    if (! this[_controller]) {
       this[_controller] = assert.assertString('controller', str);
     }
   }
@@ -259,7 +259,7 @@ export class RequestInput {
 
   set action (str: string) {
     // can only be set once
-    if (!this[_action]) {
+    if (! this[_action]) {
       this[_action] = assert.assertString('action', str);
     }
   }

@@ -234,7 +234,7 @@ export class ClusterIdCardHandler {
     this.disposed = true;
 
     if (this.refreshWorker) {
-      this.refreshWorker.postMessage({action: 'dispose'});
+      this.refreshWorker.postMessage({ action: 'dispose' });
     }
   }
 

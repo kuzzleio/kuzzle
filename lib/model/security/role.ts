@@ -88,7 +88,7 @@ export class Role {
       return false;
     }
 
-    if (typeof actionRights !== 'boolean' || !actionRights) {
+    if (typeof actionRights !== 'boolean' || ! actionRights) {
       return false;
     }
 
@@ -103,7 +103,7 @@ export class Role {
       throw assertionError.get('missing_argument', `${this._id}.controllers`);
     }
 
-    if (!isPlainObject(this.controllers)) {
+    if (! isPlainObject(this.controllers)) {
       throw assertionError.get('invalid_type', `${this._id}.controllers`, 'object');
     }
 
@@ -176,11 +176,11 @@ export class Role {
       throw assertionError.get('empty_argument', name);
     }
 
-    if (!has(controller, 'actions')) {
+    if (! has(controller, 'actions')) {
       throw assertionError.get('missing_argument', name);
     }
 
-    if (!isPlainObject(controller.actions)) {
+    if (! isPlainObject(controller.actions)) {
       throw assertionError.get('invalid_type', `${name}.actions`, 'object');
     }
 

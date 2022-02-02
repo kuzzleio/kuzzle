@@ -60,7 +60,7 @@ const errors = {
   UnauthorizedError,
 };
 
-function getHeader(title) {
+function getHeader (title) {
   return `---
 code: true
 type: page
@@ -77,7 +77,7 @@ description: Error codes definitions
 }
 
 function rimraf (dir) {
-  for (const entry of fs.readdirSync(dir, {withFileTypes: true})) {
+  for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fulldir = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
@@ -92,7 +92,7 @@ function rimraf (dir) {
 }
 
 function clearCodeDirectories (target) {
-  for (const entry of fs.readdirSync(target, {withFileTypes: true})) {
+  for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
     if (entry.isDirectory()) {
       rimraf(path.join(target, entry.name));
     }

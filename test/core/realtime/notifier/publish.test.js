@@ -38,7 +38,7 @@ describe('Test: notifier.publish', () => {
       index: 'foo',
       collection: 'bar',
       _id: 'I am fabulous',
-      body: {youAre: 'fabulous too'},
+      body: { youAre: 'fabulous too' },
       volatile: {},
     });
 

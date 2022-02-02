@@ -278,8 +278,8 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository (
       collection: string,
-      ObjectConstructor: any = null)
-    {
+      ObjectConstructor: any = null
+    ) {
       if (! collection) {
         throw contextError.get('missing_collection');
       }
@@ -400,7 +400,7 @@ function execute (request, callback) {
 
   const promback = new Promback(callback);
 
-  if (!request || (!(request instanceof KuzzleRequest) && !(request instanceof Request))) {
+  if (! request || (! (request instanceof KuzzleRequest) && ! (request instanceof Request))) {
     return promback.reject(contextError.get('missing_request'));
   }
 
@@ -442,24 +442,25 @@ function execute (request, callback) {
  * @param {Object} [options]
  * @returns {Request}
  */
-function instantiateRequest(request, data, options = {}) {
+function instantiateRequest (request, data, options = {}) {
   let
     _request = request,
     _data = data,
     _options = options;
 
-  if (!_request) {
+  if (! _request) {
     throw contextError.get('missing_request_data');
   }
 
-  if (!(_request instanceof KuzzleRequest)) {
+  if (! (_request instanceof KuzzleRequest)) {
     if (_data) {
       _options = _data;
     }
 
     _data = _request;
     _request = null;
-  } else {
+  }
+  else {
     Object.assign(_options, _request.context.toJSON());
   }
 
@@ -468,7 +469,7 @@ function instantiateRequest(request, data, options = {}) {
   // forward informations if a request object was supplied
   if (_request) {
     for (const resource of ['_id', 'index', 'collection']) {
-      if (!target.input.resource[resource]) {
+      if (! target.input.resource[resource]) {
         target.input.resource[resource] = _request.input.resource[resource];
       }
     }
@@ -479,7 +480,7 @@ function instantiateRequest(request, data, options = {}) {
       }
     }
 
-    if (!_data || _data.jwt === undefined) {
+    if (! _data || _data.jwt === undefined) {
       target.input.jwt = _request.input.jwt;
     }
 
@@ -488,7 +489,8 @@ function instantiateRequest(request, data, options = {}) {
         {},
         _request.input.volatile,
         _data.volatile);
-    } else {
+    }
+    else {
       target.input.volatile = _request.input.volatile;
     }
   }
@@ -504,15 +506,15 @@ function instantiateRequest(request, data, options = {}) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryAddStrategy(pluginName) {
-  return async function addStrategy(name, strategy) {
+function curryAddStrategy (pluginName) {
+  return async function addStrategy (name, strategy) {
     // strategy constructors cannot be used directly to dynamically
     // add new strategies, because they cannot
     // be serialized and propagated to other cluster nodes
     // so if a strategy is not defined using an authenticator, we have
     // to reject the call
-    if ( !isPlainObject(strategy)
-      || !isPlainObject(strategy.config)
+    if ( ! isPlainObject(strategy)
+      || ! isPlainObject(strategy.config)
       || typeof strategy.config.authenticator !== 'string'
     ) {
       throw contextError.get('missing_authenticator', pluginName, name);
@@ -546,17 +548,17 @@ function curryAddStrategy(pluginName) {
  *                    registering it into kuzzle, and returning
  *                    a promise
  */
-function curryRemoveStrategy(pluginName) {
+function curryRemoveStrategy (pluginName) {
   // either async or catch unregisterStrategy exceptions + return a rejected
   // promise
-  return async function removeStrategy(name) {
+  return async function removeStrategy (name) {
     const mutex = new Mutex('auth:strategies:remove', { ttl: 30000 });
 
     await mutex.lock();
 
     try {
       global.kuzzle.pluginsManager.unregisterStrategy(pluginName, name);
-      return await global.kuzzle.pipe('core:auth:strategyRemoved', {name, pluginName});
+      return await global.kuzzle.pipe('core:auth:strategyRemoved', { name, pluginName });
     }
     finally {
       await mutex.unlock();

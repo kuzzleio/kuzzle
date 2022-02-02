@@ -162,7 +162,7 @@ describe('Test: model/security/role', () => {
       role.controllers = {
         '*': {
           actions: {
-            '*': {an: 'object'}
+            '*': { an: 'object' }
           }
         }
       };
@@ -221,7 +221,7 @@ describe('Test: model/security/role', () => {
       role.controllers = true;
 
       return should(role.validateDefinition(context))
-        .be.rejectedWith(BadRequestError, {id: 'api.assert.invalid_type' });
+        .be.rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
 
     it('should reject the promise if the controllers definition is empty', () => {

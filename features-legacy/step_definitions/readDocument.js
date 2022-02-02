@@ -11,7 +11,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
   var main = function (callbackAsync) {
     this.api.get(this.result._id, index)
       .then(body => {
-        if (body.error && !not) {
+        if (body.error && ! not) {
           if (body.error.message) {
             callbackAsync(body.error.message);
             return false;
@@ -21,7 +21,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
           return false;
         }
 
-        if (!body.result || !body.result._source) {
+        if (! body.result || ! body.result._source) {
           if (not) {
             callbackAsync();
             return false;
@@ -32,7 +32,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
         }
 
         if (not) {
-          callbackAsync('Object with id '+ this.result._id + ' exists');
+          callbackAsync('Object with id ' + this.result._id + ' exists');
           return false;
         }
 
@@ -49,7 +49,7 @@ Then(/^I'm ?(not)* able to get the document(?: in index "([^"]*)")?$/, function 
   };
 
 
-  async.retry({times: 20, interval: 20}, main.bind(this), function (err) {
+  async.retry({ times: 20, interval: 20 }, main.bind(this), function (err) {
     if (err) {
       if (err.message) {
         err = err.message;
@@ -106,7 +106,7 @@ Then(/^my document has the value "([^"]*)" in field "([^"]*)"$/, function (value
 });
 
 Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in index "([^"]*)")?(?: with scroll "([^"]*)")?$/, function (dont, value, field, index, scroll) {
-  const query = {query: { match: { [field]: (value === 'true' ? true : value) }}};
+  const query = { query: { match: { [field]: (value === 'true' ? true : value) } } };
   const args = {};
 
   if (scroll) {
@@ -130,21 +130,27 @@ Then(/^I ?(don't)* find a document with "([^"]*)"(?: in field "([^"]*)")?(?: in 
       }
 
       if (body.result && body.result.hits && body.result.total !== 0) {
-        if (dont) { return Bluebird.reject(new Error('A document exists for the query')); }
+        if (dont) {
+          return Bluebird.reject(new Error('A document exists for the query')); 
+        }
         return Bluebird.resolve();
       }
 
-      if (dont) { return Bluebird.resolve(); }
+      if (dont) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(new Error('No result for query search'));
     })
     .catch(error => {
-      if (dont) { return Bluebird.resolve(); }
+      if (dont) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(error);
     });
 });
 
 Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     if (not) {
       return Bluebird.resolve();
     }
@@ -163,15 +169,21 @@ Then(/^I am ?(not)* able to scroll previous search$/, function (not) {
       }
 
       if (body.result && body.result.hits && body.result.hits.length > 0) {
-        if (not) { return Bluebird.reject(new Error('A document exists for the scrollId')); }
+        if (not) {
+          return Bluebird.reject(new Error('A document exists for the scrollId')); 
+        }
         return Bluebird.resolve();
       }
 
-      if (not) { return Bluebird.resolve(); }
+      if (not) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(new Error('No result for scrollId search'));
     })
     .catch(error => {
-      if (not) { return Bluebird.resolve(); }
+      if (not) {
+        return Bluebird.resolve(); 
+      }
       return Bluebird.reject(error);
     });
 });
@@ -188,13 +200,13 @@ Then(/^I should receive a document id$/, function (callback) {
 Then(/^I get ([\d]+) documents '([^']+)'?$/, function (count, documents, callback) {
   documents = JSON.parse(documents);
 
-  this.api.mGet({ids: documents})
+  this.api.mGet({ ids: documents })
     .then(response => {
       if (response.error !== null) {
         callback(response.error.message);
         return false;
       }
-      else if(response.result.total !== Number.parseInt(count)) {
+      else if (response.result.total !== Number.parseInt(count)) {
         callback('Document count (' + response.result.total + ') not as expected (' + count + ')');
         return false;
       }

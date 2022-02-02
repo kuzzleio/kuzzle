@@ -59,13 +59,13 @@ export class Profile {
    * @returns {Promise}
    */
   async getPolicies(): Promise<InternalProfilePolicy[]> {
-    if (!global.kuzzle) {
+    if (! global.kuzzle) {
       throw kerror.get('security', 'profile', 'uninitialized', this._id);
     }
 
     return Bluebird.map(this.optimizedPolicies, async ({restrictedTo, roleId}) => {
       const role = await global.kuzzle.ask('core:security:role:get', roleId);
-      return {restrictedTo, role};
+      return { restrictedTo, role };
     });
   }
 
@@ -114,14 +114,14 @@ export class Profile {
    *                                     existing indexes/collections
    * @returns {Promise}
    */
-  async validateDefinition({ strict = false } = {}) {
+  async validateDefinition ({ strict = false } = {}) {
     this.validateRateLimit();
 
-    if (!this.policies) {
+    if (! this.policies) {
       throw assertionError.get('missing_argument', `${this._id}.policies`);
     }
 
-    if (!Array.isArray(this.policies)) {
+    if (! Array.isArray(this.policies)) {
       throw assertionError.get('invalid_type', `${this._id}.policies`, 'object[]');
     }
 
@@ -131,7 +131,7 @@ export class Profile {
 
     let i = 0;
     for (const policy of this.policies) {
-      if (!policy.roleId) {
+      if (! policy.roleId) {
         throw assertionError.get('missing_argument', `${this._id}.policies[${i}].roleId`);
       }
 
@@ -145,7 +145,7 @@ export class Profile {
       }
 
       if (policy.restrictedTo) {
-        if (!Array.isArray(policy.restrictedTo)) {
+        if (! Array.isArray(policy.restrictedTo)) {
           throw assertionError.get(
             'invalid_type',
             `${this._id}.policies[${i}].restrictedTo`,
@@ -154,7 +154,7 @@ export class Profile {
 
         let j = 0;
         for (const restriction of policy.restrictedTo) {
-          if (!isPlainObject(restriction)) {
+          if (! isPlainObject(restriction)) {
             throw assertionError.get(
               'invalid_type',
               `${this._id}.policies[${i}].restrictedTo[${restriction}]`,
@@ -172,7 +172,7 @@ export class Profile {
               'core:storage:public:index:exist',
               restriction.index);
 
-            if (!indexExists) {
+            if (! indexExists) {
               throw kerror.get(
                 'services',
                 'storage',
@@ -184,7 +184,7 @@ export class Profile {
           if ( restriction.collections !== undefined
             && restriction.collections !== null
           ) {
-            if (!Array.isArray(restriction.collections)) {
+            if (! Array.isArray(restriction.collections)) {
               throw assertionError.get(
                 'invalid_type',
                 `${this._id}.policies[${i}].restrictedTo[${j}].collections`,
@@ -199,7 +199,7 @@ export class Profile {
                   restriction.index,
                   collection);
 
-                if (!isValid) {
+                if (! isValid) {
                   invalidCollections.push(collection);
                 }
               }
@@ -296,7 +296,7 @@ export class Profile {
     }
 
     if ( typeof this.rateLimit !== 'number'
-      || !Number.isInteger(this.rateLimit)
+      || ! Number.isInteger(this.rateLimit)
     ) {
       throw assertionError.get('invalid_type', 'rateLimit', 'integer');
     }

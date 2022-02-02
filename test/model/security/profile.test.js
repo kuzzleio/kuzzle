@@ -12,7 +12,7 @@ const { Profile } = require('../../../lib/model/security/profile');
 const { Role } = require('../../../lib/model/security/role');
 
 describe('Test: model/security/profile', () => {
-  const context = {connectionId: null, userId: null};
+  const context = { connectionId: null, userId: null };
   const request = new Request(
     {
       index: 'index',
@@ -270,7 +270,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo points to an unknown index (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index'}]
+        restrictedTo: [{ index: 'index' }]
       }];
 
       kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(false);
@@ -300,7 +300,7 @@ describe('Test: model/security/profile', () => {
     it('should reject if restrictedTo points to an unknown collection (strict mode)', async () => {
       profile.policies = [{
         roleId: 'admin',
-        restrictedTo: [{ index: 'index', collections: ['foo']}]
+        restrictedTo: [{ index: 'index', collections: ['foo'] }]
       }];
 
       kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(false);
@@ -316,7 +316,7 @@ describe('Test: model/security/profile', () => {
     });
 
     it('should force the rateLimit to 0 if none is provided', async () => {
-      profile.policies = [{roleId: 'admin'}];
+      profile.policies = [{ roleId: 'admin' }];
       profile.rateLimit = null;
       await profile.validateDefinition();
       should(profile.rateLimit).eql(0);
@@ -327,7 +327,7 @@ describe('Test: model/security/profile', () => {
     });
 
     it('should throw if the rate limit is not a valid integer', async () => {
-      profile.policies = [{roleId: 'admin'}];
+      profile.policies = [{ roleId: 'admin' }];
 
       for (const l of ['foo', {}, [], 123.45, true, false]) {
         profile.rateLimit = l;
@@ -343,7 +343,7 @@ describe('Test: model/security/profile', () => {
     });
 
     it('should throw if the rate limit is a negative integer', async () => {
-      profile.policies = [{roleId: 'admin'}];
+      profile.policies = [{ roleId: 'admin' }];
       profile.rateLimit = -2;
 
       try {

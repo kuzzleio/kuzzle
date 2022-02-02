@@ -136,13 +136,13 @@ export class Mutex {
 
       duration += this.attemptDelay;
 
-      if (!this._locked && (this.timeout === -1 || duration <= this.timeout)) {
+      if (! this._locked && (this.timeout === -1 || duration <= this.timeout)) {
         await Bluebird.delay(this.attemptDelay);
       }
     }
-    while (!this._locked && (this.timeout === -1 || duration <= this.timeout));
+    while (! this._locked && (this.timeout === -1 || duration <= this.timeout));
 
-    if (!this._locked) {
+    if (! this._locked) {
       debug('Failed to lock %s (mutex id: %s)', this.resource, this.mutexId);
       return false;
     }
@@ -158,11 +158,11 @@ export class Mutex {
    * @return {Promise}
    */
   async unlock () : Promise<void> {
-    if (!this._locked) {
+    if (! this._locked) {
       throw fatal.get('assertion_failed', `tried to unlock the resource "${this.resource}", which is not locked (mutex id: ${this.mutexId})`);
     }
 
-    if (!delScriptRegistered) {
+    if (! delScriptRegistered) {
       await global.kuzzle.ask(
         'core:cache:internal:script:define',
         'delIfValueEqual',

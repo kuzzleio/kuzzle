@@ -77,14 +77,14 @@ describe('/api/controllers/securityController', () => {
       request.input.body = null;
 
       return should(securityController._mDelete('type', request))
-        .rejectedWith(BadRequestError, {id: 'api.assert.body_required'});
+        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
     });
 
     it('should fail if the request has no ids to delete', () => {
       request.input.body = {};
 
       return should(securityController._mDelete('type', request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument'});
+        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should fail if ids is not an array', () => {

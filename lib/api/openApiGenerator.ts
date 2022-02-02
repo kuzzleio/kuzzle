@@ -34,6 +34,7 @@ import {
   OpenApiDocumentGetComponent,
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
+  OpenApiDocumentValidateComponent,
 } from './openapi';
 import { Inflector } from '../util/inflector';
 import { JSONObject } from '../../index';
@@ -44,17 +45,25 @@ const routeUrlMatch = /:([^/]*)/g;
  * Generate basic openApi Controller
  */
 function generateController (route: JSONObject, response: JSONObject) {
-  if (route.controller !== undefined) {
-    if (!_.some(response.tags, {name: route.controller})) {
-      const capitalizedController = Inflector.upFirst(route.controller);
-      response.tags.push({description: `${capitalizedController} Controller`, name: route.controller});
-    }
-    if (route.openapi.tags === undefined) {
-      route.openapi.tags = [];
-    }
-    if (!route.openapi.tags.includes(route.controller)) {
-      route.openapi.tags.push(route.controller);
-    }
+  if (route.controller === undefined) {
+    return;
+  }
+
+  if (! _.some(response.tags, { name: route.controller })) {
+    const capitalizedController = Inflector.upFirst(route.controller);
+
+    response.tags.push({
+      description: `${capitalizedController} Controller`,
+      name: route.controller
+    });
+  }
+
+  if (route.openapi.tags === undefined) {
+    route.openapi.tags = [];
+  }
+
+  if (! route.openapi.tags.includes(route.controller)) {
+    route.openapi.tags.push(route.controller);
   }
 }
 
@@ -65,6 +74,7 @@ function generateSummary (route: JSONObject) {
   if (route.openapi.description === undefined) {
     route.openapi.description = `Controller: ${route.controller}.`;
   }
+
   if (route.openapi.summary === undefined) {
     route.openapi.summary = `Action: ${route.action}.`;
   }
@@ -84,7 +94,7 @@ function generateParameters (route: JSONObject) {
         in: 'path',
         name: m[1],
         required: true,
-        schema: {type: 'string'}
+        schema: { type: 'string' }
       });
 
       m = routeUrlMatch.exec(route.path);
@@ -181,6 +191,7 @@ export function generateOpenApi (): JSONObject {
         ...OpenApiDocumentGetComponent,
         ...OpenApiDocumentCreateOrReplaceComponent,
         ...OpenApiDocumentCreateComponent,
+        ...OpenApiDocumentValidateComponent,
       }
     }
   };
