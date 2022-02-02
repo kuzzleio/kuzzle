@@ -32,6 +32,7 @@ import { Deprecation, User } from '../../types';
 import * as assert from '../../util/assertType';
 import { isPlainObject } from '../../util/safeObject';
 import { get } from 'lodash';
+import { HttpStream } from '../../types';
 
 const assertionError = kerror.wrap('api', 'assert');
 
@@ -244,6 +245,10 @@ export class KuzzleRequest {
   ) {
     if (result instanceof Error) {
       throw new InternalError('cannot set an error as a request\'s response');
+    }
+
+    if (this.context.connection.protocol !== 'http' && result instanceof HttpStream) {
+      throw new InternalError('cannot set an HttpStream as a request\'s response in a non-http protocol');
     }
 
     this.status = options.status || 200;
