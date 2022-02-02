@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Stream large volumes
+title: Stream large volumes of data
 description: Create streams to send large amount of data over the network
 order: 300
 ---
@@ -31,15 +31,15 @@ Use a two way stream to process your data and send each processed chunks.
 const { PassThrough } = require('stream');
 
 async myAction (request) {
- const stream = new PassThrough();
-
- setInterval(() => {
-   // Process data
-   stream.write(/* Processed data */);
-  if (done) {
-    stream.end(); // Close the stream
-  }
- }, 50):
+  const stream = new PassThrough();
+  let done = false;
+  setInterval(() => {
+    // Process data
+    stream.write(/* Processed data */); // Send chunk of data
+    if (done) {
+      stream.end(); // Close the stream
+    }
+  }, 50);
 
  return new HttpStream(stream);
 }
