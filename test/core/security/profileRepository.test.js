@@ -725,7 +725,7 @@ describe('Test: security/profileRepository', () => {
         restrictedTo: [
           {
             index: 'foo',
-            collections: ['qux', 'bar',]
+            collections: ['qux', 'bar']
           },
           {
             index: 'foo',

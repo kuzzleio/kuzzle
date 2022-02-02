@@ -29,7 +29,7 @@
  * - [0] Both value are equals
  * @returns {number} The index of the value, or -1 if not found
  */
-export function binarySearch(array: any[], predicate: (value: any) => number) {
+export function binarySearch (array: any[], predicate: (value: any) => number) {
   let lowerBound = 0;
   let upperBound = array.length - 1;
 

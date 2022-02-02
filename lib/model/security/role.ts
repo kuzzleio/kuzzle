@@ -44,7 +44,7 @@ export class Role {
    * @returns {boolean}
    */
   isActionAllowed (request: KuzzleRequest): boolean {
-    if (!global.kuzzle) {
+    if (! global.kuzzle) {
       throw kerror.get('security', 'role', 'uninitialized', this._id);
     }
 
@@ -123,7 +123,7 @@ export class Role {
    * @param {Map<string, string[]>} restrictedTo Restricted indexes
    * @returns {Boolean} resolves to a Boolean value
    */
-  checkRestrictions(index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean {
+  checkRestrictions (index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean {
     // If no restrictions, we allow the action:
     if (! restrictedTo || restrictedTo.size === 0) {
       return true;
@@ -131,7 +131,7 @@ export class Role {
 
     // If the request's action does not refer to an index, restrictions are
     // useless for this action (=> ignore them)
-    if (!index) {
+    if (! index) {
       return true;
     }
 
@@ -144,7 +144,7 @@ export class Role {
 
     // if no collections given on the restriction, the action is allowed for all
     // collections:
-    if (!collections || collections.length === 0) {
+    if (! collections || collections.length === 0) {
       return true;
     }
 
@@ -168,7 +168,7 @@ export class Role {
    * @throws If the controller definition is invalid
    */
   validateControllerRights (name: string, controller: ControllerRight) {
-    if (!isPlainObject(controller)) {
+    if (! isPlainObject(controller)) {
       throw assertionError.get('invalid_type', name, 'object');
     }
 

@@ -168,8 +168,8 @@ describe('Test: ElasticSearch service', () => {
           _scroll_id: 'azerty',
           hits: {
             hits: [
-              {_index: '&foo.foo', _id: 'foo', _source: {}},
-              {_index: '&bar.bar', _id: 'bar', _source: {}},
+              { _index: '&foo.foo', _id: 'foo', _source: {} },
+              { _index: '&bar.bar', _id: 'bar', _source: {} },
             ],
             total: { value: 1000 },
           },
@@ -233,8 +233,8 @@ describe('Test: ElasticSearch service', () => {
         body: {
           hits: {
             hits: [
-              {_index: '&foo.foo', _id: 'foo', _source: {}},
-              {_index: '&bar.bar', _id: 'bar', _source: {}},
+              { _index: '&foo.foo', _id: 'foo', _source: {} },
+              { _index: '&bar.bar', _id: 'bar', _source: {} },
             ],
             total: { value: 1000 }
           },
@@ -370,9 +370,11 @@ describe('Test: ElasticSearch service', () => {
           ],
           searchBody,
         });
-      } catch (error) {
+      }
+      catch (error) {
         // Catch error since we throw to skip the rest of the execution
-      } finally {
+      }
+      finally {
         should(elasticsearch._client.search.firstCall.args[0]).match({
           index: '@&nyc-open-data.yellow-taxi,@&nyc-open-data.red-taxi,@&nyc-close-data.green-taxi,@&nyc-close-data.blue-taxi',
           body: { query: { match_all: {} } },
@@ -420,7 +422,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._getAliasFromIndice = sinon.stub();
       elasticsearch._getAliasFromIndice.withArgs(indice).returns(alias);
 
-      const result = await elasticsearch.search({index, collection, searchBody});
+      const result = await elasticsearch.search({ index, collection, searchBody });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         index: alias,
@@ -498,7 +500,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      await elasticsearch.search({index: 'main', collection: 'kuzzleData', searchBody});
+      await elasticsearch.search({ index: 'main', collection: 'kuzzleData', searchBody });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         body: searchBody,
@@ -510,7 +512,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a search fails', async () => {
       elasticsearch._client.search.rejects(esClientError);
 
-      await should(elasticsearch.search({index, collection, searchBody}))
+      await should(elasticsearch.search({ index, collection, searchBody }))
         .be.rejected();
 
       should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
@@ -522,7 +524,7 @@ describe('Test: ElasticSearch service', () => {
         query : {}
       };
 
-      return should(elasticsearch.search({index, collection, searchBody}))
+      return should(elasticsearch.search({ index, collection, searchBody }))
         .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
@@ -533,7 +535,7 @@ describe('Test: ElasticSearch service', () => {
         },
       });
 
-      await elasticsearch.search({index, collection, searchBody: {}});
+      await elasticsearch.search({ index, collection, searchBody: {} });
 
       should(kuzzle.ask).not.calledWith('core:cache:internal:store');
     });

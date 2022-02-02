@@ -46,7 +46,7 @@ export class Profile {
   public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
 
-  constructor() {
+  constructor () {
     this._id = null;
     this.policies = [];
     this.optimizedPolicies = [];
@@ -58,12 +58,12 @@ export class Profile {
    *
    * @returns {Promise}
    */
-  async getPolicies(): Promise<InternalProfilePolicy[]> {
+  async getPolicies (): Promise<InternalProfilePolicy[]> {
     if (! global.kuzzle) {
       throw kerror.get('security', 'profile', 'uninitialized', this._id);
     }
 
-    return Bluebird.map(this.optimizedPolicies, async ({restrictedTo, roleId}) => {
+    return Bluebird.map(this.optimizedPolicies, async ({ restrictedTo, roleId }) => {
       const role = await global.kuzzle.ask('core:security:role:get', roleId);
       return { restrictedTo, role };
     });
@@ -73,7 +73,7 @@ export class Profile {
    * @param {Request} request
    * @returns {Promise}
    */
-  async getAllowedPolicies(request: KuzzleRequest): Promise<InternalProfilePolicy[]> {
+  async getAllowedPolicies (request: KuzzleRequest): Promise<InternalProfilePolicy[]> {
     if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
       return [];
     }
@@ -89,7 +89,7 @@ export class Profile {
    * @param {Request} request
    * @returns {Promise<boolean>}
    */
-  async isActionAllowed(request: KuzzleRequest): Promise<boolean> {
+  async isActionAllowed (request: KuzzleRequest): Promise<boolean> {
     if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
       return false;
     }

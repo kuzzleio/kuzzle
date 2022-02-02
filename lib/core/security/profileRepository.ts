@@ -551,8 +551,8 @@ export class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param {Object[]} policies 
    */
-  private optimizePolicies(policies: Policy[]): OptimizedPolicy[] {
-    if (!policies) {
+  private optimizePolicies (policies: Policy[]): OptimizedPolicy[] {
+    if (! policies) {
       return [];
     }
     
@@ -567,10 +567,10 @@ export class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param policy
    */
-  private optimizePolicy(policy: Policy): OptimizedPolicy {
+  private optimizePolicy (policy: Policy): OptimizedPolicy {
     const indexes = new Map();
 
-    if (!policy.restrictedTo) {
+    if (! policy.restrictedTo) {
       return {
         roleId: policy.roleId,
       };
@@ -580,15 +580,15 @@ export class ProfileRepository extends Repository {
       const index = restriction.index;
       const collections = restriction.collections;
 
-      if (!index) {
+      if (! index) {
         continue;
       }
 
-      if (!indexes.has(index)) {
+      if (! indexes.has(index)) {
         indexes.set(index, new Set());
       }
 
-      if (!collections) {
+      if (! collections) {
         continue;
       }
 
@@ -615,19 +615,19 @@ export class ProfileRepository extends Repository {
   // Otherwise we cannot stub them
   // ============================================
 
-  async toDTO(dto: Profile): Promise<JSONObject> {
+  async toDTO (dto: Profile): Promise<JSONObject> {
     return super.toDTO(dto);
   }
 
-  async deleteFromDatabase(id: string, options: JSONObject) {
+  async deleteFromDatabase (id: string, options: JSONObject) {
     return super.deleteFromDatabase(id, options);
   }
 
-  async search(searchBody: JSONObject, options: JSONObject) {
+  async search (searchBody: JSONObject, options: JSONObject) {
     return super.search(searchBody, options);
   }
 
-  async scroll(id: string, ttl: number) {
+  async scroll (id: string, ttl: number) {
     return super.scroll(id, ttl);
   }
 }

@@ -34,7 +34,7 @@ export class User {
   public _id: string;
   public profileIds: string[];
 
-  constructor() {
+  constructor () {
     this._id = null;
     this.profileIds = [];
   }
@@ -42,8 +42,8 @@ export class User {
   /**
    * @returns {Promise<Profile[]>}
    */
-  getProfiles() : Promise<Profile[]> {
-    if (!global.kuzzle) {
+  getProfiles (): Promise<Profile[]> {
+    if (! global.kuzzle) {
       return kerror.reject('security', 'user', 'uninitialized', this._id);
     }
 
@@ -53,7 +53,7 @@ export class User {
   /**
    * @returns {Promise}
    */
-  async getRights() {
+  async getRights () {
     const profiles = await this.getProfiles();
     const results = await Bluebird.map(profiles, p => p.getRights());
 
@@ -68,7 +68,7 @@ export class User {
    * @param {Request} request
    * @returns {Promise.<boolean>}
    */
-  async isActionAllowed(request: KuzzleRequest): Promise<boolean> {
+  async isActionAllowed (request: KuzzleRequest): Promise<boolean> {
     if (this.profileIds === undefined || this.profileIds.length === 0) {
       return false;
     }
@@ -95,14 +95,14 @@ export class User {
    * while skipping the ones that includes a wildcard since they will be expanded
    * later on, based on index and collections authorized for the given user.
    */
-  private async areTargetsAllowed(profiles: Profile[], targets: Target[]) {
+  private async areTargetsAllowed (profiles: Profile[], targets: Target[]) {
     const profilesPolicies = await Bluebird.map(profiles, profile => profile.getAllowedPolicies());
 
     // Every target must be allowed by at least one profile
     for (const target of targets) {
 
       // Skip targets with no Index or Collection
-      if (!target.index || !target.collections) {
+      if (! target.index || ! target.collections) {
         continue;
       }
 
@@ -127,7 +127,7 @@ export class User {
           )
         );
 
-        if (!isTargetAllowed) {
+        if (! isTargetAllowed) {
           return false;
         }
       }

@@ -139,10 +139,10 @@ describe('funnelController.execute', () => {
         index: 'index',
         collection: 'collection',
         targets: [
-          {index: 'index', collections: ['collection']}
+          { index: 'index', collections: ['collection'] }
         ]
       }, {
-        connection: {id: 'connectionid'},
+        connection: { id: 'connectionid' },
         token: null
       });
 

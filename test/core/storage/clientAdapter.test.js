@@ -1397,7 +1397,7 @@ describe('#core/storage/ClientAdapter', () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:document:multiSearch`,
-            [{index: 'index1', collections: ['collection1', 'collection2']}],
+            [{ index: 'index1', collections: ['collection1', 'collection2'] }],
             'query',
             'options');
 
@@ -1408,7 +1408,7 @@ describe('#core/storage/ClientAdapter', () => {
           should(adapter.client.search)
             .calledWith(
               {
-                targets: [{index: 'index1', collections: ['collection1', 'collection2']}],
+                targets: [{ index: 'index1', collections: ['collection1', 'collection2'] }],
                 searchBody: 'query'
               },
               'options'
@@ -1423,7 +1423,7 @@ describe('#core/storage/ClientAdapter', () => {
 
         const result = kuzzle.ask(
           'core:storage:public:document:multiSearch',
-          [{index: 'index1', collections: ['collection1', 'collection2']}],
+          [{ index: 'index1', collections: ['collection1', 'collection2'] }],
           'query',
           'options');
 
