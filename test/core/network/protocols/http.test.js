@@ -200,10 +200,14 @@ describe('core/network/protocols/http', () => {
       const stream = new PassThrough();
       
       stream.destroy();
+      sinon.stub(httpWs, 'httpSendError');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
-      should(response.writeStatus).be.calledWith('200 OK');
-      should(response.end).calledOnce();
+      should(httpWs.httpSendError).be.calledWithMatch(
+        message,
+        response,
+        { id: 'network.http.stream_closed' }
+      );
       should(response.cork).not.be.called();
     });
 
