@@ -30,6 +30,7 @@ description: Error codes definitions
 | api.assert.koncorde_unknown_keyword<br/><pre>0x0201000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The keyword "%s" is not part of Koncorde filters DSL keywords. Are you trying to use an Elasticsearch query? | An unknown keyword has been provided in filters |
 | api.assert.koncorde_restricted_keyword<br/><pre>0x0201000d</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | The %s "%s" of Koncorde DSL is not supported for search queries. | A restricted keyword has been provided in filters |
 | api.assert.koncorde_dsl_error<br/><pre>0x0201000e</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | %s | Provided filters contains an error |
+| api.assert.forbidden_stream<br/><pre>0x0201000f</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Cannot set an HttpStream as a request's response in a non-http protocol | A forbidden HttpStream has been provided in a response |
 
 ---
 

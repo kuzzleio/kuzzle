@@ -247,7 +247,7 @@ export class KuzzleRequest {
     }
 
     if (this.context.connection.protocol !== 'http' && result instanceof HttpStream) {
-      throw new InternalError('cannot set an HttpStream as a request\'s response in a non-http protocol');
+      throw kerror.get('api', 'assert', 'forbidden_stream');
     }
 
     this.status = options.status || 200;
