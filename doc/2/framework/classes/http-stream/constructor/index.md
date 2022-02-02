@@ -27,7 +27,7 @@ constructor (stream: stream.Readable, { totalBytes = -1 });
 
 | Argument     | Type                             | Description                                                                                   |
 | ------------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `totalBytes` | <pre>`number`</pre>(`-1`) | Represent the total number of bytes that the stream will send. `-1` means the size is dynamic |
+| `totalBytes` | <pre>number</pre>(`-1`) | Represent the total number of bytes that the stream will send. `-1` means the size is dynamic |
 
 ## Usage
 
