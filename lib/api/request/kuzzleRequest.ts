@@ -28,11 +28,10 @@ import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
 import kerror from '../../kerror';
-import { Deprecation, User } from '../../types';
+import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
 import { isPlainObject } from '../../util/safeObject';
 import { get } from 'lodash';
-import { HttpStream } from '../../types';
 
 const assertionError = kerror.wrap('api', 'assert');
 
