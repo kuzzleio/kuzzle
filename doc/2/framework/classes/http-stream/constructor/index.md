@@ -27,12 +27,12 @@ constructor (stream: stream.Readable, { totalBytes = -1 });
 
 | Argument     | Type                             | Description                                                                                   |
 | ------------ | -------------------------------- | --------------------------------------------------------------------------------------------- |
-| `totalBytes` | <pre>`number (defaut: -1)`</pre> | Represent the total number of bytes that the stream will send. `-1` means the size is dynamic |
+| `totalBytes` | <pre>`number`</pre>(`-1`) | Represent the total number of bytes that the stream will send. `-1` means the size is dynamic |
 
 ## Usage
 
 ```ts
-import { HttpStream } from 'types';
+import { HttpStream } from 'kuzzle';
 ```
 
 ## Examples
