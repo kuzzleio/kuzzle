@@ -61,7 +61,7 @@ const defaultConfig: KuzzleConfiguration = {
     concurrentRequests: 100,
     documentsFetchCount: 10000,
     documentsWriteCount: 200,
-    loginsPerSecond: 1,
+    loginsPerSecond: 2,
     requestsBufferSize: 50000,
     requestsBufferWarningThreshold: 5000,
     subscriptionConditionsCount: 100,
