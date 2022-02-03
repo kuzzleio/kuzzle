@@ -93,3 +93,14 @@ Feature: Server Controller
   Scenario: Http call onto deprecated method should not print a warning when NODE_ENV=production
     When I execute the action "server":"publicApi"
     Then The response should contains a "deprecations" equals to undefined
+
+  # server:capabilities =====================================================================
+  @http
+  Scenario: Get server capabilities
+    When I successfully execute the action "server":"capabilities"
+    Then I should receive a result matching:
+      | limits      | "_OBJECT_"    |
+      | plugins     | "_OBJECT_"    |
+      | routes      | "_OBJECT_"    |
+      | services    | "_OBJECT_"    |
+      | version     | "_STRING_"    |
