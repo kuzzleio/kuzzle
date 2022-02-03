@@ -207,6 +207,21 @@ Feature: Document Controller
     And I refresh the collection
     Then The document "document-1" should not exist
 
+  # document:mExists ============================================================
+
+  @mappings
+  Scenario: Check document existence
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    Then The document "document-1" should not exist
+    When I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+    Then The document "document-1" should exist
+    When I "delete" the following document ids:
+      | "document-1" |
+    And I refresh the collection
+    Then The document "document-1" should not exist
+
   # document:mCreate ===========================================================
 
   @mappings
