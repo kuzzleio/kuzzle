@@ -95,7 +95,6 @@ Feature: Server Controller
     Then The response should contains a "deprecations" equals to undefined
 
   # server:capabilities =====================================================================
-  @http
   Scenario: Get server capabilities
     When I successfully execute the action "server":"capabilities"
     Then I should receive a result matching:
