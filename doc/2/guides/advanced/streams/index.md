@@ -26,25 +26,6 @@ from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
 
 ## Examples
 
-Use a two way stream to process your data and send each processed chunks.
-```js
-const { PassThrough } = require('stream');
-
-async myAction (request) {
-  const stream = new PassThrough();
-  let done = false;
-  setInterval(() => {
-    // Process data
-    stream.write(/* Processed data */); // Send chunk of data
-    if (done) {
-      stream.end(); // Close the stream
-    }
-  }, 50);
-
- return new HttpStream(stream);
-}
-```
-
 Read a file from the disk and send it.
 ```js
 const fs = require('fs');
