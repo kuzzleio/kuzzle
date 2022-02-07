@@ -58,7 +58,8 @@
     "comma-spacing": 2,
     "brace-style": ["error", "stroustrup"],
     "space-infix-ops": 2,
-    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }]
+    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }],
+    "key-spacing": ["error", { "afterColon": true }]
   },
   "overrides": [
     {
