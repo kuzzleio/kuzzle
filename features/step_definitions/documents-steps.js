@@ -220,7 +220,7 @@ Then('I delete the document {string}', async function (id) {
 
 Then('I export the collection {string}:{string} in the format {string}', async function (index, collection, format) {
 
-  const response = await new Promise((resolve, reject) => {
+  this.props.result = await new Promise((resolve, reject) => {
 
     const req = http.request({
       hostname: this.host,
@@ -245,7 +245,4 @@ Then('I export the collection {string}:{string} in the format {string}', async f
 
     req.end();
   });
-  
-  this.props.result = response;
-
 });
