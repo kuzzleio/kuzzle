@@ -236,7 +236,7 @@ class JSONLDumper extends AbstractDumper {
 
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
-      if (this.ndjsonStream.write(`${content}\n`)) {
+      if (this.ndjsonStream.write(content)) {
         resolve();
       }
       else {
@@ -297,7 +297,7 @@ class CSVDumper extends AbstractDumper {
 
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
-      if (this.writeStream.write(content)) {
+      if (this.writeStream.write(`${content}\n`)) {
         resolve();
       }
       else {
