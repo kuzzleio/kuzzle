@@ -3,6 +3,7 @@ import { JSONObject } from '../../index';
 import get from 'lodash/get';
 import isObject from 'lodash/isObject';
 import stream from 'stream';
+import kerror from '../kerror';
 
 /**
  * Flatten an object transform:
@@ -49,6 +50,25 @@ function flattenStep (
     output[newKey] = value;
   }
 }
+/**
+ * Extract fields from mapping by removing the properties from es mapping
+ * 
+ * @param mapping 
+ * @returns 
+ */
+function extractMappingFields (mapping: JSONObject) {
+  const newMapping = {};
+
+  for (const key of Object.keys(mapping)) {
+    if (key === 'properties' && isObject(mapping[key])) {
+      newMapping[key] = extractMappingFields(mapping[key]);
+    } else {
+      newMapping[key] = mapping[key];
+    }
+  }
+
+  return newMapping;
+}
 
 
 /**
@@ -72,7 +92,7 @@ function pickValues (object: any, fields: string[]): any[] {
  */
 function formatValueForCSV (value: any) {
   if (isObject(value)) {
-    return '[NOT_SCALAR]';
+    return '[OBJECT]';
   }
 
   return value;
@@ -92,9 +112,12 @@ abstract class AbstractDumper {
     protected readonly writeStream: stream.Writable,
   ) {
     this.options = {
-      scroll: '2s',
+      scroll: '30s',
       size: batchSize
     };
+    if (! writeStream) {
+      throw kerror.get('api','assert','missing_argument','writeStream');
+    }
   }
 
   /**
@@ -200,12 +223,8 @@ class JSONLDumper extends AbstractDumper {
 
   async setup () {
     this.ndjsonStream.on('data', (line: string) => {
-      if (! this.writeStream) {
-        throw new Error('Cannot write data: WriteStream is not initialized.');
-      }
       this.writeStream.write(line);
     });
-    return;
   }
 
   async writeHeader () {
@@ -219,7 +238,7 @@ class JSONLDumper extends AbstractDumper {
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
       if (this.ndjsonStream.write(content)) {
-        resolve(undefined);
+        resolve();
       }
       else {
         this.ndjsonStream.once('drain', resolve);
@@ -236,32 +255,6 @@ class JSONLDumper extends AbstractDumper {
 
   protected get fileExtension () {
     return 'jsonl';
-  }
-}
-
-class KuzzleDumper extends JSONLDumper {
-  private rawDocuments: any = {
-    [this.index]: {
-      [this.collection]: []
-    }
-  };
-
-  protected get fileExtension () {
-    return 'json';
-  }
-
-  async onResult (document: {_id: string, _source: any}) {
-    this.rawDocuments[this.index][this.collection].push({
-      index: {
-        _id: document._id
-      }
-    });
-    this.rawDocuments[this.index][this.collection].push(document._source);
-    return;
-  }
-
-  tearDown (): Promise<void> {
-    return this.writeLine(this.rawDocuments);
   }
 }
 
@@ -292,7 +285,7 @@ class CSVDumper extends AbstractDumper {
       if (! mappings.properties) {
         return;
       }
-      this.fields = Object.keys(flattenObject(mappings.properties));
+      this.fields = Object.keys(flattenObject(extractMappingFields(mappings.properties)));
     }
     else if (this.fields.includes('_id')) {
       // Delete '_id' from the selected fields, since IDs are
@@ -304,12 +297,15 @@ class CSVDumper extends AbstractDumper {
     return this.writeLine(['_id', ...this.fields].join(this.separator));
   }
 
-  async writeLine (line: any) {
-    if (! this.writeStream) {
-      throw new Error('Cannot write data: WriteStream is not initialized.');
-    }
-    this.writeStream.write(`${line}\n`);
-    return;
+  writeLine (content: any): Promise<void> {
+    return new Promise(resolve => {
+      if (this.writeStream.write(content)) {
+        resolve();
+      }
+      else {
+        this.writeStream.once('drain', resolve);
+      }
+    });
   }
 
   onResult (document: { _id: string; _source: any }): Promise<void> {
@@ -322,16 +318,12 @@ export async function dumpCollectionData (writableStream: stream.Writable, index
   let dumper: AbstractDumper;
 
   switch (format.toLowerCase()) {
-    case 'jsonl':
-      dumper = new JSONLDumper(index, collection, batchSize, query, writableStream);
-      return dumper.dump();
-
     case 'csv':
       dumper = new CSVDumper(index, collection, batchSize, query, writableStream, fields);
       return dumper.dump();
 
     default:
-      dumper = new KuzzleDumper(index, collection, batchSize, query, writableStream);
+      dumper = new JSONLDumper(index, collection, batchSize, query, writableStream);
       return dumper.dump();
   }
 }
