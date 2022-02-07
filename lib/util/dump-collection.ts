@@ -62,7 +62,11 @@ function extractMappingFields (mapping: JSONObject) {
   for (const key of Object.keys(mapping)) {
     if (key === 'properties' && isObject(mapping[key])) {
       newMapping[key] = extractMappingFields(mapping[key]);
-    } else {
+    }
+    else if (isObject(mapping[key]) && mapping[key].type) {
+        newMapping[key] = mapping[key].type;
+    }
+    else {
       newMapping[key] = mapping[key];
     }
   }
@@ -237,7 +241,7 @@ class JSONLDumper extends AbstractDumper {
 
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
-      if (this.ndjsonStream.write(content)) {
+      if (this.ndjsonStream.write(`${content}\n`)) {
         resolve();
       }
       else {
@@ -299,7 +303,7 @@ class CSVDumper extends AbstractDumper {
 
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
-      if (this.writeStream.write(content)) {
+      if (this.writeStream.write(`${content}\n`)) {
         resolve();
       }
       else {
