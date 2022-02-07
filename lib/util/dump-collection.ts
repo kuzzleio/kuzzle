@@ -297,7 +297,7 @@ class CSVDumper extends AbstractDumper {
 
   writeLine (content: any): Promise<void> {
     return new Promise(resolve => {
-      if (this.writeStream.write(`${content}\n`)) {
+      if (this.writeStream.write(content)) {
         resolve();
       }
       else {
