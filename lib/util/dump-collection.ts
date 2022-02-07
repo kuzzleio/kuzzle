@@ -112,7 +112,7 @@ abstract class AbstractDumper {
     protected readonly collection: string,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
-    protected readonly options: JSONObject = { scroll: '1m', size: 1000, separator: ',' }
+    protected readonly options: JSONObject = { scroll: '1m', separator: ',', size: 1000 }
   ) {
     if (! writeStream) {
       throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
@@ -321,7 +321,7 @@ export async function dumpCollectionData (writableStream: stream.Writable, index
       return dumper.dump();
 
     default:
-      dumper = new JSONLDumper(index, collection, query,  writableStream, options);
+      dumper = new JSONLDumper(index, collection, query, writableStream, options);
       return dumper.dump();
   }
 }
