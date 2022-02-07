@@ -33,7 +33,7 @@ export type HttpStreamProperties = {
 export class HttpStream {
   public readonly stream: Readable;
   public readonly totalBytes: number;
-  private destroyed = false;
+  private _destroyed = false;
 
   constructor (
     readableStream: Readable,
@@ -43,14 +43,13 @@ export class HttpStream {
   ) {
     this.stream = readableStream;
     this.totalBytes = totalBytes;
-    this.destroyed = readableStream.destroyed;
+    this._destroyed = readableStream.destroyed;
   }
 
   /**
    * Returns if the stream is errored
    */
-  isErrored (): boolean {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  get errored (): boolean {
     // @ts-ignore
     return this.stream._readableState.errored !== null;
   }
@@ -58,8 +57,7 @@ export class HttpStream {
   /**
    * Get the error
    */
-  getError (): Error {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  get error (): Error {
     // @ts-ignore
     return this.stream._readableState.errored;
   }
@@ -67,8 +65,8 @@ export class HttpStream {
   /**
    * Returns if the stream has been destroyed
    */
-  isDestroyed (): boolean {
-    return this.destroyed;
+  get destroyed (): boolean {
+    return this._destroyed;
   }
 
   /**
@@ -76,12 +74,12 @@ export class HttpStream {
    * true if the stream has been destroyed
    */
   destroy (): boolean {
-    if (this.destroyed) {
+    if (this._destroyed) {
       return false;
     }
 
     this.stream.destroy();
-    this.destroyed = true;
+    this._destroyed = true;
     return true;
   }
 }
