@@ -1,5 +1,6 @@
 {
   "rules": {
+    "typescript-eslint/ban-ts-comment": 0,
     "consistent-return": 0,
     "curly": 2,
     "dot-notation": 2,
