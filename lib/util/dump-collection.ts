@@ -64,7 +64,7 @@ function extractMappingFields (mapping: JSONObject) {
       newMapping[key] = extractMappingFields(mapping[key]);
     }
     else if (isObject(mapping[key]) && mapping[key].type) {
-        newMapping[key] = mapping[key].type;
+      newMapping[key] = mapping[key].type;
     }
     else {
       newMapping[key] = mapping[key];
@@ -120,7 +120,7 @@ abstract class AbstractDumper {
       size: batchSize
     };
     if (! writeStream) {
-      throw kerror.get('api','assert','missing_argument','writeStream');
+      throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
     }
   }
 
