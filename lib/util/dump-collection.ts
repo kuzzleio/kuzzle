@@ -112,7 +112,7 @@ abstract class AbstractDumper {
     protected readonly collection: string,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
-    protected readonly options: JSONObject = { scroll: '1m', separator: ',', size: 1000 }
+    protected readonly options: JSONObject = { scroll: '1m', separator: ',', size: 10000 }
   ) {
     if (! writeStream) {
       throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
