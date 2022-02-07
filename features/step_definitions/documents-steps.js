@@ -225,7 +225,7 @@ Then('I export the collection {string}:{string} in the format {string}', async f
     const req = http.request({
       hostname: this.host,
       port: this.port,
-      path: `/${index}/${collection}/_export?format=${format}`,
+      path: `/${index}/${collection}/_export?format=${format}&size=1`,
       method: 'GET',
     }, (response) => {
       let data = [];
