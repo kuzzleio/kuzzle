@@ -51,7 +51,8 @@ export class HttpStream {
    */
   get errored (): boolean {
     // @ts-ignore
-    return this.stream._readableState.errored !== null;
+    return this.stream._readableState.errored !== null // @ts-ignore
+        && this.stream._readableState.errored !== undefined;
   }
 
   /**
