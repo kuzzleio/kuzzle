@@ -104,21 +104,16 @@ function formatValueForCSV (value: any) {
 
 abstract class AbstractDumper {
   protected collectionDir: string;
-  protected options: {scroll: string, size: number};
 
   protected abstract get fileExtension(): string;
 
   constructor (
     protected readonly index: string,
     protected readonly collection: string,
-    protected readonly batchSize: number,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
+    protected readonly options: JSONObject = { scroll: '1m', size: 1000, separator: ',' }
   ) {
-    this.options = {
-      scroll: '30s',
-      size: batchSize
-    };
     if (! writeStream) {
       throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
     }
@@ -266,13 +261,12 @@ class CSVDumper extends AbstractDumper {
   constructor (
     index: string,
     collection: string,
-    batchSize: number,
     query: any = {},
     writeStream: stream.Writable,
+    options: JSONObject,
     protected fields: string[],
-    protected readonly separator = ','
   ) {
-    super(index, collection, batchSize, query, writeStream);
+    super(index, collection, query, writeStream, options);
   }
 
   protected get fileExtension (): string {
@@ -298,7 +292,7 @@ class CSVDumper extends AbstractDumper {
     }
   }
   writeHeader () {
-    return this.writeLine(['_id', ...this.fields].join(this.separator));
+    return this.writeLine(['_id', ...this.fields].join(this.options.separator));
   }
 
   writeLine (content: any): Promise<void> {
@@ -314,20 +308,20 @@ class CSVDumper extends AbstractDumper {
 
   onResult (document: { _id: string; _source: any }): Promise<void> {
     const values = [document._id, ...pickValues(document._source, this.fields)];
-    return this.writeLine(values.join(this.separator));
+    return this.writeLine(values.join(this.options.separator));
   }
 }
 
-export async function dumpCollectionData (writableStream: stream.Writable, index: string, collection: string, batchSize: number, query: any = {}, format = 'jsonl', fields: string[] = []) {
+export async function dumpCollectionData (writableStream: stream.Writable, index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}) {
   let dumper: AbstractDumper;
 
   switch (format.toLowerCase()) {
     case 'csv':
-      dumper = new CSVDumper(index, collection, batchSize, query, writableStream, fields);
+      dumper = new CSVDumper(index, collection, query, writableStream, options, fields);
       return dumper.dump();
 
     default:
-      dumper = new JSONLDumper(index, collection, batchSize, query, writableStream);
+      dumper = new JSONLDumper(index, collection, query,  writableStream, options);
       return dumper.dump();
   }
 }
