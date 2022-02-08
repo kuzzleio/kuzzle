@@ -312,7 +312,7 @@ class CSVDumper extends AbstractDumper {
   }
 }
 
-export async function dumpCollectionData (writableStream: stream.Writable, index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}) {
+export async function dumpCollectionDocument (writableStream: stream.Writable, index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}) {
   let dumper: AbstractDumper;
 
   switch (format.toLowerCase()) {
