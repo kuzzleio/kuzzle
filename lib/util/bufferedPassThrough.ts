@@ -30,6 +30,8 @@ type Chunk = {
   encoding: Encoding;
 };
 
+type Callback = (error?: Error) => void;
+
 /**
  * This streams accumulate chunks data into a buffer until the amount of data is equal or exceed  the buffer size.
  * Then, it emits a single chunk with the accumulated data.
@@ -59,7 +61,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param encoding Type of encoding to use
    * @returns How many bytes have been copied / written to the internal buffer.
    */
-  private writeToBuffer(data: ChunkData, start: number, end: number, encoding: Encoding): number {
+  private writeToBuffer (data: ChunkData, start: number, end: number, encoding: Encoding): number {
     if (encoding === 'buffer') {
       return (data as Buffer).copy(this.buffer, this.offset, start, end);
     }
@@ -69,8 +71,8 @@ export class BufferedPassThrough extends stream.Duplex {
     return this.buffer.write((data as string).slice(start, end), this.offset, end - start, encoding);
   }
 
-  private async writeChunks(chunks: Chunk[]): Promise<void> {
-    for (let chunk of chunks) {
+  private async writeChunks (chunks: Chunk[]): Promise<void> {
+    for (const chunk of chunks) {
       await this.writeChunkData(chunk.chunk, chunk.encoding);
     }
   }
@@ -81,7 +83,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param chunk 
    * @param encoding 
    */
-  private async writeChunkData(chunk: ChunkData, encoding: Encoding): Promise<void> {
+  private async writeChunkData (chunk: ChunkData, encoding: Encoding): Promise<void> {
 
     let chunkOffset = 0;
 
@@ -103,7 +105,8 @@ export class BufferedPassThrough extends stream.Duplex {
         }
 
         this.offset = 0; // Reset the offset
-      } else {
+      }
+      else {
         // Write the whole chunk to the buffer
         const size = this.writeToBuffer(chunk, chunkOffset, chunk.length, encoding);
         // Increase the internal buffer offset
@@ -120,7 +123,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param encoding 
    * @param callback 
    */
-  _write (chunkData: ChunkData, encoding: Encoding, callback: Function) {
+  _write (chunkData: ChunkData, encoding: Encoding, callback: Callback) {
     this.writeChunkData(chunkData, encoding).then(() => {
       callback();
     });
@@ -132,7 +135,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param chunks 
    * @param callback 
    */
-  _writev (chunks: Chunk[], callback: Function) {
+  _writev (chunks: Chunk[], callback: Callback) {
     this.writeChunks(chunks).then(() => {
       callback();
     });
@@ -153,7 +156,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * Internal method called when the stream is ended.
    * @param callback 
    */
-  _final (callback: Function) {
+  _final (callback: Callback) {
     if (this.buffer && this.offset > 0) {
       // Push last bit of data
       this.push(this.buffer.slice(0, this.offset));
@@ -169,7 +172,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param err
    * @param callback 
    */
-  _destroy (err: Error, callback: Function) {
+  _destroy (err: Error, callback: Callback) {
     if (this.buffer && this.offset > 0) {
       // Push last bit of data
       this.push(this.buffer.slice(0, this.offset));
