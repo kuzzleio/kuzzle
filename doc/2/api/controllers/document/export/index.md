@@ -17,8 +17,8 @@ This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filter
 Koncorde filters will be translated into an Elasticsearch query.
 
 ::: info
-If you are struggling to retrieve all your documents, try tweaking the [size](#optional) and [scroll](#optional) parameters.
-Thoses parameters affects how many documents the internal scroll retrieves and processes per page and how long the scroll will exists.
+The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.  
+You should try with smaller pages of results if you experienced download problems.
 :::
 
 ::: warning
