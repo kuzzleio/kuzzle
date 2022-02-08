@@ -600,7 +600,7 @@ Kuzzle will then stream the data though the HTTP protocol in chunk until the str
 and not have everything stored in ram.
 
 ::: warning
-Chunks are send through the HTTP Protocol each time a chunk is emitted through the `data` event of the given stream.
+Chunks are sent through the HTTP Protocol each time a chunk is emitted through the `data` event of the given stream.
 It's up to you to implement a buffer mechanism to avoid sending too many small consecutive chunks through the network.
 
 Sending too many small chunks instead of bigger chunks will increase the number of syscall made to the TCP Socket and might decrease performance and throughput.
