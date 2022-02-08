@@ -16,6 +16,11 @@ that can either be downloaded directly from a browser or any scripts.
 This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filters-syntax) to match documents by passing the `lang` argument with the value `koncorde`.
 Koncorde filters will be translated into an Elasticsearch query.
 
+::: info
+If you are struggling to retrieve all your documents, try tweaking the [size](#optional) and [scroll](#optional) parameters.
+Thoses parameters affects how many documents the internal scroll retrieves and processes per page and how long the scroll will exists.
+:::
+
 ::: warning
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
 :::
@@ -98,7 +103,7 @@ Method: GET
 - `collection`: collection name
 - `index`: index name
 
-### Optionnal:
+### Optional:
 
 - `separator`: This option is only supported for the `CSV` format, it defines which character sequence will be used to format the CSV documents
 - `scroll`: This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed.
