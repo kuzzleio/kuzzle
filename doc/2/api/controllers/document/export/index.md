@@ -4,7 +4,9 @@ type: page
 title: export
 ---
 
-# export <SinceBadge version="auto-version"/>
+# export
+
+<SinceBadge version="auto-version"/>
 
 Export searched documents.
 
