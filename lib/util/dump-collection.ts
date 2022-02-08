@@ -4,6 +4,8 @@ import get from 'lodash/get';
 import isObject from 'lodash/isObject';
 import stream from 'stream';
 import kerror from '../kerror';
+import { BufferedPassThrough } from './bufferedPassThrough';
+import { HttpStream } from '../types';
 
 /**
  * Flatten an object transform:
@@ -312,16 +314,21 @@ class CSVDumper extends AbstractDumper {
   }
 }
 
-export async function dumpCollectionDocument (writableStream: stream.Writable, index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}) {
+export function dumpCollectionDocument (index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}): HttpStream {
   let dumper: AbstractDumper;
+
+  const writableStream = new BufferedPassThrough({ highWaterMark: 16384 });
 
   switch (format.toLowerCase()) {
     case 'csv':
       dumper = new CSVDumper(index, collection, query, writableStream, options, fields);
-      return dumper.dump();
-
+      dumper.dump();
+      break;
     default:
       dumper = new JSONLDumper(index, collection, query, writableStream, options);
-      return dumper.dump();
+      dumper.dump();
+      break;
   }
+
+  return new HttpStream(writableStream);
 }

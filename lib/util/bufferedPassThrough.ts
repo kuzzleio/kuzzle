@@ -182,5 +182,3 @@ export class BufferedPassThrough extends stream.Duplex {
     callback(err);
   }
 }
-
-module.exports = BufferedPassThrough;
