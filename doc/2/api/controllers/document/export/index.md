@@ -101,7 +101,7 @@ Method: GET
 ### Optionnal:
 
 - `separator`: This option is only supported for the `CSV` format, it defines which character sequence will be used to format the CSV documents
-- `scroll`: creates a forward-only result cursor. This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed. If set, a cursor identifier named `scrollId` is returned in the results. This cursor can then be moved forward using the [scroll](/core/2/api/controllers/document/scroll) API action
+- `scroll`: This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed.
 - `size`: set the maximum number of documents returned per result page. By default it's `10000`.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used.
 - `format`: Set the format that should be used to export the documents. (`csv`, `jsonl`)
