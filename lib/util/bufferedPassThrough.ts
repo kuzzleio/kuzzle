@@ -99,7 +99,7 @@ export class BufferedPassThrough extends stream.Duplex {
 
         // Sends the whole buffer to the stream since it is full
         if (! this.push(this.buffer)) {
-          await new Promise((res) => {
+          await new Promise(res => {
             this.once('_drained', res);
           });
         }
