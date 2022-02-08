@@ -606,14 +606,13 @@ It's up to you to implement a buffer mechanism to avoid sending too many small c
 Sending too many small chunks instead of bigger chunks will increase the number of syscall made to the TCP Socket and might decrease performance and throughput.
 :::
 
-## Usage
+**Usage:**
 
 All you need to send a stream from any controller's actions is to wrap any [Readable Stream](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable)
 from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
 
-## Examples
+**Example: Read a file from the disk and send it.**
 
-Read a file from the disk and send it.
 ```js
 const fs = require('fs');
 
