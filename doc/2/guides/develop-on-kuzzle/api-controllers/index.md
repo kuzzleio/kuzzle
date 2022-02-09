@@ -600,25 +600,24 @@ Kuzzle will then stream the data though the HTTP protocol in chunk until the str
 and not have everything stored in ram.
 
 ::: warning
-Chunks are send through the HTTP Protocol each time a chunk is emitted through the `data` event of the given stream.
+Chunks are sent through the HTTP Protocol each time a chunk is emitted through the `data` event of the given stream.
 It's up to you to implement a buffer mechanism to avoid sending too many small consecutive chunks through the network.
 
 Sending too many small chunks instead of bigger chunks will increase the number of syscall made to the TCP Socket and might decrease performance and throughput.
 :::
 
-## Usage
+**Usage:**
 
 All you need to send a stream from any controller's actions is to wrap any [Readable Stream](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable)
 from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
 
-## Examples
+**Example: Read a file from the disk and send it.**
 
-Read a file from the disk and send it.
 ```js
 const fs = require('fs');
 
 async myAction (request) {
- const readStream = fs.createReadStream('./Document.zip');
+ const readStream = fs.createReadStream('./Document.tar.gz');
 
  return new HttpStream(readStream);
 }
