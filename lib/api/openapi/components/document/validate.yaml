@@ -16,12 +16,12 @@ DocumentValidate:
       description: "Document content to check."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentValidateRequest"
+        $ref: "#/components/document/DocumentValidateRequest"
   responses:
     200:
       description: "Returns the document validation status."
       schema:
-        $ref: "#/components/schemas/DocumentValidateResponse"
+        $ref: "#/components/document/DocumentValidateResponse"
 
 components:
   schemas:

@@ -35,12 +35,12 @@ DocumentReplace:
       description: "Replaces the content of an existing document."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentReplaceRequest"
+        $ref: "#/components/document/DocumentReplaceRequest"
   responses:
     200:
       description: "Replaces the content of an existing document."
       schema:
-        $ref: "#/components/schemas/DocumentReplaceResponse"
+        $ref: "#/components/document/DocumentReplaceResponse"
 
 components:
   schemas:
