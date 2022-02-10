@@ -1,4 +1,4 @@
-!bin/.upgrades
+bin/.upgrades
 
 # JS generated files from TS
 *.d.ts
