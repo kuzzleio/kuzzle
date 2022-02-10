@@ -254,7 +254,7 @@ async function upgradeAliases (context, upgraded) {
   for (const [index, obj] of Object.entries(response.body)) {
     if (Object.keys(obj.aliases).length > 0) {
       for (const newIndex of upgraded[index].targets) {
-        aliases[newIndex] = obj.aliases;
+        aliases[newIndex.toLowerCase()] = obj.aliases;
       }
     }
   }
