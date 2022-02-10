@@ -99,10 +99,10 @@ export class OpenApiManager {
    * @param applicationDefinition Application OpenApi definition
    * @param pluginsManager PluginsManager instance
    */
-  constructor (applicationDefinition: OpenApiDefinition, pluginsRoutes: any[]) {
+  constructor (applicationDefinition: OpenApiDefinition, kuzzleRoutes: any[], pluginsRoutes: any[]) {
     this.applicationDefinition = applicationDefinition;
 
-    generateOpenApi(global.kuzzle.config.http.routes, this.kuzzleDefinition);
+    generateOpenApi(kuzzleRoutes, this.kuzzleDefinition);
 
     generateOpenApi(pluginsRoutes, this.applicationDefinition);
 

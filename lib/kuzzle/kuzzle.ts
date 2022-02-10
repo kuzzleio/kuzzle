@@ -270,7 +270,10 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.install(options.installations);
 
-      this.openApiManager = new OpenApiManager(application.openApi, this.pluginsManager.routes);
+      this.openApiManager = new OpenApiManager(
+        application.openApi,
+        this.config.http.routes,
+        this.pluginsManager.routes);
 
       // @deprecated
       await this.pipe('kuzzle:start');
