@@ -107,7 +107,7 @@ Method: GET
 
 - `separator`: This option is only supported for the `CSV` format, it defines which character sequence will be used to format the CSV documents
 - `scroll`: This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed.
-- `size`: set the maximum number of documents returned per result page. By default it's `10000`.
+- `size`: set the maximum number of documents returned per result page. By default it's `10`.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used.
 - `format`: Set the format that should be used to export the documents. (`csv`, `jsonl`)
 
