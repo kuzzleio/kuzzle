@@ -616,11 +616,17 @@ from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
 ```js
 const fs = require('fs');
 
-async myAction (request) {
- const readStream = fs.createReadStream('./Document.tar.gz');
+app.controller.register('myController', {
+  actions: {
+    myDownloadAction: {
+      handler: async (request: KuzzleRequest) => {
+        const readStream = fs.createReadStream('./Document.tar.gz');
 
- return new HttpStream(readStream);
-}
+        return new HttpStream(readStream);
+      }
+    }
+  }
+});
 ```
 
 ## Use a custom Controller Action
