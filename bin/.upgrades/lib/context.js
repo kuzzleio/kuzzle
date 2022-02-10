@@ -29,8 +29,7 @@ const rc = require('rc');
 const inquirer = require('./inquirerExtended');
 const Logger = require('./logger');
 
-const defaultConfiguration = require('../../../lib/config/default.config');
-const { version: currentVersion } = require('../../../package.json');
+const defaultConfiguration = require('./default.config');
 
 class Version {
   constructor() {
@@ -110,8 +109,6 @@ class UpgradeContext {
    */
   async getVersions () {
     const version = new Version();
-
-    this.log.print(`Current Kuzzle version: ${currentVersion}`);
 
     version.list = fs
       .readdirSync(

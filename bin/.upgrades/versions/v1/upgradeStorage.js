@@ -144,20 +144,29 @@ async function upgradeMappings (context, index, collection, newIndex) {
   });
 }
 
-async function createNewIndex (context, newIndex) {
+async function createNewIndex (context, previousIndex, newIndex) {
   const exists = await context.target.indices.exists({ index: newIndex });
 
   if (exists.body) {
     await context.target.indices.delete({ index: newIndex });
   }
 
-  await context.target.indices.create({ index: newIndex });
+  const settingsResponse = await context.source.indices.getSettings({
+    index: previousIndex,
+  });
+  const previousSettings = settingsResponse.body[previousIndex].settings.index;
+  
+  const settings = {
+    analysis: previousSettings.analysis,    
+  };
+
+  await context.target.indices.create({ index: newIndex, body: { settings } });
 }
 
 async function upgrade (context, index, collection, newIndex) {
   const fixedIndexName = fixIndexName(context, index, collection, newIndex);
 
-  await createNewIndex(context, fixedIndexName);
+  await createNewIndex(context, index, fixedIndexName);
   await upgradeMappings(context, index, collection, fixedIndexName);
 
   return await moveData(context, index, collection, fixedIndexName);
@@ -180,7 +189,7 @@ async function upgradeInternalStorage (context) {
     let total;
 
     if (mappings) {
-      await createNewIndex(context, newIndex);
+      await createNewIndex(context, index, newIndex);
       await context.target.indices.putMapping({
         body: mappings,
         index: newIndex,
