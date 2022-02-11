@@ -114,7 +114,12 @@ abstract class AbstractDumper {
     protected readonly collection: string,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
-    protected readonly options: JSONObject = { scroll: '5s', separator: ',', size: 10, fieldsName: {} }
+    protected readonly options: JSONObject = {
+      fieldsName: {},
+      scroll: '5s',
+      separator: ',',
+      size: 10,
+    }
   ) {
     if (! writeStream) {
       throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
@@ -199,9 +204,9 @@ abstract class AbstractDumper {
       this.collection,
       this.query,
       {
-        size:  this.options.size,
+        lang: this.options.lang,
         scroll: this.options.scroll,
-        lang: this.options.lang
+        size: this.options.size,
       }
     );
 
