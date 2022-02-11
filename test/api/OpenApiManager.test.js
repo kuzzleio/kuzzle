@@ -42,7 +42,7 @@ describe('OpenApiManager', () => {
           url: 'https://{baseUrl}:{port}',
           description: 'Kuzzle Base Url',
           variables: {
-            baseUrl: {  default: 'localhost' },
+            baseUrl: { default: 'localhost' },
             port: { default: 7512 }
           },
         }
@@ -89,7 +89,7 @@ describe('OpenApiManager', () => {
     ];
 
     manager = new OpenApiManager(applicationOpenApi, kuzzleRoutes, pluginsRoutes);
-   });
+  });
 
   describe('#constructor', () => {
     it('should generate open API paths from kuzzle routes', () => {
