@@ -114,7 +114,7 @@ abstract class AbstractDumper {
     protected readonly collection: string,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
-    protected readonly options: JSONObject = { scroll: '1m', separator: ',', size: 10000 }
+    protected readonly options: JSONObject = { scroll: '5s', separator: ',', size: 10, fieldsName: {} }
   ) {
     if (! writeStream) {
       throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
@@ -198,7 +198,11 @@ abstract class AbstractDumper {
       this.index,
       this.collection,
       this.query,
-      this.options
+      {
+        size:  this.options.size,
+        scroll: this.options.scroll,
+        lang: this.options.lang
+      }
     );
 
     do {
@@ -293,8 +297,12 @@ class CSVDumper extends AbstractDumper {
       this.fields.splice(this.fields.indexOf('_id'), 1);
     }
   }
+  
   writeHeader () {
-    return this.writeLine(['_id', ...this.fields].join(this.options.separator));
+    const mappedFieldsName = ['_id', ...this.fields].map(field => {
+      return this.options.fieldsName[field] || field;
+    });
+    return this.writeLine(mappedFieldsName.join(this.options.separator));
   }
 
   writeLine (content: any): Promise<void> {
@@ -314,7 +322,7 @@ class CSVDumper extends AbstractDumper {
   }
 }
 
-export function dumpCollectionDocument (index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}): HttpStream {
+export function dumpCollectionDocuments (index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}): HttpStream {
   let dumper: AbstractDumper;
 
   const writableStream = new BufferedPassThrough({ highWaterMark: 16384 });
