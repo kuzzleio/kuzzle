@@ -243,6 +243,43 @@ Feature: Document Controller
       | document-1,42,,,document1  |
       | document-2,666,,,document2 |
 
+  @mappings
+  @http
+  Scenario: Verify exported documents in format csv with specified fields
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    Then The document "document-1" should not exist
+    And The document "document-2" should not exist
+    When I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+      | "document-2" | { "name": "document2", "age": 666 } |
+    And I refresh the collection
+    When I export the collection "nyc-open-data":"yellow-taxi" in the format "csv":
+      | fields | ["age","name"] |
+    Then the streamed data should be equal to:
+      | _id,age,name             |
+      | document-1,42,document1  |
+      | document-2,666,document2 |
+
+  @mappings
+  @http
+  Scenario: Verify exported documents in format csv with renamed fields
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    Then The document "document-1" should not exist
+    And The document "document-2" should not exist
+    When I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+      | "document-2" | { "name": "document2", "age": 666 } |
+    And I refresh the collection
+    When I export the collection "nyc-open-data":"yellow-taxi" in the format "csv":
+      | fields     | [ "age", "name" ]                                         |
+      | fieldsName | { "age": "cityAge", "name": "documentName", "_id": "id" } |
+    Then the streamed data should be equal to:
+      | id,cityAge,documentName  |
+      | document-1,42,document1  |
+      | document-2,666,document2 |
+
   # document:mCreate ===========================================================
 
   @mappings
