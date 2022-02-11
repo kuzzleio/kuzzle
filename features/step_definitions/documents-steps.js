@@ -250,7 +250,6 @@ Then('I export the collection {string}:{string} in the format {string}', async f
 Then('I export the collection {string}:{string} in the format {string}:', async function (index, collection, format, dataTable) {
 
   const options = this.parseObject(dataTable);
-  console.log(options);
   this.props.result = await new Promise((resolve, reject) => {
 
     const req = http.request({
