@@ -65,7 +65,7 @@ export class OpenApiManager {
         url: 'https://{baseUrl}:{port}',
         description: 'Kuzzle Base Url',
         variables: {
-          baseUrl: {  default: 'localhost' },
+          baseUrl: { default: 'localhost' },
           port: { default: 7512 }
         },
       }
@@ -107,7 +107,7 @@ export class OpenApiManager {
     generateOpenApi(pluginsRoutes, this.applicationDefinition);
 
     this.registerAskEvents();
-  };
+  }
 
   registerAskEvents () {
     global.kuzzle.onAsk('core:api:openapi:kuzzle', () => this.kuzzleDefinition);

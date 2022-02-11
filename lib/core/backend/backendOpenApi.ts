@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-
 import { ApplicationManager, Backend } from './index';
 import { OpenApiDefinition } from '../../types';
 

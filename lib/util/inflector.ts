@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import _ from 'lodash';
+
 export class Inflector {
   /**
    * Converts a string to kebab-case
@@ -48,24 +50,15 @@ export class Inflector {
 
   /**
    * Converts a string to PascalCase
-   * https://stackoverflow.com/questions/4068573/convert-string-to-pascal-case-aka-uppercamelcase-in-javascript
    */
   static pascalCase (string: string) {
-    return `${string}`
-      .replace(new RegExp(/[-_]+/, 'g'), ' ')
-      .replace(new RegExp(/[^\w\s]/, 'g'), '')
-      .replace(
-        new RegExp(/\s+(.)(\w*)/, 'g'),
-        ($1, $2, $3) => `${$2.toUpperCase() + $3.toLowerCase()}`
-      )
-      .replace(new RegExp(/\w/), s => s.toUpperCase());
+    return _.startCase(string).replace(/ /g, '');
   }
 
   /**
    * Converts a string to camelCase
-   * https://stackoverflow.com/questions/2970525/converting-any-string-into-camel-case
    */
   static camelCase (string) {
-    return string.toLowerCase().replace(/[^a-zA-Z0-9]+(.)/g, (m, chr) => chr.toUpperCase());
+    return _.camelCase(string);
   }
 }
