@@ -246,3 +246,35 @@ Then('I export the collection {string}:{string} in the format {string}', async f
     req.end();
   });
 });
+
+Then('I export the collection {string}:{string} in the format {string}:', async function (index, collection, format, dataTable) {
+
+  const options = this.parseObject(dataTable);
+  console.log(options);
+  this.props.result = await new Promise((resolve, reject) => {
+
+    const req = http.request({
+      hostname: this.host,
+      port: this.port,
+      path: `/${index}/${collection}/_export?format=${format}&size=1`,
+      method: 'POST',
+    }, (response) => {
+      let data = [];
+
+      response.on('data', (chunk) => {
+        data.push(chunk.toString());
+      });
+
+      response.on('end', () => {
+        resolve(data.join(''));
+      });
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    req.write(JSON.stringify(options));
+    req.end();
+  });
+});
