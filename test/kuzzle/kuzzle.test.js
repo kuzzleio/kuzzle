@@ -158,7 +158,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
         kuzzleWithPCRE.config.realtime.pcreSupport = true;
 
-        await kuzzleWithPCRE.start();
+        await kuzzleWithPCRE.start(application);
       });
 
       should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2' });
