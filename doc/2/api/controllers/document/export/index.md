@@ -92,7 +92,10 @@ Method: GET
   "size": <page size>,
   "scroll": "<scroll duration>",
   "lang": "<query language>",
-  "format": "<export format>"
+  "format": "<export format>",
+  "fieldsName": {
+    "<field path>": "<field name>"
+  }
 }
 ```
 
@@ -106,6 +109,7 @@ Method: GET
 ### Optional:
 
 - `separator`: This option is only supported for the `CSV` format, it defines which character sequence will be used to format the CSV documents
+- `fieldsName`: This option is only supported for the `CSV` format, it defines how fields path should be renamed, if not present the field path will be used.
 - `scroll`: This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed.
 - `size`: set the maximum number of documents returned per result page. By default it's `10`.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used.
