@@ -454,7 +454,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if an unhautorized property is in the query', () => {
       searchBody = {
         not_authorized: 42,
-        query : {}
+        query: {}
       };
 
       return should(elasticsearch.search(index, collection, searchBody))
@@ -2125,7 +2125,7 @@ describe('Test: ElasticSearch service', () => {
       const mappings = {
         dinamic: 'false',
         properties: {
-          freeman:  { type: 'keyword' }
+          freeman: { type: 'keyword' }
         }
       };
 
@@ -2213,18 +2213,18 @@ describe('Test: ElasticSearch service', () => {
           gordon: { type: 'text' },
           _kuzzle_info: {
             properties: {
-              author:     { type: 'text' },
-              createdAt:  { type: 'date' },
-              updatedAt:  { type: 'date' },
-              updater:    { type: 'keyword' },
+              author: { type: 'text' },
+              createdAt: { type: 'date' },
+              updatedAt: { type: 'date' },
+              updater: { type: 'keyword' },
             }
           }
         }
       };
       const mappings = {
         properties: {
-          gordon:   { type: 'keyword' },
-          freeman:  { type: 'keyword' },
+          gordon: { type: 'keyword' },
+          freeman: { type: 'keyword' },
           _kuzzle_info: {
             properties: {
               author: { type: 'keyword' }
@@ -2241,14 +2241,14 @@ describe('Test: ElasticSearch service', () => {
           _meta: undefined,
           dynamic: 'false',
           properties: {
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
+            gordon: { type: 'text' },
+            freeman: { type: 'keyword' },
             _kuzzle_info: {
               properties: {
-                author:     { type: 'text' },
-                createdAt:  { type: 'date' },
-                updatedAt:  { type: 'date' },
-                updater:    { type: 'keyword' },
+                author: { type: 'text' },
+                createdAt: { type: 'date' },
+                updatedAt: { type: 'date' },
+                updater: { type: 'keyword' },
               }
             }
           }
@@ -2517,7 +2517,7 @@ describe('Test: ElasticSearch service', () => {
       newMapping = {
         dinamic: 'false',
         properties: {
-          freeman:  { type: 'keyword' }
+          freeman: { type: 'keyword' }
         }
       };
 
@@ -4867,16 +4867,16 @@ describe('Test: ElasticSearch service', () => {
 
         should(publicES._client.indices.updateAliases).be.calledWith({
           body: {
-            actions : [
-              { add : { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
+            actions: [
+              { add: { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
             ]
           }
         });
         should(internalES._client.indices.updateAliases).be.calledWith({
           body: {
-            actions : [
-              { add : { alias: '@%nepali.liia', index: '%nepali.liia' } },
-              { add : { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
+            actions: [
+              { add: { alias: '@%nepali.liia', index: '%nepali.liia' } },
+              { add: { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
             ]
           }
         });
