@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import _ from 'lodash';
+
 export class Inflector {
   /**
    * Converts a string to kebab-case
@@ -44,5 +46,19 @@ export class Inflector {
    */
   static upFirst (string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  /**
+   * Converts a string to PascalCase
+   */
+  static pascalCase (string: string) {
+    return _.startCase(string).replace(/ /g, '');
+  }
+
+  /**
+   * Converts a string to camelCase
+   */
+  static camelCase (string) {
+    return _.camelCase(string);
   }
 }
