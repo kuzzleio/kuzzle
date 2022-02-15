@@ -17,6 +17,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let kuzzle;
   let Kuzzle;
   let application;
+  let clusterModuleInitStub;
 
   const mockedProperties = [
     'entryPoint',
@@ -52,6 +53,11 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   }
 
   beforeEach(() => {
+    clusterModuleInitStub = sinon.stub().resolves();
+    const clusterModuleStub = function () {
+      return { init: clusterModuleInitStub };
+    };
+
     const coreModuleStub = function () {
       return { init: sinon.stub().resolves() };
     };
@@ -60,7 +66,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     mockrequire('../../lib/core/storage/storageEngine', coreModuleStub);
     mockrequire('../../lib/core/security', coreModuleStub);
     mockrequire('../../lib/core/realtime', coreModuleStub);
-    mockrequire('../../lib/cluster', coreModuleStub);
+    mockrequire('../../lib/cluster', clusterModuleStub);
     mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
 
     mockrequire.reRequire('../../lib/kuzzle/kuzzle');
@@ -92,10 +98,10 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       });
 
       await stubbedKuzzle(async () => {
-        kuzzle = await _mockKuzzle(Kuzzle);
+        kuzzle = _mockKuzzle(Kuzzle);
 
         kuzzle.install = sinon.stub().resolves();
-        kuzzle.import = sinon.stub().resolves();
+        kuzzle.loadInitialState = sinon.stub().resolves();
         const options = {
           import: { something: 'here' },
           installations: [{ id: 'foo', handler: () => {} }],
@@ -111,6 +117,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         sinon.assert.callOrder(
           kuzzle.pipe, // kuzzle:state:start
           kuzzle.internalIndex.init,
+          // clusterModuleInitStub,
           kuzzle.validation.init,
           kuzzle.tokenManager.init,
           kuzzle.funnel.init,
@@ -118,7 +125,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           kuzzle.validation.curateSpecification,
           kuzzle.entryPoint.init,
           kuzzle.pluginsManager.init,
-          kuzzle.import.withArgs(options.import, options.support),
+          kuzzle.loadInitialState.withArgs(options.import, options.support),
           kuzzle.ask.withArgs('core:security:verify'),
           kuzzle.router.init,
           kuzzle.install.withArgs(options.installations),
@@ -208,6 +215,16 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly('SIGTERM');
           should(processOnSpy.getCall(6).args[0]).be.exactly('SIGTERM');
         });
+    });
+  });
+
+  describe('#generateId', () => {
+    it('should not initialize the cluster if disabled', async () => {
+      kuzzle.config.cluster.enabled = false;
+
+      await kuzzle.start(application, {});
+
+      should(clusterModuleInitStub).not.be.called();
     });
   });
 
@@ -342,7 +359,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toImport mappings and permissions', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
-      await kuzzle.import(toImport, {});
+      await kuzzle.loadInitialState(toImport, {});
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
@@ -367,7 +384,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
-      await kuzzle.import({}, toSupport);
+      await kuzzle.loadInitialState({}, toSupport);
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,
@@ -383,13 +400,13 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should prevent mappings to be loaded from import and support simultaneously', () => {
-      return should(kuzzle.import(toImport, { mappings: { something: 'here' } }))
+      return should(kuzzle.loadInitialState(toImport, { mappings: { something: 'here' } }))
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
 
     it('should prevent permissions to be loaded from import and support simultaneously', () => {
       return should(
-        kuzzle.import(
+        kuzzle.loadInitialState(
           { profiles: { something: 'here' } },
           { securities: { roles: { something: 'here' } } }))
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });

@@ -53,6 +53,7 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import { generateRandomName } from '../util/name-generator';
 import { OpenApiManager } from '../api/openapi';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
@@ -218,7 +219,6 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe('kuzzle:state:start');
 
-
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
         maxConditions: this.config.limits.subscriptionConditionsCount,
@@ -233,7 +233,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await (new SecurityModule()).init();
 
-      this.id = await (new Cluster()).init();
+      // This will init the cluster module if enabled
+      this.id = await this.initKuzzleNode();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -260,7 +261,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.import(options.import, options.support);
+      await this.loadInitialState(options.import, options.support);
 
       await this.ask('core:security:verify');
 
@@ -270,6 +271,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await this.install(options.installations);
 
+      this.log.info(`[✔] Start "${this.pluginsManager.application.name}" application`);
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
@@ -296,6 +298,27 @@ class Kuzzle extends KuzzleEventEmitter {
 
       throw error;
     }
+  }
+
+  /**
+   * Generates the node ID.
+   *
+   * This will init the cluster if it's enabled.
+   */
+  private async initKuzzleNode (): Promise<string> {
+    let id;
+
+    if (this.config.cluster.enabled) {
+      id = await (new Cluster()).init();
+
+      this.log.info('[✔] Cluster initialized');
+    }
+    else {
+      id = generateRandomName('knode');
+      this.log.info('[X] Cluster disabled: single node mode.');
+    }
+
+    return id;
   }
 
   /**
@@ -566,10 +589,19 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (
-    toImport: ImportConfig = {},
-    toSupport: SupportConfig = {}
-  ): Promise<void> {
+  async loadInitialState (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
+    if ( _.isEmpty(toImport.mappings)
+      && _.isEmpty(toImport.profiles)
+      && _.isEmpty(toImport.roles)
+      && _.isEmpty(toImport.userMappings)
+      && _.isEmpty(toImport.users)
+      && _.isEmpty(toSupport.fixtures)
+      && _.isEmpty(toSupport.mappings)
+      && _.isEmpty(toSupport.securities)
+    ) {
+      return;
+    }
+
     const lockedMutex = [];
 
     try {

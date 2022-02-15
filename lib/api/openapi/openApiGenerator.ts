@@ -21,8 +21,8 @@
 
 import _ from 'lodash';
 
-import { Inflector } from '../util/inflector';
-import { JSONObject } from '../../index';
+import { Inflector } from '../../util/inflector';
+import { JSONObject } from '../../../index';
 
 const routeUrlMatch = /:([^/]*)/g;
 

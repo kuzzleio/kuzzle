@@ -35,7 +35,7 @@ import {
 } from './components';
 import { OpenApiDefinition } from '../../types/OpenApiDefinition';
 import { version } from '../../../package.json';
-import { generateOpenApi } from '../openApiGenerator';
+import { generateOpenApi } from './openApiGenerator';
 
 export class OpenApiManager {
   /* eslint-disable sort-keys */

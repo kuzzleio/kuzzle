@@ -7,7 +7,7 @@ description: BackendConfig.set method
 
 # `set()`
 
-<SinceBadge version="2.8.0" />
+<DeprecatedBadge version="auto-version"/>
 
 Sets a configuration value.
 

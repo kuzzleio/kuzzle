@@ -48,6 +48,6 @@ export * from './realtime/RoomList';
 export * from './KuzzleDocument';
 export * from './config/publicCache/PublicCacheRedisConfiguration';
 export * from './config/internalCache/InternalCacheRedisConfiguration';
-export * from './config/StorageService/StorageServiceElasticsearchConfiguration';
+export * from './config/storageEngine/StorageEngineElasticsearchConfiguration';
 export * from './config/DumpConfiguration';
 export * from './OpenApiDefinition';
