@@ -76,7 +76,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
       { init: sinon.stub() },
-      { name: 'application', application: true });
+      { name: 'application', application: true, openApi: 'openApi' });
   });
 
   afterEach(() => {
@@ -101,7 +101,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle = _mockKuzzle(Kuzzle);
 
         kuzzle.install = sinon.stub().resolves();
-        kuzzle.import = sinon.stub().resolves();
+        kuzzle.loadInitialState = sinon.stub().resolves();
         const options = {
           import: { something: 'here' },
           installations: [{ id: 'foo', handler: () => {} }],
@@ -125,7 +125,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
           kuzzle.validation.curateSpecification,
           kuzzle.entryPoint.init,
           kuzzle.pluginsManager.init,
-          kuzzle.import.withArgs(options.import, options.support),
+          kuzzle.loadInitialState.withArgs(options.import, options.support),
           kuzzle.ask.withArgs('core:security:verify'),
           kuzzle.router.init,
           kuzzle.install.withArgs(options.installations),
@@ -359,7 +359,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toImport mappings and permissions', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
-      await kuzzle.import(toImport, {});
+      await kuzzle.loadInitialState(toImport, {});
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
@@ -384,7 +384,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
-      await kuzzle.import({}, toSupport);
+      await kuzzle.loadInitialState({}, toSupport);
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,
@@ -400,13 +400,13 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should prevent mappings to be loaded from import and support simultaneously', () => {
-      return should(kuzzle.import(toImport, { mappings: { something: 'here' } }))
+      return should(kuzzle.loadInitialState(toImport, { mappings: { something: 'here' } }))
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });
     });
 
     it('should prevent permissions to be loaded from import and support simultaneously', () => {
       return should(
-        kuzzle.import(
+        kuzzle.loadInitialState(
           { profiles: { something: 'here' } },
           { securities: { roles: { something: 'here' } } }))
         .be.rejectedWith({ id: 'plugin.runtime.incompatible' });

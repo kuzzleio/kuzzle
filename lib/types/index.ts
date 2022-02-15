@@ -50,3 +50,4 @@ export * from './config/publicCache/PublicCacheRedisConfiguration';
 export * from './config/internalCache/InternalCacheRedisConfiguration';
 export * from './config/storageEngine/StorageEngineElasticsearchConfiguration';
 export * from './config/DumpConfiguration';
+export * from './OpenApiDefinition';

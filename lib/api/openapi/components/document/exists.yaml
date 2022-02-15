@@ -22,7 +22,7 @@ DocumentExists:
     200:
       description: "Checks if a document exists."
       schema:
-        $ref: "#/components/schemas/DocumentExistsResponse"
+        $ref: "#/components/document/DocumentExistsResponse"
 
 components:
   schemas:

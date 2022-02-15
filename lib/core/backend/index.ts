@@ -20,4 +20,6 @@ export * from './backendStorage';
 
 export * from './backendVault';
 
+export * from './backendOpenApi';
+
 export * from './internalLogger';

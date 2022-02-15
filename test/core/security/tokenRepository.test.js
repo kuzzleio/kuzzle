@@ -77,7 +77,7 @@ describe('Test: security/tokenRepository', () => {
           done();
         })
         .catch(err => {
-          done(err); 
+          done(err);
         });
     });
   });
@@ -499,7 +499,7 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
         JSON.stringify({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${Token.APIKEY_PREFIX}baz` }));
-      
+
       await tokenRepository.deleteByKuid('foo', { keepApiKeys: false });
 
       should(kuzzle.ask)
@@ -530,7 +530,7 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
         JSON.stringify({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${Token.APIKEY_PREFIX}baz` }));
-      
+
       await tokenRepository.deleteByKuid('foo', { keepApiKeys: true });
 
       should(kuzzle.ask)
@@ -695,8 +695,8 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 },
-        { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 },
+        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
+        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
       ]);
     });
 
