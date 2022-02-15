@@ -37,7 +37,7 @@ Given(/^A room subscription listening to the whole collection$/, function (callb
 });
 
 Given(/^A room subscription listening field "([^"]*)" doesn't exists$/, function (key, callback) {
-  var filter = { not: { exists: { field : key } } };
+  var filter = { not: { exists: { field: key } } };
 
   this.api.subscribe(filter)
     .then(body => {

@@ -301,7 +301,7 @@ describe('Plugin', () => {
         {
           action: 'receive',
           controller: 'email',
-          openapi : undefined,
+          openapi: undefined,
           path: '/_/path-with-leading-underscore',
           verb: 'post'
         }

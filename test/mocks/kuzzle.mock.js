@@ -93,7 +93,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       checkRights: sinon.stub(),
       getEventName: sinon.spy(),
       executePluginRequest: sinon.stub().resolves(),
-      isNativeController : sinon.stub()
+      isNativeController: sinon.stub()
     };
 
     this.dumpGenerator = {

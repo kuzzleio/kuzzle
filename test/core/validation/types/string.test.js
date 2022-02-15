@@ -27,7 +27,7 @@ describe('Test: validation/types/string', () => {
     });
 
     it('should return true if the string length is comprised in the provided length range', () => {
-      should(stringType.validate({ length: { min:7, max: 9 } }, 'a string', [])).be.true();
+      should(stringType.validate({ length: { min: 7, max: 9 } }, 'a string', [])).be.true();
     });
 
     it('should return false if the value is not a string', () => {

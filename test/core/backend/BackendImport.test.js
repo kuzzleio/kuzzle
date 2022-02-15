@@ -39,11 +39,11 @@ describe('BackendImport', () => {
               },
             },
             settings: {
-              analysis : {
-                analyzer:{
-                  content:{
-                    type:'custom',
-                    tokenizer:'whitespace'
+              analysis: {
+                analyzer: {
+                  content: {
+                    type: 'custom',
+                    tokenizer: 'whitespace'
                   }
                 }
               }
