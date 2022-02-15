@@ -47,7 +47,7 @@ function transformProfile (profile) {
 function getNewIndexName (index, collection) {
   const prefix = index[0] === '%' ? '' : PUBLIC_PREFIX;
 
-  return `${prefix}${index}${NAME_SEPARATOR}${collection}`;
+  return `${prefix}${index}${NAME_SEPARATOR}${collection}`.toLocaleLowerCase();
 }
 
 function fixIndexName (context, index, collection, newIndex) {
@@ -155,9 +155,9 @@ async function createNewIndex (context, previousIndex, newIndex) {
     index: previousIndex,
   });
   const previousSettings = settingsResponse.body[previousIndex].settings.index;
-  
+
   const settings = {
-    analysis: previousSettings.analysis,    
+    analysis: previousSettings.analysis,
   };
 
   await context.target.indices.create({ index: newIndex, body: { settings } });
@@ -247,15 +247,25 @@ async function upgradePluginsStorage (context) {
 
 async function upgradeAliases (context, upgraded) {
   const response = await context.source.indices.getAlias({
-    index: Object.keys(upgraded)
+    index: Object.keys(upgraded),
   });
 
   const aliases = {};
   for (const [index, obj] of Object.entries(response.body)) {
-    if (Object.keys(obj.aliases).length > 0) {
-      for (const newIndex of upgraded[index].targets) {
-        aliases[newIndex.toLowerCase()] = obj.aliases;
-      }
+    if (Object.keys(obj.aliases).length === 0) {
+      continue;
+    }
+
+    const aliasName = Object.keys(obj.aliases)[0];
+
+    for (let i = 0; i < upgraded[index].targets.length; i++) {
+      const indice = upgraded[index].targets[i];
+      const collection = upgraded[index].collections[i];
+
+      aliases[indice] = {
+        [`@&${aliasName}.${collection}`]: '',
+        [`@&${index}.${collection}`]: '',
+      };
     }
   }
 
@@ -341,7 +351,8 @@ async function upgradeDataStorage (context) {
 
     upgraded[index] = {
       canBeRemoved: collections.length === allCollections.length,
-      targets: []
+      targets: [],
+      collections: [],
     };
 
     for (const collection of collections) {
@@ -349,6 +360,7 @@ async function upgradeDataStorage (context) {
       const total = await upgrade(context, index, collection, newIndex);
 
       upgraded[index].targets.push(newIndex);
+      upgraded[index].collections.push(collection.toLocaleLowerCase());
       context.log.ok(`... migrated data index ${index}: ${collection} (${total} documents)`);
     }
   }
