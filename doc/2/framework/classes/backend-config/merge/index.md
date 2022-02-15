@@ -7,7 +7,7 @@ description: BackendConfig.merge method
 
 # `merge()`
 
-<DeprecatedBadge version="auto-version"/>
+<DeprecatedBadge version="2.17.0"/>
 
 Sets a configuration value.
 
