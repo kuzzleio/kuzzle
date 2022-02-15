@@ -70,7 +70,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
       { init: sinon.stub() },
-      { name: 'application', application: true });
+      { name: 'application', application: true, openApi: 'openApi' });
   });
 
   afterEach(() => {
@@ -146,7 +146,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
         baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        await baseKuzzle.start();
+        await baseKuzzle.start(application);
 
         const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
 
@@ -158,7 +158,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
         kuzzleWithPCRE.config.realtime.pcreSupport = true;
 
-        await kuzzleWithPCRE.start();
+        await kuzzleWithPCRE.start(application);
       });
 
       should(Koncorde.firstCall).calledWithMatch({ regExpEngine: 're2' });
@@ -184,7 +184,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         kuzzle = _mockKuzzle(Kuzzle);
         kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        return kuzzle.start();
+        return kuzzle.start(application);
       })
         .then(() => {
           should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly('unhandledRejection');

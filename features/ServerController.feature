@@ -74,11 +74,20 @@ Feature: Server Controller
 
   # server:openapi ========================================================================
   @http
-  Scenario: Get our API in OpenApi format as a raw response
+  Scenario: Get Kuzzle Open API definition
     When I successfully execute the action "server":"openapi"
     Then I should receive a response matching:
-      | swagger                                           | "2.0"                 |
-      | paths./_/functional-tests/hello-world.get.summary | "Action: helloWorld." |
+      | swagger                                 | "2.0"      |
+      | components.RequestPayload               | "_OBJECT_" |
+      | paths./users/{_id}/_replace.put.tags[0] | "security" |
+
+  @http
+  Scenario: Get application Open API defintion
+    When I successfully execute the action "server":"openapi" with args:
+      | scope | "app" |
+    Then I should receive a response matching:
+      | paths./openapi-test/{company}/{objectType}/{_id}.post.tags[0] | "openapi-test" |
+      | components.LogisticObjects.Item                               | "_OBJECT_"     |
 
   # server:publicApi ========================================================================
   @development @http
@@ -98,8 +107,8 @@ Feature: Server Controller
   Scenario: Get server capabilities
     When I successfully execute the action "server":"capabilities"
     Then I should receive a result matching:
-      | limits      | "_OBJECT_"    |
-      | plugins     | "_OBJECT_"    |
-      | routes      | "_OBJECT_"    |
-      | services    | "_OBJECT_"    |
-      | version     | "_STRING_"    |
+      | limits   | "_OBJECT_" |
+      | plugins  | "_OBJECT_" |
+      | routes   | "_OBJECT_" |
+      | services | "_OBJECT_" |
+      | version  | "_STRING_" |

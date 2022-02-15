@@ -108,6 +108,55 @@ app.hook.register('custom:event', async (name) => {
 let syncedHello = 'World';
 let dynamicPipeId;
 
+app.openApi.definition.components.LogisticObjects = {
+  Item: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'integer' },
+    }
+  }
+};
+
+app.controller.register('openapi-test', {
+  actions: {
+    hello: {
+      handler: async () => ({ hello: 'world' }),
+      http: [
+        {
+          verb: 'post',
+          path: '/openapi-test/:company/:objectType/:_id',
+          openapi: {
+            description: 'Creates a new Logistic Object',
+            parameters: [
+              {
+                in: 'body',
+                description: 'Content of the Logistic Object',
+                required: true,
+                schema: {
+                  $ref: '#/components/LogisticObjects/Item'
+                },
+              }
+            ],
+            responses: {
+              200: {
+                description: "Custom greeting",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "string",
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+});
+
 app.controller.register('tests', {
   actions: {
     // Controller registration and http route definition

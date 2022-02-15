@@ -21,21 +21,6 @@
 
 import _ from 'lodash';
 
-import { version } from '../../package.json';
-import {
-  OpenApiPayloadsDefinitions,
-  OpenApiDocumentCountComponent,
-  OpenApiDocumentDeleteByQueryComponent,
-  OpenApiDocumentDeleteComponent,
-  OpenApiDocumentScrollComponent,
-  OpenApiDocumentExistsComponent,
-  OpenApiDocumentUpdateComponent,
-  OpenApiDocumentReplaceComponent,
-  OpenApiDocumentGetComponent,
-  OpenApiDocumentCreateOrReplaceComponent,
-  OpenApiDocumentCreateComponent,
-  OpenApiDocumentValidateComponent,
-} from './openapi';
 import { Inflector } from '../util/inflector';
 import { JSONObject } from '../../index';
 
@@ -44,15 +29,15 @@ const routeUrlMatch = /:([^/]*)/g;
 /**
  * Generate basic openApi Controller
  */
-function generateController (route: JSONObject, response: JSONObject) {
+function generateController (route: JSONObject, definition: JSONObject) {
   if (route.controller === undefined) {
     return;
   }
 
-  if (! _.some(response.tags, { name: route.controller })) {
-    const capitalizedController = Inflector.upFirst(route.controller);
+  if (! _.some(definition.tags, { name: route.controller })) {
+    const capitalizedController = Inflector.pascalCase(route.controller);
 
-    response.tags.push({
+    definition.tags.push({
       description: `${capitalizedController} Controller`,
       name: route.controller
     });
@@ -123,80 +108,7 @@ function generateResponse (route: JSONObject) {
  *
  * @returns {object} openApi object
  */
-export function generateOpenApi (): JSONObject {
-  const routes = [];
-
-  global.kuzzle.config.http.routes.forEach(route => routes.push({ ...route }));
-  global.kuzzle.pluginsManager.routes.forEach(route => routes.push({ ...route }));
-
-  /* eslint-disable sort-keys */
-  const response = {
-    swagger: '2.0',
-    info: {
-      title: 'Kuzzle API',
-      description: 'Kuzzle HTTP API definition',
-      contact: {
-        name: 'Kuzzle team',
-        url: 'https://kuzzle.io',
-        email: 'support@kuzzle.io',
-        discord: 'http://join.discord.kuzzle.io'
-      },
-      license: {
-        name: 'Apache 2',
-        url: 'http://opensource.org/licenses/apache2.0'
-      },
-      version: version
-    },
-    externalDocs: {
-      description: 'Kuzzle API Documentation',
-      url: 'https://docs.kuzzle.io/core/2/api/'
-    },
-    servers: [
-      {
-        url: 'https://{baseUrl}:{port}',
-        description: 'Kuzzle Base Url',
-        variables: {
-          baseUrl: {
-            default: 'localhost'
-          },
-          port: {
-            default: '7512'
-          }
-        }
-
-      }
-    ],
-    tags: [
-      {
-        name: 'document',
-        description: 'document controller'
-      }
-    ],
-    schemes: [
-      'https',
-      'http'
-    ],
-    paths: {},
-    components: {
-      ...OpenApiPayloadsDefinitions,
-
-      schemas: {
-        ...OpenApiDocumentCountComponent,
-        ...OpenApiDocumentDeleteByQueryComponent,
-        ...OpenApiDocumentDeleteComponent,
-        ...OpenApiDocumentScrollComponent,
-        ...OpenApiDocumentExistsComponent,
-        ...OpenApiDocumentUpdateComponent,
-        ...OpenApiDocumentReplaceComponent,
-        ...OpenApiDocumentGetComponent,
-        ...OpenApiDocumentCreateOrReplaceComponent,
-        ...OpenApiDocumentCreateComponent,
-        ...OpenApiDocumentValidateComponent,
-      }
-    }
-  };
-  /* eslint-enable sort-keys */
-
+export function generateOpenApi (routes: JSONObject[], definition: JSONObject): JSONObject {
   for (const route of routes) {
     // Make sure route verbs are lowercase
     if (route.verb !== undefined) {
@@ -206,18 +118,19 @@ export function generateOpenApi (): JSONObject {
     // Set :param notation to {param}
     route.formattedPath = route.path.replace(routeUrlMatch, '{$1}');
 
-    if (response.paths[route.formattedPath] === undefined) {
-      response.paths[route.formattedPath] = {};
+    if (definition.paths[route.formattedPath] === undefined) {
+      definition.paths[route.formattedPath] = {};
     }
 
-    if (response.paths[route.formattedPath][route.verb] !== undefined) {
+    if (definition.paths[route.formattedPath][route.verb] !== undefined) {
       continue;
     }
 
     // If custom specification, return as it is
     if (route.openapi) {
+      generateController(route, definition);
 
-      response.paths[route.formattedPath][route.verb] = route.openapi;
+      definition.paths[route.formattedPath][route.verb] = route.openapi;
       continue;
     }
 
@@ -225,7 +138,7 @@ export function generateOpenApi (): JSONObject {
       route.openapi = {};
     }
 
-    generateController(route, response);
+    generateController(route, definition);
 
     generateSummary(route);
 
@@ -233,8 +146,8 @@ export function generateOpenApi (): JSONObject {
 
     generateResponse(route);
 
-    response.paths[route.formattedPath][route.verb] = route.openapi;
+    definition.paths[route.formattedPath][route.verb] = route.openapi;
   }
 
-  return response;
+  return definition;
 }

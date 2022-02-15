@@ -53,6 +53,7 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import { OpenApiManager } from '../api/openapi';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -146,6 +147,8 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   private version: string;
 
+  private openApiManager: OpenApiManager;
+
   /**
    * List of differents imports types and their associated method
    */
@@ -203,7 +206,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Initializes all the needed components of Kuzzle.
    *
-   * @param {Application} - Application instance
+   * @param {Application} - Application Plugin instance
    * @param {Object} - Additional options (import, installations, plugins, secretsFile, support, vaultKey)
    *
    * @this {Kuzzle}
@@ -266,6 +269,11 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Core components loaded');
 
       await this.install(options.installations);
+
+      this.openApiManager = new OpenApiManager(
+        application.openApi,
+        this.config.http.routes,
+        this.pluginsManager.routes);
 
       // @deprecated
       await this.pipe('kuzzle:start');
