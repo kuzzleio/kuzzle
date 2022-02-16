@@ -33,6 +33,7 @@ export * from './User';
 export * from './Token';
 export * from './Target';
 export * from './Global';
+export * from './HttpStream';
 export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
 export * from './config/ServerConfiguration';

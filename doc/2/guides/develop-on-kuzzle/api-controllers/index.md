@@ -585,6 +585,50 @@ app.controller.register('redirect', {
 });
 ```
 
+#### HTTP Streams
+<SinceBadge version="auto-version" />
+
+Kuzzle sends response through HTTP using the JSON format.
+[Kuzzle Response](/core/2/guides/main-concepts/api#response-format) are standardized. This format is shared by all API actions, including custom controller actions.
+
+Kuzzle Response might be heavy when it comes to processing and sending large volumes of data, since the response are sent in one go,
+this imply that all the processing must be done before sending the response and must be stored in ram until the whole response is sent.
+
+To avoid having to process and store large amount of data before sending it, Kuzzle allow controller's actions to return an [HttpStream](/core/2/framework/classes/http-stream) instead
+of a JSON object.
+Kuzzle will then stream the data though the HTTP protocol in chunk until the stream is closed, this way you can process bits of your data at a time
+and not have everything stored in ram.
+
+::: warning
+Chunks are sent through the HTTP Protocol each time a chunk is emitted through the `data` event of the given stream.
+It's up to you to implement a buffer mechanism to avoid sending too many small consecutive chunks through the network.
+
+Sending too many small chunks instead of bigger chunks will increase the number of syscall made to the TCP Socket and might decrease performance and throughput.
+:::
+
+**Usage:**
+
+All you need to send a stream from any controller's actions is to wrap any [Readable Stream](https://nodejs.org/docs/latest-v14.x/api/stream.html#stream_class_stream_readable)
+from NodeJS with an [HttpStream](/core/2/framework/classes/http-stream).
+
+**Example: Read a file from the disk and send it.**
+
+```js
+const fs = require('fs');
+
+app.controller.register('myController', {
+  actions: {
+    myDownloadAction: {
+      handler: async (request: KuzzleRequest) => {
+        const readStream = fs.createReadStream('./Document.tar.gz');
+
+        return new HttpStream(readStream);
+      }
+    }
+  }
+});
+```
+
 ## Use a custom Controller Action
 
 As we have seen, controller actions can be executed via different protocols.

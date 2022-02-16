@@ -1,5 +1,7 @@
 {
   "rules": {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
     "consistent-return": 0,
     "curly": 2,
     "dot-notation": 2,

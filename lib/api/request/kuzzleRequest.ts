@@ -28,7 +28,7 @@ import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
 import kerror from '../../kerror';
-import { Deprecation, User } from '../../types';
+import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
 import { isPlainObject } from '../../util/safeObject';
 import { get } from 'lodash';
@@ -244,6 +244,10 @@ export class KuzzleRequest {
   ) {
     if (result instanceof Error) {
       throw new InternalError('cannot set an error as a request\'s response');
+    }
+
+    if (this.context.connection.protocol !== 'http' && result instanceof HttpStream) {
+      throw kerror.get('api', 'assert', 'forbidden_stream');
     }
 
     this.status = options.status || 200;
