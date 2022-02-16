@@ -6,7 +6,7 @@ title: export
 
 # export
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.17.0"/>
 
 Export searched documents.
 

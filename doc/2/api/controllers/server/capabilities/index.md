@@ -4,7 +4,7 @@ type: page
 title: capabilities
 ---
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.17.0"/>
 
 # capabilities
 

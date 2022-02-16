@@ -586,7 +586,7 @@ app.controller.register('redirect', {
 ```
 
 #### HTTP Streams
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.0" />
 
 Kuzzle sends response through HTTP using the JSON format.
 [Kuzzle Response](/core/2/guides/main-concepts/api#response-format) are standardized. This format is shared by all API actions, including custom controller actions.

@@ -21,7 +21,7 @@ This property is an instance of the [BackendCluster](/core/2/framework/classes/b
 
 ## `nodeId`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.0" />
 
 This property is the current Kuzzle node unique identifier.
 

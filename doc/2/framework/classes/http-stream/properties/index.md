@@ -5,7 +5,7 @@ title: Properties
 description: HttpStream class properties
 ---
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.0" />
 
 # Properties
 
