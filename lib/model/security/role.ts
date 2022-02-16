@@ -19,28 +19,32 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const kerror = require('../../kerror');
-const { has, isPlainObject } = require('../../util/safeObject');
+import kerror from '../../kerror';
+import { has, isPlainObject } from '../../util/safeObject';
+import { binarySearch } from '../../util/array';
+import { ControllerRight, ControllerRights } from '../../types/ControllerRights';
+import { KuzzleRequest } from '../../../index';
+import { OptimizedPolicyRestrictions } from '../../types/PolicyRestrictions';
 
 const assertionError = kerror.wrap('api', 'assert');
 
 /**
  * @class Role
  */
-class Role {
+export class Role {
+  public controllers: ControllerRights;
+  public _id: string;
+
   constructor () {
     this.controllers = {};
   }
 
   /**
    * @param {Request} request
-   * @param {Array} restrictedTo
    * @returns {boolean}
    */
-  isActionAllowed (request, restrictedTo = []) {
-    if (!global.kuzzle) {
+  isActionAllowed (request: KuzzleRequest): boolean {
+    if (! global.kuzzle) {
       throw kerror.get('security', 'role', 'uninitialized', this._id);
     }
 
@@ -84,11 +88,11 @@ class Role {
       return false;
     }
 
-    if (typeof actionRights !== 'boolean' || !actionRights) {
+    if (typeof actionRights !== 'boolean' || ! actionRights) {
       return false;
     }
 
-    return checkRestrictions(request, restrictedTo);
+    return true;
   }
 
   /**
@@ -99,7 +103,7 @@ class Role {
       throw assertionError.get('missing_argument', `${this._id}.controllers`);
     }
 
-    if (!isPlainObject(this.controllers)) {
+    if (! isPlainObject(this.controllers)) {
       throw assertionError.get('invalid_type', `${this._id}.controllers`, 'object');
     }
 
@@ -112,14 +116,59 @@ class Role {
       .forEach(entry => this.validateControllerRights(...entry));
   }
 
+  
+  /**
+   * @param {String} index
+   * @param {String} collection
+   * @param {Map<string, string[]>} restrictedTo Restricted indexes
+   * @returns {Boolean} resolves to a Boolean value
+   */
+  checkRestrictions (index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean {
+    // If no restrictions, we allow the action:
+    if (! restrictedTo || restrictedTo.size === 0) {
+      return true;
+    }
+
+    // If the request's action does not refer to an index, restrictions are
+    // useless for this action (=> ignore them)
+    if (! index) {
+      return true;
+    }
+
+    // If the index is not in the restrictions, the action is not allowed
+    if (! restrictedTo.has(index)) {
+      return false;
+    }
+
+    const collections = restrictedTo.get(index);
+
+    // if no collections given on the restriction, the action is allowed for all
+    // collections:
+    if (! collections || collections.length === 0) {
+      return true;
+    }
+
+    // Find collection index in array
+    // If the collection is not in the array, the action is not allowed
+    // The array must be sorted for binary search to work
+    const indexOfCollection = binarySearch(collections, (collectionName) => {
+      if (collection > collectionName) {
+        return 1;
+      }
+      return collection < collectionName ? -1 : 0;
+    });
+
+    return indexOfCollection > -1; // Collection found
+  }
+
   /**
    * Verifies that a controller rights definition is correct
    *
    * @param  {Array.<string, Object>}
    * @throws If the controller definition is invalid
    */
-  validateControllerRights (name, controller) {
-    if (!isPlainObject(controller)) {
+  validateControllerRights (name: string, controller: ControllerRight) {
+    if (! isPlainObject(controller)) {
       throw assertionError.get('invalid_type', name, 'object');
     }
 
@@ -127,11 +176,11 @@ class Role {
       throw assertionError.get('empty_argument', name);
     }
 
-    if (!has(controller, 'actions')) {
+    if (! has(controller, 'actions')) {
       throw assertionError.get('missing_argument', name);
     }
 
-    if (!isPlainObject(controller.actions)) {
+    if (! isPlainObject(controller.actions)) {
       throw assertionError.get('invalid_type', `${name}.actions`, 'object');
     }
 
@@ -151,7 +200,7 @@ class Role {
    *
    * @returns {boolean}
    */
-  canLogIn () {
+  canLogIn (): boolean {
     for (const controllerKey of ['auth', '*']) {
       if (this.controllers[controllerKey]) {
         const controller = this.controllers[controllerKey];
@@ -169,51 +218,3 @@ class Role {
     return false;
   }
 }
-
-/**
- * @param {Request} request
- * @param {object} restriction a restriction object on an index
- * @returns {Boolean}
- */
-function checkIndexRestriction(request, restriction) {
-  if (restriction.index !== request.input.args.index) {
-    return false;
-  }
-
-  // if no collections given on the restriction, the action is allowed for all
-  // collections:
-  if (!restriction.collections || restriction.collections.length === 0) {
-    return true;
-  }
-
-  // If the request's action does not refer to a collection, the restriction
-  // is useless for this action (=> ignored):
-  if (!request.input.args.collection) {
-    return true;
-  }
-
-  return restriction.collections.includes(request.input.args.collection);
-}
-
-/**
- * @param {Request} request
- * @param {Array} restrictedTo
- * @returns {Boolean} resolves to a Boolean value
- */
-function checkRestrictions(request, restrictedTo) {
-  // If no restrictions, we allow the action:
-  if (restrictedTo.length === 0) {
-    return true;
-  }
-
-  // If the request's action does not refer to an index, restrictions are
-  // useless for this action (=> ignore them)
-  if (!request.input.args.index) {
-    return true;
-  }
-
-  return restrictedTo
-    .some(restriction => checkIndexRestriction(request, restriction));
-}
-
-module.exports = Role;

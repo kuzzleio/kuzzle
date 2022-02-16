@@ -22,8 +22,8 @@ describe('#RequestInput', () => {
   it('should dispatch data correctly across properties', () => {
     let
       data = {
-        volatile: {foo: 'bar'},
-        body: {some: 'content'},
+        volatile: { foo: 'bar' },
+        body: { some: 'content' },
         controller: 'controller',
         action: 'action',
         index: 'index',
@@ -31,12 +31,12 @@ describe('#RequestInput', () => {
         _id: 'id',
         foo: 'bar',
         bar: 'foo',
-        headers: {foo: 'args.header'},
+        headers: { foo: 'args.header' },
         jwt: 'a jwt token'
       },
       input = new RequestInput(data);
 
-    input.headers = {foo: 'input.header'};
+    input.headers = { foo: 'input.header' };
     should(input.volatile).be.exactly(data.volatile);
     should(input.body).be.exactly(data.body);
     should(input.controller).eql('controller');
@@ -48,38 +48,66 @@ describe('#RequestInput', () => {
     should(input.args).deepEqual({
       foo: 'bar',
       bar: 'foo',
-      headers: {foo: 'args.header'},
+      headers: { foo: 'args.header' },
       _id: 'id',
       index: 'index',
       collection: 'collection',
     });
-    should(input.headers).match({foo: 'input.header'});
+    should(input.headers).match({ foo: 'input.header' });
   });
 
   it('should throw if invalid data is provided', () => {
-    should(function () { new RequestInput(); }).throw('Input request data must be a non-null object');
-    should(function () { new RequestInput(null); }).throw('Input request data must be a non-null object');
-    should(function () { new RequestInput([]); }).throw('Input request data must be a non-null object');
-    should(function () { new RequestInput('abc'); }).throw('Input request data must be a non-null object');
-    should(function () { new RequestInput(123); }).throw('Input request data must be a non-null object');
-    should(function () { new RequestInput(true); }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput(); 
+    }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput(null); 
+    }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput([]); 
+    }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput('abc'); 
+    }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput(123); 
+    }).throw('Input request data must be a non-null object');
+    should(function () {
+      new RequestInput(true); 
+    }).throw('Input request data must be a non-null object');
   });
 
   it('should throw if an invalid data parameter is provided', () => {
     // testing object-only parameters
     ['volatile', 'body'].forEach(k => {
-      should(function () { new RequestInput({[k]: []}); }).throw(`Attribute ${k} must be of type "object"`);
-      should(function () { new RequestInput({[k]: 123}); }).throw(`Attribute ${k} must be of type "object"`);
-      should(function () { new RequestInput({[k]: false}); }).throw(`Attribute ${k} must be of type "object"`);
-      should(function () { new RequestInput({[k]: 'foobar'}); }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () {
+        new RequestInput({ [k]: [] }); 
+      }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () {
+        new RequestInput({ [k]: 123 }); 
+      }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () {
+        new RequestInput({ [k]: false }); 
+      }).throw(`Attribute ${k} must be of type "object"`);
+      should(function () {
+        new RequestInput({ [k]: 'foobar' }); 
+      }).throw(`Attribute ${k} must be of type "object"`);
     });
 
     // testing string-only parameters
     ['controller', 'action', 'jwt'].forEach(k => {
-      should(function () { new RequestInput({[k]: []}); }).throw(`Attribute ${k} must be of type "string"`);
-      should(function () { new RequestInput({[k]: 123}); }).throw(`Attribute ${k} must be of type "string"`);
-      should(function () { new RequestInput({[k]: false}); }).throw(`Attribute ${k} must be of type "string"`);
-      should(function () { new RequestInput({[k]: {}}); }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () {
+        new RequestInput({ [k]: [] }); 
+      }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () {
+        new RequestInput({ [k]: 123 }); 
+      }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () {
+        new RequestInput({ [k]: false }); 
+      }).throw(`Attribute ${k} must be of type "string"`);
+      should(function () {
+        new RequestInput({ [k]: {} }); 
+      }).throw(`Attribute ${k} must be of type "string"`);
     });
   });
 

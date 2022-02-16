@@ -44,7 +44,7 @@ For example, the `.kuzzlerc` parameter `services.storageEngine.host` in example 
 export kuzzle_services__storageEngine__host="http://localhost:9200"
 ```
 
-You can also pass stringified JSON values this way to override non-scalar values such as objects or arrays.  
+You can also pass stringified JSON values this way to override non-scalar values such as objects or arrays.
 To do so, prefix a valid stringified JSON with `*json:` to instruct Kuzzle to parse the content of the value as JSON.
 
 Examples:
@@ -94,11 +94,11 @@ For an exhaustive list of configuration parameters, please refer to the [kuzzler
 
 ::: info
 You can change the configuration only during the `setup` phase, before starting the application.
-::: 
+:::
 
 The configuration of Kuzzle is also accessible through the [Backend.config](/core/2/framework/classes/backend-config) property.
 
-It is possible to **read or edit values of the configuration**. 
+It is possible to **read or edit values of the configuration**.
 
 The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
 
@@ -112,18 +112,8 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide for more in
 console.log(`Kuzzle will listen on port ${app.config.content.server.port}`);
 
 // Set log level to verbose
-app.config.set(
-  'plugins.kuzzle-plugin-logger.services.stdout.level', 
-  'verbose');
-```
+app.config.content['kuzzle-plugin-logger'].services.stdout.level = 'verbose';
 
-**Example:** _Use a secret from the Vault in the configuration_
-```js
-app.config.set('services.storageEngine.client', {
-  node: 'http://elasticsearch:9200',
-  auth: {
-    username: 'elastic',
-    password: app.vault.secrets.xpack.password,
-  }
-});
+// Listen to port 4242
+app.config.content.server.port = 4242;
 ```

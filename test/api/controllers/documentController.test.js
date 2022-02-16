@@ -83,7 +83,7 @@ describe('DocumentController', () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: 'services.storage.no_multi_indexes' });
+        { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
     it('should reject if collection contains a comma', () => {
@@ -92,7 +92,68 @@ describe('DocumentController', () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: 'services.storage.no_multi_collections' });
+        { id: 'services.storage.invalid_multi_index_collection_usage' });
+    });
+
+    it.only('should reject if no index and collection or targets are specified', async () => {
+      request.input.args.index = undefined;
+      request.input.args.collection = undefined;
+      request.input.args.targets = undefined;
+      request.input.action = 'search';
+
+      await should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: 'api.assert.missing_argument' });
+    });
+
+    it('should verify that targets are valid', async () => {
+      request.input.args.index = null;
+      request.input.args.collection = null;
+      request.input.args.targets = [
+        { index: 'foo', collections: ['bar'] },
+      ];
+      request.input.action = 'search';
+
+      documentController.assertTargetsAreValid = sinon.stub();
+      kuzzle.ask
+        .withArgs('core:storage:public:document:multiSearch')
+        .resolves({
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+      await documentController.search(request);
+      return should(documentController.assertTargetsAreValid).calledWith([
+        { index: 'foo', collections: ['bar'] }
+      ]);
+    });
+
+    it('should ask document:multiSearch when specifiying targets', async () => {
+      request.input.args.index = null;
+      request.input.args.collection = null;
+      request.input.args.targets = [
+        { index: 'foo', collections: ['bar'] },
+      ];
+      request.input.action = 'search';
+
+      kuzzle.ask
+        .withArgs('core:storage:public:document:multiSearch')
+        .resolves({
+          hits: 'hits',
+          other: 'other',
+          remaining: 'remaining',
+          scrollId: 'scrollId',
+          total: 'total',
+        });
+      await documentController.search(request);
+      return should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:multiSearch',
+        [
+          { index: 'foo', collections: ['bar'] },
+        ]
+      );
     });
 
     it('should reject if the size argument exceeds server configuration', () => {
@@ -198,6 +259,81 @@ describe('DocumentController', () => {
         'foo');
 
       should(response).be.True();
+    });
+  });
+
+  describe('#mExists', () => {
+    beforeEach(() => {
+      request.input.body = {
+        ids: ['id', 'id2']
+      };
+
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' },
+          { _id: 'id2', _version: 1, some: 'some' }
+        ],
+        errors: []
+      }));
+    });
+
+    it('should forward to the store module', async () => {
+      const response = await documentController.mExists(request);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mExists',
+        index,
+        collection,
+        ['id', 'id2']);
+
+      should(response).match({
+        errors: [],
+        successes: [
+          { _id: 'id', _version: 1 },
+          { _id: 'id2', _version: 1 }
+        ]
+      });
+    });
+
+    it('should throw an error if the number of documents to get exceeds server configuration', () => {
+      kuzzle.config.limits.documentsFetchCount = 1;
+
+      should(documentController.mExists(request)).be.rejectedWith(
+        SizeLimitError,
+        { id: 'services.storage.get_limit_exceeded' });
+    });
+
+    it('should handle errors if some documents are missing', async () => {
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      const response = await documentController.mExists(request);
+
+      should(response).match({
+        errors: ['id2'],
+        successes: [
+          { _id: 'id', _version: 1 }
+        ]
+      });
+    });
+
+    it('should throw an error in strict mode if at least one document is missing', () => {
+      request.input.args.strict = true;
+
+      kuzzle.ask.withArgs('core:storage:public:document:mExists').resolves(({
+        items: [
+          { _id: 'id', _version: 1, some: 'some' }
+        ],
+        errors: ['id2']
+      }));
+
+      return should(documentController.mExists(request)).be.rejectedWith(
+        MultipleErrorsError,
+        { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
@@ -622,9 +758,9 @@ describe('DocumentController', () => {
 
     it('should notify with _updatedFields when doing an upsert ', async () => {
       request.input.body.documents = [
-        { _id: '_id1', changes: { field: '_source'}, default: { field2: 'default'} },
-        { _id: '_id2', changes: { field: '_source'}, default: { field2: 'default'} },
-        { _id: '_id3', changes: { field: '_source'}, default: { field2: 'default'} }
+        { _id: '_id1', changes: { field: '_source' }, default: { field2: 'default' } },
+        { _id: '_id2', changes: { field: '_source' }, default: { field2: 'default' } },
+        { _id: '_id3', changes: { field: '_source' }, default: { field2: 'default' } }
       ];
 
       items[0].created = false;

@@ -326,11 +326,11 @@ export default class State {
     const list: RoomList = {};
 
     for (const room of this.realtime.values()) {
-      if (!list[room.index]) {
+      if (! list[room.index]) {
         list[room.index] = {};
       }
 
-      if (!list[room.index][room.collection]) {
+      if (! list[room.index][room.collection]) {
         list[room.index][room.collection] = {};
       }
 

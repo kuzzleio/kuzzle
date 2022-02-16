@@ -522,7 +522,7 @@ describe('core/network/protocols/websocket', () => {
 
       for (const channel of channels) {
         should(socket.send)
-          .calledWithMatch(Buffer.from(JSON.stringify({foo: 'bar', room: channel})));
+          .calledWithMatch(Buffer.from(JSON.stringify({ foo: 'bar', room: channel })));
       }
     });
   });

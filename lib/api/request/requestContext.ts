@@ -112,7 +112,7 @@ export class Connection {
     this[_c_ips] = assert.assertArray('connection.ips', arr, 'string');
   }
 
-  get ips(): string[] {
+  get ips (): string[] {
     return this[_c_ips];
   }
 
@@ -143,7 +143,7 @@ export class Connection {
  * and origin (connection, protocol).
  */
 export class RequestContext {
-  constructor(options: any = {}) {
+  constructor (options: any = {}) {
 
     this[_token] = null;
     this[_user] = null;

@@ -9,7 +9,7 @@ const {
   SizeLimitError,
 } = require('../../../../index');
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const Profile = require('../../../../lib/model/security/profile');
+const { Profile } = require('../../../../lib/model/security/profile');
 const SecurityController = require('../../../../lib/api/controllers/securityController');
 
 describe('Test: security controller - profiles', () => {
@@ -20,8 +20,8 @@ describe('Test: security controller - profiles', () => {
 
   beforeEach(() => {
     request = new Request(
-      {controller: 'security'},
-      {user: {_id: 'userId'}});
+      { controller: 'security' },
+      { user: { _id: 'userId' } });
     kuzzle = new KuzzleMock();
     kuzzle.ask.withArgs('core:storage:private:document:get').resolves({});
     kuzzle.ask.withArgs('core:storage:private:mappings:get').resolves({
@@ -43,7 +43,7 @@ describe('Test: security controller - profiles', () => {
   });
 
   describe('#updateProfileMapping', () => {
-    const foo = {foo: 'bar'};
+    const foo = { foo: 'bar' };
 
     it('should throw a BadRequestError if the body is missing', () => {
       return should(() => {
@@ -179,7 +179,7 @@ describe('Test: security controller - profiles', () => {
         });
       should(createOrReplaceStub).not.called();
 
-      request.input.body = {policies: 'foobar'};
+      request.input.body = { policies: 'foobar' };
       should(securityController.createOrReplaceProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
@@ -188,7 +188,7 @@ describe('Test: security controller - profiles', () => {
       should(createOrReplaceStub).not.called();
 
       request.input.args._id = null;
-      request.input.body = {policies: []};
+      request.input.body = { policies: [] };
       should(securityController.createOrReplaceProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
@@ -252,7 +252,7 @@ describe('Test: security controller - profiles', () => {
         });
       should(createStub).not.called();
 
-      request.input.body = {policies: 'foobar'};
+      request.input.body = { policies: 'foobar' };
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
@@ -261,7 +261,7 @@ describe('Test: security controller - profiles', () => {
       should(createStub).not.called();
 
       request.input.args._id = null;
-      request.input.body = {policies: []};
+      request.input.body = { policies: [] };
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
@@ -319,7 +319,7 @@ describe('Test: security controller - profiles', () => {
           message: 'Missing argument "body.policies".'
         });
 
-      request.input.body = {policies: 'foobar'};
+      request.input.body = { policies: 'foobar' };
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
@@ -327,7 +327,7 @@ describe('Test: security controller - profiles', () => {
         });
 
       request.input.args._id = null;
-      request.input.body = {policies: []};
+      request.input.body = { policies: [] };
       await should(securityController.createProfile(request))
         .rejectedWith(BadRequestError, {
           id: 'api.assert.missing_argument',
@@ -389,7 +389,7 @@ describe('Test: security controller - profiles', () => {
 
     beforeEach(() => {
       mGetStub = kuzzle.ask.withArgs(mGetEvent);
-      request.input.body = {ids: 'ids'.split('')};
+      request.input.body = { ids: 'ids'.split('') };
     });
 
     it('should reject if the ids argument is not provided', async () => {
@@ -451,7 +451,7 @@ describe('Test: security controller - profiles', () => {
       request.input.args.from = 13;
       request.input.args.size = 42;
       request.input.args.scroll = 'duration';
-      request.input.body = {roles: 'roles'.split('')};
+      request.input.body = { roles: 'roles'.split('') };
 
       const response = await securityController.searchProfiles(request);
 

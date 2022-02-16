@@ -1,6 +1,7 @@
 'use strict';
 
 const
+  http = require('http'),
   _ = require('lodash'),
   should = require('should'),
   {
@@ -19,7 +20,7 @@ Given(/I can( not)? create the following document:/, async function (not, dataTa
     not,
     'Document should not have been created');
 
-  if (!not) {
+  if (! not) {
     this.props.documentId = this.props.result._id;
   }
 });
@@ -117,7 +118,7 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
     throw new Error(`Document ${id} exists, but it shouldn't`);
   }
 
-  if (!not && !exists) {
+  if (! not && ! exists) {
     throw new Error(`Expected document ${id} to exist`);
   }
 });
@@ -176,7 +177,7 @@ Then('I execute the search query', async function () {
 Then('I scroll to the next page', async function () {
   // temporary use of raw results, until the "remaining" propery is made
   // available to the SearchResults SDK class
-  if (!this.props.result.scrollId) {
+  if (! this.props.result.scrollId) {
     throw new Error('No scroll ID found');
   }
 
@@ -202,7 +203,8 @@ Then('I execute the search query with verb "GET"', async function () {
   if (this.kuzzleConfig.PROTOCOL === 'http') {
     request.searchBody = JSON.stringify(this.props.searchBody);
     options.verb = 'GET';
-  } else {
+  }
+  else {
     request.body = this.props.searchBody;
   }
   const { result } = await this.sdk.query(request, options);
@@ -214,4 +216,64 @@ Then('I delete the document {string}', async function (id) {
     this.props.index,
     this.props.collection,
     id);
+});
+
+Then('I export the collection {string}:{string} in the format {string}', async function (index, collection, format) {
+
+  this.props.result = await new Promise((resolve, reject) => {
+
+    const req = http.request({
+      hostname: this.host,
+      port: this.port,
+      path: `/${index}/${collection}/_export?format=${format}&size=1`,
+      method: 'GET',
+    }, (response) => {
+      let data = [];
+
+      response.on('data', (chunk) => {
+        data.push(chunk.toString());
+      });
+
+      response.on('end', () => {
+        resolve(data.join(''));
+      });
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    req.end();
+  });
+});
+
+Then('I export the collection {string}:{string} in the format {string}:', async function (index, collection, format, dataTable) {
+
+  const options = this.parseObject(dataTable);
+  this.props.result = await new Promise((resolve, reject) => {
+
+    const req = http.request({
+      hostname: this.host,
+      port: this.port,
+      path: `/${index}/${collection}/_export?format=${format}&size=1`,
+      method: 'POST',
+    }, (response) => {
+      let data = [];
+
+      response.on('data', (chunk) => {
+        data.push(chunk.toString());
+      });
+
+      response.on('end', () => {
+        resolve(data.join(''));
+      });
+
+      response.on('error', (error) => {
+        reject(error);
+      });
+    });
+
+    req.write(JSON.stringify(options));
+    req.end();
+  });
 });

@@ -10,7 +10,7 @@ const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
 const Store = require('../../../lib/core/shared/store');
 
 describe('core/plugin/pluginRepository', () => {
-  const someObject = {_id: 'someId', some: {defined: 'object'}};
+  const someObject = { _id: 'someId', some: { defined: 'object' } };
   const someCollection = 'someCollection';
   const SomeConstructor = function () {};
   let kuzzle;
@@ -113,7 +113,7 @@ describe('core/plugin/pluginRepository', () => {
 
   describe('#delete', () => {
     it('should call parent method delete with proper arguments', async () => {
-      await pluginRepository.delete('someId', {refresh: 'wait_for'});
+      await pluginRepository.delete('someId', { refresh: 'wait_for' });
 
       const args = kuzzle.ask
         .withArgs('core:storage:private:document:delete')
@@ -123,7 +123,7 @@ describe('core/plugin/pluginRepository', () => {
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
       should(args[3]).be.exactly('someId');
-      should(args[4]).be.deepEqual({refresh: 'wait_for'});
+      should(args[4]).be.deepEqual({ refresh: 'wait_for' });
     });
   });
 });

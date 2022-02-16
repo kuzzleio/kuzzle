@@ -96,6 +96,11 @@ export interface IKuzzleConfiguration {
 
   cluster: {
     /**
+     * @default true
+     */
+    enabled: boolean;
+
+    /**
      * @default 50
      */
     activityDepth: number

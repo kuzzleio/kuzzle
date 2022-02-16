@@ -63,7 +63,7 @@ Then('The multipart document was correctly created', async function () {
   const response = await this.api.get(this.result._id);
   const document = response.result._source;
 
-  if (!document.attachments || !document.attachments.file) {
+  if (! document.attachments || ! document.attachments.file) {
     throw new Error('Created document does not contain the file attachment');
   }
 

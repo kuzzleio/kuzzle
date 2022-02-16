@@ -35,7 +35,7 @@ const
     myField: 'fooBarBaz'
   };
 
-When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function(no, some, index, collection, callback) {
+When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([^"]*)"$/, {}, function (no, some, index, collection, callback) {
   const
     idx = index ? index : this.fakeIndex,
     coll = collection ? collection : this.fakeCollection;
@@ -57,7 +57,7 @@ When(/^There is (no)?(a)? specifications? for index "([^"]*)" and collection "([
     .catch(error => callback(no ? null : error));
 });
 
-Then(/^I put a (not )?valid ?specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function(not, index, collection, callback) {
+Then(/^I put a (not )?valid ?specification for index "([^"]*)" and collection "([^"]*)"$/, {}, function (not, index, collection, callback) {
   const
     idx = index ? index : this.fakeIndex,
     coll = collection ? collection : this.fakeCollection,
@@ -84,7 +84,7 @@ Then(/^I put a (not )?valid ?specification for index "([^"]*)" and collection "(
     });
 });
 
-Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function(noError, withError, inBody, callback) {
+Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function (noError, withError, inBody, callback) {
   if (this.statusCode !== 200) {
     if (noError) {
       if (inBody) {
@@ -110,7 +110,7 @@ Then(/^There is (an)?(no)? error message( in the response body)?$/, {}, function
   return callback();
 });
 
-When(/^I post a(n in)? ?valid ?specification$/, {}, function(not, callback) {
+When(/^I post a(n in)? ?valid ?specification$/, {}, function (not, callback) {
   const
     index = this.fakeIndex,
     collection = this.fakeCollection,
@@ -136,7 +136,7 @@ When(/^I post a(n in)? ?valid ?specification$/, {}, function(not, callback) {
     });
 });
 
-When(/^I post a(n in)? ?valid document/, {}, function(not, callback) {
+When(/^I post a(n in)? ?valid document/, {}, function (not, callback) {
   const
     index = this.fakeIndex,
     collection = this.fakeCollection,
@@ -159,7 +159,7 @@ When(/^I post a(n in)? ?valid document/, {}, function(not, callback) {
     });
 });
 
-When(/^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/, {}, function(again, index, collection, callback) {
+When(/^I delete the specifications (again )?for index "([^"]*)" and collection "([^"]*)"$/, {}, function (again, index, collection, callback) {
   const
     idx = index ? index : this.fakeIndex,
     coll = collection ? collection : this.fakeCollection;
@@ -186,13 +186,13 @@ Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, 
 
   let search = function (callbackAsync) {
     setTimeout(() => {
-      this.api.searchSpecifications({}, scroll && {scroll})
+      this.api.searchSpecifications({}, scroll && { scroll })
         .then(response => {
           if (response.error) {
             return callbackAsync(new Error(response.error.message));
           }
 
-          if (scroll && !response.result.scrollId) {
+          if (scroll && ! response.result.scrollId) {
             return callbackAsync(new Error('No scrollId returned by the searchProfile query'));
           }
 
@@ -221,7 +221,7 @@ Then(/^I find (\d+) specifications(?: with scroll "([^"]+)")?/, function (hits, 
 });
 
 Then(/^I am able to perform a scrollSpecifications request$/, function () {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     throw new Error('No previous scrollId found');
   }
 

@@ -28,7 +28,7 @@ import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
 import kerror from '../../kerror';
-import { Deprecation, User } from '../../types';
+import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
 import { isPlainObject } from '../../util/safeObject';
 import { get } from 'lodash';
@@ -133,25 +133,25 @@ export class KuzzleRequest {
   /**
    * Deprecation warnings for the API action
    */
-  get deprecations(): Deprecation[] | void {
+  get deprecations (): Deprecation[] | void {
     return this[_deprecations];
   }
 
   /**
    * Request timestamp (in Epoch-micro)
    */
-  get timestamp(): number {
+  get timestamp (): number {
     return this[_timestamp];
   }
 
   /**
    * Request HTTP status
    */
-  get status(): number {
+  get status (): number {
     return this[_status];
   }
 
-  set status(i: number) {
+  set status (i: number) {
     this[_status] = assert.assertInteger('status', i);
   }
 
@@ -198,7 +198,7 @@ export class KuzzleRequest {
    * Adds an error to the request, and sets the request's status to the error one.
    */
   setError (error: Error) {
-    if (! error || !(error instanceof Error)) {
+    if (! error || ! (error instanceof Error)) {
       throw new InternalError('Cannot set non-error object as a request\'s error');
     }
 
@@ -244,6 +244,10 @@ export class KuzzleRequest {
   ) {
     if (result instanceof Error) {
       throw new InternalError('cannot set an error as a request\'s response');
+    }
+
+    if (this.context.connection.protocol !== 'http' && result instanceof HttpStream) {
+      throw kerror.get('api', 'assert', 'forbidden_stream');
     }
 
     this.status = options.status || 200;
@@ -886,7 +890,7 @@ export class KuzzleRequest {
 
     value = Number.parseFloat(value);
 
-    if (Number.isNaN(value) || !Number.isSafeInteger(value)) {
+    if (Number.isNaN(value) || ! Number.isSafeInteger(value)) {
       throw assertionError.get('invalid_type', errorName, 'integer');
     }
 
@@ -940,7 +944,7 @@ export class KuzzleRequest {
       throw assertionError.get('missing_argument', errorName);
     }
 
-    if (!Array.isArray(value)) {
+    if (! Array.isArray(value)) {
       throw assertionError.get('invalid_type', errorName, 'array');
     }
 
@@ -967,7 +971,7 @@ export class KuzzleRequest {
       throw assertionError.get('missing_argument', errorName);
     }
 
-    if (!isPlainObject(value)) {
+    if (! isPlainObject(value)) {
       throw assertionError.get('invalid_type', errorName, 'object');
     }
 

@@ -154,7 +154,7 @@ describe('kerror: error codes loader', () => {
 
     it('should default plugin subdomains code to 0 if not set', () => {
       delete domains.bar.subdomains.sub1.code;
-      should(() => checkDomains(domains, {plugin: true})).not.throw();
+      should(() => checkDomains(domains, { plugin: true })).not.throw();
       should(domains.bar.subdomains.sub1.code).eql(0);
     });
 
@@ -176,13 +176,13 @@ describe('kerror: error codes loader', () => {
     it('should not throw if a plugin subdomain contains multiple defaulted codes', () => {
       delete domains.foo.subdomains.sub1;
       delete domains.foo.subdomains.sub2;
-      should(() => checkDomains(domains, {plugin: true})).not.throw();
+      should(() => checkDomains(domains, { plugin: true })).not.throw();
     });
 
     it('should throw if a plugin subdomain contain duplicates, non-default, codes', () => {
       domains.foo.subdomains.sub1.code = 42;
       domains.foo.subdomains.sub2.code = 42;
-      should(() => checkDomains(domains, {plugin: true})).throw(/code .* is not unique/i);
+      should(() => checkDomains(domains, { plugin: true })).throw(/code .* is not unique/i);
     });
 
     it('should throw if a subdomain code exceeds the allowed range', () => {
@@ -306,7 +306,7 @@ describe('kerror: error codes loader', () => {
     it('should not throw if a plugin error does not contain a description', () => {
       delete domains.foo.subdomains.sub2.errors.err1.description;
 
-      should(() => checkDomains(domains, {plugin: true})).not.throw();
+      should(() => checkDomains(domains, { plugin: true })).not.throw();
     });
 
     it('should throw if a deprecated field is present and not a non-empty string', () => {

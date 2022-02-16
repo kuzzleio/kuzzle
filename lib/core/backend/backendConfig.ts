@@ -30,7 +30,7 @@ const runtimeError = kerror.wrap('plugin', 'runtime');
 
 export class BackendConfig extends ApplicationManager {
   /**
-   * Configuration content
+   * Configuration content.
    */
   public content: KuzzleConfiguration;
 
@@ -42,6 +42,8 @@ export class BackendConfig extends ApplicationManager {
 
   /**
    * Sets a configuration value
+   *
+   * @deprecated use app.config.content instead
    *
    * @param path - Path to the configuration key (lodash style)
    * @param value - Value for the configuration key
@@ -56,6 +58,8 @@ export class BackendConfig extends ApplicationManager {
 
   /**
    * Merges a configuration object into the current configuration
+   *
+   * @deprecated use app.config.content instead
    *
    * @param config - Configuration object to merge
    */

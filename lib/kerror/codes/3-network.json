@@ -81,6 +81,18 @@
           "code": 13,
           "message": "Maximum HTTP file size exceeded",
           "class": "SizeLimitError"
+        },
+        "stream_closed": {
+          "description": "The stream has been closed or destroyed before sending the response",
+          "code": 14,
+          "message": "Stream closed or destroyed.",
+          "class": "InternalError"
+        },
+        "stream_errored": {
+          "description": "The stream is errored",
+          "code": 15,
+          "message": "Stream errored: %s",
+          "class": "InternalError"
         }
       }
     },

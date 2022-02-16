@@ -22,7 +22,7 @@ DocumentGet:
     200:
       description: "Gets a document."
       schema:
-          $ref: "#/components/schemas/DocumentGetResponse"
+          $ref: "#/components/document/DocumentGetResponse"
 
 components:
   schemas:

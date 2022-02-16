@@ -45,7 +45,7 @@ export class Token implements TokenContent {
   jwt: string;
   refreshed: boolean;
 
-  constructor(data: TokenContent = {}) {
+  constructor (data: TokenContent = {}) {
     this._id = data._id || null;
     this.expiresAt = data.expiresAt || null;
     this.ttl = data.ttl || null;

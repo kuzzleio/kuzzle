@@ -393,9 +393,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -480,9 +480,9 @@ describe('DocumentExtractor', () => {
       req.setResult({});
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -548,9 +548,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -635,9 +635,9 @@ describe('DocumentExtractor', () => {
       req.setResult({});
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -703,9 +703,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -790,9 +790,9 @@ describe('DocumentExtractor', () => {
       req.setResult({});
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -858,9 +858,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -945,9 +945,9 @@ describe('DocumentExtractor', () => {
       req.setResult({});
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -1009,9 +1009,9 @@ describe('DocumentExtractor', () => {
       req.setResult({});
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -1374,9 +1374,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);
@@ -1460,9 +1460,9 @@ describe('DocumentExtractor', () => {
       });
 
       const documents = [
-        { _id: 'foo', _source: { foo: 'qux' }},
-        { _id: 'foo2', _source: { foo: 'bar' }},
-        { _id: 'foo3', _source: { foo: 'baz' }},
+        { _id: 'foo', _source: { foo: 'qux' } },
+        { _id: 'foo2', _source: { foo: 'bar' } },
+        { _id: 'foo3', _source: { foo: 'baz' } },
       ];
 
       const newReq = new DocumentExtractor(req).insert(documents);

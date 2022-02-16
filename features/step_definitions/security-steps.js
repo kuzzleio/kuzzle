@@ -15,7 +15,7 @@ Then(/I (try to )?create a (strict )?profile "(.*?)" with the following policies
   }
 
   try {
-    if (!strict) {
+    if (! strict) {
       this.props.result = await this.sdk.security.createProfile(profileId, {
         policies,
       });

@@ -51,7 +51,7 @@ describe('Test the passport Wrapper', () => {
   it('should store strategy options and use them when authenticating', () => {
     const
       stub = sinon.stub(),
-      opts = {foo: 'bar'};
+      opts = { foo: 'bar' };
 
     passportWrapper.use('foobar', stub, opts);
     should(passportWrapper.options.foobar).be.eql(opts);
@@ -67,7 +67,7 @@ describe('Test the passport Wrapper', () => {
   });
 
   it('should resolve to the user if credentials are verified', () => {
-    const user = {username: 'jdoe'};
+    const user = { username: 'jdoe' };
 
     passportMock.authenticate.yields(null, user);
 
@@ -78,7 +78,7 @@ describe('Test the passport Wrapper', () => {
     passportMock.authenticate.yields(null, null, new Error('foobar'));
 
     return should(passportWrapper.authenticate('foo', 'bar'))
-      .be.rejectedWith(UnauthorizedError, {message: 'foobar'});
+      .be.rejectedWith(UnauthorizedError, { message: 'foobar' });
   });
 
   it('should reject in case of an authentication error', () => {
@@ -107,7 +107,7 @@ describe('Test the passport Wrapper', () => {
 
   it('should return a PassportResponse if the strategy calls a HTTP redirection', () => {
     class MockupStrategy extends passport.Strategy {
-      constructor(name, verify) {
+      constructor (name, verify) {
         super(name, verify);
         this.name = name;
         this._verify = verify;
@@ -144,6 +144,6 @@ describe('Test the passport Wrapper', () => {
     passportMock.authenticate.throws(new Error('foobar'));
 
     return should(passportWrapper.authenticate('foo', 'bar'))
-      .be.rejectedWith(PluginImplementationError, { id: 'plugin.runtime.unexpected_error'});
+      .be.rejectedWith(PluginImplementationError, { id: 'plugin.runtime.unexpected_error' });
   });
 });

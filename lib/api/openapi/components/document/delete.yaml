@@ -40,7 +40,7 @@ DocumentDelete:
     200:
       description: "Deletes a document."
       schema:
-        $ref: "#/components/schemas/DocumentDeleteResponse"
+        $ref: "#/components/document/DocumentDeleteResponse"
 
 components:
   schemas:

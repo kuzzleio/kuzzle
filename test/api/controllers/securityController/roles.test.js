@@ -11,7 +11,7 @@ const {
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controllers/securityController');
-const Role = require('../../../../lib/model/security/role');
+const { Role } = require('../../../../lib/model/security/role');
 
 describe('Test: security controller - roles', () => {
   let kuzzle;
@@ -23,8 +23,8 @@ describe('Test: security controller - roles', () => {
     securityController = new SecurityController();
 
     request = new Request(
-      {controller: 'security'},
-      {user: { _id: '4' } });
+      { controller: 'security' },
+      { user: { _id: '4' } });
   });
 
   describe('#updateRoleMapping', () => {
@@ -82,7 +82,7 @@ describe('Test: security controller - roles', () => {
 
       createdRole = new Role();
       createdRole._id = request.input.args._id;
-      Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
+      Object.assign(createdRole, { controllers: { ctrl: true }, foo: 'bar' });
 
       createOrReplaceStub = kuzzle.ask
         .withArgs(createOrReplaceEvent, request.input.args._id)
@@ -168,7 +168,7 @@ describe('Test: security controller - roles', () => {
 
       createdRole = new Role();
       createdRole._id = request.input.args._id;
-      Object.assign(createdRole, {controllers: {ctrl: true}, foo: 'bar'});
+      Object.assign(createdRole, { controllers: { ctrl: true }, foo: 'bar' });
 
       createStub = kuzzle.ask
         .withArgs(createEvent, request.input.args._id)
@@ -255,7 +255,7 @@ describe('Test: security controller - roles', () => {
     it('should resolve to an object on a getRole call', async () => {
       let returnedRole = new Role();
       returnedRole._id = 'foo';
-      Object.assign(returnedRole, {controllers: {ctrl: true}, foo: 'bar'});
+      Object.assign(returnedRole, { controllers: { ctrl: true }, foo: 'bar' });
 
       getStub.resolves(returnedRole);
 
@@ -356,7 +356,7 @@ describe('Test: security controller - roles', () => {
 
       for (let i = 0; i < response.hits.length; i++) {
         should(response.hits[i]).be.an.Object().and.not.instanceof(Role);
-        should(response.hits[i]._id).eql(`role${i+1}`);
+        should(response.hits[i]._id).eql(`role${i + 1}`);
       }
     });
   });
@@ -371,7 +371,7 @@ describe('Test: security controller - roles', () => {
 
       searchedRole = new Role();
       searchedRole._id = 'foo';
-      Object.assign(searchedRole, {controllers: {ctrl: true}, foo: 'bar'});
+      Object.assign(searchedRole, { controllers: { ctrl: true }, foo: 'bar' });
 
       searchStub = kuzzle.ask
         .withArgs(searchEvent)
@@ -487,7 +487,7 @@ describe('Test: security controller - roles', () => {
 
       updatedRole = new Role();
       updatedRole._id = 'test';
-      Object.assign(updatedRole, {controllers: { ctrl: true }, foo: 'bar'});
+      Object.assign(updatedRole, { controllers: { ctrl: true }, foo: 'bar' });
 
       updateStub = kuzzle.ask.withArgs(updateEvent).resolves(updatedRole);
     });

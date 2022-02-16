@@ -48,7 +48,7 @@ describe('Test: validation/baseType', () => {
     });
 
     it('should be false if one of the property is not allowed', () => {
-      should(baseType.checkAllowedProperties({foo:'bar', baz: 'bar'}, ['foo'])).be.false();
+      should(baseType.checkAllowedProperties({ foo: 'bar', baz: 'bar' }, ['foo'])).be.false();
     });
   });
 });

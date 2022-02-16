@@ -55,7 +55,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'import',
-        body: {bulkData: bulk}
+        body: { bulkData: bulk }
       };
 
     return this.send(msg);
@@ -107,7 +107,8 @@ class ApiBase {
         _.forEach(value, (item, k) => {
           msg[k] = item;
         });
-      } else {
+      }
+      else {
         msg[prop] = value;
       }
     });
@@ -123,7 +124,7 @@ class ApiBase {
       this.world.currentUser.token = null;
     }
 
-    return this.send({controller: 'auth', action: 'checkToken', body: {token}})
+    return this.send({ controller: 'auth', action: 'checkToken', body: { token } })
       .then(response => {
         if (_token !== null) {
           this.world.currentUser.token = _token;
@@ -187,7 +188,7 @@ class ApiBase {
 
     if (jwtToken !== undefined) {
       msg.headers = {
-        authorization :'Bearer ' + jwtToken
+        authorization: 'Bearer ' + jwtToken
       };
     }
 
@@ -476,7 +477,7 @@ class ApiBase {
       index: index,
       collection: collection,
       controller: 'collection',
-      action : 'deleteSpecifications',
+      action: 'deleteSpecifications',
       body: null
     });
   }
@@ -740,7 +741,7 @@ class ApiBase {
         controller: 'collection',
         index: index || this.world.fakeIndex,
         action: 'list',
-        body: {type}
+        body: { type }
       };
 
     return this.send(msg);
@@ -808,7 +809,7 @@ class ApiBase {
 
     if (jwtToken !== undefined) {
       msg.headers = {
-        authorization :'Bearer ' + jwtToken
+        authorization: 'Bearer ' + jwtToken
       };
     }
 
@@ -1224,7 +1225,7 @@ class ApiBase {
       index,
       collection,
       controller: 'collection',
-      action : 'updateSpecifications',
+      action: 'updateSpecifications',
       body: specifications
     });
   }
@@ -1268,7 +1269,7 @@ class ApiBase {
       index,
       collection,
       controller: 'collection',
-      action : 'validateSpecifications',
+      action: 'validateSpecifications',
       body: specifications
     });
   }

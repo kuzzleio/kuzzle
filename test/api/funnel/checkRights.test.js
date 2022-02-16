@@ -12,7 +12,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const FunnelController = require('../../../lib/api/funnel');
 const { Token } = require('../../../lib/model/security/token');
-const User = require('../../../lib/model/security/user');
+const { User } = require('../../../lib/model/security/user');
 
 describe('funnel.checkRights', () => {
   const getUserEvent = 'core:security:user:get';
@@ -176,7 +176,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = null;
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    request.input.headers = { cookie: 'authToken=hashed JWT;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await funnel.checkRights(request);
@@ -201,7 +201,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'authToken=foobar; randomToken=test' };
+    request.input.headers = { cookie: 'authToken=foobar; randomToken=test' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.token.verification_error' });
@@ -212,7 +212,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'randomToken=foobar;' };
+    request.input.headers = { cookie: 'randomToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.token.verification_error' });
@@ -225,7 +225,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'authToken=null;' };
+    request.input.headers = { cookie: 'authToken=null;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await funnel.checkRights(request);
@@ -238,7 +238,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
-    request.input.headers = {cookie: 'randomToken=foobar;' };
+    request.input.headers = { cookie: 'randomToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).not.be.rejectedWith({ id: 'security.cookie.unsupported' });
@@ -251,7 +251,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = null;
     request.input.args.cookieAuth = true;
-    request.input.headers = {cookie: 'authToken=foobar;' };
+    request.input.headers = { cookie: 'authToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
@@ -263,7 +263,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
-    request.input.headers = {cookie: 'authToken=foobar;' };
+    request.input.headers = { cookie: 'authToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.token.verification_error' });
@@ -274,7 +274,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = null;
     request.input.args.cookieAuth = false;
-    request.input.headers = {cookie: 'authToken=hashed JWT;' };
+    request.input.headers = { cookie: 'authToken=hashed JWT;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await funnel.checkRights(request);
@@ -299,7 +299,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = 'hashed JWT';
     request.input.args.cookieAuth = false;
-    request.input.headers = {cookie: 'authToken=foobar;' };
+    request.input.headers = { cookie: 'authToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });
@@ -310,7 +310,7 @@ describe('funnel.checkRights', () => {
 
     request.input.jwt = null;
     request.input.args.cookieAuth = false;
-    request.input.headers = {cookie: 'authToken=foobar;' };
+    request.input.headers = { cookie: 'authToken=foobar;' };
     sinon.stub(loadedUser, 'isActionAllowed').resolves(true);
 
     await should(funnel.checkRights(request)).be.rejectedWith({ id: 'security.cookie.unsupported' });

@@ -11,9 +11,9 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const Role = require('../../../lib/model/security/role');
-const Profile = require('../../../lib/model/security/profile');
-const ProfileRepository = require('../../../lib/core/security/profileRepository');
+const { Role } = require('../../../lib/model/security/role');
+const { Profile } = require('../../../lib/model/security/profile');
+const { ProfileRepository } = require('../../../lib/core/security/profileRepository');
 const Repository = require('../../../lib/core/shared/repository');
 
 describe('Test: security/profileRepository', () => {
@@ -43,8 +43,8 @@ describe('Test: security/profileRepository', () => {
     testProfile = new Profile();
     testProfile._id = 'foo';
     testProfile.policies = [
-      {roleId: 'test', restrictedTo: [{index: 'index'}]},
-      {roleId: 'test2'}
+      { roleId: 'test', restrictedTo: [{ index: 'index' }] },
+      { roleId: 'test2' }
     ];
 
     return profileRepository.init();
@@ -82,7 +82,7 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should load a profile from the db', async () => {
-      roleRepositoryMock.loadRoles.resolves([{_id: 'default'}]);
+      roleRepositoryMock.loadRoles.resolves([{ _id: 'default' }]);
 
       let profile;
 
@@ -114,7 +114,7 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should reject if profileIds is not an array of strings', () => {
-      return should(profileRepository.loadProfiles(['a string', {foo: 'bar'}]))
+      return should(profileRepository.loadProfiles(['a string', { foo: 'bar' }]))
         .be.rejectedWith(BadRequestError, {
           id: 'api.assert.invalid_type',
           message: 'Wrong type for argument "profileIds" (expected: string[])'
@@ -129,14 +129,14 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should load & cache profiles', async () => {
-      const p1 = {_id: 'p1', foo: 'bar', constructor: {_hash: () => false}};
-      const p2 = {_id: 'p2', bar: 'baz', constructor: {_hash: () => false}};
-      const p3 = {_id: 'p3', baz: 'foo', constructor: {_hash: () => false}};
+      const p1 = { _id: 'p1', foo: 'bar', constructor: { _hash: () => false } };
+      const p2 = { _id: 'p2', bar: 'baz', constructor: { _hash: () => false } };
+      const p3 = { _id: 'p3', baz: 'foo', constructor: { _hash: () => false } };
 
       profileRepository.loadOneFromDatabase.withArgs('p1').resolves(p1);
       profileRepository.loadOneFromDatabase.withArgs('p3').resolves(p3);
 
-      roleRepositoryMock.loadRoles.resolves([{_id: 'default'}]);
+      roleRepositoryMock.loadRoles.resolves([{ _id: 'default' }]);
 
       profileRepository.profiles.set('p2', p2);
 
@@ -153,11 +153,11 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should use only the cache if all profiles are known', async () => {
-      const p1 = {_id: 'p1', foo: 'bar', constructor: {_hash: () => false}};
-      const p2 = {_id: 'p2', bar: 'baz', constructor: {_hash: () => false}};
-      const p3 = {_id: 'p3', baz: 'foo', constructor: {_hash: () => false}};
+      const p1 = { _id: 'p1', foo: 'bar', constructor: { _hash: () => false } };
+      const p2 = { _id: 'p2', bar: 'baz', constructor: { _hash: () => false } };
+      const p3 = { _id: 'p3', baz: 'foo', constructor: { _hash: () => false } };
 
-      roleRepositoryMock.loadRoles.resolves([{_id: 'default'}]);
+      roleRepositoryMock.loadRoles.resolves([{ _id: 'default' }]);
 
       profileRepository.profiles.set('p1', p1);
       profileRepository.profiles.set('p2', p2);
@@ -174,13 +174,14 @@ describe('Test: security/profileRepository', () => {
     });
   });
 
+
   describe('#fromDTO', () => {
     it('should throw if the profile contains unexisting roles', () => {
       roleRepositoryMock.loadRoles.resolves([null]);
 
       const dto = {
         policies: [
-          {roleId: 'notExistingRole'}
+          { roleId: 'notExistingRole' }
         ]
       };
 
@@ -191,12 +192,12 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should set role default when none is given', async () => {
-      roleRepositoryMock.loadRoles.resolves([{_id: 'default'}]);
+      roleRepositoryMock.loadRoles.resolves([{ _id: 'default' }]);
 
       const p = await profileRepository.fromDTO({});
 
       should(p.policies).match([
-        {roleId: 'default'}
+        { roleId: 'default' }
       ]);
     });
   });
@@ -228,7 +229,7 @@ describe('Test: security/profileRepository', () => {
 
       should(userRepositoryMock.search).calledWithMatch(
         { query: { terms: { profileIds: [ testProfile._id ] } } },
-        { from: 0, size: 1});
+        { from: 0, size: 1 });
 
       should(kuzzle.emit).not.be.called();
       should(profileRepository.deleteFromDatabase).not.called();
@@ -346,7 +347,7 @@ describe('Test: security/profileRepository', () => {
     it('should throw if roles cannot be loaded', () => {
       const invalidProfile = new Profile();
       invalidProfile._id = 'awesomeProfile';
-      invalidProfile.policies = [{roleId: 'notSoAwesomeRole'}];
+      invalidProfile.policies = [{ roleId: 'notSoAwesomeRole' }];
 
       const error = new Error('foo');
       roleRepositoryMock.loadRoles
@@ -369,12 +370,24 @@ describe('Test: security/profileRepository', () => {
       should(profileRepository.profiles).have.value('foo', testProfile);
     });
 
+    it('should compute the optimized policies', async () => {
+      profileRepository.loadOneFromDatabase = sinon.stub().resolves(testProfile);
+      profileRepository.persistToDatabase = sinon.stub().resolves(null);
+      profileRepository.optimizePolicies = sinon.stub().resolves([]);
+      kuzzle.ask.withArgs('core:storage:public:index:exist').resolves(true);
+      kuzzle.ask.withArgs('core:storage:public:collection:exist').resolves(true);
+
+      await profileRepository.validateAndSaveProfile(testProfile);
+
+      should(profileRepository.optimizePolicies).be.calledOnce();
+    });
+
     it('should reject if we try to remove the anonymous role from the anonymous profile', () => {
       const profile = new Profile();
       profile._id = 'anonymous';
       profile.policies = [
-        {roleId: 'test'},
-        {roleId: 'another'}
+        { roleId: 'test' },
+        { roleId: 'another' }
       ];
 
       return should(profileRepository.validateAndSaveProfile(profile))
@@ -387,8 +400,8 @@ describe('Test: security/profileRepository', () => {
       const profile = new Profile();
       profile._id = 'anonymous';
       profile.policies = [
-        {roleId: 'test'},
-        {roleId: 'anonymous'}
+        { roleId: 'test' },
+        { roleId: 'anonymous' }
       ];
       profileRepository.loadOneFromDatabase = sinon.stub().resolves(profile);
       return profileRepository.validateAndSaveProfile(profile)
@@ -435,6 +448,23 @@ describe('Test: security/profileRepository', () => {
 
       return should(profileRepository.loadOneFromDatabase('foo'))
         .rejectedWith(error);
+    });
+  });
+
+  describe('#load', () => {
+    afterEach(() => {
+      Repository.prototype.load.restore();
+    });
+
+
+    it('should compute the optimized policies', async () => {
+      sinon.stub(Repository.prototype, 'load').resolves(testProfile);
+
+      profileRepository.optimizePolicies = sinon.stub().resolves([]);
+
+      await profileRepository.load('foobar');
+
+      should(profileRepository.optimizePolicies).be.calledOnce();
     });
   });
 
@@ -640,7 +670,7 @@ describe('Test: security/profileRepository', () => {
     });
 
     it('should clear the RAM cache once the truncate succeeds', async () => {
-      const opts = {foo: 'bar'};
+      const opts = { foo: 'bar' };
 
       profileRepository.profiles.set('foo', 'bar');
       profileRepository.profiles.set('baz', 'qux');
@@ -662,6 +692,54 @@ describe('Test: security/profileRepository', () => {
       await should(profileRepository.truncate()).rejectedWith(error);
 
       should(profileRepository.profiles).be.empty();
+    });
+  });
+
+  describe('#optimizePolicy', () => {
+    it('should merge restriction with same indices', () => {
+      const policy = profileRepository.optimizePolicy({
+        roleId: 'foo',
+        restrictedTo: [
+          {
+            index: 'foo',
+            collections: ['bar']
+          },
+          {
+            index: 'foo',
+            collections: ['baz']
+          }
+        ]
+      });
+
+      should(policy).match({
+        roleId: 'foo',
+        restrictedTo: new Map(Object.entries({
+          'foo': ['bar', 'baz']
+        }))
+      });
+    });
+
+    it('should remove duplicated collections and sort the collections', () => {
+      const policy = profileRepository.optimizePolicy({
+        roleId: 'foo',
+        restrictedTo: [
+          {
+            index: 'foo',
+            collections: ['qux', 'bar']
+          },
+          {
+            index: 'foo',
+            collections: ['baz', 'bar']
+          }
+        ]
+      });
+
+      should(policy).match({
+        roleId: 'foo',
+        restrictedTo: new Map(Object.entries({
+          'foo': ['bar', 'baz', 'qux']
+        }))
+      });
     });
   });
 
