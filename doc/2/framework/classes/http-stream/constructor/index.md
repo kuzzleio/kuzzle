@@ -37,5 +37,5 @@ import { HttpStream } from 'kuzzle';
 
 ## Examples
 
-See [Advanced Streams](/core/2/guides/advanced/streams)
+See [HTTP Stream](/core/2/guides/develop-on-kuzzle/api-controllers#http-streams)
 

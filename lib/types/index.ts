@@ -29,7 +29,7 @@ export * from './EventHandler';
 export * from './User';
 export * from './Token';
 export * from './Global';
-export * from './httpStream';
+export * from './HttpStream';
 export * from './PasswordPolicy';
 export * from './config/KuzzleConfiguration';
 export * from './config/ServerConfiguration';

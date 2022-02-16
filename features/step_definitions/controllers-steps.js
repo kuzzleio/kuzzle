@@ -231,3 +231,16 @@ Then(/I have .* in the app before startup/, function () {
   // - docker/scripts/start-kuzzle-dev
   // - features/fixtures/imports
 });
+
+Then('the streamed data should be equal to:', async function (dataTable) {
+  const lines = dataTable.rawTable.map((row) => {
+    return row[0];
+  });
+
+  const resultLines = this.props.result.split('\n');
+  for (let i = 0; i < resultLines.length; i++) {
+    const regexp = new RegExp(lines[i]);
+
+    should(resultLines[i]).match(regexp);
+  }
+});
