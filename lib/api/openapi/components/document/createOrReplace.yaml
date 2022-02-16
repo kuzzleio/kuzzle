@@ -28,12 +28,12 @@ DocumentCreateOrReplace:
       description: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentCreateOrReplaceRequest"
+        $ref: "#/components/document/DocumentCreateOrReplaceRequest"
   responses:
     200:
       description: "Creates a new document in the persistent data storage, or replaces its content if it already exists."
       schema:
-        $ref: "#/components/schemas/DocumentCreateOrReplaceResponse"
+        $ref: "#/components/document/DocumentCreateOrReplaceResponse"
 
 components:
   schemas:

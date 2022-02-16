@@ -72,7 +72,6 @@
     "nanoid": "^3.2.0",
     "ndjson": "^2.0.0",
     "node-segfault-handler": "^1.0.4",
-    "openapi-enforcer": "^1.16.1",
     "passport": "^0.5.2",
     "protobufjs": "~6.11.2",
     "rc": "1.2.8",

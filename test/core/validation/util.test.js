@@ -22,7 +22,7 @@ describe('Test: validation utilities', () => {
     });
 
     it('should be false if one of the property is not allowed', () => {
-      should(checkAllowedProperties({ foo:'bar', baz: 'bar' }, ['foo'])).be.false();
+      should(checkAllowedProperties({ foo: 'bar', baz: 'bar' }, ['foo'])).be.false();
     });
   });
 

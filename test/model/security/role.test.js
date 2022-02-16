@@ -3,7 +3,7 @@
 const should = require('should');
 
 const KuzzleMock = require('../../mocks/kuzzle.mock');
-const Role = require('../../../lib/model/security/role');
+const { Role } = require('../../../lib/model/security/role');
 const {
   Request,
   BadRequestError
@@ -120,12 +120,7 @@ describe('Test: model/security/role', () => {
         req = new Request({
           controller: 'controller',
           action: 'action'
-        }, context),
-        restrictions = [
-          { index: 'index1' },
-          { index: 'index2', collections: ['collection1'] },
-          { index: 'index3', collections: ['collection1', 'collection2'] }
-        ];
+        }, context);
 
       role.controllers = {
         controller: {
@@ -136,28 +131,6 @@ describe('Test: model/security/role', () => {
       };
 
       should(role.isActionAllowed(req)).be.true();
-      should(role.isActionAllowed(req, restrictions)).be.true();
-
-      req.input.args.index = 'index';
-      should(role.isActionAllowed(req, restrictions)).be.false();
-
-      req.input.args.index = 'index1';
-      should(role.isActionAllowed(req, restrictions)).be.true();
-
-      req.input.args.index = 'index2';
-      should(role.isActionAllowed(req, restrictions)).be.true();
-
-      req.input.args.collection = 'collection';
-      should(role.isActionAllowed(req, restrictions)).be.false();
-
-      req.input.args.collection = 'collection1';
-      should(role.isActionAllowed(req, restrictions)).be.true();
-
-      req.input.args.collection = 'collection2';
-      should(role.isActionAllowed(req, restrictions)).be.false();
-
-      req.input.args.index = 'index3';
-      should(role.isActionAllowed(req, restrictions)).be.true();
     });
 
     it('should properly handle overridden permissions', () => {
@@ -197,6 +170,49 @@ describe('Test: model/security/role', () => {
       should(role.isActionAllowed(request)).be.false();
     });
 
+  });
+
+  describe('#checkRestrictions', () => {
+    it('should properly handle restrictions', () => {
+      const
+        role = new Role(),
+        req = new Request({
+          controller: 'controller',
+          action: 'action'
+        }, context),
+
+        restrictions = new Map(Object.entries(
+          {
+            index1: [],
+            index2: ['collection1'],
+            index3: ['collection1', 'collection2'],
+          }
+        ));
+
+      role.controllers = {
+        controller: {
+          actions: {
+            action: true
+          }
+        }
+      };
+
+      should(role.checkRestrictions(req, restrictions)).be.true();
+
+      should(role.checkRestrictions('index', undefined, restrictions)).be.false();
+
+      should(role.checkRestrictions('index1', undefined, restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', undefined, restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', 'collection', restrictions)).be.false();
+
+      should(role.checkRestrictions('index2', 'collection1', restrictions)).be.true();
+
+      should(role.checkRestrictions('index2', 'collection2', restrictions)).be.false();
+
+      should(role.checkRestrictions('index3', 'collection2', restrictions)).be.true();
+    });
   });
 
   describe('#validateDefinition', () => {

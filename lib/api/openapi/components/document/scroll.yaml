@@ -19,7 +19,7 @@ DocumentScroll:
     200:
       description: "Moves a search cursor forward."
       schema:
-        $ref: "#/components/schemas/DocumentScrollResponse"
+        $ref: "#/components/document/DocumentScrollResponse"
 
 components:
   schemas:

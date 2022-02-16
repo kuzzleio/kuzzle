@@ -93,7 +93,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       checkRights: sinon.stub(),
       getEventName: sinon.spy(),
       executePluginRequest: sinon.stub().resolves(),
-      isNativeController : sinon.stub()
+      isNativeController: sinon.stub()
     };
 
     this.dumpGenerator = {
@@ -131,7 +131,8 @@ class KuzzleMock extends KuzzleEventEmitter {
       registerStrategy: sinon.stub(),
       unregisterStrategy: sinon.stub(),
       application: {
-        info: sinon.stub()
+        info: sinon.stub(),
+        name: 'my-app',
       },
       routes: [],
       loadedPlugins: []

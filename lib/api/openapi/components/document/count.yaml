@@ -16,12 +16,12 @@ DocumentCount:
       description: "Counts documents in a collection."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentCountRequest"
+        $ref: "#/components/document/DocumentCountRequest"
   responses:
     200:
       description: "Counts documents in a collection."
       schema:
-        $ref: "#/components/schemas/DocumentCountResponse"
+        $ref: "#/components/document/DocumentCountResponse"
 
 components:
   schemas:

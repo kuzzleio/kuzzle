@@ -19,24 +19,37 @@
  * limitations under the License.
  */
 
-'use strict';
+import _ from 'lodash';
+import Bluebird from 'bluebird';
 
-const _ = require('lodash');
-const Bluebird = require('bluebird');
-
-const Rights = require('./rights');
-const kerror = require('../../kerror');
-const { isPlainObject } = require('../../util/safeObject');
+import Rights from './rights';
+import kerror from '../../kerror';
+import { isPlainObject } from '../../util/safeObject';
+import { Policy, OptimizedPolicy, OptimizedPolicyRestrictions } from '../../types/index';
+import { Role } from './role';
+import { KuzzleRequest } from '../../../index';
 
 const assertionError = kerror.wrap('api', 'assert');
+
+/** @internal */
+type InternalProfilePolicy = {
+  role: Role;
+  restrictedTo: OptimizedPolicyRestrictions;
+};
 
 /**
  * @class Profile
  */
-class Profile {
+export class Profile {
+  public _id: string;
+  public policies: Policy[];
+  public optimizedPolicies: OptimizedPolicy[];
+  public rateLimit: number;
+
   constructor () {
     this._id = null;
     this.policies = [];
+    this.optimizedPolicies = [];
     this.rateLimit = 0;
   }
 
@@ -45,12 +58,12 @@ class Profile {
    *
    * @returns {Promise}
    */
-  async getPolicies () {
+  async getPolicies (): Promise<InternalProfilePolicy[]> {
     if (! global.kuzzle) {
       throw kerror.get('security', 'profile', 'uninitialized', this._id);
     }
 
-    return Bluebird.map(this.policies, async ({ restrictedTo, roleId }) => {
+    return Bluebird.map(this.optimizedPolicies, async ({ restrictedTo, roleId }) => {
       const role = await global.kuzzle.ask('core:security:role:get', roleId);
       return { restrictedTo, role };
     });
@@ -58,21 +71,39 @@ class Profile {
 
   /**
    * @param {Request} request
-   * @param {Kuzzle} kuzzle
-   * @returns {Promise<boolean>}
+   * @returns {Promise}
    */
-  async isActionAllowed (request) {
-    if (this.policies === undefined || this.policies.length === 0) {
-      return false;
+  async getAllowedPolicies (request: KuzzleRequest): Promise<InternalProfilePolicy[]> {
+    if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
+      return [];
     }
 
     const policies = await this.getPolicies();
 
-    const results = await Bluebird.map(
-      policies,
-      policy => policy.role.isActionAllowed(request, policy.restrictedTo));
+    return policies.filter(
+      policy => policy.role.isActionAllowed(request)
+    );
+  }
 
-    return results.includes(true);
+  /**
+   * @param {Request} request
+   * @returns {Promise<boolean>}
+   */
+  async isActionAllowed (request: KuzzleRequest): Promise<boolean> {
+    if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
+      return false;
+    }
+
+    const allowedPolicies = await this.getAllowedPolicies(request);
+
+    return allowedPolicies
+      .some(policy =>
+        policy.role.checkRestrictions(
+          request.input.args.index,
+          request.input.args.collection,
+          policy.restrictedTo
+        )
+      );
   }
 
   /**
@@ -217,28 +248,31 @@ class Profile {
       const role = policy.role;
       let restrictedTo = _.cloneDeep(policy.restrictedTo);
 
-      if (restrictedTo === undefined || restrictedTo.length === 0) {
-        restrictedTo = [{ collections: ['*'], index: '*' }];
+      if (restrictedTo === undefined || restrictedTo.size === 0) {
+        restrictedTo = new Map([['*', ['*']]]);
       }
 
       for (const [controller, rights] of Object.entries(role.controllers)) {
         for (const [action, actionRights] of Object.entries(rights.actions)) {
-          for (const restriction of restrictedTo) {
-            if (restriction.collections === undefined
-              || restriction.collections.length === 0
+          for (const [restrictedIndex, restrictedCollections] of restrictedTo.entries()) {
+            let collections = restrictedCollections;
+            if (restrictedCollections === undefined
+              || restrictedCollections.length === 0
             ) {
-              restriction.collections = ['*'];
+              collections = ['*'];
             }
 
-            for (const collection of restriction.collections) {
+            for (const collection of collections) {
               const rightsItem = {
                 action,
                 collection,
                 controller,
-                index: restriction.index,
+                index: restrictedIndex,
                 value: actionRights
               };
               const rightsObject = {
+                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+                // @ts-ignore
                 [this.constructor._hash(rightsItem)]: rightsItem
               };
 
@@ -272,5 +306,3 @@ class Profile {
     }
   }
 }
-
-module.exports = Profile;

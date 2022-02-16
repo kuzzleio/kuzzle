@@ -47,12 +47,12 @@ DocumentUpdate:
       description: "Updates a document content."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentUpdateRequest"
+        $ref: "#/components/document/DocumentUpdateRequest"
   responses:
     200:
       description: "Updates a document content."
       schema:
-        $ref: "#/components/schemas/DocumentUpdateResponse"
+        $ref: "#/components/document/DocumentUpdateResponse"
 
 components:
   schemas:

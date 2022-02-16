@@ -8,8 +8,8 @@ const {
   PreconditionError,
 } = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
-const Profile = require('../../../lib/model/security/profile');
-const Role = require('../../../lib/model/security/role');
+const { Profile } = require('../../../lib/model/security/profile');
+const { Role } = require('../../../lib/model/security/role');
 
 describe('Test: model/security/profile', () => {
   const context = { connectionId: null, userId: null };
@@ -58,7 +58,7 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies = [{ roleId: 'denyRole' }];
+    profile.optimizedPolicies = [{ roleId: 'denyRole' }];
 
     kuzzle.ask
       .withArgs('core:security:role:get')
@@ -66,18 +66,17 @@ describe('Test: model/security/profile', () => {
 
     should(await profile.isActionAllowed(request)).be.false();
 
-    profile.policies.push({ roleId: 'allowRole' });
+    profile.optimizedPolicies.push({ roleId: 'allowRole' });
     should(await profile.isActionAllowed(request)).be.true();
 
-    profile.policies = [
+    profile.optimizedPolicies = [
       { roleId: 'denyRole' },
       {
         roleId: 'allowRole',
-        restrictedTo: [
-          { index: 'index1' },
-          { index: 'index2', collections: ['collection1'] },
-          { index: 'index3', collections: ['collection1', 'collection2'] }
-        ]
+        restrictedTo: new Map(Object.entries({
+          index2: ['collection1'],
+          index3: ['collection1', 'collection2'],
+        }))
       }
     ];
     should(await profile.isActionAllowed(request)).be.false();
@@ -97,11 +96,14 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies.push({
+    profile.optimizedPolicies.push({
       roleId: role1._id,
-      restrictedTo: [
-        { index: 'index1', collections: ['collection1', 'collection2'] }
-      ]
+      restrictedTo: new Map(Object.entries(
+        {
+          index1: ['collection1', 'collection2']
+        }
+      )),
+      
     });
 
     role2._id = 'role2';
@@ -111,9 +113,13 @@ describe('Test: model/security/profile', () => {
       }
     };
 
-    profile.policies.push({
+    profile.optimizedPolicies.push({
       roleId: role2._id,
-      restrictedTo: [{ index: 'index2' }]
+      restrictedTo: new Map(Object.entries(
+        {
+          index2: []
+        }
+      )),
     });
 
     role3._id = 'role3';
@@ -125,7 +131,7 @@ describe('Test: model/security/profile', () => {
 
     profile.constructor._hash = obj => kuzzle.hash(obj);
 
-    profile.policies.push({ roleId: role3._id });
+    profile.optimizedPolicies.push({ roleId: role3._id });
 
     kuzzle.ask
       .withArgs('core:security:role:get')

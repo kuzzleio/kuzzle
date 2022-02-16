@@ -188,7 +188,7 @@ class ApiBase {
 
     if (jwtToken !== undefined) {
       msg.headers = {
-        authorization :'Bearer ' + jwtToken
+        authorization: 'Bearer ' + jwtToken
       };
     }
 
@@ -477,7 +477,7 @@ class ApiBase {
       index: index,
       collection: collection,
       controller: 'collection',
-      action : 'deleteSpecifications',
+      action: 'deleteSpecifications',
       body: null
     });
   }
@@ -809,7 +809,7 @@ class ApiBase {
 
     if (jwtToken !== undefined) {
       msg.headers = {
-        authorization :'Bearer ' + jwtToken
+        authorization: 'Bearer ' + jwtToken
       };
     }
 
@@ -1225,7 +1225,7 @@ class ApiBase {
       index,
       collection,
       controller: 'collection',
-      action : 'updateSpecifications',
+      action: 'updateSpecifications',
       body: specifications
     });
   }
@@ -1269,7 +1269,7 @@ class ApiBase {
       index,
       collection,
       controller: 'collection',
-      action : 'validateSpecifications',
+      action: 'validateSpecifications',
       body: specifications
     });
   }

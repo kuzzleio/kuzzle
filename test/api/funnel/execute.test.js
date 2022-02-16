@@ -132,6 +132,33 @@ describe('funnelController.execute', () => {
       });
     });
 
+    it('should immediately reject requests with index, collection and targets', done => {
+      request = new Request({
+        controller: 'foo',
+        action: 'bar',
+        index: 'index',
+        collection: 'collection',
+        targets: [
+          { index: 'index', collections: ['collection'] }
+        ]
+      }, {
+        connection: { id: 'connectionid' },
+        token: null
+      });
+
+      funnel.execute(request, (err, res) => {
+        try {
+          should(err).be.instanceOf(BadRequestError);
+          should(err.id).eql('api.assert.mutually_exclusive');
+          should(res).eql(request);
+          done();
+        }
+        catch (e) {
+          done(e);
+        }
+      });
+    });
+
     it('should immediately reject requests with an unauthorized origin', done => {
       request = new Request({ controller: 'foo', action: 'bar' }, {
         connection: { id: 'connectionid' },

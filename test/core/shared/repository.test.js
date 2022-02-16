@@ -103,8 +103,8 @@ describe('Test: repositories/repository', () => {
       });
 
       const results = await repository.loadMultiFromDatabase([
-        { _id:'persisted' },
-        { _id:'persisted' },
+        { _id: 'persisted' },
+        { _id: 'persisted' },
       ]);
 
       should(results).be.an.Array().and.not.be.empty();
@@ -121,7 +121,7 @@ describe('Test: repositories/repository', () => {
         items: [],
       });
 
-      const results = await repository.loadMultiFromDatabase([{ _id:'null' }]);
+      const results = await repository.loadMultiFromDatabase([{ _id: 'null' }]);
 
       should(results).be.an.Array().and.be.empty();
     });
@@ -431,7 +431,7 @@ describe('Test: repositories/repository', () => {
         total: 1,
       });
 
-      const response = await repository.search({ query:'noquery' });
+      const response = await repository.search({ query: 'noquery' });
 
       should(response).be.an.Object();
       should(response.hits).be.an.Array();
@@ -440,7 +440,7 @@ describe('Test: repositories/repository', () => {
         'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         repository.collection,
-        { query:'noquery' },
+        { query: 'noquery' },
         {});
     });
 
@@ -465,7 +465,7 @@ describe('Test: repositories/repository', () => {
         'core:storage:private:document:search',
         kuzzle.internalIndex.index,
         repository.collection,
-        { query:'noquery' },
+        { query: 'noquery' },
         { from: 13, scroll: '45s', size: 42 });
     });
 
