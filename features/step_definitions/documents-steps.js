@@ -122,21 +122,6 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
   }
 });
 
-Then(/The document "(.*?)" should( not)? multiple exist:$/, async function (id, not) {
-  const mExists = await this.sdk.document.mExists(
-    this.props.index,
-    this.props.collection,
-    id);
-
-  if (not && mExists) {
-    throw new Error(`Document ${id} exists, but it shouldn't`);
-  }
-
-  if (! not && ! mExists) {
-    throw new Error(`Expected document ${id} to exist`);
-  }
-});
-
 Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
   const options = verb ? { verb, refresh: 'wait_for' } : { refresh: 'wait_for' };

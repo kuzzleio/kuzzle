@@ -210,17 +210,85 @@ Feature: Document Controller
   # document:mExists ============================================================
 
   @mappings
-  Scenario: Check document existence
+  Scenario: Check multiple document existence
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    Then The document "document-1" should not exist
-    When I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-    Then The document "document-1" should exist
-    When I "delete" the following document ids:
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I "get" the following document ids:
       | "document-1" |
-    And I refresh the collection
-    Then The document "document-1" should not exist
+      | "document-2" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                 |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    And I should receive a empty "errors" array
+    When I "get" the following document ids with verb "POST":
+      | "document-1" |
+      | "document-2" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                 |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    And I should receive a empty "errors" array
+
+
+  @mappings
+  Scenario: Get multiple documents with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I "get" the following document ids:
+      | "document-1"  |
+      | 214284        |
+      | "document-42" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                 |
+      | "document-1" | { "name": "document1" } |
+    And I should receive a "errors" array matching:
+      | "214284"      |
+      | "document-42" |
+  
+  @mappings
+  Scenario: Get multiple documents with success and with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I "get" the following document ids:
+      | "document-1"  |
+      | "document-2"  |
+      | "document-42" |
+      | "document-21" |
+    Then I should receive a "successes" array of objects matching:
+      | _id          | _source                 |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    And I should receive a "errors" array matching:
+      | "document-42" |
+      | "document-21" |
+
+  @mappings
+  Scenario: Get multiple documents in strict mode with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    When I execute the action "document":"mGet" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { ids: [ "document-1", "document-42" ] } |
+    Then I should receive an error matching:
+      | id     | "api.process.incomplete_multiple_request" |
 
   # document:mCreate ===========================================================
 
