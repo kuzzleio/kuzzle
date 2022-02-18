@@ -436,7 +436,7 @@ describe('core/network/httpRouter', () => {
 
       const req = new MockHttpRequest('get', '/foo/bar', '', {
         'content-type': 'application/json',
-        'x-kuzzle-volatile':  '{bad JSON syntax}',
+        'x-kuzzle-volatile': '{bad JSON syntax}',
       });
       const httpMessage = new HttpMessage(connection, req);
 

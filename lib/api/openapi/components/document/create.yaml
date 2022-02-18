@@ -16,12 +16,12 @@ DocumentCreate:
       description: "Creates a new document in the persistent data storage."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentCreateRequest"
+        $ref: "#/components/document/DocumentCreateRequest"
   responses:
     200:
       description: "Creates a new document in the persistent data storage."
       schema:
-          $ref: "#/components/schemas/DocumentCreateResponse"
+          $ref: "#/components/document/DocumentCreateResponse"
 
 components:
   schemas:

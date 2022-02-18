@@ -355,7 +355,7 @@ class HttpApi {
 
   createCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
       method: 'POST',
       body
     };
@@ -392,7 +392,7 @@ class HttpApi {
 
   createMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_create'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_create'),
       method: 'POST',
       body
     };
@@ -454,7 +454,7 @@ class HttpApi {
 
   credentialsExist (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_exists'),
       method: 'GET'
     };
 
@@ -482,7 +482,7 @@ class HttpApi {
 
   deleteCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId),
+      url: this.apiPath('credentials/' + strategy + '/' + userId),
       method: 'DELETE'
     };
 
@@ -509,7 +509,7 @@ class HttpApi {
 
   deleteMyCredentials (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me'),
+      url: this.apiPath('credentials/' + strategy + '/_me'),
       method: 'DELETE'
     };
 
@@ -616,7 +616,7 @@ class HttpApi {
 
   getCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId),
+      url: this.apiPath('credentials/' + strategy + '/' + userId),
       method: 'GET'
     };
 
@@ -625,7 +625,7 @@ class HttpApi {
 
   getCredentialsById (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
       method: 'GET'
     };
 
@@ -650,7 +650,7 @@ class HttpApi {
 
   getMyCredentials (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me'),
+      url: this.apiPath('credentials/' + strategy + '/_me'),
       method: 'GET'
     };
 
@@ -753,7 +753,7 @@ class HttpApi {
 
   hasCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
       method: 'GET'
     };
 
@@ -1146,7 +1146,7 @@ class HttpApi {
 
   updateCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
       method: 'PUT',
       body
     };
@@ -1176,7 +1176,7 @@ class HttpApi {
 
   updateMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_update'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_update'),
       method: 'PUT',
       body
     };
@@ -1226,7 +1226,7 @@ class HttpApi {
 
   validateCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
       method: 'POST',
       body
     };
@@ -1246,7 +1246,7 @@ class HttpApi {
 
   validateMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_validate'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_validate'),
       method: 'POST',
       body
     };
@@ -1305,7 +1305,7 @@ class HttpApi {
 
   loadMappings (body) {
     const options = {
-      url : this.apiPath('admin/_loadMappings?refresh=wait_for'),
+      url: this.apiPath('admin/_loadMappings?refresh=wait_for'),
       method: 'POST',
       body
     };
@@ -1315,7 +1315,7 @@ class HttpApi {
 
   loadFixtures (body) {
     const options = {
-      url : this.apiPath('admin/_loadFixtures?refresh=wait_for'),
+      url: this.apiPath('admin/_loadFixtures?refresh=wait_for'),
       method: 'POST',
       body
     };
@@ -1325,7 +1325,7 @@ class HttpApi {
 
   loadSecurities (body) {
     const options = {
-      url : this.apiPath('admin/_loadSecurities?refresh=wait_for'),
+      url: this.apiPath('admin/_loadSecurities?refresh=wait_for'),
       method: 'POST',
       body
     };

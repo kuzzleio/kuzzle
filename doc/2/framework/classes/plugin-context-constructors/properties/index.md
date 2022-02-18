@@ -93,7 +93,7 @@ const user = await context.accessors.execute(req)
 ```
 
 ## `Mutex`
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.0" />
 
 Instantiates a new mutex, allowing to lock a resource. Works both with single-node and cluster environments.
 

@@ -29,6 +29,8 @@ description: Error codes definitions
 | network.http.volatile_parse_failed<br/><pre>0x0301000b</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Unable to convert the "x-kuzzle-volatile" HTTP header to JSON: %s | The x-kuzzle-volatile header received is not in JSON format |
 | network.http.body_parse_failed<br/><pre>0x0301000c</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Unable to convert the HTTP body to JSON: %s | The request body is not in JSON format |
 | network.http.file_too_large<br/><pre>0x0301000d</pre>  | [SizeLimitError](/core/2/api/errors/error-codes#sizelimiterror) <pre>(413)</pre> | Maximum HTTP file size exceeded | The submitted file exceeds the server configured limit |
+| network.http.stream_closed<br/><pre>0x0301000e</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Stream closed or destroyed. | The stream has been closed or destroyed before sending the response |
+| network.http.stream_errored<br/><pre>0x0301000f</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Stream errored: %s | The stream is errored |
 
 ---
 

@@ -1,5 +1,7 @@
 {
   "rules": {
+    "@typescript-eslint/ban-ts-comment": "off",
+    "@typescript-eslint/ban-ts-ignore": "off",
     "consistent-return": 0,
     "curly": 2,
     "dot-notation": 2,
@@ -58,7 +60,8 @@
     "comma-spacing": 2,
     "brace-style": ["error", "stroustrup"],
     "space-infix-ops": 2,
-    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }]
+    "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }],
+    "key-spacing": ["error", { "afterColon": true }]
   },
   "overrides": [
     {

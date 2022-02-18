@@ -155,7 +155,7 @@ Then(/^I'm able to find "(\d*)" role by searching controller "([^"]*)"(?: with m
   var
     main,
     body = {
-      controllers : controller.split(',')
+      controllers: controller.split(',')
     },
     args = {
       from: from || 0,

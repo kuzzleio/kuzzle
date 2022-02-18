@@ -74,9 +74,9 @@ class KWorld {
       }
     };
     this.bulk = [
-      { index:  { _id: 1 } },
+      { index: { _id: 1 } },
       { title: 'foo' },
-      { index:  { _id: 2 } },
+      { index: { _id: 2 } },
       { title: 'bar' },
       { update: { _id: 1 } },
       { doc: { title: 'foobar' } },
@@ -251,7 +251,7 @@ class KWorld {
       profile3: {
         policies: [{
           roleId: this.idPrefix + 'role2',
-          restrictedTo: [{ index: this.fakeAltIndex, collections:[this.fakeCollection] }]
+          restrictedTo: [{ index: this.fakeAltIndex, collections: [this.fakeCollection] }]
         }]
       },
       profile4: {
@@ -268,7 +268,7 @@ class KWorld {
       profile6: {
         policies: [{
           roleId: this.idPrefix + 'role3',
-          restrictedTo: [{ index: this.fakeIndex, collections:[this.fakeCollection] }]
+          restrictedTo: [{ index: this.fakeIndex, collections: [this.fakeCollection] }]
         }]
       },
       invalidProfile: {

@@ -296,10 +296,10 @@ const defaultConfig: KuzzleConfiguration = {
         properties: {
           _kuzzle_info: {
             properties: {
-              author:     { type: 'keyword' },
-              createdAt:  { type: 'date' },
-              updater:    { type: 'keyword' },
-              updatedAt:  { type: 'date' }
+              author: { type: 'keyword' },
+              createdAt: { type: 'date' },
+              updater: { type: 'keyword' },
+              updatedAt: { type: 'date' }
             }
           }
         }
@@ -318,7 +318,7 @@ const defaultConfig: KuzzleConfiguration = {
             properties: {
               tags: { type: 'keyword' },
               policies: {
-                properties:  {
+                properties: {
                   roleId: { type: 'keyword' },
                   restrictedTo: {
                     type: 'nested',
@@ -391,6 +391,7 @@ const defaultConfig: KuzzleConfiguration = {
   },
 
   cluster: {
+    enabled: true,
     activityDepth: 50,
     heartbeat: 2000,
     interface: null,

@@ -224,7 +224,7 @@ describe('Test: security controller - credentials', () => {
           must: [
             {
               match: {
-                credentials:  'test@test.com'
+                credentials: 'test@test.com'
               }
             }
           ]

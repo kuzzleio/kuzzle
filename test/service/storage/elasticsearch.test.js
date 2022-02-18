@@ -168,13 +168,17 @@ describe('Test: ElasticSearch service', () => {
           _scroll_id: 'azerty',
           hits: {
             hits: [
-              { _id: 'foo', _source: {} },
-              { _id: 'bar', _source: {} },
+              { _index: '&foo.foo', _id: 'foo', _source: {} },
+              { _index: '&bar.bar', _id: 'bar', _source: {} },
             ],
             total: { value: 1000 },
           },
         }
       });
+
+      elasticsearch._getAliasFromIndice = sinon.stub();
+      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns('@&foo.foo');
+      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns('@&bar.bar');
 
       const result = await elasticsearch.scroll('i-am-scroll-id', {
         scrollTTL: '10s'
@@ -201,8 +205,18 @@ describe('Test: ElasticSearch service', () => {
       should(result).be.match({
         aggregations: undefined,
         hits: [
-          { _id: 'foo', _source: {} },
-          { _id: 'bar', _source: {} },
+          {
+            _id: 'foo',
+            _source: {},
+            index: 'foo',
+            collection: 'foo'
+          },
+          {
+            _id: 'bar',
+            _source: {},
+            index: 'bar',
+            collection: 'bar'
+          },
         ],
         remaining: 997,
         scrollId: 'azerty',
@@ -219,14 +233,18 @@ describe('Test: ElasticSearch service', () => {
         body: {
           hits: {
             hits: [
-              { _id: 'foo', _source: {} },
-              { _id: 'bar', _source: {} },
+              { _index: '&foo.foo', _id: 'foo', _source: {} },
+              { _index: '&bar.bar', _id: 'bar', _source: {} },
             ],
             total: { value: 1000 }
           },
           _scroll_id: 'azerty'
         }
       });
+
+      elasticsearch._getAliasFromIndice = sinon.stub();
+      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns('@&foo.foo');
+      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns('@&bar.bar');
 
       const result = await elasticsearch.scroll('i-am-scroll-id', {
         scrollTTL: '10s'
@@ -251,8 +269,18 @@ describe('Test: ElasticSearch service', () => {
       should(result).be.match({
         aggregations: undefined,
         hits: [
-          { _id: 'foo', _source: {} },
-          { _id: 'bar', _source: {} },
+          {
+            _id: 'foo',
+            _source: {},
+            index: 'foo',
+            collection: 'foo'
+          },
+          {
+            _id: 'bar',
+            _source: {},
+            index: 'bar',
+            collection: 'bar'
+          },
         ],
         remaining: 0,
         scrollId: 'azerty',
@@ -324,6 +352,40 @@ describe('Test: ElasticSearch service', () => {
       searchBody = {};
     });
 
+    it('should join multi indexes and collections when specified with targets', async () => {
+
+      elasticsearch._client.search.rejects(new Error()); // Skip rest of the execution
+
+      try {
+        await elasticsearch.search({
+          targets: [
+            {
+              index: 'nyc-open-data',
+              collections: ['yellow-taxi', 'red-taxi'],
+            },
+            {
+              index: 'nyc-close-data',
+              collections: ['green-taxi', 'blue-taxi'],
+            }
+          ],
+          searchBody,
+        });
+      }
+      catch (error) {
+        // Catch error since we throw to skip the rest of the execution
+      }
+      finally {
+        should(elasticsearch._client.search.firstCall.args[0]).match({
+          index: '@&nyc-open-data.yellow-taxi,@&nyc-open-data.red-taxi,@&nyc-close-data.green-taxi,@&nyc-close-data.blue-taxi',
+          body: { query: { match_all: {} } },
+          from: undefined,
+          size: undefined,
+          scroll: undefined,
+          trackTotalHits: true,
+        });
+      }
+    });
+
     it('should be able to search documents', async () => {
       elasticsearch._client.search.resolves({
         body: {
@@ -333,6 +395,7 @@ describe('Test: ElasticSearch service', () => {
             hits: [
               {
                 _id: 'liia',
+                _index: indice,
                 _source: { country: 'Nepal' },
                 _score: 42,
                 highlight: 'highlight',
@@ -356,7 +419,10 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      const result = await elasticsearch.search(index, collection, searchBody);
+      elasticsearch._getAliasFromIndice = sinon.stub();
+      elasticsearch._getAliasFromIndice.withArgs(indice).returns(alias);
+
+      const result = await elasticsearch.search({ index, collection, searchBody });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         index: alias,
@@ -377,6 +443,8 @@ describe('Test: ElasticSearch service', () => {
         aggregations: { some: 'aggregs' },
         hits: [
           {
+            index,
+            collection,
             _id: 'liia',
             _source: { country: 'Nepal' },
             _score: 42,
@@ -404,11 +472,10 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      await elasticsearch.search(index, collection, searchBody, {
-        from: 0,
-        scroll: '30s',
-        size: 1,
-      });
+      await elasticsearch.search(
+        { index, collection, searchBody },
+        { from: 0, scroll: '30s', size: 1, }
+      );
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         body: searchBody,
@@ -433,7 +500,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
 
-      await elasticsearch.search('main', 'kuzzleData', searchBody);
+      await elasticsearch.search({ index: 'main', collection: 'kuzzleData', searchBody });
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
         body: searchBody,
@@ -445,7 +512,7 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if a search fails', async () => {
       elasticsearch._client.search.rejects(esClientError);
 
-      await should(elasticsearch.search(index, collection, searchBody))
+      await should(elasticsearch.search({ index, collection, searchBody }))
         .be.rejected();
 
       should(elasticsearch._esWrapper.formatESError).be.calledWith(esClientError);
@@ -454,10 +521,10 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if an unhautorized property is in the query', () => {
       searchBody = {
         not_authorized: 42,
-        query : {}
+        query: {}
       };
 
-      return should(elasticsearch.search(index, collection, searchBody))
+      return should(elasticsearch.search({ index, collection, searchBody }))
         .be.rejectedWith({ id: 'services.storage.invalid_search_query' });
     });
 
@@ -468,7 +535,7 @@ describe('Test: ElasticSearch service', () => {
         },
       });
 
-      await elasticsearch.search(index, collection, {});
+      await elasticsearch.search({ index, collection, searchBody: {} });
 
       should(kuzzle.ask).not.calledWith('core:cache:internal:store');
     });
@@ -476,9 +543,10 @@ describe('Test: ElasticSearch service', () => {
     it('should return a rejected promise if the scroll duration is too great', async () => {
       elasticsearch._config.maxScrollDuration = '21m';
 
-      const promise = elasticsearch.search(index, collection, searchBody, {
-        scroll: '42m'
-      });
+      const promise = elasticsearch.search(
+        { index, collection, searchBody },
+        { scroll: '42m' }
+      );
 
       await should(promise).be.rejectedWith({
         id: 'services.storage.scroll_duration_too_great'
@@ -2125,7 +2193,7 @@ describe('Test: ElasticSearch service', () => {
       const mappings = {
         dinamic: 'false',
         properties: {
-          freeman:  { type: 'keyword' }
+          freeman: { type: 'keyword' }
         }
       };
 
@@ -2213,18 +2281,18 @@ describe('Test: ElasticSearch service', () => {
           gordon: { type: 'text' },
           _kuzzle_info: {
             properties: {
-              author:     { type: 'text' },
-              createdAt:  { type: 'date' },
-              updatedAt:  { type: 'date' },
-              updater:    { type: 'keyword' },
+              author: { type: 'text' },
+              createdAt: { type: 'date' },
+              updatedAt: { type: 'date' },
+              updater: { type: 'keyword' },
             }
           }
         }
       };
       const mappings = {
         properties: {
-          gordon:   { type: 'keyword' },
-          freeman:  { type: 'keyword' },
+          gordon: { type: 'keyword' },
+          freeman: { type: 'keyword' },
           _kuzzle_info: {
             properties: {
               author: { type: 'keyword' }
@@ -2241,14 +2309,14 @@ describe('Test: ElasticSearch service', () => {
           _meta: undefined,
           dynamic: 'false',
           properties: {
-            gordon:   { type: 'text' },
-            freeman:  { type: 'keyword' },
+            gordon: { type: 'text' },
+            freeman: { type: 'keyword' },
             _kuzzle_info: {
               properties: {
-                author:     { type: 'text' },
-                createdAt:  { type: 'date' },
-                updatedAt:  { type: 'date' },
-                updater:    { type: 'keyword' },
+                author: { type: 'text' },
+                createdAt: { type: 'date' },
+                updatedAt: { type: 'date' },
+                updater: { type: 'keyword' },
               }
             }
           }
@@ -2517,7 +2585,7 @@ describe('Test: ElasticSearch service', () => {
       newMapping = {
         dinamic: 'false',
         properties: {
-          freeman:  { type: 'keyword' }
+          freeman: { type: 'keyword' }
         }
       };
 
@@ -4867,16 +4935,16 @@ describe('Test: ElasticSearch service', () => {
 
         should(publicES._client.indices.updateAliases).be.calledWith({
           body: {
-            actions : [
-              { add : { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
+            actions: [
+              { add: { alias: '@&nepali.mehry', index: '&nepali.mehry' } }
             ]
           }
         });
         should(internalES._client.indices.updateAliases).be.calledWith({
           body: {
-            actions : [
-              { add : { alias: '@%nepali.liia', index: '%nepali.liia' } },
-              { add : { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
+            actions: [
+              { add: { alias: '@%nepali.liia', index: '%nepali.liia' } },
+              { add: { alias: '@%nepali.mehry', index: '%nepali.mehry' } },
             ]
           }
         });

@@ -47,12 +47,12 @@ DocumentDeleteByQuery:
       description: "Deletes documents matching the provided search query."
       required: true
       schema:
-        $ref: "#/components/schemas/DocumentDeleteByQueryRequest"
+        $ref: "#/components/document/DocumentDeleteByQueryRequest"
   responses:
     200:
       description: "Deletes documents matching the provided search query."
       schema:
-        $ref: "#/components/schemas/DocumentDeleteByQueryResponse"
+        $ref: "#/components/document/DocumentDeleteByQueryResponse"
 
 components:
   schemas:

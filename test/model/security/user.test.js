@@ -8,8 +8,8 @@ const {
   Request,
 } = require('../../../index');
 const Kuzzle = require('../../mocks/kuzzle.mock');
-const Profile = require('../../../lib/model/security/profile');
-const User = require('../../../lib/model/security/user');
+const { Profile } = require('../../../lib/model/security/profile');
+const { User } = require('../../../lib/model/security/user');
 
 
 describe('Test: model/security/user', () => {

@@ -14,6 +14,8 @@ const ClientConnection = require('../../../../lib/core/network/clientConnection'
 const KuzzleMock = require('../../../mocks/kuzzle.mock');
 const uWSMock = require('../../../mocks/uWS.mock');
 const EntryPointMock = require('../../../mocks/entrypoint.mock');
+const { HttpStream } = require('../../../..');
+const { PassThrough } = require('stream');
 
 describe('core/network/protocols/http', () => {
   let HttpWs;
@@ -160,6 +162,131 @@ describe('core/network/protocols/http', () => {
       should(response.writeStatus).not.called();
       should(response.writeHeader).not.called();
       should(response.end).not.called();
+    });
+  });
+
+  describe('#httpSendStream', () => {
+    let message;
+    let connection;
+    let request;
+
+    beforeEach(async () => {
+      await httpWs.init(entryPoint);
+
+      connection = new ClientConnection('http', ['1.2.3.4'], 'foo');
+      request = new uWSMock.MockHttpRequest(
+        '',
+        '',
+        '',
+        {
+          origin: 'foo'
+        });
+      message = new HttpMessage(connection, request);
+    });
+
+    it('should set the headers', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      const stub = sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
+
+      should(response.cork).calledOnce();
+      should(stub).be.calledOnce();
+    });
+
+    it('should end the connection if the stream is closed or errored', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      stream.destroy();
+      sinon.stub(httpWs, 'httpSendError');
+      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
+
+      should(httpWs.httpSendError).be.calledWithMatch(
+        message,
+        response,
+        { id: 'network.http.stream_closed' }
+      );
+      should(response.cork).not.be.called();
+    });
+
+    it('should add the content-length header if the stream has a fixed size', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 1 }), message);
+
+      should(response.writeHeader).be.calledWithMatch(Buffer.from('Content-Length'), Buffer.from('1'));
+    });
+
+    it('should add the transfer-encoding header if the stream has a dynamic size', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
+
+      should(response.writeHeader).be.calledWithMatch(Buffer.from('Transfer-Encoding'), Buffer.from('chunked'));
+    });
+
+    it('should write chunk using tryEnd when the stream size is fixed', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
+
+      stream.write('Hello');
+      stream.end();
+      should(response.getWriteOffset).be.calledOnce();
+      should(response.tryEnd).be.calledWithMatch(Buffer.from('Hello').buffer.slice(0, 5), 5);
+    });
+
+    it('should write chunk using write when the stream size is dynamic', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
+
+      stream.write('Hello');
+      stream.end();
+      should(response.getWriteOffset).be.calledOnce();
+      should(response.write).be.calledWithMatch(Buffer.from('Hello').buffer.slice(0, 5));
+    });
+
+    it('should pause writing data when there is some backpressure when the stream has a fixed size', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+
+      response.tryEnd.returns([false, false]);
+      sinon.stub(stream, 'pause');
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
+
+      stream.write('Hello');
+      stream.end();
+      
+      should(stream.pause).be.calledOnce();
+    });
+
+    it('should pause writing data when there is some backpressure when the stream has a dynamic size', () => {
+      const response = new uWSMock.MockHttpResponse();
+      const stream = new PassThrough();
+
+      response.write.returns(false);
+      sinon.stub(stream, 'pause');
+      
+      sinon.stub(httpWs, 'httpWriteRequestHeaders');
+      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
+
+      stream.write('Hello');
+      stream.end();
+      
+      should(stream.pause).be.calledOnce();
     });
   });
 
