@@ -6,9 +6,26 @@ export type ErrorClassNames = 'BadRequestError' | 'ExternalServiceError' | 'Forb
 /**
  * Represents a standardized error definition
  */
-export type ErrorDefinition = {
-  description: string;
+export type ErrorDefinition = CustomErrorDefinition & {
   code: number;
+}
+
+/**
+ * Represents a custom standardized error definition
+ */
+export type CustomErrorDefinition = {
+  /**
+   * Error description for documentation purpose
+   */
+  description: string;
+
+  /**
+   * Error message
+   */
   message: string;
+
+  /**
+   * Error class
+   */
   class: ErrorClassNames
 };

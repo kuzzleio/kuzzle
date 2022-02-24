@@ -6,7 +6,7 @@ import { ErrorDefinition } from './ErrorDefinition';
 export type ErrorDomains = {
   [domain: string]: {
     code: number;
-    subdomains: {
+    subdomains?: {
       [subDomain: string]: {
         code: number;
         errors: {

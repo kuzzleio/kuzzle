@@ -22,14 +22,17 @@
 import { KuzzleError, } from '../../kerror/errors';
 import * as kerror from '../../kerror';
 import { ApplicationManager, Backend } from './index';
-import { ErrorDefinition } from '../../types';
+import { CustomErrorDefinition, ErrorDomains } from '../../types';
 
 export class BackendErrors extends ApplicationManager {
-  public readonly applicationDomain: {
-    [subDomain: string]: {
-      [errorName: string]: ErrorDefinition
-    };
-  } = {};
+  public readonly domains: ErrorDomains = {
+    application: {
+      code: 9,
+      subdomains: {},
+    }
+  };
+
+  private subDomains = 0;
 
   constructor (application: Backend) {
     super(application);
@@ -41,13 +44,28 @@ export class BackendErrors extends ApplicationManager {
    * @param subDomain Subdomain name
    * @param name Standard error name
    * @param definition Standard error definition
+   *
+   * @example
+   * ```
+   * app.errors.register('api', 'custom', {
+   *   class: 'BadRequestError',
+   *   description: 'This is a custom error from API subdomain',
+   *   message: 'Custom API error: %s',
+   * });
+   * ```
    */
-  register (subDomain: string, name: string, definition: ErrorDefinition) {
-    if (! this.applicationDomain[subDomain]) {
-      this.applicationDomain[subDomain] = {};
+  register (subDomain: string, name: string, definition: CustomErrorDefinition) {
+    if (! this.domains.application.subdomains[subDomain]) {
+      this.domains.application.subdomains[subDomain] = {
+        code: this.subDomains++,
+        errors: {},
+      };
     }
 
-    this.applicationDomain[subDomain][name] = definition;
+    this.domains.application.subdomains[subDomain].errors[name] = {
+      code: Object.keys(this.domains.application.subdomains[subDomain].errors).length + 1,
+      ...definition,
+    };
   }
 
   /**
@@ -57,10 +75,12 @@ export class BackendErrors extends ApplicationManager {
    * @param name Standard error name
    * @param placeholders Other placeholder arguments
    *
+   * @example throw app.errors.get('api', 'custom', 'Tbilisi');
+   *
    * @returns Standardized KuzzleError
    */
    get (subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.get('application', subDomain, name, ...placeholders);
+    return kerror.rawGet(this.domains, 'application', subDomain, name, ...placeholders);
   }
 
   /**
@@ -74,7 +94,7 @@ export class BackendErrors extends ApplicationManager {
    * @returns Standardized KuzzleError
    */
   getFrom (source: Error, subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.getFrom(source, 'application', subDomain, name, ...placeholders);
+    return kerror.rawGetFrom(this.domains, source, 'application', subDomain, name, ...placeholders);
   }
 
   /**
@@ -83,6 +103,6 @@ export class BackendErrors extends ApplicationManager {
    * @param subDomain Subdomain to wrap to
    */
   wrap (subDomain: string) {
-    return kerror.wrap('application', subDomain);
+    return kerror.rawWrap(this.domains, 'application', subDomain);
   }
 }
