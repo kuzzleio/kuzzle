@@ -91,6 +91,14 @@ Application name.
 |-------------------|------------------|
 | <pre>string</pre> | Application name |
 
+## `openApi`
+
+This property is an instance of the [BackendOpenApi](/core/2/framework/classes/backend-openapi) class that allows to modify OpenAPI definition.
+
+| Type              | Description      |
+|-------------------|------------------|
+| <pre>JSONObject</pre> | OpenAPI default definition |
+
 ## `pipe`
 
 This property is an instance of the [BackendPipe](/core/2/framework/classes/backend-pipe) class that allows to register pipes.

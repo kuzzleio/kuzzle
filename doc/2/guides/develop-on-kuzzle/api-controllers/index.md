@@ -299,9 +299,11 @@ Then Kuzzle will inject the http route specification as shown in the example bel
 }
 ```
 
+<SinceBadge version="2.17.0" />
+
 The complete OpenAPI definition is accessible and customizable with the [app.openapi.definition](/core/2/framework/classes/backend-openapi) property.
 
-**Example:** _Registering an OpenAPI schema_
+**Example:** _Register an OpenAPI schema_
 
 ```js
 app.openApi.definition.components.LogisticObjects = {

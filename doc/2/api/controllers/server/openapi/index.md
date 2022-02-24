@@ -9,6 +9,8 @@ title: openapi
 
 Returns available API routes OpenAPI v3 specifications.
 
+<SinceBadge version="2.17.0" />
+
 By default, the action returns Kuzzle standard API specification, to return the custom specification from the plugins and application, the scope parameter should be `app`.
 
 ---
