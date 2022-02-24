@@ -20,7 +20,7 @@
  */
 
 import vault from '../../kuzzle/vault';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { ApplicationManager } from './index';
 

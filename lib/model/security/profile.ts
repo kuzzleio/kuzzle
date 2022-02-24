@@ -23,7 +23,7 @@ import _ from 'lodash';
 import Bluebird from 'bluebird';
 
 import Rights from './rights';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { isPlainObject } from '../../util/safeObject';
 import { Policy, OptimizedPolicy, OptimizedPolicyRestrictions } from '../../types/index';
 import { Role } from './role';

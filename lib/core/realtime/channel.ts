@@ -20,7 +20,7 @@
  */
 
 import { RealtimeScope, RealtimeUsers } from '../../types';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 
 const realtimeError = kerror.wrap('core', 'realtime');
 

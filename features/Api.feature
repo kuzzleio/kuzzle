@@ -17,3 +17,8 @@ Feature: API
       | age                 | 27           |
       | _kuzzle_info.author | "test-admin" |
 
+  Scenario: Use a custom error with error manager
+    When I execute the action "tests":"customError"
+    Then I should receive an error matching:
+      | id      | "application.api.custom" |
+      | message | "Custom Tbilisi error"   |

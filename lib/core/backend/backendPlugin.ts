@@ -20,7 +20,7 @@
  */
 
 import { Inflector } from '../../util/inflector';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { Plugin } from '../../types';
 import { ApplicationManager } from './index';

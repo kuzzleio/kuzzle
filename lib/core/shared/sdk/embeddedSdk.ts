@@ -31,7 +31,7 @@ import {
 import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
-import kerror from '../../../kerror';
+import * as kerror from '../../../kerror';
 import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
