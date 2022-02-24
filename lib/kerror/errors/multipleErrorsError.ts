@@ -27,14 +27,14 @@ export class MultipleErrorsError extends KuzzleError {
 
   constructor (
     message: string,
-    body: Array<KuzzleError> = [],
+    errors: Array<KuzzleError> = [],
     id?: string,
     code?: number
   ) {
     super(message, 400, id, code);
 
-    this.errors = body;
-    this.count = body.length;
+    this.errors = errors;
+    this.count = errors.length;
   }
 
   toJSON () {
@@ -48,7 +48,7 @@ export class MultipleErrorsError extends KuzzleError {
     catch (error) {
       serialized.errors = this.errors;
     }
-    
+
     return serialized;
   }
 }
