@@ -23,3 +23,5 @@ export * from './backendVault';
 export * from './backendOpenApi';
 
 export * from './internalLogger';
+
+export * from './backendErrors';
