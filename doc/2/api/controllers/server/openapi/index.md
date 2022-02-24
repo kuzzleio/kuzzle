@@ -7,7 +7,9 @@ title: openapi
 # openapi
 
 
-Returns available API routes OpenAPI v3 specifications, including both Kuzzle's and plugins'.  
+Returns available API routes OpenAPI v3 specifications.
+
+By default, the action returns Kuzzle standard API specification, to return the custom specification from the plugins and application, the scope parameter should be `app`.
 
 ---
 
@@ -16,7 +18,7 @@ Returns available API routes OpenAPI v3 specifications, including both Kuzzle's 
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_openapi[?format=<json|yaml>]
+URL: http://kuzzle:7512/_openapi[?format=<json|yaml>][scope=<app|kuzzle>]
 Method: GET
 ```
 
@@ -26,7 +28,8 @@ Method: GET
 {
   "controller": "server",
   "action": "openapi",
-  "format": "<json|yaml>"
+  "format": "<json|yaml>",
+  "scope": "<kuzzle|app",
 }
 ```
 

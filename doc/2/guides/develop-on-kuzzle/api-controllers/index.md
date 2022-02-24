@@ -225,9 +225,9 @@ By doing this, the action will only be available through the HTTP protocol with 
 
 The API action [server:openapi](/core/2/api/controllers/server/openapi) returns available API routes OpenAPI v3 specifications.
 
-By default, Kuzzle autogenerates specifications for actions added via a controller. When defining a controller action, it is possible to provide a custom specification which will overwrite the default one.
+When used with the `scope` argument to `app`, the API action will returns the OpenAPI specification of custom controllers added by plugins or the application.
 
-### HTTP Route
+Kuzzle generates specifications for custom API actions, although it is possible to customize the OpenAPI specifications for each HTTP route.
 
 To register this custom specification, it must be declared with http routes in an `openapi` property. To write this object, follow the official [openapi specification](https://swagger.io/specification/#paths-object) especially the paths object section.
 
@@ -269,6 +269,7 @@ app.controller.register('greeting', {
   }
 });
 ```
+
 Then Kuzzle will inject the http route specification as shown in the example below using each property `path`, `verb` and `openapi`.
 
 ```json
@@ -296,6 +297,24 @@ Then Kuzzle will inject the http route specification as shown in the example bel
     },
   }
 }
+```
+
+The complete OpenAPI definition is accessible and customizable with the [app.openapi.definition](/core/2/framework/classes/backend-openapi) property.
+
+**Example:** _Registering an OpenAPI schema_
+
+```js
+app.openApi.definition.components.LogisticObjects = {
+  Item: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      quantity: { type: 'integer' },
+    }
+  }
+};
+
+// Then you can reference this schema anywhere according to OpenAPI specification "#/components/LogisticObjects/Item"
 ```
 
 ## KuzzleRequest Input
