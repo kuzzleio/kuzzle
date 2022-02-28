@@ -25,7 +25,7 @@ import { ApplicationManager, Backend } from './index';
 import { CustomErrorDefinition, ErrorDomains } from '../../types';
 
 export class BackendErrors extends ApplicationManager {
-  public readonly domains: ErrorDomains = {
+  private domains: ErrorDomains = {
     application: {
       code: 9,
       subdomains: {},
@@ -79,7 +79,7 @@ export class BackendErrors extends ApplicationManager {
    *
    * @returns Standardized KuzzleError
    */
-   get (subDomain: string, name: string, ...placeholders): KuzzleError {
+  get (subDomain: string, name: string, ...placeholders): KuzzleError {
     return kerror.rawGet(this.domains, 'application', subDomain, name, ...placeholders);
   }
 
