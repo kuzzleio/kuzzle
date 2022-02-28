@@ -93,7 +93,8 @@ describe('core/network/protocols/http', () => {
         '',
         '',
         {
-          origin: 'foo'
+          origin: 'foo',
+          'Content-Length': 42
         });
       message = new HttpMessage(connection, req);
     });
@@ -125,6 +126,10 @@ describe('core/network/protocols/http', () => {
       should(response.writeHeader).calledWithMatch(
         Buffer.from('Content-Type'),
         Buffer.from('application/json'));
+
+      should(response.writeHeader).not.be.calledWithMatch(
+        Buffer.from('Content-Length'),
+        Buffer.from('42'));
 
       should(response.writeHeader.calledBefore(response.end));
 
