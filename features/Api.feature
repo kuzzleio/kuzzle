@@ -20,5 +20,5 @@ Feature: API
   Scenario: Use a custom error with error manager
     When I execute the action "tests":"customError"
     Then I should receive an error matching:
-      | id      | "application.api.custom" |
-      | message | "Custom Tbilisi error"   |
+      | id      | "app.api.custom"       |
+      | message | "Custom Tbilisi error" |

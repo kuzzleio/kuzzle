@@ -13,7 +13,7 @@ The `BackendOpenApi` class handles OpenAPI definition.
 
 It is accessible from the [Backend.openapi](/core/2/framework/classes/backend/properties#openapi) property.
 
-See the [OpenAPI](/core/2/guides/develop-on-kuzzle/api-controller#openapi-specification) guide.
+See the [OpenAPI](/core/2/guides/develop-on-kuzzle/api-controllers#openapi-specification) guide.
 
 ## `definition`
 
