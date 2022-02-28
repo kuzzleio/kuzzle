@@ -46,7 +46,6 @@ app.openApi.definition
   },
   externalDocs: {
     description: 'Kuzzle API Documentation',
-    url: 'https://docs.kuzzle.io/core/2/api/'
   },
   servers: [
     {
