@@ -26,7 +26,7 @@ import { CustomErrorDefinition, ErrorDomains } from '../../types';
 
 export class BackendErrors extends ApplicationManager {
   private domains: ErrorDomains = {
-    application: {
+    app: {
       code: 9,
       subdomains: {},
     }
@@ -55,15 +55,15 @@ export class BackendErrors extends ApplicationManager {
    * ```
    */
   register (subDomain: string, name: string, definition: CustomErrorDefinition) {
-    if (! this.domains.application.subdomains[subDomain]) {
-      this.domains.application.subdomains[subDomain] = {
+    if (! this.domains.app.subdomains[subDomain]) {
+      this.domains.app.subdomains[subDomain] = {
         code: this.subDomains++,
         errors: {},
       };
     }
 
-    this.domains.application.subdomains[subDomain].errors[name] = {
-      code: Object.keys(this.domains.application.subdomains[subDomain].errors).length + 1,
+    this.domains.app.subdomains[subDomain].errors[name] = {
+      code: Object.keys(this.domains.app.subdomains[subDomain].errors).length,
       ...definition,
     };
   }
@@ -80,7 +80,7 @@ export class BackendErrors extends ApplicationManager {
    * @returns Standardized KuzzleError
    */
   get (subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGet(this.domains, 'application', subDomain, name, ...placeholders);
+    return kerror.rawGet(this.domains, 'app', subDomain, name, ...placeholders);
   }
 
   /**
@@ -94,7 +94,7 @@ export class BackendErrors extends ApplicationManager {
    * @returns Standardized KuzzleError
    */
   getFrom (source: Error, subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGetFrom(this.domains, source, 'application', subDomain, name, ...placeholders);
+    return kerror.rawGetFrom(this.domains, source, 'app', subDomain, name, ...placeholders);
   }
 
   /**
@@ -103,6 +103,6 @@ export class BackendErrors extends ApplicationManager {
    * @param subDomain Subdomain to wrap to
    */
   wrap (subDomain: string) {
-    return kerror.rawWrap(this.domains, 'application', subDomain);
+    return kerror.rawWrap(this.domains, 'app', subDomain);
   }
 }

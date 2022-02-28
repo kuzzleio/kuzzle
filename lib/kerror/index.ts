@@ -243,7 +243,7 @@ export function getFrom (source: Error, domain: string, subdomain: string, error
 /**
  * Wrap error functions with the provided domain and subdomain.
  */
- export function wrap (domain: string, subdomain: string) {
+export function wrap (domain: string, subdomain: string) {
   return {
     get: (error, ...placeholders) => get(
       domain,
