@@ -76,8 +76,8 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
   }
 
   const message = options.message || format(kuzzleError.message, ...placeholders);
-  const id: string = `${domain}.${subdomain}.${error}`;
-  const code: number = domains[domain].code << 24
+  const id = `${domain}.${subdomain}.${error}`;
+  const code = domains[domain].code << 24
     | domains[domain].subdomains[subdomain].code << 16
     | domains[domain].subdomains[subdomain].errors[error].code;
 
