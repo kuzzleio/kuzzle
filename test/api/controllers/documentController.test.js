@@ -95,7 +95,7 @@ describe('DocumentController', () => {
         { id: 'services.storage.invalid_multi_index_collection_usage' });
     });
 
-    it.only('should reject if no index and collection or targets are specified', async () => {
+    it('should reject if no index and collection or targets are specified', async () => {
       request.input.args.index = undefined;
       request.input.args.collection = undefined;
       request.input.args.targets = undefined;
