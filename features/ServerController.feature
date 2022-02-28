@@ -82,7 +82,7 @@ Feature: Server Controller
       | paths./users/{_id}/_replace.put.tags[0] | "security" |
 
   @http
-  Scenario: Get application Open API defintion
+  Scenario: Get application Open API definition
     When I successfully execute the action "server":"openapi" with args:
       | scope | "app" |
     Then I should receive a response matching:

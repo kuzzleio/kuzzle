@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { has, isPlainObject } from '../../util/safeObject';
 import { binarySearch } from '../../util/array';
 import { ControllerRight, ControllerRights } from '../../types/ControllerRights';
@@ -116,7 +116,7 @@ export class Role {
       .forEach(entry => this.validateControllerRights(...entry));
   }
 
-  
+
   /**
    * @param {String} index
    * @param {String} collection

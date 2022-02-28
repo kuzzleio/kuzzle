@@ -24,7 +24,7 @@ import { JSONObject } from 'kuzzle-sdk';
 import { Koncorde, NormalizedFilter } from 'koncorde';
 
 import { KuzzleRequest, Request, RequestContext } from '../../api/request';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import createDebug from '../../util/debug';
 import {
   fromKoncordeIndex,
@@ -551,7 +551,7 @@ export class HotelClerk {
   metrics (): {rooms: number, subscriptions: number} {
     return {
       rooms: this.roomsCount,
-      subscriptions: this.subscriptions.size,    
+      subscriptions: this.subscriptions.size,
     };
   }
 

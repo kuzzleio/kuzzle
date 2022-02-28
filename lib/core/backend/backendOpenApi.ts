@@ -33,7 +33,7 @@ export class BackendOpenApi extends ApplicationManager {
 
     /* eslint-disable sort-keys */
     this.definition = {
-      swagger: '2.0',
+      openapi: '3.0.0',
       info: {
         title: `${application.name} API`,
         description: `${application.name} HTTP API definition`,

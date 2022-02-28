@@ -43,7 +43,7 @@ import vault from './vault';
 import DumpGenerator from './dumpGenerator';
 import AsyncStore from '../util/asyncStore';
 import { Mutex } from '../util/mutex';
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import InternalIndexHandler from './internalIndexHandler';
 import CacheEngine from '../core/cache/cacheEngine';
 import StorageEngine from '../core/storage/storageEngine';

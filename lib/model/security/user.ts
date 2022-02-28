@@ -22,7 +22,7 @@
 import Rights from './rights';
 import Bluebird from 'bluebird';
 import _ from 'lodash';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { Profile } from './profile';
 import { KuzzleRequest } from '../../../index';
 import { Target } from '../../types';
@@ -116,7 +116,7 @@ export class User {
         if (collection.includes('*')) {
           return false;
         }
-        
+
         const isTargetAllowed = profilesPolicies.some(
           policies => policies.some(
             policy => policy.role.checkRestrictions(

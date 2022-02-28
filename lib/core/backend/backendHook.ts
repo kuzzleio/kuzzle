@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { EventHandler } from '../../types';
 import { ApplicationManager } from './index';
 

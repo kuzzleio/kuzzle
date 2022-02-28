@@ -56,3 +56,5 @@ export * from './config/internalCache/InternalCacheRedisConfiguration';
 export * from './config/storageEngine/StorageEngineElasticsearchConfiguration';
 export * from './config/DumpConfiguration';
 export * from './OpenApiDefinition';
+export * from './errors/ErrorDefinition';
+export * from './errors/ErrorDomains';
