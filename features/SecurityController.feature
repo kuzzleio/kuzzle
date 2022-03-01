@@ -113,6 +113,41 @@ Feature: Security Controller
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
       | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
 
+
+  @security @login
+  Scenario: Create two API key for a user consecutively
+    Given I create a user "My" with content:
+      | profileIds | ["default"] |
+    When I successfully execute the action "security":"createApiKey" with args:
+      | userId    | "My"                          |
+      | expiresIn | -1                            |
+      | refresh   | "wait_for"                    |
+      | body      | { "description": "Le Huong" } |
+    Then The property "_source" of the result should match:
+      | expiresAt   | -1         |
+      | ttl         | -1         |
+      | description | "Le Huong" |
+      | token       | "_STRING_" |
+    And The result should contain a property "_id" of type "string"
+    When I successfully execute the action "security":"createApiKey" with args:
+      | userId    | "My"                          |
+      | expiresIn | -1                            |
+      | refresh   | "wait_for"                    |
+      | body      | { "description": "Foobar" } |
+    Then The property "_source" of the result should match:
+      | expiresAt   | -1         |
+      | ttl         | -1         |
+      | description | "Foobar" |
+      | token       | "_STRING_" |
+    And The result should contain a property "_id" of type "string"
+    And I successfully execute the action "security":"searchApiKeys" with args:
+      | userId | "My" |
+    Then I should receive a "hits" array of objects matching:
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
+      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
+      | "_STRING_" | "My"           | -1          | -1                | "Foobar"            | "_STRING_"          |
+
+
   # security:searchApiKeys =====================================================
 
   @security

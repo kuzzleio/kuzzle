@@ -85,6 +85,34 @@ Feature: Auth Controller
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
       | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"          |
 
+  @security @login
+  Scenario: Create two API key consecutively
+    When I successfully execute the action "auth":"createApiKey" with args:
+      | expiresIn | -1                                  |
+      | refresh   | "wait_for"                          |
+      | body      | { "description": "Sigfox API key" } |
+    Then The property "_source" of the result should match:
+      | expiresAt   | -1               |
+      | ttl         | -1               |
+      | description | "Sigfox API key" |
+      | token       | "_STRING_"       |
+    And The result should contain a property "_id" of type "string"
+    When I successfully execute the action "auth":"createApiKey" with args:
+      | expiresIn | -1                                  |
+      | refresh   | "wait_for"                          |
+      | body      | { "description": "LoRa API key" }   |
+    Then The property "_source" of the result should match:
+      | expiresAt   | -1               |
+      | ttl         | -1               |
+      | description | "LoRa API key"   |
+      | token       | "_STRING_"       |
+    And The result should contain a property "_id" of type "string"
+    And I successfully execute the action "auth":"searchApiKeys"
+    Then I should receive a "hits" array of objects matching:
+      | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "Sigfox API key"    | "_STRING_"          |
+      | "_STRING_" | "test-admin"   | -1          | -1                | "LoRa API key"      | "_STRING_"          |
+
   # auth:login =================================================================
 
   @security @http
