@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: [ "${{ env.NODE_VERSION_LATEST }}" ]
+        node-version: [ "${{ NODE_VERSION_LATEST }}" ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
