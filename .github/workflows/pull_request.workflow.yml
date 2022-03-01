@@ -3,8 +3,8 @@ name: Pull request checks
 on: [pull_request]
 
 env:
-  NODE_VERSION_MAINTENANCE: 'lts/fermium'
-  NODE_VERSION_ACTIVE: 'lts/gallium'
+  NODE_VERSION_MAINTENANCE: 'lts/erbium'
+  NODE_VERSION_ACTIVE: 'lts/fermium'
   NODE_VERSION_LATEST: 'lts/*'
 
 jobs:
@@ -13,7 +13,8 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: [ "${{ NODE_VERSION_LATEST }}" ]
+        node-version:
+         - 'lts/*'
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
