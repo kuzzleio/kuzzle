@@ -5,6 +5,11 @@ on:
     branches:
       - 2-dev
 
+env:
+  NODE_VERSION_MAINTENANCE: 'lts/fermium'
+  NODE_VERSION_ACTIVE: 'lts/gallium'
+  NODE_VERSION_LATEST: 'lts/*'
+
 jobs:
   lint:
     name: Lint
@@ -26,7 +31,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ["14.17.0"]
+        node-version: [ $NODE_VERSION_LATEST ]
         kuzzle-image: ["kuzzle"]
     steps:
       - uses: actions/checkout@v2
@@ -46,7 +51,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: ["14.17.0", "12.16.3", "12.20.0"]
+        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -65,7 +70,7 @@ jobs:
     strategy:
       matrix:
         test_set: ["http", "websocket", "mqtt"]
-        node-version: ["14.17.0", "12.16.3", "12.20.0"]
+        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -86,7 +91,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: ["14.17.0", "12.16.3", "12.20.0"]
+        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -108,7 +113,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: ["14.17.0", "12.16.3", "12.20.0"]
+        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
