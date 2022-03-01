@@ -684,6 +684,8 @@ export class KuzzleRequest {
   ): string {
     const id = this.input.args._id;
 
+    options.generator = options.generator || uuid.v4; // Default to uuid v4
+
     if (! id) {
       if (options.ifMissing === 'generate') {
         return options.generator();
