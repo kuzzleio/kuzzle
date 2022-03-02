@@ -25,7 +25,7 @@ import { JSONObject } from 'kuzzle-sdk';
 import { RoomList } from '../types';
 import Long from 'long';
 
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import '../types/Global';
 
 import { toKoncordeIndex } from '../util/koncordeCompat';

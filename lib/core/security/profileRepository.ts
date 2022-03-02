@@ -24,7 +24,7 @@ import Bluebird from 'bluebird';
 
 import { Profile } from '../../model/security/profile';
 import Repository from '../shared/repository';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import cacheDbEnum from '../cache/cacheDbEnum';
 import { JSONObject } from 'kuzzle-sdk';
 import { Policy, OptimizedPolicy } from '../../../index';
@@ -546,23 +546,23 @@ export class ProfileRepository extends Repository {
   /**
    * Optimize each policy to get a O(1) index access time
    * and a O(log(n)) collection search time.
-   * 
+   *
    * - Deduplicate indexes using a map
    * - Sort collections per index
-   * @param {Object[]} policies 
+   * @param {Object[]} policies
    */
   private optimizePolicies (policies: Policy[]): OptimizedPolicy[] {
     if (! policies) {
       return [];
     }
-    
+
     return policies.map(this.optimizePolicy);
   }
 
   /**
    * Optimize a policy to get a O(1) index access time
    * and a O(log(n)) collection search time.
-   * 
+   *
    * - Deduplicate indexes using a map
    * - Sort collections per index
    * @param policy

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 
 const storageError = kerror.wrap('services', 'storage');
 

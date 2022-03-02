@@ -3,7 +3,7 @@ import { JSONObject } from '../../index';
 import get from 'lodash/get';
 import isObject from 'lodash/isObject';
 import stream from 'stream';
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import { BufferedPassThrough } from './bufferedPassThrough';
 import { HttpStream } from '../types';
 
@@ -54,9 +54,9 @@ function flattenStep (
 }
 /**
  * Extract fields from mapping by removing the properties from es mapping
- * 
- * @param mapping 
- * @returns 
+ *
+ * @param mapping
+ * @returns
  */
 function extractMappingFields (mapping: JSONObject) {
   const newMapping = {};
@@ -302,7 +302,7 @@ class CSVDumper extends AbstractDumper {
       this.fields.splice(this.fields.indexOf('_id'), 1);
     }
   }
-  
+
   writeHeader () {
     const mappedFieldsName = ['_id', ...this.fields].map(field => {
       return this.options.fieldsName[field] || field;

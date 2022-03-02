@@ -32,7 +32,7 @@ import Elasticsearch from '../../service/storage/elasticsearch';
 import { isPlainObject } from '../../util/safeObject';
 import Promback from '../../util/promback';
 import { Mutex } from '../../util/mutex';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import storeScopeEnum from '../storage/storeScopeEnum';
 import {
   BadRequestError,

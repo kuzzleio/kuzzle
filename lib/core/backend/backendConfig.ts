@@ -21,7 +21,7 @@
 
 import _ from 'lodash';
 
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { ApplicationManager, Backend } from './index';
 import { KuzzleConfiguration } from '../../types/config/KuzzleConfiguration';
 import { loadConfig } from '../../config/index.js';

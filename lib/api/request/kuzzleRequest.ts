@@ -27,7 +27,7 @@ import { RequestInput } from './requestInput';
 import { RequestResponse } from './requestResponse';
 import { RequestContext } from './requestContext';
 import { KuzzleError, InternalError } from '../../kerror/errors';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
 import { isPlainObject } from '../../util/safeObject';
@@ -683,6 +683,8 @@ export class KuzzleRequest {
     } = { generator: uuid.v4, ifMissing: 'error' }
   ): string {
     const id = this.input.args._id;
+
+    options.generator = options.generator || uuid.v4; // Default to uuid v4
 
     if (! id) {
       if (options.ifMissing === 'generate') {

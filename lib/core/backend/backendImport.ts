@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { ApplicationManager } from './index';
 import { JSONObject } from '../../../index';
 import { isPlainObject } from '../../../lib/util/safeObject';

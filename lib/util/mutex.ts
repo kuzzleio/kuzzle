@@ -23,7 +23,7 @@ import { randomBytes } from 'crypto';
 
 import Bluebird from 'bluebird';
 
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import buildDebug from './debug';
 import '../types/Global';
 
