@@ -7,7 +7,7 @@ description: BackendErrors register method
 
 # register
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.1" />
 
 Register a new standard KuzzleError
 

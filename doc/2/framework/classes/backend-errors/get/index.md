@@ -7,7 +7,7 @@ description: BackendErrors get method
 
 # get
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.1" />
 
 Get a standardized KuzzleError
 

@@ -7,7 +7,7 @@ description: BackendErrors getFrom method
 
 # getFrom
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.17.1" />
 
 Get a standardized KuzzleError from an existing error to keep the stacktrace
 
