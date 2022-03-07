@@ -2,13 +2,25 @@ name: Pull request checks
 
 on: [pull_request]
 
+env:
+  NODE_LTS_MAINTENANCE_VERSION: "lts/erbium"
+  NODE_LTS_CURRENT_VERSION: "lts/fermium"
+  NODE_LTS_ACTIVE_VERSION: "lts/*"  # This latest LTS version
+
 jobs:
+  forge-node-lts-matrix:
+    name: Forge Node LTS Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - id: forge-matrix
+        run: |
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
+
   lint:
     name: Lint
     runs-on: ubuntu-18.04
     strategy:
-      matrix:
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+      matrix: ${{ fromJson(needs.forge-node-lts-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -20,144 +32,144 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
-  unit-tests:
-    name: Unit Tests - Node.js v${{ matrix.node-version }}
-    needs: [lint]
-    strategy:
-      matrix:
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/unit-tests
+  # unit-tests:
+  #   name: Unit Tests
+  #   needs: [lint]
+  #   strategy:
+  #     matrix:
+  #       node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/install-packages
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/cache-node-modules
+  #       with:
+  #         NODE_VERSION: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/unit-tests
 
-  build-and-run-kuzzle:
-    needs: [unit-tests]
-    name: Build and Run ${{ matrix.kuzzle-image }} - Node.js v${{ matrix.node-version }}
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
-        kuzzle-image: ['kuzzle']
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/build-and-run-kuzzle
-        with:
-          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
+  # build-and-run-kuzzle:
+  #   needs: [unit-tests]
+  #   name: Build and Run ${{ matrix.kuzzle-image }}
+  #   runs-on: ubuntu-18.04
+  #   strategy:
+  #     matrix:
+  #       node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+  #       kuzzle-image: ['kuzzle']
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/install-packages
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/cache-node-modules
+  #       with:
+  #         NODE_VERSION: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/build-and-run-kuzzle
+  #       with:
+  #         KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
 
-  functional-tests-legacy:
-    name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
-    strategy:
-      matrix:
-        test_set: [http, websocket, mqtt]
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/functional-tests
-        with:
-          test-set: test:functional:legacy:${{ matrix.test_set }}
-          node-version: ${{ matrix.node-version }}
+  # functional-tests-legacy:
+  #   name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+  #   needs: [unit-tests]
+  #   strategy:
+  #     matrix:
+  #       test_set: [http, websocket, mqtt]
+  #       node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/cache-node-modules
+  #       with:
+  #         NODE_VERSION: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/functional-tests
+  #       with:
+  #         test-set: test:functional:legacy:${{ matrix.test_set }}
+  #         node-version: ${{ matrix.node-version }}
 
-  functional-tests:
-    name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
-    strategy:
-      matrix:
-        test_set: [http, websocket]
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/functional-tests
-        with:
-          test-set: test:functional:${{ matrix.test_set }}
-          node-version: ${{ matrix.node-version }}
+  # functional-tests:
+  #   name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+  #   needs: [unit-tests]
+  #   strategy:
+  #     matrix:
+  #       test_set: [http, websocket]
+  #       node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/install-packages
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/cache-node-modules
+  #       with:
+  #         NODE_VERSION: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/functional-tests
+  #       with:
+  #         test-set: test:functional:${{ matrix.test_set }}
+  #         node-version: ${{ matrix.node-version }}
 
-  error-codes-check:
-    name: Documentation - Error codes check
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
-      - run: npm install
-      - name: Test error codes
-        run: ./.ci/scripts/check-error-codes-documentation.sh
+  # error-codes-check:
+  #   name: Documentation - Error codes check
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/install-packages
+  #     - run: npm install
+  #     - name: Test error codes
+  #       run: ./.ci/scripts/check-error-codes-documentation.sh
 
-  cluster-monkey-tests:
-    name: Cluster Monkey Tests
-    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
-    runs-on: ubuntu-18.04
-    strategy:
-      matrix:
-        node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
-    steps:
-      - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
-      - name: Cloning Monkey Tester
-        uses: actions/checkout@v2
-        with:
-          repository: kuzzleio/kuzzle-monkey-tests
-          path: "kuzzle-monkey-tests"
-      - uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
-        with:
-          NODE_VERSION: ${{ matrix.node-version }}
-      - uses: ./.github/actions/monkey-tests
-        with:
-          node-version: ${{ matrix.node-version }}
+  # cluster-monkey-tests:
+  #   name: Cluster Monkey Tests
+  #   needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
+  #   runs-on: ubuntu-18.04
+  #   strategy:
+  #     matrix:
+  #       node-version: [ 'lts/erbium', 'lts/fermium', 'lts/*' ]
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - uses: ./.github/actions/install-packages
+  #     - name: Cloning Monkey Tester
+  #       uses: actions/checkout@v2
+  #       with:
+  #         repository: kuzzleio/kuzzle-monkey-tests
+  #         path: "kuzzle-monkey-tests"
+  #     - uses: actions/setup-node@v2
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/cache-node-modules
+  #       with:
+  #         NODE_VERSION: ${{ matrix.node-version }}
+  #     - uses: ./.github/actions/monkey-tests
+  #       with:
+  #         node-version: ${{ matrix.node-version }}
 
-  doc-dead-links:
-    name: Check dead-links
-    runs-on: ubuntu-18.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/install-packages
-      - name: Extract references from context
-        shell: bash
-        id: extract-refs
-        run: |
-          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
-          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-          echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
-      - uses: convictional/trigger-workflow-and-wait@v1.3.0
-        with:
-          owner: kuzzleio
-          repo: documentation
-          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
-          workflow_file_name: dead_links.workflow.yml
-          ref: ${{ steps.extract-refs.outputs.fw-branch }}
-          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+  # doc-dead-links:
+  #   name: Check dead-links
+  #   runs-on: ubuntu-18.04
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #       with:
+  #         fetch-depth: 0
+  #     - uses: ./.github/actions/install-packages
+  #     - name: Extract references from context
+  #       shell: bash
+  #       id: extract-refs
+  #       run: |
+  #         echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+  #         echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
+  #         echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
+  #     - uses: convictional/trigger-workflow-and-wait@v1.3.0
+  #       with:
+  #         owner: kuzzleio
+  #         repo: documentation
+  #         github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+  #         workflow_file_name: dead_links.workflow.yml
+  #         ref: ${{ steps.extract-refs.outputs.fw-branch }}
+  #         inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
