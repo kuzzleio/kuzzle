@@ -8,20 +8,22 @@ env:
   NODE_LTS_ACTIVE_VERSION: "lts/*"  # This latest LTS version
 
 jobs:
-  forge-node-lts-matrix:
+  prepare-matrix:
     name: Forge Node LTS Matrix
     runs-on: ubuntu-latest
     steps:
-      - id: forge-matrix
+      - id: set-matrix
         run: |
           echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
 
   lint:
     name: Lint
     runs-on: ubuntu-18.04
     needs: [forge-node-lts-matrix]
     strategy:
-      matrix: ${{ fromJson(needs.forge-node-lts-matrix.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
