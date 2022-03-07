@@ -5,7 +5,7 @@ on: [pull_request]
 env:
   NODE_LTS_MAINTENANCE_VERSION: "lts/erbium"
   NODE_LTS_CURRENT_VERSION: "lts/fermium"
-  NODE_LTS_ACTIVE_VERSION: "lts/*"  # This latest LTS version
+  NODE_LTS_ACTIVE_VERSION: "lts/*"  # The latest LTS version
 
 jobs:
   prepare-matrix:
@@ -23,10 +23,15 @@ jobs:
     runs-on: ubuntu-18.04
     needs: [prepare-matrix]
     strategy:
-      matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
+      matrix: 
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        test: ["toto"]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
+      - run: echo $TOTO
+        env: 
+          TOTO: ${{ matrix.test }}
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
