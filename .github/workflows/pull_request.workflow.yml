@@ -21,7 +21,7 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-18.04
-    needs: [forge-node-lts-matrix]
+    needs: [prepare-matrix]
     strategy:
       matrix: ${{ fromJson(needs.prepare-matrix.outputs.matrix) }}
     steps:
