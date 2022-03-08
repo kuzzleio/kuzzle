@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.18.1-stretch-slim as builder
+FROM node:lts-bullseye-slim as builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
@@ -47,7 +47,7 @@ RUN  set -x \
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:12.18.1-stretch-slim as minifier
+FROM node:lts-bullseye-slim as minifier
 
 ENV NODE_ENV=production
 
@@ -62,7 +62,7 @@ RUN  set -x \
 ################################################################################
 # Production image
 ################################################################################
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:bullseye
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
