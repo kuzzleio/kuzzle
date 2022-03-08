@@ -20,7 +20,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     needs: [prepare-matrix]
     strategy:
       matrix: 
@@ -45,7 +45,7 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -60,7 +60,7 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests]
     name: Build and Run ${{ matrix.kuzzle-image }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -86,7 +86,7 @@ jobs:
       matrix:
         test_set: [http, websocket, mqtt]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -107,7 +107,7 @@ jobs:
       matrix:
         test_set: [http, websocket]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -124,7 +124,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -135,7 +135,7 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -159,7 +159,7 @@ jobs:
 
   doc-dead-links:
     name: Check dead-links
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:

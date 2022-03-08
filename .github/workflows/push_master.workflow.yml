@@ -23,7 +23,7 @@ jobs:
 
   lint:
     name: Lint
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     needs: [prepare-matrix]
     strategy:
       matrix:
@@ -42,7 +42,7 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests]
     name: Build and Run ${{ matrix.kuzzle-image }} - Node.js v${{ matrix.node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -66,7 +66,7 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -85,7 +85,7 @@ jobs:
       matrix:
         test_set: [http, websocket, mqtt]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -106,7 +106,7 @@ jobs:
       matrix:
         test_set: [http, websocket]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -124,7 +124,7 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -148,7 +148,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -158,7 +158,7 @@ jobs:
 
   doc-deploy:
     name: Deployment Doc to Prod
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     needs: [cluster-monkey-tests]
     steps:
       - uses: actions/checkout@v2
@@ -184,13 +184,13 @@ jobs:
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
     needs: [functional-tests-legacy, functional-tests]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ env.NODE_VERSION_ACTIVE }}
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       - name: Get branch name
         # Github expose branch name with this format '/ref/branch/branchName'
         # So we need to extract the wanted part (branchName)
@@ -205,13 +205,13 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     needs: [functional-tests-legacy, functional-tests]
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v1
         with:
-          node-version: ${{ env.NODE_VERSION_ACTIVE }}
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           registry-url: "https://registry.npmjs.org"
       - run: npm install
       - run: npm publish
