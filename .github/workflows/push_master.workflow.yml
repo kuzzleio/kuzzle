@@ -6,17 +6,28 @@ on:
       - master
 
 env:
-  NODE_VERSION_MAINTENANCE: 'lts/fermium'
-  NODE_VERSION_ACTIVE: 'lts/gallium'
-  NODE_VERSION_LATEST: 'lts/*'
+  NODE_LTS_MAINTENANCE_VERSION: "lts/erbium"
+  NODE_LTS_CURRENT_VERSION: "lts/fermium"
+  NODE_LTS_ACTIVE_VERSION: "lts/*"  # The latest LTS version
 
 jobs:
+  prepare-matrix:
+    name: Forge Node LTS Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - id: set-matrix
+        run: |
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+
   lint:
     name: Lint
     runs-on: ubuntu-18.04
+    needs: [prepare-matrix]
     strategy:
       matrix:
-        node-version: [ $NODE_VERSION_LATEST ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -34,7 +45,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - uses: actions/checkout@v2
@@ -54,7 +65,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -73,7 +84,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket, mqtt]
-        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -94,7 +105,7 @@ jobs:
     strategy:
       matrix:
         test_set: [http, websocket]
-        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
@@ -116,7 +127,7 @@ jobs:
     runs-on: ubuntu-18.04
     strategy:
       matrix:
-        node-version: [ $NODE_VERSION_LATEST, $NODE_VERSION_MAINTENANCE, $NODE_VERSION_ACTIVE ]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
