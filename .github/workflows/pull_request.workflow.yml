@@ -3,8 +3,8 @@ name: Pull request checks
 on: [pull_request]
 
 env:
-  NODE_LTS_MAINTENANCE_VERSION: "lts/erbium"
-  NODE_LTS_CURRENT_VERSION: "lts/fermium"
+  NODE_LTS_MAINTENANCE_VERSION: "lts/fermium"
+  NODE_LTS_CURRENT_VERSION: "lts/gallium"
   NODE_LTS_ACTIVE_VERSION: "lts/*"  # The latest LTS version
 
 jobs:
