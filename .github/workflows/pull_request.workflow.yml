@@ -25,7 +25,6 @@ jobs:
     strategy:
       matrix: 
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-        test: ["toto"]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
