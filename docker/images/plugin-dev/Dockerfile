@@ -1,7 +1,7 @@
 ################################################################################
 # Plugin development build image
 ################################################################################
-FROM node:12.18.1-stretch-slim as builder
+FROM node:lts-bullseye-slim as builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
@@ -45,7 +45,7 @@ RUN  set -x \
 ################################################################################
 # Plugin development image
 ################################################################################
-FROM debian:stretch-slim
+FROM bitnami/minideb:bullseye
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
