@@ -9,7 +9,7 @@ RUN  set -x \
        python \
        make \
        g++ \
-       python \
+       python3 \
        libzmq3-dev \
        libunwind-dev \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
