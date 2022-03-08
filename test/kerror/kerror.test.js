@@ -9,10 +9,37 @@ const {
   NotFoundError,
   PreconditionError,
   PartialError,
-  UnauthorizedError
+  UnauthorizedError,
+  KuzzleError,
 } = require('../../index');
 
 describe('#kerror', () => {
+  it('should allows custom KuzzleError', () => {
+    const domains = {
+      custom: {
+        code: 1,
+        subDomains: {
+          httpStatus: {
+            code: 1,
+            errors: {
+              conflict: {
+                status: 409,
+                message: '9 more for the teapot',
+                code: 1,
+                class: 'KuzzleError',
+              }
+            }
+          }
+        }
+      }
+    };
+
+    const err = kerror.rawGet(domains, 'custom', 'httpStatus', 'conflict');
+
+    should(err).be.instanceOf(KuzzleError);
+    should(err.status).be.eql(409);
+  });
+
   it('should return an ExternalServiceError with right name, msg and code', () => {
     const err = kerror.get('core', 'fatal', 'service_unavailable', '{"status":"red"}');
     should(err).be.instanceOf(ExternalServiceError);

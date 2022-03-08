@@ -1,6 +1,6 @@
 {
   "code": 6,
-  "subdomains": {
+  "subDomains": {
     "runtime": {
       "code": 1,
       "errors": {

@@ -35,7 +35,7 @@ describe('BackendErrors', () => {
         class: 'BadRequestError',
       });
 
-      const apiSubDomain = app.errors.domains.app.subdomains.api;
+      const apiSubDomain = app.errors.domains.app.subDomains.api;
       should(apiSubDomain.code).be.eql(0);
       should(apiSubDomain.errors.wtf).match({
         description: 'WTF',

@@ -28,7 +28,7 @@ export class BackendErrors extends ApplicationManager {
   private domains: ErrorDomains = {
     app: {
       code: 9,
-      subdomains: {},
+      subDomains: {},
     }
   };
 
@@ -55,15 +55,15 @@ export class BackendErrors extends ApplicationManager {
    * ```
    */
   register (subDomain: string, name: string, definition: CustomErrorDefinition) {
-    if (! this.domains.app.subdomains[subDomain]) {
-      this.domains.app.subdomains[subDomain] = {
+    if (! this.domains.app.subDomains[subDomain]) {
+      this.domains.app.subDomains[subDomain] = {
         code: this.subDomains++,
         errors: {},
       };
     }
 
-    this.domains.app.subdomains[subDomain].errors[name] = {
-      code: Object.keys(this.domains.app.subdomains[subDomain].errors).length,
+    this.domains.app.subDomains[subDomain].errors[name] = {
+      code: Object.keys(this.domains.app.subDomains[subDomain].errors).length,
       ...definition,
     };
   }

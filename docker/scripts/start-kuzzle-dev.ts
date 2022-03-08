@@ -180,7 +180,7 @@ app.controller.register('tests', {
     },
 
     getSyncedHello: {
-      handler: async (request: KuzzleRequest) => `Hello, ${syncedHello}`,
+      handler: async () => `Hello, ${syncedHello}`,
       http: [{ verb: 'get', path: '/hello' }],
     },
 

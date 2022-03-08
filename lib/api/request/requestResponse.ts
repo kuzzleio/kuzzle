@@ -286,7 +286,12 @@ export class RequestResponse {
       this.setHeaders(options.headers);
     }
 
-    this.status = options.status || 200;
+    if (options.status) {
+      this.status = options.status;
+    }
+    else if (this.status === 102) {
+      this.status = 200;
+    }
 
     switch (options.format) {
       case 'raw':

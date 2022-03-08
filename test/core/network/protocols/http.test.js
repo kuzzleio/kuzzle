@@ -192,7 +192,7 @@ describe('core/network/protocols/http', () => {
     it('should set the headers', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       const stub = sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
@@ -203,7 +203,7 @@ describe('core/network/protocols/http', () => {
     it('should end the connection if the stream is closed or errored', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       stream.destroy();
       sinon.stub(httpWs, 'httpSendError');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
@@ -219,7 +219,7 @@ describe('core/network/protocols/http', () => {
     it('should add the content-length header if the stream has a fixed size', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 1 }), message);
 
@@ -229,7 +229,7 @@ describe('core/network/protocols/http', () => {
     it('should add the transfer-encoding header if the stream has a dynamic size', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
@@ -239,7 +239,7 @@ describe('core/network/protocols/http', () => {
     it('should write chunk using tryEnd when the stream size is fixed', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
 
@@ -252,7 +252,7 @@ describe('core/network/protocols/http', () => {
     it('should write chunk using write when the stream size is dynamic', () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
@@ -268,13 +268,13 @@ describe('core/network/protocols/http', () => {
 
       response.tryEnd.returns([false, false]);
       sinon.stub(stream, 'pause');
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream, { totalBytes: 5 }), message);
 
       stream.write('Hello');
       stream.end();
-      
+
       should(stream.pause).be.calledOnce();
     });
 
@@ -284,13 +284,13 @@ describe('core/network/protocols/http', () => {
 
       response.write.returns(false);
       sinon.stub(stream, 'pause');
-      
+
       sinon.stub(httpWs, 'httpWriteRequestHeaders');
       httpWs.httpSendStream(request, response, new HttpStream(stream), message);
 
       stream.write('Hello');
       stream.end();
-      
+
       should(stream.pause).be.calledOnce();
     });
   });
@@ -689,6 +689,35 @@ describe('core/network/protocols/http', () => {
       });
 
       should(entryPoint.removeConnection).calledOnce();
+    });
+
+    it('should allow custom X-Kuzzle-Request-Id header', () => {
+      const result = new KuzzleRequest({});
+      result.setResult(
+        'yo',
+        {
+          headers: {
+            'X-Kuzzle-Request-Id': 'my-custom-id-42',
+          }
+        }
+      );
+      kuzzle.router.http.route.yields(result);
+
+      httpWs.server._httpOnMessage('get', '/', '', { origin: 'foobar' });
+      httpWs.server._httpResponse._onData(Buffer.from('{"controller":"foo","action":"bar"}'), true);
+
+      const response = httpWs.server._httpResponse;
+
+      should(response.cork).calledOnce();
+      should(response.cork.calledBefore(response.writeStatus)).be.true();
+
+      should(response.writeStatus).calledOnce().calledWithMatch(Buffer.from('200'));
+
+      should(response.writeHeader)
+        .be.calledWithMatch(
+          Buffer.from('X-Kuzzle-Request-Id'),
+          Buffer.from('my-custom-id-42')
+        );
     });
 
     it('should compress the response with gzip if asked to', async () => {
