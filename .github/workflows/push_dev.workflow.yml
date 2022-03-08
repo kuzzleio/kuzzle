@@ -31,7 +31,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
@@ -41,7 +41,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests - Node.js v${{ matrix.node-version }}
-    needs: [lint]
+    needs: [lint, prepare-matrix]
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -49,7 +49,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
@@ -58,7 +58,7 @@ jobs:
       - uses: ./.github/actions/unit-tests
 
   build-and-run-kuzzle:
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     name: Build and Run ${{ matrix.kuzzle-image }} - Node.js v${{ matrix.node-version }}
     runs-on: ubuntu-latest
     strategy:
@@ -68,7 +68,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
@@ -81,7 +81,7 @@ jobs:
 
   functional-tests-legacy:
     name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
         test_set: ["http", "websocket", "mqtt"]
@@ -89,7 +89,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
@@ -102,7 +102,7 @@ jobs:
 
   functional-tests:
     name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
         test_set: [http, websocket]
@@ -111,7 +111,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
@@ -124,7 +124,7 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
+    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle, prepare-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -137,7 +137,7 @@ jobs:
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
-      - uses: actions/setup-node@v1
+      - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
