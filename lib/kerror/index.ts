@@ -48,7 +48,7 @@ function _getCurrentFileName () {
 /**
  * Construct and return the corresponding error
  *
- * @param  domains - Domains object with subdomains and error names
+ * @param  domains - Domains object with subDomains and error names
  * @param  domain - Domain (eg: 'external')
  * @param  subdomain - Subdomain (eg: 'elasticsearch')
  * @param  error - Error name: (eg: 'index_not_found')
@@ -63,7 +63,7 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
     options = placeholders.pop();
   }
 
-  const kuzzleError = _.get(domains, `${domain}.subdomains.${subdomain}.errors.${error}`) as any as ErrorDefinition;
+  const kuzzleError = _.get(domains, `${domain}.subDomains.${subdomain}.errors.${error}`) as any as ErrorDefinition;
 
   if (! kuzzleError) {
     return get('core', 'fatal', 'unexpected_error', `${domain}.${subdomain}.${error}`);
@@ -78,12 +78,16 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
   const message = options.message || format(kuzzleError.message, ...placeholders);
   const id = `${domain}.${subdomain}.${error}`;
   const code = domains[domain].code << 24
-    | domains[domain].subdomains[subdomain].code << 16
-    | domains[domain].subdomains[subdomain].errors[error].code;
+    | domains[domain].subDomains[subdomain].code << 16
+    | domains[domain].subDomains[subdomain].errors[error].code;
 
   let kerror;
   if (kuzzleError.class === 'PartialError' || kuzzleError.class === 'MultipleErrorsError') {
     kerror = new errors[kuzzleError.class](message, body, id, code);
+  }
+  else if (kuzzleError.class === 'KuzzleError') {
+    const status = kuzzleError.status || 500;
+    kerror = new errors.KuzzleError(message, status, id, code);
   }
   else {
     kerror = new errors[kuzzleError.class](message, id as any, code as any);
@@ -136,7 +140,7 @@ function cleanStackTrace (error: KuzzleError): void {
 /**
  * Returns a promise rejected with the corresponding error
  *
- * @param  domains - Domains object with subdomains and error names
+ * @param  domains - Domains object with subDomains and error names
  * @param  domain - Domain (eg: 'external')
  * @param  subdomain - Subdomain (eg: 'elasticsearch')
  * @param  error - Error name: (eg: 'index_not_found')
@@ -150,7 +154,7 @@ export function rawReject (domains: ErrorDomains, domain: string, subdomain: str
  * Construct and return the corresponding error, with its stack
  * trace derivated from a provided source error
  *
- * @param  domains - Domains object with subdomains and error names
+ * @param  domains - Domains object with subDomains and error names
  * @param  source - Original error
  * @param  domain - Domain (eg: 'external')
  * @param  subdomain - Subdomain (eg: 'elasticsearch')

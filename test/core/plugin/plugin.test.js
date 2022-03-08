@@ -199,7 +199,7 @@ describe('Plugin', () => {
         .calledOnce()
         .calledWith('[lambda-core] Custom errors successfully loaded.');
 
-      const pluginErrors = errors.domains.plugin.subdomains;
+      const pluginErrors = errors.domains.plugin.subDomains;
 
       should(pluginErrors).have.ownProperty(plugin.manifest.name);
       should(pluginErrors[plugin.manifest.name]).have.ownProperty('errors');

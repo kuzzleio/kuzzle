@@ -1,6 +1,6 @@
 {
   "code": 3,
-  "subdomains": {
+  "subDomains": {
     "http": {
       "code": 1,
       "errors": {
