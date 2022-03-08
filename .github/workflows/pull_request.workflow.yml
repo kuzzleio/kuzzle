@@ -38,7 +38,7 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [lint]
+    needs: [lint, prepare-matrix]
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -55,7 +55,7 @@ jobs:
       - uses: ./.github/actions/unit-tests
 
   build-and-run-kuzzle:
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     name: Build and Run ${{ matrix.kuzzle-image }}
     runs-on: ubuntu-latest
     strategy:
@@ -78,7 +78,7 @@ jobs:
 
   functional-tests-legacy:
     name: Functional Tests Legacy - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
         test_set: [http, websocket, mqtt]
@@ -99,7 +99,7 @@ jobs:
 
   functional-tests:
     name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests]
+    needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
         test_set: [http, websocket]
@@ -131,7 +131,7 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle]
+    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle, prepare-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
