@@ -115,7 +115,7 @@ function buildErrorCodes (name) {
 
   let doc = getHeader(`0x${buffer.toString('hex', 3)}: ${name}`);
 
-  for (const [subname, subdomain] of Object.entries(domain.subdomains)) {
+  for (const [subname, subdomain] of Object.entries(domain.subDomains)) {
 
     buffer.writeUInt16BE(domain.code << 8 | subdomain.code, 2);
 

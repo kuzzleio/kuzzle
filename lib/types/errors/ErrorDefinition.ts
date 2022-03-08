@@ -27,5 +27,12 @@ export type CustomErrorDefinition = {
   /**
    * Error class
    */
-  class: ErrorClassNames
+  class: ErrorClassNames;
+
+  /**
+   * Custom HTTP status.
+   *
+   * Only available for generic KuzzleError.
+   */
+  status?: number;
 };
