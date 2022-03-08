@@ -82,12 +82,10 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
     | domains[domain].subDomains[subdomain].errors[error].code;
 
   let kerror;
-  console.log({kuzzleError})
   if (kuzzleError.class === 'PartialError' || kuzzleError.class === 'MultipleErrorsError') {
     kerror = new errors[kuzzleError.class](message, body, id, code);
   }
   else if (kuzzleError.class === 'KuzzleError') {
-    console.log(kuzzleError)
     const status = kuzzleError.status || 500;
     kerror = new errors.KuzzleError(message, status, id, code);
   }
