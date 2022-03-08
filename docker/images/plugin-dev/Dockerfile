@@ -8,7 +8,7 @@ RUN  set -x \
        curl \
        make \
        g++ \
-       python \
+       python3 \
        libzmq3-dev \
        libunwind-dev \
   && npm install -g --unsafe-perm --production \
