@@ -691,7 +691,7 @@ describe('core/network/protocols/http', () => {
       should(entryPoint.removeConnection).calledOnce();
     });
 
-    it.only('should allow custom X-Kuzzle-Request-Id header', () => {
+    it('should allow custom X-Kuzzle-Request-Id header', () => {
       const result = new KuzzleRequest({});
       result.setResult(
         'yo',
