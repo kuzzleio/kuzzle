@@ -14,12 +14,13 @@ Get a standardized KuzzleError
 ## Arguments
 
 ```js
-get (subDomain: string, name: string, placeholders: any[]): KuzzleError
+get (domain: string, subDomain: string, name: string, placeholders: any[]): KuzzleError
 ```
 
-| Argument | Type | Description |
-|----------|------|-------------|
-| `subDomain` | <pre>string</pre> | Subdomain name |
-| `name` | <pre>string</pre> | Standard error name |
-| `placeholders` | <pre>any[]</pre> | Other placeholder arguments |
+| Argument       | Type              | Description                 |
+| -------------- | ----------------- | --------------------------- |
+| `domain`       | <pre>string</pre> | Domain name                 |
+| `subDomain`    | <pre>string</pre> | Subdomain name              |
+| `name`         | <pre>string</pre> | Standard error name         |
+| `placeholders` | <pre>any[]</pre>  | Other placeholder arguments |
 
