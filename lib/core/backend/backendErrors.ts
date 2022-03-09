@@ -51,14 +51,14 @@ export class BackendErrors extends ApplicationManager {
   register (domain: string, subDomain: string, name: string, definition: CustomErrorDefinition) {
     if (! this.domains[domain]) {
       this.domains[domain] = {
-        code: Object.keys(this.domains).length - 1,
+        code: Object.keys(this.domains).length,
         subDomains: {},
       };
     }
 
     if (! this.domains[domain].subDomains[subDomain]) {
       this.domains[domain].subDomains[subDomain] = {
-        code: Object.keys(this.domains[domain].subDomains).length - 1,
+        code: Object.keys(this.domains[domain].subDomains).length,
         errors: {},
       };
     }
