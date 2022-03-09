@@ -25,14 +25,7 @@ import { ApplicationManager, Backend } from './index';
 import { CustomErrorDefinition, ErrorDomains } from '../../types';
 
 export class BackendErrors extends ApplicationManager {
-  private domains: ErrorDomains = {
-    app: {
-      code: 9,
-      subDomains: {},
-    }
-  };
-
-  private subDomains = 0;
+  private domains: ErrorDomains = {};
 
   constructor (application: Backend) {
     super(application);
@@ -41,29 +34,37 @@ export class BackendErrors extends ApplicationManager {
   /**
    * Register a new standard KuzzleError
    *
+   * @param domain Domain name
    * @param subDomain Subdomain name
    * @param name Standard error name
    * @param definition Standard error definition
    *
    * @example
    * ```
-   * app.errors.register('api', 'custom', {
+   * app.errors.register('app', 'api', 'custom', {
    *   class: 'BadRequestError',
    *   description: 'This is a custom error from API subdomain',
    *   message: 'Custom API error: %s',
    * });
    * ```
    */
-  register (subDomain: string, name: string, definition: CustomErrorDefinition) {
-    if (! this.domains.app.subDomains[subDomain]) {
-      this.domains.app.subDomains[subDomain] = {
-        code: this.subDomains++,
+  register (domain: string, subDomain: string, name: string, definition: CustomErrorDefinition) {
+    if (! this.domains[domain]) {
+      this.domains[domain] = {
+        code: Object.keys(this.domains).length,
+        subDomains: {},
+      };
+    }
+
+    if (! this.domains[domain].subDomains[subDomain]) {
+      this.domains[domain].subDomains[subDomain] = {
+        code: Object.keys(this.domains[domain].subDomains).length,
         errors: {},
       };
     }
 
-    this.domains.app.subDomains[subDomain].errors[name] = {
-      code: Object.keys(this.domains.app.subDomains[subDomain].errors).length,
+    this.domains[domain].subDomains[subDomain].errors[name] = {
+      code: Object.keys(this.domains[domain].subDomains[subDomain].errors).length,
       ...definition,
     };
   }
@@ -71,38 +72,41 @@ export class BackendErrors extends ApplicationManager {
   /**
    * Get a standardized KuzzleError
    *
+   * @param domain Domain name
    * @param subDomain Subdomain name
    * @param name Standard error name
    * @param placeholders Other placeholder arguments
    *
-   * @example throw app.errors.get('api', 'custom', 'Tbilisi');
+   * @example throw app.errors.get('app', 'api', 'custom', 'Tbilisi');
    *
    * @returns Standardized KuzzleError
    */
-  get (subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGet(this.domains, 'app', subDomain, name, ...placeholders);
+  get (domain: string, subDomain: string, name: string, ...placeholders): KuzzleError {
+    return kerror.rawGet(this.domains, domain, subDomain, name, ...placeholders);
   }
 
   /**
    * Get a standardized KuzzleError from an existing error to keep the stacktrace
    *
    * @param source Original error
+   * @param domain Domain name
    * @param subDomain Subdomain name
    * @param name Standard error name
    * @param placeholders Other placeholder arguments
    *
    * @returns Standardized KuzzleError
    */
-  getFrom (source: Error, subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGetFrom(this.domains, source, 'app', subDomain, name, ...placeholders);
+  getFrom (source: Error, domain: string, subDomain: string, name: string, ...placeholders): KuzzleError {
+    return kerror.rawGetFrom(this.domains, source, domain, subDomain, name, ...placeholders);
   }
 
   /**
-   * Wrap an error manager on the subDomain
+   * Wrap an error manager on the domain and subDomain
    *
+   * @param domain Domain name
    * @param subDomain Subdomain to wrap to
    */
-  wrap (subDomain: string) {
-    return kerror.rawWrap(this.domains, 'app', subDomain);
+  wrap (domain: string, subDomain: string) {
+    return kerror.rawWrap(this.domains, domain, subDomain);
   }
 }
