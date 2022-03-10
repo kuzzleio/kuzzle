@@ -157,7 +157,7 @@ app.controller.register('openapi-test', {
   }
 });
 
-app.errors.register('api', 'custom', {
+app.errors.register('app', 'api', 'custom', {
   class: 'BadRequestError',
   description: 'This is a custom error from API subdomain',
   message: 'Custom %s error',
@@ -167,7 +167,7 @@ app.controller.register('tests', {
   actions: {
     customError: {
       handler: async () => {
-        throw app.errors.get('api', 'custom', 'Tbilisi');
+        throw app.errors.get('app', 'api', 'custom', 'Tbilisi');
       }
     },
 

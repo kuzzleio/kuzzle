@@ -24,17 +24,18 @@ describe('BackendErrors', () => {
 
   describe('BackendErrors#register', () => {
     it('should allows to register a standard error', () => {
-      app.errors.register('api', 'wtf', {
+      app.errors.register('app', 'api', 'wtf', {
         description: 'WTF',
         message: 'WTF bruh',
         class: 'BadRequestError',
       });
-      app.errors.register('api', 'stfu', {
+      app.errors.register('app', 'api', 'stfu', {
         description: 'STFU',
         message: 'STFU bro',
         class: 'BadRequestError',
       });
 
+      should(app.errors.domains.app.code).be.eql(0);
       const apiSubDomain = app.errors.domains.app.subDomains.api;
       should(apiSubDomain.code).be.eql(0);
       should(apiSubDomain.errors.wtf).match({
@@ -49,17 +50,17 @@ describe('BackendErrors', () => {
 
   describe('BackendErrors#get', () => {
     it('should get a standard error', () => {
-      app.errors.register('api', 'wtf', {
+      app.errors.register('iot', 'api', 'wtf', {
         description: 'WTF',
         message: 'WTF bruh %s',
         class: 'BadRequestError',
       });
 
-      const error = app.errors.get('api', 'wtf', 'custom');
+      const error = app.errors.get('iot', 'api', 'wtf', 'custom');
 
       should(error).match({
         message: 'WTF bruh custom',
-        id: 'app.api.wtf'
+        id: 'iot.api.wtf'
       });
       should(error).be.instanceOf(BadRequestError);
     });

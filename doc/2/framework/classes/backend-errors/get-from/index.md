@@ -14,13 +14,14 @@ Get a standardized KuzzleError from an existing error to keep the stacktrace
 ## Arguments
 
 ```js
-getFrom (source: Error, subDomain: string, name: string, placeholders: any[]): KuzzleError
+getFrom (source: Error, domain: string, subDomain: string, name: string, placeholders: any[]): KuzzleError
 ```
 
-| Argument | Type | Description |
-|----------|------|-------------|
-| `source` | <pre>Error</pre> | Original error |
-| `subDomain` | <pre>string</pre> | Subdomain name |
-| `name` | <pre>string</pre> | Standard error name |
-| `placeholders` | <pre>any[]</pre> | Other placeholder arguments |
+| Argument       | Type              | Description                 |
+| -------------- | ----------------- | --------------------------- |
+| `source`       | <pre>Error</pre>  | Original error              |
+| `domain`       | <pre>string</pre> | Domain name                 |
+| `subDomain`    | <pre>string</pre> | Subdomain name              |
+| `name`         | <pre>string</pre> | Standard error name         |
+| `placeholders` | <pre>any[]</pre>  | Other placeholder arguments |
 
