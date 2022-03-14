@@ -6,8 +6,7 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
   NODE_LTS_MAINTENANCE_VERSION: "14"
   NODE_LTS_ACTIVE_VERSION: "16"
-  NODE_LTS_CURRENT_VERSION: "18"
-  NODE_LTS_CURRENT_VERSION_ALIAS: "lts/*"
+  NODE_LTS_CURRENT_VERSION: "lts/*"
 
 jobs:
   prepare-matrix:
