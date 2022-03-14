@@ -3,9 +3,11 @@ name: Pull request checks
 on: [pull_request]
 
 env:
-  NODE_LTS_MAINTENANCE_VERSION: "lts/fermium"
-  NODE_LTS_CURRENT_VERSION: "lts/gallium"
-  NODE_LTS_ACTIVE_VERSION: "lts/*"  # The latest LTS version
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+  NODE_LTS_MAINTENANCE_VERSION: "14"
+  NODE_LTS_ACTIVE_VERSION: "16"
+  NODE_LTS_CURRENT_VERSION: "18"
+  NODE_LTS_CURRENT_VERSION_ALIAS: "lts/*"
 
 jobs:
   prepare-matrix:
