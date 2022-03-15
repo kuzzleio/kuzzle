@@ -38,6 +38,7 @@ describe('#kerror', () => {
 
     should(err).be.instanceOf(KuzzleError);
     should(err.status).be.eql(409);
+    should(err.props).be.eql(['conflict']);
   });
 
   it('should return an ExternalServiceError with right name, msg and code', () => {
