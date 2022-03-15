@@ -3,7 +3,7 @@ version: '3.4'
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:nvm
   command: >
-    sh -c "nvm install $NODE_VERSION &&
+    bash -c "nvm install $NODE_VERSION &&
            node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin"
   volumes:
     - "..:/var/app"
