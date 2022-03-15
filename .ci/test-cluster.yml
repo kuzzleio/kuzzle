@@ -4,7 +4,7 @@ x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:nvm
   entrypoint: /bin/bash -c
   command: >
-      source ~/.bashrc
+      bash ~/.bashrc
       nvm install $NODE_VERSION &&
       node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
   volumes:
