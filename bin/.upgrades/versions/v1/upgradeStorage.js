@@ -21,6 +21,8 @@
 
 'use strict';
 
+const fs = require('fs');
+
 const _ = require('lodash');
 
 const getESConnector = require('../../connectors/es');
@@ -62,6 +64,14 @@ function fixIndexName (context, index, collection, newIndex) {
 }
 
 async function moveData (context, index, collection, newIndex, transform) {
+  console.log(`\n---------------------------\nStart migrating data for collection "${collection}"`);
+  const countSource = await context.source.count({
+    index,
+    type: collection,
+  });
+
+  console.log(`    Source has ${countSource.body.count} documents`);
+
   let page = await context.source.search({
     body: { sort: [ '_doc' ] },
     index,
@@ -81,6 +91,9 @@ async function moveData (context, index, collection, newIndex, transform) {
     const bulk = [];
 
     for (let i = 0; i < page.body.hits.hits.length; i++) {
+      if (collection === 'users' && i === 0) {
+        continue;
+      }
       const doc = page.body.hits.hits[i];
 
       if (doc._source._kuzzle_info) {
@@ -117,7 +130,86 @@ async function moveData (context, index, collection, newIndex, transform) {
   }
 
   progressBar.destroy();
+
+  await context.target.indices.refresh({
+    index: newIndex,
+  });
+  const countTarget = await context.target.count({
+    index: newIndex,
+  });
+
+  console.log(`    Target has ${countTarget.body.count} documents`);
+
+  if (countSource.body.count !== countTarget.body.count) {
+    console.log(`${countSource.body.count - countTarget.body.count} documents missing, analyzing..`);
+    await analyzeMissingDocuments(context, index, collection, newIndex);
+  }
+
   return total;
+}
+
+async function analyzeMissingDocuments (context, index, collection, newIndex) {
+  let page = await context.source.search({
+    body: { sort: [ '_doc' ] },
+    index,
+    scroll: '1m',
+    size: context.argv.storagePageSize,
+    type: collection
+  });
+
+  console.log(`Missing documents IDs for "${collection}" is written at "./missing-${collection}.json"`)
+  const analyzeReport = fs.createWriteStream(`./missing-${collection}.json`);
+
+  let streamPromise = new Promise(resolve => {
+    analyzeReport.on('finish', () => {
+      resolve();
+    });
+  });
+
+  analyzeReport.write('[\n');
+
+  const total = page.body.hits.total;
+  let analyzed = 0;
+  const progressBar = new ProgressBar(
+    context,
+    `Analyzing: ${index}/${collection}`,
+    total);
+
+  while (analyzed < total) {
+    const mGetRequest = {
+      body: {
+        docs: page.body.hits.hits.map(doc => ({
+          _id: doc._id,
+          _index: newIndex,
+        }))
+      }
+    };
+
+    const mGetResponse = await context.target.mget(mGetRequest);
+
+    for (const doc of mGetResponse.body.docs) {
+      if (! doc.found) {
+        analyzeReport.write(`  "${doc._id}",\n`);
+      }
+    }
+
+    // continue scroll
+    analyzed += page.body.hits.hits.length;
+
+    progressBar.update(analyzed);
+
+    if (analyzed < total) {
+      page = await context.source.scroll({
+        scroll: '1m',
+        scroll_id: page.body._scroll_id
+      });
+    }
+  }
+
+  analyzeReport.write(']');
+  analyzeReport.end();
+  await streamPromise;
+  progressBar.destroy();
 }
 
 async function upgradeMappings (context, index, collection, newIndex) {
@@ -437,16 +529,16 @@ Existing data from the older version of Kuzzle will be unaffected, but if
 Kuzzle indexes already exist in the target storage space, they will be
 overwritten without notice.`);
 
-  const confirm = await context.inquire.direct({
-    default: true,
-    message: 'Continue?',
-    type: 'confirm'
-  });
+  // const confirm = await context.inquire.direct({
+  //   default: true,
+  //   message: 'Continue?',
+  //   type: 'confirm'
+  // });
 
-  if (!confirm) {
-    context.log.error('Aborted by user.');
-    process.exit(0);
-  }
+  // if (!confirm) {
+  //   context.log.error('Aborted by user.');
+  //   process.exit(0);
+  // }
 
   try {
     await upgradeInternalStorage(storageContext);
