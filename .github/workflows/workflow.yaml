@@ -139,7 +139,7 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests-legacy, functional-tests, build-and-run-kuzzle, prepare-matrix]
+    needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -196,7 +196,7 @@ jobs:
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-    needs: [functional-tests-legacy, functional-tests]
+    needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -218,7 +218,7 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
-    needs: [functional-tests-legacy, functional-tests]
+    needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
