@@ -164,7 +164,7 @@ jobs:
 
   doc-deploy:
     name: Documentation - Deploy
-    if: github.event_name == "push" && (github.ref == "refs/heads/master" || github.ref == "refs/heads/2-dev")
+    if: ${{ github.event_name == "push" && (github.ref == "refs/heads/master" || github.ref == "refs/heads/2-dev") }}
     runs-on: ubuntu-latest
     needs: [cluster-monkey-tests, error-codes-check]
     steps:
@@ -195,7 +195,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    if: github.event_name == "push" && github.ref == "refs/heads/master"
+    if: ${{ github.event_name == "push" && github.ref == "refs/heads/master" }}
     needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-latest
     steps:
@@ -217,7 +217,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: github.event_name == "push" && github.ref == "refs/heads/master"
+    if: ${{ github.event_name == "push" && github.ref == "refs/heads/master" }}
     needs: [functional-tests-legacy, functional-tests]
     runs-on: ubuntu-latest
     steps:
