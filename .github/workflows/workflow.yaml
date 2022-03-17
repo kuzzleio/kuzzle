@@ -221,6 +221,7 @@ jobs:
         id: get-version
         run: |
           echo "::set-output name=version::$(jq -r .version package.json)"
+          echo "::set-output name=major-version::$(jq -r .version package.json | cut -d. -f 1)"
       - name: Build TS files
         run: |
           npm install
@@ -232,7 +233,7 @@ jobs:
           file: ./docker/images/kuzzle/Dockerfile
           push: false
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle:2,kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
+          tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
   
 
   # npm-deploy:
