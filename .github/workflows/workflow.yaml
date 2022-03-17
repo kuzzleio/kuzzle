@@ -14,190 +14,190 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
-  # prepare-matrix:
-  #   name: Forge Node LTS Matrix
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - id: set-matrix
-  #       run: |
-  #         echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
-  #   outputs:
-  #     matrix: ${{ steps.set-matrix.outputs.matrix }}
+  prepare-matrix:
+    name: Forge Node LTS Matrix
+    runs-on: ubuntu-latest
+    steps:
+      - id: set-matrix
+        run: |
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
   
-  # doc-dead-links:
-  #   name: Documentation - Check Dead Links
-  #   if: github.event_name == 'pull_request'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: ./.github/actions/install-packages
-  #     - name: Extract references from context
-  #       shell: bash
-  #       id: extract-refs
-  #       run: |
-  #         echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
-  #         echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-  #         echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
-  #     - uses: convictional/trigger-workflow-and-wait@v1.3.0
-  #       with:
-  #         owner: kuzzleio
-  #         repo: documentation
-  #         github_token: ${{ secrets.ACCESS_TOKEN_CI }}
-  #         workflow_file_name: dead_links.workflow.yml
-  #         ref: ${{ steps.extract-refs.outputs.fw-branch }}
-  #         inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+  doc-dead-links:
+    name: Documentation - Check Dead Links
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/install-packages
+      - name: Extract references from context
+        shell: bash
+        id: extract-refs
+        run: |
+          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
+          echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
+      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+        with:
+          owner: kuzzleio
+          repo: documentation
+          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+          workflow_file_name: dead_links.workflow.yml
+          ref: ${{ steps.extract-refs.outputs.fw-branch }}
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
 
-  # error-codes-check:
-  #   name: Documentation - Error codes check
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - run: npm install
-  #     - name: Test error codes
-  #       run: ./.ci/scripts/check-error-codes-documentation.sh
+  error-codes-check:
+    name: Documentation - Error codes check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - run: npm install
+      - name: Test error codes
+        run: ./.ci/scripts/check-error-codes-documentation.sh
 
-  # lint:
-  #   name: Lint - Node.js LTS ${{ matrix.node-version }}
-  #   runs-on: ubuntu-latest
-  #   needs: [prepare-matrix]
-  #   strategy:
-  #     matrix: 
-  #       node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/cache-node-modules
-  #       with:
-  #         NODE_VERSION: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/es-lint
+  lint:
+    name: Lint - Node.js LTS ${{ matrix.node-version }}
+    runs-on: ubuntu-latest
+    needs: [prepare-matrix]
+    strategy:
+      matrix: 
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/es-lint
 
-  # unit-tests:
-  #   name: Unit Tests
-  #   needs: [lint, prepare-matrix]
-  #   strategy:
-  #     matrix:
-  #       node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/cache-node-modules
-  #       with:
-  #         NODE_VERSION: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/unit-tests
+  unit-tests:
+    name: Unit Tests
+    needs: [lint, prepare-matrix]
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/unit-tests
 
-  # build-and-run-kuzzle:
-  #   needs: [unit-tests, prepare-matrix]
-  #   name: Build and Run ${{ matrix.kuzzle-image }}
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-  #       kuzzle-image: ['kuzzle']
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/cache-node-modules
-  #       with:
-  #         NODE_VERSION: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/build-and-run-kuzzle
-  #       with:
-  #         KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
+  build-and-run-kuzzle:
+    needs: [unit-tests, prepare-matrix]
+    name: Build and Run ${{ matrix.kuzzle-image }}
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        kuzzle-image: ['kuzzle']
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/build-and-run-kuzzle
+        with:
+          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
 
-  # functional-tests:
-  #   name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-  #   needs: [unit-tests, prepare-matrix]
-  #   strategy:
-  #     matrix:
-  #       test_set: [http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
-  #       node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/cache-node-modules
-  #       with:
-  #         NODE_VERSION: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/functional-tests
-  #       with:
-  #         test-set: test:functional:${{ matrix.test_set }}
-  #         node-version: ${{ matrix.node-version }}
+  functional-tests:
+    name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    needs: [unit-tests, prepare-matrix]
+    strategy:
+      matrix:
+        test_set: [http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:${{ matrix.test_set }}
+          node-version: ${{ matrix.node-version }}
 
-  # cluster-monkey-tests:
-  #   name: Cluster Monkey Tests
-  #   needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - name: Cloning Monkey Tester
-  #       uses: actions/checkout@v2
-  #       with:
-  #         repository: kuzzleio/kuzzle-monkey-tests
-  #         path: "kuzzle-monkey-tests"
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/cache-node-modules
-  #       with:
-  #         NODE_VERSION: ${{ matrix.node-version }}
-  #     - uses: ./.github/actions/monkey-tests
-  #       with:
-  #         node-version: ${{ matrix.node-version }}
+  cluster-monkey-tests:
+    name: Cluster Monkey Tests
+    needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - name: Cloning Monkey Tester
+        uses: actions/checkout@v2
+        with:
+          repository: kuzzleio/kuzzle-monkey-tests
+          path: "kuzzle-monkey-tests"
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ matrix.node-version }}
+      - uses: ./.github/actions/cache-node-modules
+        with:
+          NODE_VERSION: ${{ matrix.node-version }}
+      - uses: ./.github/actions/monkey-tests
+        with:
+          node-version: ${{ matrix.node-version }}
 
-  # doc-deploy:
-  #   name: Documentation - Deploy
-  #   if: github.event_name != 'pull_request'
-  #   runs-on: ubuntu-latest
-  #   needs: [cluster-monkey-tests, error-codes-check]
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: ./.github/actions/install-packages
-  #     - uses: actions/github-script@v4
-  #       id: chose-documentation-framework-version
-  #       with:
-  #         script: |
-  #           return context.ref === 'refs/heads/master' ? 'master' : 'develop'
-  #     - name: Extract references from context
-  #       shell: bash
-  #       id: extract-refs
-  #       run: |
-  #         echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
-  #         echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-  #         echo "::set-output name=branch::$(echo $GITHUB_REF | cut -d/ -f 3)"
-  #     - uses: convictional/trigger-workflow-and-wait@v1.3.0
-  #       with:
-  #         owner: kuzzleio
-  #         repo: documentation
-  #         github_token: ${{ secrets.ACCESS_TOKEN_CI }}
-  #         workflow_file_name: child_repo.workflow.yml
-  #         ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
-  #         inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ steps.extract-refs.outputs.branch }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+  doc-deploy:
+    name: Documentation - Deploy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: [cluster-monkey-tests, error-codes-check]
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/install-packages
+      - uses: actions/github-script@v4
+        id: chose-documentation-framework-version
+        with:
+          script: |
+            return context.ref === 'refs/heads/master' ? 'master' : 'develop'
+      - name: Extract references from context
+        shell: bash
+        id: extract-refs
+        run: |
+          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
+          echo "::set-output name=branch::$(echo $GITHUB_REF | cut -d/ -f 3)"
+      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+        with:
+          owner: kuzzleio
+          repo: documentation
+          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+          workflow_file_name: child_repo.workflow.yml
+          ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ steps.extract-refs.outputs.branch }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    # if: github.event_name != 'pull_request'
-    # needs: [cluster-monkey-tests]
+    if: github.event_name != 'pull_request'
+    needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -211,7 +211,6 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
-        if: ${{ ! github.event.pull_request }}
         uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
@@ -234,21 +233,20 @@ jobs:
           push: false
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
-  
 
-  # npm-deploy:
-  #   name: Build and deploy release on NPM.js
-  #   if: github.event_name != 'pull_request'
-  #   needs: [cluster-monkey-tests]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #     - uses: ./.github/actions/install-packages
-  #     - uses: actions/setup-node@v2
-  #       with:
-  #         node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
-  #         registry-url: "https://registry.npmjs.org"
-  #     - run: npm install
-  #     - run: npm publish
-  #       env:
-  #         NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+  npm-deploy:
+    name: Build and deploy release on NPM.js
+    if: github.event_name != 'pull_request'
+    needs: [cluster-monkey-tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: ./.github/actions/install-packages
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          registry-url: "https://registry.npmjs.org"
+      - run: npm install
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
