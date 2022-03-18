@@ -10,7 +10,7 @@ on:
 env:
   NODE_LTS_MAINTENANCE_VERSION: "14"
   NODE_LTS_ACTIVE_VERSION: "16"
-  NODE_LTS_CURRENT_VERSION: "lts/*"
+  NODE_LTS_CURRENT_VERSION: "lts/*"  # Stand for the latest LTS version
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
@@ -24,6 +24,10 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
   
+# -----------------------------------------------------------------------------
+# Documentation checks: error codes and dead links
+# -----------------------------------------------------------------------------
+
   doc-dead-links:
     name: Documentation - Check Dead Links
     if: github.event_name == 'pull_request'
@@ -58,6 +62,10 @@ jobs:
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
+
+# -----------------------------------------------------------------------------
+# Unit Test and Linting
+# -----------------------------------------------------------------------------
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
@@ -94,6 +102,10 @@ jobs:
         with:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
+
+# -----------------------------------------------------------------------------
+# E2E Tests: Functional tests, Monkey tests, Docker image tests
+# -----------------------------------------------------------------------------
 
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
@@ -163,6 +175,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
+# -----------------------------------------------------------------------------
+# Deployments: Documentation, Docker images, NPM package (only on git push)
+# -----------------------------------------------------------------------------
+
   doc-deploy:
     name: Documentation - Deploy
     if: github.event_name != 'pull_request'
@@ -196,7 +212,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref === 'refs/heads/master'
     needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
@@ -230,13 +246,13 @@ jobs:
         with:
           context: .
           file: ./docker/images/kuzzle/Dockerfile
-          push: false
+          push: true
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request' && github.ref === 'refs/heads/master'
     needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
