@@ -2,7 +2,7 @@ name: Cache Node Modules
 description: Cache Node Modules
 
 inputs:
-  NODE_VERSION:
+  node-version:
     description: node version
     required: true
 
@@ -15,8 +15,8 @@ runs:
         cache-name: cache-node-modules-1.0.0
       with:
         path: node_modules
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.node-version }}-${{ hashFiles('package-lock.json') }}
         restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.NODE_VERSION }}-${{ hashFiles('package-lock.json') }}
+          ${{ runner.os }}-build-${{ env.cache-name }}-${{ inputs.node-version }}-${{ hashFiles('package-lock.json') }}
 
 
