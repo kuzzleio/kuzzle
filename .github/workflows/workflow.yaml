@@ -82,7 +82,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          NODE_VERSION: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -100,7 +100,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          NODE_VERSION: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/unit-tests
 
 # -----------------------------------------------------------------------------
@@ -123,7 +123,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          NODE_VERSION: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
@@ -144,7 +144,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          NODE_VERSION: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -170,7 +170,7 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/cache-node-modules
         with:
-          NODE_VERSION: ${{ matrix.node-version }}
+          node-version: ${{ matrix.node-version }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
