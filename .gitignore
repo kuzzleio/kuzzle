@@ -196,3 +196,17 @@ lib/types/config/ServicesConfiguration.js
 lib/types/config/StorageService/StorageServiceElasticsearchConfiguration.js
 lib/types/config/internalCache/InternalCacheRedisConfiguration.js
 lib/types/config/publicCache/PublicCacheRedisConfiguration.js
+lib/api/openapi/components/document/index.js
+lib/api/openapi/components/index.js
+lib/types/ControllerRights.js
+lib/types/HttpStream.js
+lib/types/OpenApiDefinition.js
+lib/types/Policy.js
+lib/types/PolicyRestrictions.js
+lib/types/Target.js
+lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.js
+lib/types/errors/ErrorDefinition.js
+lib/types/errors/ErrorDomains.js
+lib/util/array.js
+lib/util/bufferedPassThrough.js
+lib/util/dump-collection.js
