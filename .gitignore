@@ -4,14 +4,6 @@ npm-debug.log*
 .node_history
 .reify-cache
 
-.yarn/*
-!.yarn/patches
-!.yarn/releases
-!.yarn/plugins
-!.yarn/sdks
-!.yarn/versions
-!.yarn/cache
-
 # Exclude coverage report
 coverage
 .nyc_output
