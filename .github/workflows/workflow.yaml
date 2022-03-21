@@ -212,7 +212,9 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    if: github.event_name != 'pull_request' && github.ref === 'refs/heads/master'
+    if: |
+      github.event_name != 'pull_request'
+        && github.ref === 'refs/heads/master'
     needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
@@ -252,7 +254,9 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: github.event_name != 'pull_request' && github.ref === 'refs/heads/master'
+    if: |
+      github.event_name != 'pull_request'
+        && github.ref === 'refs/heads/master'
     needs: [cluster-monkey-tests]
     runs-on: ubuntu-latest
     steps:
