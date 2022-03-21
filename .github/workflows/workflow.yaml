@@ -59,7 +59,11 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
-      - run: yarn install
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-modules-${{ hashFiles('**/package-lock.json') }}
+      - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
@@ -80,6 +84,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -95,6 +103,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/unit-tests
 
 # -----------------------------------------------------------------------------
@@ -115,6 +127,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
@@ -133,6 +149,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -156,6 +176,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
@@ -205,7 +229,11 @@ jobs:
       - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
@@ -224,7 +252,7 @@ jobs:
           echo "::set-output name=major-version::$(jq -r .version package.json | cut -d. -f 1)"
       - name: Build TS files
         run: |
-          yarn install
+          npm install
           npm run build-ts
       - name: Build and push
         uses: docker/build-push-action@v2
@@ -247,7 +275,7 @@ jobs:
         with:
           node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           registry-url: "https://registry.npmjs.org"
-      - run: yarn install
+      - run: npm install
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

@@ -9,7 +9,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: yarn install
+    - run: npm install
       shell: bash
     - run: npm run build
       shell: bash

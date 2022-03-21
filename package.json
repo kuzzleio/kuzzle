@@ -130,6 +130,5 @@
     "index.d.ts",
     "LICENSE.md",
     "README.md"
-  ],
-  "packageManager": "yarn@3.2.0"
+  ]
 }
