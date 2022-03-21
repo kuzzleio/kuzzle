@@ -1,6 +1,5 @@
 <p align="center">
   <img src="https://user-images.githubusercontent.com/7868838/103797784-32337580-5049-11eb-8917-3fcf4487644c.png"/>
-
 </p>
 <p align="center">
   <img alt="GitHub branch checks state" src="https://img.shields.io/github/checks-status/kuzzleio/kuzzle/master">
