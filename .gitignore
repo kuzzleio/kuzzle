@@ -4,6 +4,14 @@ npm-debug.log*
 .node_history
 .reify-cache
 
+.yarn/*
+!.yarn/patches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+!.yarn/cache
+
 # Exclude coverage report
 coverage
 .nyc_output
@@ -85,6 +93,8 @@ lib/kuzzle/kuzzle.js
 lib/core/backend/applicationManager.js
 lib/core/backend/backend.js
 lib/core/backend/backendCluster.js
+lib/core/backend/backendErrors.js
+lib/core/backend/backendOpenApi.js
 lib/core/backend/backendConfig.js
 lib/core/backend/backendController.js
 lib/core/backend/backendHook.js
@@ -95,6 +105,7 @@ lib/core/backend/backendStorage.js
 lib/core/backend/backendVault.js
 lib/core/backend/internalLogger.js
 lib/core/backend/index.js
+lib/core/security/profileRepository.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/KoncordeWrapper.js
 lib/core/storage/indexCache.js
@@ -122,6 +133,7 @@ lib/kerror/errors/serviceUnavailableError.js
 lib/kerror/errors/sizeLimitError.js
 lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
+lib/kerror/index.js
 lib/types/Controller.js
 lib/types/ControllerDefinition.js
 lib/types/Deprecation.js
@@ -147,6 +159,9 @@ features-sdk/support/application/functional-tests-app.js
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
 lib/model/security/token.js
+lib/model/security/user.js
+lib/model/security/profile.js
+lib/model/security/role.js
 lib/core/auth/tokenManager.js
 lib/cluster/state.js
 lib/core/realtime/hotelClerk.js
@@ -160,7 +175,8 @@ lib/types/realtime/RoomList.js
 lib/cluster/idCardHandler.js
 lib/types/KuzzleDocument.js
 lib/core/storage/indexCache.js
-lib/api/openApiGenerator.js
+lib/api/openapi/openApiGenerator.js
+lib/api/openapi/OpenApiManager.js
 lib/api/openapi/document/index.js
 lib/api/openapi/tools.js
 lib/api/openapi/index.js
