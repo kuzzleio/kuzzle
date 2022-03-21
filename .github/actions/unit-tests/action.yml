@@ -4,7 +4,7 @@ description: Run Node.js unit tests
 runs:
   using: "composite"
   steps:
-    - run: npm install
+    - run: yarn install
       shell: bash
     - run: npm run build
       shell: bash
