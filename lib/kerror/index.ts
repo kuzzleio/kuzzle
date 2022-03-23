@@ -93,6 +93,8 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
     kerror = new errors[kuzzleError.class](message, id as any, code as any);
   }
 
+  kerror.props = placeholders;
+
   if (kuzzleError.class !== 'InternalError') {
     cleanStackTrace(kerror);
   }
