@@ -59,6 +59,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-modules-${{ hashFiles('**/package-lock.json') }}
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
@@ -80,9 +84,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
+      - uses: actions/cache@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -98,9 +103,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
+      - uses: actions/cache@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/unit-tests
 
 # -----------------------------------------------------------------------------
@@ -121,9 +127,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
+      - uses: actions/cache@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
@@ -142,9 +149,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
+      - uses: actions/cache@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -168,9 +176,10 @@ jobs:
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: ./.github/actions/cache-node-modules
+      - uses: actions/cache@v2
         with:
-          node-version: ${{ matrix.node-version }}
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
@@ -220,7 +229,11 @@ jobs:
       - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+      - uses: actions/cache@v2
+        with:
+          path: '**/node_modules'
+          key: ${{ runner.os }}-${{ matrix.node-version }}-modules-${{ hashFiles('**/package-lock.json') }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
