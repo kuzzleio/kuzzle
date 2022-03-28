@@ -14,7 +14,6 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controllers/securityController');
 const { User } = require('../../../../lib/model/security/user');
-const { NotFoundError } = require('../../../../lib/kerror/errors');
 const kerror = require('../../../../lib/kerror');
 
 describe('Test: security controller - users', () => {
@@ -871,7 +870,7 @@ describe('Test: security controller - users', () => {
       existingUser.profileIds = [...request.input.body.content.profileIds];
 
       let updatedUser = {};
-      request.input.body = { content: { foo: 'bar', profileIds: ['default']} };
+      request.input.body = { content: { foo: 'bar', profileIds: ['default'] } };
       Object.assign(updatedUser, existingUser);
       Object.assign(updatedUser, request.input.body.content);
 
