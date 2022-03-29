@@ -28,6 +28,7 @@ Then('I have the definition of kuzzle and plugins controllers', function () {
 
     for (const actionName of Object.keys(this.apiResult[controllerName])) {
       const action = this.apiResult[controllerName][actionName];
+      // console.log("action:", action);
 
       should(action.controller).eql(controllerName);
       should(action.action).eql(actionName);
