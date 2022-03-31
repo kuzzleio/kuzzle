@@ -44,8 +44,8 @@ export class BackendPlugin extends ApplicationManager {
    */
   use (
     plugin: Plugin,
-    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
-  ) : void {
+    options: { name?: string; manifest?: JSONObject; deprecationWarning?: boolean } = {}
+  ): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }

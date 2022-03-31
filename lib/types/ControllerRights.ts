@@ -22,8 +22,8 @@
 /** @internal */
 export type ControllerRight = {
   actions: {
-    [action: string]: boolean
-  }
+    [action: string]: boolean;
+  };
 };
 
 /**
@@ -40,6 +40,6 @@ export type ControllerRight = {
  * }
  */
 export type ControllerRights = {
-  [controller: string]: ControllerRight
+  [controller: string]: ControllerRight;
 };
 

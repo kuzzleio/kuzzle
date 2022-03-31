@@ -35,7 +35,7 @@ export type PluginApiDefinition = {
   /**
    * Name of the API controller.
    */
-  [controller: string]: ControllerDefinition
+  [controller: string]: ControllerDefinition;
 }
 
 /**
@@ -45,7 +45,7 @@ export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: EventHandler | EventHandler[];
 }
 
 /**
@@ -55,7 +55,7 @@ export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: EventHandler | EventHandler[];
 }
 
 /**

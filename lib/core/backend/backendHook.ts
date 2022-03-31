@@ -34,7 +34,7 @@ export class BackendHook extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: EventHandler) : void {
+  register (event: string, handler: EventHandler): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'hook');
     }

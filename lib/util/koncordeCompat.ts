@@ -38,7 +38,7 @@ const SEPARATOR = '/';
  * @param {string} collection
  * @return {string}
  */
-export function toKoncordeIndex (index: string, collection: string) : string {
+export function toKoncordeIndex (index: string, collection: string): string {
   return `${index}${SEPARATOR}${collection}`;
 }
 
@@ -48,7 +48,7 @@ export function toKoncordeIndex (index: string, collection: string) : string {
  * @param {string} index - Koncorde v4 index name
  * @return {{index: string, collection: string}}
  */
-export function fromKoncordeIndex (index: string): { collection: string, index: string } {
+export function fromKoncordeIndex (index: string): { collection: string; index: string } {
   const [ kindex, kcollection ] = index.split(SEPARATOR);
 
   return {
@@ -72,7 +72,7 @@ export function koncordeTest (
   collection: string,
   body: JSONObject,
   _id?: string
-) : string[] {
+): string[] {
   const indexV4 = toKoncordeIndex(index, collection);
 
   // Koncorde v4 silently accepts the old "ids" keyword, but it is now

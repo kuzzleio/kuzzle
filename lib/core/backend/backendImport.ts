@@ -32,8 +32,8 @@ export type DefaultMappings = {
     [collection: string]: {
       mappings: JSONObject;
       settings?: JSONObject;
-    }
-  }
+    };
+  };
 };
 
 export class BackendImport extends ApplicationManager {
@@ -54,7 +54,7 @@ export class BackendImport extends ApplicationManager {
    *
    * @param mappings Object containing index and their collections mappings
    */
-  mappings (mappings: DefaultMappings) : void {
+  mappings (mappings: DefaultMappings): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }
@@ -84,7 +84,7 @@ export class BackendImport extends ApplicationManager {
    *
    * @param profiles Object containing profiles and their definition
    */
-  profiles (profiles: JSONObject) : void {
+  profiles (profiles: JSONObject): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }
@@ -109,7 +109,7 @@ export class BackendImport extends ApplicationManager {
    *
    * @param roles Object containing roles and their definition
    */
-  roles (roles: JSONObject) : void {
+  roles (roles: JSONObject): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }
@@ -136,7 +136,7 @@ export class BackendImport extends ApplicationManager {
    *
    * @param mappings User properties
    */
-  userMappings (mappings: JSONObject) : void {
+  userMappings (mappings: JSONObject): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }
@@ -162,7 +162,7 @@ export class BackendImport extends ApplicationManager {
   users (
     users: JSONObject,
     options: { onExistingUsers?: 'overwrite' | 'skip' } = {}
-  ) : void {
+  ): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'import');
     }

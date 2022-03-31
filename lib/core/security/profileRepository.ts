@@ -31,26 +31,26 @@ import { Policy, OptimizedPolicy } from '../../../index';
 
 /** @internal */
 type CreateOrReplaceOptions = {
-  method?: string,
-  refresh?: string,
-  strict?: boolean,
-  userId?: string
+  method?: string;
+  refresh?: string;
+  strict?: boolean;
+  userId?: string;
 };
 
 /** @internal */
 type ValidateAndSaveProfileOptions = {
-  method?: string,
-  refresh?: string,
-  strict?: boolean,
-  retryOnConflict?: number
+  method?: string;
+  refresh?: string;
+  strict?: boolean;
+  retryOnConflict?: number;
 };
 
 /** @internal */
 type UpdateOptions = {
-  userId?: string,
-  refresh?: string,
-  strict?: boolean,
-  retryOnConflict?: number
+  userId?: string;
+  refresh?: string;
+  strict?: boolean;
+  retryOnConflict?: number;
 };
 
 /**
