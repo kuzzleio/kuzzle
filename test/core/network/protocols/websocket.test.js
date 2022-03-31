@@ -163,6 +163,33 @@ describe('core/network/protocols/websocket', () => {
         context
       );
     });
+
+    it('should upgrade the connection and store the origin in the UserData if present', () => {
+      const response = new MockHttpResponse();
+      const request = new MockHttpRequest(
+        '',
+        '',
+        '',
+        {
+          origin: 'my-website.com',
+          'sec-websocket-key': 'websocket-key',
+          'sec-websocket-protocol': 'websocket-protocol',
+          'sec-websocket-extensions': 'websocket-extension',
+        }
+      );
+      const context = {}; // context object
+      httpWs.server._wsOnUpgrade(response, request, context);
+
+      should(response.upgrade).be.calledWithMatch(
+        {
+          origin: 'my-website.com',
+        },
+        'websocket-key',
+        'websocket-protocol',
+        'websocket-extension',
+        context
+      );
+    });
   });
 
   describe('new connection', () => {
@@ -522,7 +549,7 @@ describe('core/network/protocols/websocket', () => {
 
       for (const channel of channels) {
         should(socket.send)
-          .calledWithMatch(Buffer.from(JSON.stringify({foo: 'bar', room: channel})));
+          .calledWithMatch(Buffer.from(JSON.stringify({ foo: 'bar', room: channel })));
       }
     });
   });

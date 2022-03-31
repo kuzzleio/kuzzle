@@ -1,6 +1,6 @@
 {
   "code": 4,
-  "subdomains": {
+  "subDomains": {
     "assert": {
       "code": 1,
       "errors" : {
@@ -93,6 +93,12 @@
           "code": 15,
           "message": "Plugin \"%s\" not found.%s",
           "class": "NotFoundError"
+        },
+        "invalid_openapi_schema": {
+          "description": "OpenAPI specification is invalid",
+          "code": 16,
+          "message": "Invalid OpenAPI specification: \"%s\"",
+          "class": "PluginImplementationError"
         }
       }
     },

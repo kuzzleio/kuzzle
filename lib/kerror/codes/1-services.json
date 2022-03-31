@@ -1,6 +1,6 @@
 {
   "code": 1,
-  "subdomains": {
+  "subDomains": {
     "storage": {
       "code": 1,
       "errors": {
@@ -275,6 +275,18 @@
           "code": 48,
           "message": "An \"%s\" is not allowed to be associated with multiple \"%\". This is probably not linked to this request but rather the consequence of previous actions on ElasticSearch.",
           "class": "PreconditionError"
+        },
+        "invalid_multi_index_collection_usage": {
+          "description": "Searches on multiple collections should be achieved with the \"targets\" argument who contains list of indexes and collections to search within.",
+          "message": "Searches on multiple collections should be achieved with the \"targets\" argument who contains list of indexes and collections to search within.",
+          "code": 49,
+          "class": "BadRequestError"
+        },
+        "invalid_target_format": {
+          "description": "When a target index or collections contains invalid characters used for multi index search or \"_all\"",
+          "message": "The %s (\"%s\") contains invalid characters \",+*\" or is equal to \"_all\" which is forbidden",
+          "code": 50,
+          "class": "BadRequestError"
         }
       }
     },

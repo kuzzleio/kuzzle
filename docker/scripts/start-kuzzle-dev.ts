@@ -108,8 +108,69 @@ app.hook.register('custom:event', async (name) => {
 let syncedHello = 'World';
 let dynamicPipeId;
 
+app.openApi.definition.components.LogisticObjects = {
+  Item: {
+    type: 'object',
+    properties: {
+      name: { type: 'string' },
+      age: { type: 'integer' },
+    }
+  }
+};
+
+app.controller.register('openapi-test', {
+  actions: {
+    hello: {
+      handler: async () => ({ hello: 'world' }),
+      http: [
+        {
+          verb: 'post',
+          path: '/openapi-test/:company/:objectType/:_id',
+          openapi: {
+            description: 'Creates a new Logistic Object',
+            parameters: [
+              {
+                in: 'body',
+                description: 'Content of the Logistic Object',
+                required: true,
+                schema: {
+                  $ref: '#/components/LogisticObjects/Item'
+                },
+              }
+            ],
+            responses: {
+              200: {
+                description: "Custom greeting",
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "string",
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+});
+
+app.errors.register('app', 'api', 'custom', {
+  class: 'BadRequestError',
+  description: 'This is a custom error from API subdomain',
+  message: 'Custom %s error',
+});
+
 app.controller.register('tests', {
   actions: {
+    customError: {
+      handler: async () => {
+        throw app.errors.get('app', 'api', 'custom', 'Tbilisi');
+      }
+    },
+
     // Controller registration and http route definition
     sayHello: {
       handler: async (request: KuzzleRequest) => {
@@ -119,7 +180,7 @@ app.controller.register('tests', {
     },
 
     getSyncedHello: {
-      handler: async (request: KuzzleRequest) => `Hello, ${syncedHello}`,
+      handler: async () => `Hello, ${syncedHello}`,
       http: [{ verb: 'get', path: '/hello' }],
     },
 

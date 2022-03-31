@@ -33,6 +33,13 @@ Koncorde filters will be translated into an Elasticsearch query.
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
 :::
 
+## Multi Search
+<SinceBadge version="2.17.0">
+
+This method also support searching accross multiple indexes and collections
+using the `targets` parameter instead of `index`, `collection` parameters.
+See [Target Format](#target-format).
+
 ---
 
 ## Query Syntax
@@ -68,10 +75,45 @@ Method: GET
 
 ### Other protocols
 
+Search using `index` & `collection` parameters
+
 ```js
 {
   "index": "<index>",
   "collection": "<collection>",
+  "controller": "document",
+  "action": "search",
+  "body": {
+    "query": {
+      // ...
+    },
+    "aggregations": {
+      // ...
+    },
+    "sort": [
+      // ...
+    ]
+  },
+
+  // optional:
+  "from": <starting offset>,
+  "size": <page size>,
+  "scroll": "<scroll duration>",
+  "lang": "<query language>"
+}
+```
+
+Search using `targets` parameter <SinceBadge version="2.17.0">
+
+```js
+{
+  "targets": [
+    {
+      "index": "<index>"
+      "collections": ["<collection>", "<anotherCollection>"]
+    },
+    // ...
+  ],
   "controller": "document",
   "action": "search",
   "body": {
@@ -108,6 +150,10 @@ kourou document:search <index> <collection> <query> --sort <sort> --size <size>
 - `collection`: collection name
 - `index`: index name
 
+or
+
+- `targets`: list of target. See [Target Format](#target-format).
+
 ### Optional:
 
 - `from`: paginates search results by defining the offset from the first result you want to fetch. Usually used with the `size` argument
@@ -140,6 +186,8 @@ Returns a paginated search result set, with the following properties:
 - `aggregations`: provides aggregation information. Present only if an `aggregations` object has been provided in the search body
 - `hits`: array of found documents. Each document has the following properties:
   - `_id`: document unique identifier
+  - `index`: index name <SinceBadge version="2.17.0">
+  - `collection`: collection name <SinceBadge version="2.17.0">
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
   - `highlight`: optional result from [highlight API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-highlighting)
@@ -183,5 +231,14 @@ Returns a paginated search result set, with the following properties:
     },
     "total": 42
   }
+}
+```
+
+## Target Format
+
+```js
+{
+  "index": "<index>"
+  "collections": ["<collection>", "<anotherCollection>"]
 }
 ```

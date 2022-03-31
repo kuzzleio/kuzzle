@@ -1,0 +1,68 @@
+DocumentGet:
+  summary: "Gets a document."
+  tags:
+    - document
+  parameters:
+    - in: path
+      name: index
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: collection
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: documentId
+      schema:
+        type: string
+      required: true
+  responses:
+    200:
+      description: "Gets a document."
+      schema:
+          $ref: "#/components/document/DocumentGetResponse"
+
+components:
+  schemas:
+    DocumentGetResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                _id:
+                  type: "string"
+                  description: "documentId"
+                _version:
+                  type: "integer"
+                _sources:
+                  type: "object"
+                  description: "document content"
+                  properties:
+                    name:
+                      type: "object"
+                      properties:
+                        first:
+                          type: "string"
+                        last:
+                          type: "string"
+                    _kuzzle_info:
+                      type: "object"
+                      description: "Information about the Kuzzle documents"
+                      properties:
+                        author:
+                          type: string
+                        createdAt:
+                          type: integer
+                        updatedAt:
+                          type:
+                            - integer
+                            - null
+                        updater:
+                          type:
+                            - integer
+                            - null

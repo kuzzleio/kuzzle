@@ -43,7 +43,7 @@ import vault from './vault';
 import DumpGenerator from './dumpGenerator';
 import AsyncStore from '../util/asyncStore';
 import { Mutex } from '../util/mutex';
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import InternalIndexHandler from './internalIndexHandler';
 import CacheEngine from '../core/cache/cacheEngine';
 import StorageEngine from '../core/storage/storageEngine';
@@ -53,6 +53,8 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import { generateRandomName } from '../util/name-generator';
+import { OpenApiManager } from '../api/openapi';
 
 const BACKEND_IMPORT_KEY = 'backend:init:import';
 
@@ -146,6 +148,8 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   private version: string;
 
+  private openApiManager: OpenApiManager;
+
   /**
    * List of differents imports types and their associated method
    */
@@ -203,7 +207,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Initializes all the needed components of Kuzzle.
    *
-   * @param {Application} - Application instance
+   * @param {Application} - Application Plugin instance
    * @param {Object} - Additional options (import, installations, plugins, secretsFile, support, vaultKey)
    *
    * @this {Kuzzle}
@@ -214,7 +218,6 @@ class Kuzzle extends KuzzleEventEmitter {
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe('kuzzle:state:start');
-
 
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
@@ -230,7 +233,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
       await (new SecurityModule()).init();
 
-      this.id = await (new Cluster()).init();
+      // This will init the cluster module if enabled
+      this.id = await this.initKuzzleNode();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -257,7 +261,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.import(options.import, options.support);
+      await this.loadInitialState(options.import, options.support);
 
       await this.ask('core:security:verify');
 
@@ -266,6 +270,12 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Core components loaded');
 
       await this.install(options.installations);
+
+      this.log.info(`[✔] Start "${this.pluginsManager.application.name}" application`);
+      this.openApiManager = new OpenApiManager(
+        application.openApi,
+        this.config.http.routes,
+        this.pluginsManager.routes);
 
       // @deprecated
       await this.pipe('kuzzle:start');
@@ -283,11 +293,32 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     }
-    catch(error) {
+    catch (error) {
       this.log.error(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
 
       throw error;
     }
+  }
+
+  /**
+   * Generates the node ID.
+   *
+   * This will init the cluster if it's enabled.
+   */
+  private async initKuzzleNode (): Promise<string> {
+    let id;
+
+    if (this.config.cluster.enabled) {
+      id = await (new Cluster()).init();
+
+      this.log.info('[✔] Cluster initialized');
+    }
+    else {
+      id = generateRandomName('knode');
+      this.log.info('[X] Cluster disabled: single node mode.');
+    }
+
+    return id;
   }
 
   /**
@@ -434,7 +465,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized || !status.locked,
+          indexCacheOnly: status.initialized || ! status.locked,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
@@ -449,7 +480,7 @@ class Kuzzle extends KuzzleEventEmitter {
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized || !status.locked,
+          indexCacheOnly: status.initialized || ! status.locked,
           propagate: false, // Each node needs to do the import themselves
           refresh: true,
 
@@ -491,13 +522,13 @@ class Kuzzle extends KuzzleEventEmitter {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
-    const isPermissionsToImport = !(
+    const isPermissionsToImport = ! (
       _.isEmpty(toImport.profiles)
       && _.isEmpty(toImport.roles)
       && _.isEmpty(toImport.users)
     );
     const isPermissionsToSupport = toSupport.securities
-      && !(
+      && ! (
         _.isEmpty(toSupport.securities.profiles)
         && _.isEmpty(toSupport.securities.roles)
         && _.isEmpty(toSupport.securities.users)
@@ -536,7 +567,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Check if every import has been done, if one of them is not finished yet, wait for it
    */
-  private async _waitForImportToFinish() {
+  private async _waitForImportToFinish () {
     const importTypes = Object.keys(this.importTypes);
 
     while (importTypes.length) {
@@ -558,10 +589,19 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async import (
-    toImport: ImportConfig = {},
-    toSupport: SupportConfig = {}
-  ): Promise<void> {
+  async loadInitialState (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
+    if ( _.isEmpty(toImport.mappings)
+      && _.isEmpty(toImport.profiles)
+      && _.isEmpty(toImport.roles)
+      && _.isEmpty(toImport.userMappings)
+      && _.isEmpty(toImport.users)
+      && _.isEmpty(toSupport.fixtures)
+      && _.isEmpty(toSupport.mappings)
+      && _.isEmpty(toSupport.securities)
+    ) {
+      return;
+    }
+
     const lockedMutex = [];
 
     try {
@@ -585,11 +625,11 @@ class Kuzzle extends KuzzleEventEmitter {
         }
       }
 
-
-      this.log.info('[✔] Waiting for imports to be finished');
       await this._waitForImportToFinish();
+
       this.log.info('[✔] Import successful');
-    } finally {
+    }
+    finally {
       await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
     }
   }
@@ -694,7 +734,7 @@ class Kuzzle extends KuzzleEventEmitter {
       try {
         await this.dump(suffix);
       }
-      catch(error) {
+      catch (error) {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

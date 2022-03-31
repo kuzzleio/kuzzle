@@ -1,6 +1,6 @@
 {
   "code": 7,
-  "subdomains": {
+  "subDomains": {
     "token": {
       "code": 1,
       "errors": {

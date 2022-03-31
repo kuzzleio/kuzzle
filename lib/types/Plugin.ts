@@ -24,8 +24,8 @@ import { ControllerDefinition } from './ControllerDefinition';
 import { PluginManifest } from './PluginManifest';
 import { StrategyDefinition } from './StrategyDefinition';
 import { EventHandler } from './EventHandler';
-import { JSONObject} from '../../index';
-import kerror from '../kerror';
+import { JSONObject } from '../../index';
+import * as kerror from '../kerror';
 import { has } from '../util/safeObject';
 
 /**
@@ -153,7 +153,7 @@ export abstract class Plugin {
   constructor (manifest: PluginManifest) {
     if (! has(manifest, 'kuzzleVersion')) {
       // eslint-disable-next-line new-cap
-      throw new kerror.get('plugin', 'manifest', 'missing_version');
+      throw kerror.get('plugin', 'manifest', 'missing_version');
     }
 
     this._manifest = manifest;

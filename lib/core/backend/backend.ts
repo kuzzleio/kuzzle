@@ -23,7 +23,7 @@ import fs from 'fs';
 
 import Kuzzle from '../../kuzzle';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import {
   BackendCluster,
@@ -35,7 +35,9 @@ import {
   BackendPlugin,
   BackendStorage,
   BackendVault,
-  InternalLogger
+  BackendOpenApi,
+  InternalLogger,
+  BackendErrors,
 } from './index';
 
 const assertionError = kerror.wrap('plugin', 'assert');
@@ -188,13 +190,23 @@ export class Backend {
   public import: BackendImport;
 
   /**
+   * OpenApi manager
+   */
+  public openApi: BackendOpenApi;
+
+  /**
+   * Standard errors
+   */
+  public errors: BackendErrors;
+
+  /**
    * @deprecated
+   *
+   * Use the app.import.xxx() feature instead.
    *
    * Support for old features available before Kuzzle as a framework
    * to avoid breaking existing deployments.
    *
-   * Do not use this property unless you know exactly what you are doing,
-   * this property can be removed in future releases.
    */
   public _support: JSONObject = {};
 
@@ -235,6 +247,14 @@ export class Backend {
       },
     ];
 
+    try {
+      const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+      this.version = info.version;
+    }
+    catch (error) {
+      // Silent if no version can be found
+    }
+
     global.app = this;
 
     this.pipe = new BackendPipe(this);
@@ -247,16 +267,10 @@ export class Backend {
     this.import = new BackendImport(this);
     this.log = new InternalLogger(this);
     this.cluster = new BackendCluster();
+    this.openApi = new BackendOpenApi(this);
+    this.errors = new BackendErrors(this);
 
     this.kerror = kerror;
-
-    try {
-      const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
-      this.version = info.version;
-    }
-    catch (error) {
-      // Silent if no version can be found
-    }
 
     try {
       this.commit = this._readCommit();
@@ -291,6 +305,7 @@ export class Backend {
 
     application.version = this.version;
     application.commit = this.commit;
+    application.openApi = this.openApi.definition;
 
     const options = {
       import: this._import,
@@ -353,7 +368,9 @@ export class Backend {
   /**
    * Application Name
    */
-  get name (): string { return this._name; }
+  get name (): string {
+    return this._name;
+  }
 
   /**
    * EmbeddedSDK instance

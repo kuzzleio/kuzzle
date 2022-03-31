@@ -69,7 +69,7 @@ Then(/I should receive a ("(.*?)" )?array (of objects )?matching:/, function (na
     expected.length,
     `Array are not the same size: expected ${expected.length} got ${result.length}`);
 
-  if (!objects) {
+  if (! objects) {
     should(result.sort()).match(expected.sort());
     return;
   }
@@ -189,7 +189,7 @@ Then('The response should contains a {string} equals to undefined', async functi
   should(this.props.response[key]).equal(undefined);
 });
 
-Then('The raw response should match:', function(dataTable) {
+Then('The raw response should match:', function (dataTable) {
   const expectedResult = this.parseObject(dataTable);
 
   should(this.props.rawResponse).not.be.undefined();
@@ -230,4 +230,17 @@ Then(/I have .* in the app before startup/, function () {
   // To check what have been done, refer to:
   // - docker/scripts/start-kuzzle-dev
   // - features/fixtures/imports
+});
+
+Then('the streamed data should be equal to:', async function (dataTable) {
+  const lines = dataTable.rawTable.map((row) => {
+    return row[0];
+  });
+
+  const resultLines = this.props.result.split('\n');
+  for (let i = 0; i < resultLines.length; i++) {
+    const regexp = new RegExp(lines[i]);
+
+    should(resultLines[i]).match(regexp);
+  }
 });

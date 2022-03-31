@@ -20,7 +20,7 @@
  */
 
 import { RealtimeScope, RealtimeUsers } from '../../types';
-import kerror from '../../kerror';
+import * as kerror from '../../kerror';
 
 const realtimeError = kerror.wrap('core', 'realtime');
 
@@ -140,11 +140,11 @@ export class Channel {
     this.users = users;
     this.cluster = propagate;
 
-    if (!Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
+    if (! Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
       throw realtimeError.get('invalid_scope');
     }
 
-    if (!Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
+    if (! Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
       throw realtimeError.get('invalid_users');
     }
 

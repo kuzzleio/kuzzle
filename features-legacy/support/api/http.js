@@ -7,13 +7,13 @@ const rp = require('request-promise');
 
 const routes = require('../../../lib/api/httpRoutes');
 
-function checkAlgorithm(algorithm) {
+function checkAlgorithm (algorithm) {
   const
     supported = ['identity', 'gzip', 'deflate'],
     list = algorithm.split(',').map(a => a.trim().toLowerCase());
 
-  for(const l of list) {
-    if (!supported.some(a => a === l)) {
+  for (const l of list) {
+    if (! supported.some(a => a === l)) {
       throw new Error(`Unsupported compression algorithm: ${l}`);
     }
   }
@@ -43,10 +43,10 @@ class HttpApi {
       verb = 'GET',
       result;
 
-    if (!args) {
+    if (! args) {
       args = {};
     }
-    if (!args.body) {
+    if (! args.body) {
       if (args.args) {
         args.body = args.args;
       }
@@ -68,13 +68,13 @@ class HttpApi {
             hits.push(match.substring(1));
 
             if (match === ':index') {
-              if (!index) {
+              if (! index) {
                 throw new Error('No index provided');
               }
               return index;
             }
             if (match === ':collection') {
-              if (!collection) {
+              if (! collection) {
                 throw new Error('No collection provided');
               }
               return collection;
@@ -175,7 +175,7 @@ class HttpApi {
     const options = {
       url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
       method: 'POST',
-      body: {bulkData: bulk}
+      body: { bulkData: bulk }
     };
 
     return this.callApi(options);
@@ -212,7 +212,7 @@ class HttpApi {
    * @returns {Promise.<IncomingMessage>}
    */
   async callApi (options) {
-    if (!options.headers) {
+    if (! options.headers) {
       options.headers = {};
     }
 
@@ -228,7 +228,7 @@ class HttpApi {
 
       const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
 
-      for(const algorithm of algorithms) {
+      for (const algorithm of algorithms) {
         if (algorithm === 'gzip') {
           options.body = zlib.gzipSync(options.body);
         }
@@ -271,7 +271,7 @@ class HttpApi {
     const request = {
       url: this.apiPath('_checkToken'),
       method: 'POST',
-      body: {token}
+      body: { token }
     };
 
     if (this.world.currentUser && this.world.currentUser.token) {
@@ -355,7 +355,7 @@ class HttpApi {
 
   createCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
       method: 'POST',
       body
     };
@@ -392,7 +392,7 @@ class HttpApi {
 
   createMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_create'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_create'),
       method: 'POST',
       body
     };
@@ -454,7 +454,7 @@ class HttpApi {
 
   credentialsExist (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_exists'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_exists'),
       method: 'GET'
     };
 
@@ -482,7 +482,7 @@ class HttpApi {
 
   deleteCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId),
+      url: this.apiPath('credentials/' + strategy + '/' + userId),
       method: 'DELETE'
     };
 
@@ -509,7 +509,7 @@ class HttpApi {
 
   deleteMyCredentials (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me'),
+      url: this.apiPath('credentials/' + strategy + '/_me'),
       method: 'DELETE'
     };
 
@@ -616,7 +616,7 @@ class HttpApi {
 
   getCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId),
+      url: this.apiPath('credentials/' + strategy + '/' + userId),
       method: 'GET'
     };
 
@@ -625,7 +625,7 @@ class HttpApi {
 
   getCredentialsById (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
       method: 'GET'
     };
 
@@ -650,7 +650,7 @@ class HttpApi {
 
   getMyCredentials (strategy) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me'),
+      url: this.apiPath('credentials/' + strategy + '/_me'),
       method: 'GET'
     };
 
@@ -721,7 +721,7 @@ class HttpApi {
   }
 
   getStats (dates) {
-    return this.callApi(this._getRequest(null, null, 'server', 'getStats', {body: dates}));
+    return this.callApi(this._getRequest(null, null, 'server', 'getStats', { body: dates }));
   }
 
   getUser (id) {
@@ -753,7 +753,7 @@ class HttpApi {
 
   hasCredentials (strategy, userId) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
       method: 'GET'
     };
 
@@ -964,7 +964,7 @@ class HttpApi {
     });
   }
 
-  revokeTokens(id) {
+  revokeTokens (id) {
     return this.callApi({
       url: this.apiPath(`users/${id}/tokens`),
       method: 'DELETE'
@@ -1033,7 +1033,7 @@ class HttpApi {
         qs.push('size=' + args.size);
       }
 
-      options.url+= qs.join('&');
+      options.url += qs.join('&');
     }
 
     return this.callApi(options);
@@ -1077,7 +1077,7 @@ class HttpApi {
         qs.push('size=' + args.size);
       }
 
-      options.url+= qs.join('&');
+      options.url += qs.join('&');
     }
 
     return this.callApi(options);
@@ -1146,7 +1146,7 @@ class HttpApi {
 
   updateCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
       method: 'PUT',
       body
     };
@@ -1176,7 +1176,7 @@ class HttpApi {
 
   updateMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_update'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_update'),
       method: 'PUT',
       body
     };
@@ -1226,7 +1226,7 @@ class HttpApi {
 
   validateCredentials (strategy, userId, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
+      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
       method: 'POST',
       body
     };
@@ -1246,7 +1246,7 @@ class HttpApi {
 
   validateMyCredentials (strategy, body) {
     const options = {
-      url : this.apiPath('credentials/' + strategy + '/_me/_validate'),
+      url: this.apiPath('credentials/' + strategy + '/_me/_validate'),
       method: 'POST',
       body
     };
@@ -1305,7 +1305,7 @@ class HttpApi {
 
   loadMappings (body) {
     const options = {
-      url : this.apiPath('admin/_loadMappings?refresh=wait_for'),
+      url: this.apiPath('admin/_loadMappings?refresh=wait_for'),
       method: 'POST',
       body
     };
@@ -1315,7 +1315,7 @@ class HttpApi {
 
   loadFixtures (body) {
     const options = {
-      url : this.apiPath('admin/_loadFixtures?refresh=wait_for'),
+      url: this.apiPath('admin/_loadFixtures?refresh=wait_for'),
       method: 'POST',
       body
     };
@@ -1325,7 +1325,7 @@ class HttpApi {
 
   loadSecurities (body) {
     const options = {
-      url : this.apiPath('admin/_loadSecurities?refresh=wait_for'),
+      url: this.apiPath('admin/_loadSecurities?refresh=wait_for'),
       method: 'POST',
       body
     };
@@ -1333,12 +1333,12 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  encode(algorithm) {
+  encode (algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;
   }
 
-  decode(algorithm) {
+  decode (algorithm) {
     checkAlgorithm(algorithm);
     this.expectedEncoding = algorithm;
   }

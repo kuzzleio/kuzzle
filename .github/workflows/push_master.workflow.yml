@@ -143,9 +143,9 @@ jobs:
     needs: [cluster-monkey-tests]
     steps:
       - uses: actions/checkout@v2
-      - uses: ./.github/actions/install-packages
         with:
           fetch-depth: 0
+      - uses: ./.github/actions/install-packages
       - name: Extract references from context
         shell: bash
         id: extract-refs

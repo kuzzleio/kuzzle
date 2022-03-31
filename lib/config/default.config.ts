@@ -145,15 +145,15 @@ const defaultConfig: KuzzleConfiguration = {
       profiles: {
         admin: {
           rateLimit: 0,
-          policies: [ { roleId: 'admin'} ]
+          policies: [ { roleId: 'admin' } ]
         },
         default: {
           rateLimit: 10,
-          policies: [ { roleId: 'default'} ]
+          policies: [ { roleId: 'default' } ]
         },
         anonymous: {
           rateLimit: 200,
-          policies: [ { roleId: 'anonymous'} ]
+          policies: [ { roleId: 'anonymous' } ]
         }
       },
       roles: {
@@ -296,10 +296,10 @@ const defaultConfig: KuzzleConfiguration = {
         properties: {
           _kuzzle_info: {
             properties: {
-              author:     { type: 'keyword' },
-              createdAt:  { type: 'date' },
-              updater:    { type: 'keyword' },
-              updatedAt:  { type: 'date' }
+              author: { type: 'keyword' },
+              createdAt: { type: 'date' },
+              updater: { type: 'keyword' },
+              updatedAt: { type: 'date' }
             }
           }
         }
@@ -318,7 +318,7 @@ const defaultConfig: KuzzleConfiguration = {
             properties: {
               tags: { type: 'keyword' },
               policies: {
-                properties:  {
+                properties: {
                   roleId: { type: 'keyword' },
                   restrictedTo: {
                     type: 'nested',
@@ -391,6 +391,7 @@ const defaultConfig: KuzzleConfiguration = {
   },
 
   cluster: {
+    enabled: true,
     activityDepth: 50,
     heartbeat: 2000,
     interface: null,

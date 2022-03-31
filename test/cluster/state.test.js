@@ -206,7 +206,7 @@ describe('#Cluster Full State', () => {
         subscribers: 23,
       });
 
-      should(state.countRealtimeSubscriptions('roomid')).be.eql(3*23);
+      should(state.countRealtimeSubscriptions('roomid')).be.eql(3 * 23);
       should(state.countRealtimeSubscriptions('roomid2')).be.eql(23);
       should(state.countRealtimeSubscriptions('ohnoes')).be.eql(0);
     });
@@ -245,7 +245,7 @@ describe('#Cluster Full State', () => {
       should(state.listRealtimeRooms()).match({
         index: {
           collection: {
-            roomid: 3*23,
+            roomid: 3 * 23,
             roomid2: 23,
           },
         },

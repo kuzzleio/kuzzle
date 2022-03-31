@@ -1363,7 +1363,14 @@ describe('#core/storage/ClientAdapter', () => {
             .calledWith('index', 'collection');
 
           should(adapter.client.search)
-            .calledWith('index', 'collection', 'query', 'options');
+            .calledWith(
+              {
+                index: 'index',
+                collection: 'collection',
+                searchBody: 'query'
+              },
+              'options'
+            );
         }
       });
 
@@ -1376,6 +1383,47 @@ describe('#core/storage/ClientAdapter', () => {
           'core:storage:public:document:search',
           'index',
           'collection',
+          'query',
+          'options');
+
+        await should(result).rejectedWith(err);
+
+        should(publicAdapter.client.search).not.called();
+      });
+    });
+
+    describe('#document:multiSearch', () => {
+      it('should register a "document:multiSearch" event', async () => {
+        for (const adapter of [publicAdapter, privateAdapter]) {
+          await kuzzle.ask(
+            `core:storage:${adapter.scope}:document:multiSearch`,
+            [{ index: 'index1', collections: ['collection1', 'collection2'] }],
+            'query',
+            'options');
+
+          should(adapter.cache.assertCollectionExists)
+            .calledWith('index1', 'collection1')
+            .and.calledWith('index1', 'collection2');
+
+          should(adapter.client.search)
+            .calledWith(
+              {
+                targets: [{ index: 'index1', collections: ['collection1', 'collection2'] }],
+                searchBody: 'query'
+              },
+              'options'
+            );
+        }
+      });
+
+      it('should reject if the collection does not exist', async () => {
+        const err = new Error();
+
+        publicAdapter.cache.assertCollectionExists.throws(err);
+
+        const result = kuzzle.ask(
+          'core:storage:public:document:multiSearch',
+          [{ index: 'index1', collections: ['collection1', 'collection2'] }],
           'query',
           'options');
 

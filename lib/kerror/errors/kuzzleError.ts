@@ -44,14 +44,21 @@ export class KuzzleError extends Error {
    */
   public id: string;
 
-  constructor(message: string, status: number, id?: string, code?: number) {
+  /**
+   * Placeholders used to construct the error message.
+   */
+  public props: string[];
+
+  constructor (message: string, status: number, id?: string, code?: number) {
     super(message);
 
     this.status = status;
     this.code = code;
     this.id = id;
+    this.props = undefined;
+    this.stack = undefined;
 
-    if (util.isError(message)) {
+    if (util.types.isNativeError(message)) {
       this.message = message.message;
       this.stack = message.stack;
     }
@@ -73,6 +80,7 @@ export class KuzzleError extends Error {
       code: this.code,
       id: this.id,
       message: this.message,
+      props: this.props,
       stack: this.stack,
       status: this.status,
     };

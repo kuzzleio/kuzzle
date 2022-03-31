@@ -24,7 +24,7 @@ When(/^I ?(can't)* write the document ?(?:"([^"]*)")?(?: in index "([^"]*)")?( w
         throw body.error;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         throw new Error(`No result: ${JSON.stringify(body)}`);
       }
 
@@ -50,7 +50,7 @@ When(/^I createOrReplace it$/, function (callback) {
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }
@@ -85,7 +85,7 @@ Then(/^I update the document with value "([^"]*)" in field "([^"]*)"(?: in index
       if (aBody.error) {
         return Bluebird.reject(aBody.error);
       }
-      if (!aBody.result) {
+      if (! aBody.result) {
         return Bluebird.reject(new Error('No result provided'));
       }
     });
@@ -102,7 +102,7 @@ Then(/^I replace the document with "([^"]*)" document$/, function (documentName,
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }
@@ -116,20 +116,20 @@ Then(/^I replace the document with "([^"]*)" document$/, function (documentName,
 });
 
 When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mCreate(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -142,20 +142,20 @@ When(/^I create multiple documents '([^']+)'( and get partial errors)?$/, functi
 });
 
 When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mReplace(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -168,20 +168,20 @@ When(/^I replace multiple documents '([^']+)'( and get partial errors)?$/, funct
 });
 
 When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mUpdate(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }
@@ -194,20 +194,20 @@ When(/^I update multiple documents '([^']+)'( and get partial errors)?$/, functi
 });
 
 When(/^I createOrReplace multiple documents '([^']+)'( and get partial errors)?$/, function (documents, withErrors, callback) {
-  var body = {documents: []};
+  var body = { documents: [] };
   documents = JSON.parse(documents);
 
   Object.keys(documents).forEach(key => {
-    body.documents.push({_id: key, body: this[documents[key]]});
+    body.documents.push({ _id: key, body: this[documents[key]] });
   });
 
   this.api.mCreateOrReplace(body)
     .then(response => {
-      if (response.error !== null && !withErrors) {
+      if (response.error !== null && ! withErrors) {
         callback(response.error.message);
         return false;
       }
-      else if(response.errors === null && withErrors) {
+      else if (response.errors === null && withErrors) {
         callback('Should get partial error');
         return false;
       }

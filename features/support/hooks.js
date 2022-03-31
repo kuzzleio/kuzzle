@@ -7,7 +7,7 @@ const
   testFixtures = require('../fixtures/fixtures'),
   World = require('./world');
 
-async function resetSecurityDefault(sdk) {
+async function resetSecurityDefault (sdk) {
   await sdk.query({
     controller: 'admin',
     action: 'resetSecurity',
@@ -164,7 +164,7 @@ After({ tags: '@login' }, async function () {
 // realtime hooks ==============================================================
 
 After({ tags: '@realtime' }, function () {
-  if (!this.props.subscriptions) {
+  if (! this.props.subscriptions) {
     return;
   }
   const promises = Object.values(this.props.subscriptions)

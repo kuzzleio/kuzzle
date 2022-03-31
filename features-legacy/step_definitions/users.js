@@ -16,11 +16,11 @@ When(/^I get the user mapping$/, function () {
         throw new Error(response.error.message);
       }
 
-      if (!response.result) {
+      if (! response.result) {
         throw new Error('No result provided');
       }
 
-      if (!response.result.mapping) {
+      if (! response.result.mapping) {
         throw new Error('No mapping provided');
       }
 
@@ -37,7 +37,7 @@ Then(/^I change the user mapping$/, function () {
     });
 });
 
-When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeout: 20000}, function (not, isRestricted, user, id, callback) {
+When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, { timeout: 20000 }, function (not, isRestricted, user, id, callback) {
   var
     userObject = this.users[user],
     method;
@@ -68,7 +68,7 @@ When(/^I (can't )?create a (restricted )?user "(.*?)" with id "(.*?)"$/, {timeou
     .catch(error => callback(not ? null : error));
 });
 
-When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/, {timeout: 20000}, function (id, reset, callback) {
+When(/^I create the first admin with id "(.*?)"( and reset profiles and roles)?$/, { timeout: 20000 }, function (id, reset, callback) {
   var
     userObject = this.users.useradmin;
 
@@ -101,7 +101,7 @@ Then(/^I am able to get the user "(.*?)"(?: matching {(.*)})?$/, function (id, m
 
         const matchingObject = JSON.parse('{' + match + '}');
 
-        if (!_.matches(matchingObject)(body.result)) {
+        if (! _.matches(matchingObject)(body.result)) {
           throw new Error('Error: ' + JSON.stringify(body.result) + ' does not match {' + match + '}');
         }
       }
@@ -131,7 +131,7 @@ Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, functi
 
           const matchFunc = _.matches(JSON.parse('{' + match + '}'));
 
-          if (!body.result.hits.every(hit => matchFunc(hit))) {
+          if (! body.result.hits.every(hit => matchFunc(hit))) {
             return cb(new Error('Error: ' + JSON.stringify(body.result.hits) + ' does not match ' + match));
           }
         }
@@ -141,7 +141,7 @@ Then(/^I search for {(.*?)} and find (\d+) users(?: matching {(.*?)})?$/, functi
       .catch(error => cb(error));
   };
 
-  async.retry({times: 40, interval: 50}, run, err => {
+  async.retry({ times: 40, interval: 50 }, run, err => {
     if (err) {
       return callback(new Error(err.message));
     }
@@ -185,7 +185,7 @@ Then(/^I am getting the current user, which matches \{(.*?)}$/, function (match)
       }
 
       match = match.replace(/#prefix#/g, this.idPrefix);
-      if (!_.matches(JSON.parse('{' + match + '}'))(body.result)) {
+      if (! _.matches(JSON.parse('{' + match + '}'))(body.result)) {
         throw new Error('Expected: ' + match + '\nGot: ' + JSON.stringify(body.result));
       }
     });
@@ -213,7 +213,7 @@ Then(/^I'm ?(not)* able to check the token for current user/, function (not, cal
 
   this.api.checkToken(this.currentUser.token)
     .then(body => {
-      if (!body.result.valid) {
+      if (! body.result.valid) {
         if (not) {
           return callback();
         }
@@ -235,13 +235,13 @@ Then(/^I'm able to find my rights$/, function () {
 Given(/^A scrolled search on users$/, function () {
   this.scrollId = null;
 
-  return this.api.searchUsers({}, {scroll: '2s'})
+  return this.api.searchUsers({}, { scroll: '2s' })
     .then(response => {
       if (response.error) {
         throw new Error(response.error.message);
       }
 
-      if (!response.result.scrollId) {
+      if (! response.result.scrollId) {
         throw new Error('No scrollId returned by the searchProfile query');
       }
 
@@ -250,7 +250,7 @@ Given(/^A scrolled search on users$/, function () {
 });
 
 Then(/^I am able to perform a scrollUsers request$/, function () {
-  if (!this.scrollId) {
+  if (! this.scrollId) {
     throw new Error('No previous scrollId found');
   }
 

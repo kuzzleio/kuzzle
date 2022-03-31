@@ -54,8 +54,22 @@ app.controller.register('greeting', {
 });
 ```
 
-<!-- 
 ## Use preconfigured errors
 
-@todo
--->
+Each standard error also have a standard [Error Code](/core/2/api/errors/error-codes).
+
+You can register custom standard errors:
+
+```js
+app.errors.register('app', 'api', 'custom', {
+  class: 'BadRequestError',
+  description: 'This is a custom error from API subdomain',
+  message: 'Custom %s error',
+});
+```
+
+And then retrieve them to throw standard errors:
+
+```js
+throw app.errors.get('app', 'api', 'custom', 'Something bad happen');
+```

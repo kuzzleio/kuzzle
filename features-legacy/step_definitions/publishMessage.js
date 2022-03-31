@@ -14,7 +14,7 @@ When(/^I publish a message$/, function (callback) {
         return false;
       }
 
-      if (!body.result) {
+      if (! body.result) {
         callback(new Error('No result provided'));
         return false;
       }

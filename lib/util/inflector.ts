@@ -19,6 +19,8 @@
  * limitations under the License.
  */
 
+import _ from 'lodash';
+
 export class Inflector {
   /**
    * Converts a string to kebab-case
@@ -28,7 +30,7 @@ export class Inflector {
    *
    * @returns kebab-case-string
    */
-  static kebabCase(string: string): string {
+  static kebabCase (string: string): string {
     return string
       // get all lowercase letters that are near to uppercase ones
       .replace(/([a-z])([A-Z])/g, '$1-$2')
@@ -42,7 +44,21 @@ export class Inflector {
    *
    * @param string String to transform the first letter in uppercase
    */
-  static upFirst(string: string): string {
+  static upFirst (string: string): string {
     return string.charAt(0).toUpperCase() + string.slice(1);
+  }
+
+  /**
+   * Converts a string to PascalCase
+   */
+  static pascalCase (string: string) {
+    return _.startCase(string).replace(/ /g, '');
+  }
+
+  /**
+   * Converts a string to camelCase
+   */
+  static camelCase (string) {
+    return _.camelCase(string);
   }
 }

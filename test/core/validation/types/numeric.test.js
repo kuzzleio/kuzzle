@@ -75,22 +75,22 @@ describe('Test: validation/types/numeric', () => {
 
     it('should throw if "range" is not an object', () => {
       [[], undefined, null, 'foobar', 123].forEach(range => {
-        should(() => numericType.validateFieldSpecification({range}))
+        should(() => numericType.validateFieldSpecification({ range }))
           .throw(PreconditionError, { id: 'validation.assert.unexpected_properties' });
       });
     });
 
     it('should throw if an unrecognized property is passed to the range options', () => {
-      should(() => numericType.validateFieldSpecification({range: {foo: 123}}))
+      should(() => numericType.validateFieldSpecification({ range: { foo: 123 } }))
         .throw(PreconditionError, { id: 'validation.assert.unexpected_properties' });
     });
 
     it('should throw if a non-numeric value is passed to the min or max properties', () => {
       [[], {}, undefined, null, 'foo'].forEach(v => {
-        should(() => numericType.validateFieldSpecification({range: {min: v}}))
+        should(() => numericType.validateFieldSpecification({ range: { min: v } }))
           .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
 
-        should(() => numericType.validateFieldSpecification({range: {max: v}}))
+        should(() => numericType.validateFieldSpecification({ range: { max: v } }))
           .throw(PreconditionError, { id: 'validation.assert.invalid_type' });
       });
     });

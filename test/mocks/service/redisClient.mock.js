@@ -4,7 +4,7 @@ const sinon = require('sinon');
 const EventEmitter = require('eventemitter3');
 const IORedis = require('ioredis');
 
-const getBuiltinCommands = (new IORedis({lazyConnect: true})).getBuiltinCommands;
+const getBuiltinCommands = (new IORedis({ lazyConnect: true })).getBuiltinCommands;
 
 /**
  * @param err

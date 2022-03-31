@@ -33,7 +33,7 @@ describe('MemoryStorageController', () => {
           called = {};
         }
 
-        called[f.name] = {called: true, args};
+        called[f.name] = { called: true, args };
         return f(...args);
       };
     };
@@ -47,11 +47,11 @@ describe('MemoryStorageController', () => {
         arg: ['body', 'someArg']
       },
       skiparg: {
-        arg1: {skip: true, path: ['body', 'missing']},
-        arg2: {skip: true, path: ['body', 'someArg']}
+        arg1: { skip: true, path: ['body', 'missing'] },
+        arg2: { skip: true, path: ['body', 'someArg'] }
       },
       mergearg: {
-        arg: {merge: true, path: ['body', 'arrArg']}
+        arg: { merge: true, path: ['body', 'arrArg'] }
       },
       maparg: {
         arg: {
@@ -101,11 +101,11 @@ describe('MemoryStorageController', () => {
 
     msController = new MemoryStorageController();
     origMapping = MemoryStorageController.__get__('mapping');
-    MemoryStorageController.__set__({mapping: testMapping});
+    MemoryStorageController.__set__({ mapping: testMapping });
   });
 
   afterEach(() => {
-    MemoryStorageController.__set__({mapping: origMapping});
+    MemoryStorageController.__set__({ mapping: origMapping });
   });
 
   describe('#constructor', () => {
@@ -249,7 +249,7 @@ describe('MemoryStorageController', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive'});
+        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive' });
     });
 
     it('should throw if EX and PX are set together', () => {
@@ -264,7 +264,7 @@ describe('MemoryStorageController', () => {
         });
 
       should(() => extractArgumentsFromRequestForSet(req))
-        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive'});
+        .throw(BadRequestError, { id: 'api.assert.mutually_exclusive' });
     });
   });
 
@@ -319,7 +319,7 @@ describe('MemoryStorageController', () => {
       let req = new Request({
         _id: 'myKey',
         body: {
-          limit: {offset: 10, count: 20}
+          limit: { offset: 10, count: 20 }
         }
       });
 
@@ -364,7 +364,7 @@ describe('MemoryStorageController', () => {
 
   describe('#extractArgumentsFromRequestForZAdd', () => {
     it('should be called from extractArgumentsFromRequest when the command "zadd" is called', () => {
-      request.input.body.elements = [{score: 123, member: 'bar'}];
+      request.input.body.elements = [{ score: 123, member: 'bar' }];
       extractArgumentsFromRequest('zadd', request);
 
       should(called.extractArgumentsFromRequestForZAdd.called).be.true();
@@ -394,8 +394,8 @@ describe('MemoryStorageController', () => {
       delete req.input.body.nx;
       delete req.input.body.incr;
       req.input.body.xx = true;
-      req.input.body.elements.push({score: 2, member: 'm2'});
-      req.input.body.elements.push({score: 3, member: 'm3'});
+      req.input.body.elements.push({ score: 2, member: 'm2' });
+      req.input.body.elements.push({ score: 3, member: 'm3' });
       result = extractArgumentsFromRequestForZAdd(req);
 
       should(result).eql(['myKey', 'XX', 'CH', 1, 'm1', 2, 'm2', 3, 'm3']);
@@ -430,7 +430,7 @@ describe('MemoryStorageController', () => {
         });
 
       should(() => extractArgumentsFromRequestForZAdd(req))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
       req.input.body.elements = { score: 1, member: 'm1' };
       should(() => extractArgumentsFromRequestForZAdd(req))
@@ -440,22 +440,22 @@ describe('MemoryStorageController', () => {
       should(() => extractArgumentsFromRequestForZAdd(req))
         .throw(BadRequestError, { id: 'api.assert.empty_argument' });
 
-      req.input.body.elements = [{ score: 1}];
+      req.input.body.elements = [{ score: 1 }];
       should(() => extractArgumentsFromRequestForZAdd(req))
         .throw(BadRequestError, { id: 'api.assert.missing_argument' });
 
-      req.input.body.elements = [{ member: 'm1'}];
+      req.input.body.elements = [{ member: 'm1' }];
       should(() => extractArgumentsFromRequestForZAdd(req))
         .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
-      req.input.body.elements = [{ score: 'foo', member: 'm1'}];
+      req.input.body.elements = [{ score: 'foo', member: 'm1' }];
       should(() => extractArgumentsFromRequestForZAdd(req))
         .throw(BadRequestError, { id: 'api.assert.invalid_type' });
 
-      req.input.body.elements = [{ score: 1.23, member: 'm1'}];
+      req.input.body.elements = [{ score: 1.23, member: 'm1' }];
       should(() => extractArgumentsFromRequestForZAdd(req)).not.throw(BadRequestError);
 
-      req.input.body.elements = [{ score: '1.23', member: 'm1'}];
+      req.input.body.elements = [{ score: '1.23', member: 'm1' }];
       should(() => extractArgumentsFromRequestForZAdd(req)).not.throw(BadRequestError);
     });
 
@@ -569,7 +569,7 @@ describe('MemoryStorageController', () => {
         });
 
       should(() => extractArgumentsFromRequestForZInterstore(req))
-        .throw(BadRequestError, { id: 'api.assert.missing_argument'});
+        .throw(BadRequestError, { id: 'api.assert.missing_argument' });
     });
 
     it('should throw if an invalid aggregate parameter is provided', () => {
@@ -633,7 +633,7 @@ describe('MemoryStorageController', () => {
 
   describe('#extractArgumentsFromRequestForMExecute', () => {
     beforeEach(() => {
-      MemoryStorageController.__set__({mapping: origMapping});
+      MemoryStorageController.__set__({ mapping: origMapping });
     });
 
     it('should be called from extractArgumentsFromRequest when calling "mexecute"', () => {
@@ -661,7 +661,7 @@ describe('MemoryStorageController', () => {
 
   describe('#generated functions', () => {
     beforeEach(() => {
-      MemoryStorageController.__set__({mapping: origMapping});
+      MemoryStorageController.__set__({ mapping: origMapping });
     });
 
     it('should return a valid response', async () => {
@@ -728,15 +728,15 @@ describe('MemoryStorageController', () => {
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument' });
 
-      req.input.body.points = [ {name: 'foo', lon: '13.361389'} ];
+      req.input.body.points = [ { name: 'foo', lon: '13.361389' } ];
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument' });
 
-      req.input.body.points = [{name: 'foo', lat: '38.115556'}];
+      req.input.body.points = [{ name: 'foo', lat: '38.115556' }];
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument' });
 
-      req.input.body.points = [{lon: '13.361389', lat: '38.115556'}];
+      req.input.body.points = [{ lon: '13.361389', lat: '38.115556' }];
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument' });
     });
@@ -745,14 +745,14 @@ describe('MemoryStorageController', () => {
       const req = new Request({
         _id: 'key',
         body: {
-          points: [ {name: 'foo', lon: 'foo', lat: '38.115556'} ],
+          points: [ { name: 'foo', lon: 'foo', lat: '38.115556' } ],
         },
       });
 
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
 
-      req.input.body.points = [{name: 'foo', lon: '13.361389', lat: 'bar'}];
+      req.input.body.points = [{ name: 'foo', lon: '13.361389', lat: 'bar' }];
       await should(msController.geoadd(req))
         .rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
     });
@@ -762,8 +762,8 @@ describe('MemoryStorageController', () => {
         _id: 'key',
         body: {
           points: [
-            {name: 'palermo', lon: '13.361389', lat: '38.115556'},
-            {name: 'catania', lon: '15.087269', lat: '37.502669'},
+            { name: 'palermo', lon: '13.361389', lat: '38.115556' },
+            { name: 'catania', lon: '15.087269', lat: '37.502669' },
           ],
         },
       });
@@ -908,14 +908,14 @@ describe('MemoryStorageController', () => {
     });
 
     it('#hmset (invalid argument)', async () => {
-      for (const entries of [ [{field: 'foo'}], [{value: 'foo'}] ]) {
+      for (const entries of [ [{ field: 'foo' }], [{ value: 'foo' }] ]) {
         const req = new Request({
           _id: 'key',
           body: { entries },
         });
 
         await should(msController.hmset(req))
-          .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument'});
+          .rejectedWith(BadRequestError, { id: 'api.assert.invalid_argument' });
       }
     });
 
@@ -924,8 +924,8 @@ describe('MemoryStorageController', () => {
         _id: 'key',
         body: {
           entries: [
-            {field: 'foo', value: 'bar'},
-            {field: 'baz', value: 'qux'},
+            { field: 'foo', value: 'bar' },
+            { field: 'baz', value: 'qux' },
           ],
         },
       });
@@ -974,7 +974,7 @@ describe('MemoryStorageController', () => {
     });
 
     it('#mset (invalid argument)', async () => {
-      for (const entries of [ ['foobar'], [{key: 'foo'}], [{value: 'foo'}] ]) {
+      for (const entries of [ ['foobar'], [{ key: 'foo' }], [{ value: 'foo' }] ]) {
         const req = new Request({
           body: { entries },
         });
@@ -988,9 +988,9 @@ describe('MemoryStorageController', () => {
       const req = new Request({
         body: {
           entries: [
-            {key: 'key1', value: 'value1'},
-            {key: 'key2', value: 'value2'},
-            {key: 'key3', value: 'value3'},
+            { key: 'key1', value: 'value1' },
+            { key: 'key2', value: 'value2' },
+            { key: 'key3', value: 'value3' },
           ],
         },
       });

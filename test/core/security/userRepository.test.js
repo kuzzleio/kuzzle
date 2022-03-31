@@ -12,7 +12,7 @@ const {
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const Repository = require('../../../lib/core/shared/repository');
-const User = require('../../../lib/model/security/user');
+const { User } = require('../../../lib/model/security/user');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 const UserRepository = require('../../../lib/core/security/userRepository');
 
@@ -26,7 +26,7 @@ describe('Test: security/userRepository', () => {
     profileRepositoryMock = {
       loadProfiles: sinon
         .stub()
-        .callsFake(async (...args) => args[0].map(id => ({_id: id}))),
+        .callsFake(async (...args) => args[0].map(id => ({ _id: id }))),
     };
 
     tokenRepositoryMock = {
@@ -53,12 +53,12 @@ describe('Test: security/userRepository', () => {
 
   describe('#fromDTO', () => {
     it('should return the anonymous user if no _id is set', () => {
-      return userRepository.fromDTO({profileIds: 'a profile'})
+      return userRepository.fromDTO({ profileIds: 'a profile' })
         .then(user => assertIsAnonymous(user));
     });
 
     it('should convert a profileIds string into array', () => {
-      return userRepository.fromDTO({_id: 'admin', profileIds: 'admin'})
+      return userRepository.fromDTO({ _id: 'admin', profileIds: 'admin' })
         .then(result => {
           should(result.profileIds).be.an.instanceOf(Array);
           should(result.profileIds[0]).be.exactly('admin');
@@ -68,14 +68,14 @@ describe('Test: security/userRepository', () => {
     it('should reject if the profile cannot be found', () => {
       profileRepositoryMock.loadProfiles.resolves([null]);
 
-      return should(userRepository.fromDTO({_id: 'foo', profileIds: ['nope']}))
+      return should(userRepository.fromDTO({ _id: 'foo', profileIds: ['nope'] }))
         .be.rejectedWith(KuzzleInternalError, {
           id: 'security.user.cannot_hydrate'
         });
     });
 
     it('should reject if the user has no profile associated to it', () => {
-      return should(userRepository.fromDTO({_id: 'foo'})).rejectedWith(
+      return should(userRepository.fromDTO({ _id: 'foo' })).rejectedWith(
         KuzzleInternalError,
         { id: 'security.user.no_profile' });
     });
@@ -139,7 +139,7 @@ describe('Test: security/userRepository', () => {
     });
 
     it('should persist in both the db and the cache with default options', async () => {
-      const user = {_id: 'foo', profileIds: ['bar']};
+      const user = { _id: 'foo', profileIds: ['bar'] };
 
       await userRepository.persist(user);
 
@@ -148,10 +148,10 @@ describe('Test: security/userRepository', () => {
     });
 
     it('should persist in both the db and the cache and forward options', async () => {
-      const user = {_id: 'foo', profileIds: ['bar']};
+      const user = { _id: 'foo', profileIds: ['bar'] };
       const opts = {
-        cache: {baz: 'qux'},
-        database: {foo: 'bar'},
+        cache: { baz: 'qux' },
+        database: { foo: 'bar' },
       };
 
       await userRepository.persist(user, opts);
@@ -161,7 +161,7 @@ describe('Test: security/userRepository', () => {
     });
 
     it('should reject if we try to remove the anonymous profile from the anonymous user', () => {
-      return should(userRepository.persist({_id: '-1', profileIds: ['test']}))
+      return should(userRepository.persist({ _id: '-1', profileIds: ['test'] }))
         .be.rejectedWith(BadRequestError, {
           id: 'security.user.anonymous_profile_required'
         });
@@ -241,7 +241,7 @@ describe('Test: security/userRepository', () => {
       should(userRepository.load).calledWith('foo');
 
       should(userRepository._removeUserStrategies).calledWith(fakeUser);
-      should(ApiKey.deleteByUser).calledWithMatch(fakeUser, {refresh: 'false'});
+      should(ApiKey.deleteByUser).calledWithMatch(fakeUser, { refresh: 'false' });
       should(tokenRepositoryMock.deleteByKuid).calledWith('foo');
       should(Repository.prototype.delete).calledWithMatch(fakeUser, {
         refresh: 'false'
@@ -278,7 +278,7 @@ describe('Test: security/userRepository', () => {
     it('should forward refresh option', async () => {
       sinon.stub(userRepository, '_removeUserStrategies');
 
-      await kuzzle.ask(deleteEvent, 'foo', {refresh: 'wait_for'});
+      await kuzzle.ask(deleteEvent, 'foo', { refresh: 'wait_for' });
 
       should(userRepository.load).calledWith('foo');
 
@@ -335,7 +335,7 @@ describe('Test: security/userRepository', () => {
       };
       const profiles = ['foo', 'bar'];
 
-      await kuzzle.ask(createEvent, 'id', profiles, content, {userId: 'userId'});
+      await kuzzle.ask(createEvent, 'id', profiles, content, { userId: 'userId' });
 
       should(userRepository.fromDTO).calledWithMatch({
         foo: 'foo',
@@ -374,7 +374,7 @@ describe('Test: security/userRepository', () => {
     });
 
     it('should return the created user object', async () => {
-      const ret = await kuzzle.ask(createEvent, 'id', [], {}, {userId: 'userId'});
+      const ret = await kuzzle.ask(createEvent, 'id', [], {}, { userId: 'userId' });
 
       should(ret).eql(fakeUser);
     });

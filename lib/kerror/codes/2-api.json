@@ -1,6 +1,6 @@
 {
   "code": 2,
-  "subdomains": {
+  "subDomains": {
     "assert": {
       "code": 1,
       "errors": {
@@ -87,6 +87,18 @@
           "code": 14,
           "message": "%s",
           "class": "BadRequestError"
+        },
+        "forbidden_stream": {
+          "description": "A forbidden HttpStream has been provided in a response",
+          "code": 15,
+          "message": "Cannot set an HttpStream as a request's response in a non-http protocol",
+          "class": "InternalError"
+        },
+        "unsupported_protocol": {
+          "description": "A request has been made with an unsupported protocol",
+          "code": 16,
+          "message": "The protocol \"%s\" is not supported by the API action \"%s\".",
+          "class": "InternalError"
         }
       }
     },

@@ -34,13 +34,13 @@ describe('Test: hotelClerk.join', () => {
       controller: 'realtime',
       action: 'subscribe',
       body: {
-        equals: {firstName: 'Ada'}
+        equals: { firstName: 'Ada' }
       },
       volatile: {
         foo: 'bar',
         bar: [ 'foo', 'bar', 'baz', 'qux']
       }
-    }, {connectionId, token: null});
+    }, { connectionId, token: null });
 
     kuzzle.config.limits.subscriptionMinterms = 0;
 
@@ -82,7 +82,7 @@ describe('Test: hotelClerk.join', () => {
       },
       { connectionId: 'connection2', user: null });
 
-    request2.input.body = {roomId};
+    request2.input.body = { roomId };
 
     result = await hotelClerk.join(request2);
 
@@ -103,7 +103,7 @@ describe('Test: hotelClerk.join', () => {
       collection: 'bar',
       controller: 'realtime',
       action: 'join',
-      body: {roomId: 'i-exist'}
+      body: { roomId: 'i-exist' }
     }, context);
 
     return should(hotelClerk.join(joinRequest)).be.rejectedWith(NotFoundError, {
@@ -117,7 +117,7 @@ describe('Test: hotelClerk.join', () => {
       collection: 'bar',
       controller: 'realtime',
       action: 'join',
-      body: {roomId: 'i-exist'}
+      body: { roomId: 'i-exist' }
     }, context);
     const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});

@@ -30,7 +30,7 @@ import { KuzzleRequest } from '../api/request';
  *   actions: {
  *     sayHello: {
  *       handler: async request => `Hello, ${request.input.args.name}`,
- *       http: [{ verb: 'POST', path: '/greeting/hello/:name' }]
+ *       http: [{ verb: 'post', path: '/greeting/hello/:name' }]
  *     }
  *   }
  * }
@@ -44,7 +44,7 @@ export type ControllerDefinition = {
    *   sayHello: {
    *     handler: async request => `Hello, ${request.input.args.name}`,
    *     http: [{
-   *       verb: 'POST',
+   *       verb: 'post',
    *       path: '/greeting/hello/:name',
    *       openapi: {
    *         description: "Simply say hello",
@@ -91,13 +91,15 @@ export type HttpRoute = {
   /**
    * HTTP verb.
    */
-  verb: 'get' | 'post' | 'put' | 'delete' | 'head',
+  verb: 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch' | 'options';
+
   /**
    * Route path.
    * A route starting with `/` will be prefixed by `/_` otherwise the route
    * will be prefixed by `/_/<application-name>/`.
    */
-  path: string
+  path: string;
+
   /**
    * Provide a (openAPI specification v3)[https://swagger.io/specification/#paths-object] for this route.
    * Kuzzle only expect the `paths` object of the specification.
@@ -128,5 +130,5 @@ export type HttpRoute = {
    *   }
    * }
    */
-  openapi?: JSONObject
+  openapi?: JSONObject;
 };

@@ -25,7 +25,7 @@ import { JSONObject } from 'kuzzle-sdk';
 import { RoomList } from '../types';
 import Long from 'long';
 
-import kerror from '../kerror';
+import * as kerror from '../kerror';
 import '../types/Global';
 
 import { toKoncordeIndex } from '../util/koncordeCompat';
@@ -326,11 +326,11 @@ export default class State {
     const list: RoomList = {};
 
     for (const room of this.realtime.values()) {
-      if (!list[room.index]) {
+      if (! list[room.index]) {
         list[room.index] = {};
       }
 
-      if (!list[room.index][room.collection]) {
+      if (! list[room.index][room.collection]) {
         list[room.index][room.collection] = {};
       }
 

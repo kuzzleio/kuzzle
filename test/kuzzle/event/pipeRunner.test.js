@@ -190,7 +190,7 @@ describe('#pipeRunner', () => {
     });
 
     it('should resubmit the first item of the buffer', () => {
-      const chain = {chain: 'foo', args: ['bar'], callback: sinon.stub()};
+      const chain = { chain: 'foo', args: ['bar'], callback: sinon.stub() };
       pipeRunner.buffer.push(chain);
       pipeRunner.buffer.push({
         chain: 'bar',

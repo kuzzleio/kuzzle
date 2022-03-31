@@ -19,12 +19,12 @@ describe('Test: token manager core component', () => {
 
     kuzzle.ask
       .withArgs('core:security:user:anonymous:get')
-      .resolves({_id: '-1'});
+      .resolves({ _id: '-1' });
 
     tokenManager = new TokenManager();
     token = new Token({
       _id: 'foo#bar',
-      expiresAt: Date.now()+1000,
+      expiresAt: Date.now() + 1000,
       jwt: 'bar',
       userId: 'foo',
     });
@@ -144,7 +144,7 @@ describe('Test: token manager core component', () => {
           _id: 'foo2#bar2',
           userId: 'foo2',
           jwt: 'bar2',
-          expiresAt: Date.now()+10000,
+          expiresAt: Date.now() + 10000,
         });
 
       tokenManager.link(tokenAfter, 'foo2');
@@ -179,7 +179,7 @@ describe('Test: token manager core component', () => {
         _id: 'foo2#bar2',
         userId: 'foo2',
         jwt: 'bar2',
-        expiresAt: Date.now()+10000,
+        expiresAt: Date.now() + 10000,
       });
 
       tokenManager.link(token, 'foo1');
@@ -257,8 +257,8 @@ describe('Test: token manager core component', () => {
         _id: 'foo2#bar2',
         userId: 'foo2',
         jwt: 'bar2',
-        expiresAt: Date.now()+1000,
-        _idx: `${Date.now()+1000}#foo2`,
+        expiresAt: Date.now() + 1000,
+        _idx: `${Date.now() + 1000}#foo2`,
       });
 
       tokenManager.tokens.array.push(token);
@@ -290,10 +290,10 @@ describe('Test: token manager core component', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(
-        new Token({_id: 'bar', expiresAt }),
+        new Token({ _id: 'bar', expiresAt }),
         'connectionId1');
       tokenManager.link(
-        new Token({_id: 'foo', expiresAt }),
+        new Token({ _id: 'foo', expiresAt }),
         'connectionId2');
 
       runTimerStub.resetHistory();
@@ -309,10 +309,10 @@ describe('Test: token manager core component', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(
-        new Token({_id: 'bar', expiresAt: now + 1000000 }),
+        new Token({ _id: 'bar', expiresAt: now + 1000000 }),
         'connectionId1');
       tokenManager.link(
-        new Token({_id: 'foo', expiresAt: now - 1000 }),
+        new Token({ _id: 'foo', expiresAt: now - 1000 }),
         'connectionId2');
 
       runTimerStub.resetHistory();
@@ -335,7 +335,7 @@ describe('Test: token manager core component', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(
-        new Token({_id: 'api-key-1', expiresAt: -1 }),
+        new Token({ _id: 'api-key-1', expiresAt: -1 }),
         'connectionId1');
 
       runTimerStub.resetHistory();
@@ -356,7 +356,7 @@ describe('Test: token manager core component', () => {
       const runTimerStub = sinon.stub(tokenManager, 'runTimer');
 
       tokenManager.link(
-        new Token({_id: 'foo', expiresAt: now - 1000 }),
+        new Token({ _id: 'foo', expiresAt: now - 1000 }),
         'connectionId2');
 
       runTimerStub.resetHistory();
@@ -398,7 +398,7 @@ describe('Test: token manager core component', () => {
         userId: token.userId,
       });
 
-      tokenManager.unlink(new Token({_id: 'i am the beyonder' }), 'bar');
+      tokenManager.unlink(new Token({ _id: 'i am the beyonder' }), 'bar');
       should(tokenManager.tokens.array)
         .be.an.Array()
         .and.have.length(1);
@@ -462,8 +462,8 @@ describe('Test: token manager core component', () => {
 
     it('should do nothing if the provided token is not linked', () => {
       tokenManager.refresh(
-        new Token({_id: 'i am the beyonder' }),
-        new Token({_id: 'i am the mountain' }));
+        new Token({ _id: 'i am the beyonder' }),
+        new Token({ _id: 'i am the mountain' }));
 
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx)
@@ -475,7 +475,7 @@ describe('Test: token manager core component', () => {
     });
 
     it('should replace the old token with the new one', () => {
-      const newT = new Token({_id: '...I got better' });
+      const newT = new Token({ _id: '...I got better' });
       tokenManager.refresh(token, newT);
 
       should(tokenManager.tokens.array).have.length(1);
@@ -506,7 +506,7 @@ describe('Test: token manager core component', () => {
 
     it('should not return token if the userId is not associated to the connection', () => {
       tokenManager.link(token, 'foo');
-      tokenManager.link(new Token({_id: 'New Token'}), 'bar');
+      tokenManager.link(new Token({ _id: 'New Token' }), 'bar');
 
       const response = tokenManager.getConnectedUserToken(token.userId, 'bar');
       should(response).be.null();

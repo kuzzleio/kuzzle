@@ -33,7 +33,7 @@ Then('I have the definition of kuzzle and plugins controllers', function () {
       should(action.action).eql(actionName);
 
       // only theses methods from realtime have http routes
-      if (!(controllerName === 'realtime' && (actionName !== 'list' || actionName !== 'publish'))) {
+      if (! (controllerName === 'realtime' && (actionName !== 'list' || actionName !== 'publish'))) {
         should(action.http).be.instanceOf(Array);
       }
     }

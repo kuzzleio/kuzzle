@@ -16,7 +16,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 const MutexMock = require('../../mocks/mutex.mock');
 
 const { Token } = require('../../../lib/model/security/token');
-const User = require('../../../lib/model/security/user');
+const { User } = require('../../../lib/model/security/user');
 const Repository = require('../../../lib/core/shared/repository');
 const ApiKey = require('../../../lib/model/storage/apiKey');
 
@@ -76,7 +76,9 @@ describe('Test: security/tokenRepository', () => {
           assertIsAnonymous(result);
           done();
         })
-        .catch(err => { done(err); });
+        .catch(err => {
+          done(err);
+        });
     });
   });
 
@@ -103,9 +105,9 @@ describe('Test: security/tokenRepository', () => {
 
     it('should reject the token if the uuid is not known', () => {
       const token = jwt.sign(
-        {_id: -99999},
+        { _id: -99999 },
         kuzzle.secret,
-        {algorithm: kuzzle.config.security.jwt.algorithm});
+        { algorithm: kuzzle.config.security.jwt.algorithm });
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
@@ -117,7 +119,7 @@ describe('Test: security/tokenRepository', () => {
       const token = jwt.sign(
         { _id: -1 },
         kuzzle.secret,
-        {algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0});
+        { algorithm: kuzzle.config.security.jwt.algorithm, expiresIn: 0 });
 
       return should(tokenRepository.verifyToken(token))
         .be.rejectedWith(UnauthorizedError, {
@@ -164,7 +166,7 @@ describe('Test: security/tokenRepository', () => {
         { _id },
         kuzzle.secret,
         { algorithm: kuzzle.config.security.jwt.algorithm });
-      const cacheObj = JSON.stringify({_id, jwt: token});
+      const cacheObj = JSON.stringify({ _id, jwt: token });
 
       kuzzle.ask
         .withArgs(
@@ -316,8 +318,8 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.jwt.maxTTL = 42000;
 
-      return should(tokenRepository.generateToken(user, {expiresIn: '1m'}))
-        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+      return should(tokenRepository.generateToken(user, { expiresIn: '1m' }))
+        .be.rejectedWith(BadRequestError, { id: 'security.token.ttl_exceeded' });
     });
 
     it('should reject if the ttl exceeds the maxTTL for apiKey', () => {
@@ -326,8 +328,8 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.config.security.apiKey.maxTTL = 42000;
 
-      return should(tokenRepository.generateToken(user, {expiresIn: '1m', type: 'apiKey'}))
-        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+      return should(tokenRepository.generateToken(user, { expiresIn: '1m', type: 'apiKey' }))
+        .be.rejectedWith(BadRequestError, { id: 'security.token.ttl_exceeded' });
     });
 
     it('should reject if the ttl is infinite and the maxTTL is finite for jwt', () => {
@@ -337,7 +339,7 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.config.security.jwt.maxTTL = 42000;
 
       return should(tokenRepository.generateToken(user, { expiresIn: -1 }))
-        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+        .be.rejectedWith(BadRequestError, { id: 'security.token.ttl_exceeded' });
     });
 
     it('should reject if the ttl is infinite and the maxTTL is finite for apiKey', () => {
@@ -347,7 +349,7 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.config.security.apiKey.maxTTL = 42000;
 
       return should(tokenRepository.generateToken(user, { expiresIn: -1, type: 'apiKey' }))
-        .be.rejectedWith(BadRequestError, {id: 'security.token.ttl_exceeded'});
+        .be.rejectedWith(BadRequestError, { id: 'security.token.ttl_exceeded' });
     });
 
     it('should reject if the ttl is not ms-compatible or not a number', () => {
@@ -430,7 +432,7 @@ describe('Test: security/tokenRepository', () => {
 
   describe('#serializeToCache', () => {
     it('should return a valid plain object', () => {
-      const token = new Token({userId: 'foo'});
+      const token = new Token({ userId: 'foo' });
       const result = tokenRepository.serializeToCache(token);
 
       should(result).not.be.an.instanceOf(Token);
@@ -496,9 +498,9 @@ describe('Test: security/tokenRepository', () => {
         JSON.stringify({ userId: 'foo', _id: 'bar', expiresAt: 2, jwt: 'bar' }));
 
       kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
-        JSON.stringify({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${Token.APIKEY_PREFIX}baz`}));
-      
-      await tokenRepository.deleteByKuid('foo', {keepApiKeys: false});
+        JSON.stringify({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${Token.APIKEY_PREFIX}baz` }));
+
+      await tokenRepository.deleteByKuid('foo', { keepApiKeys: false });
 
       should(kuzzle.ask)
         .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
@@ -506,9 +508,9 @@ describe('Test: security/tokenRepository', () => {
         .calledWith('core:cache:internal:expire', `repos/kuzzle/token/${Token.APIKEY_PREFIX}baz`, -1);
 
       should(kuzzle.tokenManager.expire)
-        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
-        .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2})
-        .calledWithMatch({userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3});
+        .calledWithMatch({ userId: 'foo', _id: 'foo', expiresAt: 1 })
+        .calledWithMatch({ userId: 'foo', _id: 'bar', expiresAt: 2 })
+        .calledWithMatch({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3 });
     });
 
 
@@ -528,8 +530,7 @@ describe('Test: security/tokenRepository', () => {
 
       kuzzle.ask.withArgs('core:cache:internal:get').onThirdCall().resolves(
         JSON.stringify({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3, jwt: `${Token.APIKEY_PREFIX}baz` }));
-      
-      await tokenRepository.deleteByKuid('foo', {keepApiKeys: true});
+      await tokenRepository.deleteByKuid('foo', { keepApiKeys: true });
 
       should(kuzzle.ask)
         .calledWith('core:cache:internal:expire', 'repos/kuzzle/token/foo', -1)
@@ -537,9 +538,9 @@ describe('Test: security/tokenRepository', () => {
         .not.calledWith('core:cache:internal:expire', `repos/kuzzle/token/${Token.APIKEY_PREFIX}baz`, -1);
 
       should(kuzzle.tokenManager.expire)
-        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
-        .calledWithMatch({userId: 'foo', _id: 'bar', expiresAt: 2})
-        .not.calledWithMatch({userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3});
+        .calledWithMatch({ userId: 'foo', _id: 'foo', expiresAt: 1 })
+        .calledWithMatch({ userId: 'foo', _id: 'bar', expiresAt: 2 })
+        .not.calledWithMatch({ userId: 'foo', _id: `${Token.APIKEY_PREFIX}baz`, expiresAt: 3 });
     });
 
     it('should not delete tokens if the internal cache return a false positive', async () => {
@@ -554,11 +555,11 @@ describe('Test: security/tokenRepository', () => {
 
       cacheGetStub
         .onFirstCall()
-        .resolves(JSON.stringify({userId: 'foo', _id: 'foo', expiresAt: 1}));
+        .resolves(JSON.stringify({ userId: 'foo', _id: 'foo', expiresAt: 1 }));
 
       cacheGetStub
         .onSecondCall()
-        .resolves(JSON.stringify({userId: 'foo', _id: 'baz', expiresAt: 2}));
+        .resolves(JSON.stringify({ userId: 'foo', _id: 'baz', expiresAt: 2 }));
 
       await tokenRepository.deleteByKuid('foo');
 
@@ -573,8 +574,8 @@ describe('Test: security/tokenRepository', () => {
 
       should(kuzzle.tokenManager.expire.callCount).be.eql(2);
       should(kuzzle.tokenManager.expire)
-        .calledWithMatch({userId: 'foo', _id: 'foo', expiresAt: 1})
-        .calledWithMatch({userId: 'foo', _id: 'baz', expiresAt: 2});
+        .calledWithMatch({ userId: 'foo', _id: 'foo', expiresAt: 1 })
+        .calledWithMatch({ userId: 'foo', _id: 'baz', expiresAt: 2 });
     });
   });
 
@@ -656,7 +657,7 @@ describe('Test: security/tokenRepository', () => {
       oldToken.refreshed = true;
 
       await should(tokenRepository.refresh('user', oldToken, '10m'))
-        .rejectedWith(UnauthorizedError, {id: 'security.token.invalid'});
+        .rejectedWith(UnauthorizedError, { id: 'security.token.invalid' });
 
       should(tokenRepository.generateToken).not.called();
       should(tokenRepository.persistToCache).not.called();
@@ -667,7 +668,7 @@ describe('Test: security/tokenRepository', () => {
       oldToken.jwt = 'kapikey-jwt';
 
       await should(tokenRepository.refresh('user', oldToken, '10m'))
-        .rejectedWith(UnauthorizedError, {id: 'security.token.refresh_forbidden'});
+        .rejectedWith(UnauthorizedError, { id: 'security.token.refresh_forbidden' });
 
       should(tokenRepository.generateToken).not.called();
       should(tokenRepository.persistToCache).not.called();
@@ -678,7 +679,7 @@ describe('Test: security/tokenRepository', () => {
       oldToken.ttl = -1;
 
       await should(tokenRepository.refresh('user', oldToken, '10m'))
-        .rejectedWith(UnauthorizedError, {id: 'security.token.refresh_forbidden'});
+        .rejectedWith(UnauthorizedError, { id: 'security.token.refresh_forbidden' });
 
       should(tokenRepository.generateToken).not.called();
       should(tokenRepository.persistToCache).not.called();
@@ -693,8 +694,8 @@ describe('Test: security/tokenRepository', () => {
       kuzzle.ask.withArgs('core:cache:internal:get').returns(null);
 
       ApiKey.batchExecute.callsArgWith(1, [
-        { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 },
-        { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 },
+        { _source: { token: 'encoded-token-1', userId: 'user-id-1', ttl: 42 } },
+        { _source: { token: 'encoded-token-2', userId: 'user-id-2', ttl: -1 } },
       ]);
     });
 

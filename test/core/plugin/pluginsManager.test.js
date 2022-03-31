@@ -124,7 +124,7 @@ describe('Plugin', () => {
 
     it('should loads plugins with existing plugins', async () => {
       const otherPlugin = createPlugin('other-plugin');
-      pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin]]));
+      pluginsManager.loadPlugins.returns(new Map([[otherPlugin.name, otherPlugin], [application.name, application]]));
       pluginsManager._plugins.set(plugin.name, plugin);
 
       await pluginsManager.init('additional plugins');
@@ -301,7 +301,7 @@ describe('Plugin', () => {
         {
           action: 'receive',
           controller: 'email',
-          openapi : undefined,
+          openapi: undefined,
           path: '/_/path-with-leading-underscore',
           verb: 'post'
         }
@@ -309,7 +309,7 @@ describe('Plugin', () => {
     });
 
     it('should throw an error if the openAPI specification is invalid', () => {
-      plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: 'specification'};
+      plugin.instance.api.email.actions.receive.http[0].openapi = { invalid: 'specification' };
 
       should(pluginsManager._initApi(plugin))
         .be.rejectedWith({ id: 'plugin.controller.invalid_openapi_schema' });
@@ -388,12 +388,12 @@ describe('Plugin', () => {
 
     it('should attach controller routes on kuzzle object', () => {
       plugin.instance.routes = [
-        {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'},
-        {verb: 'head', url: '/bar/:name', controller: 'foo', action: 'bar'},
-        {verb: 'post', url: '/bar', controller: 'foo', action: 'bar'},
-        {verb: 'put', url: '/bar', controller: 'foo', action: 'bar'},
-        {verb: 'delete', url: '/bar', controller: 'foo', action: 'bar'},
-        {verb: 'patch', url: '/bar', controller: 'foo', action: 'bar'}
+        { verb: 'get', url: '/bar/:name', controller: 'foo', action: 'bar' },
+        { verb: 'head', url: '/bar/:name', controller: 'foo', action: 'bar' },
+        { verb: 'post', url: '/bar', controller: 'foo', action: 'bar' },
+        { verb: 'put', url: '/bar', controller: 'foo', action: 'bar' },
+        { verb: 'delete', url: '/bar', controller: 'foo', action: 'bar' },
+        { verb: 'patch', url: '/bar', controller: 'foo', action: 'bar' }
       ];
 
       plugin.instance.controllers = {
@@ -522,7 +522,7 @@ describe('Plugin', () => {
       plugin.instance.functionName = () => {};
 
       plugin.instance.routes = [
-        {vert: 'get', url: '/bar/:name', controller: 'foo', action: 'bar'}
+        { vert: 'get', url: '/bar/:name', controller: 'foo', action: 'bar' }
       ];
 
       should(() => pluginsManager._initControllers(plugin)).throw({
@@ -531,7 +531,7 @@ describe('Plugin', () => {
       });
 
       plugin.instance.routes = [
-        {verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar'}
+        { verb: 'post', url: ['/bar'], controller: 'foo', action: 'bar' }
       ];
 
       should(() => pluginsManager._initControllers(plugin)).throw({
@@ -539,7 +539,7 @@ describe('Plugin', () => {
       });
 
       plugin.instance.routes = [
-        {verb: 'posk', url: '/bar', controller: 'foo', action: 'bar'}
+        { verb: 'posk', url: '/bar', controller: 'foo', action: 'bar' }
       ];
 
       should(() => pluginsManager._initControllers(plugin)).throw({
@@ -548,7 +548,7 @@ describe('Plugin', () => {
       });
 
       plugin.instance.routes = [
-        {verb: 'get', url: '/bar/:name', controller: 'foo', action: 'baz'}
+        { verb: 'get', url: '/bar/:name', controller: 'foo', action: 'baz' }
       ];
 
       should(() => pluginsManager._initControllers(plugin)).throw({
@@ -557,7 +557,7 @@ describe('Plugin', () => {
       });
 
       plugin.instance.routes = [
-        {verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar'}
+        { verb: 'get', url: '/bar/:name', controller: 'fou', action: 'bar' }
       ];
 
       should(() => pluginsManager._initControllers(plugin)).throw({
@@ -670,7 +670,7 @@ describe('Plugin', () => {
         [[], 'foobar', 123, true].forEach(authenticators => {
           plugin.instance.authenticators = authenticators;
           should(() => pluginsManager._initAuthenticators(plugin))
-            .throw(PluginImplementationError, { id: 'plugin.authenticators.not_an_object'});
+            .throw(PluginImplementationError, { id: 'plugin.authenticators.not_an_object' });
         });
       });
 
@@ -684,7 +684,7 @@ describe('Plugin', () => {
     });
 
     describe('#initStrategies', () => {
-      let foo = {foo: 'bar'};
+      let foo = { foo: 'bar' };
 
       beforeEach(() => {
         pluginsManager.strategies = {};
@@ -696,7 +696,7 @@ describe('Plugin', () => {
 
       it('should add the strategy in strategies if it is well-formed', done => {
         plugin.instance.existsFunction = sinon.stub().returns(foo);
-        plugin.instance.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
+        plugin.instance.verifyFunction = sinon.stub().resolves({ kuid: 'foo' });
 
         pluginsManager._initStrategies(plugin);
 
@@ -739,7 +739,7 @@ describe('Plugin', () => {
         };
 
         plugin.instance.existsFunction = sinon.stub().returns(foo);
-        plugin.instance.verifyFunction = sinon.stub().resolves({kuid: 'foo'});
+        plugin.instance.verifyFunction = sinon.stub().resolves({ kuid: 'foo' });
 
         pluginsManager._initStrategies(plugin);
         should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(
@@ -768,7 +768,7 @@ describe('Plugin', () => {
         [{}, [], null, undefined, 'foobar', 123, true].forEach(strategies => {
           plugin.instance.strategies = strategies;
           should(() => pluginsManager._initStrategies(plugin))
-            .throw(PluginImplementationError, {message});
+            .throw(PluginImplementationError, { message });
         });
       });
 
@@ -795,7 +795,7 @@ describe('Plugin', () => {
           const message = new RegExp(`\\[test-plugin\\] Strategy someStrategy: expected a "config" property of type "object", got: ${config}`);
           plugin.instance.strategies.someStrategy.config = config;
           should(() => pluginsManager._initStrategies(plugin))
-            .throw(PluginImplementationError, {message});
+            .throw(PluginImplementationError, { message });
         });
       });
 
@@ -961,7 +961,7 @@ describe('Plugin', () => {
             should(msg).be.undefined();
             should(err)
               .instanceOf(PluginImplementationError)
-              .match({message: /\[test-plugin\] Strategy someStrategy: invalid authentication strategy result/});
+              .match({ message: /\[test-plugin\] Strategy someStrategy: invalid authentication strategy result/ });
             done();
           }
           catch (e) {
@@ -971,14 +971,14 @@ describe('Plugin', () => {
       });
 
       it('should reject if the plugin resolves to a non-string kuid', done => {
-        plugin.instance.verifyFunction.resolves({kuid: 123});
+        plugin.instance.verifyFunction.resolves({ kuid: 123 });
         verifyAdapter('foo', 'bar', (err, res, msg) => {
           try {
             should(res).be.undefined();
             should(msg).be.undefined();
             should(err)
               .instanceOf(PluginImplementationError)
-              .match({message: /\[test-plugin\] Strategy someStrategy: invalid authentication kuid returned: expected a string, got a number/});
+              .match({ message: /\[test-plugin\] Strategy someStrategy: invalid authentication kuid returned: expected a string, got a number/ });
             done();
           }
           catch (e) {
@@ -992,7 +992,7 @@ describe('Plugin', () => {
         verifyAdapter((err, res, msg) => {
           try {
             should(res).be.false();
-            should(msg).be.eql({message: null});
+            should(msg).be.eql({ message: null });
             should(err).be.null();
             done();
           }
@@ -1007,7 +1007,7 @@ describe('Plugin', () => {
         verifyAdapter((err, res, msg) => {
           try {
             should(res).be.false();
-            should(msg).be.eql({message: 'Unable to log in using the strategy "someStrategy"'});
+            should(msg).be.eql({ message: 'Unable to log in using the strategy "someStrategy"' });
             should(err).be.null();
             done();
           }
@@ -1018,11 +1018,11 @@ describe('Plugin', () => {
       });
 
       it('should relay the plugin  message if one is provided', done => {
-        plugin.instance.verifyFunction.resolves({message: '"NONE SHALL PASS!" -The Black Knight'});
+        plugin.instance.verifyFunction.resolves({ message: '"NONE SHALL PASS!" -The Black Knight' });
         verifyAdapter((err, res, msg) => {
           try {
             should(res).be.false();
-            should(msg).be.eql({message: '"NONE SHALL PASS!" -The Black Knight'});
+            should(msg).be.eql({ message: '"NONE SHALL PASS!" -The Black Knight' });
             should(err).be.null();
             done();
           }
@@ -1033,7 +1033,7 @@ describe('Plugin', () => {
       });
 
       it('should reject if the plugin returns an invalid kuid', done => {
-        plugin.instance.verifyFunction.resolves({kuid: 'Waldo'});
+        plugin.instance.verifyFunction.resolves({ kuid: 'Waldo' });
 
         const error = new Error('foo');
         error.id = 'security.user.not_found';
@@ -1048,7 +1048,7 @@ describe('Plugin', () => {
             should(msg).be.undefined();
             should(err)
               .instanceOf(PluginImplementationError)
-              .match({id: 'plugin.strategy.unknown_kuid'});
+              .match({ id: 'plugin.strategy.unknown_kuid' });
             done();
           }
           catch (e) {
@@ -1340,7 +1340,7 @@ describe('Plugin', () => {
       pluginsManager._initPipes(plugin);
 
       return should(kuzzle.pipe('foo:bar'))
-        .be.rejectedWith(KuzzleError, {message: 'foobar'});
+        .be.rejectedWith(KuzzleError, { message: 'foobar' });
     });
 
     it('should embed a non-KuzzleError error in a PluginImplementationError', async () => {

@@ -19,7 +19,7 @@ const {
 describe('ServerController', () => {
   let serverController;
   let kuzzle;
-  let foo = {foo: 'bar'};
+  let foo = { foo: 'bar' };
   let index = '%text';
   let collection = 'unit-test-serverController';
   let request;
@@ -350,31 +350,40 @@ describe('ServerController', () => {
   });
 
   describe('#openapi', () => {
-    it('should return JSON formated OpenAPI specifications by default', () => {
-      return serverController.openapi(request)
-        .then((response) => {
-          should(response).be.an.Object();
-          should(response.swagger).be.a.String();
-        });
+    beforeEach(() => {
+      kuzzle.ask.withArgs('core:api:openapi:kuzzle').resolves({
+        swagger: '2.0',
+      });
+
+      kuzzle.ask.withArgs('core:api:openapi:app').resolves({
+        swagger: '2.0',
+      });
     });
 
-    it('should return JSON formated OpenAPI specifications if specified', () => {
-      request.input.args.format = 'json';
-      return serverController.openapi(request)
-        .then((response) => {
-          should(response).be.an.Object();
-          should(response.swagger).be.a.String();
-        });
+    it('should return JSON Kuzzle OpenAPI definition by default', async () => {
+      const definition = await serverController.openapi(request);
+
+      should(definition).be.an.Object();
+      should(kuzzle.ask).be.calledWith('core:api:openapi:kuzzle');
     });
 
-    it('should return YAML formated OpenAPI specifications if specified', () => {
+    it('should return JSON application OpenApi definition', async () => {
+      request.input.args.scope = 'app';
+
+      const definition = await serverController.openapi(request);
+
+      should(definition).be.an.Object();
+      should(kuzzle.ask).be.calledWith('core:api:openapi:app');
+    });
+
+    it('should return YAML formated OpenAPI specifications if specified', async () => {
       request.input.args.format = 'yaml';
-      return serverController.openapi(request)
-        .then((response) => {
-          const parsedResponse = yaml.parse(response);
-          should(parsedResponse).be.an.Object();
-          should(parsedResponse.swagger).be.a.String();
-        });
+
+      const response = await serverController.openapi(request);
+
+      const definition = yaml.parse(response);
+      should(definition).be.an.Object();
+      should(definition.swagger).be.a.String();
     });
   });
 
