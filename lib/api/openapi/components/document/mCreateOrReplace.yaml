@@ -1,0 +1,93 @@
+DocumentmCreateOrReplace:
+  summary: "Creates or replaces multiple documents."
+  tags:
+    - document
+  parameters:
+    - in: path
+      name: index
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: collection
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: refresh
+      schema:
+        type: string
+      required: false
+    - in: path
+      name: silent
+      schema:
+        type: boolean
+      required: false
+    - in: path
+      name: _source
+      description: "if set to true, the response will include the document's source (default value true)"
+      schema:
+        type: boolean
+      required: false
+    - name: body
+      in: "body"
+      description: "Creates or replaces multiple documents."
+      required: true
+      schema:
+        $ref: "#/components/document/DocumentmCreateOrReplaceRequest"
+  responses:
+    200:
+      description: "Creates or replaces multiple documents."
+      schema:
+        $ref: "#/components/document/DocumentmCreateOrReplaceResponse"
+
+components:
+  schemas:
+    DocumentmCreateOrReplaceRequest:
+      allOf:
+        - type: "object"
+          properties:
+            documents:
+              type: "array"
+              items:
+                type: "object"
+                properties:
+                  _id:
+                    type: "string"
+                  _body:
+                    type: "object"
+                    description: "document content"
+    DocumentmCreateOrReplaceResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                successes:
+                  type: "array"
+                  items:
+                    type: "object"
+                    properties:
+                      _id:
+                        type: "string"
+                      _source:
+                        type: "object"
+                        description: "document content"
+                      _version:
+                        type: "integer"
+                      created:
+                        type: "boolean"
+                errors:
+                  type: "array"
+                  items:
+                    type: "object"
+                    properties:
+                      document:
+                        type: "object"
+                        description: "document content"
+                      status:
+                        type: "integer"
+                      reason:
+                        type: "string"
