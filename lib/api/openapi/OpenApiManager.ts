@@ -32,6 +32,7 @@ import {
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
   OpenApiDocumentValidateComponent,
+  OpenApiSecurityUpsertUserComponent,
 } from './components';
 import { OpenApiDefinition } from '../../types/OpenApiDefinition';
 import { version } from '../../../package.json';
@@ -88,6 +89,9 @@ export class OpenApiManager {
         ...OpenApiDocumentCreateOrReplaceComponent,
         ...OpenApiDocumentCreateComponent,
         ...OpenApiDocumentValidateComponent,
+      },
+      security: {
+        ...OpenApiSecurityUpsertUserComponent,
       }
     }
   };
