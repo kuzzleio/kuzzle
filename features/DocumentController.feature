@@ -207,79 +207,6 @@ Feature: Document Controller
     And I refresh the collection
     Then The document "document-1" should not exist
 
-  # document:export ============================================================
-
-  @mappings
-  @http
-  Scenario: Verify exported documents in format jsonl
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    Then The document "document-1" should not exist
-    And The document "document-2" should not exist
-    When I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-      | "document-2" | { "name": "document2", "age": 666 } |
-    And I refresh the collection
-    When I export the collection "nyc-open-data":"yellow-taxi" in the format "jsonl"
-    Then the streamed data should be equal to:
-      | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                          |
-      | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document1","age":42}}  |
-      | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document2","age":666}} |
-  
-  @mappings
-  @http
-  Scenario: Verify exported documents in format csv
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    Then The document "document-1" should not exist
-    And The document "document-2" should not exist
-    When I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-      | "document-2" | { "name": "document2", "age": 666 } |
-    And I refresh the collection
-    When I export the collection "nyc-open-data":"yellow-taxi" in the format "csv"
-    Then the streamed data should be equal to:
-      | _id,age,city,job,name      |
-      | document-1,42,,,document1  |
-      | document-2,666,,,document2 |
-
-  @mappings
-  @http
-  Scenario: Verify exported documents in format csv with specified fields
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    Then The document "document-1" should not exist
-    And The document "document-2" should not exist
-    When I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-      | "document-2" | { "name": "document2", "age": 666 } |
-    And I refresh the collection
-    When I export the collection "nyc-open-data":"yellow-taxi" in the format "csv":
-      | fields | ["age","name"] |
-    Then the streamed data should be equal to:
-      | _id,age,name             |
-      | document-1,42,document1  |
-      | document-2,666,document2 |
-
-  @mappings
-  @http
-  Scenario: Verify exported documents in format csv with renamed fields
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    Then The document "document-1" should not exist
-    And The document "document-2" should not exist
-    When I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-      | "document-2" | { "name": "document2", "age": 666 } |
-    And I refresh the collection
-    When I export the collection "nyc-open-data":"yellow-taxi" in the format "csv":
-      | fields     | [ "age", "name" ]                                         |
-      | fieldsName | { "age": "cityAge", "name": "documentName", "_id": "id" } |
-    Then the streamed data should be equal to:
-      | id,cityAge,documentName  |
-      | document-1,42,document1  |
-      | document-2,666,document2 |
-
   # document:mCreate ===========================================================
 
   @mappings
@@ -366,12 +293,6 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I successfully execute the action "document":"update" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "document-1"           |
-      | body       | { "name": "updated1" } |
-      | source     | true                   |
     And I "create" the following documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
@@ -421,7 +342,7 @@ Feature: Document Controller
       | "document-1" | { "name": "replaced1" } | 200    | "updated" | false   |
     And I should receive a empty "errors" array
     And I refresh the collection
-    And I count 2 documents
+    And I count 1 documents
     And The document "document-1" content match:
       | name | "replaced1" |
 
