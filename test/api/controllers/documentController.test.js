@@ -716,7 +716,7 @@ describe('DocumentController', () => {
     it('should return success result of mCreateOrReplace with _source for each documents', async () => {
       request.input.args.silent = true;
 
-      const response = await documentController._mChanges(
+      await documentController._mChanges(
         request,
         'mCreateOrReplace',
         actionEnum.WRITE,
@@ -728,7 +728,7 @@ describe('DocumentController', () => {
         collection,
         documents,
         { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
-      )
+      );
     });
 
     it('should return success result of mCreateOrReplace without _source for each documents', async () => {
@@ -747,11 +747,30 @@ describe('DocumentController', () => {
         collection,
         documents,
         { _source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
-      )
+      );
 
       for (const item of response.successes) {
         should.not.exists(item._source);
       }
+    });
+
+    it('should return success result of mCreateOrReplace with _source for each documents', async () => {
+      request.input.args.silent = true;
+      request.input.args._source = true;
+
+      await documentController._mChanges(
+        request,
+        'mCreateOrReplace',
+        actionEnum.WRITE,
+      );
+
+      should(kuzzle.ask).be.calledWith(
+        'core:storage:public:document:mCreateOrReplace',
+        index,
+        collection,
+        documents,
+        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+      );
     });
   });
 
