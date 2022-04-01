@@ -1288,7 +1288,7 @@ describe('DocumentController', () => {
 
     it('should throw an error if one document has an error with the strict arg', async () => {
       kuzzle.ask.withArgs('core:storage:public:document:updateByQuery').resolves({
-        succecces: esResponse.successes,
+        successes: esResponse.successes,
         errors: [
           {
             document: { _id: 'id3', _source: { foo: 'bar', bar: 'foo' } },
