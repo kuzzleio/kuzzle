@@ -248,6 +248,7 @@ describe('AdminController', () => {
     beforeEach(() => {
       request.input.action = 'loadFixtures';
       request.input.body = { city: { seventeen: [] } };
+      request.input.args.refresh = 'false';
     });
 
     it('should call loadFixtures from the public storage engine', async () => {
@@ -255,7 +256,7 @@ describe('AdminController', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:storage:public:document:import',
-        request.input.body);
+        request.input.body, { refresh: 'false' });
     });
 
     it('should handle promise rejections when not waiting for a refresh', async () => {
