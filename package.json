@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.17.5",
+  "version": "2.17.6",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -45,7 +45,7 @@
     "@types/js-yaml": "^4.0.5",
     "aedes": "^0.46.3",
     "bluebird": "^3.7.2",
-    "cli-color": "^2.0.1",
+    "cli-color": "^2.0.2",
     "cookie": "^0.4.2",
     "debug": "^4.3.4",
     "denque": "^2.0.1",
@@ -53,8 +53,8 @@
     "dumpme": "^1.0.3",
     "eventemitter3": "^4.0.7",
     "express": "^4.17.3",
-    "inquirer": "^8.2.1",
-    "ioredis": "^4.28.5",
+    "inquirer": "^8.2.2",
+    "ioredis": "^5.0.3",
     "js-yaml": "^4.1.0",
     "json-stable-stringify": "^1.0.1",
     "json2yaml": "^1.1.0",
@@ -69,7 +69,7 @@
     "moment": "^2.29.1",
     "ms": "^2.1.3",
     "murmurhash-native": "^3.5.0",
-    "nanoid": "^3.3.1",
+    "nanoid": "^3.3.2",
     "ndjson": "^2.0.0",
     "node-segfault-handler": "^1.0.4",
     "passport": "^0.5.2",
@@ -92,15 +92,15 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.180",
-    "@typescript-eslint/eslint-plugin": "^5.16.0",
-    "@typescript-eslint/parser": "^5.16.0",
+    "@types/lodash": "^4.14.181",
+    "@typescript-eslint/eslint-plugin": "^5.17.0",
+    "@typescript-eslint/parser": "^5.17.0",
     "async": "^3.2.3",
     "chokidar": "^3.5.3",
     "codecov": "^3.8.3",
     "cucumber": "^6.0.5",
     "ergol": "^1.0.2",
-    "eslint": "^8.11.0",
+    "eslint": "^8.12.0",
     "mocha": "^9.2.2",
     "mock-require": "^3.0.3",
     "mqtt": "^4.3.7",
@@ -113,7 +113,7 @@
     "sinon": "^12.0.1",
     "strip-json-comments": "https://github.com/sindresorhus/strip-json-comments/archive/refs/tags/v3.1.1.tar.gz",
     "ts-node": "^10.7.0",
-    "typescript": "^4.6.2",
+    "typescript": "^4.6.3",
     "yaml": "^1.10.2"
   },
   "engines": {
