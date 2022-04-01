@@ -258,20 +258,6 @@ describe('AdminController', () => {
         'core:storage:public:document:import',
         request.input.body, { refresh: 'false' });
     });
-
-    it('should handle promise rejections when not waiting for a refresh', async () => {
-      const err = new Error('err');
-
-      kuzzle.ask
-        .withArgs('core:storage:public:document:import')
-        .rejects(err);
-
-      request.input.args.refresh = false;
-
-      await should(adminController.loadFixtures(request)).fulfilled();
-
-      should(kuzzle.log.error).calledWith(err);
-    });
   });
 
   describe('#loadSecurities', () => {
