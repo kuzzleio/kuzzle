@@ -4,6 +4,8 @@ type: page
 title: upsertUser
 ---
 
+<SinceBadge version="auto-version"/>
+
 # upsertUser
 
 Applies partial changes to an user. If the user doesn't already exist, a new user is created.
