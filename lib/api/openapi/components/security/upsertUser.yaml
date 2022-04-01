@@ -49,11 +49,11 @@ components:
                 _id:
                   type: "string"
                   description: "userId"
-                  _version:
-                    type: "integer"
-                  _source:
-                    type: "object"
-                    description: " (optional) actualized user content. This property appears only if the \"source\" option is set to true"
-                  created:
-                    type: "boolean"
+                _version:
+                  type: "integer"
+                _source:
+                  type: "object"
+                  description: " (optional) actualized user content. This property appears only if the \"source\" option is set to true"
+                created:
+                  type: "boolean"
 

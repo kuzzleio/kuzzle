@@ -838,21 +838,21 @@ describe('Test: security controller - users', () => {
     beforeEach(() => {
       request.input.args._id = 'test';
       request.input.body = {
-        content: { name: 'John Doe', profileIds: ['default'] }
+        content: { name: 'John Doe', profileIds: ['default'] },
       };
     });
 
     it('should create a user if it did not exist', async () => {
       const createdUserAnswer = {
         _id: request.input.args._id,
-        _source: request.input.body.content
+        _source: request.input.body.content,
       };
 
       sinon.stub(securityController, '_persistUser').resolves(createdUserAnswer);
 
       kuzzle.ask
         .withArgs('core:security:user:update', request.input.args._id)
-        .rejects(kerror.get('services', 'storage', 'not_found', request.input.args._id));
+        .rejects(kerror.get('security', 'user', 'not_found', request.input.args._id));
 
       const response = await securityController.upsertUser(request);
 
@@ -864,8 +864,10 @@ describe('Test: security controller - users', () => {
     });
 
     it('should create a user if it did not exist and assign default values', async () => {
+      const credentials = { local: { username: 'username', password: 'password' } };
       request.input.body.default = {
-        city: 'Mtp',
+        city: 'Montpellier',
+        credentials: credentials
       };
 
       const createdUserAnswer = {
@@ -880,13 +882,16 @@ describe('Test: security controller - users', () => {
 
       kuzzle.ask
         .withArgs('core:security:user:update', request.input.args._id)
-        .rejects(kerror.get('services', 'storage', 'not_found', request.input.args._id));
+        .rejects(kerror.get('security', 'user', 'not_found', request.input.args._id));
 
       const response = await securityController.upsertUser(request);
 
       should(securityController._persistUser)
         .calledOnce()
-        .calledWithMatch(request, ['default'], { name: 'John Doe', city: 'Mtp' });
+        .calledWithMatch(request,
+          ['default'],
+          { name: 'John Doe', city: 'Montpellier', credentials: credentials }
+        );
 
       should(response).eql(createdUserAnswer);
     });
