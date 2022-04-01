@@ -1311,12 +1311,10 @@ describe('DocumentController', () => {
       request.input.args.strict = true;
       request.context.user = { _id: 'aschen' };
 
-      const methodName = 'core:storage:public:document:updateByQuery';
-
       documentController.updateByQuery(request).should.be.rejectedWith({ id: 'incomplete_multiple_request' });
 
       should(kuzzle.ask).be.calledWith(
-        methodName,
+        'core:storage:public:document:updateByQuery',
         index,
         collection,
         { match: { foo: 'bar' } },

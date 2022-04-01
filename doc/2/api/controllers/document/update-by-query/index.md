@@ -119,6 +119,7 @@ Each errored document is an object of the `errors` array with the following prop
 - `status`: HTTP error status code
 - `reason`: human readable reason
 
+<SinceBadge version="auto-version"/>
 If `strict` mode is enabled, will rather return an error if at least one document has not been updated.
 ```js
 {
