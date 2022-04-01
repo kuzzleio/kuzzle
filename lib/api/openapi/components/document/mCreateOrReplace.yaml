@@ -54,7 +54,7 @@ components:
                 properties:
                   _id:
                     type: "string"
-                  _body:
+                  body:
                     type: "object"
                     description: "document content"
     DocumentmCreateOrReplaceResponse:
