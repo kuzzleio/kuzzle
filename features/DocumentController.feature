@@ -364,26 +364,6 @@ Feature: Document Controller
   # document:mCreateOrReplace ==================================================
 
   @mappings
-  Scenario: CreateOrReplace multiple documents
-    Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
-      | _id          | body                               |
-      | "document-1" | { "name": "document1", "age": 42 } |
-    When I "createOrReplace" the following documents:
-      | _id          | body                    |
-      | "document-1" | { "name": "replaced1" } |
-      | -            | { "name": "document2" } |
-    Then I should receive a "successes" array of objects matching:
-      | _id          | _source                 | status | result    | created |
-      | "document-1" | { "name": "replaced1" } | 200    | "updated" | false   |
-      | -            | { "name": "document2" } | 201    | "created" | true    |
-    And I should receive a empty "errors" array
-    And I refresh the collection
-    And I count 2 documents
-    And The document "document-1" content match:
-      | name | "replaced1" |
-
-  @mappings
   Scenario: CreateOrReplace multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I "createOrReplace" the following documents:
@@ -419,7 +399,7 @@ Feature: Document Controller
     And The document "document-1" content match:
       | name | "replaced1" |
 
-    @mappings
+  @mappings
   Scenario: CreateOrReplace multiple documents and return response without _source
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
@@ -429,15 +409,12 @@ Feature: Document Controller
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
       | body       | { "documents": [ { "_id": "document-1", "body": { "name": "replaced1" } } ] } |
-      | source     | false                  |
+      | source     | "false"                |
     Then I should receive a "successes" array of objects matching:
-      | _id          |  status | result    | created |
-      | "document-1" |  200    | "updated" | false   |
+      | _id          | _source       | status | result    | created |
+      | "document-1" | "_UNDEFINED_" | 200    | "updated" | false   |
     And I should receive a empty "errors" array
     And I refresh the collection
-    And I count 1 documents
-    And The document "document-1" content match:
-      | name | "replaced1" |
 
   # document:update ===========================================================
   @mappings
