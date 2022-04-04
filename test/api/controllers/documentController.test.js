@@ -587,7 +587,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
+        { source: true, userId: 'aschen', refresh: 'wait_for', retryOnConflict: undefined });
 
       should(kuzzle.ask).be.calledWith(
         'core:realtime:document:mNotify',
@@ -609,7 +609,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
+        { source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should handle errors if some actions failed', async () => {
@@ -699,7 +699,7 @@ describe('DocumentController', () => {
           { id: 'api.process.incomplete_multiple_request' });
     });
 
-    it('should retrieve retryOnConflict param when updating ', async () => {
+    it('should retrieve retryOnConflict param when updating', async () => {
       request.input.args.retryOnConflict = 2;
 
       await documentController._mChanges(request, 'mUpdate', actionEnum.UPDATE);
@@ -709,10 +709,10 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
+        { source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
     });
 
-    it('should retrieve retryOnConflict param doing an upsert ', async () => {
+    it('should retrieve retryOnConflict param doing an upsert', async () => {
       request.input.args.retryOnConflict = 2;
 
       await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
@@ -722,10 +722,10 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
+        { source: true, userId: null, refresh: 'false', retryOnConflict: 2 });
     });
 
-    it('should not check retryOnConflict param when not performing an update/upsert ', async () => {
+    it('should not check retryOnConflict param when not performing an update/upsert', async () => {
       request.input.args.retryOnConflict = 2;
 
       await documentController._mChanges(request, 'mCreate', actionEnum.CREATE);
@@ -735,7 +735,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
+        { source: true, userId: null, refresh: 'false', retryOnConflict: undefined });
     });
 
     it('should notify with _updatedFields when updating ', async () => {
@@ -828,7 +828,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+        { source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
       ).resolves(({
         items,
         errors: []
@@ -839,7 +839,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
+        { source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
       ).resolves(({
         items: items.map(item => {
           delete item._source;
@@ -863,13 +863,13 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+        { source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
       );
     });
 
     it('should return success result of mCreateOrReplace without _source for each documents', async () => {
       request.input.args.silent = true;
-      request.input.args._source = false;
+      request.input.args.source = false;
 
       const response = await documentController._mChanges(
         request,
@@ -882,7 +882,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
+        { source: false, refresh: 'false', retryOnConflict: undefined, userId: null }
       );
 
       for (const item of response.successes) {
@@ -905,7 +905,7 @@ describe('DocumentController', () => {
         index,
         collection,
         documents,
-        { _source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
+        { source: true, refresh: 'false', retryOnConflict: undefined, userId: null }
       );
     });
   });
