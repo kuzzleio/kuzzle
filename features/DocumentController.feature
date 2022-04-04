@@ -210,6 +210,7 @@ Feature: Document Controller
   # document:mExists ============================================================
 
   @mappings
+  @test
   Scenario: Check multiple document existence
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following documents:
@@ -217,9 +218,11 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I execute the "Exists" action on the following document ids:
-      | "document-1" |
-      | "document-2" |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { ids: [ "document-1", "document-2" ] }  |
     Then I should receive a "successes" array matching:
       | "document-1" |
       | "document-2" |
@@ -233,10 +236,11 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I execute the "Exists" action on the following document ids:
-      | "document-1"  |
-      | 214284        |
-      | "document-42" |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                                     |
+      | collection | "yellow-taxi"                                       |
+      | strict     | true                                                |
+      | body       | { ids: [ "document-1", "214284", "document-42" ] }  |
     Then I should receive a "successes" array matching:
       | "document-1" |
     And I should receive a "errors" array matching:
@@ -256,6 +260,11 @@ Feature: Document Controller
       | "document-2"  |
       | "document-42" |
       | "document-21" |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                                                        |
+      | collection | "yellow-taxi"                                                          |
+      | strict     | true                                                                   |
+      | body       | { ids: [ "document-1", "document-2", "document-42", "document-21" ] }  |
     Then I should receive a "successes" array matching:
       | "document-1" |
       | "document-2" |
