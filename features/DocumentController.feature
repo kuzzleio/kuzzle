@@ -257,7 +257,7 @@ Feature: Document Controller
     When I execute the action "document":"mExists" with args:
       | index      | "nyc-open-data"                                                        |
       | collection | "yellow-taxi"                                                          |
-      | strict     | true                                                                   |
+      | strict     | false                                                                  |
       | body       | { ids: [ "document-1", "document-2", "document-42", "document-21" ] }  |
     Then I should receive a "successes" array matching:
       | "document-1" |
