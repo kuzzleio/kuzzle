@@ -414,7 +414,6 @@ Feature: Document Controller
       | _id          | _source       | status | result    | created |
       | "document-1" | "_UNDEFINED_" | 200    | "updated" | false   |
     And I should receive a empty "errors" array
-    And I refresh the collection
 
   # document:update ===========================================================
   @mappings
