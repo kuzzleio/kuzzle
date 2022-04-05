@@ -68,6 +68,10 @@ Returns the update user kuid and version number.
   "requestId": "<unique request identifier>",
   "result": {
     "_id": "<kuid>",
+    "_source": {
+      "profileIds": ["<profileId>"],
+      "fullname": "Walter Smith"
+    },
     "_version": 2
   }
 }

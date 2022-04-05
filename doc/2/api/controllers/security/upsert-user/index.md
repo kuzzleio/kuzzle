@@ -4,9 +4,9 @@ type: page
 title: upsertUser
 ---
 
-<SinceBadge version="auto-version"/>
-
 # upsertUser
+
+<SinceBadge version="auto-version"/>
 
 Applies partial changes to an user. If the user doesn't already exist, a new user is created.
 
@@ -95,7 +95,7 @@ Body:
   - `profileIds`: an array of security profiles attributed to the user
   - any other property: optional additional user information
 - `credentials`: describe how the new user can be authenticated. This object contains any number of properties, named after the target authentication strategy to use. Each one of these properties are objects containing the credentials information, corresponding to that authentication strategy. If left empty, the new user is created but cannot be authenticated.
-- `default`: (optional) fields to add to the document if it gets created
+- `default`: (optional) fields to add to the user if it gets created
 
 ---
 
@@ -104,9 +104,7 @@ Body:
 Returns information about the updated user:
 
 - `_id`: user kuid
-- `_source`: (only if the `source` option is set) actualized document content
-- `_version`: updated user version
-- `created`: if `true`, a new user was created, otherwise the user existed and was updated
+- `_source`: actualized user content
 
 ```js
 {
@@ -118,11 +116,9 @@ Returns information about the updated user:
   "result": {
     "_id": "<kuid>",
     "_source": {
-      // (optional) actualized document content. This property appears only if
-      // the "source" option is set to true
+      "profileIds": ["<profileId>"],
+      "fullname": "John Doe"
     },
-    "_version": 2,
-    "created": false,
   }
 }
 ```
