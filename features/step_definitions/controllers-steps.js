@@ -207,18 +207,23 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
     method,
     body: {
       jwt: this.sdk.jwt,
-      ...body,
+      ...body
     },
     headers: body.headers,
   };
 
-  delete body.headers;
+  body.headers = undefined;
 
-  const response = await requestPromise(options);
+  try {
+    const response = await requestPromise(options);
 
-  this.props.result = response.body.result;
-  this.props.response = response.body;
-  this.props.rawResponse = response;
+    this.props.result = response.body.result;
+    this.props.response = response.body;
+    this.props.rawResponse = response;
+  }
+  catch (err) {
+    this.props.error = err.error.error;
+  }
 });
 
 Then('I wait {int} milliseconds', async function (ms) {
