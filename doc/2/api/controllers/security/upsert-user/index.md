@@ -32,8 +32,8 @@ Body:
   "credentials": {
     // example with the "local" authentication strategy
     "local": {
-      username: "jdoe",
-      password: "foobar"
+      "username": "jdoe",
+      "password": "foobar"
     }
   },
   "default": {
