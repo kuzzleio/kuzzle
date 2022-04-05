@@ -50,7 +50,7 @@ Body:
   "index": "<index>",
   "collection": "<collection>",
   "controller": "security",
-  "action": "upsertuser",
+  "action": "upsertUser",
   "_id": "<userId>",
   "body": {
     "content": {
