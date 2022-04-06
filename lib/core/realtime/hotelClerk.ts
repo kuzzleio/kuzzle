@@ -248,13 +248,14 @@ export class HotelClerk {
     /**
      * You might wonder why in the world is there a callback here.
      * The fact is that to prevent the event loop from switching to another function
-     * we need to keep descending the execution stack without returning await
+     * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
      * 
      * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription without return to the await keyword.
+     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
+     * without switching context.
      * 
-     * Since everything needs to be atomic (multiple operation done without interruption) otherwise we might
+     * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
@@ -328,13 +329,14 @@ export class HotelClerk {
     /**
      * You might wonder why in the world is there a callback here.
      * The fact is that to prevent the event loop from switching to another function
-     * we need to keep descending the execution stack without returning await
+     * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
      * 
      * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription without return to the await keyword.
+     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
+     * without switching context.
      * 
-     * Since everything needs to be atomic (multiple operation done without interruption) otherwise we might
+     * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
