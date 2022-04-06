@@ -35,6 +35,7 @@
     "test:lint:js:fix": "eslint --max-warnings=0 --fix ./lib ./test ./features-legacy ./bin ./features ./doc/build-error-codes.js",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
     "docker:install": "docker-compose run kuzzle_node_1 npm install",
+    "docker:test:unit": "docker-compose run kuzzle_node_1 npm run test:unit",
     "docker:npm": "docker-compose run kuzzle_node_1 npm run --"
   },
   "directories": {

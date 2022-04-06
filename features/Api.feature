@@ -22,3 +22,13 @@ Feature: API
     Then I should receive an error matching:
       | id      | "app.api.custom"       |
       | message | "Custom Tbilisi error" |
+  
+  @mappings
+  @http
+  Scenario: Send /_query Request with an empty JSON
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I'm logged in Kuzzle as user "test-admin" with password "password"
+    When I send a bad HTTP "post" request with:
+      | body | {} |
+    Then I should receive an error matching:
+      | id     | "api.assert.missing_argument" |
