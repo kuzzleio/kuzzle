@@ -245,24 +245,29 @@ export class HotelClerk {
 
     this.createRoom(normalized);
 
-    const { channel, subscribed } = await this.subscribeToRoom(
-      normalized.id,
-      request);
-
-    if (subscribed) {
-      global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
-
-      // @deprecated -- to be removed in next major version
-      // we have to recreate the old "diff" object
-      await global.kuzzle.pipe('core:hotelClerk:addSubscription', {
-        changed: subscribed,
-        collection,
-        connectionId: request.context.connection.id,
-        filters: normalized.filter,
-        index,
-        roomId: normalized.id,
-      });
+    const afterSubscribe = async (subscribed) => {
+      if (subscribed) {
+        global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
+  
+        // @deprecated -- to be removed in next major version
+        // we have to recreate the old "diff" object
+        await global.kuzzle.pipe('core:hotelClerk:addSubscription', {
+          changed: subscribed,
+          collection,
+          connectionId: request.context.connection.id,
+          filters: normalized.filter,
+          index,
+          roomId: normalized.id,
+        });
+      }
     }
+
+    const { channel } = await this.subscribeToRoom(
+      normalized.id,
+      request,
+      afterSubscribe);
+
+
 
     const subscription = new Subscription(
       index,
@@ -308,11 +313,13 @@ export class HotelClerk {
       this.createRoom(normalized);
     }
 
-    const { channel, cluster, subscribed } = await this.subscribeToRoom(roomId, request);
+    const afterSubscribeCallback = async (subscribed, cluster) => {
+      if (cluster && subscribed) {
+        global.kuzzle.emit('core:realtime:subscribe:after', roomId);
+      }
+    };
 
-    if (cluster && subscribed) {
-      global.kuzzle.emit('core:realtime:subscribe:after', roomId);
-    }
+    const { channel } = await this.subscribeToRoom(roomId, request, afterSubscribeCallback);
 
     return {
       channel,
@@ -485,8 +492,10 @@ export class HotelClerk {
 
     room.removeConnection(connectionId);
 
+    let roomDeleted = false;
     if (room.size === 0) {
       await this.removeRoom(roomId);
+      roomDeleted = true;
     }
 
     // even if the room is deleted for this node, another one may need the
@@ -508,6 +517,7 @@ export class HotelClerk {
     if ( notify
       && this.rooms.has(roomId)
       && room.channels.size > 0
+      && ! roomDeleted
     ) {
       await global.kuzzle.pipe('core:realtime:unsubscribe:after', roomId);
 
@@ -587,7 +597,8 @@ export class HotelClerk {
    */
   private async subscribeToRoom (
     roomId: string,
-    request: KuzzleRequest
+    request: KuzzleRequest,
+    afterSubscribeCallback: Function,
   ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
@@ -616,6 +627,8 @@ export class HotelClerk {
     global.kuzzle.entryPoint.joinChannel(channel.name, connectionId);
 
     room.createChannel(channel);
+
+    await afterSubscribeCallback(subscribed, channel.cluster);
 
     await notifyPromise;
 
