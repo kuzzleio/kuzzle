@@ -9,7 +9,7 @@ export class AsyncMutex {
   private _resource: string;
   private _acquired: boolean;
 
-  constructor (resource) {
+  constructor (resource: string) {
     this._resource = resource;
     this._acquired = false;
   }

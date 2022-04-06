@@ -36,6 +36,7 @@ import { Channel } from './channel';
 import { ConnectionRooms } from './connectionRooms';
 import { Room } from './room';
 import { Subscription } from './subscription';
+import { AsyncMutex } from '../../util/asyncMutex';
 
 const realtimeError = kerror.wrap('core', 'realtime');
 
@@ -245,25 +246,17 @@ export class HotelClerk {
 
     this.createRoom(normalized);
 
-    /**
-     * You might wonder why in the world is there a callback here.
-     * The fact is that to prevent the event loop from switching to another function
-     * we need to keep descending the execution stack without returning in a function that has been awaited
-     * otherwise once we return to the await keyword the event loop will switch to another function.
-     * 
-     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
-     * without switching context.
-     * 
-     * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
-     * run into some issues where the room is created but another request has deleted it before we can
-     * subscribe to it.
-     * All because the subscription was not atomic.
-     */
-    const afterSubscribeCallback = async (subscribed) => {
+    const mutex = new AsyncMutex(normalized.id);
+    await mutex.lock();
+
+    try {
+      const { channel, subscribed } = await this.subscribeToRoom(
+        normalized.id,
+        request);
+
       if (subscribed) {
         global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
-  
+
         // @deprecated -- to be removed in next major version
         // we have to recreate the old "diff" object
         await global.kuzzle.pipe('core:hotelClerk:addSubscription', {
@@ -275,27 +268,24 @@ export class HotelClerk {
           roomId: normalized.id,
         });
       }
-    };
 
-    const { channel } = await this.subscribeToRoom(
-      normalized.id,
-      request,
-      afterSubscribeCallback);
+      const subscription = new Subscription(
+        index,
+        collection,
+        request.input.body,
+        normalized.id,
+        request.context.connection.id,
+        request.context.user);
 
-    const subscription = new Subscription(
-      index,
-      collection,
-      request.input.body,
-      normalized.id,
-      request.context.connection.id,
-      request.context.user);
+      global.kuzzle.emit('core:realtime:user:subscribe:after', subscription);
 
-    global.kuzzle.emit('core:realtime:user:subscribe:after', subscription);
-
-    return {
-      channel,
-      roomId: normalized.id,
-    };
+      return {
+        channel,
+        roomId: normalized.id,
+      };
+    } finally {
+      mutex.unlock();
+    }
   }
 
   /**
@@ -314,45 +304,35 @@ export class HotelClerk {
   async join (request: KuzzleRequest): Promise<{ channel, roomId }> {
     const roomId = request.input.body.roomId;
 
-    if (! this.rooms.has(roomId)) {
-      const normalized: NormalizedFilter = await global.kuzzle.ask(
-        'cluster:realtime:filters:get',
-        roomId);
+    const mutex = new AsyncMutex(roomId);
+    await mutex.lock();
 
-      if (! normalized) {
-        throw realtimeError.get('room_not_found', roomId);
+    try {
+      if (! this.rooms.has(roomId)) {
+        const normalized: NormalizedFilter = await global.kuzzle.ask(
+          'cluster:realtime:filters:get',
+          roomId);
+
+        if (! normalized) {
+          throw realtimeError.get('room_not_found', roomId);
+        }
+
+        this.createRoom(normalized);
       }
 
-      this.createRoom(normalized);
-    }
+      const { channel, cluster, subscribed } = await this.subscribeToRoom(roomId, request);
 
-    /**
-     * You might wonder why in the world is there a callback here.
-     * The fact is that to prevent the event loop from switching to another function
-     * we need to keep descending the execution stack without returning in a function that has been awaited
-     * otherwise once we return to the await keyword the event loop will switch to another function.
-     * 
-     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
-     * without switching context.
-     * 
-     * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
-     * run into some issues where the room is created but another request has deleted it before we can
-     * subscribe to it.
-     * All because the subscription was not atomic.
-     */
-    const afterSubscribeCallback = async (subscribed, cluster) => {
       if (cluster && subscribed) {
         global.kuzzle.emit('core:realtime:subscribe:after', roomId);
       }
-    };
 
-    const { channel } = await this.subscribeToRoom(roomId, request, afterSubscribeCallback);
-
-    return {
-      channel,
-      roomId,
-    };
+      return {
+        channel,
+        roomId,
+      };
+    } finally {
+      mutex.unlock();
+    }
   }
 
   /**
@@ -490,97 +470,101 @@ export class HotelClerk {
       connection: { id: connectionId }
     });
 
-    if (! connectionRooms) {
-      throw realtimeError.get('not_subscribed', connectionId, roomId);
-    }
+    const mutex = new AsyncMutex(roomId);
+    await mutex.lock();
 
-    const volatile = connectionRooms.getVolatile(roomId);
+    try {
+      if (! connectionRooms) {
+        throw realtimeError.get('not_subscribed', connectionId, roomId);
+      }
 
-    if (volatile === undefined) {
-      throw realtimeError.get('not_subscribed', connectionId, roomId);
-    }
+      const volatile = connectionRooms.getVolatile(roomId);
 
-    if (connectionRooms.count > 1) {
-      connectionRooms.removeRoom(roomId);
-    }
-    else {
-      this.subscriptions.delete(connectionId);
-    }
+      if (volatile === undefined) {
+        throw realtimeError.get('not_subscribed', connectionId, roomId);
+      }
 
-    const room = this.rooms.get(roomId);
+      if (connectionRooms.count > 1) {
+        connectionRooms.removeRoom(roomId);
+      }
+      else {
+        this.subscriptions.delete(connectionId);
+      }
 
-    if (! room) {
-      global.kuzzle.log.error(`Cannot remove room "${roomId}": room not found`);
-      throw realtimeError.get('room_not_found', roomId);
-    }
+      const room = this.rooms.get(roomId);
 
-    for (const channel of Object.keys(room.channels)) {
-      global.kuzzle.entryPoint.leaveChannel(channel, connectionId);
-    }
+      if (! room) {
+        global.kuzzle.log.error(`Cannot remove room "${roomId}": room not found`);
+        throw realtimeError.get('room_not_found', roomId);
+      }
 
-    room.removeConnection(connectionId);
+      for (const channel of Object.keys(room.channels)) {
+        global.kuzzle.entryPoint.leaveChannel(channel, connectionId);
+      }
 
-    let roomDeleted = false;
-    if (room.size === 0) {
-      await this.removeRoom(roomId);
-      roomDeleted = true;
-    }
+      room.removeConnection(connectionId);
 
-    // even if the room is deleted for this node, another one may need the
-    // notification
-    const request = new Request(
-      {
-        action: 'unsubscribe',
-        collection: room.collection,
-        controller: 'realtime',
-        index: room.index,
-        volatile,
-      },
-      requestContext);
+      if (room.size === 0) {
+        await this.removeRoom(roomId);
+      }
 
-    await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
+      // even if the room is deleted for this node, another one may need the
+      // notification
+      const request = new Request(
+        {
+          action: 'unsubscribe',
+          collection: room.collection,
+          controller: 'realtime',
+          index: room.index,
+          volatile,
+        },
+        requestContext);
 
-    // Do not send an unsubscription notification if the room has been destroyed
-    // because the other nodes already had destroyed it in the full state
-    if ( notify
-      && this.rooms.has(roomId)
-      && room.channels.size > 0
-      && ! roomDeleted
-    ) {
-      await global.kuzzle.pipe('core:realtime:unsubscribe:after', roomId);
+      await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
 
-      // @deprecated -- to be removed in next major version
-      await global.kuzzle.pipe('core:hotelClerk:removeRoomForCustomer', {
+      // Do not send an unsubscription notification if the room has been destroyed
+      // because the other nodes already had destroyed it in the full state
+      if ( notify
+        && this.rooms.has(roomId)
+        && room.channels.size > 0
+      ) {
+        await global.kuzzle.pipe('core:realtime:unsubscribe:after', roomId);
+
+        // @deprecated -- to be removed in next major version
+        await global.kuzzle.pipe('core:hotelClerk:removeRoomForCustomer', {
+          requestContext,
+          room: {
+            collection: room.collection,
+            id: roomId,
+            index: room.index,
+          },
+        });
+      }
+
+      const kuid = global.kuzzle.tokenManager.getKuidFromConnection(connectionId);
+
+      const subscription = new Subscription(
+        room.index,
+        room.collection,
+        undefined,
+        roomId,
+        connectionId,
+        { _id: kuid });
+
+      global.kuzzle.emit('core:realtime:user:unsubscribe:after', {
+        /* @deprecated */
         requestContext,
+        /* @deprecated */
         room: {
           collection: room.collection,
           id: roomId,
           index: room.index,
         },
+        subscription,
       });
+    } finally {
+      mutex.unlock();
     }
-
-    const kuid = global.kuzzle.tokenManager.getKuidFromConnection(connectionId);
-
-    const subscription = new Subscription(
-      room.index,
-      room.collection,
-      undefined,
-      roomId,
-      connectionId,
-      { _id: kuid });
-
-    global.kuzzle.emit('core:realtime:user:unsubscribe:after', {
-      /* @deprecated */
-      requestContext,
-      /* @deprecated */
-      room: {
-        collection: room.collection,
-        id: roomId,
-        index: room.index,
-      },
-      subscription,
-    });
   }
 
   /**
@@ -625,8 +609,7 @@ export class HotelClerk {
    */
   private async subscribeToRoom (
     roomId: string,
-    request: KuzzleRequest,
-    afterSubscribeCallback: (subscribed: boolean, cluster: boolean) => Promise<void>,
+    request: KuzzleRequest
   ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
@@ -655,8 +638,6 @@ export class HotelClerk {
     global.kuzzle.entryPoint.joinChannel(channel.name, connectionId);
 
     room.createChannel(channel);
-
-    await afterSubscribeCallback(subscribed, channel.cluster);
 
     await notifyPromise;
 
