@@ -3,12 +3,10 @@ const mutexes = new Map<string, boolean>();
 export class AsyncMutex {
   private _resource: string;
   private _acquired: boolean;
-  private _name: string;
 
-  constructor (resource: string, name?: string) {
+  constructor (resource: string) {
     this._resource = resource;
     this._acquired = false;
-    this._name = name;
   }
 
   /**
