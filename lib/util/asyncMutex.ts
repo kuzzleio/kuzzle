@@ -1,17 +1,14 @@
 const mutexes = new Map<string, boolean>();
 
-async function _yield (): Promise<void> {
-  // This function needs to remain empty
-  // Its only purpose is to let the event loop switch to another task
-}
-
 export class AsyncMutex {
   private _resource: string;
   private _acquired: boolean;
+  private _name: string;
 
-  constructor (resource: string) {
+  constructor (resource: string, name?: string) {
     this._resource = resource;
     this._acquired = false;
+    this._name = name;
   }
 
   /**
@@ -41,14 +38,26 @@ export class AsyncMutex {
       return false;
     }
       
-    while (mutexes.get(this._resource)) {
-      // Enters and return from an empty async function so the event loop can switch to another task
-      await _yield();
+    let resolve, reject;
+    const promise = new Promise<boolean>((res, rej) => {
+      resolve = res;
+      reject = rej;
+    })
+
+    const callback = () => {
+      if (mutexes.get(this._resource)) {
+        setImmediate(callback);
+        return;
+      }
+
+      this._acquired = true;
+      mutexes.set(this._resource, true);
+      resolve(true);
     }
 
-    this._acquired = true;
-    mutexes.set(this._resource, true);
-    return true;
+    callback();
+
+    return promise;
   }
 
   /**

@@ -244,12 +244,13 @@ export class HotelClerk {
       throw kerror.get('api', 'assert', 'koncorde_dsl_error', e.message);
     }
 
-    this.createRoom(normalized);
-
-    const mutex = new AsyncMutex(normalized.id);
+    const mutex = new AsyncMutex(normalized.id, 'subscribe');
     await mutex.lock();
 
+    
     try {
+      this.createRoom(normalized);
+
       const { channel, subscribed } = await this.subscribeToRoom(
         normalized.id,
         request);
@@ -304,7 +305,7 @@ export class HotelClerk {
   async join (request: KuzzleRequest): Promise<{ channel, roomId }> {
     const roomId = request.input.body.roomId;
 
-    const mutex = new AsyncMutex(roomId);
+    const mutex = new AsyncMutex(roomId, 'join');
     await mutex.lock();
 
     try {
@@ -415,7 +416,6 @@ export class HotelClerk {
     }
 
     connectionRooms.addRoom(roomId, volatile);
-
     this.rooms.get(roomId).addConnection(connectionId);
   }
 
@@ -470,7 +470,7 @@ export class HotelClerk {
       connection: { id: connectionId }
     });
 
-    const mutex = new AsyncMutex(roomId);
+    const mutex = new AsyncMutex(roomId, 'unsubscribe');
     await mutex.lock();
 
     try {
