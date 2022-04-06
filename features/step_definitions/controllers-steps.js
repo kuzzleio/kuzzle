@@ -197,7 +197,7 @@ Then('The raw response should match:', function (dataTable) {
   should(this.props.rawResponse).matchObject(expectedResult);
 });
 
-Then('I send a HTTP {string} request with:', async function (method, dataTable) {
+Then(/I send a (bad )?HTTP "(.*?)" request with:$/, async function (expectError, method, dataTable) {
   const body = this.parseObject(dataTable);
 
   const options = {
@@ -207,7 +207,7 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
     method,
     body: {
       jwt: this.sdk.jwt,
-      ...body
+      ...body,
     },
     headers: body.headers,
   };
@@ -222,7 +222,12 @@ Then('I send a HTTP {string} request with:', async function (method, dataTable) 
     this.props.rawResponse = response;
   }
   catch (err) {
-    this.props.error = err.error.error;
+    if (expectError) {
+      this.props.error = err.error.error;
+    }
+    else {
+      throw err;
+    }
   }
 });
 
