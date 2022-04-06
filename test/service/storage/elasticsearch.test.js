@@ -3536,7 +3536,7 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._mExecute = sinon.stub().resolves(mExecuteResult);
     });
 
-    it('should call _mExecute with formated documents', () => {
+    it('should call _mExecute with formated documents', async () => {
       const promise = elasticsearch.mCreateOrReplace(index, collection, documents);
 
       return promise
