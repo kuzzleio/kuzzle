@@ -121,7 +121,11 @@ describe('Test: hotelClerk.join', () => {
     }, context);
     const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});
-    sinon.stub(hotelClerk, 'subscribeToRoom').resolves(response);
+    
+    hotelClerk.subscribeToRoom = async (roomId, request, callback) => {
+      await callback(response.subscribed, response.cluster);
+      return response;
+    };
 
     await hotelClerk.join(joinRequest);
 
