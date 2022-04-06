@@ -245,7 +245,21 @@ export class HotelClerk {
 
     this.createRoom(normalized);
 
-    const afterSubscribe = async (subscribed) => {
+    /**
+     * You might wonder why in the world is there a callback here.
+     * The fact is that to prevent the event loop from switching to another function
+     * we need to keep descending the execution stack without returning await
+     * otherwise once we return to the await keyword the event loop will switch to another function.
+     * 
+     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
+     * and we execute it right after the subscription without return to the await keyword.
+     * 
+     * Since everything needs to be atomic (multiple operation done without interruption) otherwise we might
+     * run into some issues where the room is created but another request has deleted it before we can
+     * subscribe to it.
+     * All because the subscription was not atomic.
+     */
+    const afterSubscribeCallback = async (subscribed) => {
       if (subscribed) {
         global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
   
@@ -265,7 +279,7 @@ export class HotelClerk {
     const { channel } = await this.subscribeToRoom(
       normalized.id,
       request,
-      afterSubscribe);
+      afterSubscribeCallback);
 
     const subscription = new Subscription(
       index,
@@ -311,6 +325,20 @@ export class HotelClerk {
       this.createRoom(normalized);
     }
 
+    /**
+     * You might wonder why in the world is there a callback here.
+     * The fact is that to prevent the event loop from switching to another function
+     * we need to keep descending the execution stack without returning await
+     * otherwise once we return to the await keyword the event loop will switch to another function.
+     * 
+     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
+     * and we execute it right after the subscription without return to the await keyword.
+     * 
+     * Since everything needs to be atomic (multiple operation done without interruption) otherwise we might
+     * run into some issues where the room is created but another request has deleted it before we can
+     * subscribe to it.
+     * All because the subscription was not atomic.
+     */
     const afterSubscribeCallback = async (subscribed, cluster) => {
       if (cluster && subscribed) {
         global.kuzzle.emit('core:realtime:subscribe:after', roomId);
@@ -596,7 +624,7 @@ export class HotelClerk {
   private async subscribeToRoom (
     roomId: string,
     request: KuzzleRequest,
-    afterSubscribeCallback: any,
+    afterSubscribeCallback: (subscribed: boolean, cluster: boolean) => Promise<void>,
   ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;

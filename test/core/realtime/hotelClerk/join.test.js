@@ -122,7 +122,7 @@ describe('Test: hotelClerk.join', () => {
     const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});
     
-    hotelClerk.subscribeToRoom = async (roomId, request, callback) => {
+    hotelClerk.subscribeToRoom = async (_, __, callback) => {
       await callback(response.subscribed, response.cluster);
       return response;
     };
