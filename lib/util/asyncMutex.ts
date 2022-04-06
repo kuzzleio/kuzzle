@@ -38,22 +38,21 @@ export class AsyncMutex {
       return false;
     }
       
-    let resolve, reject;
-    const promise = new Promise<boolean>((res, rej) => {
+    let resolve;
+    const promise = new Promise<boolean>(res => {
       resolve = res;
-      reject = rej;
-    })
+    });
 
     const callback = () => {
       if (mutexes.get(this._resource)) {
-        setImmediate(callback);
+        setImmediate(callback); // Try again the next tick of the event loop
         return;
       }
 
       this._acquired = true;
       mutexes.set(this._resource, true);
       resolve(true);
-    }
+    };
 
     callback();
 

@@ -284,7 +284,8 @@ export class HotelClerk {
         channel,
         roomId: normalized.id,
       };
-    } finally {
+    }
+    finally {
       mutex.unlock();
     }
   }
@@ -331,7 +332,8 @@ export class HotelClerk {
         channel,
         roomId,
       };
-    } finally {
+    }
+    finally {
       mutex.unlock();
     }
   }
@@ -562,7 +564,8 @@ export class HotelClerk {
         },
         subscription,
       });
-    } finally {
+    }
+    finally {
       mutex.unlock();
     }
   }
