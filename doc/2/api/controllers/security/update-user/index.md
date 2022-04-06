@@ -71,8 +71,7 @@ Returns the update user kuid and version number.
     "_source": {
       "profileIds": ["<profileId>"],
       "fullname": "Walter Smith"
-    },
-    "_version": 2
+    }
   }
 }
 ```
