@@ -3539,31 +3539,30 @@ describe('Test: ElasticSearch service', () => {
     it('should call _mExecute with formated documents and source flag', async () => {
       const promise = elasticsearch.mCreateOrReplace(index, collection, documents, { source: false });
 
-      return promise
-        .then(result => {
-          const esRequest = {
-            index: alias,
-            body: [
-              { index: { _index: alias, _id: 'mehry' } },
-              { city: 'Kathmandu', ...kuzzleMeta },
-              { index: { _index: alias, _id: 'liia' } },
-              { city: 'Ho Chi Minh City', ...kuzzleMeta }
-            ],
-            refresh: undefined,
-            timeout: undefined
-          };
-          const toImport = [
-            { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
-            { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
-          ];
-          should(elasticsearch._mExecute).be.calledWithMatch(
-            esRequest,
-            toImport,
-            [],
-            { source: false });
+      const result = await promise;
 
-          should(result).match(mExecuteResult);
-        });
+      const esRequest = {
+        index: alias,
+        body: [
+          { index: { _index: alias, _id: 'mehry' } },
+          { city: 'Kathmandu', ...kuzzleMeta },
+          { index: { _index: alias, _id: 'liia' } },
+          { city: 'Ho Chi Minh City', ...kuzzleMeta }
+        ],
+        refresh: undefined,
+        timeout: undefined
+      };
+      const toImport = [
+        { _id: 'mehry', _source: { city: 'Kathmandu', ...kuzzleMeta } },
+        { _id: 'liia', _source: { city: 'Ho Chi Minh City', ...kuzzleMeta } }
+      ];
+      should(elasticsearch._mExecute).be.calledWithMatch(
+        esRequest,
+        toImport,
+        [],
+        { source: false });
+
+      should(result).match(mExecuteResult);
     });
 
     it('should call _mExecute with formated documents', () => {
