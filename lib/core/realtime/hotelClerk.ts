@@ -260,14 +260,12 @@ export class HotelClerk {
           roomId: normalized.id,
         });
       }
-    }
+    };
 
     const { channel } = await this.subscribeToRoom(
       normalized.id,
       request,
       afterSubscribe);
-
-
 
     const subscription = new Subscription(
       index,
@@ -598,7 +596,7 @@ export class HotelClerk {
   private async subscribeToRoom (
     roomId: string,
     request: KuzzleRequest,
-    afterSubscribeCallback: Function,
+    afterSubscribeCallback: any,
   ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
