@@ -207,6 +207,80 @@ Feature: Document Controller
     And I refresh the collection
     Then The document "document-1" should not exist
 
+  # document:mExists ============================================================
+
+  @mappings
+  Scenario: Check multiple document existence
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { ids: [ "document-1", "document-2" ] }  |
+    Then I should receive a "successes" array matching:
+      | "document-1" |
+      | "document-2" |
+    And I should receive a empty "errors" array
+
+  @mappings
+  Scenario: Get multiple documents with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                                     |
+      | collection | "yellow-taxi"                                       |
+      | strict     | false                                               |
+      | body       | { ids: [ "document-1", "214284", "document-42" ] }  |
+    Then I should receive a "successes" array matching:
+      | "document-1" |
+    And I should receive a "errors" array matching:
+      | "214284"      |
+      | "document-42" |
+  
+  @mappings
+  Scenario: Get multiple documents with success and with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+      | "document-3" | { "name": "document3" } |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                                                        |
+      | collection | "yellow-taxi"                                                          |
+      | strict     | false                                                                  |
+      | body       | { ids: [ "document-1", "document-2", "document-42", "document-21" ] }  |
+    Then I should receive a "successes" array matching:
+      | "document-1" |
+      | "document-2" |
+    And I should receive a "errors" array matching:
+      | "document-42" |
+      | "document-21" |
+
+  @mappings
+  Scenario: Get multiple documents in strict mode with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+      | "document-2" | { "name": "document2" } |
+    When I execute the action "document":"mExists" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { ids: [ "document-1", "document-42" ] } |
+    Then I should receive an error matching:
+      | id     | "api.process.incomplete_multiple_request" |
+
   # document:export ============================================================
 
   @mappings
