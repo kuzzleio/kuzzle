@@ -41,7 +41,7 @@ class KuzzleWorld {
     return this._protocol;
   }
 
-  parseObject(dataTable) {
+  parseObject (dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
       throw new Error('Argument is not a dataTable');
     }
@@ -50,22 +50,16 @@ class KuzzleWorld {
 
     // Copied from kuzzle iot
     for (const [path, value] of Object.entries(content)) {
-      if (value.includes('_AGO_')) {
-        // format: "_5m_AGO_"
-        const timeAgo = ms(value.split('_')[1]);
-
-        _.set(content, path.split('.'), this.props.now - timeAgo);
-      }
-      else {
-        content[path] = eval(`const o = ${content[path]}; o`);  // Duplicate for legacy test
-        _.set(content, path.split('.'), eval(`var o = ${value}; o`));
-      }
+      // eslint-disable-next-line no-eval
+      content[path] = eval(`const o = ${content[path]}; o`); // Duplicate for legacy test
+      // eslint-disable-next-line no-eval
+      _.set(content, path.split('.'), eval(`var o = ${value}; o`));
     }
 
     return content;
   }
 
-  parseObjectArray(dataTable) {
+  parseObjectArray (dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
       throw new Error('Argument is not a dataTable');
     }
@@ -81,8 +75,10 @@ class KuzzleWorld {
 
       for (let j = 0; j < keys.length; j++) {
         if (rawObject[j] !== '-') {
+          // eslint-disable-next-line no-eval
           _.set(object, keys[j], eval(`var o = ${rawObject[j]}; o`));
-          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`);  // Duplicate for legacy test
+          // eslint-disable-next-line no-eval
+          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`); // Duplicate for legacy test
         }
       }
 
