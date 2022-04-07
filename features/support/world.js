@@ -2,6 +2,7 @@
 
 const { setDefaultTimeout, setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
+const _ = require('lodash');
 
 const config = require('../../lib/config');
 
@@ -40,37 +41,48 @@ class KuzzleWorld {
     return this._protocol;
   }
 
-  parseObject (dataTable) {
+  parseObject(dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
       throw new Error('Argument is not a dataTable');
     }
 
     const content = dataTable.rowsHash();
 
-    for (const key of Object.keys(content)) {
-      // eslint-disable-next-line no-eval
-      content[key] = eval(`const o = ${content[key]}; o`);
+    // Copied from kuzzle iot
+    for (const [path, value] of Object.entries(content)) {
+      if (value.includes('_AGO_')) {
+        // format: "_5m_AGO_"
+        const timeAgo = ms(value.split('_')[1]);
+
+        _.set(content, path.split('.'), this.props.now - timeAgo);
+      }
+      else {
+        content[path] = eval(`const o = ${content[path]}; o`);  // Duplicate for legacy test
+        _.set(content, path.split('.'), eval(`var o = ${value}; o`));
+      }
     }
 
     return content;
   }
 
-  parseObjectArray (dataTable) {
+  parseObjectArray(dataTable) {
     if (typeof dataTable.rowsHash !== 'function') {
       throw new Error('Argument is not a dataTable');
     }
 
-    const objectArray = [];
-    const keys = dataTable.rawTable[0];
+    const
+      objectArray = [],
+      keys = dataTable.rawTable[0];
 
     for (let i = 1; i < dataTable.rawTable.length; i++) {
-      const object = {};
-      const rawObject = dataTable.rawTable[i];
+      const
+        object = {},
+        rawObject = dataTable.rawTable[i];
 
       for (let j = 0; j < keys.length; j++) {
         if (rawObject[j] !== '-') {
-          // eslint-disable-next-line no-eval
-          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`);
+          _.set(object, keys[j], eval(`var o = ${rawObject[j]}; o`));
+          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`);  // Duplicate for legacy test
         }
       }
 
