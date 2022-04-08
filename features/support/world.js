@@ -48,12 +48,9 @@ class KuzzleWorld {
 
     const content = dataTable.rowsHash();
 
-    // Copied from kuzzle iot
-    for (const [path, value] of Object.entries(content)) {
-      // eslint-disable-next-line no-eval
-      content[path] = eval(`const o = ${content[path]}; o`); // Duplicate for legacy test
-      // eslint-disable-next-line no-eval
-      _.set(content, path.split('.'), eval(`var o = ${value}; o`));
+    for (const key of Object.keys(content)) {
+    // eslint-disable-next-line no-eval
+      content[key] = eval(`const o = ${content[key]}; o`);
     }
 
     return content;
@@ -64,21 +61,17 @@ class KuzzleWorld {
       throw new Error('Argument is not a dataTable');
     }
 
-    const
-      objectArray = [],
-      keys = dataTable.rawTable[0];
+    const objectArray = [];
+    const keys = dataTable.rawTable[0];
 
     for (let i = 1; i < dataTable.rawTable.length; i++) {
-      const
-        object = {},
-        rawObject = dataTable.rawTable[i];
+      const object = {};
+      const rawObject = dataTable.rawTable[i];
 
       for (let j = 0; j < keys.length; j++) {
         if (rawObject[j] !== '-') {
           // eslint-disable-next-line no-eval
-          _.set(object, keys[j], eval(`var o = ${rawObject[j]}; o`));
-          // eslint-disable-next-line no-eval
-          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`); // Duplicate for legacy test
+          object[keys[j]] = eval(`const o = ${rawObject[j]}; o`);
         }
       }
 
