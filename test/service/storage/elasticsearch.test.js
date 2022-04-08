@@ -2616,20 +2616,21 @@ describe('Test: ElasticSearch service', () => {
 
       elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
 
-      elasticsearch._client.indices.getSettings.resolves( {
+      elasticsearch._client.indices.getSettings.resolves({
         body: {
-          '&nyc-open-data.yellow-taxi' : {
+          '&nyc-open-data.yellow-taxi': {
             settings: {
               analysis: {
-                analyzers : {
+                analyzers: {
                   custom_analyzer: {
-                    type : 'simple'
+                    type: 'simple'
                   }
                 }
               }
             }
           }
-        }});
+        }
+      });
       sinon.stub(elasticsearch, '_getIndice').resolves(indice);
     });
 
@@ -2656,9 +2657,9 @@ describe('Test: ElasticSearch service', () => {
           },
           settings: {
             analysis: {
-              analyzers : {
+              analyzers: {
                 custom_analyzer: {
-                  type : 'simple'
+                  type: 'simple'
                 }
               }
             }
