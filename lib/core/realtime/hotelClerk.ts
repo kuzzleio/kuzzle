@@ -206,7 +206,7 @@ export class HotelClerk {
    *         has a different name with same filter) or if there is an error
    *         during room creation
    */
-  async subscribe (request: KuzzleRequest): Promise<{ channel: string, roomId: string }> {
+  async subscribe (request: KuzzleRequest): Promise<{ channel: string; roomId: string }> {
     const { index, collection } = request.input.resource;
 
     if (! index) {
@@ -293,7 +293,7 @@ export class HotelClerk {
    * The room may exists on another cluster node, if it's the case, the normalized
    * filters will be fetched from the cluster.
    */
-  async join (request: KuzzleRequest): Promise<{ channel, roomId }> {
+  async join (request: KuzzleRequest): Promise<{ channel; roomId }> {
     const roomId = request.input.body.roomId;
 
     if (! this.rooms.has(roomId)) {
@@ -548,7 +548,7 @@ export class HotelClerk {
   /**
    * Returns inner metrics from the HotelClerk
    */
-  metrics (): {rooms: number, subscriptions: number} {
+  metrics (): {rooms: number; subscriptions: number} {
     return {
       rooms: this.roomsCount,
       subscriptions: this.subscriptions.size,
@@ -588,7 +588,7 @@ export class HotelClerk {
   private async subscribeToRoom (
     roomId: string,
     request: KuzzleRequest
-  ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
+  ): Promise<{ channel: string; cluster: boolean; subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
 

@@ -14,7 +14,7 @@
 export type RoomList = {
   [index: string]: {
     [collection: string]: {
-      [roomId: string]: number
-    }
-  }
+      [roomId: string]: number;
+    };
+  };
 };

@@ -231,7 +231,7 @@ export class KuzzleRequest {
       /**
        * HTTP status code
        */
-      status?: number
+      status?: number;
       /**
        * additional response protocol headers
        */
@@ -292,7 +292,7 @@ export class KuzzleRequest {
    * across the network and then used to instantiate a new Request
    * object
    */
-  serialize (): { data: JSONObject, options: JSONObject } {
+  serialize (): { data: JSONObject; options: JSONObject } {
     const serialized = {
       data: {
         _id: this[_input].args._id,
@@ -633,7 +633,7 @@ export class KuzzleRequest {
   /**
    * Returns the index and collection specified in the request
    */
-  getIndexAndCollection (): { index: string, collection: string } {
+  getIndexAndCollection (): { index: string; collection: string } {
     if (! this.input.args.index) {
       throw assertionError.get('missing_argument', 'index');
     }
@@ -678,8 +678,8 @@ export class KuzzleRequest {
    */
   getId (
     options: {
-      ifMissing?: 'error' | 'generate' | 'ignore',
-      generator?: () => string,
+      ifMissing?: 'error' | 'generate' | 'ignore';
+      generator?: () => string;
     } = { generator: uuid.v4, ifMissing: 'error' }
   ): string {
     const id = this.input.args._id;
@@ -751,11 +751,11 @@ export class KuzzleRequest {
    * Returns the search params.
    */
   getSearchParams (): {
-    from: number,
-    query: JSONObject,
-    scrollTTL: string,
-    searchBody: JSONObject,
-    size: number,
+    from: number;
+    query: JSONObject;
+    scrollTTL: string;
+    searchBody: JSONObject;
+    size: number;
     } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
