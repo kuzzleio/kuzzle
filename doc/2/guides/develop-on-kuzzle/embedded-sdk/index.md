@@ -39,6 +39,10 @@ The behavior of the [realtime:subscribe](/sdk/js/7/controllers/realtime) method 
 Learn more about [Backend Realtime Subscriptions](/core/2/guides/develop-on-kuzzle/embedded-sdk#backend-realtime-subscriptions)
 :::
 
+::: warning
+The [auth controller](/sdk/js/7/controllers/auth/) is deprecated in the embedded sdk. [User impersonation](/core/2/guides/develop-on-kuzzle/embedded-sdk#user-impersonation) is preferred.
+:::
+
 **Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
 ```js
 // After application startup
