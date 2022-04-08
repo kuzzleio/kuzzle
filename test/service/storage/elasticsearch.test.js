@@ -2733,6 +2733,21 @@ describe('Test: ElasticSearch service', () => {
       };
 
       elasticsearch.getMapping = sinon.stub().resolves(existingMapping);
+
+      elasticsearch._client.indices.getSettings.resolves( {
+        body: {
+          '&nyc-open-data.yellow-taxi' : {
+            settings: {
+              analysis: {
+                analyzers : {
+                  custom_analyzer: {
+                    type : 'simple'
+                  }
+                }
+              }
+            }
+          }
+        }});
       sinon.stub(elasticsearch, '_getIndice').resolves(indice);
     });
 
@@ -2740,30 +2755,38 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch._getIndice.restore();
     });
 
-    it('should delete and then create the collection with the same mapping', () => {
-      const promise = elasticsearch.truncateCollection(index, collection);
+    it('should delete and then create the collection with the same mapping', async () => {
+      const result = await elasticsearch.truncateCollection(index, collection);
 
-      return promise
-        .then(result => {
-          should(elasticsearch.getMapping).be.calledWith(index, collection);
-          should(elasticsearch._client.indices.delete).be.calledWithMatch({
-            index: indice
-          });
-          should(elasticsearch._client.indices.create).be.calledWithMatch({
-            index: indice,
-            body: {
-              aliases: { [alias]: {} },
-              mappings: {
-                dynamic: 'false',
-                properties: {
-                  name: { type: 'keyword' }
+      should(elasticsearch.getMapping).be.calledWith(index, collection);
+      should(elasticsearch._client.indices.delete).be.calledWithMatch({
+        index: indice
+      });
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: indice,
+        body: {
+          aliases: { [alias]: {} },
+          mappings: {
+            dynamic: 'false',
+            properties: {
+              name: { type: 'keyword' }
+            }
+          },
+          settings: {
+            analysis: {
+              analyzers : {
+                custom_analyzer: {
+                  type : 'simple'
                 }
               }
             }
-          });
-
-          should(result).be.null();
-        });
+          }
+        }
+      });
+      should(elasticsearch._client.indices.getSettings).be.calledWithMatch({
+        index: indice
+      });
+      should(result).be.null();
     });
 
     it('should return a rejected promise if client fails', () => {
