@@ -2,7 +2,6 @@
 
 const { setDefaultTimeout, setWorldConstructor } = require('cucumber');
 const { Kuzzle, WebSocket, Http } = require('kuzzle-sdk');
-const _ = require('lodash');
 
 const config = require('../../lib/config');
 
