@@ -26,6 +26,7 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
+  KuzzleAbstractProtocol,
 } from 'kuzzle-sdk';
 
 import { RequestPayload, ResponsePayload } from '../../../types';
@@ -94,7 +95,8 @@ export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
   constructor () {
-    super(new FunnelProtocol(), { autoResubscribe: false });
+    // FunnelProtocol is not technically a valid SDK protocol
+    super(new FunnelProtocol() as any, { autoResubscribe: false });
   }
 
   /**

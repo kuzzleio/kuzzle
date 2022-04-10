@@ -42,6 +42,10 @@ export class FunnelProtocol extends KuzzleEventEmitter {
     });
   }
 
+  isReady () {
+    return true;
+  }
+
   /**
    *  Hydrate the user and execute SDK query
    */
