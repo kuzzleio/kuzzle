@@ -26,7 +26,6 @@ import { JSONObject } from 'kuzzle-sdk';
 
 import { domains as internalDomains } from './codes';
 import * as errors from './errors';
-import { hilightUserCode } from '../util/stackTrace';
 import { KuzzleError } from './errors';
 import { ErrorDefinition, ErrorDomains } from '../types';
 
