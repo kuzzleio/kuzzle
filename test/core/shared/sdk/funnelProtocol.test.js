@@ -65,28 +65,26 @@ describe('Test: sdk/funnelProtocol', () => {
         .resolves(exampleUser);
     });
 
-    it('should call executePluginRequest with the constructed request', () => {
-      return funnelProtocol.query(request)
-        .then(() => {
-          should(kuzzle.funnel.executePluginRequest).be.calledOnce();
+    it('should call executePluginRequest with the constructed request', async () => {
+      await funnelProtocol.query(request);
 
-          const req = kuzzle.funnel.executePluginRequest.firstCall.args[0];
-          should(req).be.an.instanceOf(Request);
-          should(req.input.controller).be.equal('foo');
-          should(req.input.action).be.equal('bar');
-          should(req.context.connection.protocol).be.equal('funnel');
-          should(req.context.connection.id).be.eql('connection-id');
-        });
+      should(kuzzle.funnel.executePluginRequest).be.calledOnce();
+
+      const req = kuzzle.funnel.executePluginRequest.firstCall.args[0];
+      should(req).be.an.instanceOf(Request);
+      should(req.input.controller).be.equal('foo');
+      should(req.input.action).be.equal('bar');
+      should(req.context.connection.protocol).be.equal('funnel');
+      should(req.context.connection.id).be.eql('connection-id');
     });
 
-    it('should return the result in the good format', () => {
-      return funnelProtocol.query(request)
-        .then(res => {
-          should(res.result).be.exactly('sdk result');
-        });
+    it('should return the return of executePluginRequest', async () => {
+      const res = await funnelProtocol.query(request);
+
+      should(res).be.exactly('sdk result');
     });
 
-    it('should execute the request with the provided request.__kuid__ if present', () => {
+    it('should execute the request with the provided request.__kuid__ if present', async () => {
       const customUserRequest = {
         controller: 'foo',
         action: 'bar',
@@ -101,12 +99,11 @@ describe('Test: sdk/funnelProtocol', () => {
         .resolves(exampleUser);
       exampleUser.isActionAllowed = sinon.stub().resolves(true);
 
-      return funnelProtocol.query(customUserRequest)
-        .then(response => {
-          should(kuzzle.ask.withArgs('core:security:user:get', customUserRequest.__kuid__))
-            .be.calledOnce();
-          should(response.result.context.user._id).be.eql(customUserRequest.__kuid__);
-        });
+      const response = await funnelProtocol.query(customUserRequest);
+
+      should(kuzzle.ask.withArgs('core:security:user:get', customUserRequest.__kuid__))
+        .be.calledOnce();
+      should(response.context.user._id).be.eql(customUserRequest.__kuid__);
     });
 
     it('should throw if the provided User is not allowed to execute a request', async () => {
