@@ -163,20 +163,6 @@ app.errors.register('app', 'api', 'custom', {
   message: 'Custom %s error',
 });
 
-app.import.mappings({
-  index: {
-    collection: {
-      mappings: {
-        properties: {
-          name: { type: 'keyword' },
-          fullName: { type: 'keyword' },
-          age: { type: 'keyword' },
-        }
-      }
-    }
-  }
-});
-
 app.controller.register('tests', {
   actions: {
     customError: {
