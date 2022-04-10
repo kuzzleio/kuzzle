@@ -86,6 +86,8 @@ export class FunnelProtocol extends KuzzleEventEmitter {
         requestOptions.user._id);
     }
 
-    return global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
+    const result = await global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
+
+    return { result };
   }
 }
