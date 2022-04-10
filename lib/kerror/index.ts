@@ -130,8 +130,7 @@ function cleanStackTrace (error: KuzzleError): void {
 
       // filter all lines related to the kerror object
       return ! line.includes(currentFileName);
-    })
-    .map(hilightUserCode);
+    });
 
   // insert a deletion message in place of the new error instantiation line
   newStack[messageLength] = '      [...Kuzzle internal calls deleted...]';
