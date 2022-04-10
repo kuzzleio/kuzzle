@@ -29,7 +29,7 @@ import {
 } from 'kuzzle-sdk';
 
 import { RequestPayload, ResponsePayload } from '../../../types';
-import FunnelProtocol from './funnelProtocol';
+import { FunnelProtocol } from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import * as kerror from '../../../kerror';
 import ImpersonatedSDK from './impersonatedSdk';

@@ -19,19 +19,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { KuzzleEventEmitter } from 'kuzzle-sdk';
 
-const { KuzzleEventEmitter } = require('kuzzle-sdk');
+import { RequestPayload } from '../../../types';
+import { Request } from '../../../api/request';
+import * as kerror from '../../../kerror';
 
-const { Request } = require('../../../api/request');
-const kerror = require('../../../kerror');
+export class FunnelProtocol extends KuzzleEventEmitter {
+  private id = 'funnel';
+  private connectionId: string = null;
 
-class FunnelProtocol extends KuzzleEventEmitter {
   constructor () {
     super();
-
-    this.id = 'funnel';
-    this.connectionId = null;
 
     /**
      * Realtime notifications are sent by the InternalProtocol
@@ -43,14 +42,10 @@ class FunnelProtocol extends KuzzleEventEmitter {
     });
   }
 
-  isReady () {
-    return true;
-  }
-
   /**
    *  Hydrate the user and execute SDK query
    */
-  async query (request) {
+  async query (request: RequestPayload) {
     if (! this.connectionId) {
       this.connectionId = await global.kuzzle.ask('core:network:internal:connectionId:get');
     }
@@ -74,7 +69,8 @@ class FunnelProtocol extends KuzzleEventEmitter {
 
     const kuzzleRequest = new Request(request, requestOptions);
 
-    if (requestOptions.user && request.__checkRights__
+    if ( requestOptions.user
+      && request.__checkRights__
       && ! await requestOptions.user.isActionAllowed(kuzzleRequest)
     ) {
       throw kerror.get(
@@ -89,5 +85,3 @@ class FunnelProtocol extends KuzzleEventEmitter {
     return global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
   }
 }
-
-module.exports = FunnelProtocol;
