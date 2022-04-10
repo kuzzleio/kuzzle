@@ -26,7 +26,6 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
-  KuzzleAbstractProtocol,
 } from 'kuzzle-sdk';
 
 import { RequestPayload, ResponsePayload } from '../../../types';
