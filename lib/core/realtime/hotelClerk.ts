@@ -627,7 +627,7 @@ export class HotelClerk {
     roomId: string,
     request: KuzzleRequest,
     afterSubscribeCallback: (subscribed: boolean, cluster: boolean) => Promise<void>,
-  ): Promise<{ channel: string, cluster: boolean, subscribed: boolean }> {
+  ): Promise<{ channel: string; cluster: boolean; subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
 
