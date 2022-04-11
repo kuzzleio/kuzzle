@@ -251,14 +251,14 @@ export class HotelClerk {
      * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
      * 
-     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
-     * without switching context.
-     * 
      * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
+     * 
+     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
+     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
+     * without switching context.
      */
     const afterSubscribeCallback = async (subscribed) => {
       if (subscribed) {
@@ -332,14 +332,14 @@ export class HotelClerk {
      * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
      * 
-     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
-     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
-     * without switching context.
-     * 
      * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
+     * 
+     * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
+     * and we execute it right after the subscription this way we keep descending the execution stack without returning and
+     * without switching context.
      */
     const afterSubscribeCallback = async (subscribed, cluster) => {
       if (cluster && subscribed) {
@@ -520,6 +520,10 @@ export class HotelClerk {
 
     room.removeConnection(connectionId);
 
+    // Used to know whether the room has been deleted or not during the unsubscription
+    // We need to store this information for later since we cannot checks if the room exists or has more than 0 subscriber
+    // later because the room might have been recreated by the time we need to send the notification
+    // all because of the `await this.removeRoom(roomId)`.
     let roomDeleted = false;
     if (room.size === 0) {
       await this.removeRoom(roomId);
