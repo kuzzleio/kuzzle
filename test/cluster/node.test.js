@@ -425,6 +425,7 @@ describe('#Cluster Node', () => {
   describe('#event listeners', () => {
     beforeEach(() => {
       kuzzle.emit.restore();
+      kuzzle.call.restore();
 
       sinon.stub(node, 'handshake').resolves();
       sinon.stub(node, 'countActiveNodes').returns(3);
