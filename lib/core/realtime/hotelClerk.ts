@@ -262,7 +262,7 @@ export class HotelClerk {
      */
     const afterSubscribeCallback = async (subscribed) => {
       if (subscribed) {
-        global.kuzzle.emit('core:realtime:subscribe:after', normalized.id);
+        global.kuzzle.call('core:realtime:subscribe:after', normalized.id);
   
         // @deprecated -- to be removed in next major version
         // we have to recreate the old "diff" object
@@ -343,7 +343,7 @@ export class HotelClerk {
      */
     const afterSubscribeCallback = async (subscribed, cluster) => {
       if (cluster && subscribed) {
-        global.kuzzle.emit('core:realtime:subscribe:after', roomId);
+        global.kuzzle.call('core:realtime:subscribe:after', roomId);
       }
     };
 
@@ -460,7 +460,7 @@ export class HotelClerk {
 
     this.koncorde.store(normalized);
 
-    global.kuzzle.emit('core:realtime:room:create:after', normalized);
+    global.kuzzle.call('core:realtime:room:create:after', normalized);
 
     // @deprecated -- to be removed in the next major version of kuzzle
     global.kuzzle.emit('room:new', { collection, index, roomId });
