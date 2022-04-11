@@ -19,20 +19,18 @@
  * limitations under the License.
  */
 
-'use strict';
+import { KuzzleEventEmitter } from 'kuzzle-sdk';
 
-const { KuzzleEventEmitter } = require('kuzzle-sdk');
+import { RequestPayload } from '../../../types';
+import { Request } from '../../../api/request';
+import * as kerror from '../../../kerror';
 
-const { Request } = require('../../../api/request');
-const kerror = require('../../../kerror');
-const { hilightUserCode } = require('../../../util/stackTrace');
+export class FunnelProtocol extends KuzzleEventEmitter {
+  private id = 'funnel';
+  private connectionId: string = null;
 
-class FunnelProtocol extends KuzzleEventEmitter {
   constructor () {
     super();
-
-    this.id = 'funnel';
-    this.connectionId = null;
 
     /**
      * Realtime notifications are sent by the InternalProtocol
@@ -51,7 +49,7 @@ class FunnelProtocol extends KuzzleEventEmitter {
   /**
    *  Hydrate the user and execute SDK query
    */
-  async query (request) {
+  async query (request: RequestPayload) {
     if (! this.connectionId) {
       this.connectionId = await global.kuzzle.ask('core:network:internal:connectionId:get');
     }
@@ -75,31 +73,21 @@ class FunnelProtocol extends KuzzleEventEmitter {
 
     const kuzzleRequest = new Request(request, requestOptions);
 
-    try {
-      if (requestOptions.user && request.__checkRights__
-        && ! await requestOptions.user.isActionAllowed(kuzzleRequest)
-      ) {
-        throw kerror.get(
-          'security',
-          'rights',
-          'forbidden',
-          kuzzleRequest.input.controller,
-          kuzzleRequest.input.action,
-          requestOptions.user._id);
-      }
-
-      const result = await global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
-
-      return { result };
+    if ( requestOptions.user
+      && request.__checkRights__
+      && ! await requestOptions.user.isActionAllowed(kuzzleRequest)
+    ) {
+      throw kerror.get(
+        'security',
+        'rights',
+        'forbidden',
+        kuzzleRequest.input.controller,
+        kuzzleRequest.input.action,
+        requestOptions.user._id);
     }
-    catch (error) {
-      if (error.stack) {
-        error.stack = error.stack.split('\n').map(hilightUserCode).join('\n');
-      }
 
-      throw error;
-    }
+    const result = await global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
+
+    return { result };
   }
 }
-
-module.exports = FunnelProtocol;

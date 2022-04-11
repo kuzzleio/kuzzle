@@ -29,7 +29,7 @@ import {
 } from 'kuzzle-sdk';
 
 import { RequestPayload, ResponsePayload } from '../../../types';
-import FunnelProtocol from './funnelProtocol';
+import { FunnelProtocol } from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import * as kerror from '../../../kerror';
 import ImpersonatedSDK from './impersonatedSdk';
@@ -94,7 +94,8 @@ export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
   constructor () {
-    super(new FunnelProtocol(), { autoResubscribe: false });
+    // FunnelProtocol is not technically a valid SDK protocol
+    super(new FunnelProtocol() as any, { autoResubscribe: false });
   }
 
   /**
