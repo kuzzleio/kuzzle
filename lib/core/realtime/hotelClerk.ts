@@ -538,8 +538,6 @@ export class HotelClerk {
       },
       requestContext);
 
-    await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
-
     // Do not send an unsubscription notification if the room has been destroyed
     // because the other nodes already had destroyed it in the full state
     if ( notify
@@ -547,7 +545,7 @@ export class HotelClerk {
       && room.channels.size > 0
       && ! roomDeleted
     ) {
-      await global.kuzzle.pipe('core:realtime:unsubscribe:after', roomId);
+      global.kuzzle.call('core:realtime:unsubscribe:after', roomId);
 
       // @deprecated -- to be removed in next major version
       await global.kuzzle.pipe('core:hotelClerk:removeRoomForCustomer', {
@@ -559,6 +557,8 @@ export class HotelClerk {
         },
       });
     }
+
+    await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
 
     const kuid = global.kuzzle.tokenManager.getKuidFromConnection(connectionId);
 
