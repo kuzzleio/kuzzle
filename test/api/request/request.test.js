@@ -802,7 +802,7 @@ describe('#Request', () => {
 
         it('extracts the birthdate in timestamp format', () => {
           should(request.getDate('birthDate', { format: 'timestamp' }))
-            .exactly(1649628000000);
+            .exactly(1649635200000);
         });
 
         it('extracts the birthdate in ISO8061 format', () => {
