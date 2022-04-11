@@ -386,7 +386,7 @@ describe('#KuzzleEventEmitter', () => {
     });
 
     it('should reject if no answerer listens to an event', async () => {
-      const stub = async () => { emitter.call('foo:bar') };
+      const stub = async () => emitter.call('foo:bar');
       await should(stub()).rejectedWith(KuzzleInternalError, {
         id: 'core.fatal.assertion_failed'
       });
