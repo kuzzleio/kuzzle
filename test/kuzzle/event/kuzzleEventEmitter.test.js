@@ -370,6 +370,38 @@ describe('#KuzzleEventEmitter', () => {
     });
   });
 
+  describe('#call', () => {
+    it('should throw if a non-function answerer is submitted', () => {
+      [{}, [], null, undefined, 123, false, true, 'foo'].forEach(fn => {
+        should(() => emitter.onCall('foo:bar', fn)).throw(
+          `Cannot register callback for event "foo:bar": "${fn}" is not a function`);
+      });
+    });
+
+    it('should throw if an answerer has already been registered on the same event', () => {
+      emitter.onCall('foo:bar', sinon.stub());
+
+      should(() => emitter.onCall('foo:bar', sinon.stub())).throw(
+        'Cannot register callback for event "foo:bar": a callback has already been registered');
+    });
+
+    it('should reject if no answerer listens to an event', async () => {
+      const stub = async () => { emitter.call('foo:bar') };
+      await should(stub()).rejectedWith(KuzzleInternalError, {
+        id: 'core.fatal.assertion_failed'
+      });
+    });
+
+    it('should resolve to the answerer result when one is registered', () => {
+      const answerer = sinon.stub().returns('foobar');
+
+      emitter.onCall('foo:bar', answerer);
+
+      should(emitter.call('foo:bar', 'foo', 'bar')).eql('foobar');
+      should(answerer).calledWith('foo', 'bar');
+    });
+  });
+
   describe('registerPluginPipe', () => {
     it('should register the pipe handler and pipe description', () => {
       const handler = () => {};
