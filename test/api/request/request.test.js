@@ -718,7 +718,7 @@ describe('#Request', () => {
           },
           year: '5270',
           defeatedBugsAt: 11,
-          birthDate: new Date(1649628000000), // 2022-04-11 00:00:00
+          birthDate: '2022-04-11T00:00:00.000Z'
         };
       });
 
@@ -797,7 +797,7 @@ describe('#Request', () => {
       describe('#getDate', () => {
         it('extracts the birthdate in date format', () => {
           should(request.getDate('birthDate'))
-            .exactly(request.input.args.birthDate);
+            .eql(new Date('2022-04-11T00:00:00.000Z'));
         });
 
         it('extracts the birthdate in timestamp format', () => {
