@@ -446,7 +446,7 @@ describe('#Cluster Node', () => {
 
       const normalized = new NormalizedFilter([], 'roomId', 'index/collection');
 
-      kuzzle.emit('core:realtime:room:create:after', normalized);
+      kuzzle.call('core:realtime:room:create:after', normalized);
 
       should(node.publisher.sendNewRealtimeRoom)
         .calledOnce()
@@ -464,7 +464,7 @@ describe('#Cluster Node', () => {
     it('should synchronize realtime subscriptions', () => {
       node.publisher.sendSubscription.returns('msgid');
 
-      kuzzle.emit('core:realtime:subscribe:after', 'roomId');
+      kuzzle.call('core:realtime:subscribe:after', 'roomId');
 
       should(node.publisher.sendSubscription).calledOnce().calledWith('roomId');
 
@@ -476,7 +476,7 @@ describe('#Cluster Node', () => {
     it('should synchronize realtime unsubscriptions', () => {
       node.publisher.sendUnsubscription.returns('msgid');
 
-      kuzzle.emit('core:realtime:unsubscribe:after', 'roomId');
+      kuzzle.call('core:realtime:unsubscribe:after', 'roomId');
 
       should(node.publisher.sendUnsubscription)
         .calledOnce()

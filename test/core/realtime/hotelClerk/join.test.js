@@ -135,6 +135,6 @@ describe('Test: hotelClerk.join', () => {
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.emit).be.calledWith('core:realtime:subscribe:after', 'i-exist');
+    should(kuzzle.call).be.calledWith('core:realtime:subscribe:after', 'i-exist');
   });
 });
