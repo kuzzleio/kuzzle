@@ -200,7 +200,7 @@ describe('Test: hotelClerk.unsubscribe', () => {
       'out',
       { count: 1 });
 
-    should(kuzzle.pipe).be.calledWithMatch(
+    should(kuzzle.call).be.calledWithMatch(
       'core:realtime:unsubscribe:after',
       roomId);
   });
