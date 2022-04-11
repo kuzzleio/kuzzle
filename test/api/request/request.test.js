@@ -458,8 +458,7 @@ describe('#Request', () => {
               mana: 10,
               damage: 10.8,
             }
-          },
-          birthDate: new Date(1649628000), // 2022-04-11 00:00:00
+          }
         };
       });
 
@@ -718,7 +717,8 @@ describe('#Request', () => {
             Valentine: 'sister'
           },
           year: '5270',
-          defeatedBugsAt: 11
+          defeatedBugsAt: 11,
+          birthDate: new Date(1649628000), // 2022-04-11 00:00:00
         };
       });
 
