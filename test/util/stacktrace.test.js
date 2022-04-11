@@ -14,7 +14,7 @@ describe('#hilightUserCode', () => {
   });
 
   it('should ignore already enhanced lines', () => {
-    const line = '>>>> at BackendController._add (/home/kuzzle/lib/core/application/backend.ts:261:28)';
+    const line = '> at BackendController._add (/home/kuzzle/lib/core/application/backend.ts:261:28)';
 
     const stack = hilightUserCode(line);
 
@@ -26,7 +26,7 @@ describe('#hilightUserCode', () => {
 
     const stack = hilightUserCode(line);
 
-    should(stack).be.eql('    ' + line);
+    should(stack).be.eql('  ' + line);
   });
 
   it('should add padding for line about node internal', () => {
@@ -34,7 +34,7 @@ describe('#hilightUserCode', () => {
 
     const stack = hilightUserCode(line);
 
-    should(stack).be.eql('    ' + line);
+    should(stack).be.eql('  ' + line);
   });
 
   it('should add padding for line about module', () => {
@@ -42,7 +42,7 @@ describe('#hilightUserCode', () => {
 
     const stack = hilightUserCode(line);
 
-    should(stack).be.eql('    ' + line);
+    should(stack).be.eql('  ' + line);
   });
 
   it('should hilight user code', () => {
@@ -50,7 +50,7 @@ describe('#hilightUserCode', () => {
 
     const stack = hilightUserCode(line);
 
-    should(stack).be.eql('>>>>' + line);
+    should(stack).be.eql('>' + line);
   });
 
 });
