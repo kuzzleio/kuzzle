@@ -605,6 +605,34 @@ export class KuzzleRequest {
   }
 
   /**
+   * Gets a parameter from a request arguments and returns it to the appropriate format.
+   *
+   * @param name parameter name.
+   * @param options Additional options
+   *    - `format`: date format timestamp, date or ISO8061 (default: 'date')
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   */
+  getDate (name: string,
+    options: {
+            format?: 'timestamp' | 'date' | 'ISO8061';
+          } = { format: 'date' }
+  ): number | Date | string {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    const date: Date = new Date(args[name]);
+    if (options.format === 'ISO8061') {
+      return date.toISOString();
+    }
+    else if (options.format === 'timestamp') {
+      return date.getTime();
+    }
+    return date;
+  }
+
+  /**
    * Returns the index specified in the request
    */
   getIndex (): string {

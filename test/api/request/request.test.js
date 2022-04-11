@@ -458,7 +458,8 @@ describe('#Request', () => {
               mana: 10,
               damage: 10.8,
             }
-          }
+          },
+          birthDate: new Date(1649628000), // 2022-04-11 00:00:00
         };
       });
 
@@ -790,6 +791,28 @@ describe('#Request', () => {
         it('should throw if the parameter is not an object', () => {
           should(() => request.getObject('age'))
             .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getDate', () => {
+        it('extracts the birthdate in date format', () => {
+          should(request.getDate('birthDate'))
+            .exactly(request.input.args.birthDate);
+        });
+
+        it('extracts the birthdate in timestamp format', () => {
+          should(request.getDate('birthDate', { format: 'timestamp' }))
+            .exactly(1649628000);
+        });
+
+        it('extracts the birthdate in ISO8061 format', () => {
+          should(request.getDate('birthDate', { format: 'ISO8061' }))
+            .exactly('2022-04-11T00:00:00.000Z');
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getDate('anotherDate'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
         });
       });
 
