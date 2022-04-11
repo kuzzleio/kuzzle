@@ -34,9 +34,9 @@ export type StrategyDefinition = {
       /**
        * Name of a registered authenticator to use with this strategy.
        */
-      authenticator: string,
-      [key: string]: any
-    },
+      authenticator: string;
+      [key: string]: any;
+    };
     /**
      * Strategy methods.
      *
@@ -44,16 +44,16 @@ export type StrategyDefinition = {
      * under the same name as specified.
      */
     methods: {
-      afterRegister?: string,
-      create: string,
-      delete: string,
-      exists: string,
-      getById?: string,
-      getInfo?: string,
-      search?: string,
-      update: string,
-      validate: string,
-      verify: string,
-    }
-  }
+      afterRegister?: string;
+      create: string;
+      delete: string;
+      exists: string;
+      getById?: string;
+      getInfo?: string;
+      search?: string;
+      update: string;
+      validate: string;
+      verify: string;
+    };
+  };
 }

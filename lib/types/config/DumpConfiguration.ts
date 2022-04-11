@@ -2,49 +2,49 @@ export type DumpConfiguration = {
   /**
    * @default false
    */
-  enabled: boolean,
+  enabled: boolean;
 
   history: {
     /**
       * @default 3
       */
-    coredump: number,
+    coredump: number;
 
     /**
       * @default 5
     */
-    reports: number
-   },
+    reports: number;
+   };
 
   /**
    * @default './dump/'
   */
-  path: string,
+  path: string;
 
   /**
    * @default 'gcore'
   */
-  gcore: string,
+  gcore: string;
 
   /**
    * @default 'YYYYMMDD-HHmmss'
   */
-  dateFormat: string,
+  dateFormat: string;
 
   handledErrors: {
     /**
      * @default true
      */
-    enabled: boolean,
+    enabled: boolean;
 
     /**
      * @default ['RangeError','TypeError','KuzzleError','InternalError'],
     */
-    whitelist: string[],
+    whitelist: string[];
 
     /**
      * @default 600000
      */
-    minInterval: number
-  }
+    minInterval: number;
+  };
 }

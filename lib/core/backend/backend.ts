@@ -85,7 +85,7 @@ export class Backend {
   };
   protected _vaultKey?: string;
   protected _secretsFile?: string;
-  protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
+  protected _installationsWaitingList: Array<{id: string; description?: string; handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -283,7 +283,7 @@ export class Backend {
   /**
    * Starts the Kuzzle application with the defined features
    */
-  async start () : Promise<void> {
+  async start (): Promise<void> {
     if (this.started) {
       throw runtimeError.get('already_started', 'start');
     }

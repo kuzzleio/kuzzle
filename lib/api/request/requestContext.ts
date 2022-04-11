@@ -54,7 +54,7 @@ export type ContextMisc = {
    */
   headers?: JSONObject;
 
-  [key: string]: any
+  [key: string]: any;
 };
 
 /**

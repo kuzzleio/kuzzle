@@ -84,7 +84,7 @@ interface EmbeddedRealtime extends RealtimeController {
        */
       propagate?: boolean;
     }
-  ): Promise<string>
+  ): Promise<string>;
 }
 
 /**
