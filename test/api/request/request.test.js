@@ -718,7 +718,9 @@ describe('#Request', () => {
           },
           year: '5270',
           defeatedBugsAt: 11,
-          birthDate: '2022-04-11T00:00:00.000Z'
+          birthDate: '2022-04-11T00:00:00.000Z',
+          badDate: '202-04-11T00:00:00.0',
+          birthDateDay: '2022-04-11'
         };
       });
 
@@ -794,21 +796,35 @@ describe('#Request', () => {
         });
       });
 
-      describe('#getISODate', () => {
+      describe('#getDate', () => {
         it('extracts the birthdate in ISO8061 format', () => {
-          should(request.getISODate('birthDate'))
-            .eql(new Date('2022-04-11T00:00:00.000Z'));
+          should(request.getDate('birthDate'))
+            .eql('2022-04-11T00:00:00.000Z');
         });
 
-        it('should throw if the parameter is missing with ISODate', () => {
-          should(() => request.getISODate('anotherDate'))
+        it('extracts the birthdate in custom format', () => {
+          should(() => request.getDate('birthDateDay', 'YYYY-MM-DD'))
+            .eql('2022-04-11');
+        });
+
+        it('should throw if the parameter is invalid date regarding custom date', () => {
+          should(() => request.getDate('birthDate', 'YYYY-MM-DD'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parameter is invalid ISO8601 date', () => {
+          should(() => request.getDate('badDate'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getDate('anotherDate'))
             .throw(BadRequestError, { id: 'api.assert.missing_argument' });
         });
 
       });
 
       describe('#getTimestamp', () => {
-
         it('extracts the birthdate in timestamp format', () => {
           should(request.getTimestamp('birthDate'))
             .exactly(1649635200000);
