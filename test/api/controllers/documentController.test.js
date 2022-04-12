@@ -11,7 +11,7 @@ const {
 } = require('../../../index');
 const KuzzleMock = require('../../mocks/kuzzle.mock');
 
-const { DocumentController } = require('../../../lib/api/controllers');
+const DocumentController = require('../../../lib/api/controllers/documentController');
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 const actionEnum = require('../../../lib/core/realtime/actionEnum');
 
