@@ -89,7 +89,7 @@ kourou document:mCreateOrReplace <index> <collection> <body> -a silent=true
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the created/replaced documents are indexed
 - `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 - `strict`: if set, an error will occur if at least one document has not been created/replaced <SinceBadge version="2.11.0" />
-- `source`: if set, at true, the response will contain the _source field of the created/replaced documents (default true) <SinceBadge version="auto-version"/>
+- `source`: if set, at true, the response will contain the _source field of the created/replaced documents (default true) <SinceBadge version="2.17.8"/>
 
 ---
 
