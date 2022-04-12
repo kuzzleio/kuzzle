@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.17.7",
+  "version": "2.17.8",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": {
     "kuzzle": "bin/start-kuzzle-server"
@@ -35,7 +35,8 @@
     "test:lint:js:fix": "eslint --max-warnings=0 --fix ./lib ./test ./features-legacy ./bin ./features ./doc/build-error-codes.js",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
     "docker:install": "docker-compose run kuzzle_node_1 npm install",
-    "docker:test:unit": "docker-compose run kuzzle_node_1 npm run test:unit"
+    "docker:test:unit": "docker-compose run kuzzle_node_1 npm run test:unit",
+    "docker:npm": "docker-compose run kuzzle_node_1 npm run --"
   },
   "directories": {
     "lib": "lib"
@@ -62,7 +63,7 @@
     "koncorde": "^4.0.2",
     "kuzzle-plugin-auth-passport-local": "^6.3.6",
     "kuzzle-plugin-logger": "^3.0.3",
-    "kuzzle-sdk": "7.9.1",
+    "kuzzle-sdk": "^7.9.1",
     "kuzzle-vault": "^2.0.4",
     "lodash": "4.17.21",
     "long": "^5.2.0",

@@ -158,7 +158,7 @@ abstract class AbstractDumper {
    *
    * @param document The document to be written in a line of the dump.
    */
-  abstract onResult (document: {_id: string, _source: any}): Promise<void>
+  abstract onResult (document: {_id: string; _source: any}): Promise<void>
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   public async tearDown () {}
@@ -256,7 +256,7 @@ class JSONLDumper extends AbstractDumper {
     });
   }
 
-  onResult (document: {_id: string, _source: any}): Promise<void> {
+  onResult (document: {_id: string; _source: any}): Promise<void> {
     return this.writeLine({
       _id: document._id,
       body: document._source,

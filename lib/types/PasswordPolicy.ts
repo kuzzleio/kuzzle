@@ -37,7 +37,7 @@ export type PasswordPolicy = {
      * Array of role ids the policy applies to.
      */
     roles?: string[];
-  },
+  };
 
   /**
    * The delay after which a password expires.

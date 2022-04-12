@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -32,6 +32,7 @@ import {
   OpenApiDocumentCreateOrReplaceComponent,
   OpenApiDocumentCreateComponent,
   OpenApiDocumentValidateComponent,
+  OpenApiDocumentmCreateOrReplaceComponent,
 } from './components';
 import { OpenApiDefinition } from '../../types/OpenApiDefinition';
 import { version } from '../../../package.json';
@@ -88,6 +89,7 @@ export class OpenApiManager {
         ...OpenApiDocumentCreateOrReplaceComponent,
         ...OpenApiDocumentCreateComponent,
         ...OpenApiDocumentValidateComponent,
+        ...OpenApiDocumentmCreateOrReplaceComponent,
       }
     }
   };

@@ -20,8 +20,8 @@ export type RoleDefinition = {
   controllers: {
     [controllerName: string]: {
       actions: {
-        [actionName: string]: boolean
-      }
-    }
-  }
+        [actionName: string]: boolean;
+      };
+    };
+  };
 };

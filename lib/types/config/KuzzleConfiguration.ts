@@ -15,32 +15,32 @@ export interface IKuzzleConfiguration {
     /**
      * @default false
      */
-    pcreSupport: boolean
-  },
+    pcreSupport: boolean;
+  };
 
-  dump: DumpConfiguration
+  dump: DumpConfiguration;
 
   /**
    * The HTTP section lets you configure how Kuzzle should
    * handle HTTP requests.
    */
-  http: HttpConfiguration
+  http: HttpConfiguration;
 
   /**
    * Kuzzle configured limits.
    */
-  limits: LimitsConfiguration
+  limits: LimitsConfiguration;
   /**
    * The application section lets you configure your application.
    */
-  application: Record<string, unknown>,
+  application: Record<string, unknown>;
 
   /**
    * The plugins section lets you define plugins behaviors.
    *
    * @see https://docs.kuzzle.io/core/2/guides/write-plugins
    */
-  plugins: PluginsConfiguration
+  plugins: PluginsConfiguration;
 
   /**
    * The repositories are used internally by Kuzzle to store its data (users,
@@ -57,42 +57,42 @@ export interface IKuzzleConfiguration {
        * @default 1440000
        */
       cacheTTL: number;
-    }
-  },
+    };
+  };
 
   /**
    * The security section contains the configuration for Kuzzle permissions
    * system.
    *
    */
-  security: SecurityConfiguration,
+  security: SecurityConfiguration;
 
   /**
    * Kuzzle server is the entry point for incoming requests.
    */
-  server: ServerConfiguration,
+  server: ServerConfiguration;
 
   /**
    * Services are the external components Kuzzle relies on.
    */
-  services: ServicesConfiguration
+  services: ServicesConfiguration;
 
   stats: {
     /**
      * @default true
      */
-    enabled: boolean
+    enabled: boolean;
 
     /**
      * @default 3600
      */
-    ttl: number
+    ttl: number;
 
     /**
      * @default 10
      */
-    statsInterval: number
-  }
+    statsInterval: number;
+  };
 
   cluster: {
     /**
@@ -103,61 +103,61 @@ export interface IKuzzleConfiguration {
     /**
      * @default 50
      */
-    activityDepth: number
+    activityDepth: number;
 
     /**
      * @default 2000
      */
-    heartbeat: number
+    heartbeat: number;
 
     /**
      * @default null
      */
-    interface: any
+    interface: any;
 
     /**
      * @default false
      */
-    ipv6: boolean
+    ipv6: boolean;
 
     /**
      * @default 'private'
      */
-    ip: string
+    ip: string;
 
     /**
      * @default 60000
      */
-    joinTimeout: number
+    joinTimeout: number;
 
     /**
      * @default 1
      */
-    minimumNodes: number
+    minimumNodes: number;
 
     ports: {
       /**
        * @default 7510
        */
-      command: number
+      command: number;
 
       /**
        * @default 7511
        */
-      sync: number
-    },
+      sync: number;
+    };
 
     /**
      * @default 5000
      */
-    syncTimeout: number
-  }
+    syncTimeout: number;
+  };
 
   internal: {
-    hash: any
-  }
+    hash: any;
+  };
 
-  validation: Record<string, unknown>,
+  validation: Record<string, unknown>;
 }
 
 export type KuzzleConfiguration = Partial<IKuzzleConfiguration>

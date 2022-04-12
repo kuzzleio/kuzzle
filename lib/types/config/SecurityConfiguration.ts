@@ -69,7 +69,7 @@ export type SecurityConfiguration = {
     * @default null
     */
     secret: string | Buffer;
-  },
+  };
 
   apiKey: {
     /**
@@ -80,7 +80,7 @@ export type SecurityConfiguration = {
     * @default -1
     */
     maxTTL: number;
-  }
+  };
 
   /**
   * The default role defines permissions for all users,
@@ -103,8 +103,8 @@ export type SecurityConfiguration = {
   *  }
   */
   default: {
-    role: RoleDefinition
-  },
+    role: RoleDefinition;
+  };
 
   /**
   * Permissions used when creating an administrator user.
@@ -187,12 +187,12 @@ export type SecurityConfiguration = {
       default: RoleDefinition;
       anonymous: RoleDefinition;
       [roleName: string]: RoleDefinition;
-    },
+    };
     profiles: {
       admin: ProfileDefinition;
       default: ProfileDefinition;
       anonymous: ProfileDefinition;
       [profileName: string]: ProfileDefinition;
-    }
-  }
+    };
+  };
 }

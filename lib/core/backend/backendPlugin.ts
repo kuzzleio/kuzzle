@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -44,8 +44,8 @@ export class BackendPlugin extends ApplicationManager {
    */
   use (
     plugin: Plugin,
-    options: { name?: string, manifest?: JSONObject, deprecationWarning?: boolean } = {}
-  ) : void {
+    options: { name?: string; manifest?: JSONObject; deprecationWarning?: boolean } = {}
+  ): void {
     if (this._application.started) {
       throw runtimeError.get('already_started', 'plugin');
     }

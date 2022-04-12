@@ -10,9 +10,9 @@ export type ErrorDomains = {
       [subDomain: string]: {
         code: number;
         errors: {
-          [errorName: string]: ErrorDefinition
-        }
+          [errorName: string]: ErrorDefinition;
+        };
       };
-    }
-  }
+    };
+  };
 };
