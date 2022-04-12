@@ -605,31 +605,25 @@ export class KuzzleRequest {
   }
 
   /**
-   * Gets a parameter from a request arguments and returns it to the appropriate format.
+   * Gets a parameter from a request arguments and returns it to the ISO Date string.
    *
    * @param name parameter name.
-   * @param options Additional options
-   *    - `format`: date format timestamp, date or ISO8061 (default: 'date')
    * @throws {api.assert.missing_argument} If parameter not found and no default
    *                                       value provided
    */
-  getDate (name: string,
-    options: {
-            format?: 'timestamp' | 'date' | 'ISO8061';
-          } = { format: 'date' }
-  ): number | Date | string {
-    const args = this.input.args;
-    if (args[name] === undefined) {
-      throw assertionError.get('missing_argument', name);
-    }
-    const date: Date = new Date(args[name]);
-    if (options.format === 'ISO8061') {
-      return date.toISOString();
-    }
-    else if (options.format === 'timestamp') {
-      return date.getTime();
-    }
-    return date;
+  getISODate (name: string): string {
+    return this._getDate(name).toISOString();
+  }
+
+  /**
+   * Gets a parameter from a request arguments and returns it to timestamp format.
+   *
+   * @param name parameter name.
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   */
+  getTimestamp (name: string): number {
+    return this._getDate(name).getTime();
   }
 
   /**
@@ -1007,6 +1001,21 @@ export class KuzzleRequest {
 
     return value;
   }
+
+  /**
+   * Generic getter value: date value.
+   *
+   * @param name parameter name
+   * @private
+   */
+  private _getDate (name: string): Date {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    return new Date(args[name]);
+  }
+
 }
 
 export class Request extends KuzzleRequest {}
