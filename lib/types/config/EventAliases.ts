@@ -19,29 +19,8 @@
  * limitations under the License.
  */
 
-'use strict';
-
-const { actions } = require('../api/controllers/documentController');
-
-function filter (map, expectValue) {
-  const result = [];
-
-  for (const [key, value] of map) {
-    if (value === expectValue) {
-      result.push(key);
-    }
-  }
-
-  return result;
+export interface EventAliases {
+  list: Record<string, unknown>;
+  namespace: string;
+  notBefore: string[];
 }
-
-module.exports = {
-  list: {
-    'delete': filter(actions, 'delete'),
-    'get': filter(actions, 'get'),
-    'update': filter(actions, 'update'),
-    'write': filter(actions, 'write'),
-  },
-  namespace: 'generic:document',
-  notBefore: ['search', 'deleteByQuery', 'updateByQuery'],
-};
