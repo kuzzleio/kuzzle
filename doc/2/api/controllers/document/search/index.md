@@ -33,12 +33,17 @@ Koncorde filters will be translated into an Elasticsearch query.
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
 :::
 
-## Multi Search
-<SinceBadge version="2.17.0">
+### Multi Search
+
+<SinceBadge version="2.17.0"/>
 
 This method also support searching accross multiple indexes and collections
 using the `targets` parameter instead of `index`, `collection` parameters.
 See [Target Format](#target-format).
+
+::: warning
+Multi Search is only supported in WebSocket and MQTT protocols.
+:::
 
 ---
 

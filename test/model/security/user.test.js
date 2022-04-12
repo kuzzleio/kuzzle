@@ -146,4 +146,25 @@ describe('Test: model/security/user', () => {
       { id: 'security.user.uninitialized' });
   });
 
+  describe('#areTargetsAllowed', () => {
+    it('should not support index wildcard', () => {
+
+    });
+
+    it('should not support collection wildcard', () => {
+
+    });
+
+    it('should allows when target is in authorized index and collection', () => {
+
+    });
+
+    it('should forbid when target contains unauthorized index', () => {
+
+    });
+
+    it('should forbid when target contains unauthorized collection', () => {
+
+    });
+  });
 });
