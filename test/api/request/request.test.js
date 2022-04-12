@@ -804,7 +804,7 @@ describe('#Request', () => {
         });
 
         it('extracts the birthdate in custom format', () => {
-          should(() => request.getDate('birthDateDay', 'YYYY-MM-DD'))
+          should(request.getDate('birthDateDay', 'YYYY-MM-DD'))
             .eql('2022-04-11');
         });
 

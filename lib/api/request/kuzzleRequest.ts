@@ -622,7 +622,7 @@ export class KuzzleRequest {
     if (args[name] === undefined) {
       throw assertionError.get('missing_argument', name);
     }
-    if (format && moment(args[name], format).isValid() === false) {
+    if (format && moment(args[name], format, true).isValid() === false) {
       throw assertionError.get('invalid_type', name, 'date');
     }
     if ( moment(args[name], moment.ISO_8601).isValid() === false) {
@@ -647,7 +647,7 @@ export class KuzzleRequest {
     if ( moment(args[name], true).isValid() === false) {
       throw assertionError.get('invalid_type', name, 'date');
     }
-    return this.getInteger (name);
+    return this.getInteger(name);
   }
 
   /**
