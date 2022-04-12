@@ -233,6 +233,13 @@ describe('ClusterSubscriber', () => {
         should(addIndexHandler).be.calledWith(message);
       });
 
+      it('should refresh the last heartbeat when receiving a message', async () => {
+        const heartbeatStub = sinon.stub(subscriber, 'handleHeartbeat');
+        await subscriber.processData(topic, encodedMessage);
+
+        should(heartbeatStub).be.calledOnce();
+      });
+
       it('should not process invalid messages', async () => {
         subscriber.validateMessage = sinon.stub().resolves(false);
 
