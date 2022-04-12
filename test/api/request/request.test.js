@@ -720,7 +720,8 @@ describe('#Request', () => {
           defeatedBugsAt: 11,
           birthDate: '2022-04-11T00:00:00.000Z',
           badDate: '202-04-11T00:00:00.0',
-          birthDateDay: '2022-04-11'
+          birthDateDay: '2022-04-11',
+          birthDateTime: 1649635200000
         };
       });
 
@@ -826,7 +827,7 @@ describe('#Request', () => {
 
       describe('#getTimestamp', () => {
         it('extracts the birthdate in timestamp format', () => {
-          should(request.getTimestamp('birthDate'))
+          should(request.getTimestamp('birthDateTime'))
             .exactly(1649635200000);
         });
 

@@ -628,7 +628,7 @@ export class KuzzleRequest {
     if ( moment(args[name], moment.ISO_8601).isValid() === false) {
       throw assertionError.get('invalid_type', name, 'date');
     }
-    return args[name];
+    return this.getString(name);
   }
 
   /**
@@ -647,7 +647,7 @@ export class KuzzleRequest {
     if ( moment(args[name], true).isValid() === false) {
       throw assertionError.get('invalid_type', name, 'date');
     }
-    return args[name];
+    return this.getInteger (name);
   }
 
   /**
