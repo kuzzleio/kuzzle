@@ -774,54 +774,90 @@
       "internalIndex": {
         "name": "kuzzle",
         "collections": {
-          "dynamic": "false",
           "users": {
-            "properties": {
-              "profileIds": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "profileIds": { "type": "keyword" }
+              }
             }
           },
           "profiles": {
-            "dynamic": "false",
-            "properties": {
-              "policies": {
-                "properties":  {
-                  "roleId": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "policies": {
+                  "properties":  {
+                    "roleId": { "type": "keyword" }
+                  }
                 }
               }
             }
           },
           "roles": {
-            "dynamic": "false",
-            "properties": {
-              "controllers": {
-                "dynamic": "false",
-                "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "controllers": {
+                  "dynamic": "false",
+                  "properties": {}
+                }
               }
             }
           },
           "validations": {
-            "properties": {
-              "index": { "type": "keyword" },
-              "collection": { "type": "keyword" },
-              "validations": {
-                "dynamic": "false",
-                "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "properties": {
+                "index": { "type": "keyword" },
+                "collection": { "type": "keyword" },
+                "validations": {
+                  "dynamic": "false",
+                  "properties": {}
+                }
               }
             }
           },
           "config": {
-            "dynamic": "false",
-            "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {}
+            }
           },
           "api-keys": {
-            "dynamic": "false",
-            "properties": {
-              "userId": { "type": "keyword" },
-              "hash": { "type": "keyword" },
-              "expiresAt": { "type": "long" },
-              "ttl": { "type": "keyword" },
-              "description": { "type": "text" },
-              "token": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "userId": { "type": "keyword" },
+                "hash": { "type": "keyword" },
+                "expiresAt": { "type": "long" },
+                "ttl": { "type": "keyword" },
+                "description": { "type": "text" },
+                "token": { "type": "keyword" }
+              }
             }
           }
         }
