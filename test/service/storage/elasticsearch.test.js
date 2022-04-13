@@ -4625,6 +4625,10 @@ describe('Test: ElasticSearch service', () => {
     const hiddenAlias = `@${hiddenIndice}`;
 
     beforeEach(() => {
+      elasticsearch._client.cat.aliases.resolves({
+        body: []
+      });
+
       sinon.stub(elasticsearch, '_getAvailableIndice').resolves(hiddenIndice);
     });
 
@@ -4647,6 +4651,16 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       });
+    });
+
+    it('does not create the hidden collection if it already exists', async () => {
+      elasticsearch._client.cat.aliases.resolves({
+        body: [{ alias: hiddenAlias }]
+      });
+
+      await elasticsearch._createHiddenCollection('nisantasi');
+
+      should(elasticsearch._client.indices.create).not.be.called();
     });
   });
 
