@@ -22,8 +22,8 @@ describe('dump-collection', () => {
               type: 'date'
             },
             delta: {
-              type: "constant_keyword",
-              value: "debug"
+              type: 'constant_keyword',
+              value: 'debug'
             }
           }
         }
