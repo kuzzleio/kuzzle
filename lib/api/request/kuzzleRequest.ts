@@ -607,8 +607,8 @@ export class KuzzleRequest {
   }
 
   /**
-   * Gets a parameter from a request arguments and check if the date is an ISO8601 format date or is valid regarding
-   * a given custom format (example : YYYY-MM-DD).
+   * Gets a parameter from a request arguments and check with moment.js if the date is an ISO8601 format date
+   * or is valid regarding a given custom format (example : YYYY-MM-DD).
    *
    * @param name parameter name.
    * @param format optional parameter to check if the date is valid regarding a format. If not set, the format checked
@@ -622,10 +622,10 @@ export class KuzzleRequest {
     if (args[name] === undefined) {
       throw assertionError.get('missing_argument', name);
     }
-    if (format && moment(args[name], format, true).isValid() === false) {
+    if (format && ! moment(args[name], format, true).isValid()) {
       throw assertionError.get('invalid_type', name, 'date');
     }
-    if ( moment(args[name], moment.ISO_8601).isValid() === false) {
+    if (! moment(args[name], moment.ISO_8601).isValid()) {
       throw assertionError.get('invalid_type', name, 'date');
     }
     return this.getString(name);
