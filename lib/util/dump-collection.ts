@@ -25,7 +25,7 @@ import { HttpStream } from '../types';
  * @param {Object} target the object we have to flatten
  * @returns {Object} the flattened object
  */
-function flattenObject (target: JSONObject): JSONObject {
+export function flattenObject (target: JSONObject): JSONObject {
   const output = {};
 
   flattenStep(output, target);
@@ -85,7 +85,7 @@ export function extractMappingFields (mapping: JSONObject) {
  * @returns The values in the same order as the fields
  * @see https://lodash.com/docs/4.17.15#values
  */
-function pickValues (object: any, fields: string[]): any[] {
+export function pickValues (object: any, fields: string[]): any[] {
   return fields.map(f => formatValueForCSV(get(object, f)));
 }
 

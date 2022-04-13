@@ -1,10 +1,11 @@
 'use strict';
 
 const should = require('should');
-const dumpCollection = require('../../lib/util/dump-collection');
+const { extractMappingFields, flattenObject, pickValues } = require('../../lib/util/dump-collection');
 
 describe('dump-collection', () => {
   let mapping;
+  let document;
 
   beforeEach(() => {
     mapping = {
@@ -17,7 +18,7 @@ describe('dump-collection', () => {
         },
         baz: {
           properties: {
-            qwerv: {
+            alpha: {
               type: 'date'
             },
             delta: {
@@ -28,27 +29,57 @@ describe('dump-collection', () => {
         }
       }
     };
+
+    document = {
+      foo: 'test',
+      bar: 42,
+      baz: {
+        alpha: 1649855989915,
+        delta: 'debug',
+      }
+    };
   });
 
-  it('Should extract fields recursively', () => {
-    const result = extractFields(document);
+  describe('#extractMappingFields', () => {
+    it('Should extract fields from mapping recursively', () => {
+      const result = extractMappingFields(mapping);
 
-    should(result).match(['foo', 'bar.a', 'bar.b']);
+      should(result).match({
+        'foo': 'keyword',
+        'bar': 'integer',
+        'baz': {
+          'alpha': 'date',
+          'delta': 'constant_keyword',
+        }
+      });
+    });
+  });
+  
+  describe('#flattenObject', () => {
+    it('Should flatten the map properties', () => {
+      const result = flattenObject(extractMappingFields(mapping));
+
+      should(result).match({
+        'foo': 'keyword',
+        'bar': 'integer',
+        'baz.alpha': 'date',
+        'baz.delta': 'constant_keyword',
+      });
+    });
   });
 
-  it('Should ignore requested fields', () => {
-    const result = extractFields(document, { fieldsToIgnore: ['bar'] });
+  describe('#pickValues', () => {
+    it('should extact the values from the document given a list of fields', () => {
+      const fields = Object.keys(flattenObject(extractMappingFields(mapping)));
 
-    should(result).match(['foo']);
-  });
+      const values = pickValues(document, fields);
 
-  it('Should extract values when asked to', () => {
-    const result = extractFields(document, { alsoExtractValues: true });
-
-    should(result).match([
-      { key: 'foo', value: 'valueFoo' },
-      { key: 'bar.a', value: 'valueBarA' },
-      { key: 'bar.b', value: 'valueBarB' }
-    ]);
+      should(values).match([
+        'test',
+        42,
+        1649855989915,
+        'debug'
+      ]);
+    });
   });
 });
