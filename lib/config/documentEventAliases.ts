@@ -22,12 +22,12 @@
 import { EventAliases } from '../types/config/EventAliases';
 import DocumentController from '../api/controllers/documentController';
 
-function filter (map: Map<string, string>, expectValue: string) {
+function filter (obj: Record<string, unknown>, expectValue: string): Array<string> {
   const result = [];
 
-  for (const [key, value] of map) {
-    if (value === expectValue) {
-      result.push(key);
+  for (const action in obj) {
+    if (obj[action] === expectValue) {
+      result.push(action);
     }
   }
 
@@ -36,10 +36,10 @@ function filter (map: Map<string, string>, expectValue: string) {
 
 export const documentEventAliases: EventAliases = {
   list: {
-    'delete': filter(DocumentController.getActions(), 'delete'),
-    'get': filter(DocumentController.getActions(), 'get'),
-    'update': filter(DocumentController.getActions(), 'update'),
-    'write': filter(DocumentController.getActions(), 'write'),
+    'delete': filter(DocumentController.actions, 'delete'),
+    'get': filter(DocumentController.actions, 'get'),
+    'update': filter(DocumentController.actions, 'update'),
+    'write': filter(DocumentController.actions, 'write'),
   },
   namespace: 'generic:document',
   notBefore: ['search', 'deleteByQuery', 'updateByQuery'],
