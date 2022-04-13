@@ -3,12 +3,12 @@ import { ClientOptions } from '@elastic/elasticsearch';
 export type StorageEngineElasticsearch = {
   /**
    * @default ['storageEngine']
-  */
+   */
   aliases: string[];
 
   /**
    * @default "elasticsearch"
-  */
+   */
   backend: 'elasticsearch';
 
   /**
@@ -24,7 +24,7 @@ export type StorageEngineElasticsearch = {
    *    node: 'http://localhost:9200'
    * }
    *
-  */
+   */
   client: ClientOptions;
 
   /**
@@ -42,7 +42,7 @@ export type StorageEngineElasticsearch = {
   commonMapping: {
     /**
      * @default "false"
-    */
+     */
     dynamic: 'true' | 'false' | 'strict';
 
     properties: {
@@ -70,11 +70,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            createdAt: {
-              type: string;
-            };
+          createdAt: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -83,11 +83,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updater: {
-              type: string;
-            };
+          updater: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -96,43 +96,71 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updatedAt: {
-              type: string;
-            };
+          updatedAt: {
+            type: string;
+          };
         };
       };
-      };
     };
+  };
 
-    internalIndex: {
-      /**
-      * @default "kuzzle"
-      */
-      name: string;
+  internalIndex: {
+    /**
+     * @default "kuzzle"
+     */
+    name: string;
 
-      collections: {
-        users: {
+    collections: {
+      users: {
+        settings: {
           /**
-          * @default 'false'
-          */
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          /**
+           * @default 'false'
+           */
           dynamic: 'true' | 'false' | 'strict';
 
           properties: {
             /**
-              * @default
-              *
-              * [
-              *   {
-              *     type: 'keyword',
-              *   }
-              * ]
-              */
+             * @default
+             *
+             * [
+             *   {
+             *     type: 'keyword',
+             *   }
+             * ]
+             */
             profileIds: {
               type: string;
             };
           };
         };
-        profiles: {
+      };
+
+      profiles: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           dynamic: 'false';
           properties: {
             tags: { type: 'keyword' };
@@ -150,7 +178,22 @@ export type StorageEngineElasticsearch = {
             };
           };
         };
-        roles: {
+      };
+
+      roles: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           dynamic: 'false';
           properties: {
             tags: { type: 'keyword' };
@@ -160,7 +203,22 @@ export type StorageEngineElasticsearch = {
             };
           };
         };
-        validations: {
+      };
+
+      validations: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           properties: {
             index: { type: 'keyword' };
             collection: { type: 'keyword' };
@@ -170,11 +228,41 @@ export type StorageEngineElasticsearch = {
             };
           };
         };
-        config: {
+      };
+
+      config: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           dynamic: 'false';
           properties: Record<string, unknown>;
         };
-        'api-keys': {
+      };
+
+      'api-keys': {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           dynamic: 'false';
           properties: {
             userId: { type: 'keyword' };
@@ -185,7 +273,22 @@ export type StorageEngineElasticsearch = {
             token: { type: 'keyword' };
           };
         };
-        installations: {
+      };
+
+      installations: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           dynamic: 'strict';
           properties: {
             description: { type: 'text' };
@@ -195,9 +298,10 @@ export type StorageEngineElasticsearch = {
         };
       };
     };
-    maxScrollDuration: '1m';
-    defaults: {
-      onUpdateConflictRetries: 0;
-      scrollTTL: '15s';
-    };
+  };
+  maxScrollDuration: '1m';
+  defaults: {
+    onUpdateConflictRetries: 0;
+    scrollTTL: '15s';
+  };
 }

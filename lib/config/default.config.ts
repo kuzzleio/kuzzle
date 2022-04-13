@@ -308,23 +308,35 @@ const defaultConfig: KuzzleConfiguration = {
         name: 'kuzzle',
         collections: {
           users: {
-            dynamic: 'false',
-            properties: {
-              profileIds: { type: 'keyword' }
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              dynamic: 'false',
+              properties: {
+                profileIds: { type: 'keyword' }
+              }
             }
           },
           profiles: {
-            dynamic: 'false',
-            properties: {
-              tags: { type: 'keyword' },
-              policies: {
-                properties: {
-                  roleId: { type: 'keyword' },
-                  restrictedTo: {
-                    type: 'nested',
-                    properties: {
-                      index: { type: 'keyword' },
-                      collections: { type: 'keyword' }
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              dynamic: 'false',
+              properties: {
+                tags: { type: 'keyword' },
+                policies: {
+                  properties: {
+                    roleId: { type: 'keyword' },
+                    restrictedTo: {
+                      type: 'nested',
+                      properties: {
+                        index: { type: 'keyword' },
+                        collections: { type: 'keyword' }
+                      }
                     }
                   }
                 }
@@ -332,47 +344,77 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           roles: {
-            dynamic: 'false',
-            properties: {
-              tags: { type: 'keyword' },
-              controllers: {
-                dynamic: 'false',
-                properties: {}
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              dynamic: 'false',
+              properties: {
+                tags: { type: 'keyword' },
+                controllers: {
+                  dynamic: 'false',
+                  properties: {}
+                }
               }
             }
           },
           validations: {
-            properties: {
-              index: { type: 'keyword' },
-              collection: { type: 'keyword' },
-              validations: {
-                dynamic: 'false',
-                properties: {}
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              properties: {
+                index: { type: 'keyword' },
+                collection: { type: 'keyword' },
+                validations: {
+                  dynamic: 'false',
+                  properties: {}
+                }
               }
             }
           },
           config: {
-            dynamic: 'false',
-            properties: {}
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              dynamic: 'false',
+              properties: {}
+            }
           },
           'api-keys': {
-            dynamic: 'false',
-            properties: {
-              userId: { type: 'keyword' },
-              hash: { type: 'keyword' },
-              description: { type: 'text' },
-              expiresAt: { type: 'long' },
-              ttl: { type: 'keyword' },
-              token: { type: 'keyword' }
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
+            },
+            mappings: {
+              dynamic: 'false',
+              properties: {
+                userId: { type: 'keyword' },
+                hash: { type: 'keyword' },
+                description: { type: 'text' },
+                expiresAt: { type: 'long' },
+                ttl: { type: 'keyword' },
+                token: { type: 'keyword' }
+              }
             }
           },
           installations: {
-            dynamic: 'strict',
-            properties: {
-              description: { type: 'text' },
-              handler: { type: 'text' },
-              installedAt: { type: 'date' }
+            settings: {
+              number_of_shards: 1,
+              number_of_replicas: 1,
             },
+            mappings: {
+              dynamic: 'strict',
+              properties: {
+                description: { type: 'text' },
+                handler: { type: 'text' },
+                installedAt: { type: 'date' }
+              },
+            }
           }
         }
       },
