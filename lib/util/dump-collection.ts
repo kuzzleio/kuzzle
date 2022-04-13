@@ -45,8 +45,8 @@ function flattenStep (
     const newKey = prev ? prev + '.' + key : key;
 
     if (Object.prototype.toString.call(value) === '[object Object]') {
-      output[newKey] = value;
       flattenStep(output, value, newKey);
+      continue;
     }
 
     output[newKey] = value;
@@ -61,15 +61,15 @@ function flattenStep (
 function extractMappingFields (mapping: JSONObject) {
   const newMapping = {};
 
+  if (mapping.properties) {
+    return extractMappingFields(mapping.properties);
+  }
+
   for (const key of Object.keys(mapping)) {
-    if (key === 'properties' && isObject(mapping[key])) {
-      newMapping[key] = extractMappingFields(mapping[key]);
-    }
-    else if (isObject(mapping[key]) && mapping[key].type) {
+    if (isObject(mapping[key]) && mapping[key].type) {
       newMapping[key] = mapping[key].type;
-    }
-    else {
-      newMapping[key] = mapping[key];
+    } else if (isObject(mapping[key])) {
+      newMapping[key] = extractMappingFields(mapping[key]);
     }
   }
 
