@@ -24,6 +24,13 @@ describe('dump-collection', () => {
             delta: {
               type: 'constant_keyword',
               value: 'debug'
+            },
+            nested: {
+              properties: {
+                deep: {
+                  type: 'integer'
+                }
+              }
             }
           }
         }
@@ -36,6 +43,9 @@ describe('dump-collection', () => {
       baz: {
         alpha: 1649855989915,
         delta: 'debug',
+        nested: {
+          deep: 666
+        }
       }
     };
   });
@@ -50,6 +60,9 @@ describe('dump-collection', () => {
         'baz': {
           'alpha': 'date',
           'delta': 'constant_keyword',
+          'nested': {
+            'deep': 'integer'
+          },
         }
       });
     });
@@ -64,6 +77,7 @@ describe('dump-collection', () => {
         'bar': 'integer',
         'baz.alpha': 'date',
         'baz.delta': 'constant_keyword',
+        'baz.nested.deep': 'integer'
       });
     });
   });
@@ -78,7 +92,8 @@ describe('dump-collection', () => {
         'test',
         42,
         1649855989915,
-        'debug'
+        'debug',
+        666
       ]);
     });
   });

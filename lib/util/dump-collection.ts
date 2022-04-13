@@ -68,7 +68,8 @@ export function extractMappingFields (mapping: JSONObject) {
   for (const key of Object.keys(mapping)) {
     if (isObject(mapping[key]) && mapping[key].type) {
       newMapping[key] = mapping[key].type;
-    } else if (isObject(mapping[key])) {
+    }
+    else if (isObject(mapping[key])) {
       newMapping[key] = extractMappingFields(mapping[key]);
     }
   }
