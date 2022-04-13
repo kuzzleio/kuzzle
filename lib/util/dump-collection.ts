@@ -58,7 +58,7 @@ function flattenStep (
  * @param mapping
  * @returns
  */
-function extractMappingFields (mapping: JSONObject) {
+export function extractMappingFields (mapping: JSONObject) {
   const newMapping = {};
 
   if (mapping.properties) {
