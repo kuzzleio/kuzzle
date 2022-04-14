@@ -120,7 +120,7 @@ describe('Test: ElasticSearch service', () => {
         }
       });
       sinon.stub(elasticsearch, '_getAliasFromIndice')
-        .callsFake((indiceArg) => `@${indiceArg}`);
+        .callsFake((indiceArg) => [`@${indiceArg}`]);
     });
 
     afterEach(() => {
@@ -161,7 +161,19 @@ describe('Test: ElasticSearch service', () => {
     it('should be able to scroll an old search', async () => {
       const cacheStub = kuzzle.ask
         .withArgs('core:cache:internal:get')
-        .resolves('1');
+        .resolves(JSON.stringify({
+          fetched: 1,
+          targets: [
+            {
+              index: 'foo',
+              collections: ['foo']
+            },
+            {
+              index: 'bar',
+              collections: ['bar']
+            },
+          ]
+        }));
 
       elasticsearch._client.scroll.resolves({
         body: {
@@ -177,8 +189,8 @@ describe('Test: ElasticSearch service', () => {
       });
 
       elasticsearch._getAliasFromIndice = sinon.stub();
-      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns('@&foo.foo');
-      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns('@&bar.bar');
+      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns(['@&foo.foo']);
+      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns(['@&bar.bar']);
 
       const result = await elasticsearch.scroll('i-am-scroll-id', {
         scrollTTL: '10s'
@@ -193,7 +205,22 @@ describe('Test: ElasticSearch service', () => {
       //   the 2 results contained in the stubbed result of _client.scroll
       // 10: scrollTTL of 10s
       should(kuzzle.ask)
-        .calledWith('core:cache:internal:store', redisKey, 3, { ttl: 10000 });
+        .calledWith('core:cache:internal:store',
+          redisKey,
+          JSON.stringify({
+            fetched: 3,
+            targets: [
+              {
+                index: 'foo',
+                collections: ['foo']
+              },
+              {
+                index: 'bar',
+                collections: ['bar']
+              },
+            ]
+          }),
+          { ttl: 10000 });
 
       should(elasticsearch._client.clearScroll).not.called();
 
@@ -227,7 +254,19 @@ describe('Test: ElasticSearch service', () => {
     it('should clear a scroll upon fetching its last page of results', async () => {
       const cacheStub = kuzzle.ask
         .withArgs('core:cache:internal:get')
-        .resolves('998');
+        .resolves(JSON.stringify({
+          fetched: 998,
+          targets: [
+            {
+              index: 'foo',
+              collections: ['foo']
+            },
+            {
+              index: 'bar',
+              collections: ['bar']
+            },
+          ]
+        }));
 
       elasticsearch._client.scroll.resolves({
         body: {
@@ -243,8 +282,8 @@ describe('Test: ElasticSearch service', () => {
       });
 
       elasticsearch._getAliasFromIndice = sinon.stub();
-      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns('@&foo.foo');
-      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns('@&bar.bar');
+      elasticsearch._getAliasFromIndice.withArgs('&foo.foo').returns(['@&foo.foo']);
+      elasticsearch._getAliasFromIndice.withArgs('&bar.bar').returns(['@&bar.bar']);
 
       const result = await elasticsearch.scroll('i-am-scroll-id', {
         scrollTTL: '10s'
@@ -320,7 +359,11 @@ describe('Test: ElasticSearch service', () => {
     it('should default an explicitly null scrollTTL argument', async () => {
       const cacheStub = kuzzle.ask
         .withArgs('core:cache:internal:get', sinon.match.string)
-        .resolves('1');
+        .resolves(JSON.stringify({
+          fetched: 1,
+          index,
+          collection
+        }));
 
       elasticsearch._client.scroll.resolves({
         body: {
@@ -335,7 +378,11 @@ describe('Test: ElasticSearch service', () => {
       should(kuzzle.ask).calledWith(
         'core:cache:internal:store',
         sinon.match.string,
-        1,
+        JSON.stringify({
+          fetched: 1,
+          index,
+          collection
+        }),
         sinon.match.object);
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
@@ -420,7 +467,7 @@ describe('Test: ElasticSearch service', () => {
       });
 
       elasticsearch._getAliasFromIndice = sinon.stub();
-      elasticsearch._getAliasFromIndice.withArgs(indice).returns(alias);
+      elasticsearch._getAliasFromIndice.withArgs(indice).returns([alias]);
 
       const result = await elasticsearch.search({ index, collection, searchBody });
 
@@ -436,7 +483,11 @@ describe('Test: ElasticSearch service', () => {
       should(kuzzle.ask).calledWith(
         'core:cache:internal:store',
         sinon.match.string,
-        1,
+        JSON.stringify({
+          fetched: 1,
+          index,
+          collection
+        }),
         { ttl: ms(elasticsearch.config.defaults.scrollTTL) });
 
       should(result).match({
@@ -489,7 +540,11 @@ describe('Test: ElasticSearch service', () => {
       should(kuzzle.ask).calledWith(
         'core:cache:internal:store',
         sinon.match.string,
-        0,
+        JSON.stringify({
+          fetched: 0,
+          index,
+          collection
+        }),
         { ttl: 30000 });
     });
 
@@ -4852,7 +4907,7 @@ describe('Test: ElasticSearch service', () => {
       let publicBody;
       let privateBody;
 
-      it('return the alias associated with an indice', async () => {
+      it('return the list of alias associated with an indice', async () => {
         publicBody = {
           ['&nepali.lia']: {
             aliases: {
@@ -4873,8 +4928,8 @@ describe('Test: ElasticSearch service', () => {
         const publicIndice = await publicES._getAliasFromIndice('&nepali.lia');
         const internalIndice = await internalES._getAliasFromIndice('%nepalu.mehry');
 
-        should(publicIndice).be.eql('@&nepali.liia');
-        should(internalIndice).be.eql('@%nepali.mehry');
+        should(publicIndice).be.eql(['@&nepali.liia']);
+        should(internalIndice).be.eql(['@%nepali.mehry']);
       });
 
       it('throw if there is no alias associated with the indice', async () => {
@@ -4898,7 +4953,7 @@ describe('Test: ElasticSearch service', () => {
           .be.rejectedWith({ id: 'services.storage.unknown_index_collection' });
       });
 
-      it('throw if there is more than one alias associated with the indice', async () => {
+      it('should not throw if there is more than one alias associated with the indice', async () => {
         publicBody = {
           ['&nepali.lia']: {
             aliases: {
@@ -4919,10 +4974,10 @@ describe('Test: ElasticSearch service', () => {
         internalES._client.indices.getAlias.resolves({ body: privateBody });
 
         await should(publicES._getAliasFromIndice('&nepali.lia'))
-          .be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
+          .not.be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
 
         await should(internalES._getAliasFromIndice('%nepalu.mehry'))
-          .be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
+          .not.be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
       });
     });
 
