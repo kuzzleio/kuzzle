@@ -50,8 +50,6 @@ Then('I {string} the following multiple documents:', async function (action, dat
 });
 
 Then(/I execute the "(.*?)" action on the following documents:$/, async function (action, dataTable) {
-  action = `${action[0].toUpperCase() + action.slice(1)}`;
-
   const documents = this.parseObjectArray(dataTable);
 
   const response = await this.sdk.query({
