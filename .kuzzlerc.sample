@@ -771,6 +771,11 @@
         }
       },
       // Internal index default name and collections
+      // When starting, at initialisation, kuzzle will attempt
+      // to update all ES dynamic settings of existing internal
+      // index's collections. Static settings are setted only at
+      // creation.
+      // See https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings
       "internalIndex": {
         "name": "kuzzle",
         "collections": {
