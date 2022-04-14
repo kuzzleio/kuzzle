@@ -157,6 +157,17 @@ Feature: Plugin Events
       | destination | "Sa Pa"   |
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
+    # mUpsert
+    When I execute the "upsert" action on the following documents:
+      | _id     | changes                                            | default              |
+      | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } | -                    |
+      | "bus-5" | { "destination": "Sa Pa" }                         | { "company": "SOO" } |
+    Then The document "bus-3-vn" content match:
+      | destination | "Hà Giang" |
+      | company     | "Cau Me"   |
+    Then The document "bus-5-vn" content match:
+      | destination | "Sa Pa"   |
+      | company     | "SOO"     |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'12:30'"              |
@@ -190,6 +201,15 @@ Feature: Plugin Events
       | _id            | _source                                                                  |
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
+    # mUpsert
+    When I execute the "upsert" action on the following documents:
+      | _id     | changes                       | default |
+      | "bus-3" | { "destination": "Hà Giang" } | -       |
+      | "bus-5" | { "destination": "Sa Pa" }    | -       |
+    Then I should receive a "successes" array of objects matching:
+      | _id            | _source                                              |
+      | "confidential" | { "destination": "Hà Giang", "type": "sleepingBus" } |
+      | "confidential" | { "destination": "Sa Pa", "type": "sleepingBus" }    |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
