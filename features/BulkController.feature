@@ -84,7 +84,7 @@ Feature: Bulk Controller
       | body       | { "query": { "match": {"name": "Sylvanas Windrunner" } }, "changes": {"title": "The liberator"} } |
     Then I should receive a result matching:
       | updated | 2 |
-    When I "get" the following document ids:
+    When I "mGet" the following document ids:
       | "document-1" |
       | "document-2" |
       | "document-3" |

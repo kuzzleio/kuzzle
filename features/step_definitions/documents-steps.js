@@ -50,7 +50,7 @@ Then('I {string} the following multiple documents:', async function (action, dat
 });
 
 Then(/I execute the "(.*?)" action on the following documents:$/, async function (action, dataTable) {
-  action = `m${action[0].toUpperCase() + action.slice(1)}`;
+  action = `${action[0].toUpperCase() + action.slice(1)}`;
 
   const documents = this.parseObjectArray(dataTable);
 
@@ -124,7 +124,6 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
 });
 
 Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
-  action = `m${action[0].toUpperCase() + action.slice(1)}`;
   const options = verb ? { verb, refresh: 'wait_for' } : { refresh: 'wait_for' };
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
 

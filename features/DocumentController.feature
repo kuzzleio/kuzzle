@@ -202,7 +202,7 @@ Feature: Document Controller
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     Then The document "document-1" should exist
-    When I "delete" the following document ids:
+    When I "mDelete" the following document ids:
       | "document-1" |
     And I refresh the collection
     Then The document "document-1" should not exist
@@ -581,7 +581,7 @@ Feature: Document Controller
     And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
-    When I execute the "upsert" action on the following documents:
+    When I execute the "mUpsert" action on the following documents:
       | _id          | changes                | default                |
       | "document-1" | { "name": "updated1" } | -                      |
       | "document-2" | { "age": 21 }          | { "name": "created2" } |
@@ -604,7 +604,7 @@ Feature: Document Controller
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
-    When I execute the "upsert" action on the following documents:
+    When I execute the "mUpsert" action on the following documents:
       | _id           | changes                 | default                 |
       | -             | { "name": "updated0" }  | -                       |
       | "document-42" | { "name": "updated42" } | { "name": "created42" } |
@@ -687,7 +687,7 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I "delete" the following document ids:
+    When I "mDelete" the following document ids:
       | "document-1" |
       | "document-2" |
     Then I should receive a "successes" array matching:
@@ -705,7 +705,7 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I "delete" the following document ids:
+    When I "mDelete" the following document ids:
       | "document-1"  |
       | 214284        |
       | "document-42" |
@@ -729,7 +729,7 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I "get" the following document ids:
+    When I "mGet" the following document ids:
       | "document-1" |
       | "document-2" |
     Then I should receive a "successes" array of objects matching:
@@ -737,7 +737,7 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
     And I should receive a empty "errors" array
-    When I "get" the following document ids with verb "POST":
+    When I "mGet" the following document ids with verb "POST":
       | "document-1" |
       | "document-2" |
     Then I should receive a "successes" array of objects matching:
@@ -755,7 +755,7 @@ Feature: Document Controller
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
       | "document-3" | { "name": "document3" } |
-    When I "get" the following document ids:
+    When I "mGet" the following document ids:
       | "document-1"  |
       | 214284        |
       | "document-42" |
@@ -900,7 +900,7 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
       | "document-4" |
-    When I "get" the following document ids:
+    When I "mGet" the following document ids:
       | "document-1" |
       | "document-4" |
     Then I should receive a "successes" array of objects matching:
@@ -928,7 +928,7 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
       | "document-4" |
-    When I "get" the following document ids:
+    When I "mGet" the following document ids:
       | "document-1" |
       | "document-4" |
     Then I should receive a "successes" array of objects matching:
