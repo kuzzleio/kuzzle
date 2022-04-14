@@ -4979,6 +4979,33 @@ describe('Test: ElasticSearch service', () => {
         await should(internalES._getAliasFromIndice('%nepalu.mehry'))
           .not.be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
       });
+
+      it('should not throw if there is more than one alias associated with the indice but the aliases are not prefixed with "@"', async () => {
+        publicBody = {
+          ['&nepali.lia']: {
+            aliases: {
+              ['@&nepali.liia']: {},
+              ['&nepali.lia']: {}
+            }
+          }
+        };
+        privateBody = {
+          ['%nepalu.mehry']: {
+            aliases: {
+              ['@%nepali.mehry']: {},
+              ['%nepalu.mehry']: {}
+            }
+          }
+        };
+        publicES._client.indices.getAlias.resolves({ body: publicBody });
+        internalES._client.indices.getAlias.resolves({ body: privateBody });
+
+        await should(publicES._getAliasFromIndice('&nepali.lia'))
+          .not.be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
+
+        await should(internalES._getAliasFromIndice('%nepalu.mehry'))
+          .not.be.rejectedWith({ id: 'services.storage.multiple_indice_alias' });
+      });
     });
 
     describe('#_ensureAliasConsistency', () => {
