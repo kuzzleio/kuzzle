@@ -38,7 +38,7 @@ Then('The document {string} content match:', async function (documentId, dataTab
   }
 });
 
-Then('I {string} the following documents:', async function (action, dataTable) {
+Then('I {string} the following multiple documents:', async function (action, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
 
   const documents = this.parseObjectArray(dataTable);

@@ -72,7 +72,7 @@ Feature: Index Controller
     And a collection "index-storage-data":"green-taxi"
     And an index "index-stats-data"
     And a collection "index-stats-data":"red-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body             |
       | "document-1" | { "test": true } |
     And I refresh the collection

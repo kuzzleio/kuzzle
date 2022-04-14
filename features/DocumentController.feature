@@ -20,7 +20,7 @@ Feature: Document Controller
   @mappings
   Scenario: Search with highlight
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | -            | { "name": "document2", "age": 21 } |
@@ -69,7 +69,7 @@ Feature: Document Controller
   @mappings
   Scenario: Search with search_after
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2", "age": 21 } |
@@ -96,7 +96,7 @@ Feature: Document Controller
   @mappings
   Scenario: Search with scroll
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -132,7 +132,7 @@ Feature: Document Controller
   @mappings
   Scenario: Search with Koncorde filters
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                                                |
       | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }  |
       | -            | { "age": 25, "city": "Istanbul" }                   |
@@ -198,7 +198,7 @@ Feature: Document Controller
   Scenario: Check document existence
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     Then The document "document-1" should exist
@@ -212,7 +212,7 @@ Feature: Document Controller
   @mappings
   Scenario: Check multiple document existence
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -230,7 +230,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -249,7 +249,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents with success and with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -269,7 +269,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents in strict mode with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -289,7 +289,7 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
     And The document "document-2" should not exist
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2", "age": 666 } |
@@ -306,7 +306,7 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
     And The document "document-2" should not exist
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2", "age": 666 } |
@@ -323,7 +323,7 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
     And The document "document-2" should not exist
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2", "age": 666 } |
@@ -341,7 +341,7 @@ Feature: Document Controller
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
     And The document "document-2" should not exist
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2", "age": 666 } |
@@ -359,7 +359,7 @@ Feature: Document Controller
   @mappings
   Scenario: Create multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | -            | { "name": "document2" } |
@@ -379,7 +379,7 @@ Feature: Document Controller
     And I can create the following document:
       | _id  | "document-1"                       |
       | body | { "name": "document1", "age": 42 } |
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "replaced1" } |
       | "document-2" | { "name": "document2" } |
@@ -418,7 +418,7 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace on an existing document
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     When I successfully execute the action "document":"createOrReplace" with args:
@@ -440,7 +440,7 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    When I "createOrReplace" the following documents:
+    When I "createOrReplace" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | -            | "not a body"            |
@@ -456,7 +456,7 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents and return _source
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     When I successfully execute the action "document":"mCreateOrReplace" with args:
@@ -476,7 +476,7 @@ Feature: Document Controller
   @mappings
   Scenario: CreateOrReplace multiple documents and return response without _source
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     When I successfully execute the action "document":"mCreateOrReplace" with args:
@@ -526,11 +526,11 @@ Feature: Document Controller
   @mappings
   Scenario: Update multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
-    When I "update" the following documents:
+    When I "update" the following multiple documents:
       | _id          | body                   |
       | "document-1" | { "name": "updated1" } |
       | "document-2" | { "age": 21 }          |
@@ -549,11 +549,11 @@ Feature: Document Controller
   @mappings
   Scenario: Update multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
-    When I "update" the following documents:
+    When I "update" the following multiple documents:
       | _id           | body                   |
       | -             | { "name": "updated1" } |
       | "document-42" | { "name": "updated1" } |
@@ -578,7 +578,7 @@ Feature: Document Controller
   @mappings
   Scenario: Upsert multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
     When I execute the "upsert" action on the following documents:
@@ -600,7 +600,7 @@ Feature: Document Controller
   @mappings
   Scenario: Upsert multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
@@ -631,11 +631,11 @@ Feature: Document Controller
   @mappings
   Scenario: Replace multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
-    When I "replace" the following documents:
+    When I "replace" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "replaced1" } |
       | "document-2" | { "name": "replaced2" } |
@@ -652,11 +652,11 @@ Feature: Document Controller
   @mappings
   Scenario: Replace multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 42 } |
       | "document-2" | { "name": "document2" }            |
-    When I "replace" the following documents:
+    When I "replace" the following multiple documents:
       | _id           | body                    |
       | -             | { "name": "replaced1" } |
       | "document-42" | { "name": "replaced1" } |
@@ -682,7 +682,7 @@ Feature: Document Controller
   @mappings
   Scenario: Delete multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -700,7 +700,7 @@ Feature: Document Controller
   @mappings
   Scenario: Delete multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -724,7 +724,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -750,7 +750,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -769,7 +769,7 @@ Feature: Document Controller
   @mappings
   Scenario: Get multiple documents in strict mode with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -786,7 +786,7 @@ Feature: Document Controller
   @mappings
   Scenario: Count documents
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id | body                   |
       | -   | { "job": "developer" } |
       | -   | { "job": "developer" } |
@@ -801,7 +801,7 @@ Feature: Document Controller
   @mappings
   Scenario: Delete document
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |
@@ -813,7 +813,7 @@ Feature: Document Controller
   @mappings
   Scenario: Delete document and retrieve its source
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
     When I successfully execute the action "document":"delete" with args:
@@ -829,7 +829,7 @@ Feature: Document Controller
   @mappings
   Scenario: deleteByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id | body                               |
       | -   | { "name": "document1", "age": 42 } |
       | -   | { "name": "document2", "age": 84 } |
@@ -846,7 +846,7 @@ Feature: Document Controller
   @mappings
   Scenario: deleteByQuery and retrieve sources
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id | body                               |
       | -   | { "name": "document1", "age": 42 } |
       | -   | { "name": "document2", "age": 84 } |
@@ -867,7 +867,7 @@ Feature: Document Controller
   @mappings
   Scenario: deleteByQuery with Koncorde filters
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id | body                               |
       | -   | { "name": "document1", "age": 42 } |
       | -   | { "name": "document2", "age": 84 } |
@@ -885,7 +885,7 @@ Feature: Document Controller
   @mappings
   Scenario: updateByQuery
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                              |
       | "document-1" | { "name": "Sylvanas Windrunner" } |
       | "document-2" | { "name": "Tirion Fordring" }     |
@@ -912,7 +912,7 @@ Feature: Document Controller
   @mappings
   Scenario: UpdateByQuery with Koncorde filters
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                              |
       | "document-1" | { "name": "Sylvanas Windrunner" } |
       | "document-2" | { "name": "Tirion Fordring" }     |

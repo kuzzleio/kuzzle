@@ -46,7 +46,7 @@ Feature: Bulk Controller
   @mappings
   Scenario: Bulk delete by query
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id | body                               |
       | -   | { "name": "document1", "age": 42 } |
       | -   | { "name": "document2", "age": 84 } |
@@ -71,7 +71,7 @@ Feature: Bulk Controller
   @mappings
   Scenario: Bulk update by query
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                              |
       | "document-1" | { "name": "Sylvanas Windrunner" } |
       | "document-2" | { "name": "Tirion Fordring" }     |
