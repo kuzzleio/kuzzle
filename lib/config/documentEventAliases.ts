@@ -42,5 +42,5 @@ export const documentEventAliases: EventAliases = {
     'write': filter(DocumentController.actions, 'write'),
   },
   namespace: 'generic:document',
-  notBefore: ['search', 'deleteByQuery', 'updateByQuery'],
+  notBefore: ['search', 'deleteByQuery', 'updateByQuery', 'export'],
 };
