@@ -308,10 +308,11 @@ const defaultConfig: KuzzleConfiguration = {
         name: 'kuzzle',
         collections: {
           users: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -320,10 +321,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           profiles: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -344,10 +346,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           roles: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -360,10 +363,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           validations: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               properties: {
                 index: { type: 'keyword' },
@@ -376,20 +380,22 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           config: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'false',
               properties: {}
             }
           },
           'api-keys': {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -403,10 +409,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           installations: {
-            settings: {
-              number_of_shards: 1,
-              number_of_replicas: 1,
-            },
+            // @deprecated : Uncomment (made to not change existing config)
+            // settings: {
+            // number_of_shards: 1,
+            // number_of_replicas: 1,
+            // },
             mappings: {
               dynamic: 'strict',
               properties: {
