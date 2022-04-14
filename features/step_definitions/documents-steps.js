@@ -174,6 +174,21 @@ Then('I execute the search query', async function () {
   this.props.result = response.result;
 });
 
+Then('I execute the multisearch query:', async function (dataTable) {
+  const targets = this.parseObjectArray(dataTable);
+  // temporary use of sdk.query until we add the new "remaining" property
+  // in the SDK's SearchResults class
+  const response = await this.sdk.query({
+    action: 'search',
+    targets,
+    body: this.props.searchBody,
+    controller: 'document',
+    ...this.props.searchOptions,
+  });
+
+  this.props.result = response.result;
+});
+
 Then('I scroll to the next page', async function () {
   // temporary use of raw results, until the "remaining" propery is made
   // available to the SearchResults SDK class
