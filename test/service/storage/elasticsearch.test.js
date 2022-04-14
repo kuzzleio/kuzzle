@@ -484,9 +484,9 @@ describe('Test: ElasticSearch service', () => {
         'core:cache:internal:store',
         sinon.match.string,
         JSON.stringify({
+          collection,
           fetched: 1,
           index,
-          collection
         }),
         { ttl: ms(elasticsearch.config.defaults.scrollTTL) });
 
@@ -541,9 +541,9 @@ describe('Test: ElasticSearch service', () => {
         'core:cache:internal:store',
         sinon.match.string,
         JSON.stringify({
+          collection,
           fetched: 0,
           index,
-          collection
         }),
         { ttl: 30000 });
     });
