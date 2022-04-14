@@ -3168,7 +3168,6 @@ describe('Test: ElasticSearch service', () => {
 
   describe('#deleteCollection', () => {
     beforeEach(() => {
-      sinon.stub(elasticsearch, '_hasHiddenCollection').resolves(true);
       sinon.stub(elasticsearch, '_createHiddenCollection').resolves();
       sinon.stub(elasticsearch, '_getIndice').resolves(indice);
     });
@@ -3186,16 +3185,12 @@ describe('Test: ElasticSearch service', () => {
 
       should(result).be.null();
 
-      should(elasticsearch._createHiddenCollection).not.be.called();
+      should(elasticsearch._createHiddenCollection).be.called();
     });
 
     it('should create the hidden collection if the index is empty', async () => {
-      elasticsearch._hasHiddenCollection.resolves(false);
-
       await elasticsearch.deleteCollection(index, collection);
 
-      should(Mutex.prototype.lock).be.called();
-      should(Mutex.prototype.unlock).be.called();
       should(elasticsearch._createHiddenCollection).be.called();
     });
   });
@@ -4651,6 +4646,8 @@ describe('Test: ElasticSearch service', () => {
           }
         }
       });
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
     });
 
     it('does not create the hidden collection if it already exists', async () => {
