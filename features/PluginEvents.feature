@@ -168,6 +168,15 @@ Feature: Plugin Events
     Then The document "bus-5-vn" content match:
       | destination | "Sa Pa"   |
       | company     | "SOO"     |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn" |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'12:30'"              |
@@ -252,6 +261,26 @@ Feature: Plugin Events
       | destination | "Hà Giang" |
       | company     | "Cau Me"   |
       | leaveAt     | "12:30"    |
+
+  @mappings @events
+  Scenario: deleteFields and modify documents with document:generic:afterUpdate
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id     | body                           |
+      | "bus-1" | { "destination": "Ninh Binh" } |
+      | "bus-2" | { "destination": "Hanoi" }     |
+      | "bus-3" | { "destination": "Hang Mau" }  |
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
+      | _id | "'bus-1-vn-vn'" |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn-vn" |
 
   @mappings @events
   Scenario: Upsert and modify documents with document:generic:afterUpdate
