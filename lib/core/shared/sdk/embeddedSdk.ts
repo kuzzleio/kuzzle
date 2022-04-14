@@ -21,6 +21,7 @@
 
 import {
   RealtimeController,
+  AuthController,
   Notification,
   JSONObject,
   ScopeOption,
@@ -42,7 +43,7 @@ interface EmbeddedRealtime extends RealtimeController {
    * and, optionally, user events matching the provided filters will generate
    * real-time notifications.
    *
-   * @see https://docs.kuzzle.io/core/2/guides/main-concepts/6-realtime-engine/
+   * @see https://docs.kuzzle.io/core/2/guides/main-concepts/realtime-engine/
    *
    * @param index Index name
    * @param collection Collection name
@@ -87,11 +88,19 @@ interface EmbeddedRealtime extends RealtimeController {
   ): Promise<string>
 }
 
+interface EmbeddedAuth extends AuthController {
+}
+
+const forbiddenAuthActions: Set<string> = new Set([
+  'getCurrentUser'
+])
+
 /**
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
 export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
+  auth: EmbeddedAuth;
 
   constructor () {
     super(new FunnelProtocol(), { autoResubscribe: false });
@@ -132,6 +141,11 @@ export class EmbeddedSDK extends Kuzzle {
       request.propagate = options.propagate === undefined || options.propagate === null
         ? false
         : options.propagate;
+    }
+
+    // Forbid some auth action in embedded sdk
+    if (request.controller === 'auth') {
+      console.log("--- controlled : ", request.action);
     }
 
     return super.query(request, options);
