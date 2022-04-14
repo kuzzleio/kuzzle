@@ -93,12 +93,6 @@ Before({ tags: '@http' }, async function () {
   }
 });
 
-Before({ tags: '@websocket' }, async function () {
-  if (process.env.KUZZLE_PROTOCOL !== 'websocket') {
-    return 'skipped';
-  }
-});
-
 Before({ tags: '@not-http' }, async function () {
   if (process.env.KUZZLE_PROTOCOL === 'http') {
     return 'skipped';

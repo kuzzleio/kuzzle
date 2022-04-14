@@ -173,7 +173,7 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
 
-  @websocket
+  @not-http
   @mappings
   Scenario: Search on multiple index and collections
     Given an existing collection "nyc-open-data":"yellow-taxi"
