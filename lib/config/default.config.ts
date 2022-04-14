@@ -308,11 +308,11 @@ const defaultConfig: KuzzleConfiguration = {
         name: 'kuzzle',
         collections: {
           users: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -321,11 +321,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           profiles: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -346,11 +346,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           roles: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -363,11 +363,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           validations: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               properties: {
                 index: { type: 'keyword' },
@@ -380,22 +380,22 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           config: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'false',
               properties: {}
             }
           },
           'api-keys': {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'false',
               properties: {
@@ -409,11 +409,11 @@ const defaultConfig: KuzzleConfiguration = {
             }
           },
           installations: {
-            // @deprecated : Uncomment (made to not change existing config)
-            // settings: {
-            // number_of_shards: 1,
-            // number_of_replicas: 1,
-            // },
+            settings: {
+            // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
             mappings: {
               dynamic: 'strict',
               properties: {
