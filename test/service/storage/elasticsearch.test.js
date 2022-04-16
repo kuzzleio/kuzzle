@@ -2451,6 +2451,14 @@ describe('Test: ElasticSearch service', () => {
       elasticsearch.updateMapping = sinon.stub().resolves();
       elasticsearch.updateSettings = sinon.stub().resolves();
       elasticsearch.updateSearchIndex = sinon.stub().resolves();
+      elasticsearch._client.search = sinon.stub().resolves({
+        body: {
+          hits: {
+            total: 0,
+            hits: [],
+          },
+        }
+      });
       sinon.stub(elasticsearch, '_getIndice').resolves(indice);
     });
 
