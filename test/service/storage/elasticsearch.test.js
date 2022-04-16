@@ -2468,7 +2468,7 @@ describe('Test: ElasticSearch service', () => {
 
     it('should call updateSettings, updateMapping, updateByQuery', async () => {
       elasticsearch.getMapping = sinon.stub().resolves({ dynamic: 'false', properties: { city: { type: 'keyword' } } });
-      elasticsearch.updateByQuery = sinon.stub().resolves({});
+      elasticsearch._client.updateByQuery = sinon.stub().resolves({});
       elasticsearch._client.search = sinon.stub().resolves({
         body: {
           hits: {
@@ -2490,7 +2490,11 @@ describe('Test: ElasticSearch service', () => {
 
       should(elasticsearch.updateSettings).be.calledWith(index, collection, settings);
       should(elasticsearch.updateMapping).be.calledWith(index, collection, mappings);
-      should(elasticsearch.updateByQuery).be.calledWith(index, collection, {}, {});
+      should(elasticsearch._client.updateByQuery).be.calledWith({
+        conflicts: 'proceed',
+        index: `&${index}.${collection}`,
+        refresh: true
+      });
     });
 
     it('should call updateSettings, updateMapping', async () => {
