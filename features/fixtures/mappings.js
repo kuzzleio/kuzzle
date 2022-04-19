@@ -11,5 +11,15 @@ module.exports = {
         city: { type: 'keyword' },
       }
     }
+  },
+  'mtp-open-data': {
+    'green-taxi': {
+      properties: {
+        job: { type: 'keyword' },
+        name: { type: 'keyword' },
+        age: { type: 'integer' },
+        city: { type: 'keyword' },
+      }
+    }
   }
 };
