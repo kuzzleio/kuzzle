@@ -45,8 +45,6 @@ export function promiseAllN<T> (collection: Array<() => Promise<T>>, n = 100): P
 
       rejected = true;
       reject(e);
-
-      return;
     });
   }
 
