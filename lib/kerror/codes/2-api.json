@@ -186,7 +186,7 @@
         "deprecated_embedded_sdk_action": {
           "description": "A deprecated sdk action has been called",
           "code": 14,
-          "message": "The action %s of the controller %s has been called while it is deprecated %s",
+          "message": "The action %s of the controller %s has been called while it is deprecated %s.",
           "class": "BadRequestError"
         }
       }
