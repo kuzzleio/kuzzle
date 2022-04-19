@@ -19,9 +19,11 @@
  * limitations under the License.
  */
 
+import _ from 'lodash';
+
 // Dynamic index settings specified in the elasticsearch documentation :
 // https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings
-const dynamicESSettings = new Set<string> ([
+const dynamicESSettings = [
   'number_of_replicas',
   'search',
   'search.idle.after',
@@ -38,7 +40,6 @@ const dynamicESSettings = new Set<string> ([
   'blocks.read_only_allow_delete',
   'blocks.read',
   'blocks.write',
-  'blocks.write',
   'blocks.metadata',
   'max_refresh_listeners',
   'highlight.max_analyzed_offset',
@@ -49,16 +50,8 @@ const dynamicESSettings = new Set<string> ([
   'gc_deletes',
   'default_pipeline',
   'final_pipeline'
-]);
+];
 
-export function getESIndexDynamicSettings (settings: object): object {
-  const dynamicSettings: object = {};
-
-  Object.keys(settings).forEach(key => {
-    if (dynamicESSettings.has(key)) {
-      dynamicSettings[key] = settings[key];
-    }
-  });
-
-  return dynamicSettings;
+export function getESIndexDynamicSettings (requestSettings: object): object {
+  return _.pick(requestSettings, dynamicESSettings);
 }
