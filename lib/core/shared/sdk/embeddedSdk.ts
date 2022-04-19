@@ -28,6 +28,7 @@ import {
   Kuzzle,
 } from 'kuzzle-sdk';
 
+import _ from lodash;
 import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
@@ -174,7 +175,7 @@ export class EmbeddedSDK extends Kuzzle {
       );
     }
 
-    const warning = _.get(warningEmbeddedActions, [request.controller, request.action])
+    const warning = _.get(warningEmbeddedActions, [request.controller, request.action]);
     if (warning) {
       global.app.log.warn(warning);
     }
