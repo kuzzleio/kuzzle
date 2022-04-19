@@ -177,14 +177,14 @@ Feature: Document Controller
   @mappings
   Scenario: Search on multiple index and collections
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 69 } |
       | "document-2" | { "name": "document2", "age": 20 } |
       | "document-3" | { "name": "document2", "age": 42 } |
     And I refresh the collection
     Given an existing collection "mtp-open-data":"green-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                               |
       | "document-1" | { "name": "document1", "age": 18 } |
       | "document-2" | { "name": "document2", "age": 21 } |
