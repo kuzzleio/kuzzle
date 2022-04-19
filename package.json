@@ -16,7 +16,7 @@
     "services": "npx kourou app:start-services",
     "dev": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json",
     "dev:test": "npm run dev -- docker/scripts/start-kuzzle-dev.ts --enable-plugins functional-test-plugin",
-    "test": "npm run --silent test:lint && npm run test:unit:coverage && npm run test:functional",
+    "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit:coverage && npm run test:functional",
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
     "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha --exit",
     "test:functional": "npm run test:functional:http && npm run test:functional:websocket",

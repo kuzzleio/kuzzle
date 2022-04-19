@@ -173,6 +173,51 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
 
+  @not-http
+  @mappings
+  Scenario: Search on multiple index and collections
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 69 } |
+      | "document-2" | { "name": "document2", "age": 20 } |
+      | "document-3" | { "name": "document2", "age": 42 } |
+    And I refresh the collection
+    Given an existing collection "mtp-open-data":"green-taxi"
+    And I "create" the following documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 18 } |
+      | "document-2" | { "name": "document2", "age": 21 } |
+      | "document-3" | { "name": "document2", "age": 99 } |
+    And I refresh the collection
+    When I search documents with the following search body:
+      """
+      {
+
+        "query": {
+          "range": {
+            "age": {
+              "gt": 42
+            }
+          }
+        }
+      }
+      """
+    And with the following search options:
+      """
+      {
+        "lang": "koncorde"
+      }
+      """
+    And I execute the multisearch query:
+      | index           | collections     |
+      | "nyc-open-data" | ["yellow-taxi"] |
+      | "mtp-open-data" | ["green-taxi"]  |
+    Then I should receive a "hits" array of objects matching:
+      | _id          | index           | collection |
+      | "document-3" | "mtp-open-data" | "green-taxi"  |
+      | "document-1" | "nyc-open-data" | "yellow-taxi" |
+
   # document:deleteFields ===========================================================
   @mappings
   Scenario: Delete fields of a document returning the document without the specified fields

@@ -14,6 +14,7 @@ const KuzzleMock = require('../../../mocks/kuzzle.mock');
 
 const SecurityController = require('../../../../lib/api/controllers/securityController');
 const { User } = require('../../../../lib/model/security/user');
+const kerror = require('../../../../lib/kerror');
 
 describe('Test: security controller - users', () => {
   let kuzzle;
@@ -830,6 +831,111 @@ describe('Test: security controller - users', () => {
       updateStub.rejects(error);
 
       return should(securityController.updateUser(request)).rejectedWith(error);
+    });
+  });
+
+  describe('#upsertUser', () => {
+    beforeEach(() => {
+      request.input.args._id = 'test';
+      request.input.body = {
+        content: { name: 'John Doe', profileIds: ['default'] },
+      };
+    });
+
+    it('should create a user if it did not exist', async () => {
+      const createdUserAnswer = {
+        _id: request.input.args._id,
+        _source: request.input.body.content,
+      };
+
+      sinon.stub(securityController, '_persistUser').resolves(createdUserAnswer);
+
+      kuzzle.ask
+        .withArgs('core:security:user:update', request.input.args._id)
+        .rejects(kerror.get('security', 'user', 'not_found', request.input.args._id));
+
+      const response = await securityController.upsertUser(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request, ['default'], { name: 'John Doe' });
+
+      should(response).eql(createdUserAnswer);
+    });
+
+    it('should create a user if it did not exist and assign default values', async () => {
+      const credentials = { local: { username: 'username', password: 'password' } };
+      request.input.body.default = {
+        city: 'Montpellier',
+        credentials: credentials
+      };
+
+      const createdUserAnswer = {
+        _id: request.input.args._id,
+        _source: {
+          ...request.input.body.default,
+          ...request.input.body.content,
+        }
+      };
+
+      sinon.stub(securityController, '_persistUser').resolves(createdUserAnswer);
+
+      kuzzle.ask
+        .withArgs('core:security:user:update', request.input.args._id)
+        .rejects(kerror.get('security', 'user', 'not_found', request.input.args._id));
+
+      const response = await securityController.upsertUser(request);
+
+      should(securityController._persistUser)
+        .calledOnce()
+        .calledWithMatch(request,
+          ['default'],
+          { name: 'John Doe', city: 'Montpellier', credentials: credentials }
+        );
+
+      should(response).eql(createdUserAnswer);
+    });
+
+    it('should update a user if it already exist', async () => {
+      let existingUser = new User();
+      existingUser._id = request.input.args._id;
+      existingUser.name = request.input.body.content.name;
+      existingUser.profileIds = [...request.input.body.content.profileIds];
+
+      let updatedUser = {};
+      request.input.body = { content: { foo: 'bar', profileIds: ['default'] } };
+      Object.assign(updatedUser, existingUser);
+      Object.assign(updatedUser, request.input.body.content);
+
+      kuzzle.ask
+        .withArgs('core:security:user:get', request.input.args._id)
+        .returns(existingUser);
+
+      const updateUserStub = kuzzle.ask
+        .withArgs('core:security:user:update', request.input.args._id)
+        .returns(updatedUser);
+
+      const response = await securityController.upsertUser(request);
+
+      should(updateUserStub).calledWithMatch(
+        'core:security:user:update',
+        'test',
+        ['default'],
+        {
+          foo: 'bar',
+          profileIds: ['default']
+        },
+        {
+          refresh: 'wait_for',
+          retryOnConflict: 10,
+          userId: request.context.user._id,
+        });
+
+      should(response).be.an.Object().and.not.instanceof(User);
+      should(response).match({
+        _id: updatedUser._id,
+        _source: request.input.body.content,
+      });
     });
   });
 
