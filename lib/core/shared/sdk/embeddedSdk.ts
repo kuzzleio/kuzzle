@@ -21,7 +21,6 @@
 
 import {
   RealtimeController,
-  AuthController,
   Notification,
   JSONObject,
   ScopeOption,
@@ -36,6 +35,32 @@ import * as kerror from '../../../kerror';
 import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
+
+const forbiddenEmbeddedActions = {
+  'auth': new Set([
+    'getCurrentUser',
+    'checkRights',
+    'createApiKey',
+    'createMyCredentials',
+    'credentialsExist',
+    'deleteApiKey',
+    'getMyCredentials',
+    'getMyRights',
+    'getStrategies',
+    'logout',
+    'refreshToken',
+    'searchApiKeys',
+    'updateMyCredentials',
+    'updateSelf',
+    'validateMyCredentials',
+  ]),
+};
+
+const warningEmbeddedActions = {
+  'auth': {
+    'login': 'EmbeddedSdk\'s auth:login is deprecated, use user impersonation instead',
+  }
+};
 
 interface EmbeddedRealtime extends RealtimeController {
   /**
@@ -88,13 +113,6 @@ interface EmbeddedRealtime extends RealtimeController {
   ): Promise<string>
 }
 
-interface EmbeddedAuth extends AuthController {
-}
-
-const forbiddenAuthActions: Set<string> = new Set([
-  'getCurrentUser'
-])
-
 /**
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
@@ -143,9 +161,22 @@ export class EmbeddedSDK extends Kuzzle {
         : options.propagate;
     }
 
-    // Forbid some auth action in embedded sdk
-    if (request.controller === 'auth') {
-      console.log("--- controlled : ", request.action);
+    if (forbiddenEmbeddedActions[request.controller] !== undefined
+      && forbiddenEmbeddedActions[request.controller].has(request.action)
+    ) {
+      throw kerror.get(
+        'api',
+        'process',
+        'deprecated_embedded_sdk_action',
+        request.action,
+        request.controller,
+        'use user impersonation instead',
+      );
+    }
+
+    const warning = _.get(warningEmbeddedActions, [request.controller, request.action])
+    if (warning) {
+      global.app.log.warn(warning);
     }
 
     return super.query(request, options);
