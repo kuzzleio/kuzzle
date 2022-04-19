@@ -28,7 +28,7 @@ import {
   Kuzzle,
 } from 'kuzzle-sdk';
 
-import _ from lodash;
+import _ from 'lodash';
 import { RequestPayload, ResponsePayload } from '../../../types';
 import FunnelProtocol from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
