@@ -112,7 +112,7 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide for more in
 console.log(`Kuzzle will listen on port ${app.config.content.server.port}`);
 
 // Set log level to verbose
-app.config.content['kuzzle-plugin-logger'].services.stdout.level = 'verbose';
+app.config.content.plugins['kuzzle-plugin-logger'].services.stdout.level = 'verbose';
 
 // Listen to port 4242
 app.config.content.server.port = 4242;
