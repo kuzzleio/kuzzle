@@ -19,9 +19,8 @@
  * limitations under the License.
  */
 
-import { KuzzleEventEmitter } from 'kuzzle-sdk';
+import { KuzzleEventEmitter, RequestPayload } from 'kuzzle-sdk';
 
-import { RequestPayload } from '../../../types';
 import { Request } from '../../../api/request';
 import * as kerror from '../../../kerror';
 
