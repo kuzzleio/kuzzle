@@ -1,20 +1,14 @@
 ---
 code: true
 type: page
-title: createUser
+title: upsertUser
 ---
 
-# createUser
+# upsertUser
 
-Creates a new user.
+<SinceBadge version="2.18.0"/>
 
-The body contains the user data and must have the following properties:
-
-::: warning
-This method is not intended to be exposed to the anonymous user because it allows the user to assign the profile of their choice.
-
-Expose the [security:createRestrictedUser](/core/2/api/controllers/security/create-restricted-user) method instead.
-:::
+Applies partial changes to an user. If the user doesn't already exist, a new user is created.
 
 ---
 
@@ -23,8 +17,7 @@ Expose the [security:createRestrictedUser](/core/2/api/controllers/security/crea
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/users/<_id>/_create[?refresh=wait_for]
-URL(2): http://kuzzle:7512/users/_create[?refresh=wait_for]
+URL: http://kuzzle:7512/users/<_id>/_upsert[?refresh=wait_for][&retryOnConflict=10]
 Method: POST
 Body:
 ```
@@ -39,9 +32,13 @@ Body:
   "credentials": {
     // example with the "local" authentication strategy
     "local": {
-      username: "jdoe",
-      password: "foobar"
+      "username": "jdoe",
+      "password": "foobar"
     }
+  },
+  "default": {
+    // optional: user fields to add to the "content" part if the user
+    // is created
   }
 }
 ```
@@ -50,8 +47,11 @@ Body:
 
 ```js
 {
+  "index": "<index>",
+  "collection": "<collection>",
   "controller": "security",
-  "action": "createUser",
+  "action": "upsertUser",
+  "_id": "<userId>",
   "body": {
     "content": {
       "profileIds": ["<profileId>"],
@@ -64,25 +64,29 @@ Body:
         username: "jdoe",
         password: "foobar"
       }
+    },
+    "default": {
+      // optional: user fields to add to the "content" part if the user
+      // is created
     }
   },
 
-  // optional arguments
-  "_id": "<kuid>",
+  // Optional
   "refresh": "wait_for",
-  "kuid": "human"
+  "retryOnConflict": 10
 }
 ```
-
 ---
 
 ## Arguments
 
-### Optional:
+- `_id`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid)
 
-- `_id`: user [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid). An error is returned if the provided identifier already exists. If not provided, a random kuid is automatically generated.
-- `refresh`: if set to `wait_for`, Kuzzle will not respond until the newly created user is indexed (default: `"wait_for"`)
-- `kuid`: if set to `human`, Kuzzle will generate a human readable id, otherwise if set to `uuid` Kuzzle will generate a standard uuid (default: `"human"`)
+### Optional arguments
+
+- `refresh`: if set to `wait_for`, Kuzzle will not respond until the user changes are indexed (default: `"wait_for"`)
+- `retryOnConflict`: in case of an update conflict in Elasticsearch, the number of retries before aborting the operation (default: `10`)
+
 ---
 
 ## Body properties
@@ -91,29 +95,30 @@ Body:
   - `profileIds`: an array of security profiles attributed to the user
   - any other property: optional additional user information
 - `credentials`: describe how the new user can be authenticated. This object contains any number of properties, named after the target authentication strategy to use. Each one of these properties are objects containing the credentials information, corresponding to that authentication strategy. If left empty, the new user is created but cannot be authenticated.
+- `default`: (optional) fields to add to the user if it gets created
 
 ---
 
 ## Response
 
-Returns the user creation status:
+Returns information about the updated user:
 
-- `_id`: new user kuid
-- `_source`: new user content and attributed profiles
+- `_id`: user kuid
+- `_source`: actualized user content
 
 ```js
 {
   "status": 200,
   "error": null,
   "controller": "security",
-  "action": "createUser",
+  "action": "upsertUser",
   "requestId": "<unique request identifier>",
   "result": {
     "_id": "<kuid>",
     "_source": {
       "profileIds": ["<profileId>"],
       "fullname": "John Doe"
-    }
+    },
   }
 }
 ```

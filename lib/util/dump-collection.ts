@@ -25,7 +25,7 @@ import { HttpStream } from '../types';
  * @param {Object} target the object we have to flatten
  * @returns {Object} the flattened object
  */
-function flattenObject (target: JSONObject): JSONObject {
+export function flattenObject (target: JSONObject): JSONObject {
   const output = {};
 
   flattenStep(output, target);
@@ -45,8 +45,8 @@ function flattenStep (
     const newKey = prev ? prev + '.' + key : key;
 
     if (Object.prototype.toString.call(value) === '[object Object]') {
-      output[newKey] = value;
       flattenStep(output, value, newKey);
+      continue;
     }
 
     output[newKey] = value;
@@ -58,18 +58,19 @@ function flattenStep (
  * @param mapping
  * @returns
  */
-function extractMappingFields (mapping: JSONObject) {
+export function extractMappingFields (mapping: JSONObject) {
   const newMapping = {};
 
+  if (mapping.properties) {
+    return extractMappingFields(mapping.properties);
+  }
+
   for (const key of Object.keys(mapping)) {
-    if (key === 'properties' && isObject(mapping[key])) {
-      newMapping[key] = extractMappingFields(mapping[key]);
-    }
-    else if (isObject(mapping[key]) && mapping[key].type) {
+    if (isObject(mapping[key]) && mapping[key].type) {
       newMapping[key] = mapping[key].type;
     }
-    else {
-      newMapping[key] = mapping[key];
+    else if (isObject(mapping[key])) {
+      newMapping[key] = extractMappingFields(mapping[key]);
     }
   }
 
@@ -85,7 +86,7 @@ function extractMappingFields (mapping: JSONObject) {
  * @returns The values in the same order as the fields
  * @see https://lodash.com/docs/4.17.15#values
  */
-function pickValues (object: any, fields: string[]): any[] {
+export function pickValues (object: any, fields: string[]): any[] {
   return fields.map(f => formatValueForCSV(get(object, f)));
 }
 

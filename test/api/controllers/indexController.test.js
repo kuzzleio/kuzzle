@@ -70,6 +70,19 @@ describe('IndexController', () => {
 
       should(response).match({ deleted: ['a', 'e', 'i'] });
     });
+
+    it('should returns all indexes when used with embedded SDK', async () => {
+      request.input.body = {
+        indexes: ['a', 'c', 'e', 'g', 'i']
+      };
+      request.context.token = null;
+      request.context.user = null;
+
+      await indexController.mDelete(request);
+
+      should(kuzzle.ask)
+        .be.calledWith('core:storage:public:index:mDelete', ['a', 'c', 'e', 'g', 'i']);
+    });
   });
 
   describe('#create', () => {

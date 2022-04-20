@@ -35,7 +35,7 @@ export class KuzzleError extends Error {
 
   /**
    * Error unique code
-   * @see https://docs.kuzzle.io/core/2/core/2/api/essentials/error-codes/
+   * @see https://docs.kuzzle.io/core/2/api/errors/error-codes/
    */
   public code: number;
 

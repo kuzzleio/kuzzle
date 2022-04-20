@@ -26,9 +26,10 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
+  RequestPayload,
 } from 'kuzzle-sdk';
 
-import { RequestPayload, ResponsePayload } from '../../../types';
+import { ResponsePayload } from '../../../types';
 import { FunnelProtocol } from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import * as kerror from '../../../kerror';
