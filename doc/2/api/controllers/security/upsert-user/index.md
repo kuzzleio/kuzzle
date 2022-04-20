@@ -6,7 +6,7 @@ title: upsertUser
 
 # upsertUser
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.18.0"/>
 
 Applies partial changes to an user. If the user doesn't already exist, a new user is created.
 
