@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import Rights from './rights';
-import Bluebird from 'bluebird';
 import _ from 'lodash';
+
+import Rights from './rights';
 import * as kerror from '../../kerror';
 import { Profile } from './profile';
 import { KuzzleRequest } from '../../../index';
@@ -55,7 +55,7 @@ export class User {
    */
   async getRights () {
     const profiles = await this.getProfiles();
-    const results = await Bluebird.map(profiles, p => p.getRights());
+    const results = await Promise.all(profiles.map(p => p.getRights()));
 
     const rights = {};
 
@@ -87,7 +87,7 @@ export class User {
     }
 
     // Every target must be allowed by at least one profile
-    return this.areTargetsAllowed(profiles, targets);
+    return this.areTargetsAllowed(request, profiles, targets);
   }
 
   /**
@@ -95,8 +95,13 @@ export class User {
    * while skipping the ones that includes a wildcard since they will be expanded
    * later on, based on index and collections authorized for the given user.
    */
-  private async areTargetsAllowed (profiles: Profile[], targets: Target[]) {
-    const profilesPolicies = await Bluebird.map(profiles, profile => profile.getAllowedPolicies());
+  private async areTargetsAllowed (
+    request: KuzzleRequest,
+    profiles: Profile[],
+    targets: Target[]
+  ) {
+    const profilesPolicies = await Promise.all(profiles.map(
+      profile => profile.getAllowedPolicies(request)));
 
     // Every target must be allowed by at least one profile
     for (const target of targets) {

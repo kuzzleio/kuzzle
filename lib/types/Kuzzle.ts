@@ -1,9 +1,9 @@
 import { JSONObject } from '../../index';
 
 export type InstallationConfig = {
-  id: string,
-  handler: () => Promise<void>,
-  description?: string
+  id: string;
+  handler: () => Promise<void>;
+  description?: string;
 }
 export type StartOptions = {
   import?: JSONObject;

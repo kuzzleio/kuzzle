@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -31,26 +31,26 @@ import { Policy, OptimizedPolicy } from '../../../index';
 
 /** @internal */
 type CreateOrReplaceOptions = {
-  method?: string,
-  refresh?: string,
-  strict?: boolean,
-  userId?: string
+  method?: string;
+  refresh?: string;
+  strict?: boolean;
+  userId?: string;
 };
 
 /** @internal */
 type ValidateAndSaveProfileOptions = {
-  method?: string,
-  refresh?: string,
-  strict?: boolean,
-  retryOnConflict?: number
+  method?: string;
+  refresh?: string;
+  strict?: boolean;
+  retryOnConflict?: number;
 };
 
 /** @internal */
 type UpdateOptions = {
-  userId?: string,
-  refresh?: string,
-  strict?: boolean,
-  retryOnConflict?: number
+  userId?: string;
+  refresh?: string;
+  strict?: boolean;
+  retryOnConflict?: number;
 };
 
 /**

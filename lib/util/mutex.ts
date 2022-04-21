@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -53,19 +53,19 @@ export interface MutexOptions {
   /**
    * Delay between 2 lock attempts (default: 200)
    */
-  attemptDelay?: number,
+  attemptDelay?: number;
 
   /**
    * Mutex lock acquisition timeout, in milliseconds (default: -1)
    *   If `-1`, will try to acquire the lock indefinitely.
    *   If `0`, locking will fail immediately if it cannot lock with its 1st attempt
    */
-  timeout?: number,
+  timeout?: number;
 
   /**
    * Lock TTL in milliseconds (default: 5000)
    */
-  ttl?: number,
+  ttl?: number;
 }
 
 /**
@@ -120,7 +120,7 @@ export class Mutex {
    *
    * @return {Promise.<boolean>}
    */
-  async lock () : Promise<boolean> {
+  async lock (): Promise<boolean> {
     if (this._locked) {
       throw fatal.get('assertion_failed', `resource "${this.resource}" already locked by this mutex (id: ${this.mutexId})`);
     }
@@ -157,7 +157,7 @@ export class Mutex {
    *
    * @return {Promise}
    */
-  async unlock () : Promise<void> {
+  async unlock (): Promise<void> {
     if (! this._locked) {
       throw fatal.get('assertion_failed', `tried to unlock the resource "${this.resource}", which is not locked (mutex id: ${this.mutexId})`);
     }

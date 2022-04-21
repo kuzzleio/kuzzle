@@ -66,8 +66,8 @@ export type ServerConfiguration = {
     *
     * @default 0
     */
-    accessLogIpOffset: number
-  },
+    accessLogIpOffset: number;
+  };
 
   /**
   * protocols accepted by Kuzzle. 
@@ -82,14 +82,14 @@ export type ServerConfiguration = {
       * 
       * @default true
       */
-      allowCompression: boolean
+      allowCompression: boolean;
 
       /**
        * Set to "false" to disable HTTP support
        * 
        * @default true
        */
-      enabled: boolean
+      enabled: boolean;
 
       /**
        * Maximum number of encoding layers that can be applied to an http message, using the Content-Encoding header. 
@@ -98,29 +98,29 @@ export type ServerConfiguration = {
        * 
        * @default 3
        */
-      maxEncodingLayers: number
+      maxEncodingLayers: number;
 
       /**
        * Maximum size of requests sent via http forms
        * 
        * @default "1MB"
        */
-      maxFormFileSize: string
-    }
+      maxFormFileSize: string;
+    };
     mqtt: {
       /**
       * Set to true to enable MQTT support
       * 
       * @default false
       */
-      enabled: boolean
+      enabled: boolean;
 
       /**
       * Allow MQTT pub/sub capabilities or restrict to Kuzzle requests only
       * 
       * @default false
       */
-      allowPubSub: boolean
+      allowPubSub: boolean;
 
 
       /**
@@ -128,7 +128,7 @@ export type ServerConfiguration = {
        * 
        * @default false
        */
-      developmentMode: boolean
+      developmentMode: boolean;
 
       /**
        * Delay in ms to apply between a disconnection notification is 
@@ -136,21 +136,21 @@ export type ServerConfiguration = {
        * 
        * @default 250
        */
-      disconnectDelay: number
+      disconnectDelay: number;
 
       /**
        * Name of the topic listened by the plugin for requests
        * 
        * @default 'Kuzzle/request'
        */
-      requestTopic: string
+      requestTopic: string;
 
       /**
        * Name of the topic clients should listen to get requests result
        * 
        * @default 'Kuzzle/response'
        */
-      responseTopic: string
+      responseTopic: string;
 
         /**
         * Constructor options passed to underlying MQTT server. 
@@ -160,23 +160,23 @@ export type ServerConfiguration = {
         /**
          * @default 1883
          */
-        port: number
-      }
+        port: number;
+      };
 
       /**
        * Set to "true" to enable realtime notifications like "TokenExpired" notifications
        * 
        * @default true
        */
-      realtimeNotifications: boolean
-    }
+      realtimeNotifications: boolean;
+    };
     websocket: {
       /**
        * Set to true to enable WebSocket support
        * 
        * @default true
        */
-      enabled: boolean
+      enabled: boolean;
 
       /**
       * The maximum time (in milliseconds) without sending or receiving a message from a client. 
@@ -186,33 +186,33 @@ export type ServerConfiguration = {
       * 
       * @default 60000
       */
-      idleTimeout: number
+      idleTimeout: number;
 
       /**
        * Enable/Disable per message compression
        * 
        * @default false
        */
-      compression: boolean
+      compression: boolean;
 
       /**
       * The maximum number of messages per second a single socket can
       * submit to the server.
       * @default 0
       */
-      rateLimit: number
+      rateLimit: number;
 
       /**
        * Set to "true" to enable realtime notifications like "TokenExpired" notifications
        * 
        * @default true
        */
-      realtimeNotifications: boolean
-    }
-  }
+      realtimeNotifications: boolean;
+    };
+  };
 
   /**
    * @default true
    */
-   strictSdkVersion: boolean
+   strictSdkVersion: boolean;
 }

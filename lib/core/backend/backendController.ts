@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -23,6 +23,7 @@ import { Inflector } from '../../util/inflector';
 import * as kerror from '../../kerror';
 import { ControllerDefinition, Controller } from '../../types';
 import { ApplicationManager } from './index';
+import Plugin from '../plugin/plugin';
 
 const assertionError = kerror.wrap('plugin', 'assert');
 const runtimeError = kerror.wrap('plugin', 'runtime');
@@ -53,7 +54,9 @@ export class BackendController extends ApplicationManager {
       throw runtimeError.get('already_started', 'controller');
     }
 
-    this._add(name, definition);
+    Plugin.checkControllerDefinition(name, definition);
+
+    this.add(name, definition);
   }
 
   /**
@@ -129,6 +132,8 @@ export class BackendController extends ApplicationManager {
         .replace('-controller', '');
     }
 
+    Plugin.checkControllerDefinition(controller.name, controller.definition);
+
     for (const [action, definition] of Object.entries(controller.definition.actions)) {
       if (typeof definition.handler !== 'function') {
         throw assertionError.get(
@@ -145,10 +150,16 @@ export class BackendController extends ApplicationManager {
       }
     }
 
-    this._add(controller.name, controller.definition);
+    this.add(controller.name, controller.definition);
   }
 
-  private _add (name: string, definition: ControllerDefinition) {
+  /**
+   * Adds the controller definition to the list of application controllers.
+   *
+   * This method also check if the definition is valid to throw with a stacktrace
+   * beginning on the user code adding the controller.
+   */
+  private add (name: string, definition: ControllerDefinition) {
     if (this._application._controllers[name]) {
       throw assertionError.get(
         'invalid_controller_definition',

@@ -12,29 +12,29 @@ export type OpenApiDefinition = {
       url: string;
       email: string;
       discord: string;
-    },
+    };
     license: {
       name: string;
       url: string;
-    },
+    };
     version: string;
-  },
+  };
   externalDocs: {
     description: string;
     url: string;
-  },
+  };
   servers: Array<{
     url: string;
     description: string;
     variables: {
-      baseUrl: { default: string; },
-      port: { default: number; },
-    }
-  }>,
+      baseUrl: { default: string };
+      port: { default: number };
+    };
+  }>;
   tags: Array<{
     description: string;
     name: string;
-  }>,
+  }>;
   schemes: string[];
   paths: JSONObject;
   components: JSONObject;

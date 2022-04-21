@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -55,7 +55,7 @@ export class BackendVault extends ApplicationManager {
   /**
    * Decrypted secrets
    */
-  get secrets () : JSONObject {
+  get secrets (): JSONObject {
     // We need to load the secrets before Kuzzle start so we can use them
     // in the configuration (e.g. configure ES X-Pack credentials)
     if (! this._application.started && ! this.decrypted) {

@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,8 +19,12 @@
  * limitations under the License.
  */
 
+import { isPlainObject } from '../../util/safeObject';
+import { get } from 'lodash';
+import moment from 'moment';
 import * as uuid from 'uuid';
 import { nanoid } from 'nanoid';
+
 import { JSONObject } from 'kuzzle-sdk';
 
 import { RequestInput } from './requestInput';
@@ -30,8 +34,6 @@ import { KuzzleError, InternalError } from '../../kerror/errors';
 import * as kerror from '../../kerror';
 import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
-import { isPlainObject } from '../../util/safeObject';
-import { get } from 'lodash';
 
 const assertionError = kerror.wrap('api', 'assert');
 
@@ -231,7 +233,7 @@ export class KuzzleRequest {
       /**
        * HTTP status code
        */
-      status?: number
+      status?: number;
       /**
        * additional response protocol headers
        */
@@ -292,7 +294,7 @@ export class KuzzleRequest {
    * across the network and then used to instantiate a new Request
    * object
    */
-  serialize (): { data: JSONObject, options: JSONObject } {
+  serialize (): { data: JSONObject; options: JSONObject } {
     const serialized = {
       data: {
         _id: this[_input].args._id,
@@ -605,6 +607,50 @@ export class KuzzleRequest {
   }
 
   /**
+   * Gets a parameter from a request arguments and check with moment.js if the date is an ISO8601 format date
+   * or is valid regarding a given custom format (example : YYYY-MM-DD).
+   *
+   * @param name parameter name.
+   * @param format optional parameter to check if the date is valid regarding a format. If not set, the format checked
+   * is ISO8601.
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   */
+  getDate (name: string, format?: string): string {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    if (format && ! moment(args[name], format, true).isValid()) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    if (! moment(args[name], moment.ISO_8601).isValid()) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    return this.getString(name);
+  }
+
+  /**
+   * Gets a parameter from a request arguments and returns it to timestamp format.
+   *
+   * @param name parameter name.
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   */
+  getTimestamp (name: string): number {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    if ( moment(args[name], true).isValid() === false) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    return this.getInteger(name);
+  }
+
+  /**
    * Returns the index specified in the request
    */
   getIndex (): string {
@@ -633,7 +679,7 @@ export class KuzzleRequest {
   /**
    * Returns the index and collection specified in the request
    */
-  getIndexAndCollection (): { index: string, collection: string } {
+  getIndexAndCollection (): { index: string; collection: string } {
     if (! this.input.args.index) {
       throw assertionError.get('missing_argument', 'index');
     }
@@ -678,8 +724,8 @@ export class KuzzleRequest {
    */
   getId (
     options: {
-      ifMissing?: 'error' | 'generate' | 'ignore',
-      generator?: () => string,
+      ifMissing?: 'error' | 'generate' | 'ignore';
+      generator?: () => string;
     } = { generator: uuid.v4, ifMissing: 'error' }
   ): string {
     const id = this.input.args._id;
@@ -751,11 +797,11 @@ export class KuzzleRequest {
    * Returns the search params.
    */
   getSearchParams (): {
-    from: number,
-    query: JSONObject,
-    scrollTTL: string,
-    searchBody: JSONObject,
-    size: number,
+    from: number;
+    query: JSONObject;
+    scrollTTL: string;
+    searchBody: JSONObject;
+    size: number;
     } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
@@ -979,6 +1025,7 @@ export class KuzzleRequest {
 
     return value;
   }
+
 }
 
 export class Request extends KuzzleRequest {}

@@ -93,7 +93,6 @@ kourou document:updateByQuery <index> <collection> <body> -a silent=true
 - `refresh`: if set to `wait_for`, Kuzzle will not respond until the update is indexed
 - `source`: if set to `true` Kuzzle will return the updated documents body in the response.
 - `lang`: specify the query language to use. By default, it's `elasticsearch` but `koncorde` can also be used. <SinceBadge version="2.8.0"/>
-- `strict`: if set, an error will occur if at least one document has not been created/replaced
 - `silent`: if set, then Kuzzle will not generate notifications <SinceBadge version="2.9.2" />
 
 ## Body properties
@@ -107,7 +106,7 @@ kourou document:updateByQuery <index> <collection> <body> -a silent=true
 
 Returns an object containing 2 arrays: `successes` and `errors`
 
-Each updated document is an object of the `successes` array with the following properties:
+Each updated document is an object of the successes array with the following properties:
 
 - `_id`: document unique identifier
 - `_source`: document content
@@ -119,8 +118,6 @@ Each errored document is an object of the `errors` array with the following prop
 - `status`: HTTP error status code
 - `reason`: human readable reason
 
-<SinceBadge version="auto-version"/>
-If `strict` mode is enabled, will rather return an error if at least one document has not been updated.
 ```js
 {
   "status": 200,
