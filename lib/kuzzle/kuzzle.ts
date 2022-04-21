@@ -164,8 +164,9 @@ class Kuzzle extends KuzzleEventEmitter {
   };
 
   private koncorde: Koncorde;
-  private id: string;
   private secret: string;
+
+  public id: string;
 
   constructor (config: KuzzleConfiguration) {
     super(
