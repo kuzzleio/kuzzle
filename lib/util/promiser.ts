@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-export function promiser(promise: Promise<any> | Promise<any>[]) {
+export function promiser (promise: Promise<any> | Promise<any>[]) {
   if (Array.isArray(promise)) {
     promise = Promise.all(promise);
   }
