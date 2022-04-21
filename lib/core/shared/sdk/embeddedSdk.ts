@@ -37,7 +37,7 @@ import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
 
-const deprecatedForbiddenEmbeddedActions = {
+const forbiddenEmbeddedActions = {
   'auth': new Set([
     'getCurrentUser',
     'checkRights',
@@ -57,7 +57,7 @@ const deprecatedForbiddenEmbeddedActions = {
   ]),
 };
 
-const deprecatedWarnEmbeddedActions = {
+const warnEmbeddedActions = {
   'auth': {
     'login': 'EmbeddedSdk\'s auth:login is deprecated, use user impersonation instead',
   }
@@ -161,20 +161,20 @@ export class EmbeddedSDK extends Kuzzle {
         : options.propagate;
     }
 
-    if (deprecatedForbiddenEmbeddedActions[request.controller] !== undefined
-      && deprecatedForbiddenEmbeddedActions[request.controller].has(request.action)
+    if (forbiddenEmbeddedActions[request.controller] !== undefined
+      && forbiddenEmbeddedActions[request.controller].has(request.action)
     ) {
       throw kerror.get(
         'api',
         'process',
-        'deprecated_embedded_sdk_action',
+        'forbidden_embedded_sdk_action',
         request.action,
         request.controller,
-        'use user impersonation instead',
+        ', use user impersonation or security controller instead',
       );
     }
 
-    const warning = _.get(deprecatedWarnEmbeddedActions, [request.controller, request.action]);
+    const warning = _.get(warnEmbeddedActions, [request.controller, request.action]);
     if (warning) {
       global.app.log.warn(warning);
     }

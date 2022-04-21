@@ -40,7 +40,7 @@ Learn more about [Backend Realtime Subscriptions](/core/2/guides/develop-on-kuzz
 :::
 
 ::: warning
-The [auth controller](/sdk/js/7/controllers/auth/) is deprecated in the embedded sdk. [User impersonation](/core/2/guides/develop-on-kuzzle/embedded-sdk#user-impersonation) is preferred.
+The [auth controller](/sdk/js/7/controllers/auth/) is deprecated in the embedded sdk. [User impersonation](/core/2/guides/develop-on-kuzzle/embedded-sdk#user-impersonation) or usage of the [security controller](/sdk/js/7/controllers/security/) is preferred.
 :::
 
 **Example:** _Create a new document by using the [document.create](/sdk/js/7/controllers/document/create) method_
