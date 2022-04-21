@@ -834,6 +834,45 @@ describe('Test: security controller - users', () => {
     });
   });
 
+  describe('#mUpsertUser', () => {
+    beforeEach(async () => {
+      request.input.body = {
+        users: [
+          {
+            content: { profileIds: ["default"] },
+            credentials: { local: { username: "user-test", password: "user-test" } },
+            _id: "user-test",
+          },
+          {
+            content: { profileIds: ["default"] },
+            credentials: { local: { username: "user-test-2", password: "user-test_2" } },
+            _id: "user-test-2",
+          }
+        ],
+        default: { name: "default-name" }
+      }
+    });
+
+    it.only(`should create two users because they didn't exist`, async () => {
+      const expectResponse = {
+        _id: request.input.body.users[0]._id,
+        _source: request.input.body.users[0].content,
+      };
+
+      sinon.stub(securityController, '_persistUser').resolves(expectResponse);
+      
+      kuzzle.ask
+        .withArgs('core:security:user:update', expectResponse._id)
+        .rejects(kerror.get('security', 'user', 'not_found', expectResponse._id));
+
+      const response = await securityController.mUpsertUsers(request);
+
+      console.log(response);
+
+      should(response.successes[0]).eql(expectResponse);
+    });
+  });
+
   describe('#upsertUser', () => {
     beforeEach(() => {
       request.input.args._id = 'test';
