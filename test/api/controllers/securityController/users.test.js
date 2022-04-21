@@ -869,6 +869,24 @@ describe('Test: security controller - users', () => {
 
       should(response.successes[0]).eql(expectResponse);
     });
+
+    it('should return empty successes and errors if no user is provided', async () => {
+      request.input.body.users = [];
+
+      const response = await securityController.mUpsertUsers(request);
+
+      should(response.successes).be.an.Array().and.be.empty();
+      should(response.errors).be.an.Array().and.be.empty();
+    });
+
+    it('should throw a BadRequestError', async () => {
+      request.input.body.users[0]._id = undefined;
+
+      await should(securityController.mUpsertUsers(request))
+        .rejectedWith(BadRequestError, {
+          message: 'Missing property "id" in users object'
+        });
+    });
   });
 
   describe('#upsertUser', () => {
