@@ -154,7 +154,7 @@ export class EmbeddedSDK extends Kuzzle {
     options: { propagate?: boolean } = {}
   ): Promise<ResponsePayload> {
     // By default, do not propagate realtime notification accross cluster nodes
-    if ( isPlainObject(request)
+    if (isPlainObject(request)
       && request.controller === 'realtime'
       && request.action === 'subscribe'
     ) {
@@ -178,7 +178,7 @@ export class EmbeddedSDK extends Kuzzle {
 
     const warning = _.get(warnEmbeddedActions, [request.controller, request.action]);
     if (warning) {
-      global.app.log.warn(warning);
+      global.kuzzle.log.warn(warning);
     }
 
     return super.query(request, options);

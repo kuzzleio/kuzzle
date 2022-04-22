@@ -65,5 +65,11 @@ describe('EmbeddedSDK', () => {
       should(embeddedSdk.protocol.query)
         .be.calledWithMatch({ ...request, propagate: true });
     });
+
+    it('should throw an error if the action is forbidden', async () => {
+      const forbiddenRequest = { controller: 'auth', action: 'createApiKey' };
+
+      should(() => embeddedSdk.query(forbiddenRequest)).throw(Error);
+    });
   });
 });
