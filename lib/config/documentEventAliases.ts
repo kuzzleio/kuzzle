@@ -19,14 +19,19 @@
  * limitations under the License.
  */
 
-import { EventAliases } from '../types/config/EventAliases';
 import DocumentController from '../api/controllers/documentController';
+
+interface EventAliases {
+  list: Record<string, unknown>;
+  namespace: string;
+  notBefore: string[];
+}
 
 function filter (obj: Record<string, unknown>, expectValue: string): Array<string> {
   const result = [];
 
-  for (const action in obj) {
-    if (obj[action] === expectValue) {
+  for (const [action, event] of Object.entries(obj)) {
+    if (event === expectValue) {
       result.push(action);
     }
   }
@@ -36,10 +41,10 @@ function filter (obj: Record<string, unknown>, expectValue: string): Array<strin
 
 export const documentEventAliases: EventAliases = {
   list: {
-    'delete': filter(DocumentController.actions, 'delete'),
-    'get': filter(DocumentController.actions, 'get'),
-    'update': filter(DocumentController.actions, 'update'),
-    'write': filter(DocumentController.actions, 'write'),
+    delete: filter(DocumentController.actions, 'delete'),
+    get: filter(DocumentController.actions, 'get'),
+    update: filter(DocumentController.actions, 'update'),
+    write: filter(DocumentController.actions, 'write'),
   },
   namespace: 'generic:document',
   notBefore: ['search', 'deleteByQuery', 'updateByQuery', 'export'],
