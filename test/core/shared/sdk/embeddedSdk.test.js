@@ -14,9 +14,10 @@ const { EmbeddedSDK } = require('../../../../lib/core/shared/sdk/embeddedSdk');
 
 describe('EmbeddedSDK', () => {
   let embeddedSdk;
+  let kuzzle;
 
   beforeEach(() => {
-    new KuzzleMock();
+    kuzzle = new KuzzleMock();
     embeddedSdk = new EmbeddedSDK();
   });
 
@@ -70,6 +71,15 @@ describe('EmbeddedSDK', () => {
       const forbiddenRequest = { controller: 'auth', action: 'createApiKey' };
 
       should(() => embeddedSdk.query(forbiddenRequest)).throw(Error);
+    });
+
+    it('should warn if the action is not supported', async () => {
+      const warnRequest = { controller: 'auth', action: 'login' };
+
+      embeddedSdk.query(warnRequest);
+
+      should(kuzzle.log.warn)
+        .be.calledOnce();
     });
   });
 });
