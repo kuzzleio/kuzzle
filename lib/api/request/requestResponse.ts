@@ -29,6 +29,11 @@ import { KuzzleError } from '../../kerror/errors/kuzzleError';
 const _request = 'request\u200b';
 const _headers = 'headers\u200b';
 
+// List of headers that should not be present in the body of the response
+const restrictedHeaders = [
+  'set-cookie',
+];
+
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
@@ -355,6 +360,18 @@ export class RequestResponse {
       };
     }
 
+    const filteredHeaders = JSON.parse(JSON.stringify(this.headers));
+
+    /**
+     * Remove headers that are not allowed to be sent to the client in the response's body
+     * For example "set-cookie" headers should only be visible by the browser,
+     * otherwise they may leak information about the server's cookies, since the browser will
+     * not be able to restrict them to the domain of the request.
+    */
+    for (const header of restrictedHeaders) {
+      filteredHeaders[header] = undefined;
+    }
+
     return {
       content: {
         action: this.action,
@@ -368,6 +385,7 @@ export class RequestResponse {
         result: this.result,
         status: this.status,
         volatile: this.volatile,
+        headers: filteredHeaders,
       },
       headers: this.headers,
       raw: false,
