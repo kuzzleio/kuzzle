@@ -137,7 +137,7 @@ describe('core/network/protocols/websocket', () => {
   describe('upgrade connection', () => {
     beforeEach(() => httpWs.init(entryPoint));
 
-    it('should upgrade the connection and store the cookie in the UserData if present', () => {
+    it('should upgrade the connection and store the headers in the UserData if present', () => {
       const response = new MockHttpResponse();
       const request = new MockHttpRequest(
         '',
@@ -145,32 +145,6 @@ describe('core/network/protocols/websocket', () => {
         '',
         {
           cookie: 'foo',
-          'sec-websocket-key': 'websocket-key',
-          'sec-websocket-protocol': 'websocket-protocol',
-          'sec-websocket-extensions': 'websocket-extension',
-        }
-      );
-      const context = {}; // context object
-      httpWs.server._wsOnUpgrade(response, request, context);
-
-      should(response.upgrade).be.calledWithMatch(
-        {
-          cookie: 'foo',
-        },
-        'websocket-key',
-        'websocket-protocol',
-        'websocket-extension',
-        context
-      );
-    });
-
-    it('should upgrade the connection and store the origin in the UserData if present', () => {
-      const response = new MockHttpResponse();
-      const request = new MockHttpRequest(
-        '',
-        '',
-        '',
-        {
           origin: 'my-website.com',
           'sec-websocket-key': 'websocket-key',
           'sec-websocket-protocol': 'websocket-protocol',
@@ -182,7 +156,13 @@ describe('core/network/protocols/websocket', () => {
 
       should(response.upgrade).be.calledWithMatch(
         {
-          origin: 'my-website.com',
+          headers: {
+            cookie: 'foo',
+            origin: 'my-website.com',
+            'sec-websocket-key': 'websocket-key',
+            'sec-websocket-protocol': 'websocket-protocol',
+            'sec-websocket-extensions': 'websocket-extension',
+          },
         },
         'websocket-key',
         'websocket-protocol',
