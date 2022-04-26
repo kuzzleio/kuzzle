@@ -127,9 +127,7 @@ describe('core/network/protocols/http', () => {
         Buffer.from('Content-Type'),
         Buffer.from('application/json'));
 
-      should(response.writeHeader).not.be.calledWithMatch(
-        Buffer.from('Content-Length'),
-        Buffer.from('42'));
+      should(response.writeHeader).not.be.calledWithMatch(Buffer.from('Content-Length'));
 
       should(response.writeHeader.calledBefore(response.end));
 

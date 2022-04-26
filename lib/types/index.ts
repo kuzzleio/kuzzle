@@ -23,7 +23,6 @@ export * from './Plugin';
 export * from './Controller';
 export * from './ControllerDefinition';
 export * from './ControllerRights';
-export * from './RequestPayload';
 export * from './ResponsePayload';
 export * from './Deprecation';
 export * from './EventHandler';

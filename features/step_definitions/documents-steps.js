@@ -38,7 +38,7 @@ Then('The document {string} content match:', async function (documentId, dataTab
   }
 });
 
-Then('I {string} the following documents:', async function (action, dataTable) {
+Then('I {string} the following multiple documents:', async function (action, dataTable) {
   action = `m${action[0].toUpperCase() + action.slice(1)}`;
 
   const documents = this.parseObjectArray(dataTable);
@@ -50,8 +50,6 @@ Then('I {string} the following documents:', async function (action, dataTable) {
 });
 
 Then(/I execute the "(.*?)" action on the following documents:$/, async function (action, dataTable) {
-  action = `m${action[0].toUpperCase() + action.slice(1)}`;
-
   const documents = this.parseObjectArray(dataTable);
 
   const response = await this.sdk.query({
@@ -124,7 +122,6 @@ Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
 });
 
 Then(/I "(.*?)" the following document ids( with verb "(.*?)")?:/, async function (action, verb, dataTable) {
-  action = `m${action[0].toUpperCase() + action.slice(1)}`;
   const options = verb ? { verb, refresh: 'wait_for' } : { refresh: 'wait_for' };
   const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
 
@@ -168,6 +165,21 @@ Then('I execute the search query', async function () {
     collection: this.props.collection,
     controller: 'document',
     index: this.props.index,
+    ...this.props.searchOptions,
+  });
+
+  this.props.result = response.result;
+});
+
+Then('I execute the multisearch query:', async function (dataTable) {
+  const targets = this.parseObjectArray(dataTable);
+  // temporary use of sdk.query until we add the new "remaining" property
+  // in the SDK's SearchResults class
+  const response = await this.sdk.query({
+    action: 'search',
+    targets,
+    body: this.props.searchBody,
+    controller: 'document',
     ...this.props.searchOptions,
   });
 

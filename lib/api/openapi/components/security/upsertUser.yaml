@@ -1,0 +1,59 @@
+SecurityUpsertUser:
+  summary: "Update or create a user."
+  tags:
+    - user
+  parameters:
+    - in: path
+      name: _id
+      schema:
+        type: string
+      required: true
+    - in: path
+      name: refresh
+      schema:
+        type: string
+      description: " if set to wait_for, Kuzzle will not respond until the deletion has been indexed"
+      required: false
+    - in: path
+      name: retryOnConflict
+      schema:
+        type: integer
+      description: "conflicts may occur if the same user gets updated multiple times within a short timespan, in a database cluster. You can set the retryOnConflict optional argument (with a retry count), to tell Kuzzle to retry the failing updates the specified amount of times before rejecting the request with an error."
+      required: false
+    - name: content
+      in: "body"
+      description: "Updates a user content."
+      required: true
+      schema:
+        $ref: "#/components/security/SecurityUpsertUserRequest"
+  responses:
+    200:
+      description: "Updates or creates a user."
+      schema:
+        $ref: "#/components/security/SecurityUpsertUserResponse"
+      
+components:
+  schemas:
+    SecurityUpsertUserRequest:
+      allOf:
+        - type: "object"
+          description: "user changes"
+    SecurityUpsertUserResponse:
+      allOf:
+        - $ref: "#/components/ResponsePayload"
+        - type: "object"
+          properties:
+            result:
+              type: "object"
+              properties:
+                _id:
+                  type: "string"
+                  description: "userId"
+                _version:
+                  type: "integer"
+                _source:
+                  type: "object"
+                  description: " (optional) actualized user content. This property appears only if the \"source\" option is set to true"
+                created:
+                  type: "boolean"
+

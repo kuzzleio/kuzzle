@@ -14,7 +14,7 @@ DocumentGet:
         type: string
       required: true
     - in: path
-      name: documentId
+      name: _id
       schema:
         type: string
       required: true
