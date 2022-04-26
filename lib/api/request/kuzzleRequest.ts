@@ -1058,6 +1058,9 @@ export class KuzzleRequest {
           const parsedValue = JSON.parse(value);
           
           if (Array.isArray(parsedValue)) {
+            // Replace the value with the parsed value
+            // This way subsequent calls to this function will return the parsed value directly
+            set(obj, name, parsedValue);
             return parsedValue;
           }
         }
@@ -1104,6 +1107,9 @@ export class KuzzleRequest {
           const parsedValue = JSON.parse(value);
           
           if (isPlainObject(parsedValue)) {
+            // Replace the value with the parsed value
+            // This way subsequent calls to this function will return the parsed value directly
+            set(obj, name, parsedValue);
             return parsedValue;
           }
         }

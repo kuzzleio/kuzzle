@@ -792,8 +792,12 @@ describe('#Request', () => {
         });
 
         it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.input.args.ids).be.a.String();
           should(request.getArray('ids'))
             .match([1, 2, 3]);
+          should(request.input.args.ids)
+            .be.an.Array()
+            .and.match([1, 2, 3]);
         });
 
         it('should throw if the value is a string but the protocol is not HTTP', () => {
@@ -907,8 +911,14 @@ describe('#Request', () => {
         });
 
         it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.input.args.powers).be.a.String();
           should(request.getObject('powers'))
             .match({ fire: 666 });
+          should(request.input.args.powers)
+            .be.an.Object()
+            .and.match({
+              fire: 666
+            });
         });
 
         it('should throw if the value is a string but the protocol is not HTTP', () => {
