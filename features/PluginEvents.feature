@@ -158,7 +158,7 @@ Feature: Plugin Events
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
     # mUpsert
-    When I execute the "upsert" action on the following documents:
+    When I execute the "mUpsert" action on the following documents:
       | _id     | changes                                            | default              |
       | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } | -                    |
       | "bus-5" | { "destination": "Sa Pa" }                         | { "company": "SOO" } |
@@ -211,7 +211,7 @@ Feature: Plugin Events
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
     # mUpsert
-    When I execute the "upsert" action on the following documents:
+    When I execute the "mUpsert" action on the following documents:
       | _id     | changes                       | default |
       | "bus-3" | { "destination": "Hà Giang" } | -       |
       | "bus-5" | { "destination": "Sa Pa" }    | -       |
@@ -265,7 +265,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: deleteFields and modify documents with document:generic:afterUpdate
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id     | body                           |
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
