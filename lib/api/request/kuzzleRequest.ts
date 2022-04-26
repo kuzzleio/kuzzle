@@ -622,25 +622,26 @@ export class KuzzleRequest {
       return value;
     }
 
-    // If we are using the HTTP protocol and we have a string instead of an Array
-    // we try to parse it as JSON
-    if (typeof value === 'string') {
-      if (this.context.connection.protocol === 'http') {
-        try {
-          const parsedValue = JSON.parse(value);
-          
-          if (Array.isArray(parsedValue)) {
-            return parsedValue;
-          }
-        }
-        catch (e) {
-          // Do nothing, let the code continue
-        }
-      }
-      return value.split(',');
+    if (typeof value !== 'string') {
+      throw assertionError.get('invalid_type', name, 'array');
     }
 
-    throw assertionError.get('invalid_type', name, 'array');
+    // If we are using the HTTP protocol and we have a string instead of an Array
+    // we try to parse it as JSON
+    if (this.context.connection.protocol === 'http') {
+      try {
+        const parsedValue = JSON.parse(value);
+        
+        if (Array.isArray(parsedValue)) {
+          return parsedValue;
+        }
+      }
+      catch (e) {
+        // Do nothing, let the code continue
+      }
+    }
+
+    return value.split(',');
   }
 
   /**
@@ -1056,7 +1057,7 @@ export class KuzzleRequest {
     if (! Array.isArray(value)) {
       // If we are using the HTTP protocol and we have a string instead of an Array
       // we try to parse it as JSON
-      if (this.context.connection.protocol === 'http'
+      if ( this.context.connection.protocol === 'http'
         && querystring
         && typeof value === 'string'
       ) {
@@ -1102,7 +1103,7 @@ export class KuzzleRequest {
     if (! isPlainObject(value)) {
       // If we are using the HTTP protocol and we have a string instead of an Array
       // we try to parse it as JSON
-      if (this.context.connection.protocol === 'http'
+      if ( this.context.connection.protocol === 'http'
         && querystring
         && typeof value === 'string'
       ) {
