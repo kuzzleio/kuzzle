@@ -853,7 +853,6 @@ describe('#Request', () => {
           should(request.getArrayLegacy('ids'))
             .match(['[1', '2', '3]']);
         });
-
       });
 
       describe('#getString', () => {
@@ -909,7 +908,7 @@ describe('#Request', () => {
 
         it('should try to parse if the value is a string and the protocol is HTTP', () => {
           should(request.getObject('powers'))
-            .match({ fire: 666});
+            .match({ fire: 666 });
         });
 
         it('should throw if the value is a string but the protocol is not HTTP', () => {

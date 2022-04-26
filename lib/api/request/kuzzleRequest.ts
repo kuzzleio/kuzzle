@@ -596,7 +596,7 @@ export class KuzzleRequest {
   }
 
   /**
-   * @deprecated Use getArray instead
+   * @deprecated do not use, Use getArray instead
    * 
    * Gets a parameter from a request arguments and checks that it is an array
    * 
@@ -611,7 +611,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
    */
-  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+  getArrayLegacy (name: string, def: [] | undefined = undefined): any[] {
     const value = get(this.input.args, name, def);
 
     if (value === undefined) {
@@ -922,7 +922,7 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    querystring: boolean = false
+    querystring = false
   ): boolean {
     let value = get(obj, name);
 
@@ -1045,7 +1045,7 @@ export class KuzzleRequest {
     name: string,
     errorName: string,
     def: [] | undefined = undefined,
-    querystring: boolean = false
+    querystring = false
   ): any[] {
     const value = get(obj, name, def);
 
@@ -1091,7 +1091,7 @@ export class KuzzleRequest {
     name: string,
     errorName: string,
     def: JSONObject | undefined = undefined,
-    querystring: boolean = false
+    querystring = false
   ): JSONObject {
     const value = get(obj, name, def);
 
