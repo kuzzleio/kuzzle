@@ -28,6 +28,7 @@ import { KuzzleError } from '../../kerror/errors/kuzzleError';
 // \u200b is a zero width space, used to masquerade console.log output
 const _request = 'request\u200b';
 const _headers = 'headers\u200b';
+const _userHeaders = 'userHeaders\u200b'; // List of headers to be sent in the response
 
 // List of headers that should not be present in the body of the response
 const restrictedHeaders = [
@@ -161,6 +162,7 @@ export class RequestResponse {
     this.raw = false;
     this[_request] = request;
     this[_headers] = new Headers();
+    this[_userHeaders] = new Set();
 
     Object.seal(this);
   }
@@ -289,6 +291,10 @@ export class RequestResponse {
   ): void {
     if (options.headers) {
       this.setHeaders(options.headers);
+
+      for (const key of Object.keys(options.headers)) {
+        this[_userHeaders].add(key.toLowerCase());
+      }
     }
 
     if (options.status) {
@@ -360,7 +366,10 @@ export class RequestResponse {
       };
     }
 
-    const filteredHeaders = JSON.parse(JSON.stringify(this.headers));
+    const filteredHeaders = {}
+    for (const name of this[_userHeaders]) {
+      filteredHeaders[name] = this.getHeader(name);
+    }
 
     /**
      * Remove headers that are not allowed to be sent to the client in the response's body
@@ -369,7 +378,9 @@ export class RequestResponse {
      * not be able to restrict them to the domain of the request.
     */
     for (const header of restrictedHeaders) {
-      filteredHeaders[header] = undefined;
+      if (filteredHeaders[header] !== undefined) {
+        filteredHeaders[header] = undefined;
+      }
     }
 
     return {
