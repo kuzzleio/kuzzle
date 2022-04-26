@@ -315,9 +315,6 @@ describe('#RequestResponse', () => {
     it('should return a valid JSON object in Kuzzle format', () => {
       let response = new RequestResponse(req);
 
-      response.setHeader('x-foo', 'bar');
-      response.setHeader('set-cookie', 'cookie');
-
       should(response.toJSON()).have.properties(['raw', 'status', 'requestId', 'content', 'headers']);
       should(response.toJSON().content).have.properties([
         'error',
@@ -331,16 +328,34 @@ describe('#RequestResponse', () => {
         'deprecations',
         'headers',
       ]);
+      should(response.toJSON().raw).be.false();
+    });
+
+    it('should only include headers added using response.configure', () => {
+      let response = new RequestResponse(req);
+
+      response.configure({
+        headers: {
+          'x-foo': 'bar',
+          'set-cookie': 'cookie'
+        }
+      });
+      
+      // Should not be included in the response content headers
+      response.setHeader('x-bar', 'baz');
+
       // Check some headers are removed from the response content headers
       should(response.toJSON().content.headers).match({
         'x-foo': 'bar',
+        'set-cookie': undefined,
       });
-      should(response.toJSON().raw).be.false();
+
       should(response.toJSON().headers).match({
         'x-foo': 'bar',
-        'set-cookie': ['cookie']
+        'set-cookie': ['cookie'],
+        'x-bar': 'baz'
       });
-    });
+    })
 
     it('should return a valid JSON object in raw format', () => {
       let response = new RequestResponse(req);
