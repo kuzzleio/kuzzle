@@ -838,14 +838,7 @@ export class KuzzleRequest {
       return this.getBody({});
     }
 
-    const searchBody = this.getString('searchBody', '{}');
-
-    try {
-      return JSON.parse(searchBody);
-    }
-    catch (err) {
-      throw assertionError.get('invalid_argument', err.message);
-    }
+    return this.getObject('searchBody', {});
   }
 
   /**

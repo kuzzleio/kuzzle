@@ -1201,11 +1201,11 @@ describe('#Request', () => {
           connection: { protocol: 'http', verb: 'GET' }
         });
         request.input.body = null;
-        request.input.args.searchBody = {};
+        request.input.args.searchBody = 0;
 
         should(() => {
           request.getSearchBody();
-        }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: string)' });
+        }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: object)' });
       });
 
       it('should provide empty body when the route is invoked with GET and no search body is provided', () => {
