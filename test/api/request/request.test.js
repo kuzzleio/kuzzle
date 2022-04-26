@@ -760,6 +760,7 @@ describe('#Request', () => {
           powers: JSON.stringify({
             fire: 666
           }),
+          legacyArray: '1,2,3',
         };
       });
 
@@ -805,6 +806,54 @@ describe('#Request', () => {
           should(() => request.getArray('fullname'))
             .throw(BadRequestError, { id: 'api.assert.invalid_type' });
         });
+      });
+
+      describe('#getArrayLegacy', () => {
+        beforeEach(() => {
+          request.context.connection.protocol = 'http';
+        });
+
+        it('extracts the required parameter', () => {
+          should(request.getArrayLegacy('names'))
+            .exactly(request.input.args.names);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getArrayLegacy('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = ['foo'];
+
+          should(request.getArrayLegacy('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an array', () => {
+          should(() => request.getArrayLegacy('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.getArrayLegacy('ids'))
+            .match([1, 2, 3]);
+        });
+
+        it('should split the split if it failed to parse the string as a JSON array when the protocol is HTTP', () => {
+          should(request.getArrayLegacy('legacyArray'))
+            .match(['1', '2', '3']);
+        });
+
+        it('should split the string on "," when the protocol is not HTTP', () => {
+          request.context.connection.protocol = 'ws';
+          should(request.getArrayLegacy('legacyArray'))
+            .match(['1', '2', '3']);
+
+          should(request.getArrayLegacy('ids'))
+            .match(['[1', '2', '3]']);
+        });
+
       });
 
       describe('#getString', () => {

@@ -596,6 +596,54 @@ export class KuzzleRequest {
   }
 
   /**
+   * @deprecated Use getArray instead
+   * 
+   * Gets a parameter from a request arguments and checks that it is an array
+   * 
+   * If the request argument is a String instead of an array, it will be JSON parsed
+   * and returned if it is a valid JSON array, otherwise it will return the string splitted on `,`.
+   * 
+   *
+   * @param name parameter name
+   * @param def default value to return if the parameter is not set
+   *
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
+   */
+  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
+    const value = get(this.input.args, name, def);
+
+    if (value === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    // If we are using the HTTP protocol and we have a string instead of an Array
+    // we try to parse it as JSON
+    if (typeof value === 'string') {
+      if (this.context.connection.protocol === 'http') {
+        try {
+          const parsedValue = JSON.parse(value);
+          
+          if (Array.isArray(parsedValue)) {
+            return parsedValue;
+          }
+        }
+        catch (e) {
+          // Do nothing, let the code continue
+        }
+      }
+      return value.split(',');
+    }
+
+    throw assertionError.get('invalid_type', name, 'array');
+  }
+
+  /**
    * Gets a parameter from a request arguments and checks that it is an object
    *
    * If the request argument is a JSON String instead of an object, it will be parsed
