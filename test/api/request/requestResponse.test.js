@@ -355,7 +355,7 @@ describe('#RequestResponse', () => {
         'set-cookie': ['cookie'],
         'x-bar': 'baz'
       });
-    })
+    });
 
     it('should return a valid JSON object in raw format', () => {
       let response = new RequestResponse(req);

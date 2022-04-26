@@ -366,7 +366,7 @@ export class RequestResponse {
       };
     }
 
-    const filteredHeaders = {}
+    const filteredHeaders = {};
     for (const name of this[_userHeaders]) {
       filteredHeaders[name] = this.getHeader(name);
     }
