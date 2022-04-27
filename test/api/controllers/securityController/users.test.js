@@ -834,7 +834,7 @@ describe('Test: security controller - users', () => {
     });
   });
 
-  describe('#mUpsertUser', () => {
+  describe('#mUserUpsert', () => {
     beforeEach(async () => {
       request.input.body = {
         users: [
@@ -865,7 +865,7 @@ describe('Test: security controller - users', () => {
         .withArgs('core:security:user:update', expectResponse._id)
         .rejects(kerror.get('security', 'user', 'not_found', expectResponse._id));
 
-      const response = await securityController.mUpsertUsers(request);
+      const response = await securityController.mUserUpsert(request);
 
       should(response.successes[0]).eql(expectResponse);
     });
@@ -873,7 +873,7 @@ describe('Test: security controller - users', () => {
     it('should return empty successes and errors if no user is provided', async () => {
       request.input.body.users = [];
 
-      const response = await securityController.mUpsertUsers(request);
+      const response = await securityController.mUserUpsert(request);
 
       should(response.successes).be.an.Array().and.be.empty();
       should(response.errors).be.an.Array().and.be.empty();
@@ -882,7 +882,7 @@ describe('Test: security controller - users', () => {
     it('should throw a BadRequestError', async () => {
       request.input.body.users[0]._id = undefined;
 
-      await should(securityController.mUpsertUsers(request))
+      await should(securityController.mUserUpsert(request))
         .rejectedWith(BadRequestError, {
           message: 'Missing property "id" in users object'
         });
