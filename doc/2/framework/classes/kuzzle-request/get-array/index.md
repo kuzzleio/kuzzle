@@ -11,7 +11,7 @@ description: KuzzleRequest class getArray() method
 
 Gets a parameter from the request arguments and checks that it is an array.
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.18.1" />
 
 If the request has been made with the HTTP protocol and the request argument is not an Array but a JSON String
 the argument will be parsed and returned if it's an array, otherwise an error will be thrown.
