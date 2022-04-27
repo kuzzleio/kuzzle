@@ -265,6 +265,18 @@ app.controller.register('tests', {
         app.pipe.unregister(dynamicPipeId);
       }
     },
+    sendBodyHeaders: {
+      http: [{ verb: 'get', path: '/tests/body/sendeaders' }],
+      handler: async (request: KuzzleRequest) => {
+        request.response.configure({
+          headers: {
+            'set-cookie': 'foo=bar',
+            'foo': 'bar',
+            'alpha': 'beta',
+          }
+        });
+      }
+    }
   },
 });
 

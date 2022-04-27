@@ -9,6 +9,7 @@ Given('I open a new local websocket connection', function () {
     this.props.client = new ws('ws://localhost:7512');
     this.props.client.on('message', (data) =>{
       this.props.result = JSON.parse(data);
+      this.props.response = this.props.result;
     });
     this.props.client.on('open', () =>{
       return resolve();

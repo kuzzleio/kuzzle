@@ -255,7 +255,9 @@ export class KuzzleRequest {
     this.status = options.status || 200;
 
     if (options.headers) {
-      this.response.setHeaders(options.headers);
+      this.response.configure({
+        headers: options.headers
+      });
     }
 
     if (options.raw !== undefined) {
