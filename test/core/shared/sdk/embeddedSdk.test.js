@@ -71,7 +71,7 @@ describe('EmbeddedSDK', () => {
       const forbiddenRequest = { controller: 'auth', action: 'createApiKey' };
 
       should(() => embeddedSdk.query(forbiddenRequest))
-        .throw(PluginImplementationError, { id: 'forbidden_embedded_sdk_action', code: 14});
+        .throw(PluginImplementationError, { id: 'forbidden_embedded_sdk_action', code: 14 });
     });
 
     it('should warn if the action is not supported', () => {
