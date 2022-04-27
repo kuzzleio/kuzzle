@@ -40,12 +40,12 @@ const contextError = kerror.wrap('plugin', 'context');
 
 const forbiddenEmbeddedActions = {
   'auth': new Set([
-    'getCurrentUser',
     'checkRights',
     'createApiKey',
     'createMyCredentials',
     'credentialsExist',
     'deleteApiKey',
+    'getCurrentUser',
     'getMyCredentials',
     'getMyRights',
     'getStrategies',
@@ -154,7 +154,7 @@ export class EmbeddedSDK extends Kuzzle {
     options: { propagate?: boolean } = {}
   ): Promise<ResponsePayload> {
     // By default, do not propagate realtime notification accross cluster nodes
-    if (isPlainObject(request)
+    if ( isPlainObject(request)
       && request.controller === 'realtime'
       && request.action === 'subscribe'
     ) {
@@ -163,15 +163,15 @@ export class EmbeddedSDK extends Kuzzle {
         : options.propagate;
     }
 
-    if (forbiddenEmbeddedActions[request.controller] !== undefined
+    if ( forbiddenEmbeddedActions[request.controller] !== undefined
       && forbiddenEmbeddedActions[request.controller].has(request.action)
     ) {
       throw kerror.get(
         'api',
         'process',
         'forbidden_embedded_sdk_action',
-        request.action,
         request.controller,
+        request.action,
         ', use user impersonation or security controller instead',
       );
     }

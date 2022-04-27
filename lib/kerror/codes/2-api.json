@@ -184,10 +184,10 @@
           "class": "TooManyRequestsError"
         },
         "forbidden_embedded_sdk_action": {
-          "description": "A forbidden embdedded sdk action has been called",
+          "description": "A forbidden EmbdeddedSDK action has been called",
           "code": 14,
-          "message": "The action %s of the controller %s has been called while it is forbidden in the embedded sdk%s.",
-          "class": "BadRequestError"
+          "message": "The action %s:%s has been called while it is forbidden in the EmbeddedSDK%s.",
+          "class": "PluginImplementationError"
         }
       }
     }
