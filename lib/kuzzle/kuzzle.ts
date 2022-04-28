@@ -530,11 +530,11 @@ class Kuzzle extends KuzzleEventEmitter {
       && _.isEmpty(toImport.users)
     );
     const isPermissionsToSupport = toSupport.securities
-    && ! (
-      _.isEmpty(toSupport.securities.profiles)
-      && _.isEmpty(toSupport.securities.roles)
-      && _.isEmpty(toSupport.securities.users)
-    );
+      && ! (
+        _.isEmpty(toSupport.securities.profiles)
+        && _.isEmpty(toSupport.securities.roles)
+        && _.isEmpty(toSupport.securities.users)
+      );
     if (isPermissionsToSupport && isPermissionsToImport) {
       throw kerror.get(
         'plugin',
