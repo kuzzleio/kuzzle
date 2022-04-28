@@ -572,14 +572,14 @@ class Kuzzle extends KuzzleEventEmitter {
   private async _waitForImportToFinish () {
     const importTypes = Object.keys(this.importTypes);
 
-    importTypes.forEach(async importType => {
+    for (const importType of importTypes) {
       // If the import is done, we pop it from the queue to check the next one
       if (await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${importType}`)) {
         return;
       }
 
       await Bluebird.delay(1000);
-    });
+    }
   }
 
   /**
