@@ -611,28 +611,28 @@ class Kuzzle extends KuzzleEventEmitter {
 
         switch (type) {
           case 'fixtures':
-            _.set(importPayload, ['toSupport', 'fixtures'], toSupport.fixtures);
+            _.set(importPayload, 'toSupport.fixtures', toSupport.fixtures);
             break;
           case 'mappings':
-            _.set(importPayload, ['toSupport', 'mappings'], toSupport.mappings);
-            _.set(importPayload, ['toImport', 'mappings'], toImport.mappings);
+            _.set(importPayload, 'toSupport.mappings', toSupport.mappings);
+            _.set(importPayload, 'toImport.mappings', toImport.mappings);
             break;
           case 'permissions':
-            _.set(importPayload, ['toSupport', 'securities'], toSupport.fixtures);
-            _.set(importPayload, ['toImport', 'profiles'], toImport.profiles);
-            _.set(importPayload, ['toImport', 'roles'], toImport.roles);
-            _.set(importPayload, ['toImport', 'users'], toImport.users);
+            _.set(importPayload, 'toSupport.securities', toSupport.fixtures);
+            _.set(importPayload, 'toImport.profiles', toImport.profiles);
+            _.set(importPayload, 'toImport.roles', toImport.roles);
+            _.set(importPayload, 'toImport.users', toImport.users);
             break;
         }
 
-        const importPayloadHash = sha256(JSON.stringify(importPayload));
+        const importPayloadHash = sha256(stringify(importPayload));
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
 
         const existingHash = await this.ask(
           'core:cache:internal:get',
           `${BACKEND_IMPORT_KEY}:${type}`);
 
-        const initialized = existingHash && existingHash === importPayloadHash;
+        const initialized = existingHash === importPayloadHash;
         const locked = await mutex.lock();
 
         await importMethod(
