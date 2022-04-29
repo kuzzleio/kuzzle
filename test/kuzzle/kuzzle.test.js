@@ -335,24 +335,55 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   describe('#import', () => {
     let toImport;
     let toSupport;
+    let mappingsPayload;
+    let permissionsPayload;
+    let fixturesPayload;
 
     beforeEach(() => {
-      toImport = {
-        mappings: { something: 'here' },
-        onExistingUsers: 'skip',
-        profiles: { something: 'here' },
-        roles: { something: 'here' },
-        userMappings: { something: 'here' },
-        user: { something: 'here' },
+
+      mappingsPayload = {
+        toImport: {
+          mappings: { something: 'here' },
+        },
+        toSupport: {
+          mappings: { something: 'here' },
+        }
       };
-      toSupport = {
-        mappings: { something: 'here' },
-        fixtures: { something: 'here' },
-        securities: {
+
+      permissionsPayload = {
+        toImport: {
           profiles: { something: 'here' },
           roles: { something: 'here' },
-          user: { something: 'here' }
+          user: { something: 'here' },
+        },
+        toSupport: {
+          securities: {
+            profiles: { something: 'here' },
+            roles: { something: 'here' },
+            user: { something: 'here' }
+          }
         }
+      };
+
+      fixturesPayload = {
+        toSupport: {
+          fixtures: { something: 'here' },
+        }
+      };
+
+      toImport = {
+        mappings: mappingsPayload.toImport.mappings,
+        onExistingUsers: 'skip',
+        profiles: permissionsPayload.toImport.profiles,
+        roles: permissionsPayload.toImport.roles,
+        userMappings: { something: 'here' },
+        user: permissionsPayload.toImport.users
+      };
+
+      toSupport = {
+        mappings: mappingsPayload.toSupport.mappings,
+        fixtures: fixturesPayload.toSupport.fixtures,
+        securities: permissionsPayload.toSupport.securities
       };
 
       kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
@@ -371,29 +402,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'core:cache:internal:get',
         'backend:init:import:permissions');
 
-      const mappingsPayload = {
-        toImport: {
-          mappings: toImport.mappings,
-        },
-        toSupport: {
-          mappings: toSupport.mappings,
-        }
-      };
-
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
         sha256(stringify(mappingsPayload)));
-
-      const permissionsPayload = {
-        toImport: {
-          profiles: toImport.profiles,
-          roles: toImport.roles,
-          users: toImport.users,
-        },
-        toSupport: {
-          securities: toSupport.securities,
-        }
-      };
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
@@ -436,44 +447,15 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'core:cache:internal:get',
         'backend:init:import:fixtures');
 
-      should(kuzzle.ask).be.calledWithMatch(
-        'core:cache:internal:store');
-
-      const mappingsPayload = {
-        toImport: {
-          mappings: toImport.mappings,
-        },
-        toSupport: {
-          mappings: toSupport.mappings,
-        }
-      };
-
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
         `${BACKEND_IMPORT_KEY}:mappings`,
         sha256(stringify(mappingsPayload)));
 
-      const permissionsPayload = {
-        toImport: {
-          profiles: toImport.profiles,
-          roles: toImport.roles,
-          users: toImport.users,
-        },
-        toSupport: {
-          securities: toSupport.securities,
-        }
-      };
-
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
         `${BACKEND_IMPORT_KEY}:permissions`,
         sha256(stringify(permissionsPayload)));
-
-      const fixturesPayload = {
-        toSupport: {
-          securities: toSupport.securities,
-        }
-      };
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
