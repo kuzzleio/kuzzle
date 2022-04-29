@@ -12,6 +12,7 @@ const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const { sha256 } = require('../../lib/util/crypto');
+const { BACKEND_IMPORT_KEY } = require('../../lib/kuzzle/kuzzle')
 
 const config = require('../../lib/config').loadConfig();
 
@@ -22,24 +23,24 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let clusterModuleInitStub;
 
   const mockedProperties = [
+    'adminController',
+    'ask',
+    'dumpGenerator',
+    'emit',
     'entryPoint',
     'funnel',
-    'router',
-    'notifier',
     'gc',
+    'internalIndex',
+    'log',
+    'notifier',
+    'pipe',
     'pluginsManager',
-    'adminController',
+    'router',
     'services',
     'statistics',
-    'validation',
-    'emit',
-    'vault',
-    'log',
-    'internalIndex',
-    'dumpGenerator',
-    'pipe',
-    'ask',
     'tokenManager',
+    'validation',
+    'vault',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -449,6 +450,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
+        `${BACKEND_IMPORT_KEY}:mappings`,
         sha256(stringify(mappingsPayload)));
 
       const permissionsPayload = {
@@ -464,6 +466,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
+        `${BACKEND_IMPORT_KEY}:permissions`,
         sha256(stringify(permissionsPayload)));
 
       const fixturesPayload = {
@@ -474,6 +477,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
+        `${BACKEND_IMPORT_KEY}:fixtures`,
         sha256(stringify(fixturesPayload)));
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
