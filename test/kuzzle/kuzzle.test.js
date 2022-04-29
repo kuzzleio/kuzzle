@@ -12,7 +12,7 @@ const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const { sha256 } = require('../../lib/util/crypto');
-const { BACKEND_IMPORT_KEY } = require('../../lib/kuzzle/kuzzle')
+const { BACKEND_IMPORT_KEY } = require('../../lib/kuzzle/kuzzle');
 
 const config = require('../../lib/config').loadConfig();
 
