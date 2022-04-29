@@ -121,7 +121,11 @@ describe('Test: hotelClerk.join', () => {
     }, context);
     const response = { cluster: false, channel: 'foobar', subscribed: true };
     hotelClerk.rooms.set('i-exist', {});
-    sinon.stub(hotelClerk, 'subscribeToRoom').resolves(response);
+    
+    hotelClerk.subscribeToRoom = async (_, __, callback) => {
+      await callback(response.subscribed, response.cluster);
+      return response;
+    };
 
     await hotelClerk.join(joinRequest);
 
@@ -131,6 +135,6 @@ describe('Test: hotelClerk.join', () => {
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.emit).be.calledWith('core:realtime:subscribe:after', 'i-exist');
+    should(kuzzle.call).be.calledWith('core:realtime:subscribe:after', 'i-exist');
   });
 });

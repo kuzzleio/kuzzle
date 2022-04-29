@@ -48,7 +48,7 @@ class KuzzleWorld {
     const content = dataTable.rowsHash();
 
     for (const key of Object.keys(content)) {
-      // eslint-disable-next-line no-eval
+    // eslint-disable-next-line no-eval
       content[key] = eval(`const o = ${content[key]}; o`);
     }
 

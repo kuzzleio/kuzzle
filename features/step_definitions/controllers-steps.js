@@ -180,6 +180,11 @@ Then('I got an error with id {string}', function (id) {
   assert(this.props.error.id === id, `Expected error to have id "${id}", but got "${this.props.error.id}"`);
 });
 
+Then('The response headers in the body should be equal:', async function (dataTable) {
+  const expectedResult = this.parseObject(dataTable);
+  should(this.props.response.headers).deepEqual(expectedResult);
+});
+
 Then('The response should contains an array of {string} in the response matching:', async function (key, dataTable) {
   const array = this.parseObjectArray(dataTable);
   should(this.props.response[key]).deepEqual(array);

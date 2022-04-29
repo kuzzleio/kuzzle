@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,8 +19,12 @@
  * limitations under the License.
  */
 
+import { isPlainObject } from '../../util/safeObject';
+import { get, set } from 'lodash';
+import moment from 'moment';
 import * as uuid from 'uuid';
 import { nanoid } from 'nanoid';
+
 import { JSONObject } from 'kuzzle-sdk';
 
 import { RequestInput } from './requestInput';
@@ -30,8 +34,6 @@ import { KuzzleError, InternalError } from '../../kerror/errors';
 import * as kerror from '../../kerror';
 import { Deprecation, User, HttpStream } from '../../types';
 import * as assert from '../../util/assertType';
-import { isPlainObject } from '../../util/safeObject';
-import { get } from 'lodash';
 
 const assertionError = kerror.wrap('api', 'assert');
 
@@ -253,7 +255,9 @@ export class KuzzleRequest {
     this.status = options.status || 200;
 
     if (options.headers) {
-      this.response.setHeaders(options.headers);
+      this.response.configure({
+        headers: options.headers
+      });
     }
 
     if (options.raw !== undefined) {
@@ -531,7 +535,7 @@ export class KuzzleRequest {
    * @param name parameter name
    */
   getBoolean (name: string): boolean {
-    return this._getBoolean(this.input.args, name, name);
+    return this._getBoolean(this.input.args, name, name, true);
   }
 
   /**
@@ -578,6 +582,9 @@ export class KuzzleRequest {
 
   /**
    * Gets a parameter from a request arguments and checks that it is an array
+   * 
+   * If the request argument is a JSON String instead of an array, it will be parsed
+   * and returned if it is a valid JSON array, otherwise it will @throws {api.assert.invalid_type}.
    *
    * @param name parameter name
    * @param def default value to return if the parameter is not set
@@ -587,12 +594,64 @@ export class KuzzleRequest {
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
   getArray (name: string, def: [] | undefined = undefined): any[] {
-    return this._getArray(this.input.args, name, name, def);
+    return this._getArray(this.input.args, name, name, def, true);
+  }
+
+  /**
+   * @deprecated do not use, Use getArray instead
+   * 
+   * Gets a parameter from a request arguments and checks that it is an array
+   * 
+   * If the request argument is a String instead of an array, it will be JSON parsed
+   * and returned if it is a valid JSON array, otherwise it will return the string splitted on `,`.
+   * 
+   *
+   * @param name parameter name
+   * @param def default value to return if the parameter is not set
+   *
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
+   */
+  getArrayLegacy (name: string, def: [] | undefined = undefined): any[] {
+    const value = get(this.input.args, name, def);
+
+    if (value === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+
+    if (Array.isArray(value)) {
+      return value;
+    }
+
+    if (typeof value !== 'string') {
+      throw assertionError.get('invalid_type', name, 'array');
+    }
+
+    // If we are using the HTTP protocol and we have a string instead of an Array
+    // we try to parse it as JSON
+    if (this.context.connection.protocol === 'http') {
+      try {
+        const parsedValue = JSON.parse(value);
+        
+        if (Array.isArray(parsedValue)) {
+          return parsedValue;
+        }
+      }
+      catch (e) {
+        // Do nothing, let the code continue
+      }
+    }
+
+    return value.split(',');
   }
 
   /**
    * Gets a parameter from a request arguments and checks that it is an object
    *
+   * If the request argument is a JSON String instead of an object, it will be parsed
+   * and returned if it is a valid JSON object, otherwise it will @throws {api.assert.invalid_type}.
+   * 
    * @param name parameter name
    * @param def default value to return if the parameter is not set
    *
@@ -601,7 +660,51 @@ export class KuzzleRequest {
    * @throws {api.assert.invalid_type} If the fetched parameter is not an object
    */
   getObject (name: string, def: JSONObject | undefined = undefined): JSONObject {
-    return this._getObject(this.input.args, name, name, def);
+    return this._getObject(this.input.args, name, name, def, true);
+  }
+
+  /**
+   * Gets a parameter from a request arguments and check with moment.js if the date is an ISO8601 format date
+   * or is valid regarding a given custom format (example : YYYY-MM-DD).
+   *
+   * @param name parameter name.
+   * @param format optional parameter to check if the date is valid regarding a format. If not set, the format checked
+   * is ISO8601.
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   */
+  getDate (name: string, format?: string): string {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    if (format && ! moment(args[name], format, true).isValid()) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    if (! moment(args[name], moment.ISO_8601).isValid()) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    return this.getString(name);
+  }
+
+  /**
+   * Gets a parameter from a request arguments and returns it to timestamp format.
+   *
+   * @param name parameter name.
+   * @throws {api.assert.missing_argument} If parameter not found and no default
+   *                                       value provided
+   * @throws {api.assert.invalid_type} If parameter value is not a valid date.
+   */
+  getTimestamp (name: string): number {
+    const args = this.input.args;
+    if (args[name] === undefined) {
+      throw assertionError.get('missing_argument', name);
+    }
+    if ( moment(args[name], true).isValid() === false) {
+      throw assertionError.get('invalid_type', name, 'date');
+    }
+    return this.getInteger(name);
   }
 
   /**
@@ -737,14 +840,7 @@ export class KuzzleRequest {
       return this.getBody({});
     }
 
-    const searchBody = this.getString('searchBody', '{}');
-
-    try {
-      return JSON.parse(searchBody);
-    }
-    catch (err) {
-      throw assertionError.get('invalid_argument', err.message);
-    }
+    return this.getObject('searchBody', {});
   }
 
   /**
@@ -816,17 +912,23 @@ export class KuzzleRequest {
    * @param obj container object
    * @param name parameter name
    * @param errorName name to use in error messages
+   * @param querystring if true, the object is expected to be found in a querystring
    */
-  private _getBoolean (obj: JSONObject, name: string, errorName: string): boolean {
+  private _getBoolean (
+    obj: JSONObject,
+    name: string,
+    errorName: string,
+    querystring = false
+  ): boolean {
     let value = get(obj, name);
 
     // In HTTP, booleans are flags: if it's in the querystring, it's set,
     // whatever its value.
     // If a user needs to unset the option, they need to remove it from the
     // querystring.
-    if (this.context.connection.protocol === 'http') {
+    if (this.context.connection.protocol === 'http' && querystring) {
       value = value !== undefined;
-      obj[name] = value;
+      set(obj, name, value);
     }
     else if (value === undefined || value === null) {
       value = false;
@@ -938,7 +1040,8 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: [] | undefined = undefined
+    def: [] | undefined = undefined,
+    querystring = false
   ): any[] {
     const value = get(obj, name, def);
 
@@ -947,6 +1050,26 @@ export class KuzzleRequest {
     }
 
     if (! Array.isArray(value)) {
+      // If we are using the HTTP protocol and we have a string instead of an Array
+      // we try to parse it as JSON
+      if ( this.context.connection.protocol === 'http'
+        && querystring
+        && typeof value === 'string'
+      ) {
+        try {
+          const parsedValue = JSON.parse(value);
+          
+          if (Array.isArray(parsedValue)) {
+            // Replace the value with the parsed value
+            // This way subsequent calls to this function will return the parsed value directly
+            set(obj, name, parsedValue);
+            return parsedValue;
+          }
+        }
+        catch (e) {
+          // Do nothing, let the error be thrown below
+        }
+      }
       throw assertionError.get('invalid_type', errorName, 'array');
     }
 
@@ -960,12 +1083,14 @@ export class KuzzleRequest {
    * @param name parameter name
    * @param errorName name to use in error messages
    * @param def default value
+   * @param querystring if true, the object is expected to be found in a querystring
    */
   private _getObject (
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: JSONObject | undefined = undefined
+    def: JSONObject | undefined = undefined,
+    querystring = false
   ): JSONObject {
     const value = get(obj, name, def);
 
@@ -974,11 +1099,32 @@ export class KuzzleRequest {
     }
 
     if (! isPlainObject(value)) {
+      // If we are using the HTTP protocol and we have a string instead of an Array
+      // we try to parse it as JSON
+      if ( this.context.connection.protocol === 'http'
+        && querystring
+        && typeof value === 'string'
+      ) {
+        try {
+          const parsedValue = JSON.parse(value);
+          
+          if (isPlainObject(parsedValue)) {
+            // Replace the value with the parsed value
+            // This way subsequent calls to this function will return the parsed value directly
+            set(obj, name, parsedValue);
+            return parsedValue;
+          }
+        }
+        catch (e) {
+          // Do nothing, let the error be thrown below
+        }
+      }
       throw assertionError.get('invalid_type', errorName, 'object');
     }
 
     return value;
   }
+
 }
 
 export class Request extends KuzzleRequest {}
