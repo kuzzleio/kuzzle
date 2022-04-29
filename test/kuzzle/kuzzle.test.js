@@ -12,7 +12,6 @@ const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
 const { sha256 } = require('../../lib/util/crypto');
-const { BACKEND_IMPORT_KEY } = require('../../lib/kuzzle/kuzzle');
 
 const config = require('../../lib/config').loadConfig();
 
@@ -404,10 +403,12 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
+        'backend:init:import:mappings',
         sha256(stringify(mappingsPayload)));
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
+        'backend:init:import:permissions',
         sha256(stringify(permissionsPayload)));
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
@@ -449,17 +450,17 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
-        `${BACKEND_IMPORT_KEY}:mappings`,
+        'backend:init:import:mappings',
         sha256(stringify(mappingsPayload)));
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
-        `${BACKEND_IMPORT_KEY}:permissions`,
+        'backend:init:import:permissions',
         sha256(stringify(permissionsPayload)));
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
-        `${BACKEND_IMPORT_KEY}:fixtures`,
+        'backend:init:import:fixtures',
         sha256(stringify(fixturesPayload)));
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
