@@ -5,11 +5,13 @@ const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
 const Bluebird = require('bluebird');
+const stringify = require('json-stable-stringify');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
+const { sha256 } = require('../../lib/util/crypto');
 
 const config = require('../../lib/config').loadConfig();
 
@@ -368,8 +370,33 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'core:cache:internal:get',
         'backend:init:import:permissions');
 
-      should(kuzzle.ask).be.calledWithMatch(
-        'core:cache:internal:store');
+      const mappingsPayload = {
+        toImport: {
+          mappings: toImport.mappings,
+        },
+        toSupport: {
+          mappings: toSupport.mappings,
+        }
+      };
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        sha256(stringify(mappingsPayload)));
+
+      const permissionsPayload = {
+        toImport: {
+          profiles: toImport.profiles,
+          roles: toImport.roles,
+          users: toImport.users,
+        },
+        toSupport: {
+          securities: toSupport.securities,
+        }
+      };
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        sha256(stringify(permissionsPayload)));
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
@@ -410,6 +437,44 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWithMatch(
         'core:cache:internal:store');
+
+      const mappingsPayload = {
+        toImport: {
+          mappings: toImport.mappings,
+        },
+        toSupport: {
+          mappings: toSupport.mappings,
+        }
+      };
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        sha256(stringify(mappingsPayload)));
+
+      const permissionsPayload = {
+        toImport: {
+          profiles: toImport.profiles,
+          roles: toImport.roles,
+          users: toImport.users,
+        },
+        toSupport: {
+          securities: toSupport.securities,
+        }
+      };
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        sha256(stringify(permissionsPayload)));
+
+      const fixturesPayload = {
+        toSupport: {
+          securities: toSupport.securities,
+        }
+      };
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        sha256(stringify(fixturesPayload)));
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,
