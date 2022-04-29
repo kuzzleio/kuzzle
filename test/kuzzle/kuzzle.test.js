@@ -353,7 +353,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         toImport: {
           profiles: { something: 'here' },
           roles: { something: 'here' },
-          user: { something: 'here' },
+          users: { something: 'here' },
         },
         toSupport: {
           securities: {
@@ -376,7 +376,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         profiles: permissionsPayload.toImport.profiles,
         roles: permissionsPayload.toImport.roles,
         userMappings: { something: 'here' },
-        user: permissionsPayload.toImport.users
+        users: permissionsPayload.toImport.users
       };
 
       toSupport = {
