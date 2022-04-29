@@ -173,10 +173,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
-      let
-        processExitSpy = sinon.spy(),
-        processOnSpy = sinon.spy(),
-        processRemoveAllListenersSpy = sinon.spy();
+      let processExitSpy = sinon.spy();
+      let processOnSpy = sinon.spy();
+      let processRemoveAllListenersSpy = sinon.spy();
 
       return Kuzzle.__with__({
         process: {
@@ -361,6 +360,17 @@ describe('/lib/kuzzle/kuzzle.js', () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
       await kuzzle.loadInitialState(toImport, {});
 
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:mappings');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:permissions');
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:cache:internal:store');
+
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toImport.mappings,
@@ -385,6 +395,21 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
       await kuzzle.loadInitialState({}, toSupport);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:mappings');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:permissions');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:fixtures');
+
+      should(kuzzle.ask).be.calledWithMatch(
+        'core:cache:internal:store');
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,
