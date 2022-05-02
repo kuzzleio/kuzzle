@@ -710,7 +710,7 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex (throwOnMissing: boolean = true): string {
+  getIndex (throwOnMissing = true): string {
     const index = this.input.args.index;
 
     if (! index) {
@@ -726,7 +726,7 @@ export class KuzzleRequest {
   /**
    * Returns the collection specified in the request
    */
-  getCollection (throwOnMissing: boolean = true): string {
+  getCollection (throwOnMissing = true): string {
     const collection = this.input.args.collection;
 
     if (! collection) {
@@ -858,7 +858,7 @@ export class KuzzleRequest {
     scrollTTL: string;
     searchBody: JSONObject;
     size: number;
-  } {
+    } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
     const scrollTTL = this.getScrollTTLParam();
