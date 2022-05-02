@@ -717,7 +717,7 @@ export class KuzzleRequest {
       throw assertionError.get('missing_argument', 'index');
     }
 
-    return index;
+    return String(index);
   }
 
   /**
@@ -730,7 +730,7 @@ export class KuzzleRequest {
       throw assertionError.get('missing_argument', 'collection');
     }
 
-    return collection;
+    return String(collection);
   }
 
   /**
