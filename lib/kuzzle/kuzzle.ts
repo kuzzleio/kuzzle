@@ -618,7 +618,7 @@ class Kuzzle extends KuzzleEventEmitter {
             _.set(importPayload, 'toImport.mappings', toImport.mappings);
             break;
           case 'permissions':
-            _.set(importPayload, 'toSupport.securities', toSupport.fixtures);
+            _.set(importPayload, 'toSupport.securities', toSupport.securities);
             _.set(importPayload, 'toImport.profiles', toImport.profiles);
             _.set(importPayload, 'toImport.roles', toImport.roles);
             _.set(importPayload, 'toImport.users', toImport.users);
@@ -649,7 +649,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
           await this.ask(
             'core:cache:internal:store',
-            `${BACKEND_IMPORT_KEY}:${type}`);
+            `${BACKEND_IMPORT_KEY}:${type}`,
+            importPayloadHash);
         }
       }
 

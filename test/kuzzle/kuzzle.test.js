@@ -391,6 +391,7 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toImport mappings and permissions', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
+
       await kuzzle.loadInitialState(toImport, {});
 
       should(kuzzle.ask).be.calledWith(
@@ -398,18 +399,24 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'backend:init:import:mappings');
 
       should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:mappings',
+        sha256(stringify({
+          toImport: mappingsPayload.toImport,
+          toSupport: {}
+        })));
+
+      should(kuzzle.ask).be.calledWith(
         'core:cache:internal:get',
         'backend:init:import:permissions');
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
-        'backend:init:import:mappings',
-        sha256(stringify(mappingsPayload)));
-
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:store',
         'backend:init:import:permissions',
-        sha256(stringify(permissionsPayload)));
+        sha256(stringify({
+          toImport: permissionsPayload.toImport,
+          toSupport: {}
+        })));
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
@@ -441,8 +448,24 @@ describe('/lib/kuzzle/kuzzle.js', () => {
         'backend:init:import:mappings');
 
       should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:mappings',
+        sha256(stringify({
+          toSupport: mappingsPayload.toSupport,
+          toImport: {}
+        })));
+
+      should(kuzzle.ask).be.calledWith(
         'core:cache:internal:get',
         'backend:init:import:permissions');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:permissions',
+        sha256(stringify({
+          toSupport: permissionsPayload.toSupport,
+          toImport: {}
+        })));
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:get',
@@ -450,18 +473,10 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:cache:internal:store',
-        'backend:init:import:mappings',
-        sha256(stringify(mappingsPayload)));
-
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:store',
-        'backend:init:import:permissions',
-        sha256(stringify(permissionsPayload)));
-
-      should(kuzzle.ask).be.calledWith(
-        'core:cache:internal:store',
         'backend:init:import:fixtures',
-        sha256(stringify(fixturesPayload)));
+        sha256(stringify({
+          toSupport: fixturesPayload.toSupport,
+        })));
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,
