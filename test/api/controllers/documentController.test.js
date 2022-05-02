@@ -774,7 +774,7 @@ describe('DocumentController', () => {
       await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
 
       const updatedItems = [
-        { 
+        {
           _id: '_id1',
           _source: { field: '_source' },
           _version: '_version',
@@ -782,14 +782,14 @@ describe('DocumentController', () => {
           created: false,
           result: 'created'
         },
-        { 
+        {
           _id: '_id2',
           _source: { field: '_source' },
           _version: '_version',
           _updatedFields: ['field'],
           created: false,
           result: 'created' },
-        { 
+        {
           _id: '_id3',
           _source: { field: '_source' },
           _version: '_version',

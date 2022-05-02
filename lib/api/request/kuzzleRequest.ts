@@ -633,7 +633,7 @@ export class KuzzleRequest {
     if (this.context.connection.protocol === 'http') {
       try {
         const parsedValue = JSON.parse(value);
-        
+
         if (Array.isArray(parsedValue)) {
           return parsedValue;
         }
@@ -710,11 +710,14 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex (): string {
+  getIndex (throwOnMissing: boolean = true): string {
     const index = this.input.args.index;
 
     if (! index) {
-      throw assertionError.get('missing_argument', 'index');
+      if (throwOnMissing) {
+        throw assertionError.get('missing_argument', 'index');
+      }
+      return null;
     }
 
     return String(index);
@@ -723,11 +726,14 @@ export class KuzzleRequest {
   /**
    * Returns the collection specified in the request
    */
-  getCollection (): string {
+  getCollection (throwOnMissing: boolean = true): string {
     const collection = this.input.args.collection;
 
     if (! collection) {
-      throw assertionError.get('missing_argument', 'collection');
+      if (throwOnMissing) {
+        throw assertionError.get('missing_argument', 'collection');
+      }
+      return null;
     }
 
     return String(collection);
@@ -805,7 +811,7 @@ export class KuzzleRequest {
       throw assertionError.get('invalid_type', '_id', 'string');
     }
 
-    return id;
+    return String(id);
   }
 
   /**
@@ -831,8 +837,8 @@ export class KuzzleRequest {
   }
 
   /**
-  * Returns the search body query according to the http method
-  */
+   * Returns the search body query according to the http method
+   */
   getSearchBody (): JSONObject {
     if ( this.context.connection.protocol !== 'http'
       || this.context.connection.misc.verb !== 'GET'
@@ -852,7 +858,7 @@ export class KuzzleRequest {
     scrollTTL: string;
     searchBody: JSONObject;
     size: number;
-    } {
+  } {
     const from = this.getInteger('from', 0);
     const size = this.getInteger('size', 10);
     const scrollTTL = this.getScrollTTLParam();
@@ -1058,7 +1064,7 @@ export class KuzzleRequest {
       ) {
         try {
           const parsedValue = JSON.parse(value);
-          
+
           if (Array.isArray(parsedValue)) {
             // Replace the value with the parsed value
             // This way subsequent calls to this function will return the parsed value directly
@@ -1107,7 +1113,7 @@ export class KuzzleRequest {
       ) {
         try {
           const parsedValue = JSON.parse(value);
-          
+
           if (isPlainObject(parsedValue)) {
             // Replace the value with the parsed value
             // This way subsequent calls to this function will return the parsed value directly
