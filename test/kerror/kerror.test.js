@@ -24,7 +24,7 @@ describe('#kerror', () => {
             errors: {
               conflict: {
                 status: 409,
-                message: '9 more for the teapot',
+                message: 'add 9 for the teapot %s',
                 code: 1,
                 class: 'KuzzleError',
               }
@@ -34,10 +34,11 @@ describe('#kerror', () => {
       }
     };
 
-    const err = kerror.rawGet(domains, 'custom', 'httpStatus', 'conflict');
+    const err = kerror.rawGet(domains, 'custom', 'httpStatus', 'conflict', 'placeHolder-1');
 
     should(err).be.instanceOf(KuzzleError);
     should(err.status).be.eql(409);
+    should(err.props).be.eql(['placeHolder-1']);
   });
 
   it('should return an ExternalServiceError with right name, msg and code', () => {

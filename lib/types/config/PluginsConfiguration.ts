@@ -15,7 +15,7 @@ export type PluginsConfiguration = {
      * 
      * @default false
      */
-    failsafeMode: boolean,
+    failsafeMode: boolean;
   
     /**
      * Maximum amount of time (in milliseconds) to wait
@@ -73,7 +73,7 @@ export type PluginsConfiguration = {
      * @default 50000
      */
     pipesBufferSize: number;
-  },
+  };
 
   /**
    * Default logger plugin configuration.
@@ -115,11 +115,11 @@ export type PluginsConfiguration = {
          * @default "YYYY-MM-DD HH-mm-ss"
          */
         dateFormat: string;
-      },
+      };
 
       [transport: string]: JSONObject;
-    }
-  },
+    };
+  };
 
   /**
    * Default local auth strategy plugin.
@@ -191,7 +191,7 @@ export type PluginsConfiguration = {
      * @see https://docs.kuzzle.io/core/2/guides/main-concepts/authentication#password-policies
      */
     passwordPolicies: PasswordPolicy[];
-  },
+  };
 
   [pluginName: string]: JSONObject;
 }

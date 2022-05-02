@@ -10,7 +10,7 @@ const {
   ForbiddenError
 } = require('../../../../index');
 const { User } = require('../../../../lib/model/security/user');
-const FunnelProtocol = require('../../../../lib/core/shared/sdk/funnelProtocol');
+const { FunnelProtocol } = require('../../../../lib/core/shared/sdk/funnelProtocol');
 
 describe('Test: sdk/funnelProtocol', () => {
   let request;
@@ -52,12 +52,6 @@ describe('Test: sdk/funnelProtocol', () => {
       });
 
       kuzzle.emit('core:network:internal:message', payload);
-    });
-  });
-
-  describe('#isReady', () => {
-    it('should return true', () => {
-      should(funnelProtocol.isReady()).be.true();
     });
   });
 

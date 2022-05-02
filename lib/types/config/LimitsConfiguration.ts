@@ -94,7 +94,7 @@ export type LimitsConfiguration = {
      *
      * @default 1000000
     */
-   subscriptionRooms: number
+   subscriptionRooms: number;
 
    /**
     * Maximum time (in seconds) a document will be kept in cache for

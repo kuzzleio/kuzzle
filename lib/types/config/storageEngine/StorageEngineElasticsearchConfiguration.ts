@@ -4,12 +4,12 @@ export type StorageEngineElasticsearch = {
   /**
    * @default ['storageEngine']
   */
-  aliases: string[],
+  aliases: string[];
 
   /**
    * @default "elasticsearch"
   */
-  backend: 'elasticsearch'
+  backend: 'elasticsearch';
 
   /**
    * Elasticsearch constructor options. Use this field to specify your
@@ -25,7 +25,7 @@ export type StorageEngineElasticsearch = {
    * }
    *
   */
-  client: ClientOptions
+  client: ClientOptions;
 
   /**
    * Default policy against new fields that are not referenced in the
@@ -43,7 +43,7 @@ export type StorageEngineElasticsearch = {
     /**
      * @default "false"
     */
-    dynamic: 'true' | 'false' | 'strict'
+    dynamic: 'true' | 'false' | 'strict';
 
     properties: {
       _kuzzle_info: {
@@ -58,8 +58,8 @@ export type StorageEngineElasticsearch = {
            * ]
            */
           author: {
-            type: string
-          }
+            type: string;
+          };
 
           /**
            * @default
@@ -71,8 +71,8 @@ export type StorageEngineElasticsearch = {
            * ]
            */
             createdAt: {
-              type: string
-            }
+              type: string;
+            };
 
             /**
            * @default
@@ -84,8 +84,8 @@ export type StorageEngineElasticsearch = {
            * ]
            */
             updater: {
-              type: string
-            }
+              type: string;
+            };
 
             /**
            * @default
@@ -97,25 +97,25 @@ export type StorageEngineElasticsearch = {
            * ]
            */
             updatedAt: {
-              type: string
-            }
-        }
-      }
-      }
-    }
+              type: string;
+            };
+        };
+      };
+      };
+    };
 
     internalIndex: {
       /**
       * @default "kuzzle"
       */
-      name: string
+      name: string;
 
       collections: {
         users: {
           /**
           * @default 'false'
           */
-          dynamic: 'true' | 'false' | 'strict'
+          dynamic: 'true' | 'false' | 'strict';
 
           properties: {
             /**
@@ -128,76 +128,76 @@ export type StorageEngineElasticsearch = {
               * ]
               */
             profileIds: {
-              type: string,
-            }
-          }
-        }
+              type: string;
+            };
+          };
+        };
         profiles: {
-          dynamic: 'false',
+          dynamic: 'false';
           properties: {
-            tags: { type: 'keyword' },
+            tags: { type: 'keyword' };
             policies: {
               properties: {
-                roleId: { type: 'keyword' },
+                roleId: { type: 'keyword' };
                 restrictedTo: {
-                  type: 'nested',
+                  type: 'nested';
                   properties: {
-                    index: { type: 'keyword' },
-                    collections: { type: 'keyword' }
-                  }
-                }
-              }
-            }
-          }
-        },
+                    index: { type: 'keyword' };
+                    collections: { type: 'keyword' };
+                  };
+                };
+              };
+            };
+          };
+        };
         roles: {
-          dynamic: 'false',
+          dynamic: 'false';
           properties: {
-            tags: { type: 'keyword' },
+            tags: { type: 'keyword' };
             controllers: {
-              dynamic: 'false',
-              properties: Record<string, unknown>,
-            }
-          }
-        },
+              dynamic: 'false';
+              properties: Record<string, unknown>;
+            };
+          };
+        };
         validations: {
           properties: {
-            index: { type: 'keyword' },
-            collection: { type: 'keyword' },
+            index: { type: 'keyword' };
+            collection: { type: 'keyword' };
             validations: {
-              dynamic: 'false',
-              properties: Record<string, unknown>,
-            }
-          }
-        },
+              dynamic: 'false';
+              properties: Record<string, unknown>;
+            };
+          };
+        };
         config: {
-          dynamic: 'false',
-          properties: Record<string, unknown>,
-        },
+          dynamic: 'false';
+          properties: Record<string, unknown>;
+        };
         'api-keys': {
-          dynamic: 'false',
+          dynamic: 'false';
           properties: {
-            userId: { type: 'keyword' },
-            hash: { type: 'keyword' },
-            description: { type: 'text' },
-            expiresAt: { type: 'long' },
-            ttl: { type: 'keyword' },
-            token: { type: 'keyword' }
-          }
-        },
+            userId: { type: 'keyword' };
+            hash: { type: 'keyword' };
+            description: { type: 'text' };
+            expiresAt: { type: 'long' };
+            ttl: { type: 'keyword' };
+            token: { type: 'keyword' };
+          };
+        };
         installations: {
-          dynamic: 'strict',
+          dynamic: 'strict';
           properties: {
-            description: { type: 'text' },
-            handler: { type: 'text' },
-            installedAt: { type: 'date' }
-          },
-        }
-      }
-    },
-    maxScrollDuration: '1m',
+            description: { type: 'text' };
+            handler: { type: 'text' };
+            installedAt: { type: 'date' };
+          };
+        };
+      };
+    };
+    maxScrollDuration: '1m';
     defaults: {
-      onUpdateConflictRetries: 0,
-      scrollTTL: '15s'
-    }
+      onUpdateConflictRetries: 0;
+      scrollTTL: '15s';
+    };
 }

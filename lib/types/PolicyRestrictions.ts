@@ -30,8 +30,8 @@
  * }
  */
 export type PolicyRestrictions = {
-  index: string,
-  collections: string[],
+  index: string;
+  collections: string[];
 };
 
 /**

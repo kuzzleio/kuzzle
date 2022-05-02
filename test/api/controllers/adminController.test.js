@@ -248,6 +248,7 @@ describe('AdminController', () => {
     beforeEach(() => {
       request.input.action = 'loadFixtures';
       request.input.body = { city: { seventeen: [] } };
+      request.input.args.refresh = 'false';
     });
 
     it('should call loadFixtures from the public storage engine', async () => {
@@ -255,21 +256,7 @@ describe('AdminController', () => {
 
       should(kuzzle.ask).be.calledWith(
         'core:storage:public:document:import',
-        request.input.body);
-    });
-
-    it('should handle promise rejections when not waiting for a refresh', async () => {
-      const err = new Error('err');
-
-      kuzzle.ask
-        .withArgs('core:storage:public:document:import')
-        .rejects(err);
-
-      request.input.args.refresh = false;
-
-      await should(adminController.loadFixtures(request)).fulfilled();
-
-      should(kuzzle.log.error).calledWith(err);
+        request.input.body, { refresh: 'false' });
     });
   });
 

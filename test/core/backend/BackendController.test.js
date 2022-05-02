@@ -79,6 +79,14 @@ describe('Backend', () => {
         application.controller.register('greeting', definition);
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
+
+    it('should check controller definition', () => {
+      delete definition.actions;
+
+      should(() => {
+        application.controller.register(definition);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
+    });
   });
 
   describe('ControllerManager#use', () => {
@@ -131,6 +139,14 @@ describe('Backend', () => {
 
       should(() => {
         application.controller.use(controller2);
+      }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
+    });
+
+    it('should check controller definition', () => {
+      delete controller.definition.actions;
+
+      should(() => {
+        application.controller.use(controller);
       }).throwError({ id: 'plugin.assert.invalid_controller_definition' });
     });
   });

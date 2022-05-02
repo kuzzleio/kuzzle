@@ -1,6 +1,8 @@
 import { JSONObject } from 'kuzzle-sdk';
 
-// Should be in the SDK instead
+/**
+ * @deprecated Use KDocument instead (See https://docs.kuzzle.io/sdk/js/7/essentials/strong-typing/)
+ */
 export interface KuzzleDocument {
   _id: string;
 

@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -85,9 +85,9 @@ Reflect.defineProperty(global, 'kuzzle', {
  */
 
 type ImportStatus = {
-  locked?: boolean,
-  initialized?: boolean,
-  firstCall?: boolean,
+  locked?: boolean;
+  initialized?: boolean;
+  firstCall?: boolean;
 }
 class Kuzzle extends KuzzleEventEmitter {
   private config: KuzzleConfiguration;
@@ -156,16 +156,16 @@ class Kuzzle extends KuzzleEventEmitter {
   private importTypes: {
     [key: string]: (
       config: {
-        toImport: ImportConfig,
-        toSupport: SupportConfig
+        toImport: ImportConfig;
+        toSupport: SupportConfig;
       },
       status: ImportStatus
     ) => Promise<void>;
   };
 
-  private koncorde : Koncorde;
-  private id : string;
-  private secret : string;
+  private koncorde: Koncorde;
+  private id: string;
+  private secret: string;
 
   constructor (config: KuzzleConfiguration) {
     super(
@@ -420,8 +420,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
   private async importUserMappings (
     config: {
-      toImport: ImportConfig,
-      toSupport: SupportConfig
+      toImport: ImportConfig;
+      toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
@@ -440,8 +440,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
   private async importMappings (
     config: {
-      toImport: ImportConfig,
-      toSupport: SupportConfig
+      toImport: ImportConfig;
+      toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
@@ -491,8 +491,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
   private async importFixtures (
     config: {
-      toImport: ImportConfig,
-      toSupport: SupportConfig
+      toImport: ImportConfig;
+      toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
@@ -510,8 +510,8 @@ class Kuzzle extends KuzzleEventEmitter {
 
   private async importPermissions (
     config: {
-      toImport: ImportConfig,
-      toSupport: SupportConfig
+      toImport: ImportConfig;
+      toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {

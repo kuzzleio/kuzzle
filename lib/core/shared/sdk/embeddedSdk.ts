@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -26,10 +26,11 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
+  RequestPayload,
 } from 'kuzzle-sdk';
 
-import { RequestPayload, ResponsePayload } from '../../../types';
-import FunnelProtocol from './funnelProtocol';
+import { ResponsePayload } from '../../../types';
+import { FunnelProtocol } from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
 import * as kerror from '../../../kerror';
 import ImpersonatedSDK from './impersonatedSdk';
@@ -84,7 +85,7 @@ interface EmbeddedRealtime extends RealtimeController {
        */
       propagate?: boolean;
     }
-  ): Promise<string>
+  ): Promise<string>;
 }
 
 /**
@@ -94,7 +95,8 @@ export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
   constructor () {
-    super(new FunnelProtocol(), { autoResubscribe: false });
+    // FunnelProtocol is not technically a valid SDK protocol
+    super(new FunnelProtocol() as any, { autoResubscribe: false });
   }
 
   /**
