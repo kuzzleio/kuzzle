@@ -1402,7 +1402,7 @@ describe('DocumentController', () => {
       };
       request.input.args.strict = true;
 
-      esResponse.errors = [{ _id: 'id3', _source: { foo: 'bar', bar: 'foo' } }]
+      esResponse.errors = [{ _id: 'id3', _source: { foo: 'bar', bar: 'foo' } }];
 
       // await documentController.updateByQuery(request);
 
