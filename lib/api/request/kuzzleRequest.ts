@@ -721,7 +721,7 @@ export class KuzzleRequest {
   /**
    * Returns the collection specified in the request
    */
-  getCollection ({ required = true }): string {
+  getCollection ({ required = true } = {}): string {
     const collection = this.input.args.collection;
 
     this._checkRequired(collection, 'collection', required);
