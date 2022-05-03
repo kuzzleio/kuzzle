@@ -1125,8 +1125,8 @@ export class KuzzleRequest {
    * Throw `missing_argument` when this one is required
    */
   private _checkRequired (arg: string, argName: string, required: boolean) {
-    if (required) {
-      throw assertionError.get('missing_argument', 'collection');
+    if (required && ! arg) {
+      throw assertionError.get('missing_argument', argName);
     }
   }
 }
