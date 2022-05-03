@@ -995,7 +995,8 @@ Feature: Document Controller
       | index      | "nyc-open-data"                          |
       | collection | "yellow-taxi"                            |
       | strict     | true                                     |
-      | body       | { "query": { "match": { "name": "document2" } }, "changes": { "author": "me" }} |
+      | lang       | "koncorde"                               |
+      | body       | { "query": { "equals": { "name": "document2" } }, "changes": { "author": "me" } } |
     Then I should receive an error matching:
       | id     | "api.process.incomplete_multiple_request" |
 
