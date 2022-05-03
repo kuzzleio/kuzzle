@@ -774,7 +774,7 @@ describe('DocumentController', () => {
       await documentController._mChanges(request, 'mUpsert', actionEnum.UPSERT);
 
       const updatedItems = [
-        { 
+        {
           _id: '_id1',
           _source: { field: '_source' },
           _version: '_version',
@@ -782,14 +782,14 @@ describe('DocumentController', () => {
           created: false,
           result: 'created'
         },
-        { 
+        {
           _id: '_id2',
           _source: { field: '_source' },
           _version: '_version',
           _updatedFields: ['field'],
           created: false,
           result: 'created' },
-        { 
+        {
           _id: '_id3',
           _source: { field: '_source' },
           _version: '_version',
@@ -1389,6 +1389,27 @@ describe('DocumentController', () => {
 
       should(documentController.translateKoncorde)
         .be.calledWith({ equals: { name: 'Melis' } });
+    });
+
+    it('should throw an error if one document has an error with the strict arg', () => {
+      request.input.body = {
+        query: {
+          match: { foo: 'bar' }
+        },
+        changes: {
+          bar: 'foo'
+        }
+      };
+      request.input.args.strict = true;
+
+      esResponse.errors = [{ _id: 'id3', _source: { foo: 'bar', bar: 'foo' } }]
+
+      // await documentController.updateByQuery(request);
+
+      should(documentController.updateByQuery(request))
+        .be.rejectedWith(
+          MultipleErrorsError,
+          { id: 'api.process.incomplete_multiple_request' });
     });
   });
 
