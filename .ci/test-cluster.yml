@@ -1,10 +1,11 @@
 version: '3.4'
 
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/core-dev:2
-  command: >
-    sh -c "n $NODE_VERSION &&
-           node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin"
+  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-16}
+  command: > 
+    bash -c "
+      node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
+    "
   volumes:
     - "..:/var/app"
   cap_add:
