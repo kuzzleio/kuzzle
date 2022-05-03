@@ -710,7 +710,7 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex (throwOnMissing = true): string {
+  getIndex ({ required = true } = {}): string {
     const index = this.input.args.index;
 
     if (! index) {
