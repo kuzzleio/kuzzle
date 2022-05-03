@@ -713,30 +713,20 @@ export class KuzzleRequest {
   getIndex ({ required = true } = {}): string {
     const index = this.input.args.index;
 
-    if (! index) {
-      if (throwOnMissing) {
-        throw assertionError.get('missing_argument', 'index');
-      }
-      return null;
-    }
+    this._checkRequired(index, 'index', required);
 
-    return String(index);
+    return index ? String(index) : null;
   }
 
   /**
    * Returns the collection specified in the request
    */
-  getCollection (throwOnMissing = true): string {
+  getCollection ({required = true}): string {
     const collection = this.input.args.collection;
 
-    if (! collection) {
-      if (throwOnMissing) {
-        throw assertionError.get('missing_argument', 'collection');
-      }
-      return null;
-    }
+    this._checkRequired(collection, 'collection', required);
 
-    return String(collection);
+    return collection ? String(collection) : null;
   }
 
   /**
@@ -1131,6 +1121,14 @@ export class KuzzleRequest {
     return value;
   }
 
+  /**
+   * Throw `missing_argument` when this one is required
+   */
+  private _checkRequired (arg: string, argName: string, required: boolean) {
+    if (required) {
+      throw assertionError.get('missing_argument', 'collection');
+    }
+  }
 }
 
 export class Request extends KuzzleRequest {}
