@@ -981,6 +981,24 @@ Feature: Document Controller
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
 
+
+
+  # document:updateByQuery =====================================================
+
+  @mappings
+  Scenario: Update multiple documents by query in strict mode with errors
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id          | body                    |
+      | "document-1" | { "name": "document1" } |
+    When I execute the action "document":"updateByQuery" with args:
+      | index      | "nyc-open-data"                          |
+      | collection | "yellow-taxi"                            |
+      | strict     | true                                     |
+      | body       | { "query": { "match": { "name": "document2" } }, "changes": { "author": "me" }} |
+    Then I should receive an error matching:
+      | id     | "api.process.incomplete_multiple_request" |
+
   # document:upsert ============================================================
 
   @mappings

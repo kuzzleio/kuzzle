@@ -1404,8 +1404,6 @@ describe('DocumentController', () => {
 
       esResponse.errors = [{ _id: 'id3', _source: { foo: 'bar', bar: 'foo' } }];
 
-      // await documentController.updateByQuery(request);
-
       should(documentController.updateByQuery(request))
         .be.rejectedWith(
           MultipleErrorsError,
