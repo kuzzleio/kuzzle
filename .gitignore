@@ -100,6 +100,7 @@ lib/cluster/idCardHandler.js
 lib/cluster/state.js
 lib/cluster/workers/IDCardRenewer.js
 lib/config/default.config.js
+lib/config/default.config.js
 lib/core/auth/tokenManager.js
 lib/core/backend/applicationManager.js
 lib/core/backend/backend.js
@@ -107,10 +108,8 @@ lib/core/backend/backendCluster.js
 lib/core/backend/backendConfig.js
 lib/core/backend/backendController.js
 lib/core/backend/backendErrors.js
-lib/core/backend/backendErrors.js
 lib/core/backend/backendHook.js
 lib/core/backend/backendImport.js
-lib/core/backend/backendOpenApi.js
 lib/core/backend/backendOpenApi.js
 lib/core/backend/backendPipe.js
 lib/core/backend/backendPlugin.js
@@ -128,7 +127,6 @@ lib/core/security/profileRepository.js
 lib/core/shared/KoncordeWrapper.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
-lib/core/storage/indexCache.js
 lib/core/storage/indexCache.js
 lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js
