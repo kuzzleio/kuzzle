@@ -78,6 +78,7 @@ upgrade-*.report
 package/*
 kuzzle-*.tgz
 
+
 /index.js
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
@@ -128,7 +129,6 @@ lib/core/shared/KoncordeWrapper.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
 lib/core/storage/indexCache.js
-lib/core/storage/indexCache.js
 lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js
 lib/kerror/errors/externalServiceError.js
@@ -162,7 +162,6 @@ lib/types/Global.js
 lib/types/HttpStream.js
 lib/types/InternalLogger.js
 lib/types/Kuzzle.js
-lib/types/KuzzleDocument.js
 lib/types/KuzzleDocument.js
 lib/types/OpenApiDefinition.js
 lib/types/PasswordPolicy.js
