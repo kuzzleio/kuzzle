@@ -126,13 +126,18 @@ class KuzzleWorld {
   }
 
   /**
-   * Re-try to validate the same predicate N times
+   * Re-try to validate the same predicate N times.
+   *
+   * By default, it will wait for a maximum of 5 seconds.
+   *
+   * You may want to increase cucumber default step timeout:
+   * `Then(..., { timeout: 5000 }, async function (...) {`
    *
    * @param predicate Function throwing an exception when fail to validate
-   * @param options.retries Max number of retries (`50`)
-   * @param options.interval Interval between retries in ms (`100`)
+   * @param options.retries Max number of retries (`100`)
+   * @param options.interval Interval between retries in ms (`50`)
    */
-   async retry (predicate, { retries=50, interval=100 } = {}) {
+   async retry (predicate, { retries=100, interval=50 } = {}) {
     let count = 0;
 
     while (count < retries) {
