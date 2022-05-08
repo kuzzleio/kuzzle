@@ -124,6 +124,33 @@ class KuzzleWorld {
       throw this.props.error;
     }
   }
+
+  /**
+   * Re-try to validate the same predicate N times
+   *
+   * @param predicate Function throwing an exception when fail to validate
+   * @param options.retries Max number of retries (`50`)
+   * @param options.interval Interval between retries in ms (`100`)
+   */
+   async retry (predicate, { retries=50, interval=100 } = {}) {
+    let count = 0;
+
+    while (count < retries) {
+      try {
+        await predicate();
+        count = retries;
+      }
+      catch (error) {
+        if (count === retries) {
+          throw error;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, interval));
+
+        count++;
+      }
+    }
+  }
 }
 
 setWorldConstructor(KuzzleWorld);
