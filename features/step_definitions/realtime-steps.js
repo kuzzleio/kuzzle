@@ -38,17 +38,14 @@ Then('I unsubscribe from the current room via the plugin', async function () {
   this.props.result = response.result;
 });
 
-Then('I should have receive {string} notifications for {string}:{string}', async function (rawNumber, index, collection) {
-  const expectedCount = parseInt(rawNumber, 10);
-  const notifications = this.props.subscriptions[`${index}:${collection}`].notifications;
+Then('I should have receive {string} notifications for {string}:{string}', function (rawNumber, index, collection) {
+  return this.retry(() => {
+    const expectedCount = parseInt(rawNumber, 10);
+    const notifications = this.props.subscriptions[`${index}:${collection}`].notifications;
 
-  // retry
-  for (let i = 0; notifications.length < expectedCount && i < 10; i++) {
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  should(this.props.subscriptions[`${index}:${collection}`].notifications)
-    .have.length(expectedCount);
+    should(this.props.subscriptions[`${index}:${collection}`].notifications)
+      .have.length(expectedCount);
+  });
 });
 
 Then('I should receive realtime notifications for {string}:{string} matching:', function (index, collection, datatable, done) {

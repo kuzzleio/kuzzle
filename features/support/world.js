@@ -21,7 +21,7 @@ class KuzzleWorld {
     // Intermediate steps should store values inside this object
     this.props = {};
 
-    this._sdk = this._getSdk();
+    this._sdk = this.getSDK();
   }
 
   get sdk () {
@@ -80,15 +80,20 @@ class KuzzleWorld {
     return objectArray;
   }
 
-  _getSdk () {
+  /**
+   * Intantiate a SDK
+   *
+   * @param options.port Used to connect the SDK to a specific node of the cluster
+   */
+  getSDK ({ port } = {}) {
     let protocol;
 
     switch (this.protocol) {
       case 'http':
-        protocol = new Http(this.host, { port: this.port });
+        protocol = new Http(this.host, { port: port || this.port });
         break;
       case 'websocket':
-        protocol = new WebSocket(this.host, { port: this.port });
+        protocol = new WebSocket(this.host, { port: port || this.port });
         break;
       default:
         throw new Error(`Unknown protocol "${this.protocol}".`);

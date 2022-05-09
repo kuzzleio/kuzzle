@@ -183,9 +183,9 @@ After({ tags: '@websocket' }, function () {
 Before({ tags: '@cluster' }, async function () {
   this.sdk.disconnect();
 
-  this.node1 = new Kuzzle(new WebSocket(this.host, { port: 17510 }));
-  this.node2 = new Kuzzle(new WebSocket(this.host, { port: 17511 }));
-  this.node3 = new Kuzzle(new WebSocket(this.host, { port: 17512 }));
+  this.node1 = this.getSDK({ port: 17510 });
+  this.node2 = this.getSDK({ port: 17511 });
+  this.node3 = this.getSDK({ port: 17512 });
 
   await Promise.all([
     this.node1.connect(),
@@ -197,4 +197,5 @@ Before({ tags: '@cluster' }, async function () {
 After({ tags: '@cluster' }, async function () {
   this.node1.disconnect();
   this.node2.disconnect();
+  this.node3.disconnect();
 });

@@ -1,3 +1,5 @@
+'use strict';
+
 const should = require('should');
 const { Then } = require('cucumber');
 
