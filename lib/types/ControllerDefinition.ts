@@ -91,7 +91,7 @@ export type HttpRoute = {
   /**
    * HTTP verb.
    */
-  verb: 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch' | 'options';
+  verb: 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch' | 'options' | 'link' | 'unlink';
 
   /**
    * Route path.
