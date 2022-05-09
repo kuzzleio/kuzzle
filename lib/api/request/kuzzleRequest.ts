@@ -633,7 +633,7 @@ export class KuzzleRequest {
     if (this.context.connection.protocol === 'http') {
       try {
         const parsedValue = JSON.parse(value);
-        
+
         if (Array.isArray(parsedValue)) {
           return parsedValue;
         }
@@ -710,27 +710,23 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex (): string {
+  getIndex ({ required = true } = {}): string {
     const index = this.input.args.index;
 
-    if (! index) {
-      throw assertionError.get('missing_argument', 'index');
-    }
+    this.checkRequired(index, 'index', required);
 
-    return index;
+    return index ? String(index) : null;
   }
 
   /**
    * Returns the collection specified in the request
    */
-  getCollection (): string {
+  getCollection ({ required = true } = {}): string {
     const collection = this.input.args.collection;
 
-    if (! collection) {
-      throw assertionError.get('missing_argument', 'collection');
-    }
+    this.checkRequired(collection, 'collection', required);
 
-    return collection;
+    return collection ? String(collection) : null;
   }
 
   /**
@@ -805,7 +801,7 @@ export class KuzzleRequest {
       throw assertionError.get('invalid_type', '_id', 'string');
     }
 
-    return id;
+    return String(id);
   }
 
   /**
@@ -831,8 +827,8 @@ export class KuzzleRequest {
   }
 
   /**
-  * Returns the search body query according to the http method
-  */
+   * Returns the search body query according to the http method
+   */
   getSearchBody (): JSONObject {
     if ( this.context.connection.protocol !== 'http'
       || this.context.connection.misc.verb !== 'GET'
@@ -1058,7 +1054,7 @@ export class KuzzleRequest {
       ) {
         try {
           const parsedValue = JSON.parse(value);
-          
+
           if (Array.isArray(parsedValue)) {
             // Replace the value with the parsed value
             // This way subsequent calls to this function will return the parsed value directly
@@ -1107,7 +1103,7 @@ export class KuzzleRequest {
       ) {
         try {
           const parsedValue = JSON.parse(value);
-          
+
           if (isPlainObject(parsedValue)) {
             // Replace the value with the parsed value
             // This way subsequent calls to this function will return the parsed value directly
@@ -1125,6 +1121,14 @@ export class KuzzleRequest {
     return value;
   }
 
+  /**
+   * Throw `missing_argument` when this one is required
+   */
+  private checkRequired (arg: string, argName: string, required: boolean) {
+    if (required && ! arg) {
+      throw assertionError.get('missing_argument', argName);
+    }
+  }
 }
 
 export class Request extends KuzzleRequest {}
