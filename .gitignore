@@ -78,10 +78,12 @@ upgrade-*.report
 package/*
 kuzzle-*.tgz
 
+
 /index.js
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
 features-sdk/support/application/functional-tests-app.js
+lib/api/openApiGenerator.js
 lib/api/openapi/OpenApiManager.js
 lib/api/openapi/components/document/index.js
 lib/api/openapi/components/index.js
@@ -99,7 +101,6 @@ lib/api/request/requestResponse.js
 lib/cluster/idCardHandler.js
 lib/cluster/state.js
 lib/cluster/workers/IDCardRenewer.js
-lib/config/default.config.js
 lib/config/default.config.js
 lib/core/auth/tokenManager.js
 lib/core/backend/applicationManager.js
@@ -196,6 +197,7 @@ lib/types/realtime/RealtimeUsers.js
 lib/types/realtime/RoomList.js
 lib/util/array.js
 lib/util/bufferedPassThrough.js
+lib/util/crypto.js
 lib/util/dump-collection.js
 lib/util/inflector.js
 lib/util/interfaces.js

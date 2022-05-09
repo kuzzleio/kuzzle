@@ -14,6 +14,8 @@ const MutexMock = require('../../mocks/mutex.mock.js');
 
 const { NativeController } = require('../../../lib/api/controllers/baseController');
 
+const { BACKEND_IMPORT_KEY } = require('../../../lib/kuzzle/kuzzle');
+
 describe('AdminController', () => {
   let AdminController;
   let adminController;
@@ -101,6 +103,9 @@ describe('AdminController', () => {
       const roleSpy = kuzzle.ask.withArgs('core:security:role:truncate');
       should(kuzzle.internalIndex.createInitialSecurities)
         .be.calledOnce();
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:del',
+        `${BACKEND_IMPORT_KEY}:permissions`);
 
       sinon.assert.callOrder(
         userSpy,
@@ -174,6 +179,10 @@ describe('AdminController', () => {
         ['a', 'b', 'c']);
 
       should(response).match({ acknowledge: true });
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:del',
+        `${BACKEND_IMPORT_KEY}:mappings`);
 
       const mutex = MutexMock.__getLastMutex();
 
