@@ -53,7 +53,7 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
-import { generateRandomName } from '../util/name-generator';
+import { NameGenerator } from '../util/name-generator';
 import { OpenApiManager } from '../api/openapi';
 import { sha256 } from '../util/crypto';
 
@@ -316,7 +316,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Cluster initialized');
     }
     else {
-      id = generateRandomName('knode');
+      id = NameGenerator.generateRandomName({ prefix: 'knode' });
       this.log.info('[X] Cluster disabled: single node mode.');
     }
 

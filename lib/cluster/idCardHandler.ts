@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { generateRandomName } from '../util/name-generator';
+import { NameGenerator } from '../util/name-generator';
 import { Worker as WorkerThread } from 'worker_threads';
 import Bluebird from 'bluebird';
 
@@ -156,7 +156,7 @@ export class ClusterIdCardHandler {
     let reserved = false;
 
     do {
-      this.nodeId = generateRandomName('knode');
+      this.nodeId = NameGenerator.generateRandomName({ prefix: 'knode' });
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),

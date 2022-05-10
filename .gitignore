@@ -203,4 +203,5 @@ lib/util/inflector.js
 lib/util/interfaces.js
 lib/util/koncordeCompat.js
 lib/util/mutex.js
+lib/util/name-generator.js
 lib/util/readYamlFile.js
