@@ -53,6 +53,21 @@ describe('Backend', () => {
     });
   });
 
+  describe('#nodeId', () => {
+    it('should return the node ID', async () => {
+      await application.start();
+
+      should(application.nodeId).be.a.String();
+    });
+
+    it('should throw an error if the application is not started', () => {
+      should(() => {
+        /* eslint-disable-next-line no-unused-expressions */
+        application.nodeId;
+      }).throwError({ id: 'plugin.runtime.unavailable_before_start' });
+    });
+  });
+
   describe('#start', () => {
     it('should call kuzzle.start with an instantiated plugin and options', async () => {
       application.version = '42.21.84';

@@ -166,8 +166,12 @@ class Kuzzle extends KuzzleEventEmitter {
   };
 
   private koncorde: Koncorde;
-  private id: string;
   private secret: string;
+
+  /**
+   * Node unique ID amongst other cluster nodes
+   */
+  public id: string;
 
   constructor (config: KuzzleConfiguration) {
     super(
