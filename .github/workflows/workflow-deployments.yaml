@@ -1,4 +1,4 @@
-name: Workflow Doc
+name: Workflow Deployments
 
 on: 
   push:
