@@ -315,8 +315,6 @@ describe('#RequestResponse', () => {
     it('should return a valid JSON object in Kuzzle format', () => {
       let response = new RequestResponse(req);
 
-      response.setHeader('x-foo', 'bar');
-
       should(response.toJSON()).have.properties(['raw', 'status', 'requestId', 'content', 'headers']);
       should(response.toJSON().content).have.properties([
         'error',
@@ -327,10 +325,36 @@ describe('#RequestResponse', () => {
         'index',
         'volatile',
         'result',
-        'deprecations'
+        'deprecations',
+        'headers',
       ]);
       should(response.toJSON().raw).be.false();
-      should(response.toJSON().headers).match({ 'x-foo': 'bar' });
+    });
+
+    it('should only include headers added using response.configure', () => {
+      let response = new RequestResponse(req);
+
+      response.configure({
+        headers: {
+          'x-foo': 'bar',
+          'set-cookie': 'cookie'
+        }
+      });
+      
+      // Should not be included in the response content headers
+      response.setHeader('x-bar', 'baz');
+
+      // Check some headers are removed from the response content headers
+      should(response.toJSON().content.headers).match({
+        'x-foo': 'bar',
+        'set-cookie': undefined,
+      });
+
+      should(response.toJSON().headers).match({
+        'x-foo': 'bar',
+        'set-cookie': ['cookie'],
+        'x-bar': 'baz'
+      });
     });
 
     it('should return a valid JSON object in raw format', () => {
@@ -338,6 +362,7 @@ describe('#RequestResponse', () => {
 
       response.raw = true;
       response.setHeader('x-foo', 'bar');
+      response.setHeader('set-cookie', 'cookie');
       response.result = 'foobar';
       response.status = 666;
 
@@ -345,7 +370,10 @@ describe('#RequestResponse', () => {
       should(response.toJSON().status).be.eql(666);
       should(response.toJSON().content).be.eql('foobar');
       should(response.toJSON().raw).be.true();
-      should(response.toJSON().headers).match({ 'x-foo': 'bar' });
+      should(response.toJSON().headers).match({
+        'x-foo': 'bar',
+        'set-cookie': ['cookie']
+      });
     });
   });
 
