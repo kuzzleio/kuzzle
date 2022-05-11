@@ -142,7 +142,7 @@ class KuzzleWorld {
    * @param options.retries Max number of retries (`100`)
    * @param options.interval Interval between retries in ms (`50`)
    */
-   async retry (predicate, { retries=100, interval=50 } = {}) {
+  async retry (predicate, { retries = 100, interval = 50 } = {}) {
     let count = 0;
 
     while (count < retries) {

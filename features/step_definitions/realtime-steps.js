@@ -41,7 +41,6 @@ Then('I unsubscribe from the current room via the plugin', async function () {
 Then('I should have receive {string} notifications for {string}:{string}', function (rawNumber, index, collection) {
   return this.retry(() => {
     const expectedCount = parseInt(rawNumber, 10);
-    const notifications = this.props.subscriptions[`${index}:${collection}`].notifications;
 
     should(this.props.subscriptions[`${index}:${collection}`].notifications)
       .have.length(expectedCount);
