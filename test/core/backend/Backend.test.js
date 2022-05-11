@@ -53,7 +53,7 @@ describe('Backend', () => {
     });
   });
 
-  describe.only('#nodeId', () => {
+  describe('#nodeId', () => {
     it('should return the node ID', async () => {
       await application.start();
 
