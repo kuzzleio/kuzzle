@@ -152,7 +152,7 @@ class KuzzleWorld {
         failure = false;
       }
       catch (error) {
-        if (count === retries) {
+        if (count >= retries) {
           throw error;
         }
 
