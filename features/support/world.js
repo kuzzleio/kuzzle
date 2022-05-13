@@ -144,11 +144,12 @@ class KuzzleWorld {
    */
   async retry (predicate, { retries = 100, interval = 50 } = {}) {
     let count = 0;
+    let failure = true;
 
-    while (count < retries) {
+    while (failure) {
       try {
         await predicate();
-        count = retries;
+        failure = false;
       }
       catch (error) {
         if (count === retries) {
