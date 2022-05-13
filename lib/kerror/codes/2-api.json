@@ -182,6 +182,12 @@
           "code": 13,
           "message": "Rejected: Too many login attempts per second",
           "class": "TooManyRequestsError"
+        },
+        "forbidden_embedded_sdk_action": {
+          "description": "A forbidden EmbdeddedSDK action has been called",
+          "code": 14,
+          "message": "The action %s:%s has been called while it is forbidden in the EmbeddedSDK%s.",
+          "class": "PluginImplementationError"
         }
       }
     }

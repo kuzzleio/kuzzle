@@ -29,6 +29,7 @@ import {
   RequestPayload,
 } from 'kuzzle-sdk';
 
+import _ from 'lodash';
 import { ResponsePayload } from '../../../types';
 import { FunnelProtocol } from './funnelProtocol';
 import { isPlainObject } from '../../../util/safeObject';
@@ -37,13 +38,39 @@ import ImpersonatedSDK from './impersonatedSdk';
 
 const contextError = kerror.wrap('plugin', 'context');
 
+const forbiddenEmbeddedActions = {
+  'auth': new Set([
+    'checkRights',
+    'createApiKey',
+    'createMyCredentials',
+    'credentialsExist',
+    'deleteApiKey',
+    'getCurrentUser',
+    'getMyCredentials',
+    'getMyRights',
+    'getStrategies',
+    'logout',
+    'refreshToken',
+    'searchApiKeys',
+    'updateMyCredentials',
+    'updateSelf',
+    'validateMyCredentials',
+  ]),
+};
+
+const warnEmbeddedActions = {
+  'auth': {
+    'login': 'EmbeddedSDK.login is deprecated, use user impersonation instead',
+  }
+};
+
 interface EmbeddedRealtime extends RealtimeController {
   /**
    * Subscribes by providing a set of filters: messages, document changes
    * and, optionally, user events matching the provided filters will generate
    * real-time notifications.
    *
-   * @see https://docs.kuzzle.io/core/2/guides/main-concepts/6-realtime-engine/
+   * @see https://docs.kuzzle.io/core/2/guides/main-concepts/realtime-engine/
    *
    * @param index Index name
    * @param collection Collection name
@@ -134,6 +161,24 @@ export class EmbeddedSDK extends Kuzzle {
       request.propagate = options.propagate === undefined || options.propagate === null
         ? false
         : options.propagate;
+    }
+
+    if ( forbiddenEmbeddedActions[request.controller] !== undefined
+      && forbiddenEmbeddedActions[request.controller].has(request.action)
+    ) {
+      throw kerror.get(
+        'api',
+        'process',
+        'forbidden_embedded_sdk_action',
+        request.controller,
+        request.action,
+        ', use user impersonation or security controller instead',
+      );
+    }
+
+    const warning = _.get(warnEmbeddedActions, [request.controller, request.action]);
+    if (warning) {
+      global.kuzzle.log.warn(warning);
     }
 
     return super.query(request, options);
