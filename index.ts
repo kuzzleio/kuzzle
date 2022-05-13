@@ -14,6 +14,8 @@ export * from './lib/util/mutex';
 
 export * from './lib/util/inflector';
 
+export { NameGenerator } from './lib/util/name-generator';
+
 export * from 'kuzzle-sdk';
 
 export * from './lib/core/shared/KoncordeWrapper';
