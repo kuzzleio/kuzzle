@@ -60,7 +60,7 @@ const forbiddenEmbeddedActions = {
 
 const warnEmbeddedActions = {
   'auth': {
-    'login': 'EmbeddedSdk\'s auth:login is deprecated, use user impersonation instead',
+    'login': 'EmbeddedSDK.login is deprecated, use user impersonation instead',
   }
 };
 
