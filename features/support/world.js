@@ -21,7 +21,7 @@ class KuzzleWorld {
     // Intermediate steps should store values inside this object
     this.props = {};
 
-    this._sdk = this._getSdk();
+    this._sdk = this.getSDK();
   }
 
   get sdk () {
@@ -80,15 +80,20 @@ class KuzzleWorld {
     return objectArray;
   }
 
-  _getSdk () {
+  /**
+   * Intantiate a SDK
+   *
+   * @param options.port Used to connect the SDK to a specific node of the cluster
+   */
+  getSDK ({ port } = {}) {
     let protocol;
 
     switch (this.protocol) {
       case 'http':
-        protocol = new Http(this.host, { port: this.port });
+        protocol = new Http(this.host, { port: port || this.port });
         break;
       case 'websocket':
-        protocol = new WebSocket(this.host, { port: this.port });
+        protocol = new WebSocket(this.host, { port: port || this.port });
         break;
       default:
         throw new Error(`Unknown protocol "${this.protocol}".`);
@@ -122,6 +127,39 @@ class KuzzleWorld {
 
     if (! failureExpected && this.props.error) {
       throw this.props.error;
+    }
+  }
+
+  /**
+   * Re-try to validate the same predicate N times.
+   *
+   * By default, it will wait for a maximum of 5 seconds.
+   *
+   * You may want to increase cucumber default step timeout:
+   * `Then(..., { timeout: 5000 }, async function (...) {`
+   *
+   * @param predicate Function throwing an exception when fail to validate
+   * @param options.retries Max number of retries (`100`)
+   * @param options.interval Interval between retries in ms (`50`)
+   */
+  async retry (predicate, { retries = 100, interval = 50 } = {}) {
+    let count = 0;
+    let failure = true;
+
+    while (failure) {
+      try {
+        await predicate();
+        failure = false;
+      }
+      catch (error) {
+        if (count >= retries) {
+          throw error;
+        }
+
+        await new Promise(resolve => setTimeout(resolve, interval));
+
+        count++;
+      }
     }
   }
 }
