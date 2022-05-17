@@ -1,5 +1,9 @@
-// Taken from :
-// https://gist.github.com/jcouyang/632709f30e12a7879a73e9e132c0d56b
+/*
+ * Resolve promises with a limited concurrency number
+ *
+ * Replacement of Bluebird.map taken from :
+ * https://gist.github.com/jcouyang/632709f30e12a7879a73e9e132c0d56b
+ */
 export function promiseAllN<T> (collection: Array<() => Promise<T>>, n = 100): Promise<T[]> {
   let i = 0;
   let jobsLeft = collection.length;
