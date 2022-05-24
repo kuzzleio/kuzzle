@@ -55,7 +55,7 @@ export class DebugController extends NativeController {
       const stream = v8.getHeapSnapshot();
 
       const date = new Date();
-      const filename = `heap-${date.getFullYear()}-${date.getMonth()}-${date.getDate()}-${date.getHours()}-${date.getMinutes()}.heapsnapshot`;
+      const filename = `heap-${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}-${date.getMinutes()}.heapsnapshot`;
       request.response.configure({
         headers: {
           'Content-Disposition': `attachment; filename="${filename}"`,
