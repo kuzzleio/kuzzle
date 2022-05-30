@@ -63,6 +63,8 @@ export class DebugController extends NativeController {
     this.inspector = new Inspector.Session();
 
     this.inspector.on('inspectorNotification', async (payload) => {
+      await this.notifyGlobalListeners(payload.method, payload);
+
       const listeners = this.events.get(payload.method);
       if (!listeners) {
         return;
@@ -90,6 +92,8 @@ export class DebugController extends NativeController {
       for (const eventName of module.events) {
         module.on(eventName, async (payload) => {
           const event = `Kuzzle.${module.name}.${eventName}`;
+          await this.notifyGlobalListeners(event, payload);
+
           const listeners = this.events.get(event);
           if (!listeners) {
             return;
@@ -299,5 +303,21 @@ export class DebugController extends NativeController {
       channels: [event],
       payload: payload,
     });
+  }
+
+  private async notifyGlobalListeners(event: string, payload: Object) {
+    const listeners = this.events.get('*');
+
+    if (!listeners) {
+      return;
+    }
+
+    const promises = [];
+    for (const connectionId of listeners) {
+      promises.push(this.notifyConnection(connectionId, event, payload));
+    }
+
+    // No need to catch, notify is already try-catched
+    await Promise.all(promises);
   }
 }
