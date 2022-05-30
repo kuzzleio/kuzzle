@@ -154,6 +154,17 @@
           "class": "GatewayTimeoutError"
         }
       }
+    },
+    "debugger": {
+      "code": 5,
+      "errors": {
+        "not_enabled": {
+          "description": "The debugger is not enabled",
+          "code": 1,
+          "message": "Debugger is not enabled",
+          "class": "InternalError"
+        }
+      }
     }
   }
 }
