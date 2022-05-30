@@ -162,7 +162,19 @@
           "description": "The debugger is not enabled",
           "code": 1,
           "message": "Debugger is not enabled",
-          "class": "InternalError"
+          "class": "PreconditionError"
+        },
+        "monitor_already_running": {
+          "description": "The monitor is already running",
+          "code": 2,
+          "message": "The monitoring of \"%s\" is already running",
+          "class": "PreconditionError"
+        },
+        "monitor_not_running": {
+          "description": "The monitor is not running",
+          "code": 3,
+          "message": "The monitoring of \"%s\" is not running",
+          "class": "PreconditionError"
         }
       }
     }

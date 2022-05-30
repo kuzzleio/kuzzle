@@ -26,19 +26,22 @@ import { NativeController } from './baseController';
 import v8 from 'v8';
 import Inspector from 'inspector';
 import { HttpStream } from '../../types';
-import * as kerror from '../../kerror' ;
-import { relativeTimeRounding } from 'moment';
-import { method } from 'lodash';
+import * as kerror from '../../kerror';
+import { RequestMonitor } from '../../core/debug/requestMonitor';
+import { DebugModule } from '../../types/DebugModule';
 
 /**
  * @class DebugController
  */
 export class DebugController extends NativeController {
   private inspector: Inspector.Session;
-  private status = false;
-  private events = new Map();
+  private debuggerStatus = false;
+  private events = new Map<string, Set<string>>();
+  private postMethods = new Map<string, Function>();
 
-  constructor () {
+  private modules: DebugModule[] = [new RequestMonitor()];
+
+  constructor() {
     super([
       'heapSnapshot',
       'getHeapStatistics',
@@ -52,23 +55,56 @@ export class DebugController extends NativeController {
       'addListener',
       'removeListener',
     ]);
+  }
+
+  async init() {
+    super.init();
 
     this.inspector = new Inspector.Session();
 
-    this.inspector.on('inspectorNotification', (message) => {
-      const listeners = this.events.get(message.method);
-      if (! listeners) {
+    this.inspector.on('inspectorNotification', async (payload) => {
+      const listeners = this.events.get(payload.method);
+      if (!listeners) {
         return;
       }
 
-      for (const listener of listeners) {
-        global.kuzzle.entryPoint._notify({
-          connectionId: listener,
-          channels: [message.method],
-          payload: message,
+      const promises = [];
+      for (const connectionId of listeners) {
+        promises.push(this.notifyConnection(connectionId, payload.method, payload));
+      }
+
+      // No need to catch, notify is already try-catched
+      await Promise.all(promises);
+    });
+
+    for (const module of this.modules) {
+      await module.init();
+
+      for (const methodName of module.methods) {
+        if (!module[methodName]) {
+          throw `Missing implementation of method "${methodName}" inside DebugModule "${module.name}"`;
+        }
+        this.postMethods.set(`Kuzzle.${module.name}.${methodName}`, module[methodName].bind(module));
+      }
+
+      for (const eventName of module.events) {
+        module.on(eventName, async (payload) => {
+          const event = `Kuzzle.${module.name}.${eventName}`;
+          const listeners = this.events.get(event);
+          if (!listeners) {
+            return;
+          }
+
+          const promises = [];
+          for (const connectionId of listeners) {
+            promises.push(this.notifyConnection(connectionId, event, payload));
+          }
+
+          // No need to catch, notify is already try-catched
+          await Promise.all(promises);
         });
       }
-    });
+    }
   }
 
   /**
@@ -77,9 +113,9 @@ export class DebugController extends NativeController {
    * 
    * @param {Request} request
    */
-  async heapSnapshot (request) {
+  async heapSnapshot(request) {
     if (request.context.connection.protocol !== 'http') {
-      throw new Error('Downloading heap snapshots is only supported over HTTP');
+      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:heapSnapshot');
     }
 
     const stream = v8.getHeapSnapshot();
@@ -101,7 +137,7 @@ export class DebugController extends NativeController {
    * 
    * @returns {Promise}
    */
-  async getHeapStatistics () {
+  async getHeapStatistics() {
     return v8.getHeapStatistics();
   }
 
@@ -111,7 +147,7 @@ export class DebugController extends NativeController {
    * 
    * @returns {Promise}
    */
-   async getHeapSpaceStatistics () {
+  async getHeapSpaceStatistics() {
     return v8.getHeapSpaceStatistics();
   }
 
@@ -119,7 +155,7 @@ export class DebugController extends NativeController {
   /**
    * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8getheapcodestatistics
    */
-  async getHeapCodeStatistics () {
+  async getHeapCodeStatistics() {
     return v8.getHeapCodeStatistics();
   }
 
@@ -127,13 +163,13 @@ export class DebugController extends NativeController {
    * The v8.setFlagsFromString() method can be used to programmatically set V8 command-line flags. This method should be used with care. Changing settings after the VM has started may result in unpredictable behavior, including crashes and data loss; or it may simply do nothing.
    * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8setflagsfromstringflags
    */
-  async setFlags (request: Request) {
+  async setFlags(request: Request) {
     const flags = request.getString('flags');
 
     return v8.setFlagsFromString(flags);
   }
 
-  async collectGarbage () {
+  async collectGarbage() {
     return await this.inspectorPost('HeapProfiler.collectGarbage', {});
   }
 
@@ -141,24 +177,25 @@ export class DebugController extends NativeController {
    * Connect the debugger
    */
   async enable() {
-    if (this.status) {
+    if (this.debuggerStatus) {
       return;
     }
 
     this.inspector.connect();
-    this.status = true;
+    this.debuggerStatus = true;
   }
 
   /**
    * Disconnect the debugger
    */
   async disable() {
-    if (!this.status) {
+    if (!this.debuggerStatus) {
       return;
     }
 
     this.inspector.disconnect();
-    this.status = false;
+    this.debuggerStatus = false;
+    this.events.clear();
   }
 
   /**
@@ -166,31 +203,72 @@ export class DebugController extends NativeController {
    * See: https://chromedevtools.github.io/devtools-protocol/v8/
    */
   async post(request: Request) {
-    const method = request.getString('method');
+    const method = request.getBodyString('method');
     const params = request.getBodyObject('params', {});
+
+    const debugModuleMethod = this.postMethods.get(method);
+
+    if (debugModuleMethod) {
+      return await debugModuleMethod(params);
+    }
 
     return await this.inspectorPost(method, params);
   }
 
+  /**
+   * Make the websocket connection listen and receive events from Chrome Debug Protocol
+   * See events from: https://chromedevtools.github.io/devtools-protocol/v8/
+   */
   async addListener(request: Request) {
-    const event = request.getString('event');
+    if (request.context.connection.protocol !== 'websocket') {
+      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:addListener');
+    }
+    const event = request.getBodyString('event');
+
+    if (!this.debuggerStatus && !event.startsWith('Kuzzle')) {
+      throw kerror.get('core', 'debugger', 'not_enabled');
+    }
+
 
     let listeners = this.events.get(event);
-    if (! listeners) {
-      listeners = [];
+    if (!listeners) {
+      listeners = new Set();
       this.events.set(event, listeners);
     }
 
-    listeners.push(request.context.connection.id);
+    listeners.add(request.context.connection.id);
   }
 
+  /**
+   * Remove the websocket connection from the events' listeners
+   */
   async removeListener(request: Request) {
-    const event = request.getString('event');
+    if (request.context.connection.protocol !== 'websocket') {
+      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:removeListener');
+    }
 
+    const event = request.getBodyString('event');
+
+    if (!this.debuggerStatus && !event.startsWith('Kuzzle')) {
+      throw kerror.get('core', 'debugger', 'not_enabled');
+    }
+
+
+    let listeners = this.events.get(event);
+
+    if (listeners) {
+      listeners.delete(request.context.connection.id);
+    }
   }
 
-  private async inspectorPost (method: string, params: Object) {
-    if (! this.status) {
+  /**
+   * Execute a method using the Chrome Debug Protocol
+   * @param method Chrome Debug Protocol method to execute
+   * @param params 
+   * @returns 
+   */
+  private async inspectorPost(method: string, params: Object) {
+    if (!this.debuggerStatus) {
       throw kerror.get('core', 'debugger', 'not_enabled');
     }
 
@@ -212,5 +290,14 @@ export class DebugController extends NativeController {
     return promise;
   }
 
-  private async 
+  /**
+   * Sends a direct notification to a websocket connection without having to listen to a specific room
+   */
+  private async notifyConnection(connectionId: string, event: string, payload: Object) {
+    global.kuzzle.entryPoint._notify({
+      connectionId: connectionId,
+      channels: [event],
+      payload: payload,
+    });
+  }
 }
