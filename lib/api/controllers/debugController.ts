@@ -29,6 +29,7 @@ import { RequestMonitor } from '../../core/debug/requestMonitor';
 import { DebugModule } from '../../types/DebugModule';
 import { JSONObject } from 'kuzzle-sdk';
 import get from 'lodash/get';
+import { EventMonitor } from '../../core/debug/eventMonitor';
 
 const DEBUGGER_EVENT = 'kuzzle-debugger-event';
 
@@ -57,7 +58,8 @@ export class DebugController extends NativeController {
    * Used to add new methods and events to the protocol
    */
   private modules: DebugModule[] = [
-    new RequestMonitor()
+    new RequestMonitor(),
+    new EventMonitor(),
   ];
 
   constructor () {

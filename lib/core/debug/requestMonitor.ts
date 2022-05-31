@@ -2,6 +2,7 @@ import { DebugModule } from '../../types/DebugModule';
 import * as kerror from '../../kerror';
 import { JSONObject } from '../../../index';
 import { KuzzleRequest } from '../../api/request';
+import { nano } from '../../util/time';
 
 type MonitoringParams = {
   reportProgressInterval?: number; // Milliseconds
@@ -50,7 +51,7 @@ export class RequestMonitor extends DebugModule {
         return;
       }
 
-      this.requestExecutionTimers.set(request.id, Date.now());
+      this.requestExecutionTimers.set(request.id, nano());
     });
     global.kuzzle.on('request:afterExecution', async ({request, success}: {request: KuzzleRequest, success: boolean}) => {
       if (! this.monitoringInProgress) {
@@ -83,7 +84,7 @@ export class RequestMonitor extends DebugModule {
       let ellapsedTime = 0;
 
       if (startDate !== undefined) {
-        ellapsedTime = Date.now() - startDate;
+        ellapsedTime = nano() - startDate;
         this.requestExecutionTimers.delete(request.id);
       }
 
@@ -100,7 +101,7 @@ export class RequestMonitor extends DebugModule {
 
   async startMonitoring (params: MonitoringParams) {
     if (this.monitoringInProgress) {
-      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Requests');
+      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Events');
     }
 
     this.monitoringInterval = setInterval(() => {
@@ -133,6 +134,8 @@ export class RequestMonitor extends DebugModule {
     }
 
     this.monitoringInProgress = false;
+    this.requestExecutionTimers.clear();
+    this.requestsStatistics = {};
     clearInterval(this.monitoringInterval);
   }
 
