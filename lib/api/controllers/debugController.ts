@@ -330,16 +330,15 @@ export class DebugController extends NativeController {
       throw kerror.get('core', 'debugger', 'not_enabled');
     }
 
-    let resolve, error;
+    let resolve;
 
-    const promise = new Promise((res, rej) => {
+    const promise = new Promise(res => {
       resolve = res;
-      error = rej;
     });
 
     this.inspector.post(method, params, (err, res) => {
       if (err) {
-        resolve({error: JSON.stringify(Object.getOwnPropertyDescriptors(err))});
+        resolve({ error: JSON.stringify(Object.getOwnPropertyDescriptors(err)) });
       }
       else {
         resolve(res);

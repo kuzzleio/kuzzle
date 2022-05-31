@@ -14,7 +14,7 @@ export type SecurityConfiguration = {
      * Allow to use the Chrome DevTools Protocol directly
      * through `debug:post`
      */
-    native_debug_protocol: boolean
+    native_debug_protocol: boolean;
   };
 
   /**
