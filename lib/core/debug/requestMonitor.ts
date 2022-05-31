@@ -1,7 +1,7 @@
-import { DebugModule } from "../../types/DebugModule";
+import { DebugModule } from '../../types/DebugModule';
 import * as kerror from '../../kerror';
-import { JSONObject } from "../../../index";
-import { KuzzleRequest } from "../../api/request";
+import { JSONObject } from '../../../index';
+import { KuzzleRequest } from '../../api/request';
 
 type MonitoringParams = {
   reportProgressInterval?: number; // Milliseconds
@@ -9,28 +9,26 @@ type MonitoringParams = {
 
 export class RequestMonitor extends DebugModule {
   private monitoringInProgress = false;
-  private requestsStatistics: JSONObject = {}
+  private requestsStatistics: JSONObject = {};
   private monitoringInterval: NodeJS.Timeout;
 
-  constructor() {
+  constructor () {
     super('RequestMonitor',
       {
+        events: [
+          'monitoringProgress'
+        ],
         methods: [
           'startMonitoring',
           'stopMonitoring'
         ],
-        events: [
-          'monitoringProgress'
-        ]
       }
     );
   }
 
-  async init() {
-    super.init();
-
+  async init () {
     global.kuzzle.on('request:beforeExecution', async (request: KuzzleRequest) => {
-      if (!this.monitoringInProgress) {
+      if (! this.monitoringInProgress) {
         return;
       }
 
@@ -38,8 +36,8 @@ export class RequestMonitor extends DebugModule {
       const action = request.input.action;
       let actionDataFrame = this.requestsStatistics[`${controller}:${action}`];
 
-      if (!actionDataFrame) {
-        actionDataFrame = {}
+      if (! actionDataFrame) {
+        actionDataFrame = {};
         this.requestsStatistics[`${controller}:${action}`] = actionDataFrame;
       }
 
@@ -48,9 +46,9 @@ export class RequestMonitor extends DebugModule {
     });
   }
 
-  async startMonitoring(params: MonitoringParams) {
+  async startMonitoring (params: MonitoringParams) {
     if (this.monitoringInProgress) {
-      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Requests')
+      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Requests');
     }
 
     this.monitoringInterval = setInterval(() => {
@@ -65,9 +63,9 @@ export class RequestMonitor extends DebugModule {
     this.monitoringInProgress = true;
   }
 
-  async stopMonitoring() {
-    if (!this.monitoringInProgress) {
-      throw kerror.get('core', 'debugger', 'monitor_not_running', 'Requests')
+  async stopMonitoring () {
+    if (! this.monitoringInProgress) {
+      throw kerror.get('core', 'debugger', 'monitor_not_running', 'Requests');
     }
 
     this.monitoringInProgress = false;
