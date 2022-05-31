@@ -334,7 +334,7 @@ export class DebugController extends NativeController {
 
     this.inspector.post(method, params, (err, res) => {
       if (err) {
-        error(err);
+        resolve({error: JSON.stringify(Object.getOwnPropertyDescriptors(err))});
       }
       else {
         resolve(res);
