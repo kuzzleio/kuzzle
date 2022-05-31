@@ -28,6 +28,7 @@ import * as kerror from '../../kerror';
 import { RequestMonitor } from '../../core/debug/requestMonitor';
 import { DebugModule } from '../../types/DebugModule';
 import { JSONObject } from 'kuzzle-sdk';
+import get from 'lodash/get';
 
 const DEBUGGER_EVENT = 'kuzzle-debugger-event';
 
@@ -264,6 +265,10 @@ export class DebugController extends NativeController {
 
     if (debugModuleMethod) {
       return await debugModuleMethod(params);
+    }
+
+    if (! get(global.kuzzle.config, 'security.debug.native_debug_protocol')) {
+      throw kerror.get('core', 'debugger', 'native_debug_protocol_usage_denied');
     }
 
     return await this.inspectorPost(method, params);

@@ -175,6 +175,12 @@
           "code": 3,
           "message": "The monitoring of \"%s\" is not running",
           "class": "PreconditionError"
+        },
+        "native_debug_protocol_usage_denied": {
+          "description": "Usage of the native debug protocol is not allowed",
+          "code": 4,
+          "message": "Usage of the native debug protocol is not allowed",
+          "class": "PreconditionError"
         }
       }
     }
