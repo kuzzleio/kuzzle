@@ -41,11 +41,13 @@ class KuzzleMock extends KuzzleEventEmitter {
     });
 
     sinon.stub(this, 'ask').resolves();
+    sinon.stub(this, 'call');
     sinon.stub(this, 'once');
     sinon.spy(this, 'emit');
     sinon.spy(this, 'registerPluginHook');
     sinon.spy(this, 'registerPluginPipe');
 
+    sinon.spy(this, 'onCall');
     sinon.spy(this, 'onAsk');
     sinon.spy(this, 'on');
     sinon.spy(this, 'onPipe');

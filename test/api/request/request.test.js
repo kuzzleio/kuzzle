@@ -428,6 +428,16 @@ describe('#Request', () => {
       });
 
       it('returns the value of the body boolean', () => {
+        request.context.connection.protocol = 'ws';
+        should(request.getBodyBoolean('doha')).be.true();
+
+        request.input.body.doha = false;
+
+        should(request.getBodyBoolean('doha')).be.false();
+      });
+
+      it('returns the value of the body boolean even in HTTP', () => {
+        request.context.connection.protocol = 'http';
         should(request.getBodyBoolean('doha')).be.true();
 
         request.input.body.doha = false;
@@ -452,6 +462,10 @@ describe('#Request', () => {
             'lebron': ['james', 'curry', 'harden'],
             'kobe': ['bryant', 'jordan', 'love']
           },
+          ids: JSON.stringify([1, 2, 3]),
+          otherPowers: JSON.stringify({
+            'superman': 'strength',
+          }),
           powers: {
             fire: {
               level: 'high',
@@ -504,6 +518,16 @@ describe('#Request', () => {
 
           should(request.getBodyArray('names', def))
             .exactly(def);
+        });
+
+        it('should throw if the value is a string and not try to parse it since it is not a query string', () => {
+          request.context.connection.protocol = 'ws';
+          should(() => request.getBodyArray('ids'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+
+          request.context.connection.protocol = 'http';
+          should(() => request.getBodyArray('ids'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
         });
       });
 
@@ -604,6 +628,16 @@ describe('#Request', () => {
 
           should(request.getBodyObject('relatives', def))
             .exactly(def);
+        });
+
+        it('should throw if the value is a string and not try to parse it since it is not a query string', () => {
+          request.context.connection.protocol = 'ws';
+          should(() => request.getBodyObject('otherPowers'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+
+          request.context.connection.protocol = 'http';
+          should(() => request.getBodyObject('otherPowers'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
         });
       });
 
@@ -717,11 +751,24 @@ describe('#Request', () => {
             Valentine: 'sister'
           },
           year: '5270',
-          defeatedBugsAt: 11
+          defeatedBugsAt: 11,
+          birthDate: '2022-04-11T00:00:00.000Z',
+          badDate: '202-04-11T00:00:00.0',
+          birthDateDay: '2022-04-11',
+          birthDateTime: 1649635200000,
+          ids: JSON.stringify([1, 2, 3]),
+          powers: JSON.stringify({
+            fire: 666
+          }),
+          legacyArray: '1,2,3',
         };
       });
 
       describe('#getArray', () => {
+        beforeEach(() => {
+          request.context.connection.protocol = 'http';
+        });
+
         it('extracts the required parameter', () => {
           should(request.getArray('names'))
             .exactly(request.input.args.names);
@@ -742,6 +789,73 @@ describe('#Request', () => {
         it('should throw if the parameter is not an array', () => {
           should(() => request.getArray('age'))
             .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.input.args.ids).be.a.String();
+          should(request.getArray('ids'))
+            .match([1, 2, 3]);
+          should(request.input.args.ids)
+            .be.an.Array()
+            .and.match([1, 2, 3]);
+        });
+
+        it('should throw if the value is a string but the protocol is not HTTP', () => {
+          request.context.connection.protocol = 'ws';
+          should(() => request.getArray('ids'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parsing of the string fails to give an array', () => {
+          should(() => request.getArray('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getArrayLegacy', () => {
+        beforeEach(() => {
+          request.context.connection.protocol = 'http';
+        });
+
+        it('extracts the required parameter', () => {
+          should(request.getArrayLegacy('names'))
+            .exactly(request.input.args.names);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getArrayLegacy('childhood'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+        it('should return the default value if provided, when the parameter is missing', () => {
+          const def = ['foo'];
+
+          should(request.getArrayLegacy('childhood', def))
+            .exactly(def);
+        });
+
+        it('should throw if the parameter is not an array', () => {
+          should(() => request.getArrayLegacy('age'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.getArrayLegacy('ids'))
+            .match([1, 2, 3]);
+        });
+
+        it('should split the split if it failed to parse the string as a JSON array when the protocol is HTTP', () => {
+          should(request.getArrayLegacy('legacyArray'))
+            .match(['1', '2', '3']);
+        });
+
+        it('should split the string on "," when the protocol is not HTTP', () => {
+          request.context.connection.protocol = 'ws';
+          should(request.getArrayLegacy('legacyArray'))
+            .match(['1', '2', '3']);
+
+          should(request.getArrayLegacy('ids'))
+            .match(['[1', '2', '3]']);
         });
       });
 
@@ -770,6 +884,10 @@ describe('#Request', () => {
       });
 
       describe('#getObject', () => {
+        beforeEach(() => {
+          request.context.connection.protocol = 'http';
+        });
+
         it('extracts the required parameter', () => {
           should(request.getObject('relatives'))
             .exactly(request.input.args.relatives);
@@ -790,6 +908,68 @@ describe('#Request', () => {
         it('should throw if the parameter is not an object', () => {
           should(() => request.getObject('age'))
             .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should try to parse if the value is a string and the protocol is HTTP', () => {
+          should(request.input.args.powers).be.a.String();
+          should(request.getObject('powers'))
+            .match({ fire: 666 });
+          should(request.input.args.powers)
+            .be.an.Object()
+            .and.match({
+              fire: 666
+            });
+        });
+
+        it('should throw if the value is a string but the protocol is not HTTP', () => {
+          request.context.connection.protocol = 'ws';
+          should(() => request.getObject('powers'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parsing of the string fails', () => {
+          should(() => request.getObject('fullname'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+      });
+
+      describe('#getDate', () => {
+        it('extracts the birthdate in ISO8061 format', () => {
+          should(request.getDate('birthDate'))
+            .eql('2022-04-11T00:00:00.000Z');
+        });
+
+        it('extracts the birthdate in custom format', () => {
+          should(request.getDate('birthDateDay', 'YYYY-MM-DD'))
+            .eql('2022-04-11');
+        });
+
+        it('should throw if the parameter is invalid date regarding custom date', () => {
+          should(() => request.getDate('birthDate', 'YYYY-MM-DD'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parameter is invalid ISO8601 date', () => {
+          should(() => request.getDate('badDate'))
+            .throw(BadRequestError, { id: 'api.assert.invalid_type' });
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getDate('anotherDate'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
+        });
+
+      });
+
+      describe('#getTimestamp', () => {
+        it('extracts the birthdate in timestamp format', () => {
+          should(request.getTimestamp('birthDateTime'))
+            .exactly(1649635200000);
+        });
+
+        it('should throw if the parameter is missing', () => {
+          should(() => request.getTimestamp('anotherDate'))
+            .throw(BadRequestError, { id: 'api.assert.missing_argument' });
         });
       });
 
@@ -1031,11 +1211,11 @@ describe('#Request', () => {
           connection: { protocol: 'http', verb: 'GET' }
         });
         request.input.body = null;
-        request.input.args.searchBody = {};
+        request.input.args.searchBody = 0;
 
         should(() => {
           request.getSearchBody();
-        }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: string)' });
+        }).throw({ id: 'api.assert.invalid_type', message: 'Wrong type for argument "searchBody" (expected: object)' });
       });
 
       it('should provide empty body when the route is invoked with GET and no search body is provided', () => {

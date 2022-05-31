@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -381,6 +381,17 @@ export class Backend {
     }
 
     return this._sdk;
+  }
+
+  /**
+   * Cluster node ID
+   */
+  get nodeId (): string {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'nodeId');
+    }
+
+    return this._kuzzle.id;
   }
 
   private get _instanceProxy () {

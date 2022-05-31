@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { generateRandomName } from '../util/name-generator';
+import { NameGenerator } from '../util/name-generator';
 import { Worker as WorkerThread } from 'worker_threads';
 import Bluebird from 'bluebird';
 
@@ -156,7 +156,7 @@ export class ClusterIdCardHandler {
     let reserved = false;
 
     do {
-      this.nodeId = generateRandomName('knode');
+      this.nodeId = NameGenerator.generateRandomName({ prefix: 'knode' });
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),

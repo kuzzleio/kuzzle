@@ -176,3 +176,26 @@ After({ tags: '@realtime' }, function () {
 After({ tags: '@websocket' }, function () {
   this.props.client.terminate();
 });
+
+
+// cluster hooks ===============================================================
+
+Before({ tags: '@cluster' }, async function () {
+  this.sdk.disconnect();
+
+  this.node1 = this.getSDK({ port: 17510 });
+  this.node2 = this.getSDK({ port: 17511 });
+  this.node3 = this.getSDK({ port: 17512 });
+
+  await Promise.all([
+    this.node1.connect(),
+    this.node2.connect(),
+    this.node3.connect(),
+  ]);
+});
+
+After({ tags: '@cluster' }, async function () {
+  this.node1.disconnect();
+  this.node2.disconnect();
+  this.node3.disconnect();
+});

@@ -100,8 +100,6 @@ Returns the user creation status:
 
 - `_id`: new user kuid
 - `_source`: new user content and attributed profiles
-- `created`: always true
-- `version`: always 1
 
 ```js
 {
@@ -115,9 +113,7 @@ Returns the user creation status:
     "_source": {
       "profileIds": ["<profileId>"],
       "fullname": "John Doe"
-    },
-    "_version": 1,
-    "created": true
+    }
   }
 }
 ```

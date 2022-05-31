@@ -20,7 +20,7 @@ Feature: Collection Controller
     Given an index "nyc-open-data"
     And I "create" the collection "nyc-open-data":"green-taxi" with:
       | mappings | { "dynamic": "true", "properties": { "name": { "type": "keyword" }, "metadata": {"properties": {}, "dynamic": "false"} } } |
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body        |
       | "document-1" | {"age": 2} |
     And I refresh the collection
@@ -46,7 +46,7 @@ Feature: Collection Controller
     When I "create" the collection "nyc-open-data":"green-taxi" with:
       | mappings | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
     And an existing collection "nyc-open-data":"green-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id          | body                    |
       | "document-1" | { "name": "document1" } |
       | "document-2" | { "name": "document2" } |

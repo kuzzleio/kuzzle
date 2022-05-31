@@ -123,7 +123,7 @@ describe('Test: hotelClerk.subscribe', () => {
       'in',
       { count: 1 });
 
-    should(kuzzle.emit).be.calledWithMatch('core:realtime:room:create:after', {
+    should(kuzzle.call).be.calledWithMatch('core:realtime:room:create:after', {
       id: 'foobar',
       index: 'foo/bar',
       filter: []

@@ -1390,54 +1390,6 @@ describe('DocumentController', () => {
       should(documentController.translateKoncorde)
         .be.calledWith({ equals: { name: 'Melis' } });
     });
-
-    it('should throw an error if one document has an error with the strict arg', async () => {
-      kuzzle.ask.withArgs('core:storage:public:document:updateByQuery').resolves({
-        successes: esResponse.successes,
-        errors: [
-          {
-            document: { _id: 'id3', _source: { foo: 'bar', bar: 'foo' } },
-            status: 206,
-            reason: 'reason'
-          }
-        ]
-      });
-
-      request.input.body = {
-        query: {
-          match: { foo: 'bar' }
-        },
-        changes: {
-          bar: 'foo'
-        }
-      };
-      request.input.args.refresh = 'wait_for';
-      request.input.args.source = true;
-      request.input.args.strict = true;
-      request.context.user = { _id: 'aschen' };
-
-      documentController.updateByQuery(request).should.be.rejectedWith({ id: 'incomplete_multiple_request' });
-
-      should(kuzzle.ask).be.calledWith(
-        'core:storage:public:document:updateByQuery',
-        index,
-        collection,
-        { match: { foo: 'bar' } },
-        { bar: 'foo' },
-        { refresh: 'wait_for', userId: 'aschen' });
-
-      // With error do not notify even if silent is false
-      should(kuzzle.ask).not.be.calledWith(
-        'core:realtime:document:mNotify',
-        request,
-        actionEnum.UPDATE,
-        esResponse.successes.map(doc => ({
-          _id: doc._id,
-          _source: doc._source,
-          _updatedFields: ['bar'],
-        })));
-
-    });
   });
 
   describe('#replace', () => {
