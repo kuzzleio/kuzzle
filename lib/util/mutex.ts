@@ -182,6 +182,27 @@ export class Mutex {
     debug('Resource %s freed (mutex id: %s)', this.resource, this.mutexId);
   }
 
+  async wait ({ timeout = this.timeout, attemptDelay = this.attemptDelay }): Promise<boolean> {
+    let duration = 0;
+
+    let isLocked = true;
+
+    do {
+      isLocked = await global.kuzzle.ask(
+        'core:cache:internal:get',
+        this.resource);
+
+      duration += attemptDelay;
+
+      if (isLocked && (timeout === -1 || duration <= timeout)) {
+        await Bluebird.delay(attemptDelay);
+      }
+    }
+    while (isLocked && (timeout === -1 || duration <= timeout));
+
+    return ! isLocked;
+  }
+
   get locked () {
     return this._locked;
   }
