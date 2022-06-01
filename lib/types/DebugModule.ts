@@ -1,4 +1,5 @@
 import EventEmitter from 'events';
+import Inspector from 'inspector';
 
 export type DebugModuleOptions = {
   methods?: string[];
@@ -10,7 +11,17 @@ export abstract class DebugModule extends EventEmitter {
   public methods: string[];
   public events: string[];
 
-  abstract init (): Promise<void>;
+  /**
+   * Called when the module is loaded, after the debugger has been enabled
+   */
+  abstract init (inspector: Inspector.Session): Promise<void>;
+
+  /**
+   * Called when the module should be cleaned up.
+   * - After the Debug Controller has been disabled
+   * - Before the debugger is disconnected
+   */
+  abstract cleanup(): Promise<void>;
 
   constructor (name: string, options: DebugModuleOptions = {}) {
     super();

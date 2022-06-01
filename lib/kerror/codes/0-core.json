@@ -181,6 +181,12 @@
           "code": 4,
           "message": "Usage of the native debug protocol is not allowed",
           "class": "PreconditionError"
+        },
+        "method_not_found": {
+          "description": "Debugger method not found",
+          "code": 5,
+          "message": "Debugger method \"%s\" not found.",
+          "class": "PreconditionError"
         }
       }
     }

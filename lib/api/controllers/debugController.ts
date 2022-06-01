@@ -111,9 +111,25 @@ export class DebugController extends NativeController {
       // No need to catch, notify is already try-catched
       await Promise.all(promises);
     });
+  }
+
+  async nodeVersion () {
+    return process.version;
+  }
+
+  /**
+   * Connect the debugger
+   */
+  async enable () {
+    if (this.debuggerStatus) {
+      return;
+    }
+
+    this.inspector.connect();
+    this.debuggerStatus = true;
 
     for (const module of this.modules) {
-      await module.init();
+      await module.init(this.inspector);
 
       for (const methodName of module.methods) {
         if (! module[methodName]) {
@@ -147,22 +163,6 @@ export class DebugController extends NativeController {
     }
   }
 
-  async nodeVersion () {
-    return process.version;
-  }
-
-  /**
-   * Connect the debugger
-   */
-  async enable () {
-    if (this.debuggerStatus) {
-      return;
-    }
-
-    this.inspector.connect();
-    this.debuggerStatus = true;
-  }
-
   /**
    * Disconnect the debugger and clears all the events listeners
    */
@@ -171,9 +171,17 @@ export class DebugController extends NativeController {
       return;
     }
 
+    for (const module of this.modules) {
+      for (const eventName of module.events) {
+        module.removeAllListeners(eventName);
+      }
+      await module.cleanup(); 
+    }
+
     this.inspector.disconnect();
     this.debuggerStatus = false;
     this.events.clear();
+    this.kuzzlePostMethods.clear();
   }
 
   /**
@@ -181,13 +189,20 @@ export class DebugController extends NativeController {
    * See: https://chromedevtools.github.io/devtools-protocol/v8/
    */
   async post (request: KuzzleRequest) {
+    if (! this.debuggerStatus) {
+      throw kerror.get('core', 'debugger', 'not_enabled');
+    }
+
     const method = request.getBodyString('method');
     const params = request.getBodyObject('params', {});
 
-    const debugModuleMethod = this.kuzzlePostMethods.get(method);
+    if (method.startsWith('Kuzzle.')) {
+      const debugModuleMethod = this.kuzzlePostMethods.get(method);
 
-    if (debugModuleMethod) {
-      return await debugModuleMethod(params);
+      if (debugModuleMethod) {
+        return await debugModuleMethod(params);
+      }
+      throw kerror.get('core', 'debugger', 'method_not_found', method);
     }
 
     if (! get(global.kuzzle.config, 'security.debug.native_debug_protocol')) {
