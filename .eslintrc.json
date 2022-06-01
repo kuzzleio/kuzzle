@@ -65,7 +65,9 @@
     "space-infix-ops": 2,
     "space-unary-ops": [2, { "words": true, "nonwords": false, "overrides": { "!": true } }],
     "key-spacing": ["error", { "afterColon": true }],
-    "no-only-tests/no-only-tests": "error"
+    "no-only-tests/no-only-tests": "error",
+    "comma-dangle": ["error", "only-multiline"],
+    "object-shorthand": ["error", "always"]
   },
   "overrides": [
     {

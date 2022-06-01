@@ -7,7 +7,7 @@ const
   } = require('cucumber');
 
 When(/^I( can't)? log in as (.*?):(.*?) expiring in (.*?)$/, function (cantLogin, login, password, expiration, callback) {
-  this.api.login('local', { username: this.idPrefix + login, password: password, expiresIn: expiration })
+  this.api.login('local', { username: this.idPrefix + login, password, expiresIn: expiration })
     .then(body => {
       if (body.error) {
         callback(new Error(body.error.message));

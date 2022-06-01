@@ -56,7 +56,7 @@ export class OpenApiManager {
         name: 'Apache 2',
         url: 'http://opensource.org/licenses/apache2.0'
       },
-      version: version
+      version
     },
     externalDocs: {
       description: 'Kuzzle API Documentation',

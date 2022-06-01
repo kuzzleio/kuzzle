@@ -28,7 +28,7 @@ describe('#AccessLogger', () => {
     };
 
     mockRequire('worker_threads', {
-      Worker: function (...args) {
+      Worker (...args) {
         workerArgs = args;
         workerData = args[1].workerData;
         return { postMessage };
@@ -443,7 +443,7 @@ describe('#AccessLogger', () => {
           .be.calledOnce()
           .be.calledWithMatch({
             connection,
-            error: error,
+            error,
             extra: null,
             request: request.input,
             status: 444,

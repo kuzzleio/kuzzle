@@ -200,7 +200,7 @@ class ApiBase {
       msg = {
         controller: 'index',
         action: 'create',
-        index: index
+        index
       };
 
     return this.send(msg);
@@ -258,7 +258,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'createOrReplace',
-        body: body
+        body
       };
 
     if (body._id) {
@@ -275,7 +275,7 @@ class ApiBase {
         controller: 'security',
         action: 'createOrReplaceProfile',
         _id: id,
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -287,7 +287,7 @@ class ApiBase {
         controller: 'security',
         action: 'createOrReplaceRole',
         _id: id,
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -297,7 +297,7 @@ class ApiBase {
     const msg = {
       controller: 'security',
       action: 'createRestrictedUser',
-      body: body
+      body
     };
     if (id !== undefined) {
       msg._id = id;
@@ -325,7 +325,7 @@ class ApiBase {
     const msg = {
       controller: 'security',
       action: 'createFirstAdmin',
-      body: body
+      body
     };
 
     if (id !== undefined) {
@@ -388,7 +388,7 @@ class ApiBase {
       msg = {
         controller: 'index',
         action: 'delete',
-        index: index
+        index
       };
 
     return this.send(msg);
@@ -474,8 +474,8 @@ class ApiBase {
 
   deleteSpecifications (index, collection) {
     return this.send({
-      index: index,
-      collection: collection,
+      index,
+      collection,
       controller: 'collection',
       action: 'deleteSpecifications',
       body: null
@@ -662,8 +662,8 @@ class ApiBase {
 
   getSpecifications (index, collection) {
     return this.send({
-      index: index,
-      collection: collection,
+      index,
+      collection,
       controller: 'collection',
       action: 'getSpecifications'
     });
@@ -772,7 +772,7 @@ class ApiBase {
       msg = {
         controller: 'auth',
         action: 'login',
-        strategy: strategy,
+        strategy,
         expiresIn: credentials.expiresIn,
         body: {
           username: credentials.username,
@@ -823,7 +823,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'mCreateOrReplace',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -860,7 +860,7 @@ class ApiBase {
       msg = {
         controller: 'security',
         action: 'mGetProfiles',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -871,7 +871,7 @@ class ApiBase {
       msg = {
         controller: 'security',
         action: 'mGetRoles',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -884,7 +884,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'mReplace',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -897,7 +897,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'mUpdate',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -930,7 +930,7 @@ class ApiBase {
         collection: this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'publish',
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -950,7 +950,7 @@ class ApiBase {
         collection: collection || this.world.fakeCollection,
         index: index || this.world.fakeIndex,
         action: 'replace',
-        body: body
+        body
       };
 
     if (body._id) {
@@ -1067,7 +1067,7 @@ class ApiBase {
     let msg = {
       controller: 'collection',
       action: 'searchSpecifications',
-      body: body
+      body
     };
 
     if (args) {
@@ -1130,7 +1130,7 @@ class ApiBase {
   unsubscribe (room, clientId) {
     const
       msg = {
-        clientId: clientId,
+        clientId,
         controller: 'realtime',
         collection: this.world.fakeCollection,
         index: this.world.fakeIndex,
@@ -1152,7 +1152,7 @@ class ApiBase {
         index: index || this.world.fakeIndex,
         action: 'update',
         _id: id,
-        body: body
+        body
       };
 
     return this.send(msg);
@@ -1216,7 +1216,7 @@ class ApiBase {
     return this.send({
       controller: 'auth',
       action: 'updateSelf',
-      body: body
+      body
     });
   }
 

@@ -306,7 +306,7 @@ describe('#Cluster Full State', () => {
       const messageId = Long.fromInt(12, true);
 
       state.addRealtimeRoom('roomid', 'index', 'collection', {}, {
-        messageId: messageId,
+        messageId,
         nodeId: 'nodeid',
         subscribers: 23,
       });
@@ -319,7 +319,7 @@ describe('#Cluster Full State', () => {
           filters: JSON.stringify({}),
           index: 'index',
           nodes: [
-            { nodeId: 'nodeid', messageId: messageId, subscribers: 23 },
+            { nodeId: 'nodeid', messageId, subscribers: 23 },
           ],
           roomId: 'roomid',
         },
@@ -418,7 +418,7 @@ describe('#Cluster Full State', () => {
       const messageId = Long.fromInt(12, true);
 
       state.addRealtimeRoom('roomid', 'index', 'collection', {}, {
-        messageId: messageId,
+        messageId,
         nodeId: 'nodeid',
         subscribers: 23,
       });
@@ -431,7 +431,7 @@ describe('#Cluster Full State', () => {
           filters: JSON.stringify({}),
           index: 'index',
           nodes: [
-            { nodeId: 'nodeid', messageId: messageId, subscribers: 23 },
+            { nodeId: 'nodeid', messageId, subscribers: 23 },
           ],
           roomId: 'roomid',
         },

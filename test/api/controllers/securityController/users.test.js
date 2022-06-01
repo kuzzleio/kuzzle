@@ -867,7 +867,7 @@ describe('Test: security controller - users', () => {
       const credentials = { local: { username: 'username', password: 'password' } };
       request.input.body.default = {
         city: 'Montpellier',
-        credentials: credentials
+        credentials
       };
 
       const createdUserAnswer = {
@@ -890,7 +890,7 @@ describe('Test: security controller - users', () => {
         .calledOnce()
         .calledWithMatch(request,
           ['default'],
-          { name: 'John Doe', city: 'Montpellier', credentials: credentials }
+          { name: 'John Doe', city: 'Montpellier', credentials }
         );
 
       should(response).eql(createdUserAnswer);

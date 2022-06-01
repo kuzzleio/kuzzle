@@ -316,7 +316,7 @@ class HttpApi {
         ? this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + id + '/_create')
         : this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_create'),
       options = {
-        url: url,
+        url,
         method: 'POST',
         body
       };

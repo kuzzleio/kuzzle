@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { KuzzleError, } from '../../kerror/errors';
+import { KuzzleError } from '../../kerror/errors';
 import * as kerror from '../../kerror';
 import { ApplicationManager, Backend } from './index';
 import { CustomErrorDefinition, ErrorDomains } from '../../types';

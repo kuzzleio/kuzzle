@@ -70,11 +70,11 @@ describe('MemoryStorageController', () => {
     extractArgumentsFromRequestForMExecute = wrap(MemoryStorageController.__get__('extractArgumentsFromRequestForMExecute'));
 
     MemoryStorageController.__set__({
-      extractArgumentsFromRequestForSet: extractArgumentsFromRequestForSet,
-      extractArgumentsFromRequestForSort: extractArgumentsFromRequestForSort,
-      extractArgumentsFromRequestForZAdd: extractArgumentsFromRequestForZAdd,
-      extractArgumentsFromRequestForZInterstore: extractArgumentsFromRequestForZInterstore,
-      extractArgumentsFromRequestForMExecute: extractArgumentsFromRequestForMExecute
+      extractArgumentsFromRequestForSet,
+      extractArgumentsFromRequestForSort,
+      extractArgumentsFromRequestForZAdd,
+      extractArgumentsFromRequestForZInterstore,
+      extractArgumentsFromRequestForMExecute
     });
   });
 

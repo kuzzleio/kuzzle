@@ -109,7 +109,7 @@ class WebSocketApiBase extends ApiBase {
         action: 'unsubscribe',
         collection: this.world.fakeCollection,
         index: this.world.fakeIndex,
-        body: { roomId: roomId }
+        body: { roomId }
       };
 
     const socket = this.sockets[socketName];

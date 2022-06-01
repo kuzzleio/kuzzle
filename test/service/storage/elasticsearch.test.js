@@ -525,7 +525,7 @@ describe('Test: ElasticSearch service', () => {
 
       await elasticsearch.search(
         { index, collection, searchBody },
-        { from: 0, scroll: '30s', size: 1, }
+        { from: 0, scroll: '30s', size: 1 }
       );
 
       should(elasticsearch._client.search.firstCall.args[0]).match({
@@ -2073,7 +2073,7 @@ describe('Test: ElasticSearch service', () => {
     beforeEach(() => {
       elasticsearch._client.cat.aliases.resolves({
         body: [
-          { alias: alias }, { alias: '@%nepali.liia' }
+          { alias }, { alias: '@%nepali.liia' }
         ]
       });
       sinon.stub(elasticsearch, '_createHiddenCollection').resolves();
