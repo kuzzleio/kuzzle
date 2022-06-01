@@ -65,12 +65,6 @@ export class DebugController extends NativeController {
   constructor () {
     super([
       'nodeVersion',
-      'heapSnapshot',
-      'getHeapStatistics',
-      'getHeapSpaceStatistics',
-      'getHeapCodeStatistics',
-      'setFlags',
-      'collectGarbage',
       'enable',
       'disable',
       'post',
@@ -162,72 +156,6 @@ export class DebugController extends NativeController {
 
   async nodeVersion () {
     return process.version;
-  }
-
-  /**
-   * Take a heap snapshot and returns the filename of the snapshot.
-   * If the download parameter is set to true, the snapshot will be downloaded using an HTTP Stream instead of saved on the disk.
-   * 
-   * @param {Request} request
-   */
-  async heapSnapshot (request: KuzzleRequest) {
-    if (request.context.connection.protocol !== 'http') {
-      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:heapSnapshot');
-    }
-
-    const stream = v8.getHeapSnapshot();
-
-    const date = new Date();
-    const filename = `heap-${date.getFullYear()}-${date.getMonth()}-${date.getDay()}-${date.getHours()}-${date.getMinutes()}.heapsnapshot`;
-    request.response.configure({
-      headers: {
-        'Content-Disposition': `attachment; filename="${filename}"`,
-        'Content-Type': 'application/json',
-      }
-    });
-
-    return new HttpStream(stream);
-  }
-
-  /**
-   * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8getheapstatistics
-   * 
-   * @returns {Promise}
-   */
-  async getHeapStatistics () {
-    return v8.getHeapStatistics();
-  }
-
-  /**
-   * Returns statistics about the V8 heap spaces, i.e. the segments which make up the V8 heap.
-   * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8getheapspacestatistics
-   * 
-   * @returns {Promise}
-   */
-  async getHeapSpaceStatistics () {
-    return v8.getHeapSpaceStatistics();
-  }
-
-
-  /**
-   * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8getheapcodestatistics
-   */
-  async getHeapCodeStatistics () {
-    return v8.getHeapCodeStatistics();
-  }
-
-  /**
-   * The v8.setFlagsFromString() method can be used to programmatically set V8 command-line flags. This method should be used with care. Changing settings after the VM has started may result in unpredictable behavior, including crashes and data loss; or it may simply do nothing.
-   * See https://nodejs.org/dist/latest-v16.x/docs/api/v8.html#v8setflagsfromstringflags
-   */
-  async setFlags (request: KuzzleRequest) {
-    const flags = request.getString('flags');
-
-    return v8.setFlagsFromString(flags);
-  }
-
-  async collectGarbage () {
-    return await this.inspectorPost('HeapProfiler.collectGarbage', {});
   }
 
   /**
