@@ -99,6 +99,13 @@ export class RequestMonitor extends DebugModule {
     });
   }
 
+  async cleanup () {
+    this.monitoringInProgress = false;
+    this.requestsStatistics = {};
+    clearInterval(this.monitoringInterval);
+    this.requestExecutionTimers.clear();
+  }
+
   async startMonitoring (params: MonitoringParams) {
     if (this.monitoringInProgress) {
       throw kerror.get('core', 'debugger', 'monitor_already_running', 'Events');
