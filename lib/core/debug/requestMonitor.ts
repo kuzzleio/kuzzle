@@ -45,58 +45,8 @@ export class RequestMonitor extends DebugModule {
   }
 
   async init () {
-
-    global.kuzzle.on('request:beforeExecution', async (request: KuzzleRequest) => {
-      if (! this.monitoringInProgress) {
-        return;
-      }
-
-      this.requestExecutionTimers.set(request.id, nano());
-    });
-    global.kuzzle.on('request:afterExecution', async ({request, success}: {request: KuzzleRequest, success: boolean}) => {
-      if (! this.monitoringInProgress) {
-        return;
-      }
-
-      const controller = request.input.controller;
-      const action = request.input.action;
-      let actionDataFrame = this.requestsStatistics[`${controller}:${action}`];
-
-      if (! actionDataFrame) {
-        actionDataFrame = {};
-        this.requestsStatistics[`${controller}:${action}`] = actionDataFrame;
-      }
-
-      const protocol = request.context.connection.protocol;
-      let dataFrame = actionDataFrame[protocol];
-      if (! dataFrame) {
-        dataFrame = {
-          success: 0,
-          errors: 0,
-          successTotalExecutionTime: 0,
-          errorTotalExecutionTime: 0,
-        };
-        actionDataFrame[protocol] = dataFrame;
-      }
-
-      const startDate = this.requestExecutionTimers.get(request.id);
-
-      let ellapsedTime = 0;
-
-      if (startDate !== undefined) {
-        ellapsedTime = nano() - startDate;
-        this.requestExecutionTimers.delete(request.id);
-      }
-
-      if (success) {
-        dataFrame.success += 1;
-        dataFrame.successTotalExecutionTime += ellapsedTime;
-      }
-      else {
-        dataFrame.errors += 1;
-        dataFrame.errorTotalExecutionTime += ellapsedTime;
-      }
-    });
+    global.kuzzle.on('request:beforeExecution', this.beforeRequestExecution);
+    global.kuzzle.on('request:afterExecution', this.afterRequestExecution);
   }
 
   async cleanup () {
@@ -104,6 +54,9 @@ export class RequestMonitor extends DebugModule {
     this.requestsStatistics = {};
     clearInterval(this.monitoringInterval);
     this.requestExecutionTimers.clear();
+  
+    global.kuzzle.off('request:beforeExecution', this.beforeRequestExecution);
+    global.kuzzle.off('request:afterExecution', this.afterRequestExecution);
   }
 
   async startMonitoring (params: MonitoringParams) {
@@ -146,4 +99,56 @@ export class RequestMonitor extends DebugModule {
     clearInterval(this.monitoringInterval);
   }
 
+  private async beforeRequestExecution (request: KuzzleRequest) {
+    if (! this.monitoringInProgress) {
+      return;
+    }
+
+    this.requestExecutionTimers.set(request.id, nano());
+  }
+
+  private async afterRequestExecution ({request, success}: {request: KuzzleRequest, success: boolean}) {
+    if (! this.monitoringInProgress) {
+      return;
+    }
+
+    const controller = request.input.controller;
+    const action = request.input.action;
+    let actionDataFrame = this.requestsStatistics[`${controller}:${action}`];
+
+    if (! actionDataFrame) {
+      actionDataFrame = {};
+      this.requestsStatistics[`${controller}:${action}`] = actionDataFrame;
+    }
+
+    const protocol = request.context.connection.protocol;
+    let dataFrame = actionDataFrame[protocol];
+    if (! dataFrame) {
+      dataFrame = {
+        success: 0,
+        errors: 0,
+        successTotalExecutionTime: 0,
+        errorTotalExecutionTime: 0,
+      };
+      actionDataFrame[protocol] = dataFrame;
+    }
+
+    const startDate = this.requestExecutionTimers.get(request.id);
+
+    let ellapsedTime = 0;
+
+    if (startDate !== undefined) {
+      ellapsedTime = nano() - startDate;
+      this.requestExecutionTimers.delete(request.id);
+    }
+
+    if (success) {
+      dataFrame.success += 1;
+      dataFrame.successTotalExecutionTime += ellapsedTime;
+    }
+    else {
+      dataFrame.errors += 1;
+      dataFrame.errorTotalExecutionTime += ellapsedTime;
+    }
+  }
 }
