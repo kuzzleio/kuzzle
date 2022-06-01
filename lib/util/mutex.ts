@@ -182,6 +182,13 @@ export class Mutex {
     debug('Resource %s freed (mutex id: %s)', this.resource, this.mutexId);
   }
 
+  /**
+   * Wait for the resource to be unlocked.
+   * Return true if it waited until the unlocking
+   * and false if it waited until the timeout
+   * 
+   * @return {Promise.<boolean>}
+   */
   async wait ({ timeout = this.timeout, attemptDelay = this.attemptDelay }): Promise<boolean> {
     let duration = 0;
 
