@@ -41,8 +41,25 @@ export class EventMonitor extends DebugModule {
     );
   }
 
-  async init () {
+  async init (): Promise<void> {
 
+  }
+
+  async cleanup(): Promise<void> {
+    this.eventsStatistics = {
+      pipes: {},
+      asks: {},
+      emits: {},
+    };
+    this.monitoringInProgress = false;
+    this.monitorEventTraces = false;
+    this.eventTraces = [];
+    clearInterval(this.monitoringInterval);
+
+    this.restoreEventMethod('pipe');
+    this.restoreEventMethod('ask');
+    this.restoreEventMethod('emit');
+    this.restoreProcessRequest();
   }
 
   async startMonitoring (params: MonitoringParams) {
