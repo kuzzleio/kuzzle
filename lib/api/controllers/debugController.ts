@@ -26,6 +26,7 @@ import * as kerror from '../../kerror';
 import { DebugModule } from '../../types/DebugModule';
 import { JSONObject } from 'kuzzle-sdk';
 import get from 'lodash/get';
+import { RequestMonitor } from '../../core/debug/requestMonitor';
 
 const DEBUGGER_EVENT = 'kuzzle-debugger-event';
 
@@ -53,7 +54,9 @@ export class DebugController extends NativeController {
    * List of DebugModule for DebugController
    * Used to add new methods and events to the protocol
    */
-  private modules: DebugModule[] = [];
+  private modules: DebugModule[] = [
+    new RequestMonitor(),
+  ];
 
   constructor () {
     super([
