@@ -45,8 +45,8 @@ export class RequestMonitor extends DebugModule {
   }
 
   async init () {
-    global.kuzzle.on('request:beforeExecution', this.beforeRequestExecution);
-    global.kuzzle.on('request:afterExecution', this.afterRequestExecution);
+    global.kuzzle.on('request:beforeExecution', this.beforeRequestExecution.bind(this));
+    global.kuzzle.on('request:afterExecution', this.afterRequestExecution.bind(this));
   }
 
   async cleanup () {
@@ -55,13 +55,13 @@ export class RequestMonitor extends DebugModule {
     clearInterval(this.monitoringInterval);
     this.requestExecutionTimers.clear();
   
-    global.kuzzle.off('request:beforeExecution', this.beforeRequestExecution);
-    global.kuzzle.off('request:afterExecution', this.afterRequestExecution);
+    global.kuzzle.off('request:beforeExecution', this.beforeRequestExecution.bind(this));
+    global.kuzzle.off('request:afterExecution', this.afterRequestExecution.bind(this));
   }
 
   async startMonitoring (params: MonitoringParams) {
     if (this.monitoringInProgress) {
-      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Events');
+      throw kerror.get('core', 'debugger', 'monitor_already_running', 'Requests');
     }
 
     this.monitoringInterval = setInterval(() => {
