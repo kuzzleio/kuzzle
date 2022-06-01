@@ -34,7 +34,7 @@ export class RequestMonitor extends DebugModule {
     super('RequestMonitor',
       {
         events: [
-          'monitoringProgress'
+          'statisticsUpdate'
         ],
         methods: [
           'startMonitoring',
@@ -120,7 +120,7 @@ export class RequestMonitor extends DebugModule {
         }
       }
 
-      this.emit('monitoringProgress', {
+      this.emit('statisticsUpdate', {
         date: Date.now(),
         statistics: statisticsFrame
       });

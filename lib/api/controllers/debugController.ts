@@ -71,6 +71,7 @@ export class DebugController extends NativeController {
       'getHeapCodeStatistics',
       'setFlags',
       'collectGarbage',
+      
       'enable',
       'disable',
       'post',
