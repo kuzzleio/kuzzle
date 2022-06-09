@@ -52,7 +52,6 @@
     "dumpme": "^1.0.3",
     "eslint-plugin-no-only-tests": "^2.6.0",
     "eventemitter3": "^4.0.7",
-    "express": "^4.17.3",
     "inquirer": "^8.2.2",
     "ioredis": "^5.0.4",
     "js-yaml": "^4.1.0",
