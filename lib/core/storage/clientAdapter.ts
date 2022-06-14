@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-'use strict';
 
-const Elasticsearch = require('../../service/storage/elasticsearch');
-const { IndexCache } = require('./indexCache');
+import { ElasticSearch } from '../../service/storage/elasticsearch';
+import { IndexCache } from './indexCache';
 const { isPlainObject } = require('../../util/safeObject');
-const kerror = require('../../kerror');
-const { Mutex } = require('../../util/mutex');
+import * as kerror from '../../kerror';
+import { Mutex } from '../../util/mutex';
+import { KuzzleError } from '../../kerror/errors';
 
 const servicesError = kerror.wrap('services', 'storage');
 
@@ -33,14 +33,18 @@ const servicesError = kerror.wrap('services', 'storage');
  * Storage client adapter to perform validation on index/collection existence
  * and to maintain the index/collection cache.
  */
-class ClientAdapter {
+export class ClientAdapter {
+  client: ElasticSearch;
+  cache: IndexCache;
+  scope: string;
   /**
    * @param {storeScopeEnum} scope
    */
-  constructor (scope) {
-    this.client = new Elasticsearch(
+  constructor (scope, virtualIndex) {
+    this.client = new ElasticSearch(
       global.kuzzle.config.services.storageEngine,
-      scope);
+      scope,
+      virtualIndex);
     this.scope = scope;
     this.cache = new IndexCache();
   }
@@ -83,16 +87,29 @@ class ClientAdapter {
     ));
   }
 
-  async createIndex (index, { indexCacheOnly = false, propagate = true } = {}) {
+  async createIndex (index, { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}) {
+    console.log('createIndex ' + index );
     if (this.cache.hasIndex(index)) {
       throw servicesError.get('index_already_exists', this.scope, index);
     }
+    
+    if (physicalIndex) {
+      if (! this.cache.hasIndex(physicalIndex)) {
+        throw new KuzzleError('The given physicalIndex does not exist.', 404);
+      }
+    }
+    this.cache.addIndex(index);
+    if (physicalIndex) {
+      this.client.createVirtualIndex(index, physicalIndex);
+      for (const collection of this.cache.listCollections(physicalIndex)) {
+        this.cache.addCollection(index, collection);
+      }
+    }
+    
 
-    if (! indexCacheOnly) {
+    if (! indexCacheOnly && ! physicalIndex) {
       await this.client.createIndex(index);
     }
-
-    this.cache.addIndex(index);
 
     if (propagate) {
       global.kuzzle.emit('core:storage:index:create:after', {
@@ -671,7 +688,7 @@ class ClientAdapter {
       `core:storage:${this.scope}:document:search`,
       (index, collection, searchBody, opts) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.search({ collection, index, searchBody }, opts);
+        return this.client.search({ collection, index, searchBody, targets: null }, opts);
       });
 
     /**
@@ -691,7 +708,7 @@ class ClientAdapter {
           }
         }
 
-        return this.client.search({ searchBody, targets }, opts);
+        return this.client.search({ searchBody, targets, index: null, collection: null }, opts);
       });
 
     /**
@@ -900,6 +917,7 @@ class ClientAdapter {
     fixtures = {},
     options = {
       indexCacheOnly: false,
+      physicalIndex: null,
       propagate: true,
       rawMappings: false,
       refresh: false,
@@ -923,6 +941,7 @@ class ClientAdapter {
           try {
             await this.createIndex(index, {
               indexCacheOnly: options.indexCacheOnly,
+              physicalIndex: options.physicalIndex,
               propagate: options.propagate,
             });
           }
@@ -955,4 +974,3 @@ class ClientAdapter {
   }
 }
 
-module.exports = ClientAdapter;

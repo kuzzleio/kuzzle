@@ -28,12 +28,12 @@ import { JSONObject } from 'kuzzle-sdk';
 import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
 import PluginRepository from './pluginRepository';
 import Store from '../shared/store';
-import Elasticsearch from '../../service/storage/elasticsearch';
+import { ElasticSearch } from '../../service/storage/elasticsearch';
 import { isPlainObject } from '../../util/safeObject';
 import Promback from '../../util/promback';
 import { Mutex } from '../../util/mutex';
 import * as kerror from '../../kerror';
-import storeScopeEnum from '../storage/storeScopeEnum';
+import { scopeEnum } from '../storage/storeScopeEnum';
 import {
   BadRequestError,
   ExternalServiceError,
@@ -273,7 +273,7 @@ export class PluginContext {
 
     const pluginStore = new Store(
       pluginIndex,
-      storeScopeEnum.PRIVATE);
+      scopeEnum.PRIVATE);
 
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository (
@@ -304,7 +304,7 @@ export class PluginContext {
 
     // eslint-disable-next-line no-inner-declarations
     function PluginContextESClient (): Client {
-      return Elasticsearch
+      return ElasticSearch
         .buildClient(global.kuzzle.config.services.storageEngine.client);
     }
 

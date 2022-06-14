@@ -8,7 +8,7 @@ const KuzzleMock = require('../../mocks/kuzzle.mock');
 
 const ESWrapper = require('../../../lib/service/storage/esWrapper');
 
-describe('Test: ElasticSearch Wrapper', () => {
+describe('Test: Elasticsearch Wrapper', () => {
   let kuzzle;
   const client = new ESClientMock();
   const esWrapper = new ESWrapper(client);

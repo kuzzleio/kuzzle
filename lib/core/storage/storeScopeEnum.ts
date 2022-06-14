@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-'use strict';
 
 /**
  * @typedef {string} storeScopeEnum
@@ -31,9 +30,8 @@
  * @readOnly
  * @enum {storeScopeEnum}
  */
-const storeScopeEnum = Object.freeze({
-  PRIVATE: 'private',
-  PUBLIC: 'public',
-});
+export enum scopeEnum {
+  PRIVATE= 'private',
+  PUBLIC = 'public',
+}
 
-module.exports = storeScopeEnum;

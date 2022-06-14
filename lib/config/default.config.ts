@@ -299,7 +299,8 @@ const defaultConfig: KuzzleConfiguration = {
               author: { type: 'keyword' },
               createdAt: { type: 'date' },
               updater: { type: 'keyword' },
-              updatedAt: { type: 'date' }
+              updatedAt: { type: 'date' },
+              index: { type: 'keyword' },
             }
           }
         }
@@ -373,6 +374,13 @@ const defaultConfig: KuzzleConfiguration = {
               handler: { type: 'text' },
               installedAt: { type: 'date' }
             },
+          },
+          'virtual-indexes': {
+            dynamic: 'strict',
+            properties: {
+              real: { type: 'text' },
+              virtual: { type: 'text' }
+            }
           }
         }
       },

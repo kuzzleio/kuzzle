@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+
 import path from 'path';
 
 import { murmurHash128 as murmur } from 'murmurhash-native';
@@ -46,10 +47,10 @@ import { Mutex } from '../util/mutex';
 import * as kerror from '../kerror';
 import InternalIndexHandler from './internalIndexHandler';
 import CacheEngine from '../core/cache/cacheEngine';
-import StorageEngine from '../core/storage/storageEngine';
 import SecurityModule from '../core/security';
 import RealtimeModule from '../core/realtime';
 import Cluster from '../cluster';
+import { StorageEngine } from '../core/storage/storageEngine';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
@@ -60,6 +61,7 @@ import { sha256 } from '../util/crypto';
 export const BACKEND_IMPORT_KEY = 'backend:init:import';
 
 let _kuzzle = null;
+
 
 Reflect.defineProperty(global, 'kuzzle', {
   configurable: true,
@@ -774,3 +776,5 @@ class Kuzzle extends KuzzleEventEmitter {
 }
 
 module.exports = Kuzzle;
+
+
