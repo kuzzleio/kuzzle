@@ -54,7 +54,7 @@ import { StorageEngine } from '../core/storage/storageEngine';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
-import { generateRandomName } from '../util/name-generator';
+import { NameGenerator } from '../util/name-generator';
 import { OpenApiManager } from '../api/openapi';
 import { sha256 } from '../util/crypto';
 
@@ -168,8 +168,12 @@ class Kuzzle extends KuzzleEventEmitter {
   };
 
   private koncorde: Koncorde;
-  private id: string;
   private secret: string;
+
+  /**
+   * Node unique ID amongst other cluster nodes
+   */
+  public id: string;
 
   constructor (config: KuzzleConfiguration) {
     super(
@@ -318,7 +322,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Cluster initialized');
     }
     else {
-      id = generateRandomName('knode');
+      id = NameGenerator.generateRandomName({ prefix: 'knode' });
       this.log.info('[X] Cluster disabled: single node mode.');
     }
 

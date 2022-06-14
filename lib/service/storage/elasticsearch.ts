@@ -204,7 +204,7 @@ export class ElasticSearch extends Service {
   /**
    * Translate Koncorde filters to Elasticsearch query
    *
-   * @param {Object} koncordeFilters - Set of valid Koncorde filters
+   * @param {Object} filters - Set of valid Koncorde filters
    * @returns {Object} Equivalent Elasticsearch query
    */
   translateKoncordeFilters (filters) {
@@ -1501,10 +1501,9 @@ export class ElasticSearch extends Service {
     // rollback the whole operation. Since mappings can't be rollback, we try to
     // update the settings first, then the mappings and we rollback the settings
     // if putMappings fail.
-    let indiceSettings;
+    let indexSettings;
     try {
-      const response = await this._client.indices.getSettings(esRequest);
-      indiceSettings = response.body[esRequest.index].settings;
+      indexSettings = await this._getSettings(esRequest);
     }
     catch (error) {
       throw this._esWrapper.formatESError(error);
@@ -1526,11 +1525,7 @@ export class ElasticSearch extends Service {
       }
     }
     catch (error) {
-      const allowedSettings = {
-        index: _.omit(
-          indiceSettings.index,
-          ['creation_date', 'provided_name', 'uuid', 'version'])
-      };
+      const allowedSettings = this.getAllowedIndexSettings(indexSettings);
 
       // Rollback to previous settings
       if (! _.isEmpty(settings)) {
@@ -1541,6 +1536,20 @@ export class ElasticSearch extends Service {
     }
 
     return null;
+  }
+
+  /**
+   * Given index settings we return a new version of index settings
+   * only with allowed settings that can be set (during update or create index).
+   * @param indexSettings the index settings
+   * @returns {{index: *}} a new index settings with only allowed settings.
+   */
+  getAllowedIndexSettings (indexSettings) {
+    return {
+      index: _.omit(
+        indexSettings.index,
+        ['creation_date', 'provided_name', 'uuid', 'version'])
+    };
   }
 
   /**
@@ -1656,7 +1665,7 @@ export class ElasticSearch extends Service {
   }
 
   /**
-   * Empties the content of a collection. Keep the existing mapping.
+   * Empties the content of a collection. Keep the existing mapping and settings.
    *
    * @param {String} index - Index name
    * @param {String} collection - Collection name
@@ -1665,6 +1674,7 @@ export class ElasticSearch extends Service {
    */
   async truncateCollection (index, collection) {
     let mappings;
+    let settings;
 
     const esRequest = {
       index: await this._getIndice(index, collection)
@@ -1672,7 +1682,11 @@ export class ElasticSearch extends Service {
 
     try {
       mappings = await this.getMapping(index, collection, { includeKuzzleMeta: true });
-
+      settings = await this._getSettings(esRequest);
+      settings = {
+        ...settings,
+        ...this.getAllowedIndexSettings(settings)
+      };
       await this._client.indices.delete(esRequest);
 
       await this._client.indices.create({
@@ -1681,7 +1695,8 @@ export class ElasticSearch extends Service {
           aliases: {
             [this._getAlias(index, collection)]: {}
           },
-          mappings
+          mappings,
+          settings
         }
       });
 
@@ -2622,7 +2637,7 @@ export class ElasticSearch extends Service {
    *
    * @param {String} index - Index name
    * @param {String} collection - Collection name
-   * @param {Array.<String>} documents - Documents IDs
+   * @param {Array.<String>} ids - Documents IDs
    * @param {Object} options - timeout (undefined), refresh (undefined)
    *
    * @returns {Promise.<{ documents, errors }>
@@ -2944,6 +2959,18 @@ export class ElasticSearch extends Service {
     }
 
     return body[0].index;
+  }
+
+  /**
+   * Given an ES Request returns the settings of the corresponding indice.
+   *
+   * @param esRequest the ES Request with wanted settings.
+   * @return {Promise<*>} the settings of the indice.
+   * @private
+   */
+  async _getSettings (esRequest) {
+    const response = await this._client.indices.getSettings(esRequest);
+    return response.body[esRequest.index].settings;
   }
 
   /**

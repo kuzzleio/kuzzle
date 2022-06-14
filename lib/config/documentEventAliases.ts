@@ -19,15 +19,33 @@
  * limitations under the License.
  */
 
-'use strict';
+import DocumentController from '../api/controllers/documentController';
 
-module.exports = {
+interface EventAliases {
+  list: Record<string, unknown>;
+  namespace: string;
+  notBefore: string[];
+}
+
+function filter (obj: Record<string, unknown>, expectValue: string): Array<string> {
+  const result = [];
+
+  for (const [action, event] of Object.entries(obj)) {
+    if (event === expectValue) {
+      result.push(action);
+    }
+  }
+
+  return result;
+}
+
+export const documentEventAliases: EventAliases = {
   list: {
-    'delete': ['delete', 'deleteByQuery', 'mDelete'],
-    'get': ['get', 'mGet', 'search'],
-    'update': ['update', 'mUpdate', 'updateByQuery', 'upsert'],
-    'write': ['create', 'createOrReplace', 'mCreate', 'mCreateOrReplace', 'mReplace', 'replace']
+    delete: filter(DocumentController.actions, 'delete'),
+    get: filter(DocumentController.actions, 'get'),
+    update: filter(DocumentController.actions, 'update'),
+    write: filter(DocumentController.actions, 'write'),
   },
   namespace: 'generic:document',
-  notBefore: ['search', 'deleteByQuery', 'updateByQuery'],
+  notBefore: ['search', 'deleteByQuery', 'updateByQuery', 'export'],
 };
