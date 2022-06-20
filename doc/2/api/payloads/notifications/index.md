@@ -158,3 +158,34 @@ Other events may be added in the future.
   "type": "TokenExpired"
 }
 ```
+
+## Debugger Notification
+
+Debugger notifications are triggered by the [Debug Controller](/core/2/api/controllers/debug) only when the debugger is enabled.
+The notifications are sent to every connections that started listening to events from the [Debug Controller](/core/2/api/controllers/debug) using
+the action [debug:addListener](/core/2/api/controllers/debug/add-listener).
+
+### Format
+
+| Property     | Type   | Description                                                                                           |
+|--------------|--------|-------------------------------------------------------------------------------------------------------|
+| `event`      | string | Name of the event that triggered the notification                                                     |
+| `result`     | object | Notification content                                                                                  |
+| `room`       | string | Subscription channel identifier. Will always be `kuzzle-debugger-event` |
+
+### Example
+
+```js
+{
+  "room": "kuzzle-debugger-event",
+  "event": "HeapProfiler.reportHeapSnapshotProgress",
+  "result": {
+      "method": "HeapProfiler.reportHeapSnapshotProgress",
+      "params": {
+          "done": 238276,
+          "total": 238276,
+          "finished": true
+      }
+  }
+}
+```
