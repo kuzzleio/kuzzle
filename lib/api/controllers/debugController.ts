@@ -200,7 +200,7 @@ export class DebugController extends NativeController {
       const debugModuleMethod = this.kuzzlePostMethods.get(method);
 
       if (debugModuleMethod) {
-        return await debugModuleMethod(params);
+        return debugModuleMethod(params);
       }
       throw kerror.get('core', 'debugger', 'method_not_found', method);
     }
@@ -209,7 +209,7 @@ export class DebugController extends NativeController {
       throw kerror.get('core', 'debugger', 'native_debug_protocol_usage_denied');
     }
 
-    return await this.inspectorPost(method, params);
+    return this.inspectorPost(method, params);
   }
 
   /**
