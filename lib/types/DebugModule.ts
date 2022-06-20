@@ -29,7 +29,7 @@ export abstract class DebugModule extends EventEmitter {
     this.methods = options.methods || [];
     this.events = options.events || [];
 
-    if (this.name.length === 0) {
+    if (! this.name || this.name.length === 0) {
       throw new Error('DebugModule should have a name');
     }
     if (this.name.charAt(0) !== this.name.charAt(0).toUpperCase()) {

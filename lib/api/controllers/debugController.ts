@@ -263,7 +263,7 @@ export class DebugController extends NativeController {
    * @param params 
    * @returns 
    */
-  private async inspectorPost (method: string, params: JSONObject) {
+  private async inspectorPost (method: string, params: JSONObject): Promise<JSONObject> {
     if (! this.debuggerStatus) {
       throw kerror.get('core', 'debugger', 'not_enabled');
     }
