@@ -28,7 +28,7 @@ describe('#AccessLogger', () => {
     };
 
     mockRequire('worker_threads', {
-      Worker (...args) {
+      Worker: (...args) => {
         workerArgs = args;
         workerData = args[1].workerData;
         return { postMessage };
