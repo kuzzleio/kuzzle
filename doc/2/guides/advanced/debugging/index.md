@@ -35,7 +35,7 @@ Debug Modules have nothing to do with the [Chrome Devtool Protocol](https://chro
 To be able to debug Kuzzle remotely using the Chrome Inspector tool you need:
 
 - A user that has access to the every actions of the [Debug Controller](/core/2/api/controllers/debug), see the [Permissions](/core/2/main-concepts/permissions) page on how to setup the proper permissions.
-- You need to set the config `security.debug.native_debug_protocol` to `true`, to allow the [Debug Controller](/core/2/api/controllers/debug) to execute actions from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8). 
+- You need to set the config `security.debug.native_debug_protocol` to `true`, to allow the [Debug Controller](/core/2/api/controllers/debug) to execute actions from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8), then restart your instance. 
 - You need to have [Kourou](https://github.com/kuzzleio/kourou) the Kuzzle CLI installed. You can install it using `npm install -g kourou`
 - You need to have the [Chrome Browser](https://www.google.com/intl/en_en/chrome/) installed.
 
@@ -98,3 +98,7 @@ The host will always be localhost since it's the IP of the server proxy that is 
 ![Image Configure Chrome Inspector Step 3](./config_step_3.png)
 
 **4 -** You can now click on `inspect` and your done, you can now debug your instance remotely using the Chrome Inspector.
+
+:::warn
+Dont forget to set the config `security.debug.native_debug_protocol` back to `false` once your done debugging to increase the security of your instance in case of one of your admin users with access to the [Debug Controller](/core/2/api/controllers/debug) gets compromised.
+:::
