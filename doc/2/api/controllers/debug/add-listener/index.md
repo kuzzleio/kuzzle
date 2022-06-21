@@ -6,7 +6,7 @@ title: addListener
 
 # addListener
 
-Allows you to listen specific events from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) and Debug Modules and receive a notification when an event is emitted.
+Allows you to listen specific events from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) and Debug Modules. You'll receive a notification when an event is emitted.
 
 ---
 

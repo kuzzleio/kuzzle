@@ -6,7 +6,7 @@ title: removeListener
 
 # removeListener
 
-Stop listening to a specific events from the Debug Controller.
+Stop listening to a specific event from the Debug Controller.
 
 ---
 

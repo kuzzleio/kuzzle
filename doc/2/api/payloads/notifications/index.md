@@ -162,7 +162,7 @@ Other events may be added in the future.
 ## Debugger Notification
 
 Debugger notifications are triggered by the [Debug Controller](/core/2/api/controllers/debug) only when the debugger is enabled.
-The notifications are sent to every connections that started listening to events from the [Debug Controller](/core/2/api/controllers/debug) using
+The notifications are sent to every connections currently listening to events from the [Debug Controller](/core/2/api/controllers/debug) using
 the action [debug:addListener](/core/2/api/controllers/debug/add-listener).
 
 ### Format

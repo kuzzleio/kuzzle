@@ -6,7 +6,7 @@ title: nodeVersion
 
 # nodeVersion
 
-Return the current node version Kuzzle is running on.
+Returns the Node.js version currently running Kuzzle.
 
 ---
 
@@ -30,7 +30,7 @@ Method: GET
 
 ## Response
 
-Returns a string representing the node version:
+Returns a string containing the Node.js version:
 
 ```js
 {
