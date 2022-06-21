@@ -11,7 +11,7 @@ Allows you to listen specific events from the [Chrome Devtool Protocol](https://
 ---
 
 :::warn
-This only works using a Websocket connection since notification can only be sent on a persisted connection.
+This only works using a Websocket connection since notification can only be sent on a persistent connection.
 :::
 
 ## Query Syntax

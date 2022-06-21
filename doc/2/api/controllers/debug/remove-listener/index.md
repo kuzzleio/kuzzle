@@ -11,7 +11,7 @@ Stop listening to a specific event from the Debug Controller.
 ---
 
 :::warn
-This only works using a Websocket connection since notification can only be sent on a persisted connection.
+This only works using a Websocket connection since notification can only be sent on a persistent connection.
 :::
 
 ## Query Syntax

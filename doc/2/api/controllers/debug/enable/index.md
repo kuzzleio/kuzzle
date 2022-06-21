@@ -6,7 +6,7 @@ title: enable
 
 # enable
 
-Enable the debugger and allows `debug:post`, `debug:addListener`, `debug:removeListener` to be called.
+Enables the debugger and allows `debug:post`, `debug:addListener` and `debug:removeListener` to be called.
 
 ---
 
