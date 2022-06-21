@@ -24,7 +24,7 @@ by setting `security.debug.native_debug_protocol` to `true` and rebooting your i
 
 ## Debug Modules
 
-Debug Modules are modules of Kuzzle that are exposed through the [Debug Controller](/core/2/api/controllers/debug) actions and allows you to better understand what is happening on your instance and helps you debug your instance live.
+Debug Modules are modules of Kuzzle that are exposed through the [Debug Controller](/core/2/api/controllers/debug) actions and allows you to better understand what is happening on your running application and helps you to debug it.
 
 Debug Modules are not related to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) and perfectly safe to use. They do not expose the debugger directly, whereas the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) could be used to execute code remotely which is why access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) is disabled by default. It should only be enabled when you need to take memory snapshot, use breakpoint, the cpu profiler, etc...
 
