@@ -220,6 +220,14 @@
   // The security section contains the configuration for Kuzzle permissions
   // mechanism
   "security": {
+    // [debug]
+    // Configuration for the Debug Controller
+    // * native_debug_protocol:
+    //    Allows the Debug Controller to use methods from the Chrome Devtools Protocol,
+    //    see (https://chromedevtools.github.io/devtools-protocol/v8) 
+    "debug": {
+      "native_debug_protocol": false
+    },
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"

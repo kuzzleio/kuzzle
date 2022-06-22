@@ -7,6 +7,17 @@ import {
 
 export type SecurityConfiguration = {
   /**
+   * Debugger configuration
+   */
+  debug: {
+    /**
+     * Allow to use the Chrome DevTools Protocol directly
+     * through `debug:post`
+     */
+    native_debug_protocol: boolean;
+  };
+
+  /**
    * The profileIds applied to a user created with the API action
    * `security:createRestrictedUser`.
    *

@@ -154,6 +154,41 @@
           "class": "GatewayTimeoutError"
         }
       }
+    },
+    "debugger": {
+      "code": 5,
+      "errors": {
+        "not_enabled": {
+          "description": "The debugger is not enabled",
+          "code": 1,
+          "message": "Debugger is not enabled",
+          "class": "PreconditionError"
+        },
+        "monitor_already_running": {
+          "description": "The monitor is already running",
+          "code": 2,
+          "message": "The monitoring of \"%s\" is already running",
+          "class": "PreconditionError"
+        },
+        "monitor_not_running": {
+          "description": "The monitor is not running",
+          "code": 3,
+          "message": "The monitoring of \"%s\" is not running",
+          "class": "PreconditionError"
+        },
+        "native_debug_protocol_usage_denied": {
+          "description": "Usage of the native debug protocol is not allowed",
+          "code": 4,
+          "message": "Usage of the native debug protocol is not allowed",
+          "class": "PreconditionError"
+        },
+        "method_not_found": {
+          "description": "Debugger method not found",
+          "code": 5,
+          "message": "Debugger method \"%s\" not found.",
+          "class": "PreconditionError"
+        }
+      }
     }
   }
 }

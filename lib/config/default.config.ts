@@ -112,6 +112,9 @@ const defaultConfig: KuzzleConfiguration = {
   },
 
   security: {
+    debug: {
+      native_debug_protocol: false 
+    },
     restrictedProfileIds: ['default'],
     jwt: {
       algorithm: 'HS256',
