@@ -1,12 +1,12 @@
 name: Workflow Deployments
 
 on:
+  workflow_run:
+    workflows: ["Workflow"]
+    branches: [master]
+    types: 
+      - completed
   workflow_dispatch:
-    inputs:
-      tags:
-        description: 'Test scenario tags'
-        required: false 
-        type: boolean
     
 
 jobs:
