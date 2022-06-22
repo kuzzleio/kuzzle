@@ -52,7 +52,7 @@ jobs:
           repo: documentation
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
-          ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
+          ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
           client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ steps.extract-refs.outputs.branch }}","version":"${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
