@@ -5,11 +5,13 @@ const should = require('should');
 const mockrequire = require('mock-require');
 const rewire = require('rewire');
 const Bluebird = require('bluebird');
+const stringify = require('json-stable-stringify');
 
 const KuzzleMock = require('../mocks/kuzzle.mock');
 const MutexMock = require('../mocks/mutex.mock.js');
 const Plugin = require('../../lib/core/plugin/plugin');
 const kuzzleStateEnum = require('../../lib/kuzzle/kuzzleStateEnum');
+const { sha256 } = require('../../lib/util/crypto');
 
 const config = require('../../lib/config').loadConfig();
 
@@ -20,24 +22,24 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   let clusterModuleInitStub;
 
   const mockedProperties = [
+    'adminController',
+    'ask',
+    'dumpGenerator',
+    'emit',
     'entryPoint',
     'funnel',
-    'router',
-    'notifier',
     'gc',
+    'internalIndex',
+    'log',
+    'notifier',
+    'pipe',
     'pluginsManager',
-    'adminController',
+    'router',
     'services',
     'statistics',
-    'validation',
-    'emit',
-    'vault',
-    'log',
-    'internalIndex',
-    'dumpGenerator',
-    'pipe',
-    'ask',
     'tokenManager',
+    'validation',
+    'vault',
   ];
 
   function _mockKuzzle (KuzzleConstructor) {
@@ -173,10 +175,9 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     });
 
     it('should start all services and register errors handlers if enabled on kuzzle.start', () => {
-      let
-        processExitSpy = sinon.spy(),
-        processOnSpy = sinon.spy(),
-        processRemoveAllListenersSpy = sinon.spy();
+      let processExitSpy = sinon.spy();
+      let processOnSpy = sinon.spy();
+      let processRemoveAllListenersSpy = sinon.spy();
 
       return Kuzzle.__with__({
         process: {
@@ -333,24 +334,55 @@ describe('/lib/kuzzle/kuzzle.js', () => {
   describe('#import', () => {
     let toImport;
     let toSupport;
+    let mappingsPayload;
+    let permissionsPayload;
+    let fixturesPayload;
 
     beforeEach(() => {
-      toImport = {
-        mappings: { something: 'here' },
-        onExistingUsers: 'skip',
-        profiles: { something: 'here' },
-        roles: { something: 'here' },
-        userMappings: { something: 'here' },
-        user: { something: 'here' },
+
+      mappingsPayload = {
+        toImport: {
+          mappings: { something: 'here' },
+        },
+        toSupport: {
+          mappings: { something: 'here' },
+        }
       };
-      toSupport = {
-        mappings: { something: 'here' },
-        fixtures: { something: 'here' },
-        securities: {
+
+      permissionsPayload = {
+        toImport: {
           profiles: { something: 'here' },
           roles: { something: 'here' },
-          user: { something: 'here' }
+          users: { something: 'here' },
+        },
+        toSupport: {
+          securities: {
+            profiles: { something: 'here' },
+            roles: { something: 'here' },
+            user: { something: 'here' }
+          }
         }
+      };
+
+      fixturesPayload = {
+        toSupport: {
+          fixtures: { something: 'here' },
+        }
+      };
+
+      toImport = {
+        mappings: mappingsPayload.toImport.mappings,
+        onExistingUsers: 'skip',
+        profiles: permissionsPayload.toImport.profiles,
+        roles: permissionsPayload.toImport.roles,
+        userMappings: { something: 'here' },
+        users: permissionsPayload.toImport.users
+      };
+
+      toSupport = {
+        mappings: mappingsPayload.toSupport.mappings,
+        fixtures: fixturesPayload.toSupport.fixtures,
+        securities: permissionsPayload.toSupport.securities
       };
 
       kuzzle.internalIndex.updateMapping = sinon.stub().resolves();
@@ -359,7 +391,32 @@ describe('/lib/kuzzle/kuzzle.js', () => {
 
     it('should load correctly toImport mappings and permissions', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
+
       await kuzzle.loadInitialState(toImport, {});
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:mappings');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:mappings',
+        sha256(stringify({
+          toImport: mappingsPayload.toImport,
+          toSupport: {}
+        })));
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:permissions');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:permissions',
+        sha256(stringify({
+          toImport: permissionsPayload.toImport,
+          toSupport: {}
+        })));
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith('users', toImport.userMappings);
       should(kuzzle.internalIndex.refreshCollection).be.calledWith('users');
@@ -385,6 +442,41 @@ describe('/lib/kuzzle/kuzzle.js', () => {
     it('should load correctly toSupport mappings, fixtures and securities', async () => {
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
       await kuzzle.loadInitialState({}, toSupport);
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:mappings');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:mappings',
+        sha256(stringify({
+          toSupport: mappingsPayload.toSupport,
+          toImport: {}
+        })));
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:permissions');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:permissions',
+        sha256(stringify({
+          toSupport: permissionsPayload.toSupport,
+          toImport: {}
+        })));
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:get',
+        'backend:init:import:fixtures');
+
+      should(kuzzle.ask).be.calledWith(
+        'core:cache:internal:store',
+        'backend:init:import:fixtures',
+        sha256(stringify({
+          toSupport: fixturesPayload.toSupport,
+        })));
 
       should(kuzzle.ask).calledWith('core:storage:public:mappings:import', toSupport.mappings, {
         indexCacheOnly: false,

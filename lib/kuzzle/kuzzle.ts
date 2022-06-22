@@ -53,10 +53,11 @@ import Cluster from '../cluster';
 import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
 import { version } from '../../package.json';
 import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
-import { generateRandomName } from '../util/name-generator';
+import { NameGenerator } from '../util/name-generator';
 import { OpenApiManager } from '../api/openapi';
+import { sha256 } from '../util/crypto';
 
-const BACKEND_IMPORT_KEY = 'backend:init:import';
+export const BACKEND_IMPORT_KEY = 'backend:init:import';
 
 let _kuzzle = null;
 
@@ -89,6 +90,7 @@ type ImportStatus = {
   initialized?: boolean;
   firstCall?: boolean;
 }
+
 class Kuzzle extends KuzzleEventEmitter {
   private config: KuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
@@ -164,8 +166,12 @@ class Kuzzle extends KuzzleEventEmitter {
   };
 
   private koncorde: Koncorde;
-  private id: string;
   private secret: string;
+
+  /**
+   * Node unique ID amongst other cluster nodes
+   */
+  public id: string;
 
   constructor (config: KuzzleConfiguration) {
     super(
@@ -314,7 +320,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info('[✔] Cluster initialized');
     }
     else {
-      id = generateRandomName('knode');
+      id = NameGenerator.generateRandomName({ prefix: 'knode' });
       this.log.info('[X] Cluster disabled: single node mode.');
     }
 
@@ -570,11 +576,10 @@ class Kuzzle extends KuzzleEventEmitter {
   private async _waitForImportToFinish () {
     const importTypes = Object.keys(this.importTypes);
 
-    while (importTypes.length) {
+    for (const importType of importTypes) {
       // If the import is done, we pop it from the queue to check the next one
-      if (await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${importTypes[0]}`)) {
-        importTypes.shift();
-        continue;
+      if (await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${importType}`)) {
+        return;
       }
 
       await Bluebird.delay(1000);
@@ -606,8 +611,32 @@ class Kuzzle extends KuzzleEventEmitter {
 
     try {
       for (const [type, importMethod] of Object.entries(this.importTypes)) {
+        const importPayload = {};
+
+        switch (type) {
+          case 'fixtures':
+            _.set(importPayload, 'toSupport.fixtures', toSupport.fixtures);
+            break;
+          case 'mappings':
+            _.set(importPayload, 'toSupport.mappings', toSupport.mappings);
+            _.set(importPayload, 'toImport.mappings', toImport.mappings);
+            break;
+          case 'permissions':
+            _.set(importPayload, 'toSupport.securities', toSupport.securities);
+            _.set(importPayload, 'toImport.profiles', toImport.profiles);
+            _.set(importPayload, 'toImport.roles', toImport.roles);
+            _.set(importPayload, 'toImport.users', toImport.users);
+            break;
+        }
+
+        const importPayloadHash = sha256(stringify(importPayload));
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
-        const initialized = await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${type}`) === '1';
+
+        const existingHash = await this.ask(
+          'core:cache:internal:get',
+          `${BACKEND_IMPORT_KEY}:${type}`);
+
+        const initialized = existingHash === importPayloadHash;
         const locked = await mutex.lock();
 
         await importMethod(
@@ -621,7 +650,11 @@ class Kuzzle extends KuzzleEventEmitter {
 
         if (! initialized && locked) {
           lockedMutex.push(mutex);
-          await this.ask('core:cache:internal:store', `${BACKEND_IMPORT_KEY}:${type}`, 1, { ttl: 5 * 60 * 1000 });
+
+          await this.ask(
+            'core:cache:internal:store',
+            `${BACKEND_IMPORT_KEY}:${type}`,
+            importPayloadHash);
         }
       }
 

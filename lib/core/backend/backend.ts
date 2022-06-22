@@ -383,6 +383,17 @@ export class Backend {
     return this._sdk;
   }
 
+  /**
+   * Cluster node ID
+   */
+  get nodeId (): string {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'nodeId');
+    }
+
+    return this._kuzzle.id;
+  }
+
   private get _instanceProxy () {
     return {
       api: this._controllers,
