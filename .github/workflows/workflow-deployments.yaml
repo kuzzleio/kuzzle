@@ -13,6 +13,7 @@ jobs:
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -42,6 +43,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -84,6 +86,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
