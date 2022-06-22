@@ -16,7 +16,7 @@ It's easier and safer to use the [Debug Controller](/core/2/api/controllers/debu
 Whereas when launching Kuzzle with `node --inspect` you need to setup some Port Forwarding from your host machine to your local machine to be able to debug Kuzzle remotely, and you need to be sure that no one can access your instance using the Debug Port exposed.
 
 :::warn
-By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it in the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
+By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it in the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/debug-controller/.kuzzlerc.sample#L229)
 by setting `security.debug.native_debug_protocol` to `true` and rebooting your instance.
 
 [Debug Modules](#debug-modules) are still accessible when `security.debug.native_debug_protocol` is disabled.
@@ -34,7 +34,7 @@ Debug Modules are not related to the [Chrome Devtools Protocol](https://chromede
 
 To be able to debug Kuzzle remotely using the Chrome Inspector tool you need:
 
-- A user allowed to access to all [Debug Controller](/core/2/api/controllers/debug)'s actions. See the [Permissions](/core/2/main-concepts/permissions) page on how to setup the proper permissions.
+- A user allowed to access to all [Debug Controller](/core/2/api/controllers/debug)'s actions. See the [Permissions](/core/2/guides/main-concepts/permissions) page on how to setup the proper permissions.
 - To set the config `security.debug.native_debug_protocol` to `true`, to allow the [Debug Controller](/core/2/api/controllers/debug) to execute actions from the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8), then restart your application. 
 - [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI, installed. You can install it using `npm install -g kourou`.
 - The [Chrome Browser](https://www.google.com/intl/en_en/chrome/) installed.
