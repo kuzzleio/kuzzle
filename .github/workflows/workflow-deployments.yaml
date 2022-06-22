@@ -46,7 +46,7 @@ jobs:
           echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
           echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
           echo "::set-output name=branch::$(echo $GITHUB_REF | cut -d/ -f 3)"
-      - uses: convictional/trigger-workflow-and-wait@v1.6.0
+      - uses: convictional/trigger-workflow-and-wait@v1.6.3
         with:
           owner: kuzzleio
           repo: documentation
