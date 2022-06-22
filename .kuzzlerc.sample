@@ -226,7 +226,7 @@
     //    Allows the Debug Controller to use methods from the Chrome Devtools Protocol,
     //    see (https://chromedevtools.github.io/devtools-protocol/v8) 
     "debug": {
-      "native_debug_protocol": false,
+      "native_debug_protocol": false
     },
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the API action
