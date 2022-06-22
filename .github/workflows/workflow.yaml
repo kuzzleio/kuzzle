@@ -188,6 +188,6 @@ jobs:
     
   deploy-workflow:
     name: Deployment Workflow
-    needs: [lint]
+    needs: [cluster-monkey-tests]
     uses: ./.github/workflows/workflow-deployments.yaml
     secrets: inherit
