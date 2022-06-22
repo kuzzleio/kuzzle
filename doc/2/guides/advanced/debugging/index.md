@@ -3,7 +3,7 @@ code: false
 type: page
 title: Debugging
 description: Debug Kuzzle
-order: 100
+order: 800
 ---
 
 ## Introduction
