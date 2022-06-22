@@ -7,7 +7,7 @@ description: NameGenerator class generateRandomName() method
 
 # generateRandomName
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.19.0" />
 
 Generates a random formatted name that consists of an optional prefix, a random adjective, a random name and an optional random number separated by separator (default: '-').
 
