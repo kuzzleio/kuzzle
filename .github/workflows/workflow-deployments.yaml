@@ -1,11 +1,6 @@
 name: Workflow Deployments
 
 on:
-  workflow_run:
-    workflows: ["Workflow"]
-    branches: [master, 2-dev]
-    types: 
-      - completed
   workflow_dispatch:
     inputs:
       tags:
