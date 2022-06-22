@@ -33,12 +33,6 @@ jobs:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/install-packages
-      - uses: actions/github-script@v4
-        id: chose-documentation-framework-version
-        with:
-          script: |
-            return context.ref === 'refs/heads/master' ? 'master' : 'develop'
       - name: Extract references from context
         shell: bash
         id: extract-refs
