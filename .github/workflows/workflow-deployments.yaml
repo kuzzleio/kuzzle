@@ -1,11 +1,13 @@
 name: Workflow Deployments
 
-on: 
+on:
   workflow_run:
     workflows: ["Workflow"]
     branches: [master]
     types: 
       - completed
+  workflow_dispatch:
+      
 
 jobs:
   # -----------------------------------------------------------------------------
