@@ -140,6 +140,10 @@ export class DebugController extends NativeController {
 
       for (const eventName of module.events) {
         module.on(eventName, async payload => {
+          if (! this.debuggerStatus) {
+            return;
+          }
+
           const event = `Kuzzle.${module.name}.${eventName}`;
           await this.notifyGlobalListeners(event, payload);
 
@@ -292,8 +296,8 @@ export class DebugController extends NativeController {
   private async notifyConnection (connectionId: string, event: string, payload: JSONObject) {
     global.kuzzle.entryPoint._notify({
       channels: [event],
-      connectionId: connectionId,
-      payload: payload,
+      connectionId,
+      payload,
     });
   }
 
