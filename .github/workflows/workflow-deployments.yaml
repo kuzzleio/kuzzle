@@ -39,7 +39,7 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
           ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
-          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ steps.extract-refs.outputs.branch }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "master", "version": "${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
