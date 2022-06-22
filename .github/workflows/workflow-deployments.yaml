@@ -3,10 +3,26 @@ name: Workflow Deployments
 on:
   workflow_run:
     workflows: ["Workflow"]
-    branches: [master]
+    branches: [master, 2-dev]
     types: 
       - completed
   workflow_dispatch:
+    inputs:
+      doc_deploy:
+        description: 'Deploy Documentation'
+        required: true
+        default: true
+        type: boolean
+      dockerhub_deploy:
+        description: 'Deploy to DockerHub'
+        required: true
+        default: true
+        type: boolean
+      npm_deploy:
+        description: 'Deploy to NPM'
+        required: true
+        default: true
+        type: boolean
     
 
 jobs:
@@ -15,6 +31,7 @@ jobs:
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.doc_deploy }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -44,6 +61,7 @@ jobs:
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -86,6 +104,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.npm_deploy }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
