@@ -1,11 +1,7 @@
 name: Workflow Deployments
 
 on:
-  workflow_run:
-    workflows: ["Workflow"]
-    branches: [master, 2-dev]
-    types: 
-      - completed
+  workflow_call:
   workflow_dispatch:
     inputs:
       doc_deploy:
@@ -31,7 +27,7 @@ jobs:
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.doc_deploy || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.doc_deploy }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -57,11 +53,11 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
           ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
-          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "master", "version": "${{ steps.extract-refs.outputs.version }}"}'
+          inputs: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ steps.extract-refs.outputs.branch }}","version":"${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.dockerhub_deploy || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -104,7 +100,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.npm_deploy || github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

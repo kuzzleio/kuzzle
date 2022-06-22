@@ -185,3 +185,9 @@ jobs:
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
+    
+  deploy-workflow:
+    name: Deployment Workflow
+    needs: [lint]
+    uses: ./.github/workflows/workflow-deployments.yaml
+    secrets: inherit
