@@ -151,13 +151,11 @@ describe('#mutex', () => {
 
       await mutex.lock();
 
-      const waitResult = mutex.wait({ timeout: 0 });
+      const waitResult = await mutex.wait({ timeout: 0 });
 
       await mutex.unlock();
 
-      const res = await waitResult;
-
-      should(res).be.false();
+      should(waitResult).be.false();
     });
   });
 
