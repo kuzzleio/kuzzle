@@ -147,13 +147,14 @@ describe('#mutex', () => {
     });
 
     it ('should resolved to false if the timeout exceed', async () => {
-      const mutex = new Mutex('foo', { timeout: 0 });
+      kuzzle.ask.withArgs('core:cache:internal:get').resolves(true);
 
-      await mutex.lock();
+      const mutex = new Mutex('foo', { timeout: 0 });
+      const otherMutex = new Mutex('foo', { timeout: 0 });
+
+      await otherMutex.lock();
 
       const waitResult = await mutex.wait({ timeout: 0 });
-
-      await mutex.unlock();
 
       should(waitResult).be.false();
     });
