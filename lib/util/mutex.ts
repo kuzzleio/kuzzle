@@ -182,6 +182,41 @@ export class Mutex {
     debug('Resource %s freed (mutex id: %s)', this.resource, this.mutexId);
   }
 
+  /**
+   * Wait for the resource to be unlocked.
+   * Return true if it waited until the unlocking
+   * and false if it waited until the timeout
+   *
+   * @param {Object} [Options] - mutex options
+   *    - `attemptDelay`: delay between 2 resource check (default: `this.attemptDelay`)
+   *    - `timeout`: mutex wait acquisition timeout, in milliseconds (default: `this.timeout`)
+   *                 If -1, will try to acquire the lock indefinitely.
+   *                 If 0, locking will fail immediately if it cannot lock with
+   *                 its 1st attempt.
+   * 
+   * @return {Promise.<boolean>} True if the ressource has been unlocked before the `timeout`
+   */
+  async wait ({ attemptDelay = this.attemptDelay, timeout = this.timeout }): Promise<boolean> {
+    let duration = 0;
+
+    let isLocked = true;
+
+    do {
+      isLocked = await global.kuzzle.ask(
+        'core:cache:internal:get',
+        this.resource);
+
+      duration += attemptDelay;
+
+      if (isLocked && (timeout === -1 || duration <= timeout)) {
+        await Bluebird.delay(attemptDelay);
+      }
+    }
+    while (isLocked && (timeout === -1 || duration <= timeout));
+
+    return ! isLocked;
+  }
+
   get locked () {
     return this._locked;
   }
