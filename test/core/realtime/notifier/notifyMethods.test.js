@@ -372,7 +372,7 @@ describe('notify methods', () => {
   });
 
   describe('dispatch', () => {
-    it('should call entrypoint.dispatch  with notify action when there is a connectionId',  async () => {
+    it('should call entrypoint.dispatch  with notify action when there is a connectionId', async () => {
       await notifier._dispatch('my-event', ['channel-foo'], { foo: 'bar' }, 'connectionId');
 
       should(kuzzle.entryPoint.dispatch)
@@ -384,7 +384,7 @@ describe('notify methods', () => {
         });
     });
 
-    it('should call entrypoint.dispatch  with broadcast action when there is no connectionId',  async () => {
+    it('should call entrypoint.dispatch  with broadcast action when there is no connectionId', async () => {
       await notifier._dispatch('my-event', ['channel-foo'], { foo: 'bar' });
 
       should(kuzzle.entryPoint.dispatch)
