@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -19,21 +19,124 @@
  * limitations under the License.
  */
 
-'use strict';
+export type GenerateRandomNameOpts = {
+  /**
+   * Optional prefix.
+   */
+  prefix?: string;
 
-function randomNumber (max) {
-  return Math.floor(Math.random() * Math.floor(max));
+  /**
+   * Optional separator. Defaults to `-`.
+   */
+  separator?: string;
+
+  /**
+   * Optional postfix random number range. Set to `false` to disable postfix. Defaults to `{ min: 0, max: 100000 }`
+   */
+  postfixRandRange?: {
+    /**
+     * Optional minimum postfix random number (inclusive). Defaults to `0`.
+     */
+    min?: number;
+
+    /**
+     * Maximum postfix random number (exclusive).
+     */
+    max: number;
+  } | false;
+};
+
+export class NameGenerator {
+  /**
+   * Returns a random name.
+   *
+   * # Usage:
+   *
+   * ```js
+   * const name = NameGenerator.getRandomName(); // 'verdi'
+   * ```
+   *
+   * @returns a random name
+   */
+  static getRandomName (): string {
+    return names[randomNumber(names.length)];
+  }
+
+  /**
+   * Returns a random adjective.
+   *
+   * # Usage
+   *
+   * ```js
+   * const adj = NameGenerator.getRandomAdjective(); // 'absent'
+   * ```
+   *
+   * @returns a random adjective
+   */
+  static getRandomAdjective (): string {
+    return adjectives[randomNumber(adjectives.length)];
+  }
+
+  /**
+   * Generates a random formatted name that consists of an optional prefix, a random adjective,
+   * a random name and an optional random number separated by separator (default: '-').
+   *
+   * Format: `[prefix<separator>]<adjective><separator><name>[<separator>random number]`
+   *
+   * Format example: `something-dashing-euler-1164`
+   *
+   * ## Usage
+   *
+   * ```js
+   * let name = NameGenerator.generateRandomName({
+   *   prefix: 'my',
+   *   separator: '_',
+   *   postfixRandRange: { min: 1, max: 10 }
+   * }); // 'my_abandoned_yogi_5'
+   *
+   * name = NameGenerator.generateRandomName({
+   *   separator: ' ',
+   *   postfixRandRange: false
+   * }); // 'amused vampire'
+   * ```
+   *
+   * @param {GenerateRandomNameOpts} opts Optional options
+   *
+   * @returns a random formatted name
+   */
+  static generateRandomName ({
+    prefix,
+    separator = '-',
+    postfixRandRange = { max: 100000, min: 0 },
+  }: GenerateRandomNameOpts = {}): string {
+    const adjective = NameGenerator.getRandomAdjective();
+    const name = NameGenerator.getRandomName();
+
+    prefix = prefix !== undefined ? `${prefix}${separator}` : '';
+
+    if (postfixRandRange === false) {
+      return `${prefix}${adjective}${separator}${name}`;
+    }
+
+    const { min = 0, max } = postfixRandRange;
+
+    return `${prefix}${adjective}${separator}${name}${separator}${randomNumber(min, max)}`;
+  }
 }
 
-function generateRandomName (prefix) {
-  const adjective = adjectives[randomNumber(adjectives.length)];
-  const name = names[randomNumber(names.length)];
-  const number = randomNumber(100000);
+export function randomNumber(max: number): number;
+export function randomNumber(min: number, max: number): number;
+export function randomNumber (min: number, max?: number): number {
+  if (max === undefined) {
+    max = min;
+    min = 0;
+  }
 
-  return `${prefix}-${adjective}-${name}-${number}`;
+  max = Math.floor(max);
+  min = Math.floor(min);
+
+  return Math.floor(Math.random() * (max - min)) + min;
 }
-
-module.exports = { generateRandomName, randomNumber };
 
 const adjectives = [
   'aback',
@@ -1369,3 +1472,4 @@ const names = [
   'zola',
   'zoologist',
 ];
+  

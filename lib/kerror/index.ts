@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -26,7 +26,6 @@ import { JSONObject } from 'kuzzle-sdk';
 
 import { domains as internalDomains } from './codes';
 import * as errors from './errors';
-import { hilightUserCode } from '../util/stackTrace';
 import { KuzzleError } from './errors';
 import { ErrorDefinition, ErrorDomains } from '../types';
 
@@ -130,8 +129,7 @@ function cleanStackTrace (error: KuzzleError): void {
 
       // filter all lines related to the kerror object
       return ! line.includes(currentFileName);
-    })
-    .map(hilightUserCode);
+    });
 
   // insert a deletion message in place of the new error instantiation line
   newStack[messageLength] = '      [...Kuzzle internal calls deleted...]';

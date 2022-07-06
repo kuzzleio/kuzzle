@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -83,12 +83,12 @@ export class PluginContext {
     /**
      * Embedded SDK
      */
-    sdk: EmbeddedSDK,
+    sdk: EmbeddedSDK;
 
     /**
      * Trigger a custom plugin event
      */
-    trigger: (eventName: string, payload: any) => Promise<any>,
+    trigger: (eventName: string, payload: any) => Promise<any>;
 
     /**
      * Add or remove strategies dynamically
@@ -97,28 +97,28 @@ export class PluginContext {
       /**
        * Adds a new authentication strategy
        */
-      add: (name: string, properties: any) => Promise<void>,
+      add: (name: string, properties: any) => Promise<void>;
 
       /**
        * Removes an authentication strategy, preventing new authentications from using it.
        */
-      remove: (name: string) => Promise<void>
-    },
+      remove: (name: string) => Promise<void>;
+    };
 
     /**
      * Accessor to the Data Validation API
      */
     validation: {
-      addType: any,
-      validate: any
-    },
+      addType: any;
+      validate: any;
+    };
 
     /**
      * Execute an API action.
      *
      * @deprecated use "accessors.sdk" instead (unless you need the original context)
      */
-    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>,
+    execute: (request: KuzzleRequest, callback?: any) => Promise<KuzzleRequest>;
 
     /**
      * Adds or removes realtime subscriptions from the backend.
@@ -127,13 +127,13 @@ export class PluginContext {
       /**
        * Registers a new realtime subscription on behalf of a client.
        */
-      register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>,
+      register: (connectionId: string, index: string, collection: string, filters: JSONObject) => Promise<{ roomId: string }>;
 
       /**
        * Removes a realtime subscription on an existing `roomId` and `connectionId`
        */
-      unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>
-    },
+      unregister: (connectionId: string, roomId: string, notify: boolean) => Promise<void>;
+    };
 
     /**
      * Initializes the plugin's private data storage.
@@ -142,19 +142,19 @@ export class PluginContext {
       /**
        * Initializes the plugin storage
        */
-      bootstrap: (collections: any) => Promise<void>,
+      bootstrap: (collections: any) => Promise<void>;
 
       /**
        * Creates a collection in the plugin storage
        */
-      createCollection: (collection: string, mappings: any) => Promise<void>
-    },
+      createCollection: (collection: string, mappings: any) => Promise<void>;
+    };
 
     /**
      * Cluster accessor
      * @type {BackendCluster}
      */
-    cluster: BackendCluster,
+    cluster: BackendCluster;
 
 
     /**
@@ -198,7 +198,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: typeof Client
+    ESClient: typeof Client;
   };
 
   /**
@@ -225,12 +225,12 @@ export class PluginContext {
    * Internal Logger
    */
   public log: {
-    debug: (message: any) => void
-    error: (message: any) => void
-    info: (message: any) => void
-    silly: (message: any) => void
-    verbose: (message: any) => void
-    warn: (message: any) => void
+    debug: (message: any) => void;
+    error: (message: any) => void;
+    info: (message: any) => void;
+    silly: (message: any) => void;
+    verbose: (message: any) => void;
+    warn: (message: any) => void;
   };
 
   constructor (pluginName) {

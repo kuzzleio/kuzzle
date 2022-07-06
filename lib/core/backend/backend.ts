@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -85,7 +85,7 @@ export class Backend {
   };
   protected _vaultKey?: string;
   protected _secretsFile?: string;
-  protected _installationsWaitingList: Array<{id: string, description?: string, handler: () => void}> = [];
+  protected _installationsWaitingList: Array<{id: string; description?: string; handler: () => void}> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -283,7 +283,7 @@ export class Backend {
   /**
    * Starts the Kuzzle application with the defined features
    */
-  async start () : Promise<void> {
+  async start (): Promise<void> {
     if (this.started) {
       throw runtimeError.get('already_started', 'start');
     }
@@ -381,6 +381,17 @@ export class Backend {
     }
 
     return this._sdk;
+  }
+
+  /**
+   * Cluster node ID
+   */
+  get nodeId (): string {
+    if (! this.started) {
+      throw runtimeError.get('unavailable_before_start', 'nodeId');
+    }
+
+    return this._kuzzle.id;
   }
 
   private get _instanceProxy () {

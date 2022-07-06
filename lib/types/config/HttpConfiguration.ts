@@ -7,7 +7,7 @@
 
 export type HttpConfiguration = {
 
-  routes: any
+  routes: any;
   /**
    * Sets the default Access-Control-Allow-Origin HTTP
    * header used to send responses to the client.
@@ -45,5 +45,5 @@ export type HttpConfiguration = {
    * 
    * @default true
   */
-  cookieAuthentication: boolean
+  cookieAuthentication: boolean;
 }

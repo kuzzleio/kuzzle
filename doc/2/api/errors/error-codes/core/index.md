@@ -73,3 +73,16 @@ description: Error codes definitions
 
 ---
 </DeprecatedBadge>
+
+
+### Subdomain: 0x0005: debugger
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| core.debugger.not_enabled<br/><pre>0x00050001</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Debugger is not enabled | The debugger is not enabled |
+| core.debugger.monitor_already_running<br/><pre>0x00050002</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | The monitoring of "%s" is already running | The monitor is already running |
+| core.debugger.monitor_not_running<br/><pre>0x00050003</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | The monitoring of "%s" is not running | The monitor is not running |
+| core.debugger.native_debug_protocol_usage_denied<br/><pre>0x00050004</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Usage of the native debug protocol is not allowed | Usage of the native debug protocol is not allowed |
+| core.debugger.method_not_found<br/><pre>0x00050005</pre>  | [PreconditionError](/core/2/api/errors/error-codes#preconditionerror) <pre>(412)</pre> | Debugger method "%s" not found. | Debugger method not found |
+
+---

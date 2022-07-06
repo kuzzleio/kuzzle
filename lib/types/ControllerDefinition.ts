@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -73,15 +73,15 @@ export type ControllerDefinition = {
       /**
        * Function handler for incoming requests.
        */
-      handler: (request: KuzzleRequest) => Promise<any>,
+      handler: (request: KuzzleRequest) => Promise<any>;
       /**
        * Declare HTTP routes (optional).
        * Http routes will be auto-generated unless at least one is provided
        * or an empty array is provided.
        */
-      http?: HttpRoute[]
-    }
-  }
+      http?: HttpRoute[];
+    };
+  };
 };
 
 /**

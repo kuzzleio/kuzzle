@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -35,7 +35,7 @@ export type PluginApiDefinition = {
   /**
    * Name of the API controller.
    */
-  [controller: string]: ControllerDefinition
+  [controller: string]: ControllerDefinition;
 }
 
 /**
@@ -45,7 +45,7 @@ export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: EventHandler | EventHandler[];
 }
 
 /**
@@ -55,7 +55,7 @@ export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: EventHandler | EventHandler[];
 }
 
 /**

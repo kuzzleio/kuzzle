@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -60,7 +60,7 @@ export class NormalizedFilterV3 {
    */
   public normalized: JSONObject[][];
 
-  constructor (index: string, collection: string, normalized : JSONObject) {
+  constructor (index: string, collection: string, normalized: JSONObject) {
     this.id = normalized.id;
     this.index = index;
     this.collection = collection;
@@ -82,7 +82,7 @@ export class Koncorde {
   private koncorde;
 
   constructor (options: JSONObject = {}) {
-    const opts : KoncordeOptions = {
+    const opts: KoncordeOptions = {
       maxConditions: options.maxConditions || options.maxMinTerms || null,
       regExpEngine: options.regExpEngine || null,
       seed: options.seed || null,
@@ -98,7 +98,7 @@ export class Koncorde {
    * @param  {string} distance
    * @return {number}
    */
-  static convertDistance (distance: string) : number {
+  static convertDistance (distance: string): number {
     return KoncordeV4.convertDistance(distance);
   }
 
@@ -109,7 +109,7 @@ export class Koncorde {
    * @param {Object} obj - object containing a geopoint
    * @returns {Coordinate} or null if no accepted format is found
    */
-  static convertGeopoint (point: string|JSONObject): { lat: number; lon: number; } {
+  static convertGeopoint (point: string|JSONObject): { lat: number; lon: number } {
     return KoncordeV4.convertGeopoint(point);
   }
 
@@ -121,7 +121,7 @@ export class Koncorde {
    * @param  {string}  collection
    * @return {boolean}
    */
-  exists (index: string, collection: string) : boolean {
+  exists (index: string, collection: string): boolean {
     return this.koncorde.getIndexes().includes(toKoncordeIndex(index, collection));
   }
 
@@ -132,7 +132,7 @@ export class Koncorde {
    * @param  {string}   index
    * @return {string[]}
    */
-  getCollections (index: string) : string[] {
+  getCollections (index: string): string[] {
     return getCollections(this.koncorde, index);
   }
 
@@ -144,7 +144,7 @@ export class Koncorde {
    * @param  {string}   collection
    * @return {string[]}
    */
-  getFilterIds (index: string, collection: string) : string[] {
+  getFilterIds (index: string, collection: string): string[] {
     return this.koncorde.getFilterIds(toKoncordeIndex(index, collection));
   }
 
@@ -153,7 +153,7 @@ export class Koncorde {
    *
    * @return {string[]}
    */
-  getIndexes () : string[] {
+  getIndexes (): string[] {
     return getIndexes(this.koncorde);
   }
 
@@ -163,7 +163,7 @@ export class Koncorde {
    * @param {string} filterId
    * @returns {boolean}
    */
-  hasFilter (filterId: string) : boolean {
+  hasFilter (filterId: string): boolean {
     return this.filterIdIndexMap.has(filterId);
   }
 
@@ -199,7 +199,7 @@ export class Koncorde {
    * @param  {JSONObject} filter
    * @return {JSONObject}
    */
-  async register (index: string, collection: string, filter: JSONObject) : Promise<JSONObject> {
+  async register (index: string, collection: string, filter: JSONObject): Promise<JSONObject> {
     const indexV4 = toKoncordeIndex(index, collection);
     const normalized = this.koncorde.normalize(filter, indexV4);
 
@@ -211,7 +211,7 @@ export class Koncorde {
    *
    * @param {string} filterId
    */
-  async remove (filterId: string) : Promise<void> {
+  async remove (filterId: string): Promise<void> {
     const index = this.filterIdIndexMap.get(filterId);
 
     this.koncorde.remove(filterId, index);
@@ -224,7 +224,7 @@ export class Koncorde {
    * @param  {NormalizedFilterV3} normalized
    * @return {JSONObject}
    */
-  async store (normalized: NormalizedFilterV3) : Promise<JSONObject> {
+  async store (normalized: NormalizedFilterV3): Promise<JSONObject> {
     const indexV4 = toKoncordeIndex(normalized.index, normalized.collection);
 
     if (this.koncorde.hasFilterId(normalized.id, indexV4)) {
@@ -259,7 +259,7 @@ export class Koncorde {
    * @param  {string}     id
    * @return {string[]}
    */
-  test (index: string, collection: string, data: JSONObject, id?: string) : string[] {
+  test (index: string, collection: string, data: JSONObject, id?: string): string[] {
     return koncordeTest(this.koncorde, index, collection, data, id);
   }
 
@@ -269,7 +269,7 @@ export class Koncorde {
    *
    * @param {JSONObject} filter
    */
-  async validate (filter: JSONObject) : Promise<void> {
+  async validate (filter: JSONObject): Promise<void> {
     // encapsulate the v4 validate method into a function returning a promise
     this.koncorde.validate(filter);
   }

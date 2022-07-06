@@ -9,7 +9,7 @@ export type ServicesConfiguration = {
      *
      * @default 120000
      */
-    defaultInitTimeout: number
+    defaultInitTimeout: number;
 
     /**
      * Default interval in ms between Kuzzle tries to init
@@ -17,15 +17,15 @@ export type ServicesConfiguration = {
      *
      * @default 1000
      */
-    retryInterval: number
-  }
+    retryInterval: number;
+  };
 
   /**
    * The database engine used for Kuzzle internal index
    */
-  internalCache: InternalCacheConfiguration,
+  internalCache: InternalCacheConfiguration;
 
-  memoryStorage: PublicCacheRedisConfiguration,
+  memoryStorage: PublicCacheRedisConfiguration;
 
   /**
    * The database engine used for Kuzzle internal index
@@ -37,11 +37,11 @@ export type ServicesConfiguration = {
      *
      * @default 60000
      */
-    bootstrapLockTimeout: number
-  }
+    bootstrapLockTimeout: number;
+  };
   /**
    * The default storage layer is Elasticsearch and it is
    * currently the only storage layer we support.
    */
-  storageEngine: StorageEngineElasticsearch
+  storageEngine: StorageEngineElasticsearch;
   }

@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -35,7 +35,7 @@ export class KuzzleError extends Error {
 
   /**
    * Error unique code
-   * @see https://docs.kuzzle.io/core/2/core/2/api/essentials/error-codes/
+   * @see https://docs.kuzzle.io/core/2/api/errors/error-codes/
    */
   public code: number;
 

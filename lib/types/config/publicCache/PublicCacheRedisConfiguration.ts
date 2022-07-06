@@ -2,36 +2,36 @@ export type PublicCacheRedisConfiguration = {
   /**
    * @default 'redis'
    */
-  backend: 'redis'
+  backend: 'redis';
   
   clusterOptions: {
     /**
      * @default true
      */
-    enableReadyCheck: boolean
-  }
+    enableReadyCheck: boolean;
+  };
 
   /**
   * @default 5
   */
-  database: number
+  database: number;
 
   node: {
     /**
      * @default 'localhost'
      */
-    host: string,
+    host: string;
 
     /**
      * @default 6379
      */
-    port: number
-  }
+    port: number;
+  };
 
-  options?: Record<string, unknown>,
+  options?: Record<string, unknown>;
 
   /**
    * @default false
    */
-  overrideDnsLookup: boolean
+  overrideDnsLookup: boolean;
 }

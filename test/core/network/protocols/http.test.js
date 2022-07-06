@@ -127,9 +127,7 @@ describe('core/network/protocols/http', () => {
         Buffer.from('Content-Type'),
         Buffer.from('application/json'));
 
-      should(response.writeHeader).not.be.calledWithMatch(
-        Buffer.from('Content-Length'),
-        Buffer.from('42'));
+      should(response.writeHeader).not.be.calledWithMatch(Buffer.from('Content-Length'));
 
       should(response.writeHeader.calledBefore(response.end));
 
@@ -510,6 +508,24 @@ describe('core/network/protocols/http', () => {
         });
     });
 
+    it('should be able to handle multipart/form-data requests when the form data is empty', () => {
+      sinon.stub(httpWs, 'httpProcessRequest');
+
+      httpWs.server._httpOnMessage('get', '/', '', {
+        'content-type': 'multipart/form-data; boundary=foo',
+      });
+
+      httpWs.server._httpResponse._onData(
+        Buffer.from('--foo\r\nContent-Disposition: form-data; --foo--'),
+        true);
+
+      should(httpWs.httpProcessRequest).calledOnce().calledWithMatch(
+        httpWs.server._httpResponse,
+        {
+          content: {}
+        });
+    });
+
     it('should reject multipart/form-data requests with too large files', () => {
       httpWs.maxFormFileSize = 2;
 
@@ -518,7 +534,7 @@ describe('core/network/protocols/http', () => {
       });
 
       httpWs.server._httpResponse._onData(
-        Buffer.from('--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'),
+        Buffer.from('--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'),
         true);
 
       should(httpWs.httpSendError).calledOnce().calledWithMatch(

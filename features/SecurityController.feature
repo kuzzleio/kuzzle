@@ -414,6 +414,27 @@ Feature: Security Controller
       | "test-user2" |
 
   @security
+  Scenario: Upsert user
+    When I successfully execute the action "security":"upsertUser" with args:
+      | _id        | "user-test"           |
+      | body       | { "content": { "profileIds": ["default"]}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+    Then I should receive a result matching:
+      | _id        | "user-test"           |
+      | _source    | { "profileIds": ["default"], "name": "default-name"} |
+    When I successfully execute the action "security":"upsertUser" with args:
+      | _id        | "user-test"           |
+      | body       | { "content": { "profileIds": ["default"], "name": "new-name"}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+    Then I should receive a result matching:
+      | _id        | "user-test"           |
+      | _source    | { "profileIds": ["default"], "name": "new-name"} |
+    When I successfully execute the action "security":"upsertUser" with args:
+      | _id        | "user-test"           |
+      | body       | { "content": { "profileIds": ["default"], "name": "new-new-name"}, "default": { "foo": "bar" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+    Then I should receive a result matching:
+      | _id        | "user-test"           |
+      | _source    | { "profileIds": ["default"], "name": "new-new-name"} |
+      
+  @security
   Scenario: Search users
     Given I create a user "test-user" with content:
       | profileIds | ["default"] |

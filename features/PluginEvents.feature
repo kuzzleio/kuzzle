@@ -7,7 +7,7 @@ Feature: Plugin Events
       | _source.leaveAt | "'10:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mCreate
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id     | body                                               |
       | "bus-1" | { "destination": "Hà Giang", "company": "Cau Me" } |
       | "bus-2" | { "destination": "Sa Pa", "company": "So Viet" }   |
@@ -20,7 +20,7 @@ Feature: Plugin Events
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
     # mCreateOrReplace
-    When I "createOrReplace" the following documents:
+    When I "createOrReplace" the following multiple documents:
       | _id     | body                                               |
       | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } |
       | "bus-4" | { "destination": "Sa Pa", "company": "So Viet" }   |
@@ -37,7 +37,7 @@ Feature: Plugin Events
       | _source.leaveAt | "'11:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mReplace
-    When I "replace" the following documents:
+    When I "replace" the following multiple documents:
       | _id     | body                                               |
       | "bus-1" | { "destination": "Hà Giang", "company": "Cau Me" } |
       | "bus-2" | { "destination": "Sa Pa", "company": "So Viet" }   |
@@ -84,7 +84,7 @@ Feature: Plugin Events
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mCreate
-    When I "create" the following documents:
+    When I "create" the following multiple documents:
       | _id     | body                   |
       | "bus-1" | { "duration": "6h" }   |
       | "bus-2" | { "duration": "8h30" } |
@@ -93,7 +93,7 @@ Feature: Plugin Events
       | "confidential" | { "duration": "6h", "type": "sleepingBus" }   |
       | "confidential" | { "duration": "8h30", "type": "sleepingBus" } |
     # mCreateOrReplace
-    When I "createOrReplace" the following documents:
+    When I "createOrReplace" the following multiple documents:
       | _id     | body                   |
       | "bus-3" | { "duration": "6h" }   |
       | "bus-4" | { "duration": "8h30" } |
@@ -118,7 +118,7 @@ Feature: Plugin Events
       | _source.type | "'localBus'" |
       | _id          | "'redacted'" |
     # mReplace
-    When I "replace" the following documents:
+    When I "replace" the following multiple documents:
       | _id     | body                  |
       | "bus-1" | { "duration": "12h" } |
       | "bus-2" | { "duration": "17h" } |
@@ -136,7 +136,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify documents with document:generic:beforeUpdate
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id        | body                           |
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
@@ -145,7 +145,7 @@ Feature: Plugin Events
       | _source.leaveAt | "'10:30'"              |
       | _id             | "`${document._id}-vn`" |
     # mUpdate
-    When I "update" the following documents:
+    When I "update" the following multiple documents:
       | _id     | body                                               |
       | "bus-1" | { "destination": "Hà Giang", "company": "Cau Me" } |
       | "bus-2" | { "destination": "Sa Pa", "company": "So Viet" }   |
@@ -157,6 +157,26 @@ Feature: Plugin Events
       | destination | "Sa Pa"   |
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
+    # mUpsert
+    When I execute the "mUpsert" action on the following documents:
+      | _id     | changes                                            | default              |
+      | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } | -                    |
+      | "bus-5" | { "destination": "Sa Pa" }                         | { "company": "SOO" } |
+    Then The document "bus-3-vn" content match:
+      | destination | "Hà Giang" |
+      | company     | "Cau Me"   |
+    Then The document "bus-5-vn" content match:
+      | destination | "Sa Pa"   |
+      | company     | "SOO"     |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn" |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'12:30'"              |
@@ -173,7 +193,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify documents with document:generic:afterUpdate
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id     | body                           |
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
@@ -182,7 +202,7 @@ Feature: Plugin Events
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mUpdate
-    When I "update" the following documents:
+    When I "update" the following multiple documents:
       | _id     | body                  |
       | "bus-1" | { "duration": "12h" } |
       | "bus-2" | { "duration": "17h" } |
@@ -190,6 +210,15 @@ Feature: Plugin Events
       | _id            | _source                                                                  |
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
+    # mUpsert
+    When I execute the "mUpsert" action on the following documents:
+      | _id     | changes                       | default |
+      | "bus-3" | { "destination": "Hà Giang" } | -       |
+      | "bus-5" | { "destination": "Sa Pa" }    | -       |
+    Then I should receive a "successes" array of objects matching:
+      | _id            | _source                                              |
+      | "confidential" | { "destination": "Hà Giang", "type": "sleepingBus" } |
+      | "confidential" | { "destination": "Sa Pa", "type": "sleepingBus" }    |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
@@ -234,6 +263,26 @@ Feature: Plugin Events
       | leaveAt     | "12:30"    |
 
   @mappings @events
+  Scenario: deleteFields and modify documents with document:generic:afterUpdate
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id     | body                           |
+      | "bus-1" | { "destination": "Ninh Binh" } |
+      | "bus-2" | { "destination": "Hanoi" }     |
+      | "bus-3" | { "destination": "Hang Mau" }  |
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
+      | _id | "'bus-1-vn-vn'" |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn-vn" |
+
+  @mappings @events
   Scenario: Upsert and modify documents with document:generic:afterUpdate
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
@@ -265,14 +314,14 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify document with document:generic:beforeGet
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id        | body                           |
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
     And I "activate" the "plugin" pipe on "generic:document:beforeGet" with the following changes:
       | _id | "`${document._id}-vn`" |
     # mGet
-    When I "get" the following document ids with verb "GET":
+    When I "mGet" the following document ids with verb "GET":
       | "bus-1" |
       | "bus-2" |
     Then I should receive a "successes" array of objects matching:
@@ -286,7 +335,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify document with document:generic:afterGet
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id     | body                           |
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
@@ -294,7 +343,7 @@ Feature: Plugin Events
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     # mGet
-    When I "get" the following document ids with verb "GET":
+    When I "mGet" the following document ids with verb "GET":
       | "bus-1" |
       | "bus-2" |
     Then I should receive a "successes" array of objects matching:
@@ -309,7 +358,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify document with document:generic:beforeDelete
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id        | body                           |
       | "bus-1-vn" | { "destination": "Ninh Binh" } |
       | "bus-2-vn" | { "destination": "Hanoi" }     |
@@ -317,7 +366,7 @@ Feature: Plugin Events
     And I "activate" the "plugin" pipe on "generic:document:beforeDelete" with the following changes:
       | _id | "`${document._id}-vn`" |
     # mDelete
-    When I "delete" the following document ids:
+    When I "mDelete" the following document ids:
       | "bus-1" |
       | "bus-2" |
     Then The document "bus-1-vn" should not exist
@@ -329,7 +378,7 @@ Feature: Plugin Events
   @mappings @events
   Scenario: Modify document with document:generic:afterDelete
     Given an existing collection "nyc-open-data":"yellow-taxi"
-    And I "create" the following documents:
+    And I "create" the following multiple documents:
       | _id     | body                           |
       | "bus-1" | { "destination": "Ninh Binh" } |
       | "bus-2" | { "destination": "Hanoi" }     |
@@ -337,7 +386,7 @@ Feature: Plugin Events
     And I "activate" the "plugin" pipe on "generic:document:afterDelete" with the following changes:
       | _id | "'confidential'" |
     # mDelete
-    When I "delete" the following document ids:
+    When I "mDelete" the following document ids:
       | "bus-1" |
       | "bus-2" |
     Then The document "bus-1-vn" should not exist

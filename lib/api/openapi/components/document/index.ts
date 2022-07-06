@@ -65,3 +65,9 @@ export const OpenApiDocumentDeleteByQueryComponent = deleteByQueryObject.compone
 const validateObject = readYamlFile(__dirname + '/validate.yaml');
 export const OpenApiDocumentValidate = validateObject.DocumentValidate;
 export const OpenApiDocumentValidateComponent = validateObject.components.schemas;
+
+// reading the description of the mCreateOrReplace action in the controller document.
+// The yaml objects are then stored in the variables below
+const mCreateOrReplaceObject = readYamlFile(__dirname + '/mCreateOrReplace.yaml');
+export const OpenApiDocumentmCreateOrReplace = mCreateOrReplaceObject.DocumentmCreateOrReplace;
+export const OpenApiDocumentmCreateOrReplaceComponent = mCreateOrReplaceObject.components.schemas;

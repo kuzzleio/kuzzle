@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -34,9 +34,9 @@ export type StrategyDefinition = {
       /**
        * Name of a registered authenticator to use with this strategy.
        */
-      authenticator: string,
-      [key: string]: any
-    },
+      authenticator: string;
+      [key: string]: any;
+    };
     /**
      * Strategy methods.
      *
@@ -44,16 +44,16 @@ export type StrategyDefinition = {
      * under the same name as specified.
      */
     methods: {
-      afterRegister?: string,
-      create: string,
-      delete: string,
-      exists: string,
-      getById?: string,
-      getInfo?: string,
-      search?: string,
-      update: string,
-      validate: string,
-      verify: string,
-    }
-  }
+      afterRegister?: string;
+      create: string;
+      delete: string;
+      exists: string;
+      getById?: string;
+      getInfo?: string;
+      search?: string;
+      update: string;
+      validate: string;
+      verify: string;
+    };
+  };
 }

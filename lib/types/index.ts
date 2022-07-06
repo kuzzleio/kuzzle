@@ -2,7 +2,7 @@
  * Kuzzle, a backend software, self-hostable and ready to use
  * to power modern apps
  *
- * Copyright 2015-2020 Kuzzle
+ * Copyright 2015-2022 Kuzzle
  * mailto: support AT kuzzle.io
  * website: http://kuzzle.io
  *
@@ -23,7 +23,6 @@ export * from './Plugin';
 export * from './Controller';
 export * from './ControllerDefinition';
 export * from './ControllerRights';
-export * from './RequestPayload';
 export * from './ResponsePayload';
 export * from './Deprecation';
 export * from './EventHandler';

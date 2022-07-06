@@ -72,31 +72,31 @@ export type InternalCacheConfiguration = {
   /**
    * @default 'redis'
   */
-  backend: 'redis'
+  backend: 'redis';
 
   clusterOptions: {
   /**
    * @default true
    */
-    enableReadyCheck: boolean
-  }
+    enableReadyCheck: boolean;
+  };
      
   /**
    * @default 0
   */
-  database: number
+  database: number;
   
   node: {
     /**
      * @default "localhost"
      */
-    host: string
+    host: string;
 
     /**
      * @default 6379
      */
-    port: number
-  }
+    port: number;
+  };
   /**
    * * (optional) options:
    *    Redis specific options compatible with IORedis.
@@ -104,7 +104,7 @@ export type InternalCacheConfiguration = {
    *    https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
    * 
   */
-  options?: Record<string, unknown>,
+  options?: Record<string, unknown>;
 
   /**
   * Only available when using a Redis Cluster config.
@@ -113,5 +113,5 @@ export type InternalCacheConfiguration = {
   *  See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
   * @default false
   */
-  overrideDnsLookup: boolean
+  overrideDnsLookup: boolean;
 }
