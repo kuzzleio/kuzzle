@@ -20,6 +20,13 @@ jobs:
           NODE_VERSION: ${{ matrix.node-version }}
       - uses: ./.github/actions/es-lint
 
+  danger-js:
+    name: Danger JS
+    uses: kuzzleio/ci-tooling/.github/workflows/danger.yaml@master
+    secrets: inherit
+    with:
+      DANGER_CONFIG: './.ci/danger.config.yaml'
+
   build-and-run-kuzzle:
     needs: [unit-tests]
     name: Build and Run ${{ matrix.kuzzle-image }} - Node.js v${{ matrix.node-version }}
