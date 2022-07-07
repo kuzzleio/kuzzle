@@ -196,7 +196,7 @@ The provided `subscription` object has the following properties:
 
 | Arguments      | Type                                                                    | Description                                                                                   |
 | -------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| `notification` | <pre><a href=/core/2/api/payloads/notifications>Notifications</a></pre> | The normalized real-time notification                                                         |
+| `notification` | <pre><a href="/core/2/api/payloads/notifications">Notifications</a></pre> | The normalized real-time notification                                                         |
 | `channels`     | <pre>string[]</pre>                                                     | List of Subscribers channels to notify                                                        |
 | `connectionId` | <pre>integer</pre>                                                      | [ClientConnection](/core/2/guides/write-protocols/context/clientconnection) unique identifier |
 
