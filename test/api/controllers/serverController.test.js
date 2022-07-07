@@ -358,9 +358,15 @@ describe('ServerController', () => {
       kuzzle.ask.withArgs('core:api:openapi:app').resolves({
         swagger: '2.0',
       });
+
+      kuzzle.ask.withArgs('core:api:openapi:all').resolves({
+        swagger: '2.0',
+      });
     });
 
-    it('should return JSON Kuzzle OpenAPI definition by default', async () => {
+    it('should return JSON Kuzzle OpenApi definition', async () => {
+      request.input.args.scope = 'kuzzle';
+
       const definition = await serverController.openapi(request);
 
       should(definition).be.an.Object();
@@ -374,6 +380,13 @@ describe('ServerController', () => {
 
       should(definition).be.an.Object();
       should(kuzzle.ask).be.calledWith('core:api:openapi:app');
+    });
+
+    it('should return JSON All OpenAPI definition by default', async () => {
+      const definition = await serverController.openapi(request);
+
+      should(definition).be.an.Object();
+      should(kuzzle.ask).be.calledWith('core:api:openapi:all');
     });
 
     it('should return YAML formated OpenAPI specifications if specified', async () => {

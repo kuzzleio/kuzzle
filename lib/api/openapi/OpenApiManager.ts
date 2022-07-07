@@ -121,10 +121,10 @@ export class OpenApiManager {
     global.kuzzle.onAsk('core:api:openapi:app', () => this.applicationDefinition);
 
     global.kuzzle.onAsk('core:api:openapi:all', () => {
-      let mergedDefinition = ({...this.kuzzleDefinition});
+      const mergedDefinition = ({ ...this.kuzzleDefinition });
 
-      mergedDefinition.tags = [...mergedDefinition.tags, ...this.applicationDefinition.tags]
-      mergedDefinition.paths = {...mergedDefinition.paths, ...this.applicationDefinition.paths}
+      mergedDefinition.tags = [ ...mergedDefinition.tags, ...this.applicationDefinition.tags ];
+      mergedDefinition.paths = { ...mergedDefinition.paths, ...this.applicationDefinition.paths };
       return mergedDefinition;
     });
   }
