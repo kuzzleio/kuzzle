@@ -44,12 +44,12 @@ describe('ServerController', () => {
   describe('#getStats', () => {
     it('should trigger the plugin manager and return a proper response', () => {
       return serverController.getStats(request)
-        .then(response => {
-          should(kuzzle.statistics.getStats).be.calledOnce();
-          should(kuzzle.statistics.getStats).be.calledWith(request);
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+          .then(response => {
+            should(kuzzle.statistics.getStats).be.calledOnce();
+            should(kuzzle.statistics.getStats).be.calledWith(request);
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
+          });
 
     });
   });
@@ -57,23 +57,23 @@ describe('ServerController', () => {
   describe('#getLastStats', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return serverController.getLastStats(request)
-        .then(response => {
-          should(kuzzle.statistics.getLastStats).be.calledOnce();
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+          .then(response => {
+            should(kuzzle.statistics.getLastStats).be.calledOnce();
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
+          });
     });
   });
 
   describe('#getAllStats', () => {
     it('should trigger the proper methods and return a valid response', () => {
       return serverController.getAllStats(request)
-        .then(response => {
-          should(kuzzle.statistics.getAllStats).be.calledOnce();
+          .then(response => {
+            should(kuzzle.statistics.getAllStats).be.calledOnce();
 
-          should(response).be.instanceof(Object);
-          should(response).match(foo);
-        });
+            should(response).be.instanceof(Object);
+            should(response).match(foo);
+          });
     });
   });
 
@@ -82,8 +82,8 @@ describe('ServerController', () => {
 
     it('should calls "core:security:user:admin:exist"', async () => {
       kuzzle.ask
-        .withArgs(adminExistsEvent)
-        .returns(true);
+          .withArgs(adminExistsEvent)
+          .returns(true);
 
       const response = await serverController.adminExists();
 
@@ -95,11 +95,11 @@ describe('ServerController', () => {
   describe('#now', () => {
     it('should resolve to a number', () => {
       return serverController.now(request)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).not.be.undefined();
-          should(response.now).not.be.undefined().and.be.a.Number();
-        });
+          .then(response => {
+            should(response).be.instanceof(Object);
+            should(response).not.be.undefined();
+            should(response.now).not.be.undefined().and.be.a.Number();
+          });
     });
   });
 
@@ -138,39 +138,39 @@ describe('ServerController', () => {
       request.input.args.services = 'storageEngine';
 
       return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.null();
-          should(response.status).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('green');
-          should(response.services.internalCache).be.exactly(undefined);
-          should(response.services.memoryStorage).be.exactly(undefined);
-        });
+          .then(response => {
+            should(request.response.error).be.null();
+            should(response.status).be.exactly('green');
+            should(response.services.storageEngine).be.exactly('green');
+            should(response.services.internalCache).be.exactly(undefined);
+            should(response.services.memoryStorage).be.exactly(undefined);
+          });
     });
 
     it('should return 200 response with status "green" if storageEngine and memoryStorage status are "green"', () => {
       request.input.args.services = 'storageEngine,memoryStorage';
 
       return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.null();
-          should(response.status).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('green');
-          should(response.services.internalCache).be.exactly(undefined);
-          should(response.services.memoryStorage).be.exactly('green');
-        });
+          .then(response => {
+            should(request.response.error).be.null();
+            should(response.status).be.exactly('green');
+            should(response.services.storageEngine).be.exactly('green');
+            should(response.services.internalCache).be.exactly(undefined);
+            should(response.services.memoryStorage).be.exactly('green');
+          });
     });
 
     it('should return 200 response with status "green" if storageEngine, memoryStorage and internalCache status are "green"', () => {
       request.input.args.services = 'storageEngine,memoryStorage,internalCache';
 
       return serverController.healthCheck(request)
-        .then(response => {
-          should(request.response.error).be.null();
-          should(response.status).be.exactly('green');
-          should(response.services.storageEngine).be.exactly('green');
-          should(response.services.internalCache).be.exactly('green');
-          should(response.services.memoryStorage).be.exactly('green');
-        });
+          .then(response => {
+            should(request.response.error).be.null();
+            should(response.status).be.exactly('green');
+            should(response.services.storageEngine).be.exactly('green');
+            should(response.services.internalCache).be.exactly('green');
+            should(response.services.memoryStorage).be.exactly('green');
+          });
     });
 
     it('should return a 503 response with status "red" if storageEngine status is "red"', async () => {
@@ -231,47 +231,7 @@ describe('ServerController', () => {
   describe('#info', () => {
     it('should return a properly formatted server information object', () => {
       serverController._buildApiDefinition = sinon.stub()
-        .onCall(0).returns({
-          foo: {
-            publicMethod: {
-              controller: 'foo',
-              action: 'publicMethod',
-              http: [
-                { url: '/u/r/l', verb: 'FOO' },
-                { url: '/u/:foobar', verb: 'FOO' }
-              ]
-            }
-          }
-        })
-        .onCall(1).returns({
-          foobar: {
-            publicMethod: {
-              action: 'publicMethod',
-              controller: 'foobar',
-              http: [{ url: '/foobar', verb: 'BAR' }]
-            },
-            anotherMethod: {
-              action: 'anotherMethod',
-              controller: 'foobar'
-            }
-          }
-        });
-      kuzzle.pluginsManager.application.info.returns({
-        commit: '42fea32fea42fea'
-      });
-
-      return serverController.info()
-        .then(response => {
-          should(serverController._buildApiDefinition).be.calledTwice();
-
-          should(response).be.instanceof(Object);
-          should(response).not.be.null();
-          should(response.serverInfo).be.an.Object();
-          should(response.serverInfo.kuzzle).be.and.Object();
-          should(response.serverInfo.kuzzle.version).be.a.String();
-          should(response.serverInfo.kuzzle.application.commit).be.a.String();
-          should(response.serverInfo.kuzzle.api).be.an.Object();
-          should(response.serverInfo.kuzzle.api.routes).match({
+          .onCall(0).returns({
             foo: {
               publicMethod: {
                 controller: 'foo',
@@ -281,7 +241,9 @@ describe('ServerController', () => {
                   { url: '/u/:foobar', verb: 'FOO' }
                 ]
               }
-            },
+            }
+          })
+          .onCall(1).returns({
             foobar: {
               publicMethod: {
                 action: 'publicMethod',
@@ -294,16 +256,54 @@ describe('ServerController', () => {
               }
             }
           });
-          should(response.serverInfo.kuzzle.plugins).be.an.Object();
-          should(response.serverInfo.kuzzle.system).be.an.Object();
-          should(response.serverInfo.services).be.an.Object();
-        });
+      kuzzle.pluginsManager.application.info.returns({
+        commit: '42fea32fea42fea'
+      });
+
+      return serverController.info()
+          .then(response => {
+            should(serverController._buildApiDefinition).be.calledTwice();
+
+            should(response).be.instanceof(Object);
+            should(response).not.be.null();
+            should(response.serverInfo).be.an.Object();
+            should(response.serverInfo.kuzzle).be.and.Object();
+            should(response.serverInfo.kuzzle.version).be.a.String();
+            should(response.serverInfo.kuzzle.application.commit).be.a.String();
+            should(response.serverInfo.kuzzle.api).be.an.Object();
+            should(response.serverInfo.kuzzle.api.routes).match({
+              foo: {
+                publicMethod: {
+                  controller: 'foo',
+                  action: 'publicMethod',
+                  http: [
+                    { url: '/u/r/l', verb: 'FOO' },
+                    { url: '/u/:foobar', verb: 'FOO' }
+                  ]
+                }
+              },
+              foobar: {
+                publicMethod: {
+                  action: 'publicMethod',
+                  controller: 'foobar',
+                  http: [{ url: '/foobar', verb: 'BAR' }]
+                },
+                anotherMethod: {
+                  action: 'anotherMethod',
+                  controller: 'foobar'
+                }
+              }
+            });
+            should(response.serverInfo.kuzzle.plugins).be.an.Object();
+            should(response.serverInfo.kuzzle.system).be.an.Object();
+            should(response.serverInfo.services).be.an.Object();
+          });
     });
 
     it('should reject an error in case of error', () => {
       kuzzle.ask
-        .withArgs('core:storage:public:info:get')
-        .rejects(new Error('foobar'));
+          .withArgs('core:storage:public:info:get')
+          .rejects(new Error('foobar'));
 
       return should(serverController.info()).be.rejected();
     });
@@ -335,17 +335,17 @@ describe('ServerController', () => {
       serverController._buildApiDefinition = sinon.stub().returns({});
 
       return serverController.publicApi()
-        .then(() => {
-          should(serverController._buildApiDefinition).be.calledTwice();
-          should(serverController._buildApiDefinition.getCall(0).args).be.eql([
-            kuzzle.funnel.controllers,
-            kuzzle.config.http.routes
-          ]);
-          should(serverController._buildApiDefinition.getCall(1).args).be.eql([
-            kuzzle.pluginsManager.controllers,
-            kuzzle.pluginsManager.routes
-          ]);
-        });
+          .then(() => {
+            should(serverController._buildApiDefinition).be.calledTwice();
+            should(serverController._buildApiDefinition.getCall(0).args).be.eql([
+              kuzzle.funnel.controllers,
+              kuzzle.config.http.routes
+            ]);
+            should(serverController._buildApiDefinition.getCall(1).args).be.eql([
+              kuzzle.pluginsManager.controllers,
+              kuzzle.pluginsManager.routes
+            ]);
+          });
     });
   });
 
@@ -358,9 +358,15 @@ describe('ServerController', () => {
       kuzzle.ask.withArgs('core:api:openapi:app').resolves({
         swagger: '2.0',
       });
+
+      kuzzle.ask.withArgs('core:api:openapi:all').resolves({
+        swagger: '2.0',
+      });
     });
 
-    it('should return JSON Kuzzle OpenAPI definition by default', async () => {
+    it('should return JSON Kuzzle OpenApi definition', async () => {
+      request.input.args.scope = 'kuzzle';
+
       const definition = await serverController.openapi(request);
 
       should(definition).be.an.Object();
@@ -374,6 +380,13 @@ describe('ServerController', () => {
 
       should(definition).be.an.Object();
       should(kuzzle.ask).be.calledWith('core:api:openapi:app');
+    });
+
+    it('should return JSON All OpenAPI definition by default', async () => {
+      const definition = await serverController.openapi(request);
+
+      should(definition).be.an.Object();
+      should(kuzzle.ask).be.calledWith('core:api:openapi:all');
     });
 
     it('should return YAML formated OpenAPI specifications if specified', async () => {
@@ -407,13 +420,13 @@ describe('ServerController', () => {
       });
 
       return serverController.metrics()
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response).not.be.null();
-          should(response.api).be.an.Object();
-          should(response.realtime).be.an.Object();
-          should(response.network).be.an.Object();
-        });
+          .then(response => {
+            should(response).be.instanceof(Object);
+            should(response).not.be.null();
+            should(response.api).be.an.Object();
+            should(response.realtime).be.an.Object();
+            should(response.network).be.an.Object();
+          });
     });
   });
 
@@ -442,13 +455,13 @@ describe('ServerController', () => {
 
 
       const apiDefinition = serverController._buildApiDefinition(
-        controllers,
-        routes);
+          controllers,
+          routes);
 
       const pluginApiDefinition = serverController._buildApiDefinition(
-        pluginsControllers,
-        pluginsRoutes,
-        '/');
+          pluginsControllers,
+          pluginsRoutes,
+          '/');
 
       should(apiDefinition).match({
         foo: {
