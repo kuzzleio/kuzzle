@@ -1063,7 +1063,8 @@ export class KuzzleRequest {
           }
         }
         catch (e) {
-          // Do nothing, let the error be thrown below
+          // Handle when only one parameter is provided
+          return [value];
         }
       }
       throw assertionError.get('invalid_type', errorName, 'array');
