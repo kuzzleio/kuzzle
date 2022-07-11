@@ -192,13 +192,22 @@ describe('notify methods', () => {
           result: content,
         });
 
-        should(kuzzle.pipe.callCount).be.eql(2);
+        should(kuzzle.pipe.callCount).be.eql(3);
 
         should(kuzzle.pipe.getCall(0).args).match(
           ['notify:document', notification]);
 
         should(kuzzle.pipe.getCall(1).args).match(
           ['notify:dispatch', notification]);
+
+        should(kuzzle.pipe.getCall(2).args).match(
+          [
+            'core:realtime:notification:dispatch:before',
+            {
+              channels: ['matching_all', 'matching_out', 'always', 'clusterOn', 'clusterOff'],
+              notification,
+            }
+          ]);
       });
 
       it('should not notify if no channel match the provided scope argument', async () => {
@@ -294,13 +303,22 @@ describe('notify methods', () => {
           room: 'matchingSome',
         }
       ]);
-      should(kuzzle.pipe.callCount).be.eql(2);
+      should(kuzzle.pipe.callCount).be.eql(3);
 
       should(kuzzle.pipe.getCall(0).args).match(
         ['notify:user', notification]);
 
       should(kuzzle.pipe.getCall(1).args).match(
         ['notify:dispatch', notification]);
+      
+      should(kuzzle.pipe.getCall(2).args).match(
+        [
+          'core:realtime:notification:dispatch:before',
+          {
+            channels: ['matching_all', 'matching_userOut'],
+            notification,
+          }
+        ]);
     });
   });
 
@@ -341,10 +359,87 @@ describe('notify methods', () => {
         info: 'This is an automated server notification',
       });
 
-      should(kuzzle.pipe.callCount).be.eql(2);
+      should(kuzzle.pipe.callCount).be.eql(3);
       should(kuzzle.pipe)
         .be.calledWith('notify:server', notification)
-        .be.calledWith('notify:dispatch', notification);
+        .be.calledWith('notify:dispatch', notification)
+        .be.calledWith('core:realtime:notification:dispatch:before', {
+          channels: ['kuzzle:notification:server'],
+          connectionId: 'foobar',
+          notification,
+        });
+    });
+  });
+
+  describe('dispatch', () => {
+    it('should call entrypoint.dispatch  with notify action when there is a connectionId', async () => {
+      await notifier._dispatch('my-event', ['channel-foo'], { foo: 'bar' }, 'connectionId');
+
+      should(kuzzle.entryPoint.dispatch)
+        .calledOnce()
+        .and.be.calledWith('notify', {
+          channels: [ 'channel-foo' ],
+          connectionId: 'connectionId',
+          payload: { foo: 'bar' },
+        });
+    });
+
+    it('should call entrypoint.dispatch  with broadcast action when there is no connectionId', async () => {
+      await notifier._dispatch('my-event', ['channel-foo'], { foo: 'bar' });
+
+      should(kuzzle.entryPoint.dispatch)
+        .calledOnce()
+        .and.be.calledWith('broadcast', {
+          channels: [ 'channel-foo' ],
+          connectionId: undefined,
+          payload: { foo: 'bar' },
+        });
+    });
+
+    it('should trigger the pipes', async () => {
+      kuzzle.registerPluginPipe('my-event', async (payload) => {
+        return {
+          ...payload,
+          bar: 'baz'
+        };
+      });
+
+      kuzzle.registerPluginPipe('notify:dispatch', async (payload) => {
+        return {
+          ...payload,
+          baz: 'alpha'
+        };
+      });
+
+      kuzzle.registerPluginPipe('core:realtime:notification:dispatch:before', async (notificationContext) => {
+        return {
+          channels: [ 'channel-bar' ],
+          connectionId: undefined,
+          notification: {
+            ...notificationContext.notification,
+            alpha: 'beta'
+          },
+        };
+      });
+
+      await notifier._dispatch('my-event', ['channel-foo'], { foo: 'bar' }, 'foobar');
+
+      await should(kuzzle.pipe)
+        .be.calledWith('my-event', { foo: 'bar' })
+        .be.calledWith('notify:dispatch', { foo: 'bar', bar: 'baz' })
+        .be.calledWith('core:realtime:notification:dispatch:before', {
+          channels: [ 'channel-foo' ],
+          connectionId: 'foobar',
+          notification: { foo: 'bar', bar: 'baz', baz: 'alpha' },
+        });
+
+      await should(kuzzle.entryPoint.dispatch)
+        .calledOnce()
+        .and.be.calledWith('broadcast', {
+          channels: [ 'channel-bar' ],
+          connectionId: undefined,
+          payload: { foo: 'bar', bar: 'baz', baz: 'alpha', alpha: 'beta' },
+        });
     });
   });
 });
