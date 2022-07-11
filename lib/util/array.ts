@@ -52,4 +52,4 @@ export function binarySearch (array: any[], predicate: (value: any) => number) {
     }
   }
   return -1;
-}
+} 
