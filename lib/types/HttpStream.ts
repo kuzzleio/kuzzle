@@ -34,6 +34,11 @@ export class HttpStream {
   public readonly totalBytes: number;
   private _destroyed = false;
 
+  private get readableState() {
+    // @ts-ignore
+    return this.stream._readableState;
+  }
+
   constructor(
     readableStream: Readable,
     { totalBytes = -1 }: HttpStreamProperties = {}
@@ -47,10 +52,9 @@ export class HttpStream {
    * Returns if the stream is errored
    */
   get errored(): boolean {
-    // @ts-ignore
     return (
-      this.stream._readableState.errored !== null && // @ts-ignore
-      this.stream._readableState.errored !== undefined
+      this.readableState.errored !== null &&
+      this.readableState.errored !== undefined
     );
   }
 
@@ -59,7 +63,7 @@ export class HttpStream {
    */
   get error(): Error {
     // @ts-ignore
-    return this.stream._readableState.errored;
+    return this.readableState.errored;
   }
 
   /**
