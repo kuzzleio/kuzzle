@@ -1,21 +1,18 @@
-'use strict';
+"use strict";
 
-const
-  {
-    When,
-    Then
-  } = require('cucumber');
+const { When, Then } = require("cucumber");
 
 When(/^I publish a message$/, function (callback) {
-  this.api.publish(this.documentGrace)
-    .then(body => {
+  this.api
+    .publish(this.documentGrace)
+    .then((body) => {
       if (body.error) {
         callback(new Error(body.error.message));
         return false;
       }
 
-      if (! body.result) {
-        callback(new Error('No result provided'));
+      if (!body.result) {
+        callback(new Error("No result provided"));
         return false;
       }
 
@@ -33,6 +30,5 @@ Then(/^I should receive a request id$/, function (callback) {
     return false;
   }
 
-  callback(new Error('No request id returned'));
+  callback(new Error("No request id returned"));
 });
-

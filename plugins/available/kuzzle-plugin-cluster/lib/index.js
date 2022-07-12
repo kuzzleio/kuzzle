@@ -19,20 +19,21 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const url = require('url');
+const url = require("url");
 
 /*
  * Compatibility plugin for the legacy Kuzzle cluster code
  */
 
 class LegacyCluster {
-  constructor () {
-  }
+  constructor() {}
 
-  init (config, context) {
-    context.log.warn('The cluster plugin is deprecated and can be safely removed: this plugin now only prevents breaking changes by adding the previously exposed API actions, and converts the old cluster configuration to the new version');
+  init(config, context) {
+    context.log.warn(
+      "The cluster plugin is deprecated and can be safely removed: this plugin now only prevents breaking changes by adding the previously exposed API actions, and converts the old cluster configuration to the new version"
+    );
 
     const clusterConfig = global.kuzzle.config.cluster;
 
@@ -42,15 +43,16 @@ class LegacyCluster {
       }
 
       if (config.bindings) {
-        let family = 'ipv4';
+        let family = "ipv4";
 
         if (config.bindings.pub) {
           const { ipv6, port } = resolveBinding(
             config.bindings.pub,
-            clusterConfig.ports.sync);
+            clusterConfig.ports.sync
+          );
 
           if (ipv6) {
-            family = 'ipv6';
+            family = "ipv6";
           }
 
           clusterConfig.ports.sync = port;
@@ -59,16 +61,17 @@ class LegacyCluster {
         if (config.bindings.router) {
           const { ipv6, port } = resolveBinding(
             config.bindings.router,
-            clusterConfig.ports.command);
+            clusterConfig.ports.command
+          );
 
-          if (family !== 'ipv6' && ipv6) {
-            family = 'ipv6';
+          if (family !== "ipv6" && ipv6) {
+            family = "ipv6";
           }
 
           clusterConfig.ports.command = port;
         }
 
-        if (family === 'ipv6') {
+        if (family === "ipv6") {
           clusterConfig.ipv6 = true;
         }
       }
@@ -76,19 +79,18 @@ class LegacyCluster {
 
     this.controllers = {
       cluster: {
-        health: 'clusterHealthAction',
-        reset: 'clusterResetAction',
-        status: 'clusterStatusAction'
-      }
+        health: "clusterHealthAction",
+        reset: "clusterResetAction",
+        status: "clusterStatusAction",
+      },
     };
 
     this.routes = [
-      {action: 'health', controller: 'cluster', path: '/health', verb: 'get', },
-      {action: 'reset', controller: 'cluster', path: '/reset', verb: 'post', },
-      {action: 'status', controller: 'cluster', path: '/status', verb: 'get', },
+      { action: "health", controller: "cluster", path: "/health", verb: "get" },
+      { action: "reset", controller: "cluster", path: "/reset", verb: "post" },
+      { action: "status", controller: "cluster", path: "/status", verb: "get" },
     ];
   }
-
 
   /**
    * @deprecated - added for backward compatibility only
@@ -100,8 +102,8 @@ class LegacyCluster {
    *
    * @return {string}
    */
-  clusterHealthAction () {
-    return 'ok';
+  clusterHealthAction() {
+    return "ok";
   }
 
   /**
@@ -118,7 +120,7 @@ class LegacyCluster {
    *
    * @return {string} deprecation notice
    */
-  clusterResetAction () {
+  clusterResetAction() {
     return 'no-op: this route is deprecated and has been kept for backward-compatibility only. To reset a cluster, simply use "admin:shutdown" and then restart Kuzzle nodes';
   }
 
@@ -130,8 +132,8 @@ class LegacyCluster {
    *
    * @return {[type]} [description]
    */
-  async clusterStatusAction () {
-    const status = await global.kuzzle.ask('cluster:status:get');
+  async clusterStatusAction() {
+    const status = await global.kuzzle.ask("cluster:status:get");
 
     const result = {
       count: status.activeNodes,
@@ -140,10 +142,11 @@ class LegacyCluster {
     };
 
     result.current = convertToOldStatus(
-      status.nodes.find(node => node.id === global.kuzzle.id));
+      status.nodes.find((node) => node.id === global.kuzzle.id)
+    );
 
     result.pool = status.nodes
-      .filter(node => node.id !== global.kuzzle.id)
+      .filter((node) => node.id !== global.kuzzle.id)
       .map(convertToOldStatus);
 
     return result;
@@ -156,14 +159,14 @@ class LegacyCluster {
  * @param {integer} defaultPort Default port to use if none found from the config
  * @returns {Object}
  */
-function resolveBinding (hostConfig, defaultPort) {
+function resolveBinding(hostConfig, defaultPort) {
   const parsed = url.parse(hostConfig, false, true);
-  let family = 'ipv4';
+  let family = "ipv4";
 
   let host = parsed.hostname;
 
   if (!/^\[.+\]/.test(parsed.host)) {
-    const tmp = host.split(':');
+    const tmp = host.split(":");
 
     if (tmp[1]) {
       family = tmp[1];
@@ -171,7 +174,7 @@ function resolveBinding (hostConfig, defaultPort) {
   }
 
   return {
-    ipv6: family === 'ipv6',
+    ipv6: family === "ipv6",
     port: parsed.port || defaultPort,
   };
 }
@@ -183,7 +186,7 @@ function resolveBinding (hostConfig, defaultPort) {
  * @param  {Object} nodeStatus
  * @return {Object}
  */
-function convertToOldStatus (nodeStatus) {
+function convertToOldStatus(nodeStatus) {
   const ports = global.kuzzle.config.cluster.ports;
 
   return {

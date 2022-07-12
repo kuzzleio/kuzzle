@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import vault from '../../kuzzle/vault';
-import * as kerror from '../../kerror';
-import { JSONObject } from '../../../index';
-import { ApplicationManager } from './index';
+import vault from "../../kuzzle/vault";
+import * as kerror from "../../kerror";
+import { JSONObject } from "../../../index";
+import { ApplicationManager } from "./index";
 
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendVault extends ApplicationManager {
   private decrypted = false;
@@ -33,9 +33,9 @@ export class BackendVault extends ApplicationManager {
   /**
    * Secret key to decrypt encrypted secrets.
    */
-  set key (key: string) {
+  set key(key: string) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'vault');
+      throw runtimeError.get("already_started", "vault");
     }
 
     this._application._vaultKey = key;
@@ -44,9 +44,9 @@ export class BackendVault extends ApplicationManager {
   /**
    * File containing encrypted secrets
    */
-  set file (file: string) {
+  set file(file: string) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'vault');
+      throw runtimeError.get("already_started", "vault");
     }
 
     this._application._secretsFile = file;
@@ -55,11 +55,14 @@ export class BackendVault extends ApplicationManager {
   /**
    * Decrypted secrets
    */
-  get secrets (): JSONObject {
+  get secrets(): JSONObject {
     // We need to load the secrets before Kuzzle start so we can use them
     // in the configuration (e.g. configure ES X-Pack credentials)
-    if (! this._application.started && ! this.decrypted) {
-      const kuzzleVault = vault.load(this._application._vaultKey, this._application._secretsFile);
+    if (!this._application.started && !this.decrypted) {
+      const kuzzleVault = vault.load(
+        this._application._vaultKey,
+        this._application._secretsFile
+      );
       this._secrets = kuzzleVault.secrets;
     }
 

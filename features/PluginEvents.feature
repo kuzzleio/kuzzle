@@ -157,6 +157,26 @@ Feature: Plugin Events
       | destination | "Sa Pa"   |
       | company     | "So Viet" |
       | leaveAt     | "10:30"   |
+    # mUpsert
+    When I execute the "mUpsert" action on the following documents:
+      | _id     | changes                                            | default              |
+      | "bus-3" | { "destination": "Hà Giang", "company": "Cau Me" } | -                    |
+      | "bus-5" | { "destination": "Sa Pa" }                         | { "company": "SOO" } |
+    Then The document "bus-3-vn" content match:
+      | destination | "Hà Giang" |
+      | company     | "Cau Me"   |
+    Then The document "bus-5-vn" content match:
+      | destination | "Sa Pa"   |
+      | company     | "SOO"     |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn" |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
       | _source.leaveAt | "'12:30'"              |
@@ -190,6 +210,15 @@ Feature: Plugin Events
       | _id            | _source                                                                  |
       | "confidential" | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus" } |
       | "confidential" | { "destination": "Hanoi", "duration": "17h", "type": "sleepingBus" }     |
+    # mUpsert
+    When I execute the "mUpsert" action on the following documents:
+      | _id     | changes                       | default |
+      | "bus-3" | { "destination": "Hà Giang" } | -       |
+      | "bus-5" | { "destination": "Sa Pa" }    | -       |
+    Then I should receive a "successes" array of objects matching:
+      | _id            | _source                                              |
+      | "confidential" | { "destination": "Hà Giang", "type": "sleepingBus" } |
+      | "confidential" | { "destination": "Sa Pa", "type": "sleepingBus" }    |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
@@ -232,6 +261,26 @@ Feature: Plugin Events
       | destination | "Hà Giang" |
       | company     | "Cau Me"   |
       | leaveAt     | "12:30"    |
+
+  @mappings @events
+  Scenario: deleteFields and modify documents with document:generic:afterUpdate
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id     | body                           |
+      | "bus-1" | { "destination": "Ninh Binh" } |
+      | "bus-2" | { "destination": "Hanoi" }     |
+      | "bus-3" | { "destination": "Hang Mau" }  |
+    And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
+      | _id | "'bus-1-vn-vn'" |
+    # deleteFields
+    When I successfully execute the action "document":"deleteFields" with args:
+      | index      | "nyc-open-data"               |
+      | collection | "yellow-taxi"                 |
+      | _id        | "bus-1"                       |
+      | body       | { "fields": ["destination"] } |
+      | source     | true                          |
+    Then I should receive a result matching:
+      | _id | "bus-1-vn-vn" |
 
   @mappings @events
   Scenario: Upsert and modify documents with document:generic:afterUpdate

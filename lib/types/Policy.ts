@@ -19,12 +19,15 @@
  * limitations under the License.
  */
 
-import { PolicyRestrictions, OptimizedPolicyRestrictions } from './PolicyRestrictions';
+import {
+  PolicyRestrictions,
+  OptimizedPolicyRestrictions,
+} from "./PolicyRestrictions";
 
-/** 
+/**
  * Policy definition for a role
  * and its restrictions
- * 
+ *
  * @example
  * {
  *   "roleId": "admin",
@@ -45,4 +48,4 @@ export type Policy = {
 export type OptimizedPolicy = {
   roleId: string;
   restrictedTo?: OptimizedPolicyRestrictions;
-}
+};

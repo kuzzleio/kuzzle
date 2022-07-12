@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const EntryPoint = require('../../../../lib/core/network/entryPoint');
-const InternalProtocol = require('../../../../lib/core/network/protocols/internalProtocol');
-const KuzzleMock = require('../../../../test/mocks/kuzzle.mock');
+const EntryPoint = require("../../../../lib/core/network/entryPoint");
+const InternalProtocol = require("../../../../lib/core/network/protocols/internalProtocol");
+const KuzzleMock = require("../../../../test/mocks/kuzzle.mock");
 
-describe('/lib/core/network/protocols/internalProtocol', () => {
+describe("/lib/core/network/protocols/internalProtocol", () => {
   let kuzzle;
   let entrypoint;
   let protocol;
@@ -16,50 +16,51 @@ describe('/lib/core/network/protocols/internalProtocol', () => {
     kuzzle = new KuzzleMock();
     entrypoint = new EntryPoint();
 
-    sinon.stub(entrypoint, 'newConnection');
-    sinon.stub(entrypoint, 'removeConnection');
+    sinon.stub(entrypoint, "newConnection");
+    sinon.stub(entrypoint, "removeConnection");
 
     protocol = new InternalProtocol();
   });
 
-  describe('#init', () => {
-    it('should register his internal connection', async () => {
+  describe("#init", () => {
+    it("should register his internal connection", async () => {
       await protocol.init(entrypoint);
 
       should(entrypoint.newConnection).be.calledWith(protocol.connection);
     });
 
-    it('should register onAsk response', async () => {
+    it("should register onAsk response", async () => {
       await protocol.init(entrypoint);
 
       should(kuzzle.onAsk).be.calledOnce();
-      should(kuzzle.onAsk.getCall(0).args[0])
-        .be.eql('core:network:internal:connectionId:get');
+      should(kuzzle.onAsk.getCall(0).args[0]).be.eql(
+        "core:network:internal:connectionId:get"
+      );
     });
   });
 
-  describe('#joinChannel', () => {
-    it('should add the channel to the list', () => {
-      protocol.joinChannel('channel-id');
+  describe("#joinChannel", () => {
+    it("should add the channel to the list", () => {
+      protocol.joinChannel("channel-id");
 
-      should(Array.from(protocol.channels)).be.eql(['channel-id']);
+      should(Array.from(protocol.channels)).be.eql(["channel-id"]);
     });
   });
 
-  describe('#leaveChannel', () => {
-    it('should add the channel to the list', () => {
-      protocol.joinChannel('channel-id1');
-      protocol.joinChannel('channel-id2');
+  describe("#leaveChannel", () => {
+    it("should add the channel to the list", () => {
+      protocol.joinChannel("channel-id1");
+      protocol.joinChannel("channel-id2");
 
-      protocol.leaveChannel('channel-id2');
+      protocol.leaveChannel("channel-id2");
 
-      should(Array.from(protocol.channels)).be.eql(['channel-id1']);
+      should(Array.from(protocol.channels)).be.eql(["channel-id1"]);
     });
   });
 
-  describe('#broadcast', () => {
-    it('should call _send', () => {
-      const message = { channels: ['c1', 'c2'], payload: { hello: 'Gordon' } };
+  describe("#broadcast", () => {
+    it("should call _send", () => {
+      const message = { channels: ["c1", "c2"], payload: { hello: "Gordon" } };
       protocol._send = sinon.stub();
 
       protocol.broadcast(message);
@@ -68,9 +69,9 @@ describe('/lib/core/network/protocols/internalProtocol', () => {
     });
   });
 
-  describe('#notify', () => {
-    it('should call _send', () => {
-      const message = { channels: ['c1', 'c2'], payload: { hello: 'Gordon' } };
+  describe("#notify", () => {
+    it("should call _send", () => {
+      const message = { channels: ["c1", "c2"], payload: { hello: "Gordon" } };
       protocol._send = sinon.stub();
 
       protocol.notify(message);
@@ -79,15 +80,21 @@ describe('/lib/core/network/protocols/internalProtocol', () => {
     });
   });
 
-  describe('#_send', () => {
-    it('should emit a message per channel with kuzzle event system', () => {
-      const message = { channels: ['c1', 'c2'], payload: { hello: 'Gordon' } };
+  describe("#_send", () => {
+    it("should emit a message per channel with kuzzle event system", () => {
+      const message = { channels: ["c1", "c2"], payload: { hello: "Gordon" } };
 
       protocol._send(message);
 
       should(kuzzle.emit)
-        .be.calledWith('core:network:internal:message', { hello: 'Gordon', room: 'c1' })
-        .be.calledWith('core:network:internal:message', { hello: 'Gordon', room: 'c1' });
+        .be.calledWith("core:network:internal:message", {
+          hello: "Gordon",
+          room: "c1",
+        })
+        .be.calledWith("core:network:internal:message", {
+          hello: "Gordon",
+          room: "c1",
+        });
     });
   });
 });

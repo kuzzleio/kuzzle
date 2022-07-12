@@ -6,29 +6,29 @@ export type DumpConfiguration = {
 
   history: {
     /**
-      * @default 3
-      */
+     * @default 3
+     */
     coredump: number;
 
     /**
-      * @default 5
-    */
+     * @default 5
+     */
     reports: number;
-   };
+  };
 
   /**
    * @default './dump/'
-  */
+   */
   path: string;
 
   /**
    * @default 'gcore'
-  */
+   */
   gcore: string;
 
   /**
    * @default 'YYYYMMDD-HHmmss'
-  */
+   */
   dateFormat: string;
 
   handledErrors: {
@@ -39,7 +39,7 @@ export type DumpConfiguration = {
 
     /**
      * @default ['RangeError','TypeError','KuzzleError','InternalError'],
-    */
+     */
     whitelist: string[];
 
     /**
@@ -47,4 +47,4 @@ export type DumpConfiguration = {
      */
     minInterval: number;
   };
-}
+};

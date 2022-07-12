@@ -19,10 +19,10 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const path = require('path');
-const fs = require('fs');
+const path = require("path");
+const fs = require("fs");
 const { domains } = require(`${__dirname}/../lib/kerror/codes/`);
 const {
   BadRequestError,
@@ -40,7 +40,7 @@ const {
   SizeLimitError,
   TooManyRequestsError,
   UnauthorizedError,
-} = require('../lib/kerror/errors');
+} = require("../lib/kerror/errors");
 
 const errors = {
   BadRequestError,
@@ -60,7 +60,7 @@ const errors = {
   UnauthorizedError,
 };
 
-function getHeader (title) {
+function getHeader(title) {
   return `---
 code: true
 type: page
@@ -76,14 +76,13 @@ description: Error codes definitions
 `;
 }
 
-function rimraf (dir) {
+function rimraf(dir) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const fulldir = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
       rimraf(fulldir);
-    }
-    else {
+    } else {
       fs.unlinkSync(fulldir);
     }
   }
@@ -91,7 +90,7 @@ function rimraf (dir) {
   fs.rmdirSync(dir);
 }
 
-function clearCodeDirectories (target) {
+function clearCodeDirectories(target) {
   for (const entry of fs.readdirSync(target, { withFileTypes: true })) {
     if (entry.isDirectory()) {
       rimraf(path.join(target, entry.name));
@@ -99,11 +98,11 @@ function clearCodeDirectories (target) {
   }
 }
 
-function deprecatedBadge (deprecated) {
-  return deprecated ? `<DeprecatedBadge version="${deprecated}"/>` : '';
+function deprecatedBadge(deprecated) {
+  return deprecated ? `<DeprecatedBadge version="${deprecated}"/>` : "";
 }
 
-function buildErrorCodes (name) {
+function buildErrorCodes(name) {
   const domain = domains[name];
 
   if (domain.deprecated) {
@@ -113,43 +112,50 @@ function buildErrorCodes (name) {
   const buffer = Buffer.allocUnsafe(4);
   buffer.writeUInt8(domain.code, 3);
 
-  let doc = getHeader(`0x${buffer.toString('hex', 3)}: ${name}`);
+  let doc = getHeader(`0x${buffer.toString("hex", 3)}: ${name}`);
 
   for (const [subname, subdomain] of Object.entries(domain.subDomains)) {
+    buffer.writeUInt16BE((domain.code << 8) | subdomain.code, 2);
 
-    buffer.writeUInt16BE(domain.code << 8 | subdomain.code, 2);
-
-    doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subname}\n\n`;
+    doc += `\n\n### Subdomain: 0x${buffer.toString("hex", 2)}: ${subname}\n\n`;
 
     if (subdomain.deprecated) {
       doc += `<DeprecatedBadge version="${subdomain.deprecated}">\n`;
     }
 
-    doc += '| id / code | class / status | message | description |\n';
-    doc += '| --------- | -------------- | --------| ----------- |\n';
+    doc += "| id / code | class / status | message | description |\n";
+    doc += "| --------- | -------------- | --------| ----------- |\n";
 
     for (const [errname, error] of Object.entries(subdomain.errors)) {
       const fullName = `${name}.${subname}.${errname}`;
-      const status = (new errors[error.class]()).status;
+      const status = new errors[error.class]().status;
 
       buffer.writeUInt32BE(
-        domain.code << 24 | subdomain.code << 16 | error.code,
-        0);
-      doc += `| ${fullName}<br/><pre>0x${buffer.toString('hex')}</pre> ${deprecatedBadge(error.deprecated)} | [${error.class}](/core/2/api/errors/error-codes#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${error.message} | ${error.description} |\n`;
+        (domain.code << 24) | (subdomain.code << 16) | error.code,
+        0
+      );
+      doc += `| ${fullName}<br/><pre>0x${buffer.toString(
+        "hex"
+      )}</pre> ${deprecatedBadge(error.deprecated)} | [${
+        error.class
+      }](/core/2/api/errors/error-codes#${error.class.toLowerCase()}) <pre>(${status})</pre> | ${
+        error.message
+      } | ${error.description} |\n`;
     }
-    doc += '\n---\n';
+    doc += "\n---\n";
     if (subdomain.deprecated) {
-      doc += '</DeprecatedBadge>\n';
+      doc += "</DeprecatedBadge>\n";
     }
   }
 
   return doc;
 }
 
-function run () {
-  const output = process.argv[2] === '-o' || process.argv[2] === '--output'
-    ? process.argv[3]
-    : `${__dirname}/2/api/errors/error-codes`;
+function run() {
+  const output =
+    process.argv[2] === "-o" || process.argv[2] === "--output"
+      ? process.argv[3]
+      : `${__dirname}/2/api/errors/error-codes`;
 
   clearCodeDirectories(output);
 
@@ -160,7 +166,7 @@ function run () {
       const dirpath = path.join(output, name);
 
       fs.mkdirSync(dirpath);
-      fs.writeFileSync(path.join(dirpath, 'index.md'), doc);
+      fs.writeFileSync(path.join(dirpath, "index.md"), doc);
     }
   }
 }

@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
+import _ from "lodash";
 
-import * as kerror from '../../kerror';
-import { ApplicationManager, Backend } from './index';
-import { KuzzleConfiguration } from '../../types/config/KuzzleConfiguration';
-import { loadConfig } from '../../config/index.js';
+import * as kerror from "../../kerror";
+import { ApplicationManager, Backend } from "./index";
+import { KuzzleConfiguration } from "../../types/config/KuzzleConfiguration";
+import { loadConfig } from "../../config/index.js";
 
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendConfig extends ApplicationManager {
   /**
@@ -34,7 +34,7 @@ export class BackendConfig extends ApplicationManager {
    */
   public content: KuzzleConfiguration;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
 
     this.content = loadConfig();
@@ -48,9 +48,9 @@ export class BackendConfig extends ApplicationManager {
    * @param path - Path to the configuration key (lodash style)
    * @param value - Value for the configuration key
    */
-  set (path: string, value: any) {
+  set(path: string, value: any) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'config');
+      throw runtimeError.get("already_started", "config");
     }
 
     _.set(this.content, path, value);
@@ -63,9 +63,9 @@ export class BackendConfig extends ApplicationManager {
    *
    * @param config - Configuration object to merge
    */
-  merge (config: KuzzleConfiguration) {
+  merge(config: KuzzleConfiguration) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'config');
+      throw runtimeError.get("already_started", "config");
     }
 
     this.content = _.merge(this.content, config);

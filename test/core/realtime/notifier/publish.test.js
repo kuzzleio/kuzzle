@@ -1,14 +1,14 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const { Request } = require('../../../../index');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const { Request } = require("../../../../index");
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
-const Notifier = require('../../../../lib/core/realtime/notifier');
+const Notifier = require("../../../../lib/core/realtime/notifier");
 
-describe('Test: notifier.publish', () => {
+describe("Test: notifier.publish", () => {
   let kuzzle;
   let notifier;
 
@@ -16,29 +16,29 @@ describe('Test: notifier.publish', () => {
     kuzzle = new KuzzleMock();
     notifier = new Notifier();
 
-    sinon.stub(notifier, 'notifyDocument').resolves();
+    sinon.stub(notifier, "notifyDocument").resolves();
 
     return notifier.init();
   });
 
   it('should register a "publish" event', async () => {
-    sinon.stub(notifier, 'publish');
+    sinon.stub(notifier, "publish");
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:publish', 'request');
+    await kuzzle.ask("core:realtime:publish", "request");
 
-    should(notifier.publish).calledWith('request');
+    should(notifier.publish).calledWith("request");
   });
 
-  it('should publish messages', async () => {
-    const rooms = ['foo'];
+  it("should publish messages", async () => {
+    const rooms = ["foo"];
     const request = new Request({
-      controller: 'realtime',
-      action: 'publish',
-      index: 'foo',
-      collection: 'bar',
-      _id: 'I am fabulous',
-      body: { youAre: 'fabulous too' },
+      controller: "realtime",
+      action: "publish",
+      index: "foo",
+      collection: "bar",
+      _id: "I am fabulous",
+      body: { youAre: "fabulous too" },
       volatile: {},
     });
 
@@ -48,7 +48,7 @@ describe('Test: notifier.publish', () => {
 
     should(notifier.notifyDocument)
       .calledOnce()
-      .calledWith(rooms, request, 'in', request.input.action, {
+      .calledWith(rooms, request, "in", request.input.action, {
         _source: request.input.body,
         _id: request.input.args._id,
       });

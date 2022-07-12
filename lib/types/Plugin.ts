@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { PluginContext } from '../core/plugin/pluginContext';
-import { ControllerDefinition } from './ControllerDefinition';
-import { PluginManifest } from './PluginManifest';
-import { StrategyDefinition } from './StrategyDefinition';
-import { EventHandler } from './EventHandler';
-import { JSONObject } from '../../index';
-import * as kerror from '../kerror';
-import { has } from '../util/safeObject';
+import { PluginContext } from "../core/plugin/pluginContext";
+import { ControllerDefinition } from "./ControllerDefinition";
+import { PluginManifest } from "./PluginManifest";
+import { StrategyDefinition } from "./StrategyDefinition";
+import { EventHandler } from "./EventHandler";
+import { JSONObject } from "../../index";
+import * as kerror from "../kerror";
+import { has } from "../util/safeObject";
 
 /**
  * Allows to define plugins controllers and actions
@@ -36,7 +36,7 @@ export type PluginApiDefinition = {
    * Name of the API controller.
    */
   [controller: string]: ControllerDefinition;
-}
+};
 
 /**
  * Allows to define hooks on events
@@ -46,7 +46,7 @@ export type PluginHookDefinition = {
    * Event name or wildcard event.
    */
   [event: string]: EventHandler | EventHandler[];
-}
+};
 
 /**
  * Allows to define pipes on events
@@ -56,7 +56,7 @@ export type PluginPipeDefinition = {
    * Event name or wildcard event.
    */
   [event: string]: EventHandler | EventHandler[];
-}
+};
 
 /**
  * Plugins must implements this abstract class.
@@ -145,15 +145,15 @@ export abstract class Plugin {
    *
    * @see https://docs.kuzzle.io/core/2/plugins/guides/manual-setup/init-function/
    */
-  abstract init (config: JSONObject, context: PluginContext): Promise<any> | any
+  abstract init(config: JSONObject, context: PluginContext): Promise<any> | any;
 
   /**
    * @param manifest Manifest containing the required kuzzleVersion number
    */
-  constructor (manifest: PluginManifest) {
-    if (! has(manifest, 'kuzzleVersion')) {
+  constructor(manifest: PluginManifest) {
+    if (!has(manifest, "kuzzleVersion")) {
       // eslint-disable-next-line new-cap
-      throw kerror.get('plugin', 'manifest', 'missing_version');
+      throw kerror.get("plugin", "manifest", "missing_version");
     }
 
     this._manifest = manifest;

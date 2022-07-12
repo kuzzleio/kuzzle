@@ -29,7 +29,7 @@ export type ControllerRight = {
 /**
  * @internal
  * A Controller Rights definition
- * 
+ *
  * @example
  * {
  *   "document": {
@@ -42,4 +42,3 @@ export type ControllerRight = {
 export type ControllerRights = {
   [controller: string]: ControllerRight;
 };
-

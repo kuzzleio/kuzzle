@@ -1,11 +1,11 @@
-import ndjson from 'ndjson';
-import { JSONObject } from '../../index';
-import get from 'lodash/get';
-import isObject from 'lodash/isObject';
-import stream from 'stream';
-import * as kerror from '../kerror';
-import { BufferedPassThrough } from './bufferedPassThrough';
-import { HttpStream } from '../types';
+import ndjson from "ndjson";
+import { JSONObject } from "../../index";
+import get from "lodash/get";
+import isObject from "lodash/isObject";
+import stream from "stream";
+import * as kerror from "../kerror";
+import { BufferedPassThrough } from "./bufferedPassThrough";
+import { HttpStream } from "../types";
 
 /**
  * Flatten an object transform:
@@ -25,7 +25,7 @@ import { HttpStream } from '../types';
  * @param {Object} target the object we have to flatten
  * @returns {Object} the flattened object
  */
-export function flattenObject (target: JSONObject): JSONObject {
+export function flattenObject(target: JSONObject): JSONObject {
   const output = {};
 
   flattenStep(output, target);
@@ -33,18 +33,19 @@ export function flattenObject (target: JSONObject): JSONObject {
   return output;
 }
 
-function flattenStep (
+function flattenStep(
   output: JSONObject,
   object: JSONObject,
-  prev: string | null = null): void {
+  prev: string | null = null
+): void {
   const keys = Object.keys(object);
 
   for (let i = 0; i < keys.length; i++) {
     const key = keys[i];
     const value = object[key];
-    const newKey = prev ? prev + '.' + key : key;
+    const newKey = prev ? prev + "." + key : key;
 
-    if (Object.prototype.toString.call(value) === '[object Object]') {
+    if (Object.prototype.toString.call(value) === "[object Object]") {
       flattenStep(output, value, newKey);
       continue;
     }
@@ -58,7 +59,7 @@ function flattenStep (
  * @param mapping
  * @returns
  */
-export function extractMappingFields (mapping: JSONObject) {
+export function extractMappingFields(mapping: JSONObject) {
   const newMapping = {};
 
   if (mapping.properties) {
@@ -68,15 +69,13 @@ export function extractMappingFields (mapping: JSONObject) {
   for (const key of Object.keys(mapping)) {
     if (isObject(mapping[key]) && mapping[key].type) {
       newMapping[key] = mapping[key].type;
-    }
-    else if (isObject(mapping[key])) {
+    } else if (isObject(mapping[key])) {
       newMapping[key] = extractMappingFields(mapping[key]);
     }
   }
 
   return newMapping;
 }
-
 
 /**
  * An iteration-order-safe version of lodash.values
@@ -86,8 +85,8 @@ export function extractMappingFields (mapping: JSONObject) {
  * @returns The values in the same order as the fields
  * @see https://lodash.com/docs/4.17.15#values
  */
-export function pickValues (object: any, fields: string[]): any[] {
-  return fields.map(f => formatValueForCSV(get(object, f)));
+export function pickValues(object: any, fields: string[]): any[] {
+  return fields.map((f) => formatValueForCSV(get(object, f)));
 }
 
 /**
@@ -97,9 +96,9 @@ export function pickValues (object: any, fields: string[]): any[] {
  * @param value The value to format
  * @returns The value or a string telling the value is not scalar
  */
-function formatValueForCSV (value: any) {
+function formatValueForCSV(value: any) {
   if (isObject(value)) {
-    return '[OBJECT]';
+    return "[OBJECT]";
   }
 
   return value;
@@ -110,20 +109,20 @@ abstract class AbstractDumper {
 
   protected abstract get fileExtension(): string;
 
-  constructor (
+  constructor(
     protected readonly index: string,
     protected readonly collection: string,
     protected readonly query: any = {},
     protected readonly writeStream: stream.Writable,
     protected readonly options: JSONObject = {
       fieldsName: {},
-      scroll: '5s',
-      separator: ',',
+      scroll: "5s",
+      separator: ",",
       size: 10,
     }
   ) {
-    if (! writeStream) {
-      throw kerror.get('api', 'assert', 'missing_argument', 'writeStream');
+    if (!writeStream) {
+      throw kerror.get("api", "assert", "missing_argument", "writeStream");
     }
   }
 
@@ -134,14 +133,14 @@ abstract class AbstractDumper {
    * @returns void
    */
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public async setup () {}
+  public async setup() {}
 
   /**
    * One-shot call before iterating over the data. Can be
    * used to write the header of the dumped output.
    */
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public async writeHeader () {}
+  public async writeHeader() {}
 
   /**
    * You can put here the logic to write into the dump.
@@ -149,7 +148,7 @@ abstract class AbstractDumper {
    * @param data The data to be written to the dump (can be
    *             an item or anything else).
    */
-  abstract writeLine (data: any): Promise<void>
+  abstract writeLine(data: any): Promise<void>;
 
   /**
    * Iterative call, on each item in the collection to
@@ -159,24 +158,23 @@ abstract class AbstractDumper {
    *
    * @param document The document to be written in a line of the dump.
    */
-  abstract onResult (document: {_id: string; _source: any}): Promise<void>
+  abstract onResult(document: { _id: string; _source: any }): Promise<void>;
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  public async tearDown () {}
+  public async tearDown() {}
 
-  private async scroll (scrollId: string): Promise<JSONObject> {
-    if (! scrollId) {
+  private async scroll(scrollId: string): Promise<JSONObject> {
+    if (!scrollId) {
       return null;
     }
 
     try {
       return await global.kuzzle.ask(
-        'core:storage:public:document:scroll',
+        "core:storage:public:document:scroll",
         scrollId,
         { scrollTTL: this.options.scroll }
       );
-    }
-    catch {
+    } catch {
       return null;
     }
   }
@@ -187,12 +185,12 @@ abstract class AbstractDumper {
    *
    * @returns a promise resolving when the dump is finished.
    */
-  async dump () {
-    const waitWrite: Promise<void> = new Promise(
-      (resolve, reject) => this.writeStream ? this.writeStream.on('finish', resolve) : reject()
+  async dump() {
+    const waitWrite: Promise<void> = new Promise((resolve, reject) =>
+      this.writeStream ? this.writeStream.on("finish", resolve) : reject()
     );
 
-    this.writeStream.on('error', error => {
+    this.writeStream.on("error", (error) => {
       throw error;
     });
 
@@ -200,7 +198,7 @@ abstract class AbstractDumper {
     await this.writeHeader();
 
     let results = await global.kuzzle.ask(
-      'core:storage:public:document:search',
+      "core:storage:public:document:search",
       this.index,
       this.collection,
       this.query,
@@ -212,11 +210,10 @@ abstract class AbstractDumper {
     );
 
     do {
-
       for (const hit of results.hits) {
         await this.onResult({
           _id: hit._id,
-          _source: hit._source
+          _source: hit._source,
         });
       }
     } while ((results = await this.scroll(results.scrollId)));
@@ -232,114 +229,133 @@ abstract class AbstractDumper {
 class JSONLDumper extends AbstractDumper {
   protected ndjsonStream = ndjson.stringify();
 
-  async setup () {
-    this.ndjsonStream.on('data', (line: string) => {
+  async setup() {
+    this.ndjsonStream.on("data", (line: string) => {
       this.writeStream.write(line);
     });
   }
 
-  async writeHeader () {
+  async writeHeader() {
     await this.writeLine({
       collection: this.collection,
       index: this.index,
-      type: 'collection',
+      type: "collection",
     });
   }
 
-  writeLine (content: any): Promise<void> {
-    return new Promise(resolve => {
+  writeLine(content: any): Promise<void> {
+    return new Promise((resolve) => {
       if (this.ndjsonStream.write(content)) {
         resolve();
-      }
-      else {
-        this.ndjsonStream.once('drain', resolve);
+      } else {
+        this.ndjsonStream.once("drain", resolve);
       }
     });
   }
 
-  onResult (document: {_id: string; _source: any}): Promise<void> {
+  onResult(document: { _id: string; _source: any }): Promise<void> {
     return this.writeLine({
       _id: document._id,
       body: document._source,
     });
   }
 
-  protected get fileExtension () {
-    return 'jsonl';
+  protected get fileExtension() {
+    return "jsonl";
   }
 }
 
 class CSVDumper extends AbstractDumper {
-  constructor (
+  constructor(
     index: string,
     collection: string,
     query: any = {},
     writeStream: stream.Writable,
     options: JSONObject,
-    protected fields: string[],
+    protected fields: string[]
   ) {
     super(index, collection, query, writeStream, options);
   }
 
-  protected get fileExtension (): string {
-    return 'csv';
+  protected get fileExtension(): string {
+    return "csv";
   }
-  async setup () {
-    if (! this.fields.length) {
+  async setup() {
+    if (!this.fields.length) {
       // If no field has been selected, then all fields are selected.
       const mappings = await global.kuzzle.ask(
-        'core:storage:public:mappings:get',
+        "core:storage:public:mappings:get",
         this.index,
         this.collection
       );
-      if (! mappings.properties) {
+      if (!mappings.properties) {
         return;
       }
-      this.fields = Object.keys(flattenObject(extractMappingFields(mappings.properties)));
-    }
-    else if (this.fields.includes('_id')) {
+      this.fields = Object.keys(
+        flattenObject(extractMappingFields(mappings.properties))
+      );
+    } else if (this.fields.includes("_id")) {
       // Delete '_id' from the selected fields, since IDs are
       // _always_ exported.
-      this.fields.splice(this.fields.indexOf('_id'), 1);
+      this.fields.splice(this.fields.indexOf("_id"), 1);
     }
   }
 
-  writeHeader () {
-    const mappedFieldsName = ['_id', ...this.fields].map(field => {
+  writeHeader() {
+    const mappedFieldsName = ["_id", ...this.fields].map((field) => {
       return this.options.fieldsName[field] || field;
     });
     return this.writeLine(mappedFieldsName.join(this.options.separator));
   }
 
-  writeLine (content: any): Promise<void> {
-    return new Promise(resolve => {
+  writeLine(content: any): Promise<void> {
+    return new Promise((resolve) => {
       if (this.writeStream.write(`${content}\n`)) {
         resolve();
-      }
-      else {
-        this.writeStream.once('drain', resolve);
+      } else {
+        this.writeStream.once("drain", resolve);
       }
     });
   }
 
-  onResult (document: { _id: string; _source: any }): Promise<void> {
+  onResult(document: { _id: string; _source: any }): Promise<void> {
     const values = [document._id, ...pickValues(document._source, this.fields)];
     return this.writeLine(values.join(this.options.separator));
   }
 }
 
-export function dumpCollectionDocuments (index: string, collection: string, query: any = {}, format = 'jsonl', fields: string[] = [], options: JSONObject = {}): HttpStream {
+export function dumpCollectionDocuments(
+  index: string,
+  collection: string,
+  query: any = {},
+  format = "jsonl",
+  fields: string[] = [],
+  options: JSONObject = {}
+): HttpStream {
   let dumper: AbstractDumper;
 
   const writableStream = new BufferedPassThrough({ highWaterMark: 16384 });
 
   switch (format.toLowerCase()) {
-    case 'csv':
-      dumper = new CSVDumper(index, collection, query, writableStream, options, fields);
+    case "csv":
+      dumper = new CSVDumper(
+        index,
+        collection,
+        query,
+        writableStream,
+        options,
+        fields
+      );
       dumper.dump();
       break;
     default:
-      dumper = new JSONLDumper(index, collection, query, writableStream, options);
+      dumper = new JSONLDumper(
+        index,
+        collection,
+        query,
+        writableStream,
+        options
+      );
       dumper.dump();
       break;
   }

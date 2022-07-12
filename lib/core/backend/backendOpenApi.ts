@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-import { ApplicationManager, Backend } from './index';
-import { OpenApiDefinition } from '../../types';
+import { ApplicationManager, Backend } from "./index";
+import { OpenApiDefinition } from "../../types";
 
 export class BackendOpenApi extends ApplicationManager {
   /**
@@ -28,46 +28,45 @@ export class BackendOpenApi extends ApplicationManager {
    */
   public definition: Partial<OpenApiDefinition>;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
 
     /* eslint-disable sort-keys */
     this.definition = {
-      openapi: '3.0.0',
+      openapi: "3.0.0",
       info: {
         title: `${application.name} API`,
         description: `${application.name} HTTP API definition`,
         contact: {
-          name: 'Kuzzle team',
-          url: 'https://kuzzle.io',
-          email: 'support@kuzzle.io',
-          discord: 'http://join.discord.kuzzle.io'
+          name: "Kuzzle team",
+          url: "https://kuzzle.io",
+          email: "support@kuzzle.io",
+          discord: "http://join.discord.kuzzle.io",
         },
         license: {
-          name: 'Apache 2',
-          url: 'http://opensource.org/licenses/apache2.0'
+          name: "Apache 2",
+          url: "http://opensource.org/licenses/apache2.0",
         },
-        version: application.version
+        version: application.version,
       },
       externalDocs: {
-        description: 'Kuzzle API Documentation',
-        url: 'https://docs.kuzzle.io/core/2/api/'
+        description: "Kuzzle API Documentation",
+        url: "https://docs.kuzzle.io/core/2/api/",
       },
       servers: [
         {
-          url: 'https://{baseUrl}:{port}',
+          url: "https://{baseUrl}:{port}",
           description: `${application.name} Base Url`,
           variables: {
-            baseUrl: { default: 'localhost' },
+            baseUrl: { default: "localhost" },
             port: { default: 7512 },
-          }
-
-        }
+          },
+        },
       ],
       tags: [],
-      schemes: [ 'https', 'http' ],
+      schemes: ["https", "http"],
       paths: {},
-      components: {}
+      components: {},
     };
     /* eslint-enable sort-keys */
   }

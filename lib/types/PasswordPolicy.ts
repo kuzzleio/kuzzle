@@ -22,22 +22,24 @@ export type PasswordPolicy = {
    * Can be either set to a wildcar (`"*""`) to match all users or to an
    * object containing at least of the following property.
    */
-  appliesTo: '*' | {
-    /**
-     * Array of user kuids the policy applies to.
-     */
-    users?: string[];
+  appliesTo:
+    | "*"
+    | {
+        /**
+         * Array of user kuids the policy applies to.
+         */
+        users?: string[];
 
-    /**
-     * Array of profile ids the policy applies to.
-     */
-    profiles?: string[];
+        /**
+         * Array of profile ids the policy applies to.
+         */
+        profiles?: string[];
 
-    /**
-     * Array of role ids the policy applies to.
-     */
-    roles?: string[];
-  };
+        /**
+         * Array of role ids the policy applies to.
+         */
+        roles?: string[];
+      };
 
   /**
    * The delay after which a password expires.
@@ -82,4 +84,3 @@ export type PasswordPolicy = {
    */
   passwordRegex: string;
 };
-

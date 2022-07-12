@@ -1,20 +1,18 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:12.18.1-stretch-slim as builder
+FROM node:12-bullseye-slim as builder
 
 RUN  set -x \
-  && apt-get update && apt-get install -y \
-       curl \
-       python \
-       make \
-       g++ \
-       python \
-       libzmq3-dev \
-       libunwind-dev \
-  && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin \
-  && curl -L https://github.com/tdewolff/minify/releases/download/v2.7.4/minify_2.7.4_linux_amd64.tar.gz > /tmp/minify_2.7.4_linux_amd64.tar.gz \
-  && tar xf /tmp/minify_2.7.4_linux_amd64.tar.gz -C /usr/bin/
+ && apt-get update \
+ && apt-get install -y \
+      curl \
+      python \
+      make \
+      g++ \
+      python3 \
+      libzmq3-dev \
+      libunwind-dev
 
 ADD ./bin /app/bin
 ADD ./config /app/config
@@ -29,8 +27,8 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install dependencies
-RUN  npm install --production \
-  && npm install -g --unsafe-perm --production \
+RUN npm install --production \
+ && npm install -g --unsafe-perm --production \
       pm2
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
@@ -39,7 +37,7 @@ ADD ./plugins/available/ /app/plugins/available/
 
 RUN  set -x \
   # Remove useless leftover dependencies
-  && rm -rf node_modules/rxjs/ \
+ && rm -rf node_modules/rxjs/ \
   # Strip binaries
   ; strip node_modules/re2/build/Release/re2.node \
   ; true
@@ -47,29 +45,29 @@ RUN  set -x \
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:12.18.1-stretch-slim as minifier
+FROM node:12-bullseye-slim as minifier
 
 ENV NODE_ENV=production
 
 COPY --from=builder /app /app
 
 RUN  set -x \
-  && apt-get update && apt-get install -y \
-    curl \
-  && apt-get clean autoclean \
-  && apt-get autoremove --yes
+ && apt-get update && apt-get install -y \
+      curl \
+ && apt-get clean autoclean \
+ && apt-get autoremove --yes
 
 ################################################################################
 # Production image
 ################################################################################
-FROM bitnami/minideb:stretch
+FROM bitnami/minideb:bullseye
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
 RUN set -x \
-  && apt-get update && apt-get install -y \
-    libunwind-dev
+ && apt-get update && apt-get install -y \
+      libunwind-dev
 
 COPY --from=minifier /lib /lib
 COPY --from=minifier /usr /usr

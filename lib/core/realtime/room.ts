@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Channel } from './channel';
+import { Channel } from "./channel";
 
 /**
  * A room represents a subscription scope made on a combination of:
@@ -77,7 +77,7 @@ export class Room {
    */
   public channels = new Map<string, Channel>();
 
-  constructor (
+  constructor(
     id: string,
     index: string,
     collection: string,
@@ -100,14 +100,14 @@ export class Room {
   /**
    * Number of connections subscribing to the room
    */
-  get size (): number {
+  get size(): number {
     return this.connections.size;
   }
 
   /**
    * Creates a new configuration channel on the room if it doesn't already exists
    */
-  createChannel (channel: Channel): void {
+  createChannel(channel: Channel): void {
     if (this.channels.has(channel.name)) {
       return;
     }
@@ -115,11 +115,11 @@ export class Room {
     this.channels.set(channel.name, channel);
   }
 
-  addConnection (connectionId: string): void {
+  addConnection(connectionId: string): void {
     this.connections.add(connectionId);
   }
 
-  removeConnection (connectionId: string): void {
+  removeConnection(connectionId: string): void {
     this.connections.delete(connectionId);
   }
 }

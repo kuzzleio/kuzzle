@@ -19,17 +19,21 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
-import Bluebird from 'bluebird';
+import _ from "lodash";
+import Bluebird from "bluebird";
 
-import Rights from './rights';
-import * as kerror from '../../kerror';
-import { isPlainObject } from '../../util/safeObject';
-import { Policy, OptimizedPolicy, OptimizedPolicyRestrictions } from '../../types/index';
-import { Role } from './role';
-import { KuzzleRequest } from '../../../index';
+import Rights from "./rights";
+import * as kerror from "../../kerror";
+import { isPlainObject } from "../../util/safeObject";
+import {
+  Policy,
+  OptimizedPolicy,
+  OptimizedPolicyRestrictions,
+} from "../../types/index";
+import { Role } from "./role";
+import { KuzzleRequest } from "../../../index";
 
-const assertionError = kerror.wrap('api', 'assert');
+const assertionError = kerror.wrap("api", "assert");
 
 /** @internal */
 type InternalProfilePolicy = {
@@ -46,7 +50,7 @@ export class Profile {
   public optimizedPolicies: OptimizedPolicy[];
   public rateLimit: number;
 
-  constructor () {
+  constructor() {
     this._id = null;
     this.policies = [];
     this.optimizedPolicies = [];
@@ -58,52 +62,60 @@ export class Profile {
    *
    * @returns {Promise}
    */
-  async getPolicies (): Promise<InternalProfilePolicy[]> {
-    if (! global.kuzzle) {
-      throw kerror.get('security', 'profile', 'uninitialized', this._id);
+  async getPolicies(): Promise<InternalProfilePolicy[]> {
+    if (!global.kuzzle) {
+      throw kerror.get("security", "profile", "uninitialized", this._id);
     }
 
-    return Bluebird.map(this.optimizedPolicies, async ({ restrictedTo, roleId }) => {
-      const role = await global.kuzzle.ask('core:security:role:get', roleId);
-      return { restrictedTo, role };
-    });
+    return Bluebird.map(
+      this.optimizedPolicies,
+      async ({ restrictedTo, roleId }) => {
+        const role = await global.kuzzle.ask("core:security:role:get", roleId);
+        return { restrictedTo, role };
+      }
+    );
   }
 
   /**
    * @param {Request} request
    * @returns {Promise}
    */
-  async getAllowedPolicies (request: KuzzleRequest): Promise<InternalProfilePolicy[]> {
-    if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
+  async getAllowedPolicies(
+    request: KuzzleRequest
+  ): Promise<InternalProfilePolicy[]> {
+    if (
+      this.optimizedPolicies === undefined ||
+      this.optimizedPolicies.length === 0
+    ) {
       return [];
     }
 
     const policies = await this.getPolicies();
 
-    return policies.filter(
-      policy => policy.role.isActionAllowed(request)
-    );
+    return policies.filter((policy) => policy.role.isActionAllowed(request));
   }
 
   /**
    * @param {Request} request
    * @returns {Promise<boolean>}
    */
-  async isActionAllowed (request: KuzzleRequest): Promise<boolean> {
-    if (this.optimizedPolicies === undefined || this.optimizedPolicies.length === 0) {
+  async isActionAllowed(request: KuzzleRequest): Promise<boolean> {
+    if (
+      this.optimizedPolicies === undefined ||
+      this.optimizedPolicies.length === 0
+    ) {
       return false;
     }
 
     const allowedPolicies = await this.getAllowedPolicies(request);
 
-    return allowedPolicies
-      .some(policy =>
-        policy.role.checkRestrictions(
-          request.input.args.index,
-          request.input.args.collection,
-          policy.restrictedTo
-        )
-      );
+    return allowedPolicies.some((policy) =>
+      policy.role.checkRestrictions(
+        request.input.args.index,
+        request.input.args.collection,
+        policy.restrictedTo
+      )
+    );
   }
 
   /**
@@ -114,113 +126,131 @@ export class Profile {
    *                                     existing indexes/collections
    * @returns {Promise}
    */
-  async validateDefinition ({ strict = false } = {}) {
+  async validateDefinition({ strict = false } = {}) {
     this.validateRateLimit();
 
-    if (! this.policies) {
-      throw assertionError.get('missing_argument', `${this._id}.policies`);
+    if (!this.policies) {
+      throw assertionError.get("missing_argument", `${this._id}.policies`);
     }
 
-    if (! Array.isArray(this.policies)) {
-      throw assertionError.get('invalid_type', `${this._id}.policies`, 'object[]');
+    if (!Array.isArray(this.policies)) {
+      throw assertionError.get(
+        "invalid_type",
+        `${this._id}.policies`,
+        "object[]"
+      );
     }
 
     if (this.policies.length === 0) {
-      throw assertionError.get('empty_argument', `${this._id}.policies`);
+      throw assertionError.get("empty_argument", `${this._id}.policies`);
     }
 
     let i = 0;
     for (const policy of this.policies) {
-      if (! policy.roleId) {
-        throw assertionError.get('missing_argument', `${this._id}.policies[${i}].roleId`);
+      if (!policy.roleId) {
+        throw assertionError.get(
+          "missing_argument",
+          `${this._id}.policies[${i}].roleId`
+        );
       }
 
       for (const member of Object.keys(policy)) {
-        if (member !== 'roleId' && member !== 'restrictedTo') {
+        if (member !== "roleId" && member !== "restrictedTo") {
           throw assertionError.get(
-            'unexpected_argument',
+            "unexpected_argument",
             `${this._id}.policies[${i}].${member}`,
-            '"roleId", "restrictedTo"');
+            '"roleId", "restrictedTo"'
+          );
         }
       }
 
       if (policy.restrictedTo) {
-        if (! Array.isArray(policy.restrictedTo)) {
+        if (!Array.isArray(policy.restrictedTo)) {
           throw assertionError.get(
-            'invalid_type',
+            "invalid_type",
             `${this._id}.policies[${i}].restrictedTo`,
-            'object[]');
+            "object[]"
+          );
         }
 
         let j = 0;
         for (const restriction of policy.restrictedTo) {
-          if (! isPlainObject(restriction)) {
+          if (!isPlainObject(restriction)) {
             throw assertionError.get(
-              'invalid_type',
+              "invalid_type",
               `${this._id}.policies[${i}].restrictedTo[${restriction}]`,
-              'object');
+              "object"
+            );
           }
 
           if (restriction.index === null || restriction.index === undefined) {
             throw assertionError.get(
-              'missing_argument',
-              `${this._id}.policies[${i}].restrictedTo[${j}].index`);
+              "missing_argument",
+              `${this._id}.policies[${i}].restrictedTo[${j}].index`
+            );
           }
 
           if (strict) {
             const indexExists = await global.kuzzle.ask(
-              'core:storage:public:index:exist',
-              restriction.index);
+              "core:storage:public:index:exist",
+              restriction.index
+            );
 
-            if (! indexExists) {
+            if (!indexExists) {
               throw kerror.get(
-                'services',
-                'storage',
-                'unknown_index',
-                restriction.index);
+                "services",
+                "storage",
+                "unknown_index",
+                restriction.index
+              );
             }
           }
 
-          if ( restriction.collections !== undefined
-            && restriction.collections !== null
+          if (
+            restriction.collections !== undefined &&
+            restriction.collections !== null
           ) {
-            if (! Array.isArray(restriction.collections)) {
+            if (!Array.isArray(restriction.collections)) {
               throw assertionError.get(
-                'invalid_type',
+                "invalid_type",
                 `${this._id}.policies[${i}].restrictedTo[${j}].collections`,
-                'string[]');
+                "string[]"
+              );
             }
 
             if (strict) {
               const invalidCollections = [];
               for (const collection of restriction.collections) {
                 const isValid = await global.kuzzle.ask(
-                  'core:storage:public:collection:exist',
+                  "core:storage:public:collection:exist",
                   restriction.index,
-                  collection);
+                  collection
+                );
 
-                if (! isValid) {
+                if (!isValid) {
                   invalidCollections.push(collection);
                 }
               }
 
               if (invalidCollections.length > 0) {
                 throw kerror.get(
-                  'services',
-                  'storage',
-                  'unknown_collection',
+                  "services",
+                  "storage",
+                  "unknown_collection",
                   restriction.index,
-                  invalidCollections);
+                  invalidCollections
+                );
               }
             }
           }
 
           for (const member of Object.keys(restriction)) {
-            if (member !== 'index' && member !== 'collections') {
+            if (member !== "index" && member !== "collections") {
               throw assertionError.get(
-                'unexpected_argument',
+                "unexpected_argument",
                 `${this._id}.policies[${i}].restrictedTo[${j}].${member}`,
-                '"index", "collections"');
+                '"index", "collections"'
+              );
             }
           }
 
@@ -239,7 +269,7 @@ export class Profile {
    *
    * @returns {Promise}
    */
-  async getRights () {
+  async getRights() {
     const profileRights = {};
 
     const policies = await this.getPolicies();
@@ -249,17 +279,21 @@ export class Profile {
       let restrictedTo = _.cloneDeep(policy.restrictedTo);
 
       if (restrictedTo === undefined || restrictedTo.size === 0) {
-        restrictedTo = new Map([['*', ['*']]]);
+        restrictedTo = new Map([["*", ["*"]]]);
       }
 
       for (const [controller, rights] of Object.entries(role.controllers)) {
         for (const [action, actionRights] of Object.entries(rights.actions)) {
-          for (const [restrictedIndex, restrictedCollections] of restrictedTo.entries()) {
+          for (const [
+            restrictedIndex,
+            restrictedCollections,
+          ] of restrictedTo.entries()) {
             let collections = restrictedCollections;
-            if (restrictedCollections === undefined
-              || restrictedCollections.length === 0
+            if (
+              restrictedCollections === undefined ||
+              restrictedCollections.length === 0
             ) {
-              collections = ['*'];
+              collections = ["*"];
             }
 
             for (const collection of collections) {
@@ -268,12 +302,12 @@ export class Profile {
                 collection,
                 controller,
                 index: restrictedIndex,
-                value: actionRights
+                value: actionRights,
               };
               const rightsObject = {
                 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
                 // @ts-ignore
-                [this.constructor._hash(rightsItem)]: rightsItem
+                [this.constructor._hash(rightsItem)]: rightsItem,
               };
 
               _.assignWith(profileRights, rightsObject, Rights.merge);
@@ -286,23 +320,28 @@ export class Profile {
     return profileRights;
   }
 
-  static _hash () {
+  static _hash() {
     return false;
   }
 
-  validateRateLimit () {
+  validateRateLimit() {
     if (this.rateLimit === null || this.rateLimit === undefined) {
       this.rateLimit = 0;
     }
 
-    if ( typeof this.rateLimit !== 'number'
-      || ! Number.isInteger(this.rateLimit)
+    if (
+      typeof this.rateLimit !== "number" ||
+      !Number.isInteger(this.rateLimit)
     ) {
-      throw assertionError.get('invalid_type', 'rateLimit', 'integer');
+      throw assertionError.get("invalid_type", "rateLimit", "integer");
     }
 
     if (this.rateLimit < 0) {
-      throw assertionError.get('invalid_argument', 'rateLimit', 'positive integer, or zero');
+      throw assertionError.get(
+        "invalid_argument",
+        "rateLimit",
+        "positive integer, or zero"
+      );
     }
   }
 }
