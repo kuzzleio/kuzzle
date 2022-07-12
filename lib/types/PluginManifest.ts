@@ -28,4 +28,4 @@ export type PluginManifest = {
    * @example ">=2.8.0 <3"
    */
   kuzzleVersion: string;
-}
+};

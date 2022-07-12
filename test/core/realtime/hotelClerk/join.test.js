@@ -1,15 +1,15 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const { NotFoundError, Request } = require('../../../../index');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const { NotFoundError, Request } = require("../../../../index");
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
-const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require("../../../../lib/core/realtime/hotelClerk");
 
-describe('Test: hotelClerk.join', () => {
-  const connectionId = 'connectionid';
+describe("Test: hotelClerk.join", () => {
+  const connectionId = "connectionid";
   let kuzzle;
   let hotelClerk;
   let request;
@@ -28,100 +28,114 @@ describe('Test: hotelClerk.join', () => {
 
     await hotelClerk.init();
 
-    request = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'subscribe',
-      body: {
-        equals: { firstName: 'Ada' }
+    request = new Request(
+      {
+        index: "foo",
+        collection: "bar",
+        controller: "realtime",
+        action: "subscribe",
+        body: {
+          equals: { firstName: "Ada" },
+        },
+        volatile: {
+          foo: "bar",
+          bar: ["foo", "bar", "baz", "qux"],
+        },
       },
-      volatile: {
-        foo: 'bar',
-        bar: [ 'foo', 'bar', 'baz', 'qux']
-      }
-    }, { connectionId, token: null });
+      { connectionId, token: null }
+    );
 
     kuzzle.config.limits.subscriptionMinterms = 0;
 
     kuzzle.koncorde.normalize.returns({
-      id: 'foobar', index: 'foo/bar', filter: []
+      id: "foobar",
+      index: "foo/bar",
+      filter: [],
     });
   });
 
   it('should register a "join" event', async () => {
-    sinon.stub(hotelClerk, 'join');
+    sinon.stub(hotelClerk, "join");
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:join', 'request');
+    await kuzzle.ask("core:realtime:join", "request");
 
-    should(hotelClerk.join).calledWith('request');
+    should(hotelClerk.join).calledWith("request");
   });
 
-  it('should allow to join an existing room', async () => {
+  it("should allow to join an existing room", async () => {
     let result = await hotelClerk.subscribe(request);
     const roomId = result.roomId;
 
     should(result).be.an.Object();
-    should(result).have.property('channel');
-    should(result).have.property('roomId');
+    should(result).have.property("channel");
+    should(result).have.property("roomId");
     should(hotelClerk.roomsCount).be.eql(1);
     should(realtimeModule.notifier.notifyUser).calledWithMatch(
       roomId,
       request,
-      'in',
-      { count: 1 });
+      "in",
+      { count: 1 }
+    );
 
     const request2 = new Request(
       {
-        index: 'foo',
-        collection: 'bar',
-        controller: 'realtime',
-        action: 'join',
+        index: "foo",
+        collection: "bar",
+        controller: "realtime",
+        action: "join",
         body: { roomId },
       },
-      { connectionId: 'connection2', user: null });
+      { connectionId: "connection2", user: null }
+    );
 
     request2.input.body = { roomId };
 
     result = await hotelClerk.join(request2);
 
     should(result).be.an.Object();
-    should(result).have.property('roomId', roomId);
-    should(result).have.property('channel');
+    should(result).have.property("roomId", roomId);
+    should(result).have.property("channel");
     should(hotelClerk.roomsCount).be.eql(1);
     should(realtimeModule.notifier.notifyUser).calledWithMatch(
       roomId,
       request2,
-      'in',
-      { count: 2 });
+      "in",
+      { count: 2 }
+    );
   });
 
-  it('should throw if the room does not exist', () => {
-    const joinRequest = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'join',
-      body: { roomId: 'i-exist' }
-    }, context);
+  it("should throw if the room does not exist", () => {
+    const joinRequest = new Request(
+      {
+        index: "foo",
+        collection: "bar",
+        controller: "realtime",
+        action: "join",
+        body: { roomId: "i-exist" },
+      },
+      context
+    );
 
     return should(hotelClerk.join(joinRequest)).be.rejectedWith(NotFoundError, {
-      id: 'core.realtime.room_not_found',
+      id: "core.realtime.room_not_found",
     });
   });
 
   it('should propagate notification only with "cluster" option', async () => {
-    const joinRequest = new Request({
-      index: 'foo',
-      collection: 'bar',
-      controller: 'realtime',
-      action: 'join',
-      body: { roomId: 'i-exist' }
-    }, context);
-    const response = { cluster: false, channel: 'foobar', subscribed: true };
-    hotelClerk.rooms.set('i-exist', {});
-    
+    const joinRequest = new Request(
+      {
+        index: "foo",
+        collection: "bar",
+        controller: "realtime",
+        action: "join",
+        body: { roomId: "i-exist" },
+      },
+      context
+    );
+    const response = { cluster: false, channel: "foobar", subscribed: true };
+    hotelClerk.rooms.set("i-exist", {});
+
     hotelClerk.subscribeToRoom = async (_, __, callback) => {
       await callback(response.subscribed, response.cluster);
       return response;
@@ -135,6 +149,9 @@ describe('Test: hotelClerk.join', () => {
 
     await hotelClerk.join(joinRequest);
 
-    should(kuzzle.call).be.calledWith('core:realtime:subscribe:after', 'i-exist');
+    should(kuzzle.call).be.calledWith(
+      "core:realtime:subscribe:after",
+      "i-exist"
+    );
   });
 });

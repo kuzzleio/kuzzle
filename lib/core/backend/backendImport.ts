@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-import * as kerror from '../../kerror';
-import { ApplicationManager } from './index';
-import { JSONObject } from '../../../index';
-import { isPlainObject } from '../../../lib/util/safeObject';
+import * as kerror from "../../kerror";
+import { ApplicationManager } from "./index";
+import { JSONObject } from "../../../index";
+import { isPlainObject } from "../../../lib/util/safeObject";
 
-const assertionError = kerror.wrap('validation', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("validation", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export type DefaultMappings = {
   [index: string]: {
@@ -37,7 +37,6 @@ export type DefaultMappings = {
 };
 
 export class BackendImport extends ApplicationManager {
-
   /**
    * Import mappings.
    *
@@ -54,21 +53,23 @@ export class BackendImport extends ApplicationManager {
    *
    * @param mappings Object containing index and their collections mappings
    */
-  mappings (mappings: DefaultMappings): void {
+  mappings(mappings: DefaultMappings): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'import');
-    }
-    else if (! isPlainObject(mappings)) {
-      throw assertionError.get('invalid_type', 'mappings', 'object');
+      throw runtimeError.get("already_started", "import");
+    } else if (!isPlainObject(mappings)) {
+      throw assertionError.get("invalid_type", "mappings", "object");
     }
 
     for (const index of Object.keys(mappings)) {
-      if (! isPlainObject(mappings[index])) {
-        throw assertionError.get('invalid_type', `mappings.${index}`, 'object');
+      if (!isPlainObject(mappings[index])) {
+        throw assertionError.get("invalid_type", `mappings.${index}`, "object");
       }
       // If some collections have already been defined, only their last mappings will be retained
-      this._application._import.mappings[index] =
-        Object.assign({}, this._application._import.mappings[index], mappings[index]);
+      this._application._import.mappings[index] = Object.assign(
+        {},
+        this._application._import.mappings[index],
+        mappings[index]
+      );
     }
   }
 
@@ -84,17 +85,19 @@ export class BackendImport extends ApplicationManager {
    *
    * @param profiles Object containing profiles and their definition
    */
-  profiles (profiles: JSONObject): void {
+  profiles(profiles: JSONObject): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'import');
-    }
-    else if (! isPlainObject(profiles)) {
-      throw assertionError.get('invalid_type', 'profiles', 'object');
+      throw runtimeError.get("already_started", "import");
+    } else if (!isPlainObject(profiles)) {
+      throw assertionError.get("invalid_type", "profiles", "object");
     }
 
     // If some profiles have already been defined, only their last definition will be retained
-    this._application._import.profiles =
-      Object.assign({}, this._application._import.profiles, profiles);
+    this._application._import.profiles = Object.assign(
+      {},
+      this._application._import.profiles,
+      profiles
+    );
   }
 
   /**
@@ -109,17 +112,19 @@ export class BackendImport extends ApplicationManager {
    *
    * @param roles Object containing roles and their definition
    */
-  roles (roles: JSONObject): void {
+  roles(roles: JSONObject): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'import');
-    }
-    else if (! isPlainObject(roles)) {
-      throw assertionError.get('invalid_type', 'roles', 'object');
+      throw runtimeError.get("already_started", "import");
+    } else if (!isPlainObject(roles)) {
+      throw assertionError.get("invalid_type", "roles", "object");
     }
 
     // If some roles have already been defined, only their last definition will be retained
-    this._application._import.roles =
-      Object.assign({}, this._application._import.roles, roles);
+    this._application._import.roles = Object.assign(
+      {},
+      this._application._import.roles,
+      roles
+    );
   }
 
   /**
@@ -136,12 +141,11 @@ export class BackendImport extends ApplicationManager {
    *
    * @param mappings User properties
    */
-  userMappings (mappings: JSONObject): void {
+  userMappings(mappings: JSONObject): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'import');
-    }
-    else if (! isPlainObject(mappings)) {
-      throw assertionError.get('invalid_type', 'mappings', 'object');
+      throw runtimeError.get("already_started", "import");
+    } else if (!isPlainObject(mappings)) {
+      throw assertionError.get("invalid_type", "mappings", "object");
     }
 
     this._application._import.userMappings = mappings;
@@ -159,28 +163,34 @@ export class BackendImport extends ApplicationManager {
    * @param users Object containing users and their content
    * @param options onExistingUsers: Default to `skip`. Strategy to adopt when trying to create an already existing user.
    */
-  users (
+  users(
     users: JSONObject,
-    options: { onExistingUsers?: 'overwrite' | 'skip' } = {}
+    options: { onExistingUsers?: "overwrite" | "skip" } = {}
   ): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'import');
-    }
-    else if (! isPlainObject(users)) {
-      throw assertionError.get('invalid_type', 'users', 'object');
-    }
-    else if (options.onExistingUsers) {
-      if (! (options.onExistingUsers === 'overwrite' || options.onExistingUsers === 'skip')) {
-        throw assertionError.get(
-          'invalid_type',
-          'onExistingUsers',
-          ['overwrite', 'skip']);
+      throw runtimeError.get("already_started", "import");
+    } else if (!isPlainObject(users)) {
+      throw assertionError.get("invalid_type", "users", "object");
+    } else if (options.onExistingUsers) {
+      if (
+        !(
+          options.onExistingUsers === "overwrite" ||
+          options.onExistingUsers === "skip"
+        )
+      ) {
+        throw assertionError.get("invalid_type", "onExistingUsers", [
+          "overwrite",
+          "skip",
+        ]);
       }
       this._application._import.onExistingUsers = options.onExistingUsers;
     }
 
     // If some users have already been defined (before startup), only their last definition will be retained
-    this._application._import.users =
-      Object.assign({}, this._application._import.users, users);
+    this._application._import.users = Object.assign(
+      {},
+      this._application._import.users,
+      users
+    );
   }
 }

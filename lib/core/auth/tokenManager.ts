@@ -19,17 +19,17 @@
  * limitations under the License.
  */
 
-import SortedArray from 'sorted-array';
+import SortedArray from "sorted-array";
 
-import '../../types/Global';
-import { Token } from '../../model/security/token';
+import "../../types/Global";
+import { Token } from "../../model/security/token";
 
 interface ISortedArray<T> {
   array: T[];
 
-  search (item: any): number;
+  search(item: any): number;
 
-  insert (item: T): void;
+  insert(item: T): void;
 }
 
 /**
@@ -46,7 +46,7 @@ class ManagedToken extends Token {
    */
   connectionIds: Set<string>;
 
-  constructor (token: Token, connectionIds: Set<string>) {
+  constructor(token: Token, connectionIds: Set<string>) {
     super(token);
 
     this.connectionIds = connectionIds;
@@ -55,7 +55,7 @@ class ManagedToken extends Token {
   /**
    * Returns an unique string that identify a token and allows to sort them by expiration date.
    */
-  static indexFor (token: Token) {
+  static indexFor(token: Token) {
     return `${token.expiresAt};${token._id}`;
   }
 }
@@ -85,7 +85,7 @@ export class TokenManager {
   private tokensByConnection = new Map<string, ManagedToken>();
   private timer: NodeJS.Timeout = null;
 
-  constructor () {
+  constructor() {
     /*
      * Tokens are sorted by their expiration date
      *
@@ -104,11 +104,11 @@ export class TokenManager {
         return 0;
       }
 
-      if (a.idx && a.idx[0] === '-') {
+      if (a.idx && a.idx[0] === "-") {
         return 1;
       }
 
-      if (b.idx && b.idx[0] === '-') {
+      if (b.idx && b.idx[0] === "-") {
         return -1;
       }
 
@@ -116,19 +116,25 @@ export class TokenManager {
     });
   }
 
-  async init () {
-    const anonymous = await global.kuzzle.ask('core:security:user:anonymous:get');
+  async init() {
+    const anonymous = await global.kuzzle.ask(
+      "core:security:user:anonymous:get"
+    );
     this.anonymousUserId = anonymous._id;
 
-    global.kuzzle.on('connection:remove', connection => {
-      this.removeConnection(connection.id)
-        .catch(err => global.kuzzle.log.info(err));
+    global.kuzzle.on("connection:remove", (connection) => {
+      this.removeConnection(connection.id).catch((err) =>
+        global.kuzzle.log.info(err)
+      );
     });
   }
 
-  runTimer () {
+  runTimer() {
     if (this.tokens.array.length > 0) {
-      const delay = Math.min(this.tokens.array[0].expiresAt - Date.now(), TIMEOUT_MAX);
+      const delay = Math.min(
+        this.tokens.array[0].expiresAt - Date.now(),
+        TIMEOUT_MAX
+      );
 
       if (this.timer) {
         clearTimeout(this.timer);
@@ -144,8 +150,8 @@ export class TokenManager {
    * @param token
    * @param connectionId
    */
-  link (token: Token, connectionId: string) {
-    if (! token || token.userId === this.anonymousUserId) {
+  link(token: Token, connectionId: string) {
+    if (!token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -162,8 +168,7 @@ export class TokenManager {
 
     if (pos === -1) {
       this.add(token, new Set([connectionId]));
-    }
-    else {
+    } else {
       const managedToken = this.tokens.array[pos];
       managedToken.connectionIds.add(connectionId);
 
@@ -177,8 +182,8 @@ export class TokenManager {
    * @param token
    * @param connectionId
    */
-  unlink (token: Token, connectionId: string) {
-    if (! token || token.userId === this.anonymousUserId) {
+  unlink(token: Token, connectionId: string) {
+    if (!token || token.userId === this.anonymousUserId) {
       return;
     }
 
@@ -200,11 +205,11 @@ export class TokenManager {
   /**
    * Remove token associated with a connection.
    */
-  async removeConnection (connectionId: string) {
+  async removeConnection(connectionId: string) {
     const managedToken = this.tokensByConnection.get(connectionId);
 
     // Anonymous connection does not have associated token
-    if (! managedToken) {
+    if (!managedToken) {
       return;
     }
 
@@ -219,7 +224,7 @@ export class TokenManager {
    *
    * @param token
    */
-  async expire (token: Token) {
+  async expire(token: Token) {
     if (token.userId === this.anonymousUserId) {
       return;
     }
@@ -232,7 +237,10 @@ export class TokenManager {
 
       for (const connectionId of managedToken.connectionIds) {
         this.tokensByConnection.delete(connectionId);
-        await global.kuzzle.ask('core:realtime:connection:remove', connectionId);
+        await global.kuzzle.ask(
+          "core:realtime:connection:remove",
+          connectionId
+        );
       }
 
       this.deleteByIndex(searchResult);
@@ -245,7 +253,7 @@ export class TokenManager {
    * @param oldToken
    * @param newToken
    */
-  refresh (oldToken: Token, newToken: Token) {
+  refresh(oldToken: Token, newToken: Token) {
     const oldIndex = ManagedToken.indexFor(oldToken);
     const pos = this.tokens.search({ idx: oldIndex });
 
@@ -266,17 +274,24 @@ export class TokenManager {
     }
   }
 
-  async checkTokensValidity () {
+  async checkTokensValidity() {
     const arr = this.tokens.array;
 
     // API key can never expire (-1)
-    if (arr.length > 0 && (arr[0].expiresAt > 0 && arr[0].expiresAt < Date.now())) {
+    if (
+      arr.length > 0 &&
+      arr[0].expiresAt > 0 &&
+      arr[0].expiresAt < Date.now()
+    ) {
       const managedToken = arr[0];
 
       arr.shift();
 
       for (const connectionId of managedToken.connectionIds) {
-        await global.kuzzle.ask('core:realtime:tokenExpired:notify', connectionId);
+        await global.kuzzle.ask(
+          "core:realtime:tokenExpired:notify",
+          connectionId
+        );
         this.tokensByConnection.delete(connectionId);
       }
 
@@ -293,7 +308,7 @@ export class TokenManager {
   /**
    * Gets the token matching user & connection if any
    */
-  getConnectedUserToken (userId: string, connectionId: string): Token | null {
+  getConnectedUserToken(userId: string, connectionId: string): Token | null {
     const token = this.tokensByConnection.get(connectionId);
 
     return token && token.userId === userId ? token : null;
@@ -302,10 +317,10 @@ export class TokenManager {
   /**
    * Returns the kuid associated to a connection
    */
-  getKuidFromConnection (connectionId: string): string | null {
+  getKuidFromConnection(connectionId: string): string | null {
     const token = this.tokensByConnection.get(connectionId);
 
-    if (! token) {
+    if (!token) {
       return null;
     }
 
@@ -318,10 +333,10 @@ export class TokenManager {
    * @param token
    * @param connectionId
    */
-  private add (token: Token, connectionIds: Set<string>) {
+  private add(token: Token, connectionIds: Set<string>) {
     const orderedToken = Object.assign({}, token, {
       connectionIds: new Set(connectionIds),
-      idx: ManagedToken.indexFor(token)
+      idx: ManagedToken.indexFor(token),
     });
 
     for (const connectionId of connectionIds) {
@@ -334,7 +349,10 @@ export class TokenManager {
     }
   }
 
-  private removeConnectionLinkedToToken (connectionId: string, managedToken: ManagedToken) {
+  private removeConnectionLinkedToToken(
+    connectionId: string,
+    managedToken: ManagedToken
+  ) {
     managedToken.connectionIds.delete(connectionId);
 
     if (managedToken.connectionIds.size === 0) {
@@ -343,10 +361,10 @@ export class TokenManager {
     }
   }
 
-  private deleteByIndex (index: number) {
+  private deleteByIndex(index: number) {
     const orderedToken = this.tokens.array[index];
 
-    if (! orderedToken) {
+    if (!orderedToken) {
       return;
     }
 

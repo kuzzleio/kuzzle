@@ -1,25 +1,27 @@
-'use strict';
+"use strict";
 
-const
-  should = require('should'),
-  {
-    When,
-    Then
-  } = require('cucumber');
+const should = require("should"),
+  { When, Then } = require("cucumber");
 
-
-When('I get the public API', function () {
-  return this.api.serverPublicApi()
-    .then(({ result }) => {
-      this.apiResult = result;
-    });
+When("I get the public API", function () {
+  return this.api.serverPublicApi().then(({ result }) => {
+    this.apiResult = result;
+  });
 });
 
-Then('I have the definition of kuzzle and plugins controllers', function () {
-  const
-    kuzzleControllers = [
-      'auth', 'bulk', 'collection', 'document', 'index', 'ms', 'memoryStorage',
-      'realtime', 'security', 'server', 'admin'
+Then("I have the definition of kuzzle and plugins controllers", function () {
+  const kuzzleControllers = [
+      "auth",
+      "bulk",
+      "collection",
+      "document",
+      "index",
+      "ms",
+      "memoryStorage",
+      "realtime",
+      "security",
+      "server",
+      "admin",
     ],
     responseControllers = Object.keys(this.apiResult);
 
@@ -33,7 +35,12 @@ Then('I have the definition of kuzzle and plugins controllers', function () {
       should(action.action).eql(actionName);
 
       // only theses methods from realtime have http routes
-      if (! (controllerName === 'realtime' && (actionName !== 'list' || actionName !== 'publish'))) {
+      if (
+        !(
+          controllerName === "realtime" &&
+          (actionName !== "list" || actionName !== "publish")
+        )
+      ) {
         should(action.http).be.instanceOf(Array);
       }
     }

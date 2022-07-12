@@ -1,10 +1,10 @@
-import { JSONObject } from '../../index';
+import { JSONObject } from "../../index";
 
 export type InstallationConfig = {
   id: string;
   handler: () => Promise<void>;
   description?: string;
-}
+};
 export type StartOptions = {
   import?: JSONObject;
   plugins?: JSONObject;
@@ -32,4 +32,3 @@ export type SupportConfig = {
     users?: JSONObject;
   };
 };
-

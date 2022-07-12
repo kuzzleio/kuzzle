@@ -19,14 +19,17 @@
  * limitations under the License.
  */
 
-import * as kerror from '../../kerror';
-import { has, isPlainObject } from '../../util/safeObject';
-import { binarySearch } from '../../util/array';
-import { ControllerRight, ControllerRights } from '../../types/ControllerRights';
-import { KuzzleRequest } from '../../../index';
-import { OptimizedPolicyRestrictions } from '../../types/PolicyRestrictions';
+import * as kerror from "../../kerror";
+import { has, isPlainObject } from "../../util/safeObject";
+import { binarySearch } from "../../util/array";
+import {
+  ControllerRight,
+  ControllerRights,
+} from "../../types/ControllerRights";
+import { KuzzleRequest } from "../../../index";
+import { OptimizedPolicyRestrictions } from "../../types/PolicyRestrictions";
 
-const assertionError = kerror.wrap('api', 'assert');
+const assertionError = kerror.wrap("api", "assert");
 
 /**
  * @class Role
@@ -35,7 +38,7 @@ export class Role {
   public controllers: ControllerRights;
   public _id: string;
 
-  constructor () {
+  constructor() {
     this.controllers = {};
   }
 
@@ -43,9 +46,9 @@ export class Role {
    * @param {Request} request
    * @returns {boolean}
    */
-  isActionAllowed (request: KuzzleRequest): boolean {
-    if (! global.kuzzle) {
-      throw kerror.get('security', 'role', 'uninitialized', this._id);
+  isActionAllowed(request: KuzzleRequest): boolean {
+    if (!global.kuzzle) {
+      throw kerror.get("security", "role", "uninitialized", this._id);
     }
 
     if (this.controllers === undefined || this.controllers === null) {
@@ -57,18 +60,17 @@ export class Role {
     // @deprecated - the "memoryStorage" alias should be removed in the next
     // major version
     // Handles the memory storage controller aliases: ms, memoryStorage
-    if ((request.input.controller === 'ms' || request.input.controller === 'memoryStorage')
-      && (this.controllers.ms || this.controllers.memoryStorage)
+    if (
+      (request.input.controller === "ms" ||
+        request.input.controller === "memoryStorage") &&
+      (this.controllers.ms || this.controllers.memoryStorage)
     ) {
       controllerRights = this.controllers.ms || this.controllers.memoryStorage;
-    }
-    else if (has(this.controllers, request.input.controller)) {
+    } else if (has(this.controllers, request.input.controller)) {
       controllerRights = this.controllers[request.input.controller];
-    }
-    else if (this.controllers['*'] !== undefined) {
-      controllerRights = this.controllers['*'];
-    }
-    else {
+    } else if (this.controllers["*"] !== undefined) {
+      controllerRights = this.controllers["*"];
+    } else {
       return false;
     }
 
@@ -80,15 +82,13 @@ export class Role {
 
     if (has(controllerRights.actions, request.input.action)) {
       actionRights = controllerRights.actions[request.input.action];
-    }
-    else if (controllerRights.actions['*'] !== undefined) {
-      actionRights = controllerRights.actions['*'];
-    }
-    else {
+    } else if (controllerRights.actions["*"] !== undefined) {
+      actionRights = controllerRights.actions["*"];
+    } else {
       return false;
     }
 
-    if (typeof actionRights !== 'boolean' || ! actionRights) {
+    if (typeof actionRights !== "boolean" || !actionRights) {
       return false;
     }
 
@@ -98,24 +98,27 @@ export class Role {
   /**
    * @returns {Promise}
    */
-  async validateDefinition () {
+  async validateDefinition() {
     if (this.controllers === undefined || this.controllers === null) {
-      throw assertionError.get('missing_argument', `${this._id}.controllers`);
+      throw assertionError.get("missing_argument", `${this._id}.controllers`);
     }
 
-    if (! isPlainObject(this.controllers)) {
-      throw assertionError.get('invalid_type', `${this._id}.controllers`, 'object');
+    if (!isPlainObject(this.controllers)) {
+      throw assertionError.get(
+        "invalid_type",
+        `${this._id}.controllers`,
+        "object"
+      );
     }
 
     if (Object.keys(this.controllers).length === 0) {
-      throw assertionError.get('empty_argument', `${this._id}.controllers`);
+      throw assertionError.get("empty_argument", `${this._id}.controllers`);
     }
 
-    Object
-      .entries(this.controllers)
-      .forEach(entry => this.validateControllerRights(...entry));
+    Object.entries(this.controllers).forEach((entry) =>
+      this.validateControllerRights(...entry)
+    );
   }
-
 
   /**
    * @param {String} index
@@ -123,20 +126,24 @@ export class Role {
    * @param {Map<string, string[]>} restrictedTo Restricted indexes
    * @returns {Boolean} resolves to a Boolean value
    */
-  checkRestrictions (index: string, collection: string, restrictedTo: OptimizedPolicyRestrictions): boolean {
+  checkRestrictions(
+    index: string,
+    collection: string,
+    restrictedTo: OptimizedPolicyRestrictions
+  ): boolean {
     // If no restrictions, we allow the action:
-    if (! restrictedTo || restrictedTo.size === 0) {
+    if (!restrictedTo || restrictedTo.size === 0) {
       return true;
     }
 
     // If the request's action does not refer to an index, restrictions are
     // useless for this action (=> ignore them)
-    if (! index) {
+    if (!index) {
       return true;
     }
 
     // If the index is not in the restrictions, the action is not allowed
-    if (! restrictedTo.has(index)) {
+    if (!restrictedTo.has(index)) {
       return false;
     }
 
@@ -144,7 +151,7 @@ export class Role {
 
     // if no collections given on the restriction, the action is allowed for all
     // collections:
-    if (! collections || collections.length === 0) {
+    if (!collections || collections.length === 0) {
       return true;
     }
 
@@ -167,30 +174,34 @@ export class Role {
    * @param  {Array.<string, Object>}
    * @throws If the controller definition is invalid
    */
-  validateControllerRights (name: string, controller: ControllerRight) {
-    if (! isPlainObject(controller)) {
-      throw assertionError.get('invalid_type', name, 'object');
+  validateControllerRights(name: string, controller: ControllerRight) {
+    if (!isPlainObject(controller)) {
+      throw assertionError.get("invalid_type", name, "object");
     }
 
     if (Object.keys(controller).length === 0) {
-      throw assertionError.get('empty_argument', name);
+      throw assertionError.get("empty_argument", name);
     }
 
-    if (! has(controller, 'actions')) {
-      throw assertionError.get('missing_argument', name);
+    if (!has(controller, "actions")) {
+      throw assertionError.get("missing_argument", name);
     }
 
-    if (! isPlainObject(controller.actions)) {
-      throw assertionError.get('invalid_type', `${name}.actions`, 'object');
+    if (!isPlainObject(controller.actions)) {
+      throw assertionError.get("invalid_type", `${name}.actions`, "object");
     }
 
     if (Object.keys(controller.actions).length === 0) {
-      throw assertionError.get('empty_argument', `${name}.actions`);
+      throw assertionError.get("empty_argument", `${name}.actions`);
     }
 
     for (const [actionName, action] of Object.entries(controller.actions)) {
-      if (typeof action !== 'boolean') {
-        throw assertionError.get('invalid_type', `${name}.actions.${actionName}`, 'boolean');
+      if (typeof action !== "boolean") {
+        throw assertionError.get(
+          "invalid_type",
+          `${name}.actions.${actionName}`,
+          "boolean"
+        );
       }
     }
   }
@@ -200,15 +211,15 @@ export class Role {
    *
    * @returns {boolean}
    */
-  canLogIn (): boolean {
-    for (const controllerKey of ['auth', '*']) {
+  canLogIn(): boolean {
+    for (const controllerKey of ["auth", "*"]) {
       if (this.controllers[controllerKey]) {
         const controller = this.controllers[controllerKey];
 
-        for (const actionKey of ['login', '*']) {
+        for (const actionKey of ["login", "*"]) {
           const action = controller.actions[actionKey];
 
-          if (typeof action === 'boolean' && action) {
+          if (typeof action === "boolean" && action) {
             return true;
           }
         }

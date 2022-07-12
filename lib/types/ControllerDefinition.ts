@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
-import { KuzzleRequest } from '../api/request';
+import { JSONObject } from "kuzzle-sdk";
+import { KuzzleRequest } from "../api/request";
 
 /**
  * API controller definition.
@@ -91,7 +91,7 @@ export type HttpRoute = {
   /**
    * HTTP verb.
    */
-  verb: 'get' | 'head' | 'post' | 'put' | 'delete' | 'patch' | 'options';
+  verb: "get" | "head" | "post" | "put" | "delete" | "patch" | "options";
 
   /**
    * Route path.

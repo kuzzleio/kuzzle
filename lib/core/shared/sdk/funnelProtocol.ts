@@ -19,73 +19,82 @@
  * limitations under the License.
  */
 
-import { KuzzleEventEmitter, RequestPayload } from 'kuzzle-sdk';
+import { KuzzleEventEmitter, RequestPayload } from "kuzzle-sdk";
 
-import { Request } from '../../../api/request';
-import * as kerror from '../../../kerror';
+import { Request } from "../../../api/request";
+import * as kerror from "../../../kerror";
 
 export class FunnelProtocol extends KuzzleEventEmitter {
-  private id = 'funnel';
+  private id = "funnel";
   private connectionId: string = null;
 
-  constructor () {
+  constructor() {
     super();
 
     /**
      * Realtime notifications are sent by the InternalProtocol
      * through the internal event system.
      */
-    global.kuzzle.on('core:network:internal:message', message => {
+    global.kuzzle.on("core:network:internal:message", (message) => {
       // Send the notifications to the SDK for the internal Room mechanism
       this.emit(message.room, message);
     });
   }
 
-  isReady () {
+  isReady() {
     return true;
   }
 
   /**
    *  Hydrate the user and execute SDK query
    */
-  async query (request: RequestPayload) {
-    if (! this.connectionId) {
-      this.connectionId = await global.kuzzle.ask('core:network:internal:connectionId:get');
+  async query(request: RequestPayload) {
+    if (!this.connectionId) {
+      this.connectionId = await global.kuzzle.ask(
+        "core:network:internal:connectionId:get"
+      );
     }
 
     const requestOptions = {
       connection: {
         id: this.connectionId,
-        protocol: this.id
+        protocol: this.id,
       },
       user: null,
     };
 
     // Validate and use the provided request.kuid
     if (request.__kuid__) {
-      if (typeof request.__kuid__ !== 'string') {
-        throw kerror.get('plugin', 'context', 'invalid_user');
+      if (typeof request.__kuid__ !== "string") {
+        throw kerror.get("plugin", "context", "invalid_user");
       }
       // Get the user and store it in this context to prevent any possible race conditions
-      requestOptions.user = await global.kuzzle.ask('core:security:user:get', request.__kuid__);
+      requestOptions.user = await global.kuzzle.ask(
+        "core:security:user:get",
+        request.__kuid__
+      );
     }
 
     const kuzzleRequest = new Request(request, requestOptions);
 
-    if ( requestOptions.user
-      && request.__checkRights__
-      && ! await requestOptions.user.isActionAllowed(kuzzleRequest)
+    if (
+      requestOptions.user &&
+      request.__checkRights__ &&
+      !(await requestOptions.user.isActionAllowed(kuzzleRequest))
     ) {
       throw kerror.get(
-        'security',
-        'rights',
-        'forbidden',
+        "security",
+        "rights",
+        "forbidden",
         kuzzleRequest.input.controller,
         kuzzleRequest.input.action,
-        requestOptions.user._id);
+        requestOptions.user._id
+      );
     }
 
-    const result = await global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
+    const result = await global.kuzzle.funnel.executePluginRequest(
+      kuzzleRequest
+    );
 
     return { result };
   }

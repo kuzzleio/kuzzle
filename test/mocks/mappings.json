@@ -7,7 +7,7 @@
     },
     "green-taxi": {
       "properties": {
-        "data": { "type": "text"},
+        "data": { "type": "text" },
         "number": { "type": "integer" }
       }
     }

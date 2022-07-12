@@ -1,9 +1,6 @@
-'use strict';
+"use strict";
 
-const
-  {
-    Given
-  } = require('cucumber');
+const { Given } = require("cucumber");
 
 Given(/^a request compressed with "([^"]*)"$/, function (algorithm) {
   this.api.encode(algorithm);

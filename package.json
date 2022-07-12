@@ -5,6 +5,7 @@
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
+    "format": "npx prettier lib/ test/ features/ features-legacy/ --write",
     "file": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json",
     "start:dev": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json --script-args=--enable-plugins functional-test-plugin",
     "prepublishOnly": "npm run build",

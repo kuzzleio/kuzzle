@@ -23,12 +23,12 @@
   Set of utility functions meant to ease up the use of Koncorde v4 in Kuzzle
  */
 
-import { uniq } from 'lodash';
-import { JSONObject } from 'kuzzle-sdk';
-import { Koncorde } from 'koncorde';
+import { uniq } from "lodash";
+import { JSONObject } from "kuzzle-sdk";
+import { Koncorde } from "koncorde";
 
 // No collision possible: "/" is forbidden in index (or collection) names
-const SEPARATOR = '/';
+const SEPARATOR = "/";
 
 /**
  * Builds a Koncorde v4 index name from the old fashioned index+collection
@@ -38,7 +38,7 @@ const SEPARATOR = '/';
  * @param {string} collection
  * @return {string}
  */
-export function toKoncordeIndex (index: string, collection: string): string {
+export function toKoncordeIndex(index: string, collection: string): string {
   return `${index}${SEPARATOR}${collection}`;
 }
 
@@ -48,8 +48,11 @@ export function toKoncordeIndex (index: string, collection: string): string {
  * @param {string} index - Koncorde v4 index name
  * @return {{index: string, collection: string}}
  */
-export function fromKoncordeIndex (index: string): { collection: string; index: string } {
-  const [ kindex, kcollection ] = index.split(SEPARATOR);
+export function fromKoncordeIndex(index: string): {
+  collection: string;
+  index: string;
+} {
+  const [kindex, kcollection] = index.split(SEPARATOR);
 
   return {
     collection: kcollection,
@@ -66,7 +69,7 @@ export function fromKoncordeIndex (index: string): { collection: string; index: 
  * @param {JSONObject} body
  * @param {string} [_id]
  */
-export function koncordeTest (
+export function koncordeTest(
   koncorde: Koncorde,
   index: string,
   collection: string,
@@ -92,13 +95,13 @@ export function koncordeTest (
  * @param  {string}   index - Kuzzle index name
  * @return {string[]}
  */
-export function getCollections (koncorde: Koncorde, index: string): string[] {
+export function getCollections(koncorde: Koncorde, index: string): string[] {
   const indexPrefix = `${index}${SEPARATOR}`;
 
   return koncorde
     .getIndexes()
-    .filter(i => i.startsWith(indexPrefix))
-    .map(i => i.substr(indexPrefix.length));
+    .filter((i) => i.startsWith(indexPrefix))
+    .map((i) => i.substr(indexPrefix.length));
 }
 
 /**
@@ -108,11 +111,11 @@ export function getCollections (koncorde: Koncorde, index: string): string[] {
  * @param  {Koncorde} koncorde
  * @return {string[]}
  */
-export function getIndexes (koncorde: Koncorde): string[] {
+export function getIndexes(koncorde: Koncorde): string[] {
   const indexes = koncorde
     .getIndexes()
-    .filter(i => i !== '(default)')
-    .map(i => i.substr(0, i.indexOf(SEPARATOR)));
+    .filter((i) => i !== "(default)")
+    .map((i) => i.substr(0, i.indexOf(SEPARATOR)));
 
   return uniq(indexes);
 }

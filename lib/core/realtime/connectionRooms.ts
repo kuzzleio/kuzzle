@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 /**
  * Each connection can subscribe to many rooms with different sets of volatile
@@ -38,36 +38,36 @@ export class ConnectionRooms {
    */
   private rooms = new Map<string, JSONObject>();
 
-  constructor (rooms?: Map<string, JSONObject>) {
+  constructor(rooms?: Map<string, JSONObject>) {
     if (rooms) {
       this.rooms = rooms;
     }
   }
 
-  get roomIds (): string[] {
+  get roomIds(): string[] {
     return Array.from(this.rooms.keys());
   }
 
-  get count (): number {
+  get count(): number {
     return this.rooms.size;
   }
 
-  addRoom (roomId: string, volatile: JSONObject) {
+  addRoom(roomId: string, volatile: JSONObject) {
     this.rooms.set(roomId, volatile);
   }
 
-  removeRoom (roomId: string) {
+  removeRoom(roomId: string) {
     this.rooms.delete(roomId);
   }
 
-  hasRoom (roomId: string) {
+  hasRoom(roomId: string) {
     return this.rooms.has(roomId);
   }
 
   /**
    * Returns the volatile data for this room subscription
    */
-  getVolatile (roomId: string) {
+  getVolatile(roomId: string) {
     return this.rooms.get(roomId);
   }
 }

@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { KuzzleError, } from '../../kerror/errors';
-import * as kerror from '../../kerror';
-import { ApplicationManager, Backend } from './index';
-import { CustomErrorDefinition, ErrorDomains } from '../../types';
+import { KuzzleError } from "../../kerror/errors";
+import * as kerror from "../../kerror";
+import { ApplicationManager, Backend } from "./index";
+import { CustomErrorDefinition, ErrorDomains } from "../../types";
 
 export class BackendErrors extends ApplicationManager {
   private domains: ErrorDomains = {};
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
   }
 
@@ -48,15 +48,20 @@ export class BackendErrors extends ApplicationManager {
    * });
    * ```
    */
-  register (domain: string, subDomain: string, name: string, definition: CustomErrorDefinition) {
-    if (! this.domains[domain]) {
+  register(
+    domain: string,
+    subDomain: string,
+    name: string,
+    definition: CustomErrorDefinition
+  ) {
+    if (!this.domains[domain]) {
       this.domains[domain] = {
         code: Object.keys(this.domains).length,
         subDomains: {},
       };
     }
 
-    if (! this.domains[domain].subDomains[subDomain]) {
+    if (!this.domains[domain].subDomains[subDomain]) {
       this.domains[domain].subDomains[subDomain] = {
         code: Object.keys(this.domains[domain].subDomains).length,
         errors: {},
@@ -64,7 +69,8 @@ export class BackendErrors extends ApplicationManager {
     }
 
     this.domains[domain].subDomains[subDomain].errors[name] = {
-      code: Object.keys(this.domains[domain].subDomains[subDomain].errors).length,
+      code: Object.keys(this.domains[domain].subDomains[subDomain].errors)
+        .length,
       ...definition,
     };
   }
@@ -81,8 +87,19 @@ export class BackendErrors extends ApplicationManager {
    *
    * @returns Standardized KuzzleError
    */
-  get (domain: string, subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGet(this.domains, domain, subDomain, name, ...placeholders);
+  get(
+    domain: string,
+    subDomain: string,
+    name: string,
+    ...placeholders
+  ): KuzzleError {
+    return kerror.rawGet(
+      this.domains,
+      domain,
+      subDomain,
+      name,
+      ...placeholders
+    );
   }
 
   /**
@@ -96,8 +113,21 @@ export class BackendErrors extends ApplicationManager {
    *
    * @returns Standardized KuzzleError
    */
-  getFrom (source: Error, domain: string, subDomain: string, name: string, ...placeholders): KuzzleError {
-    return kerror.rawGetFrom(this.domains, source, domain, subDomain, name, ...placeholders);
+  getFrom(
+    source: Error,
+    domain: string,
+    subDomain: string,
+    name: string,
+    ...placeholders
+  ): KuzzleError {
+    return kerror.rawGetFrom(
+      this.domains,
+      source,
+      domain,
+      subDomain,
+      name,
+      ...placeholders
+    );
   }
 
   /**
@@ -106,7 +136,7 @@ export class BackendErrors extends ApplicationManager {
    * @param domain Domain name
    * @param subDomain Subdomain to wrap to
    */
-  wrap (domain: string, subDomain: string) {
+  wrap(domain: string, subDomain: string) {
     return kerror.rawWrap(this.domains, domain, subDomain);
   }
 }
