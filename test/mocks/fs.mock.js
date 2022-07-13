@@ -1,22 +1,22 @@
 // Mock for node's "fs" module
 
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
+const sinon = require("sinon");
 
 class FsMock {
-  constructor () {
+  constructor() {
     this.accessSync = sinon.stub();
     this.constants = {};
     this.copyFileSync = sinon.stub();
     this.createReadStream = sinon.stub().returns({
       pipe: sinon.stub().returnsThis(),
-      on: sinon.stub().callsArgWith(1)
+      on: sinon.stub().callsArgWith(1),
     });
     this.createWriteStream = sinon.stub();
     this.existsSync = sinon.stub().returns(false);
     this.lstatSync = sinon.stub().returns({
-      isFile: sinon.stub().returns(true)
+      isFile: sinon.stub().returns(true),
     });
     this.mkdirSync = sinon.stub();
     this.readdir = sinon.stub();

@@ -1,30 +1,30 @@
-'use strict';
+"use strict";
 
 // See https://docs.kuzzle.io/core/2/api/controllers/admin/load-securities/
 
 module.exports = {
   users: {
-    'test-admin': {
+    "test-admin": {
       content: {
-        profileIds: ['admin']
+        profileIds: ["admin"],
       },
       credentials: {
         local: {
-          username: 'test-admin',
-          password: 'password'
-        }
-      }
+          username: "test-admin",
+          password: "password",
+        },
+      },
     },
-    'default-user': {
+    "default-user": {
       content: {
-        profileIds: ['default']
+        profileIds: ["default"],
       },
       credentials: {
         local: {
-          username: 'default-user',
-          password: 'password'
-        }
-      }
-    }
-  }
+          username: "default-user",
+          password: "password",
+        },
+      },
+    },
+  },
 };

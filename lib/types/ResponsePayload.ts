@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from '../../index';
+import { JSONObject } from "../../index";
 
 export type ResponseErrorPayload = {
   /**
@@ -108,4 +108,4 @@ export type ResponsePayload = {
    * Room unique identifier
    */
   room?: string;
-}
+};

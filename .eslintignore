@@ -122,3 +122,8 @@ lib/types/errors/ErrorDomains.js
 lib/util/array.js
 lib/util/bufferedPassThrough.js
 lib/util/dump-collection.js
+lib/api/controllers/debugController.js
+lib/api/openapi/components/security/index.js
+lib/config/documentEventAliases.js
+lib/types/DebugModule.js
+lib/util/time.js

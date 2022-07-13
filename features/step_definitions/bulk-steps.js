@@ -1,25 +1,22 @@
-'use strict';
+"use strict";
 
-const
-  {
-    When,
-    Then
-  } = require('cucumber'),
-  should = require('should');
+const { When, Then } = require("cucumber"),
+  should = require("should");
 
-const actionName = action => Object.keys(action)[0];
-const actionBody = action => action[actionName(action)];
+const actionName = (action) => Object.keys(action)[0];
+const actionBody = (action) => action[actionName(action)];
 
-When('I perform a bulk import with the following:', async function (dataTable) {
+When("I perform a bulk import with the following:", async function (dataTable) {
   const bulkData = dataTable.rawTable.map(JSON.parse);
 
   this.props.result = await this.sdk.bulk.import(
     this.props.index,
     this.props.collection,
-    bulkData);
+    bulkData
+  );
 });
 
-Then('I should receive a bulk result matching:', function (dataTable) {
+Then("I should receive a bulk result matching:", function (dataTable) {
   const expectedResult = dataTable.rawTable.map(JSON.parse);
 
   for (let i = 0; i < this.props.result.successes.length; i++) {
@@ -30,7 +27,7 @@ Then('I should receive a bulk result matching:', function (dataTable) {
   }
 });
 
-Then('I should receive a bulk error matching:', function (dataTable) {
+Then("I should receive a bulk error matching:", function (dataTable) {
   const expectedError = dataTable.rawTable.map(JSON.parse);
 
   for (let i = 0; i < this.props.result.errors.length; i++) {
@@ -41,19 +38,22 @@ Then('I should receive a bulk error matching:', function (dataTable) {
   }
 });
 
-Then('I perform a bulk deleteByQuery with the query:', async function (rawQuery) {
-  const query = JSON.parse(rawQuery);
+Then(
+  "I perform a bulk deleteByQuery with the query:",
+  async function (rawQuery) {
+    const query = JSON.parse(rawQuery);
 
-  const request = {
-    controller: 'bulk',
-    action: 'deleteByQuery',
-    index: this.props.index,
-    collection: this.props.collection,
-    refresh: 'wait_for',
-    body: { query }
-  };
+    const request = {
+      controller: "bulk",
+      action: "deleteByQuery",
+      index: this.props.index,
+      collection: this.props.collection,
+      refresh: "wait_for",
+      body: { query },
+    };
 
-  const { result } = await this.sdk.query(request);
+    const { result } = await this.sdk.query(request);
 
-  this.props.result = result;
-});
+    this.props.result = result;
+  }
+);

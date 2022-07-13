@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { omit } from 'lodash';
-import Bluebird from 'bluebird';
+import { omit } from "lodash";
+import Bluebird from "bluebird";
 
-import { Profile } from '../../model/security/profile';
-import Repository from '../shared/repository';
-import * as kerror from '../../kerror';
-import cacheDbEnum from '../cache/cacheDbEnum';
-import { JSONObject } from 'kuzzle-sdk';
-import { Policy, OptimizedPolicy } from '../../../index';
+import { Profile } from "../../model/security/profile";
+import Repository from "../shared/repository";
+import * as kerror from "../../kerror";
+import cacheDbEnum from "../cache/cacheDbEnum";
+import { JSONObject } from "kuzzle-sdk";
+import { Policy, OptimizedPolicy } from "../../../index";
 
 /** @internal */
 type CreateOrReplaceOptions = {
@@ -64,7 +64,7 @@ export class ProfileRepository extends Repository {
   /**
    * @constructor
    */
-  constructor (securityModule) {
+  constructor(securityModule) {
     super({
       cache: cacheDbEnum.NONE,
       store: global.kuzzle.internalIndex,
@@ -73,11 +73,11 @@ export class ProfileRepository extends Repository {
     this.module = securityModule;
     this.profiles = new Map();
 
-    super.collection = 'profiles';
+    super.collection = "profiles";
     super.ObjectConstructor = Profile;
   }
 
-  init () {
+  init() {
     /**
      * Creates a new profile
      * @param  {String} id - profile identifier / name
@@ -86,9 +86,9 @@ export class ProfileRepository extends Repository {
      * @returns {Profile}
      * @throws If already exists or if the policies are invalid
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:create',
-      (id, policies, opts) => this.create(id, policies, opts));
+    global.kuzzle.onAsk("core:security:profile:create", (id, policies, opts) =>
+      this.create(id, policies, opts)
+    );
 
     /**
      * Creates a new profile, or replaces it if it already exists
@@ -99,8 +99,9 @@ export class ProfileRepository extends Repository {
      * @throws If the profile policies are invalid
      */
     global.kuzzle.onAsk(
-      'core:security:profile:createOrReplace',
-      (id, policies, opts) => this.createOrReplace(id, policies, opts));
+      "core:security:profile:createOrReplace",
+      (id, policies, opts) => this.createOrReplace(id, policies, opts)
+    );
 
     /**
      * Deletes an existing profile
@@ -109,9 +110,9 @@ export class ProfileRepository extends Repository {
      * @throws If the profile doesn't exist, if it is protected, or if it's
      *         still in use
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:delete',
-      (id, opts) => this.deleteById(id, opts));
+    global.kuzzle.onAsk("core:security:profile:delete", (id, opts) =>
+      this.deleteById(id, opts)
+    );
 
     /**
      * Loads and returns an existing profile
@@ -119,7 +120,7 @@ export class ProfileRepository extends Repository {
      * @returns {Profile}
      * @throws {NotFoundError} If the profile doesn't exist
      */
-    global.kuzzle.onAsk('core:security:profile:get', id => this.load(id));
+    global.kuzzle.onAsk("core:security:profile:get", (id) => this.load(id));
 
     /**
      * Invalidates the RAM cache from the given profile ID. If none is provided,
@@ -127,9 +128,9 @@ export class ProfileRepository extends Repository {
      *
      * @param  {String} [id] - profile identifier
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:invalidate',
-      id => this.invalidate(id));
+    global.kuzzle.onAsk("core:security:profile:invalidate", (id) =>
+      this.invalidate(id)
+    );
 
     /**
      * Gets multiple profiles
@@ -137,9 +138,9 @@ export class ProfileRepository extends Repository {
      * @returns {Array.<Profile>}
      * @throws If one or more profiles don't exist
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:mGet',
-      ids => this.loadProfiles(ids));
+    global.kuzzle.onAsk("core:security:profile:mGet", (ids) =>
+      this.loadProfiles(ids)
+    );
 
     /**
      * Fetches the next page of search results
@@ -147,9 +148,9 @@ export class ProfileRepository extends Repository {
      * @param  {String} [ttl] - refresh the scroll results TTL
      * @returns {Object} Search results
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:scroll',
-      (id, ttl) => this.scroll(id, ttl));
+    global.kuzzle.onAsk("core:security:profile:scroll", (id, ttl) =>
+      this.scroll(id, ttl)
+    );
 
     /**
      * Searches profiles
@@ -159,17 +160,17 @@ export class ProfileRepository extends Repository {
      *
      * @returns {Object} Search results
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:search',
-      (searchBody, opts) => this.search(searchBody, opts));
+    global.kuzzle.onAsk("core:security:profile:search", (searchBody, opts) =>
+      this.search(searchBody, opts)
+    );
 
     /**
      * Removes all existing profiles and invalidates the RAM cache
      * @param  {Object} opts (refresh)
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:truncate',
-      opts => this.truncate(opts));
+    global.kuzzle.onAsk("core:security:profile:truncate", (opts) =>
+      this.truncate(opts)
+    );
 
     /**
      * Updates an existing profile using a partial content
@@ -178,9 +179,9 @@ export class ProfileRepository extends Repository {
      * @param  {Object} opts - refresh, retryOnConflict, userId (used for metadata)
      * @returns {Profile} Updated profile
      */
-    global.kuzzle.onAsk(
-      'core:security:profile:update',
-      (id, content, opts) => this.update(id, content, opts));
+    global.kuzzle.onAsk("core:security:profile:update", (id, content, opts) =>
+      this.update(id, content, opts)
+    );
   }
 
   /**
@@ -190,7 +191,7 @@ export class ProfileRepository extends Repository {
    * @returns {Promise.<Promise>}
    * @throws {NotFoundError} If the corresponding profile doesn't exist
    */
-  async load (id: string): Promise<Profile> {
+  async load(id: string): Promise<Profile> {
     if (this.profiles.has(id)) {
       return this.profiles.get(id);
     }
@@ -217,23 +218,28 @@ export class ProfileRepository extends Repository {
    * @returns {Promise} Resolves to the matching Profile object if found, null
    * if not.
    */
-  async loadProfiles (profileIds: string[] = []): Promise<Profile[]> {
+  async loadProfiles(profileIds: string[] = []): Promise<Profile[]> {
     const profiles = [];
 
-    if (profileIds.some(p => typeof p !== 'string')) {
-      throw kerror.get('api', 'assert', 'invalid_type', 'profileIds', 'string[]');
+    if (profileIds.some((p) => typeof p !== "string")) {
+      throw kerror.get(
+        "api",
+        "assert",
+        "invalid_type",
+        "profileIds",
+        "string[]"
+      );
     }
 
     for (const id of profileIds) {
       let profile: Profile | Promise<Profile> = this.profiles.get(id);
 
-      if (! profile) {
-        profile = this.loadOneFromDatabase(id)
-          .then(p => {
-            p.optimizedPolicies = this.optimizePolicies(p.policies);
-            this.profiles.set(id, p);
-            return p;
-          });
+      if (!profile) {
+        profile = this.loadOneFromDatabase(id).then((p) => {
+          p.optimizedPolicies = this.optimizePolicies(p.policies);
+          this.profiles.set(id, p);
+          return p;
+        });
       }
 
       profiles.push(profile);
@@ -245,13 +251,12 @@ export class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async loadOneFromDatabase (id: string): Promise<Profile> {
+  async loadOneFromDatabase(id: string): Promise<Profile> {
     try {
       return await super.loadOneFromDatabase(id);
-    }
-    catch (err) {
+    } catch (err) {
       if (err.status === 404) {
-        throw kerror.get('security', 'profile', 'not_found', id);
+        throw kerror.get("security", "profile", "not_found", id);
       }
       throw err;
     }
@@ -265,14 +270,14 @@ export class ProfileRepository extends Repository {
    * @param {Object} [opts]
    * @returns {Profile}
    */
-  async _createOrReplace (
+  async _createOrReplace(
     id: string,
     content: JSONObject,
     {
       method,
-      refresh = 'false',
+      refresh = "false",
       strict,
-      userId = null
+      userId = null,
     }: CreateOrReplaceOptions = {}
   ) {
     const profile = await this.fromDTO({
@@ -298,9 +303,13 @@ export class ProfileRepository extends Repository {
    * @param {Object} [opts]
    * @returns {Profile}
    */
-  async create (id: string, content: JSONObject, opts: JSONObject = {}): Promise<Profile> {
+  async create(
+    id: string,
+    content: JSONObject,
+    opts: JSONObject = {}
+  ): Promise<Profile> {
     return this._createOrReplace(id, content, {
-      method: 'create',
+      method: "create",
       ...opts,
     });
   }
@@ -313,9 +322,13 @@ export class ProfileRepository extends Repository {
    * @param {Object} [opts]
    * @returns {Profile}
    */
-  async createOrReplace (id: string, content: JSONObject, opts: JSONObject = {}): Promise<Profile> {
+  async createOrReplace(
+    id: string,
+    content: JSONObject,
+    opts: JSONObject = {}
+  ): Promise<Profile> {
     return this._createOrReplace(id, content, {
-      method: 'createOrReplace',
+      method: "createOrReplace",
       ...opts,
     });
   }
@@ -327,15 +340,10 @@ export class ProfileRepository extends Repository {
    * @param  {Object} [opts]
    * @returns {Promise}
    */
-  async update (
+  async update(
     id: string,
     content: JSONObject,
-    {
-      refresh,
-      retryOnConflict,
-      strict,
-      userId
-    }: UpdateOptions = {}
+    { refresh, retryOnConflict, strict, userId }: UpdateOptions = {}
   ) {
     const profile = await this.load(id);
     const pojo = super.toDTO(profile);
@@ -352,7 +360,7 @@ export class ProfileRepository extends Repository {
     });
 
     return this.validateAndSaveProfile(updated, {
-      method: 'update',
+      method: "update",
       refresh,
       retryOnConflict,
       strict,
@@ -366,7 +374,7 @@ export class ProfileRepository extends Repository {
    * @param {object} [options]
    * @returns {Promise}
    */
-  async deleteById (id: string, options: JSONObject = {}): Promise<void> {
+  async deleteById(id: string, options: JSONObject = {}): Promise<void> {
     const profile = await this.load(id);
     return this.delete(profile, options);
   }
@@ -374,46 +382,44 @@ export class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async delete (profile: Profile, {
-    refresh = 'false',
-    onAssignedUsers = 'fail',
-    userId = '-1',
-  } = {}) {
-    if (['admin', 'default', 'anonymous'].includes(profile._id)) {
-      throw kerror.get('security', 'profile', 'cannot_delete');
+  async delete(
+    profile: Profile,
+    { refresh = "false", onAssignedUsers = "fail", userId = "-1" } = {}
+  ) {
+    if (["admin", "default", "anonymous"].includes(profile._id)) {
+      throw kerror.get("security", "profile", "cannot_delete");
     }
 
     const query = {
       terms: {
-        'profileIds': [ profile._id ]
-      }
+        profileIds: [profile._id],
+      },
     };
 
-    if (onAssignedUsers === 'remove') {
+    if (onAssignedUsers === "remove") {
       const batch = [];
       let treated = 0;
       let userPage = await this.module.user.search(
         { query },
-        { scroll: '1m', size: 100 });
+        { scroll: "1m", size: 100 }
+      );
 
       while (treated < userPage.total) {
         batch.length = 0;
 
         for (const user of userPage.hits) {
-          user.profileIds = user.profileIds.filter(e => e !== profile._id);
+          user.profileIds = user.profileIds.filter((e) => e !== profile._id);
 
           if (user.profileIds.length === 0) {
-            user.profileIds.push('anonymous');
+            user.profileIds.push("anonymous");
           }
 
-          batch.push(this.module.user.update(
-            user._id,
-            user.profileIds,
-            user,
-            {
+          batch.push(
+            this.module.user.update(user._id, user.profileIds, user, {
               refresh,
-              userId
-            }));
+              userId,
+            })
+          );
         }
 
         await Bluebird.all(batch);
@@ -421,15 +427,17 @@ export class ProfileRepository extends Repository {
         treated += userPage.hits.length;
 
         if (treated < userPage.total) {
-          userPage = await this.module.user.scroll(userPage.scrollId, '1m');
+          userPage = await this.module.user.scroll(userPage.scrollId, "1m");
         }
       }
-    }
-    else {
-      const hits = await this.module.user.search({ query }, { from: 0, size: 1 });
+    } else {
+      const hits = await this.module.user.search(
+        { query },
+        { from: 0, size: 1 }
+      );
 
       if (hits.total > 0) {
-        throw kerror.get('security', 'profile', 'in_use');
+        throw kerror.get("security", "profile", "in_use");
       }
     }
 
@@ -445,9 +453,9 @@ export class ProfileRepository extends Repository {
    * @param {Profile} profile
    * @returns {object}
    */
-  serializeToDatabase (profile: Profile) {
+  serializeToDatabase(profile: Profile) {
     // avoid the profile var mutation
-    return omit(profile, ['_id']);
+    return omit(profile, ["_id"]);
   }
 
   /**
@@ -463,26 +471,41 @@ export class ProfileRepository extends Repository {
    *                                     applied on existing indexes/collections
    * @returns {Promise<Profile>}
    **/
-  async validateAndSaveProfile (profile: Profile, { method, refresh, retryOnConflict, strict }: ValidateAndSaveProfileOptions = {}) {
-    const policiesRoles = profile.policies.map(p => p.roleId);
+  async validateAndSaveProfile(
+    profile: Profile,
+    {
+      method,
+      refresh,
+      retryOnConflict,
+      strict,
+    }: ValidateAndSaveProfileOptions = {}
+  ) {
+    const policiesRoles = profile.policies.map((p) => p.roleId);
 
     // Assert: all roles must exist
     await this.module.role.loadRoles(policiesRoles);
 
     await profile.validateDefinition({ strict });
 
-    if ( profile._id === 'anonymous'
-      && policiesRoles.indexOf('anonymous') === -1
+    if (
+      profile._id === "anonymous" &&
+      policiesRoles.indexOf("anonymous") === -1
     ) {
-      throw kerror.get('security', 'profile', 'missing_anonymous_role');
+      throw kerror.get("security", "profile", "missing_anonymous_role");
     }
 
     profile.optimizedPolicies = undefined; // Remove optimized policies
-    await super.persistToDatabase(profile, { method, refresh, retryOnConflict });
+    await super.persistToDatabase(profile, {
+      method,
+      refresh,
+      retryOnConflict,
+    });
 
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
     // Recompute optimized policies based on new policies
-    updatedProfile.optimizedPolicies = this.optimizePolicies(updatedProfile.policies);
+    updatedProfile.optimizedPolicies = this.optimizePolicies(
+      updatedProfile.policies
+    );
 
     this.profiles.set(profile._id, updatedProfile);
     return updatedProfile;
@@ -492,24 +515,24 @@ export class ProfileRepository extends Repository {
    * @param {object} dto
    * @returns {Promise<Profile>}
    */
-  async fromDTO (dto: JSONObject): Promise<Profile> {
+  async fromDTO(dto: JSONObject): Promise<Profile> {
     const profile = await super.fromDTO(dto);
 
     // force "default" role/policy if the profile does not have any role in it
-    if (! profile.policies || profile.policies.length === 0) {
-      profile.policies = [ { roleId: 'default' } ];
+    if (!profile.policies || profile.policies.length === 0) {
+      profile.policies = [{ roleId: "default" }];
     }
 
-    if (profile.constructor._hash('') === false) {
-      profile.constructor._hash = obj => global.kuzzle.hash(obj);
+    if (profile.constructor._hash("") === false) {
+      profile.constructor._hash = (obj) => global.kuzzle.hash(obj);
     }
 
-    const policiesRoles = profile.policies.map(p => p.roleId);
+    const policiesRoles = profile.policies.map((p) => p.roleId);
     const roles = await this.module.role.loadRoles(policiesRoles);
 
     // Fail if not all roles are found
-    if (roles.some(r => r === null)) {
-      throw kerror.get('security', 'profile', 'cannot_hydrate');
+    if (roles.some((r) => r === null)) {
+      throw kerror.get("security", "profile", "cannot_hydrate");
     }
 
     return profile;
@@ -518,11 +541,10 @@ export class ProfileRepository extends Repository {
   /**
    * @override
    */
-  async truncate (opts: JSONObject) {
+  async truncate(opts: JSONObject) {
     try {
       await super.truncate(opts);
-    }
-    finally {
+    } finally {
       // always clear the RAM cache: even if truncate fails in the middle of it,
       // some of the cached profiles might not be valid anymore
       this.invalidate();
@@ -534,11 +556,10 @@ export class ProfileRepository extends Repository {
    * the entire cache is emptied.
    * @param {string} [profileId]
    */
-  invalidate (profileId?: string) {
-    if (! profileId) {
+  invalidate(profileId?: string) {
+    if (!profileId) {
       this.profiles.clear();
-    }
-    else {
+    } else {
       this.profiles.delete(profileId);
     }
   }
@@ -551,8 +572,8 @@ export class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param {Object[]} policies
    */
-  private optimizePolicies (policies: Policy[]): OptimizedPolicy[] {
-    if (! policies) {
+  private optimizePolicies(policies: Policy[]): OptimizedPolicy[] {
+    if (!policies) {
       return [];
     }
 
@@ -567,10 +588,10 @@ export class ProfileRepository extends Repository {
    * - Sort collections per index
    * @param policy
    */
-  private optimizePolicy (policy: Policy): OptimizedPolicy {
+  private optimizePolicy(policy: Policy): OptimizedPolicy {
     const indexes = new Map();
 
-    if (! policy.restrictedTo) {
+    if (!policy.restrictedTo) {
       return {
         roleId: policy.roleId,
       };
@@ -580,15 +601,15 @@ export class ProfileRepository extends Repository {
       const index = restriction.index;
       const collections = restriction.collections;
 
-      if (! index) {
+      if (!index) {
         continue;
       }
 
-      if (! indexes.has(index)) {
+      if (!indexes.has(index)) {
         indexes.set(index, new Set());
       }
 
-      if (! collections) {
+      if (!collections) {
         continue;
       }
 
@@ -615,19 +636,19 @@ export class ProfileRepository extends Repository {
   // Otherwise we cannot stub them
   // ============================================
 
-  async toDTO (dto: Profile): Promise<JSONObject> {
+  async toDTO(dto: Profile): Promise<JSONObject> {
     return super.toDTO(dto);
   }
 
-  async deleteFromDatabase (id: string, options: JSONObject) {
+  async deleteFromDatabase(id: string, options: JSONObject) {
     return super.deleteFromDatabase(id, options);
   }
 
-  async search (searchBody: JSONObject, options: JSONObject) {
+  async search(searchBody: JSONObject, options: JSONObject) {
     return super.search(searchBody, options);
   }
 
-  async scroll (id: string, ttl: number) {
+  async scroll(id: string, ttl: number) {
     return super.scroll(id, ttl);
   }
 }

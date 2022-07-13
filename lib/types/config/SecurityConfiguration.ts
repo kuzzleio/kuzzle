@@ -1,9 +1,6 @@
-import { JSONObject } from '../../../index';
+import { JSONObject } from "../../../index";
 
-import {
-  RoleDefinition,
-  ProfileDefinition,
-} from '../index';
+import { RoleDefinition, ProfileDefinition } from "../index";
 
 export type SecurityConfiguration = {
   /**
@@ -26,93 +23,92 @@ export type SecurityConfiguration = {
   restrictedProfileIds: string[];
 
   /**
-  * @deprecated Use `security.authToken` instead.
-  */
+   * @deprecated Use `security.authToken` instead.
+   */
   jwt?: JSONObject;
 
   /**
-  * Configuration for the npm package jsonwebtoken
-  * who handle Kuzzle Authentication Token.
-  *
-  * @see https://github.com/auth0/node-jsonwebtoken
-  */
+   * Configuration for the npm package jsonwebtoken
+   * who handle Kuzzle Authentication Token.
+   *
+   * @see https://github.com/auth0/node-jsonwebtoken
+   */
   authToken: {
-
     /**
-    * Hash/encryption method used to sign the token.
-    *
-    * @default "HS256"
-    */
+     * Hash/encryption method used to sign the token.
+     *
+     * @default "HS256"
+     */
     algorithm: string;
 
     /**
-    * Token default expiration time.
-    *
-    * @see https://www.npmjs.com/package/ms
-    *
-    * @default "1h"
-    */
+     * Token default expiration time.
+     *
+     * @see https://www.npmjs.com/package/ms
+     *
+     * @default "1h"
+     */
     expiresIn: string;
 
     /**
-    * Duration in ms during which a renewed token is still considered valid.
-    *
-    * @default 1000
-    */
+     * Duration in ms during which a renewed token is still considered valid.
+     *
+     * @default 1000
+     */
     gracePeriod: number;
 
     /**
-    * Maximum duration in milliseconds a token can be requested to be valid.
-    *
-    * If set to -1, no maximum duration is set.
-    *
-    * @default -1
-    */
+     * Maximum duration in milliseconds a token can be requested to be valid.
+     *
+     * If set to -1, no maximum duration is set.
+     *
+     * @default -1
+     */
     maxTTL: number;
 
     /**
-    * String or buffer data containing either the secret for HMAC
-    * algorithms, or the PEM encoded private key for RSA and ECDSA.
-    *
-    * If left to null, Kuzzle will autogenerate a random
-    * seed (can only be used with HMAC algorithms).
-    *
-    * @default null
-    */
+     * String or buffer data containing either the secret for HMAC
+     * algorithms, or the PEM encoded private key for RSA and ECDSA.
+     *
+     * If left to null, Kuzzle will autogenerate a random
+     * seed (can only be used with HMAC algorithms).
+     *
+     * @default null
+     */
     secret: string | Buffer;
   };
 
   apiKey: {
     /**
-    * Maximum duration in milliseconds a token can be requested to be valid.
-    *
-    * If set to -1, no maximum duration is set.
-    *
-    * @default -1
-    */
+     * Maximum duration in milliseconds a token can be requested to be valid.
+     *
+     * If set to -1, no maximum duration is set.
+     *
+     * @default -1
+     */
     maxTTL: number;
   };
 
   /**
-  * The default role defines permissions for all users,
-  * until an administrator configures the backend rights.
-  *
-  * By default, all users are granted all permissions.
-  *
-  * @default
-  *
-  * {
-  *   "role": {
-  *      "controllers": {
-  *        "*": {
-  *          "actions": {
-  *            "*": true
-  *          }
-  *        }
-  *      }
-  *    }
-  *  }
-  */
+   * The default role defines permissions for all users,
+   * until an administrator configures the backend rights.
+   *
+   * By default, all users are granted all permissions.
+   *
+   * @default
+   *
+   * {
+   *   "role": {
+   *      "controllers": {
+   *        "*": {
+   *          "actions": {
+   *            "*": true
+   *          }
+   *        }
+   *      }
+   *    }
+   *  }
+   */
   default: {
     role: RoleDefinition;
   };
@@ -191,7 +187,6 @@ export type SecurityConfiguration = {
       }
   */
 
-
   standard: {
     roles: {
       admin: RoleDefinition;
@@ -206,4 +201,4 @@ export type SecurityConfiguration = {
       [profileName: string]: ProfileDefinition;
     };
   };
-}
+};

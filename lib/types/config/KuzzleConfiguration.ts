@@ -6,11 +6,9 @@ import {
   PluginsConfiguration,
   LimitsConfiguration,
   DumpConfiguration,
-} from '../index';
-
+} from "../index";
 
 export interface IKuzzleConfiguration {
-
   realtime: {
     /**
      * @default false
@@ -160,4 +158,4 @@ export interface IKuzzleConfiguration {
   validation: Record<string, unknown>;
 }
 
-export type KuzzleConfiguration = Partial<IKuzzleConfiguration>
+export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;

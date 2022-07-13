@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
+const sinon = require("sinon");
 
 afterEach(() => {
   sinon.restore();

@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import * as kerror from '../../kerror';
-import { EventHandler } from '../../types';
-import { ApplicationManager } from './index';
+import * as kerror from "../../kerror";
+import { EventHandler } from "../../types";
+import { ApplicationManager } from "./index";
 
-const assertionError = kerror.wrap('plugin', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("plugin", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendHook extends ApplicationManager {
   /**
@@ -34,16 +34,16 @@ export class BackendHook extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register (event: string, handler: EventHandler): void {
+  register(event: string, handler: EventHandler): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'hook');
+      throw runtimeError.get("already_started", "hook");
     }
 
-    if (typeof handler !== 'function') {
-      throw assertionError.get('invalid_hook', event);
+    if (typeof handler !== "function") {
+      throw assertionError.get("invalid_hook", event);
     }
 
-    if (! this._application._hooks[event]) {
+    if (!this._application._hooks[event]) {
       this._application._hooks[event] = [];
     }
 

@@ -22,7 +22,7 @@
 export interface TokenContent {
   /**
    * Token ID (also Redis key)
-   * 
+   *
    * @example `${userId}#${jwt}`
    */
   _id?: string;
@@ -45,7 +45,7 @@ export class Token implements TokenContent {
   jwt: string;
   refreshed: boolean;
 
-  constructor (data: TokenContent = {}) {
+  constructor(data: TokenContent = {}) {
     this._id = data._id || null;
     this.expiresAt = data.expiresAt || null;
     this.ttl = data.ttl || null;
@@ -54,18 +54,18 @@ export class Token implements TokenContent {
     this.refreshed = Boolean(data.refreshed);
   }
 
-  get type (): 'apiKey' | 'authToken' {
+  get type(): "apiKey" | "authToken" {
     if (this.jwt && this.jwt.startsWith(Token.APIKEY_PREFIX)) {
-      return 'apiKey';
+      return "apiKey";
     }
 
-    return 'authToken';
+    return "authToken";
   }
 
-  static get AUTH_PREFIX () {
-    return 'kauth-';
+  static get AUTH_PREFIX() {
+    return "kauth-";
   }
-  static get APIKEY_PREFIX () {
-    return 'kapikey-';
+  static get APIKEY_PREFIX() {
+    return "kapikey-";
   }
 }

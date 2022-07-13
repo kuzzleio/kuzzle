@@ -1,110 +1,125 @@
-'use strict';
+"use strict";
 
-const rewire = require('rewire');
-const sinon = require('sinon');
-const should = require('should');
+const rewire = require("rewire");
+const sinon = require("sinon");
+const should = require("should");
 
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
-const { NativeController } = require('../../../../lib/api/controllers/baseController');
-const SecurityController = rewire('../../../../lib/api/controllers/securityController');
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
+const {
+  NativeController,
+} = require("../../../../lib/api/controllers/baseController");
+const SecurityController = rewire(
+  "../../../../lib/api/controllers/securityController"
+);
 const {
   Request,
   BadRequestError,
   PartialError,
-  SizeLimitError
-} = require('../../../../index');
-const kerror = require('../../../../lib/kerror');
+  SizeLimitError,
+} = require("../../../../index");
+const kerror = require("../../../../lib/kerror");
 
-describe('/api/controllers/securityController', () => {
+describe("/api/controllers/securityController", () => {
   let kuzzle;
   let request;
   let securityController;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    sinon.spy(kerror, 'get');
+    sinon.spy(kerror, "get");
     securityController = new SecurityController();
-    request = new Request({ controller: 'security' });
+    request = new Request({ controller: "security" });
   });
 
   afterEach(() => {
     kerror.get.restore();
   });
 
-  describe('#constructor', () => {
-    it('should inherit the base constructor', () => {
+  describe("#constructor", () => {
+    it("should inherit the base constructor", () => {
       should(new SecurityController()).instanceOf(NativeController);
     });
   });
 
-  describe('#refresh', () => {
-    it('should refresh the allowed collections', async () => {
-      for (const collection of ['users', 'roles', 'profiles']) {
+  describe("#refresh", () => {
+    it("should refresh the allowed collections", async () => {
+      for (const collection of ["users", "roles", "profiles"]) {
         request.input.args.collection = collection;
 
         const response = await securityController.refresh(request);
 
         should(response).be.null();
         should(kuzzle.ask).calledWith(
-          'core:storage:private:collection:refresh',
+          "core:storage:private:collection:refresh",
           kuzzle.internalIndex.index,
-          collection);
+          collection
+        );
       }
     });
 
-    it('should raise an error with unknown collection', async () => {
-      request.input.args.collection = 'frontend-security';
+    it("should raise an error with unknown collection", async () => {
+      request.input.args.collection = "frontend-security";
 
-      await should(securityController.refresh(request))
-        .rejectedWith({ id: 'api.assert.unexpected_argument' });
+      await should(securityController.refresh(request)).rejectedWith({
+        id: "api.assert.unexpected_argument",
+      });
 
-      should(kuzzle.ask.withArgs('core:storage:private:collection:refresh'))
-        .not.be.called();
+      should(
+        kuzzle.ask.withArgs("core:storage:private:collection:refresh")
+      ).not.be.called();
     });
   });
 
-  describe('#mDelete', () => {
+  describe("#mDelete", () => {
     let deleteStub;
 
     beforeEach(() => {
       deleteStub = kuzzle.ask
         .withArgs(sinon.match.string, sinon.match.string, sinon.match.object)
         .resolves();
-      request.input.body = { ids: ['foo', 'bar', 'baz' ] };
+      request.input.body = { ids: ["foo", "bar", "baz"] };
     });
 
-    it('should reject if the request has no body', () => {
+    it("should reject if the request has no body", () => {
       request.input.body = null;
 
-      return should(securityController._mDelete('type', request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.body_required' });
+      return should(securityController._mDelete("type", request)).rejectedWith(
+        BadRequestError,
+        { id: "api.assert.body_required" }
+      );
     });
 
-    it('should fail if the request has no ids to delete', () => {
+    it("should fail if the request has no ids to delete", () => {
       request.input.body = {};
 
-      return should(securityController._mDelete('type', request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.missing_argument' });
+      return should(securityController._mDelete("type", request)).rejectedWith(
+        BadRequestError,
+        { id: "api.assert.missing_argument" }
+      );
     });
 
-    it('should fail if ids is not an array', () => {
+    it("should fail if ids is not an array", () => {
       request.input.body = { ids: {} };
 
-      return should(securityController._mDelete('type', request))
-        .rejectedWith(BadRequestError, { id: 'api.assert.invalid_type' });
+      return should(securityController._mDelete("type", request)).rejectedWith(
+        BadRequestError,
+        { id: "api.assert.invalid_type" }
+      );
     });
 
-    it('should throw an error if the number of documents to get exceeds server configuration', () => {
+    it("should throw an error if the number of documents to get exceeds server configuration", () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
-      return should(securityController._mDelete('type', request))
-        .rejectedWith(SizeLimitError, {
-          id: 'services.storage.write_limit_exceeded'
-        });
+      return should(securityController._mDelete("type", request)).rejectedWith(
+        SizeLimitError,
+        {
+          id: "services.storage.write_limit_exceeded",
+        }
+      );
     });
 
-    it('should return the input ids if everything went fine', async () => {
-      for (const type of ['role', 'profile', 'user']) {
+    it("should return the input ids if everything went fine", async () => {
+      for (const type of ["role", "profile", "user"]) {
         let ids = await securityController._mDelete(type, request);
 
         should(ids).match(request.input.body.ids);
@@ -113,15 +128,16 @@ describe('/api/controllers/securityController', () => {
           should(deleteStub).calledWithMatch(
             `core:security:${type}:delete`,
             id,
-            { refresh: 'wait_for' });
+            { refresh: "wait_for" }
+          );
         }
       }
     });
 
-    it('should handle request options', async () => {
+    it("should handle request options", async () => {
       request.input.args.refresh = false;
 
-      for (const type of ['role', 'profile', 'user']) {
+      for (const type of ["role", "profile", "user"]) {
         let ids = await securityController._mDelete(type, request);
 
         should(ids).match(request.input.body.ids);
@@ -130,13 +146,14 @@ describe('/api/controllers/securityController', () => {
           should(deleteStub).calledWithMatch(
             `core:security:${type}:delete`,
             id,
-            { refresh: 'false' });
+            { refresh: "false" }
+          );
         }
       }
     });
 
-    it('should set a partial error if something went wrong', async () => {
-      const error = new Error('test');
+    it("should set a partial error if something went wrong", async () => {
+      const error = new Error("test");
 
       // Overwrite the kuzzle.ask stub with generic matchers.
       // We need to reject on only 1 argument to test partial errors, and there
@@ -146,20 +163,20 @@ describe('/api/controllers/securityController', () => {
       securityController.ask = sinon.stub();
 
       securityController.ask
-        .withArgs('core:security:profile:delete', 'foo', sinon.match.object)
+        .withArgs("core:security:profile:delete", "foo", sinon.match.object)
         .resolves();
       securityController.ask
-        .withArgs('core:security:profile:delete', 'bar', sinon.match.object)
+        .withArgs("core:security:profile:delete", "bar", sinon.match.object)
         .rejects(error);
       securityController.ask
-        .withArgs('core:security:profile:delete', 'baz', sinon.match.object)
+        .withArgs("core:security:profile:delete", "baz", sinon.match.object)
         .resolves();
 
-      const ids = await securityController._mDelete('profile', request);
+      const ids = await securityController._mDelete("profile", request);
 
-      should(ids).match(['foo', 'baz']);
+      should(ids).match(["foo", "baz"]);
       should(request.error).be.an.instanceOf(PartialError);
-      should(request.error.id).eql('services.storage.incomplete_delete');
+      should(request.error.id).eql("services.storage.incomplete_delete");
       should(request.error.errors).be.an.Array().and.have.length(1);
       should(request.error.errors[0]).eql(error);
     });

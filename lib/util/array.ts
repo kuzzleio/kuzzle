@@ -21,7 +21,7 @@
 
 /**
  * Binary Search
- * 
+ *
  * @param array Sorted Array
  * @param predicate A function that return -1, 0, or 1
  * - [-1] The value is greater than what you search
@@ -29,7 +29,7 @@
  * - [0] Both value are equals
  * @returns {number} The index of the value, or -1 if not found
  */
-export function binarySearch (array: any[], predicate: (value: any) => number) {
+export function binarySearch(array: any[], predicate: (value: any) => number) {
   let lowerBound = 0;
   let upperBound = array.length - 1;
 
@@ -43,11 +43,9 @@ export function binarySearch (array: any[], predicate: (value: any) => number) {
     const comparison = predicate(array[index]);
     if (comparison < 0) {
       upperBound = index - 1;
-    }
-    else if (comparison > 0) {
+    } else if (comparison > 0) {
       lowerBound = index + 1;
-    }
-    else {
+    } else {
       return index;
     }
   }

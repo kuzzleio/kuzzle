@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
-const { HotelClerk } = require('../../../../lib/core/realtime/hotelClerk');
+const { HotelClerk } = require("../../../../lib/core/realtime/hotelClerk");
 
-describe('Test: hotelClerk.list', () => {
+describe("Test: hotelClerk.list", () => {
   let kuzzle;
   let hotelClerk;
   let user;
@@ -17,7 +17,7 @@ describe('Test: hotelClerk.list', () => {
     hotelClerk = new HotelClerk({});
 
     user = {
-      _id: 'user',
+      _id: "user",
       isActionAllowed: sinon.stub().resolves(true),
     };
 
@@ -25,22 +25,24 @@ describe('Test: hotelClerk.list', () => {
   });
 
   it('should register a "list" event', async () => {
-    sinon.stub(hotelClerk, 'list');
+    sinon.stub(hotelClerk, "list");
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:list', 'user');
+    await kuzzle.ask("core:realtime:list", "user");
 
-    should(hotelClerk.list).calledWith('user');
+    should(hotelClerk.list).calledWith("user");
   });
 
-  it('should return an empty object if there is no room', async () => {
-    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({});
+  it("should return an empty object if there is no room", async () => {
+    kuzzle.ask.withArgs("cluster:realtime:room:list").resolves({});
 
-    should(await hotelClerk.list(user)).be.empty().Object();
+    should(await hotelClerk.list(user))
+      .be.empty()
+      .Object();
   });
 
-  it('should return a correct list according to subscribe on filter', async () => {
-    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({
+  it("should return a correct list according to subscribe on filter", async () => {
+    kuzzle.ask.withArgs("cluster:realtime:room:list").resolves({
       anotherIndex: {
         anotherCollection: {
           baz: 42,
@@ -61,18 +63,18 @@ describe('Test: hotelClerk.list', () => {
         collection: {
           foo: 12,
           bar: 24,
-        }
+        },
       },
       anotherIndex: {
         anotherCollection: {
           baz: 42,
-        }
-      }
+        },
+      },
     });
   });
 
-  it('should return a correct list according to subscribe on filter and user right', async () => {
-    kuzzle.ask.withArgs('cluster:realtime:room:list').resolves({
+  it("should return a correct list according to subscribe on filter and user right", async () => {
+    kuzzle.ask.withArgs("cluster:realtime:room:list").resolves({
       andAnotherOne: {
         collection: {
           foobar: 26,
@@ -94,12 +96,8 @@ describe('Test: hotelClerk.list', () => {
       },
     });
 
-    user.isActionAllowed
-      .onSecondCall()
-      .resolves(false);
-    user.isActionAllowed
-      .onThirdCall()
-      .resolves(false);
+    user.isActionAllowed.onSecondCall().resolves(false);
+    user.isActionAllowed.onThirdCall().resolves(false);
 
     const response = await hotelClerk.list(user);
 
@@ -108,13 +106,13 @@ describe('Test: hotelClerk.list', () => {
         collection: {
           foo: 12,
           bar: 24,
-        }
+        },
       },
       andAnotherOne: {
         collection: {
           foobar: 26,
-        }
-      }
+        },
+      },
     });
   });
 });

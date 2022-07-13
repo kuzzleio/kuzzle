@@ -1,6 +1,6 @@
-import { JSONObject } from '../../../index';
+import { JSONObject } from "../../../index";
 
-import { PasswordPolicy } from '../index';
+import { PasswordPolicy } from "../index";
 
 export type PluginsConfiguration = {
   /**
@@ -12,11 +12,11 @@ export type PluginsConfiguration = {
      * the ones defined in the application).
      * The API will only be available to administrators ("admin" profile)
      * during failsafe mode.
-     * 
+     *
      * @default false
      */
     failsafeMode: boolean;
-  
+
     /**
      * Maximum amount of time (in milliseconds) to wait
      * for a concurrent plugin bootstrap.
@@ -82,7 +82,7 @@ export type PluginsConfiguration = {
    *
    * @see https://github.com/kuzzleio/kuzzle-plugin-logger
    */
-  'kuzzle-plugin-logger': {
+  "kuzzle-plugin-logger": {
     /**
      * Winston transport services declaration
      */
@@ -126,7 +126,7 @@ export type PluginsConfiguration = {
    *
    * @see https://github.com/kuzzleio/kuzzle-plugin-auth-passport-local/
    */
-  'kuzzle-plugin-auth-passport-local': {
+  "kuzzle-plugin-auth-passport-local": {
     /**
      * One of the supported encryption algorithms
      * (run crypto.getHashes() to get the complete list).
@@ -194,4 +194,4 @@ export type PluginsConfiguration = {
   };
 
   [pluginName: string]: JSONObject;
-}
+};

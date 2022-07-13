@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import * as kerror from '../../kerror';
+import * as kerror from "../../kerror";
 
-const storageError = kerror.wrap('services', 'storage');
+const storageError = kerror.wrap("services", "storage");
 
 export class IndexCache {
   /**
@@ -31,7 +31,7 @@ export class IndexCache {
    */
   private indexes = new Map<string, Set<string>>();
 
-  constructor () {
+  constructor() {
     this.indexes = new Map();
   }
 
@@ -40,7 +40,7 @@ export class IndexCache {
    *
    * @return true if an index was added, false if there is no modification
    */
-  addIndex (index: string): boolean {
+  addIndex(index: string): boolean {
     if (this.indexes.has(index)) {
       return false;
     }
@@ -53,7 +53,7 @@ export class IndexCache {
   /**
    * Cache a new collection
    */
-  addCollection (index: string, collection: string): void {
+  addCollection(index: string, collection: string): void {
     this.addIndex(index);
     const collections = this.indexes.get(index);
 
@@ -63,17 +63,17 @@ export class IndexCache {
   /**
    * Check an index existence
    */
-  hasIndex (index: string): boolean {
+  hasIndex(index: string): boolean {
     return this.indexes.has(index);
   }
 
   /**
    * Check a collection existence
    */
-  hasCollection (index: string, collection: string): boolean {
+  hasCollection(index: string, collection: string): boolean {
     const collections = this.indexes.get(index);
 
-    if (! collections) {
+    if (!collections) {
       return false;
     }
 
@@ -83,7 +83,7 @@ export class IndexCache {
   /**
    * Return the list of cached indexes
    */
-  listIndexes (): string[] {
+  listIndexes(): string[] {
     return Array.from(this.indexes.keys());
   }
 
@@ -92,7 +92,7 @@ export class IndexCache {
    *
    * @throws If the provided index does not exist
    */
-  listCollections (index: string): string[] {
+  listCollections(index: string): string[] {
     this.assertIndexExists(index);
 
     return Array.from(this.indexes.get(index));
@@ -101,14 +101,14 @@ export class IndexCache {
   /**
    * Remove an index from the cache
    */
-  removeIndex (index: string): void {
+  removeIndex(index: string): void {
     this.indexes.delete(index);
   }
 
   /**
    * Remove a collection from the cache
    */
-  removeCollection (index: string, collection: string) {
+  removeCollection(index: string, collection: string) {
     const collections = this.indexes.get(index);
 
     if (collections) {
@@ -121,20 +121,20 @@ export class IndexCache {
    *
    * @throws If the index does not exist
    */
-  assertIndexExists (index: string) {
-    if (! this.indexes.has(index)) {
-      throw storageError.get('unknown_index', index);
+  assertIndexExists(index: string) {
+    if (!this.indexes.has(index)) {
+      throw storageError.get("unknown_index", index);
     }
   }
 
   /**
    * Assert that the provided index and collection exist
    */
-  assertCollectionExists (index: string, collection: string) {
+  assertCollectionExists(index: string, collection: string) {
     this.assertIndexExists(index);
 
-    if (! this.indexes.get(index).has(collection)) {
-      throw storageError.get('unknown_collection', index, collection);
+    if (!this.indexes.get(index).has(collection)) {
+      throw storageError.get("unknown_collection", index, collection);
     }
   }
 }
