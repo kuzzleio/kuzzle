@@ -3,7 +3,7 @@ code: false
 type: page
 title: Debugging
 description: Debug Kuzzle
-order: 100
+order: 800
 ---
 
 ## Introduction
@@ -15,7 +15,7 @@ The Debug Controller gives you the ability to execute methods and listen to even
 It's easier and safer to use the [Debug Controller](/core/2/api/controllers/debug) to debug Kuzzle remotely than exposing the debugger port using `node --inspect` since the [Debug Controller](/core/2/api/controllers/debug) is limited by the authentication mechanism of Kuzzle making it impossible to use if you don't have the proper rights to use it.
 Whereas when launching Kuzzle with `node --inspect` you need to setup some Port Forwarding from your host machine to your local machine to be able to debug Kuzzle remotely, and you need to be sure that no one can access your instance using the Debug Port exposed.
 
-:::warn
+:::warning
 By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it in the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/debug-controller/.kuzzlerc.sample#L229)
 by setting `security.debug.native_debug_protocol` to `true` and rebooting your instance.
 
@@ -52,7 +52,7 @@ kourou app:debug-proxy --host <Kuzzle Host> --port <Kuzzle Port> --username <use
 
 This will open a proxy server that will connects to your Kuzzle instance using the given username and password and will do the translation automatically.
 
-:::warn
+:::warning
 Remember that the user must be allowed to use all the actions of [Debug Controller](/core/2/api/controllers/debug) and you need to set the config option `security.debug.native_debug_protocol` to `true`, to allow the [Debug Controller](/core/2/api/controllers/debug) to execute actions from the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8).
 :::
 
@@ -85,10 +85,13 @@ The host will always be localhost since it's the IP of the proxy server that is 
 :::
 
 **1 -** Click on the `Configure` button, a dialog will appear where you can enter the IP and Port of your local proxy server.
+
 ![Image Configure Chrome Inspector Step 1](./config_step_1.png)
 
 **2 -** Enter your local target, here `localhost:9222`
+
 **3 -** Confirm
+
 ![Image Configure Chrome Inspector Step 2](./config_step_2.png)
 
 **If everything worked so far, you should see a new Remote Target called** `Kuzzle Debugger - <Instance Host>:<Instance Port>`.
@@ -103,6 +106,6 @@ You can now fully use the Chrome Inspector to debug you instance.
 
 #### Step 4 - After Debugging
 
-:::warn
+:::warning
 Don't forget to set the `security.debug.native_debug_protocol` configuration setting back to `false` once you're done debugging to increase the security of your instance. Doing so, if one of your admin users with access to the [Debug Controller](/core/2/api/controllers/debug) gets compromised, it won't harm your application.
 :::

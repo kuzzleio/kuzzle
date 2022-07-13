@@ -10,7 +10,7 @@ Allows you to execute methods from the Debugger using the [Chrome Devtool Protoc
 
 ---
 
-:::warn
+:::warning
 To use the methods from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you must enable it in the KuzzleRC at `security.debug.native_debug_protocol`.
 
 Otherwise you will only be able to use the methods from the DebugModules.

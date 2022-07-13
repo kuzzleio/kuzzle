@@ -24,6 +24,13 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
   
+  danger-js:
+    name: Danger JS
+    uses: kuzzleio/ci-tooling/.github/workflows/danger.yaml@master
+    secrets: inherit
+    with:
+      DANGER_CONFIG: './.ci/danger.config.yaml'
+
 # -----------------------------------------------------------------------------
 # Documentation checks: error codes and dead links
 # -----------------------------------------------------------------------------
@@ -185,3 +192,9 @@ jobs:
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
+    
+  deploy-workflow:
+    name: Deployment Workflow
+    needs: [cluster-monkey-tests]
+    uses: ./.github/workflows/workflow-deployments.yaml
+    secrets: inherit

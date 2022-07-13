@@ -10,7 +10,7 @@ Allows you to listen specific events from the [Chrome Devtool Protocol](https://
 
 ---
 
-:::warn
+:::warning
 This only works using a Websocket connection since notification can only be sent on a persistent connection.
 :::
 

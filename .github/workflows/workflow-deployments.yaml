@@ -1,11 +1,25 @@
 name: Workflow Deployments
 
-on: 
-  workflow_run:
-    workflows: ["Workflow"]
-    branches: [master]
-    types: 
-      - completed
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      doc_deploy:
+        description: 'Deploy Documentation'
+        required: true
+        default: true
+        type: boolean
+      dockerhub_deploy:
+        description: 'Deploy to DockerHub'
+        required: true
+        default: true
+        type: boolean
+      npm_deploy:
+        description: 'Deploy to NPM'
+        required: true
+        default: true
+        type: boolean
+    
 
 jobs:
   # -----------------------------------------------------------------------------
@@ -13,37 +27,30 @@ jobs:
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.doc_deploy }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/install-packages
-      - uses: actions/github-script@v4
-        id: chose-documentation-framework-version
-        with:
-          script: |
-            return context.ref === 'refs/heads/master' ? 'master' : 'develop'
       - name: Extract references from context
         shell: bash
         id: extract-refs
         run: |
           echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
           echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-          echo "::set-output name=branch::$(echo $GITHUB_REF | cut -d/ -f 3)"
-      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+      - uses: convictional/trigger-workflow-and-wait@v1.6.3
         with:
           owner: kuzzleio
           repo: documentation
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
-          ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
-          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ steps.extract-refs.outputs.branch }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+          ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
+          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -86,7 +93,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
