@@ -71,6 +71,7 @@
     "ndjson": "^2.0.0",
     "node-segfault-handler": "^1.0.4",
     "passport": "^0.5.2",
+    "prettier": "^2.7.1",
     "protobufjs": "~6.11.2",
     "rc": "1.2.8",
     "semver": "^7.3.7",
