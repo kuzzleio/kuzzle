@@ -2570,12 +2570,10 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should call updateSettings, updateMapping", async () => {
-      elasticsearch.getMapping = sinon
-        .stub()
-        .resolves({
-          dynamic: "true",
-          properties: { city: { type: "keyword" }, dynamic: "false" },
-        });
+      elasticsearch.getMapping = sinon.stub().resolves({
+        dynamic: "true",
+        properties: { city: { type: "keyword" }, dynamic: "false" },
+      });
       await elasticsearch.updateCollection(index, collection, {
         mappings,
         settings,
@@ -2594,12 +2592,10 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should call updateSettings and updateMapping", async () => {
-      elasticsearch.getMapping = sinon
-        .stub()
-        .resolves({
-          dynamic: "false",
-          properties: { city: { type: "keyword" } },
-        });
+      elasticsearch.getMapping = sinon.stub().resolves({
+        dynamic: "false",
+        properties: { city: { type: "keyword" } },
+      });
       await elasticsearch.updateCollection(index, collection, {
         mappings,
         settings,
@@ -2619,12 +2615,10 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should revert settings if updateMapping fail", () => {
-      elasticsearch.getMapping = sinon
-        .stub()
-        .resolves({
-          dynamic: "true",
-          properties: { city: { type: "keyword" } },
-        });
+      elasticsearch.getMapping = sinon.stub().resolves({
+        dynamic: "true",
+        properties: { city: { type: "keyword" } },
+      });
       elasticsearch.updateMapping.rejects();
 
       const promise = elasticsearch.updateCollection(index, collection, {
