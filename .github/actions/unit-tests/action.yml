@@ -8,7 +8,7 @@ runs:
       shell: bash
     - run: npm run build
       shell: bash
-    - run: npm run test:unit:coverage
+    - run: NODE_OPTIONS=--max_old_space_size=4096 npm run test:unit:coverage
       shell: bash
     - run: npm run codecov
       shell: bash
