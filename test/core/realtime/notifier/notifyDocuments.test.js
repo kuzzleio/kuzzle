@@ -1,20 +1,20 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
 const {
   Request,
   InternalError: KuzzleInternalError,
-} = require('../../../../index');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+} = require("../../../../index");
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
-const Notifier = require('../../../../lib/core/realtime/notifier');
-const actionEnum = require('../../../../lib/core/realtime/actionEnum');
+const Notifier = require("../../../../lib/core/realtime/notifier");
+const actionEnum = require("../../../../lib/core/realtime/actionEnum");
 
-describe('#notifier.notifyDocuments', () => {
-  const index = 'index';
-  const collection = 'collection';
+describe("#notifier.notifyDocuments", () => {
+  const index = "index";
+  const collection = "collection";
   let kuzzle;
   let notifier;
   let document;
@@ -29,131 +29,138 @@ describe('#notifier.notifyDocuments', () => {
 
     request = new Request({ collection, index });
     document = {
-      _id: 'foo',
-      _source: 'bar',
+      _id: "foo",
+      _source: "bar",
     };
 
     return notifier.init();
   });
 
   it('should register a "document:notify" event', async () => {
-    sinon.stub(notifier, 'notifyDocuments');
+    sinon.stub(notifier, "notifyDocuments");
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:document:notify', 'req', 'action', 'doc');
+    await kuzzle.ask("core:realtime:document:notify", "req", "action", "doc");
 
-    should(notifier.notifyDocuments).calledWith('req', 'action', ['doc']);
+    should(notifier.notifyDocuments).calledWith("req", "action", ["doc"]);
   });
 
   it('should register a "document:mNotify" event', async () => {
-    sinon.stub(notifier, 'notifyDocuments');
+    sinon.stub(notifier, "notifyDocuments");
 
     kuzzle.ask.restore();
-    await kuzzle.ask('core:realtime:document:mNotify', 'req', 'action', 'doc');
+    await kuzzle.ask("core:realtime:document:mNotify", "req", "action", "doc");
 
-    should(notifier.notifyDocuments).calledWith('req', 'action', 'doc');
+    should(notifier.notifyDocuments).calledWith("req", "action", "doc");
   });
 
-  describe('cache management', () => {
+  describe("cache management", () => {
     beforeEach(() => {
-      sinon.stub(notifier, 'notifyDocumentCreate');
+      sinon.stub(notifier, "notifyDocumentCreate");
     });
 
-    it('should put the result rooms in cache', async () => {
-      const rooms = ['foo', 'bar'];
+    it("should put the result rooms in cache", async () => {
+      const rooms = ["foo", "bar"];
       notifier.notifyDocumentCreate.resolves(rooms);
 
       await notifier.notifyDocuments(request, actionEnum.CREATE, [
-        { _id: 'foo' },
-        { _id: 'bar' },
-        { _id: 'baz' },
+        { _id: "foo" },
+        { _id: "bar" },
+        { _id: "baz" },
       ]);
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
-      should(kuzzle.ask).not.calledWith('core:cache:internal:del');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
+      should(kuzzle.ask).not.calledWith("core:cache:internal:del");
 
-      should(kuzzle.ask.withArgs('core:cache:internal:store'))
+      should(kuzzle.ask.withArgs("core:cache:internal:store"))
         .calledThrice()
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/foo`,
           JSON.stringify(rooms),
-          { ttl })
+          { ttl }
+        )
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(rooms),
-          { ttl })
+          { ttl }
+        )
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/baz`,
           JSON.stringify(rooms),
-          { ttl });
+          { ttl }
+        );
     });
 
-    it('should put the result rooms in cache forever (TTL = 0)', async () => {
+    it("should put the result rooms in cache forever (TTL = 0)", async () => {
       notifier.ttl = 0;
 
-      const rooms = ['foo', 'bar'];
+      const rooms = ["foo", "bar"];
       notifier.notifyDocumentCreate.resolves(rooms);
 
       await notifier.notifyDocuments(request, actionEnum.CREATE, [
-        { _id: 'foo' },
-        { _id: 'bar' },
-        { _id: 'baz' },
+        { _id: "foo" },
+        { _id: "bar" },
+        { _id: "baz" },
       ]);
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
-      should(kuzzle.ask).not.calledWith('core:cache:internal:del');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
+      should(kuzzle.ask).not.calledWith("core:cache:internal:del");
 
-      should(kuzzle.ask.withArgs('core:cache:internal:store'))
+      should(kuzzle.ask.withArgs("core:cache:internal:store"))
         .calledThrice()
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/foo`,
-          JSON.stringify(rooms))
+          JSON.stringify(rooms)
+        )
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
-          JSON.stringify(rooms))
+          JSON.stringify(rooms)
+        )
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/baz`,
-          JSON.stringify(rooms));
+          JSON.stringify(rooms)
+        );
     });
 
-    it('should delete the cache key if documents does not match rooms', async () => {
+    it("should delete the cache key if documents does not match rooms", async () => {
       notifier.notifyDocumentCreate.onFirstCall().resolves([]);
-      notifier.notifyDocumentCreate.onSecondCall().resolves(['foo', 'bar']);
+      notifier.notifyDocumentCreate.onSecondCall().resolves(["foo", "bar"]);
       notifier.notifyDocumentCreate.onThirdCall().resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.CREATE, [
-        { _id: 'foo' },
-        { _id: 'bar' },
-        { _id: 'baz' },
+        { _id: "foo" },
+        { _id: "bar" },
+        { _id: "baz" },
       ]);
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
-      should(kuzzle.ask.withArgs('core:cache:internal:store'))
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
+      should(kuzzle.ask.withArgs("core:cache:internal:store"))
         .calledOnce()
         .calledWith(
-          'core:cache:internal:store',
+          "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
-          JSON.stringify(['foo', 'bar']),
-          { ttl });
+          JSON.stringify(["foo", "bar"]),
+          { ttl }
+        );
 
-      should(kuzzle.ask.withArgs('core:cache:internal:del'))
+      should(kuzzle.ask.withArgs("core:cache:internal:del"))
         .calledOnce()
-        .calledWith('core:cache:internal:del', [
+        .calledWith("core:cache:internal:del", [
           `{notif/${index}/${collection}}/foo`,
           `{notif/${index}/${collection}}/baz`,
         ]);
     });
   });
 
-  describe('notifier function calls', () => {
+  describe("notifier function calls", () => {
     it('"document created" notification', async () => {
-      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
+      sinon.stub(notifier, "notifyDocumentCreate").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.CREATE, [
         document,
@@ -165,11 +172,11 @@ describe('#notifier.notifyDocuments', () => {
         .calledThrice()
         .alwaysCalledWith(request, document);
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
     });
 
     it('"document deleted" notification', async () => {
-      sinon.stub(notifier, 'notifyDocumentDelete').resolves([]);
+      sinon.stub(notifier, "notifyDocumentDelete").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.DELETE, [
         document,
@@ -181,38 +188,43 @@ describe('#notifier.notifyDocuments', () => {
         .calledThrice()
         .alwaysCalledWith(request, document);
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
     });
 
     it('"document updated" notification', async () => {
-      const cacheResult = [
-        'foo',
-        'bar',
-        'baz',
-      ];
+      const cacheResult = ["foo", "bar", "baz"];
 
-      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
+      kuzzle.ask.withArgs("core:cache:internal:mget").resolves(cacheResult);
 
-      sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
+      sinon.stub(notifier, "notifyDocumentUpdate").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.UPDATE, [
-        { _id: 'foo' },
-        { _id: 'bar' },
-        { _id: 'baz' },
+        { _id: "foo" },
+        { _id: "bar" },
+        { _id: "baz" },
       ]);
 
       should(notifier.notifyDocumentUpdate).calledThrice();
 
-      should(notifier.notifyDocumentUpdate.firstCall)
-        .calledWith(request, { _id: 'foo' }, cacheResult[0]);
+      should(notifier.notifyDocumentUpdate.firstCall).calledWith(
+        request,
+        { _id: "foo" },
+        cacheResult[0]
+      );
 
-      should(notifier.notifyDocumentUpdate.secondCall)
-        .calledWith(request, { _id: 'bar' }, cacheResult[1]);
+      should(notifier.notifyDocumentUpdate.secondCall).calledWith(
+        request,
+        { _id: "bar" },
+        cacheResult[1]
+      );
 
-      should(notifier.notifyDocumentUpdate.thirdCall)
-        .calledWith(request, { _id: 'baz' }, cacheResult[2]);
+      should(notifier.notifyDocumentUpdate.thirdCall).calledWith(
+        request,
+        { _id: "baz" },
+        cacheResult[2]
+      );
 
-      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
+      should(kuzzle.ask).calledWith("core:cache:internal:mget", [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -220,34 +232,39 @@ describe('#notifier.notifyDocuments', () => {
     });
 
     it('"document replaced" notification', async () => {
-      const cacheResult = [
-        'foo',
-        'bar',
-        'baz',
-      ];
+      const cacheResult = ["foo", "bar", "baz"];
 
-      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
+      kuzzle.ask.withArgs("core:cache:internal:mget").resolves(cacheResult);
 
-      sinon.stub(notifier, 'notifyDocumentReplace').resolves([]);
+      sinon.stub(notifier, "notifyDocumentReplace").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.REPLACE, [
-        { _id: 'foo' },
-        { _id: 'bar' },
-        { _id: 'baz' },
+        { _id: "foo" },
+        { _id: "bar" },
+        { _id: "baz" },
       ]);
 
       should(notifier.notifyDocumentReplace).calledThrice();
 
-      should(notifier.notifyDocumentReplace.firstCall)
-        .calledWith(request, { _id: 'foo' }, cacheResult[0]);
+      should(notifier.notifyDocumentReplace.firstCall).calledWith(
+        request,
+        { _id: "foo" },
+        cacheResult[0]
+      );
 
-      should(notifier.notifyDocumentReplace.secondCall)
-        .calledWith(request, { _id: 'bar' }, cacheResult[1]);
+      should(notifier.notifyDocumentReplace.secondCall).calledWith(
+        request,
+        { _id: "bar" },
+        cacheResult[1]
+      );
 
-      should(notifier.notifyDocumentReplace.thirdCall)
-        .calledWith(request, { _id: 'baz' }, cacheResult[2]);
+      should(notifier.notifyDocumentReplace.thirdCall).calledWith(
+        request,
+        { _id: "baz" },
+        cacheResult[2]
+      );
 
-      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
+      should(kuzzle.ask).calledWith("core:cache:internal:mget", [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -255,36 +272,39 @@ describe('#notifier.notifyDocuments', () => {
     });
 
     it('"document created/replaced" notification (at least 1 replace)', async () => {
-      const cacheResult = [
-        undefined,
-        'bar',
-        undefined,
-      ];
+      const cacheResult = [undefined, "bar", undefined];
 
-      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
+      kuzzle.ask.withArgs("core:cache:internal:mget").resolves(cacheResult);
 
-      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
-      sinon.stub(notifier, 'notifyDocumentReplace').resolves([]);
+      sinon.stub(notifier, "notifyDocumentCreate").resolves([]);
+      sinon.stub(notifier, "notifyDocumentReplace").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.WRITE, [
-        { _id: 'foo', created: true },
-        { _id: 'bar', created: false },
-        { _id: 'baz', created: true },
+        { _id: "foo", created: true },
+        { _id: "bar", created: false },
+        { _id: "baz", created: true },
       ]);
 
       should(notifier.notifyDocumentCreate).calledTwice();
       should(notifier.notifyDocumentReplace).calledOnce();
 
-      should(notifier.notifyDocumentCreate.firstCall)
-        .calledWith(request, { _id: 'foo', created: true });
+      should(notifier.notifyDocumentCreate.firstCall).calledWith(request, {
+        _id: "foo",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.secondCall)
-        .calledWith(request, { _id: 'baz', created: true });
+      should(notifier.notifyDocumentCreate.secondCall).calledWith(request, {
+        _id: "baz",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentReplace)
-        .calledWith(request, { _id: 'bar', created: false }, cacheResult[1]);
+      should(notifier.notifyDocumentReplace).calledWith(
+        request,
+        { _id: "bar", created: false },
+        cacheResult[1]
+      );
 
-      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
+      should(kuzzle.ask).calledWith("core:cache:internal:mget", [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -292,61 +312,70 @@ describe('#notifier.notifyDocuments', () => {
     });
 
     it('"document created/replaced" notification (no replace)', async () => {
-      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
-      sinon.stub(notifier, 'notifyDocumentReplace').resolves([]);
+      sinon.stub(notifier, "notifyDocumentCreate").resolves([]);
+      sinon.stub(notifier, "notifyDocumentReplace").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.WRITE, [
-        { _id: 'foo', created: true },
-        { _id: 'bar', created: true },
-        { _id: 'baz', created: true },
+        { _id: "foo", created: true },
+        { _id: "bar", created: true },
+        { _id: "baz", created: true },
       ]);
 
       should(notifier.notifyDocumentCreate).calledThrice();
       should(notifier.notifyDocumentReplace).not.called();
 
-      should(notifier.notifyDocumentCreate.firstCall)
-        .calledWith(request, { _id: 'foo', created: true });
+      should(notifier.notifyDocumentCreate.firstCall).calledWith(request, {
+        _id: "foo",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.secondCall)
-        .calledWith(request, { _id: 'bar', created: true });
+      should(notifier.notifyDocumentCreate.secondCall).calledWith(request, {
+        _id: "bar",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.thirdCall)
-        .calledWith(request, { _id: 'baz', created: true });
+      should(notifier.notifyDocumentCreate.thirdCall).calledWith(request, {
+        _id: "baz",
+        created: true,
+      });
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
     });
 
     it('"document upsert" notification (at least 1 update)', async () => {
-      const cacheResult = [
-        undefined,
-        'bar',
-        undefined,
-      ];
+      const cacheResult = [undefined, "bar", undefined];
 
-      kuzzle.ask.withArgs('core:cache:internal:mget').resolves(cacheResult);
+      kuzzle.ask.withArgs("core:cache:internal:mget").resolves(cacheResult);
 
-      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
-      sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
+      sinon.stub(notifier, "notifyDocumentCreate").resolves([]);
+      sinon.stub(notifier, "notifyDocumentUpdate").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.UPSERT, [
-        { _id: 'foo', created: true },
-        { _id: 'bar', created: false, _updatedFields: ['toto'] },
-        { _id: 'baz', created: true },
+        { _id: "foo", created: true },
+        { _id: "bar", created: false, _updatedFields: ["toto"] },
+        { _id: "baz", created: true },
       ]);
 
       should(notifier.notifyDocumentCreate).calledTwice();
       should(notifier.notifyDocumentUpdate).calledOnce();
 
-      should(notifier.notifyDocumentCreate.firstCall)
-        .calledWith(request, { _id: 'foo', created: true });
+      should(notifier.notifyDocumentCreate.firstCall).calledWith(request, {
+        _id: "foo",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.secondCall)
-        .calledWith(request, { _id: 'baz', created: true });
+      should(notifier.notifyDocumentCreate.secondCall).calledWith(request, {
+        _id: "baz",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentUpdate)
-        .calledWith(request, { _id: 'bar', created: false, _updatedFields: ['toto'] }, cacheResult[1]);
+      should(notifier.notifyDocumentUpdate).calledWith(
+        request,
+        { _id: "bar", created: false, _updatedFields: ["toto"] },
+        cacheResult[1]
+      );
 
-      should(kuzzle.ask).calledWith('core:cache:internal:mget', [
+      should(kuzzle.ask).calledWith("core:cache:internal:mget", [
         `{notif/${index}/${collection}}/foo`,
         `{notif/${index}/${collection}}/bar`,
         `{notif/${index}/${collection}}/baz`,
@@ -354,34 +383,42 @@ describe('#notifier.notifyDocuments', () => {
     });
 
     it('"document upsert" notification (no update)', async () => {
-      sinon.stub(notifier, 'notifyDocumentCreate').resolves([]);
-      sinon.stub(notifier, 'notifyDocumentUpdate').resolves([]);
+      sinon.stub(notifier, "notifyDocumentCreate").resolves([]);
+      sinon.stub(notifier, "notifyDocumentUpdate").resolves([]);
 
       await notifier.notifyDocuments(request, actionEnum.UPSERT, [
-        { _id: 'foo', created: true },
-        { _id: 'bar', created: true },
-        { _id: 'baz', created: true },
+        { _id: "foo", created: true },
+        { _id: "bar", created: true },
+        { _id: "baz", created: true },
       ]);
 
       should(notifier.notifyDocumentCreate).calledThrice();
       should(notifier.notifyDocumentUpdate).not.called();
 
-      should(notifier.notifyDocumentCreate.firstCall)
-        .calledWith(request, { _id: 'foo', created: true });
+      should(notifier.notifyDocumentCreate.firstCall).calledWith(request, {
+        _id: "foo",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.secondCall)
-        .calledWith(request, { _id: 'bar', created: true });
+      should(notifier.notifyDocumentCreate.secondCall).calledWith(request, {
+        _id: "bar",
+        created: true,
+      });
 
-      should(notifier.notifyDocumentCreate.thirdCall)
-        .calledWith(request, { _id: 'baz', created: true });
+      should(notifier.notifyDocumentCreate.thirdCall).calledWith(request, {
+        _id: "baz",
+        created: true,
+      });
 
-      should(kuzzle.ask).not.calledWith('core:cache:internal:mget');
+      should(kuzzle.ask).not.calledWith("core:cache:internal:mget");
     });
 
-
-    it('should throw on an unknown action', () => {
-      return should(notifier.notifyDocuments(request, 'ohnoes', [document]))
-        .rejectedWith(KuzzleInternalError, { id: 'core.fatal.assertion_failed' });
+    it("should throw on an unknown action", () => {
+      return should(
+        notifier.notifyDocuments(request, "ohnoes", [document])
+      ).rejectedWith(KuzzleInternalError, {
+        id: "core.fatal.assertion_failed",
+      });
     });
   });
 });

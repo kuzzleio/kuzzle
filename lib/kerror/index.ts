@@ -19,22 +19,22 @@
  * limitations under the License.
  */
 
-import { format } from 'util';
+import { format } from "util";
 
-import _ from 'lodash';
-import { JSONObject } from 'kuzzle-sdk';
+import _ from "lodash";
+import { JSONObject } from "kuzzle-sdk";
 
-import { domains as internalDomains } from './codes';
-import * as errors from './errors';
-import { KuzzleError } from './errors';
-import { ErrorDefinition, ErrorDomains } from '../types';
+import { domains as internalDomains } from "./codes";
+import * as errors from "./errors";
+import { KuzzleError } from "./errors";
+import { ErrorDefinition, ErrorDomains } from "../types";
 
 /**
  * Gets this file name in the exact same format than the one printed in the
  * stacktraces (used to clean kerror lines from stacktraces)
  */
 let _currentFileName = null;
-function _getCurrentFileName () {
+function _getCurrentFileName() {
   if (_currentFileName !== null) {
     return _currentFileName;
   }
@@ -54,7 +54,13 @@ function _getCurrentFileName () {
  * @param  placeholders - Placeholders value to inject in error message
  * @param  options - Last param can be additional options { message }
  */
-export function rawGet (domains: ErrorDomains, domain: string, subdomain: string, error: string, ...placeholders): KuzzleError {
+export function rawGet(
+  domains: ErrorDomains,
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): KuzzleError {
   let options: JSONObject = {};
 
   // extract options object from the placeholders
@@ -62,39 +68,53 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
     options = placeholders.pop();
   }
 
-  const kuzzleError = _.get(domains, `${domain}.subDomains.${subdomain}.errors.${error}`) as any as ErrorDefinition;
+  const kuzzleError = _.get(
+    domains,
+    `${domain}.subDomains.${subdomain}.errors.${error}`
+  ) as any as ErrorDefinition;
 
-  if (! kuzzleError) {
-    return get('core', 'fatal', 'unexpected_error', `${domain}.${subdomain}.${error}`);
+  if (!kuzzleError) {
+    return get(
+      "core",
+      "fatal",
+      "unexpected_error",
+      `${domain}.${subdomain}.${error}`
+    );
   }
 
   let body = null;
 
-  if (kuzzleError.class === 'PartialError' || kuzzleError.class === 'MultipleErrorsError') {
+  if (
+    kuzzleError.class === "PartialError" ||
+    kuzzleError.class === "MultipleErrorsError"
+  ) {
     body = placeholders.splice(-1)[0];
   }
 
-  const message = options.message || format(kuzzleError.message, ...placeholders);
+  const message =
+    options.message || format(kuzzleError.message, ...placeholders);
   const id = `${domain}.${subdomain}.${error}`;
-  const code = domains[domain].code << 24
-    | domains[domain].subDomains[subdomain].code << 16
-    | domains[domain].subDomains[subdomain].errors[error].code;
+  const code =
+    (domains[domain].code << 24) |
+    (domains[domain].subDomains[subdomain].code << 16) |
+    domains[domain].subDomains[subdomain].errors[error].code;
 
   let kerror;
-  if (kuzzleError.class === 'PartialError' || kuzzleError.class === 'MultipleErrorsError') {
+  if (
+    kuzzleError.class === "PartialError" ||
+    kuzzleError.class === "MultipleErrorsError"
+  ) {
     kerror = new errors[kuzzleError.class](message, body, id, code);
-  }
-  else if (kuzzleError.class === 'KuzzleError') {
+  } else if (kuzzleError.class === "KuzzleError") {
     const status = kuzzleError.status || 500;
     kerror = new errors.KuzzleError(message, status, id, code);
-  }
-  else {
+  } else {
     kerror = new errors[kuzzleError.class](message, id as any, code as any);
   }
 
   kerror.props = placeholders;
 
-  if (kuzzleError.class !== 'InternalError') {
+  if (kuzzleError.class !== "InternalError") {
     cleanStackTrace(kerror);
   }
 
@@ -113,28 +133,27 @@ export function rawGet (domains: ErrorDomains, domain: string, subdomain: string
  *  at ControllerManager.add (kuzzle/lib/core/backend/backend.ts:226:34)
  */
 
-function cleanStackTrace (error: KuzzleError): void {
+function cleanStackTrace(error: KuzzleError): void {
   // Keep the original error message
-  const messageLength = error.message.split('\n').length;
+  const messageLength = error.message.split("\n").length;
   const currentFileName = _getCurrentFileName();
 
   // we keep the new error instantiation line ("new ...Error (") on purpose:
   // this will allow us to replace it without inserting a new line in the array,
   // saving us from building a new array
-  const newStack = error.stack.split('\n')
-    .filter((line, index) => {
-      if (index < messageLength) {
-        return true;
-      }
+  const newStack = error.stack.split("\n").filter((line, index) => {
+    if (index < messageLength) {
+      return true;
+    }
 
-      // filter all lines related to the kerror object
-      return ! line.includes(currentFileName);
-    });
+    // filter all lines related to the kerror object
+    return !line.includes(currentFileName);
+  });
 
   // insert a deletion message in place of the new error instantiation line
-  newStack[messageLength] = '      [...Kuzzle internal calls deleted...]';
+  newStack[messageLength] = "      [...Kuzzle internal calls deleted...]";
 
-  error.stack = newStack.join('\n');
+  error.stack = newStack.join("\n");
 }
 
 /**
@@ -146,8 +165,16 @@ function cleanStackTrace (error: KuzzleError): void {
  * @param  error - Error name: (eg: 'index_not_found')
  * @param  placeholders - Placeholders value to inject in error message
  */
-export function rawReject (domains: ErrorDomains, domain: string, subdomain: string, error: string, ...placeholders): Promise<any> {
-  return Promise.reject(rawGet(domains, domain, subdomain, error, ...placeholders));
+export function rawReject(
+  domains: ErrorDomains,
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): Promise<any> {
+  return Promise.reject(
+    rawGet(domains, domain, subdomain, error, ...placeholders)
+  );
 }
 
 /**
@@ -161,18 +188,31 @@ export function rawReject (domains: ErrorDomains, domain: string, subdomain: str
  * @param  error - Error name: (eg: 'index_not_found')
  * @param  placeholders - Placeholders value to inject in error message
  */
-export function rawGetFrom (domains: ErrorDomains, source: Error, domain: string, subdomain: string, error: string, ...placeholders): KuzzleError {
-  const derivedError = rawGet(domains, domain, subdomain, error, ...placeholders);
+export function rawGetFrom(
+  domains: ErrorDomains,
+  source: Error,
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): KuzzleError {
+  const derivedError = rawGet(
+    domains,
+    domain,
+    subdomain,
+    error,
+    ...placeholders
+  );
 
   // If a stacktrace is present, we need to modify the first line because it
   // still contains the original error message
   if (derivedError.stack && derivedError.stack.length) {
-    const stackArray = source.stack.split('\n');
+    const stackArray = source.stack.split("\n");
     stackArray.shift();
     derivedError.stack = [
       `${derivedError.constructor.name}: ${derivedError.message}`,
-      ...stackArray
-    ].join('\n');
+      ...stackArray,
+    ].join("\n");
   }
 
   return derivedError;
@@ -181,27 +221,18 @@ export function rawGetFrom (domains: ErrorDomains, source: Error, domain: string
 /**
  * Wrap error functions with the provided domain and subdomain.
  */
-export function rawWrap (domains: ErrorDomains, domain: string, subdomain: string) {
+export function rawWrap(
+  domains: ErrorDomains,
+  domain: string,
+  subdomain: string
+) {
   return {
-    get: (error, ...placeholders) => rawGet(
-      domains,
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
-    getFrom: (source, error, ...placeholders) => rawGetFrom(
-      domains,
-      source,
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
-    reject: (error, ...placeholders) => rawReject(
-      domains,
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
+    get: (error, ...placeholders) =>
+      rawGet(domains, domain, subdomain, error, ...placeholders),
+    getFrom: (source, error, ...placeholders) =>
+      rawGetFrom(domains, source, domain, subdomain, error, ...placeholders),
+    reject: (error, ...placeholders) =>
+      rawReject(domains, domain, subdomain, error, ...placeholders),
   };
 }
 
@@ -214,7 +245,12 @@ export function rawWrap (domains: ErrorDomains, domain: string, subdomain: strin
  * @param  placeholders - Placeholders value to inject in error message
  * @param  options - Last param can be additional options { message }
  */
-export function get (domain: string, subdomain: string, error: string, ...placeholders): KuzzleError {
+export function get(
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): KuzzleError {
   return rawGet(internalDomains, domain, subdomain, error, ...placeholders);
 }
 
@@ -226,7 +262,12 @@ export function get (domain: string, subdomain: string, error: string, ...placeh
  * @param  error - Error name: (eg: 'index_not_found')
  * @param  placeholders - Placeholders value to inject in error message
  */
-export function reject (domain: string, subdomain: string, error: string, ...placeholders): Promise<any> {
+export function reject(
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): Promise<any> {
   return rawReject(internalDomains, domain, subdomain, error, ...placeholders);
 }
 
@@ -240,30 +281,33 @@ export function reject (domain: string, subdomain: string, error: string, ...pla
  * @param  error - Error name: (eg: 'index_not_found')
  * @param  placeholders - Placeholders value to inject in error message
  */
-export function getFrom (source: Error, domain: string, subdomain: string, error: string, ...placeholders): KuzzleError {
-  return rawGetFrom(internalDomains, source, domain, subdomain, error, ...placeholders);
+export function getFrom(
+  source: Error,
+  domain: string,
+  subdomain: string,
+  error: string,
+  ...placeholders
+): KuzzleError {
+  return rawGetFrom(
+    internalDomains,
+    source,
+    domain,
+    subdomain,
+    error,
+    ...placeholders
+  );
 }
 
 /**
  * Wrap error functions with the provided domain and subdomain.
  */
-export function wrap (domain: string, subdomain: string) {
+export function wrap(domain: string, subdomain: string) {
   return {
-    get: (error, ...placeholders) => get(
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
-    getFrom: (source, error, ...placeholders) => getFrom(
-      source,
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
-    reject: (error, ...placeholders) => reject(
-      domain,
-      subdomain,
-      error,
-      ...placeholders),
+    get: (error, ...placeholders) =>
+      get(domain, subdomain, error, ...placeholders),
+    getFrom: (source, error, ...placeholders) =>
+      getFrom(source, domain, subdomain, error, ...placeholders),
+    reject: (error, ...placeholders) =>
+      reject(domain, subdomain, error, ...placeholders),
   };
 }

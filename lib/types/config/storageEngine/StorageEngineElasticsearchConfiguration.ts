@@ -1,15 +1,15 @@
-import { ClientOptions } from '@elastic/elasticsearch';
+import { ClientOptions } from "@elastic/elasticsearch";
 
 export type StorageEngineElasticsearch = {
   /**
    * @default ['storageEngine']
-  */
+   */
   aliases: string[];
 
   /**
    * @default "elasticsearch"
-  */
-  backend: 'elasticsearch';
+   */
+  backend: "elasticsearch";
 
   /**
    * Elasticsearch constructor options. Use this field to specify your
@@ -24,7 +24,7 @@ export type StorageEngineElasticsearch = {
    *    node: 'http://localhost:9200'
    * }
    *
-  */
+   */
   client: ClientOptions;
 
   /**
@@ -42,8 +42,8 @@ export type StorageEngineElasticsearch = {
   commonMapping: {
     /**
      * @default "false"
-    */
-    dynamic: 'true' | 'false' | 'strict';
+     */
+    dynamic: "true" | "false" | "strict";
 
     properties: {
       _kuzzle_info: {
@@ -70,11 +70,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            createdAt: {
-              type: string;
-            };
+          createdAt: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -83,11 +83,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updater: {
-              type: string;
-            };
+          updater: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -96,108 +96,108 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updatedAt: {
-              type: string;
-            };
-        };
-      };
-      };
-    };
-
-    internalIndex: {
-      /**
-      * @default "kuzzle"
-      */
-      name: string;
-
-      collections: {
-        users: {
-          /**
-          * @default 'false'
-          */
-          dynamic: 'true' | 'false' | 'strict';
-
-          properties: {
-            /**
-              * @default
-              *
-              * [
-              *   {
-              *     type: 'keyword',
-              *   }
-              * ]
-              */
-            profileIds: {
-              type: string;
-            };
+          updatedAt: {
+            type: string;
           };
         };
-        profiles: {
-          dynamic: 'false';
-          properties: {
-            tags: { type: 'keyword' };
-            policies: {
-              properties: {
-                roleId: { type: 'keyword' };
-                restrictedTo: {
-                  type: 'nested';
-                  properties: {
-                    index: { type: 'keyword' };
-                    collections: { type: 'keyword' };
-                  };
+      };
+    };
+  };
+
+  internalIndex: {
+    /**
+     * @default "kuzzle"
+     */
+    name: string;
+
+    collections: {
+      users: {
+        /**
+         * @default 'false'
+         */
+        dynamic: "true" | "false" | "strict";
+
+        properties: {
+          /**
+           * @default
+           *
+           * [
+           *   {
+           *     type: 'keyword',
+           *   }
+           * ]
+           */
+          profileIds: {
+            type: string;
+          };
+        };
+      };
+      profiles: {
+        dynamic: "false";
+        properties: {
+          tags: { type: "keyword" };
+          policies: {
+            properties: {
+              roleId: { type: "keyword" };
+              restrictedTo: {
+                type: "nested";
+                properties: {
+                  index: { type: "keyword" };
+                  collections: { type: "keyword" };
                 };
               };
             };
           };
         };
-        roles: {
-          dynamic: 'false';
-          properties: {
-            tags: { type: 'keyword' };
-            controllers: {
-              dynamic: 'false';
-              properties: Record<string, unknown>;
-            };
-          };
-        };
-        validations: {
-          properties: {
-            index: { type: 'keyword' };
-            collection: { type: 'keyword' };
-            validations: {
-              dynamic: 'false';
-              properties: Record<string, unknown>;
-            };
-          };
-        };
-        config: {
-          dynamic: 'false';
-          properties: Record<string, unknown>;
-        };
-        'api-keys': {
-          dynamic: 'false';
-          properties: {
-            userId: { type: 'keyword' };
-            hash: { type: 'keyword' };
-            description: { type: 'text' };
-            expiresAt: { type: 'long' };
-            ttl: { type: 'keyword' };
-            token: { type: 'keyword' };
-          };
-        };
-        installations: {
-          dynamic: 'strict';
-          properties: {
-            description: { type: 'text' };
-            handler: { type: 'text' };
-            installedAt: { type: 'date' };
+      };
+      roles: {
+        dynamic: "false";
+        properties: {
+          tags: { type: "keyword" };
+          controllers: {
+            dynamic: "false";
+            properties: Record<string, unknown>;
           };
         };
       };
+      validations: {
+        properties: {
+          index: { type: "keyword" };
+          collection: { type: "keyword" };
+          validations: {
+            dynamic: "false";
+            properties: Record<string, unknown>;
+          };
+        };
+      };
+      config: {
+        dynamic: "false";
+        properties: Record<string, unknown>;
+      };
+      "api-keys": {
+        dynamic: "false";
+        properties: {
+          userId: { type: "keyword" };
+          hash: { type: "keyword" };
+          description: { type: "text" };
+          expiresAt: { type: "long" };
+          ttl: { type: "keyword" };
+          token: { type: "keyword" };
+        };
+      };
+      installations: {
+        dynamic: "strict";
+        properties: {
+          description: { type: "text" };
+          handler: { type: "text" };
+          installedAt: { type: "date" };
+        };
+      };
     };
-    maxScrollDuration: '1m';
-    defaults: {
-      onUpdateConflictRetries: 0;
-      scrollTTL: '15s';
-    };
-}
+  };
+  maxScrollDuration: "1m";
+  defaults: {
+    onUpdateConflictRetries: 0;
+    scrollTTL: "15s";
+  };
+};

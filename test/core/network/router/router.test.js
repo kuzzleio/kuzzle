@@ -1,19 +1,19 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
 const {
   RequestContext,
-  PluginImplementationError
-} = require('../../../../index');
-const KuzzleMock = require('../../../mocks/kuzzle.mock');
+  PluginImplementationError,
+} = require("../../../../index");
+const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
-const Router = require('../../../../lib/core/network/router');
+const Router = require("../../../../lib/core/network/router");
 
-describe('Test: router', () => {
-  const protocol = 'foo';
-  const connectionId = 'bar';
+describe("Test: router", () => {
+  const protocol = "foo";
+  const connectionId = "bar";
   let kuzzle;
   let router;
   let requestContext;
@@ -22,15 +22,15 @@ describe('Test: router', () => {
     requestContext = new RequestContext({
       connection: {
         protocol,
-        id: connectionId
-      }
+        id: connectionId,
+      },
     });
     kuzzle = new KuzzleMock();
     router = new Router();
   });
 
-  describe('#newConnection', () => {
-    it('should have registered the connection', () => {
+  describe("#newConnection", () => {
+    it("should have registered the connection", () => {
       router.newConnection(requestContext);
 
       const context = router.connections.get(connectionId);
@@ -43,7 +43,7 @@ describe('Test: router', () => {
       should(kuzzle.statistics.newConnection).be.calledWith(requestContext);
     });
 
-    it('should return an error if no connectionId is provided', () => {
+    it("should return an error if no connectionId is provided", () => {
       const context = new RequestContext({ connection: { protocol } });
       router.newConnection(context);
 
@@ -52,7 +52,7 @@ describe('Test: router', () => {
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
-    it('should return an error if no protocol is provided', () => {
+    it("should return an error if no protocol is provided", () => {
       const context = new RequestContext({ connection: { id: connectionId } });
       router.newConnection(context);
 
@@ -62,16 +62,16 @@ describe('Test: router', () => {
     });
   });
 
-  describe('#removeConnection', () => {
+  describe("#removeConnection", () => {
     let realtimeDisconnectStub;
 
     beforeEach(() => {
       realtimeDisconnectStub = kuzzle.ask
-        .withArgs('core:realtime:connection:remove')
+        .withArgs("core:realtime:connection:remove")
         .resolves();
     });
 
-    it('should remove the context from the context pool', () => {
+    it("should remove the context from the context pool", () => {
       router.connections.set(connectionId, requestContext);
       router.removeConnection(requestContext);
 
@@ -81,7 +81,7 @@ describe('Test: router', () => {
       should(router.connections.has(connectionId)).be.false();
     });
 
-    it('should remove the context from the context pool', () => {
+    it("should remove the context from the context pool", () => {
       router.removeConnection(requestContext);
 
       should(realtimeDisconnectStub).not.be.called();
@@ -91,7 +91,7 @@ describe('Test: router', () => {
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
-    it('should return an error if no connectionId is provided', () => {
+    it("should return an error if no connectionId is provided", () => {
       const context = new RequestContext({ connection: { protocol } });
       router.connections.set(connectionId, context);
       router.removeConnection(context);
@@ -101,7 +101,7 @@ describe('Test: router', () => {
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
 
-    it('should return an error if no protocol is provided', () => {
+    it("should return an error if no protocol is provided", () => {
       const context = new RequestContext({ connection: { id: connectionId } });
       router.connections.set(connectionId, context);
       router.removeConnection(context);
@@ -112,39 +112,43 @@ describe('Test: router', () => {
     });
   });
 
-  describe('#isConnectionActive', () => {
-    it('should resolve to false if the connection is unknown', () => {
+  describe("#isConnectionActive", () => {
+    it("should resolve to false if the connection is unknown", () => {
       should(router.isConnectionAlive(requestContext)).be.false();
     });
 
-    it('should interact correctly with newConnection/removeConnection', () => {
+    it("should interact correctly with newConnection/removeConnection", () => {
       router.newConnection(requestContext);
       should(router.isConnectionAlive(requestContext)).be.true();
       router.removeConnection(requestContext);
       should(router.isConnectionAlive(requestContext)).be.false();
     });
 
-    it('should always return true for connections without an id', () => {
+    it("should always return true for connections without an id", () => {
       const context = new RequestContext({
         connection: {
           id: null,
-          protocol: 'foobar'
-        }
+          protocol: "foobar",
+        },
       });
       should(router.isConnectionAlive(context)).be.true();
     });
   });
 
-  describe('#metrics', () => {
-    it('should return the metrics object', () => {
+  describe("#metrics", () => {
+    it("should return the metrics object", () => {
       // Fake connections
-      router.newConnection(new RequestContext({ connection: { id: 'foo', protocol: 'bar' } }));
-      router.newConnection(new RequestContext({ connection: { id: 'foo2', protocol: 'bar' } }));
+      router.newConnection(
+        new RequestContext({ connection: { id: "foo", protocol: "bar" } })
+      );
+      router.newConnection(
+        new RequestContext({ connection: { id: "foo2", protocol: "bar" } })
+      );
 
       should(router.metrics()).match({
         connections: {
           bar: 2,
-        }
+        },
       });
     });
   });

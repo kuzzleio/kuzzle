@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 /**
  * Kuzzle user.

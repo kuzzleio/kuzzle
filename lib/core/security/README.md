@@ -13,23 +13,23 @@ The constructor expects to be passed the kuzzle instance and an options array.
 
 ### options
 
-* *string* collection (mandatory)
+- _string_ collection (mandatory)
 
 The underlying collection to store the Business objects to.
 
-* *integer | false* ttl (optional)
+- _integer | false_ ttl (optional)
 
 The ttl to use for the cache module. If set to false, the objects get an unlimited lifetime.
 
-* *function* ObjectConstructor (mandatory)
+- _function_ ObjectConstructor (mandatory)
 
-The constructor function for the business objects. The load* methods will return some new instances of this function.
+The constructor function for the business objects. The load\* methods will return some new instances of this function.
 
-* *function* indexStorage (optional)
+- _function_ indexStorage (optional)
 
 The read engine to use to retrieve the business objects to/from the database. Defaults to Kuzzle's internalStorage (elasticsearch).
 
-* *function* cache (optional)
+- _function_ cache (optional)
 
 The cache database to use to store and retrieve the business objects to/from the cache. Defaults to Kuzzle's internal cache.
 
@@ -43,13 +43,13 @@ This method loads one object from the database given its id.
 
 ### parameters
 
-* *string* id
+- _string_ id
 
 The id of the document to retrieve.
 
 ### returns
 
-Returns a promise that resolves to the *ObjectConstructor* instance if found or null if the id does not exist in the database.
+Returns a promise that resolves to the _ObjectConstructor_ instance if found or null if the id does not exist in the database.
 
 ## loadMultiFromDatabase
 
@@ -61,7 +61,7 @@ This method tries to load the business objects from the database matching the gi
 
 ### returns
 
-Returns a promise that resolves to an array containing the *ObjectConstructor* instances or documents that could be retrieved from the database.
+Returns a promise that resolves to an array containing the _ObjectConstructor_ instances or documents that could be retrieved from the database.
 
 If no matching document could be found, an empty array is returned.
 
@@ -75,22 +75,21 @@ This method tries to load documents matching the given ids from the indexStorage
 
 ### parameters
 
-* *object* query
+- _object_ query
 
 The query sent to the indexStorage in order to retrieve documents.
 
-* *Integer* from
+- _Integer_ from
 
 Starting offset (default: 0).
 
-* *Integer* size
+- _Integer_ size
 
 Number of hits to return (default: 20).
 
 ### returns
 
 Returns a promise that resolves to an object that contains a list of documents from indexStorage.
-
 
 ## loadFromCache
 
@@ -102,20 +101,20 @@ This method loads one object from the cache given its id.
 
 ### parameters
 
-* *string* id
+- _string_ id
 
 The object id to load from the cache.
 
-* *Object* opts
+- _Object_ opts
 
 An optional options object.
 
-Currently, the only optional parameter that can be pass to the method is *key*.
-If no key is given to the method, defaults to *collection* + '/' + id.
+Currently, the only optional parameter that can be pass to the method is _key_.
+If no key is given to the method, defaults to _collection_ + '/' + id.
 
 ### returns
 
-Returns a promise that resolves to the *ObjectConstructor* instance if a matching document could be found in the cache, or *null* if no document could be found.
+Returns a promise that resolves to the _ObjectConstructor_ instance if a matching document could be found in the cache, or _null_ if no document could be found.
 
 ## persistToDB
 
@@ -123,17 +122,17 @@ Returns a promise that resolves to the *ObjectConstructor* instance if a matchin
 Repository.prototype.persistToDB = function (object) {...}
 ```
 
-This method persists the given *ObjectConstructor* instance to the database.
+This method persists the given _ObjectConstructor_ instance to the database.
 
 ### parameters
 
-* *ObjectConstructor* object
+- _ObjectConstructor_ object
 
 The business object to persist.
 
 ### returns
 
-*(Promise)*
+_(Promise)_
 
 ## persistToCache
 
@@ -141,25 +140,25 @@ The business object to persist.
 Repository.prototype.persistToCache = function (object, opts) {...}
 ```
 
-This method persists the given *ObjectConstructor* instance to the cache.
+This method persists the given _ObjectConstructor_ instance to the cache.
 
 ### parameters
 
-* *ObjectConstructor* object
+- _ObjectConstructor_ object
 
 The business object to persist.
 
-* *Object* opts
+- _Object_ opts
 
 An optional options object.
 The supported options are:
 
-> * key: The key used to store the object in the cache engine. Defaults to *collection* + '/' + object._id
-> * ttl: Defaults to the repository ttl. If set to false, the object will never expire.
+> - key: The key used to store the object in the cache engine. Defaults to _collection_ + '/' + object.\_id
+> - ttl: Defaults to the repository ttl. If set to false, the object will never expire.
 
 ### returns
 
-*(Promise)*
+_(Promise)_
 
 ## refreshCacheTTL
 
@@ -171,21 +170,21 @@ This methods updates the object's TTL in the cache engine.
 
 ### parameters
 
-* *ObjectConstructor* object
+- _ObjectConstructor_ object
 
 The business object to update.
 
-* *Object* opts
+- _Object_ opts
 
 An optional options object.  
 The supported options are:
 
-> * key: The key used to store the object in the cache engine. Defaults to *collection* + '/' + object._id
-> * ttl: Defaults to the repository ttl. If set to false, the object will never expire.
+> - key: The key used to store the object in the cache engine. Defaults to _collection_ + '/' + object.\_id
+> - ttl: Defaults to the repository ttl. If set to false, the object will never expire.
 
 ### returns
 
-*(Promise)*
+_(Promise)_
 
 ## serializeToCache
 
@@ -197,13 +196,13 @@ This method transforms the business object before being persisted to the cache. 
 
 ### parameters
 
-* *ObjectConstructor* object
+- _ObjectConstructor_ object
 
 The business object to persist.
 
 ### returns
 
-*(Object)*
+_(Object)_
 
 ## serializeToDatabase
 
@@ -215,10 +214,10 @@ This method transforms the business object before being persisted to the cache. 
 
 ### parameters
 
-* *ObjectConstructor* object
+- _ObjectConstructor_ object
 
 The business object to persist.
 
 ### returns
 
-*(Object)*
+_(Object)_

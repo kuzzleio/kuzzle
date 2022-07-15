@@ -19,18 +19,17 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const
-  fs = require('fs'),
+const fs = require("fs"),
   {
     ColoredFormatter,
     PrefixedFormatter,
-    FileFormatter
-  } = require('./formatters');
+    FileFormatter,
+  } = require("./formatters");
 
 class ColorOutput {
-  constructor (opts) {
+  constructor(opts) {
     this.terminalFormatter = opts.C
       ? new PrefixedFormatter()
       : new ColoredFormatter();
@@ -39,14 +38,14 @@ class ColorOutput {
 
     this.fileReport = null;
 
-    if (! opts.R) {
+    if (!opts.R) {
       this.notice(`Upgrade report file: ${opts.output}`);
-      this.fileReport = fs.openSync(opts.output, 'w', 0o600);
+      this.fileReport = fs.openSync(opts.output, "w", 0o600);
     }
   }
 
   /* eslint-disable no-console */
-  error (str) {
+  error(str) {
     console.error(this.terminalFormatter.error(str));
 
     if (this.fileReport) {
@@ -54,7 +53,7 @@ class ColorOutput {
     }
   }
 
-  warn (str) {
+  warn(str) {
     console.warn(this.terminalFormatter.warn(str));
 
     if (this.fileReport) {
@@ -62,7 +61,7 @@ class ColorOutput {
     }
   }
 
-  notice (str) {
+  notice(str) {
     console.log(this.terminalFormatter.notice(str));
 
     if (this.fileReport) {
@@ -70,7 +69,7 @@ class ColorOutput {
     }
   }
 
-  question (str) {
+  question(str) {
     console.log(this.terminalFormatter.question(str));
 
     if (this.fileReport) {
@@ -78,7 +77,7 @@ class ColorOutput {
     }
   }
 
-  ok (str) {
+  ok(str) {
     console.log(this.terminalFormatter.ok(str));
 
     if (this.fileReport) {
@@ -86,7 +85,7 @@ class ColorOutput {
     }
   }
 
-  print (str) {
+  print(str) {
     console.log(this.terminalFormatter.raw(str));
 
     if (this.fileReport) {

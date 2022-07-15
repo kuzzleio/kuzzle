@@ -56,4 +56,4 @@ export type StrategyDefinition = {
       verify: string;
     };
   };
-}
+};

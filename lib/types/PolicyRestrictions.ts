@@ -22,7 +22,7 @@
 /**
  * Policy Restiction definition of
  * a index and its collections
- * 
+ *
  * @example
  * {
  *   "index": "index-yellow-taxi",

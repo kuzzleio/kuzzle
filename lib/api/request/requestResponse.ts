@@ -19,28 +19,26 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
-import * as assert from '../../util/assertType';
-import { Deprecation } from '../../types';
-import { KuzzleError } from '../../kerror/errors/kuzzleError';
+import { JSONObject } from "kuzzle-sdk";
+import * as assert from "../../util/assertType";
+import { Deprecation } from "../../types";
+import { KuzzleError } from "../../kerror/errors/kuzzleError";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
-const _request = 'request\u200b';
-const _headers = 'headers\u200b';
-const _userHeaders = 'userHeaders\u200b'; // List of headers to be sent in the response
+const _request = "request\u200b";
+const _headers = "headers\u200b";
+const _userHeaders = "userHeaders\u200b"; // List of headers to be sent in the response
 
 // List of headers that should not be present in the body of the response
-const restrictedHeaders = [
-  'set-cookie',
-];
+const restrictedHeaders = ["set-cookie"];
 
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
   private proxy: any;
 
-  constructor () {
+  constructor() {
     this.namesMap = new Map();
     this.headers = {};
     this.proxy = new Proxy(this.headers, {
@@ -49,7 +47,7 @@ export class Headers {
       set: (target, name, value) => this.setHeader(name as string, value),
     });
 
-    this.setHeader('X-Kuzzle-Node', (global as any).kuzzle.id);
+    this.setHeader("X-Kuzzle-Node", (global as any).kuzzle.id);
   }
 
   /**
@@ -57,24 +55,24 @@ export class Headers {
    *
    * @param name Header name. Could be a string (case-insensitive) or a symbol
    */
-  getHeader (name: any): string | void {
-    if (typeof name === 'symbol') {
+  getHeader(name: any): string | void {
+    if (typeof name === "symbol") {
       return this.headers[name as unknown as string];
     }
 
-    assert.assertString('header name', name);
+    assert.assertString("header name", name);
 
-    if (! name) {
+    if (!name) {
       return;
     }
 
     return this.headers[this.namesMap.get(name.toLowerCase())];
   }
 
-  removeHeader (name: string): boolean {
-    assert.assertString('header name', name);
+  removeHeader(name: string): boolean {
+    assert.assertString("header name", name);
 
-    if (! name) {
+    if (!name) {
       return true;
     }
 
@@ -89,10 +87,10 @@ export class Headers {
     return true;
   }
 
-  setHeader (name: string, value: string): boolean {
-    assert.assertString('header name', name);
+  setHeader(name: string, value: string): boolean {
+    assert.assertString("header name", name);
 
-    if (! name) {
+    if (!name) {
       return true;
     }
 
@@ -101,7 +99,7 @@ export class Headers {
 
     let _name = this.namesMap.get(lowerCased);
 
-    if (! _name) {
+    if (!_name) {
       this.namesMap.set(lowerCased, name);
       _name = name;
     }
@@ -109,37 +107,35 @@ export class Headers {
     // Common HTTP headers are overwritten when set, instead of being
     // concatenated
     switch (lowerCased) {
-      case 'age':
-      case 'authorization':
-      case 'content-length':
-      case 'content-type':
-      case 'etag':
-      case 'expires':
-      case 'from':
-      case 'host':
-      case 'if-modified-since':
-      case 'if-unmodified-since':
-      case 'last-modified, location':
-      case 'max-forwards':
-      case 'proxy-authorization':
-      case 'referer':
-      case 'retry-after':
-      case 'user-agent':
+      case "age":
+      case "authorization":
+      case "content-length":
+      case "content-type":
+      case "etag":
+      case "expires":
+      case "from":
+      case "host":
+      case "if-modified-since":
+      case "if-unmodified-since":
+      case "last-modified, location":
+      case "max-forwards":
+      case "proxy-authorization":
+      case "referer":
+      case "retry-after":
+      case "user-agent":
         this.headers[_name] = _value;
         break;
-      case 'set-cookie':
-        if (! this.headers[_name]) {
+      case "set-cookie":
+        if (!this.headers[_name]) {
           this.headers[_name] = [_value];
-        }
-        else {
+        } else {
           this.headers[_name].push(_value);
         }
         break;
       default: {
         if (this.headers[_name]) {
-          this.headers[_name] += ', ' + _value;
-        }
-        else {
+          this.headers[_name] += ", " + _value;
+        } else {
           this.headers[_name] = _value;
         }
       }
@@ -158,7 +154,7 @@ export class RequestResponse {
    */
   public raw: boolean;
 
-  constructor (request) {
+  constructor(request) {
     this.raw = false;
     this[_request] = request;
     this[_headers] = new Headers();
@@ -170,7 +166,7 @@ export class RequestResponse {
   /**
    * Get the parent request deprecations
    */
-  get deprecations (): Array<Deprecation> | void {
+  get deprecations(): Array<Deprecation> | void {
     return this[_request].deprecations;
   }
 
@@ -178,7 +174,7 @@ export class RequestResponse {
    * Set the parent request deprecations
    * @param {Object[]} deprecations
    */
-  set deprecations (deprecations: Array<Deprecation> | void) {
+  set deprecations(deprecations: Array<Deprecation> | void) {
     this[_request].deprecations = deprecations;
   }
 
@@ -186,89 +182,89 @@ export class RequestResponse {
    * Get the parent request status
    * @returns {number}
    */
-  get status (): number {
+  get status(): number {
     return this[_request].status;
   }
 
-  set status (s: number) {
+  set status(s: number) {
     this[_request].status = s;
   }
 
   /**
    * Request error
    */
-  get error (): KuzzleError | null {
+  get error(): KuzzleError | null {
     return this[_request].error;
   }
 
-  set error (e: KuzzleError | null) {
+  set error(e: KuzzleError | null) {
     this[_request].setError(e);
   }
 
   /**
    * Request external ID
    */
-  get requestId (): string | null {
+  get requestId(): string | null {
     return this[_request].id;
   }
 
   /**
    * API controller name
    */
-  get controller (): string | null {
+  get controller(): string | null {
     return this[_request].input.controller;
   }
 
   /**
    * API action name
    */
-  get action (): string | null {
+  get action(): string | null {
     return this[_request].input.action;
   }
 
   /**
    * Collection name
    */
-  get collection (): string | null {
+  get collection(): string | null {
     return this[_request].input.resource.collection;
   }
 
   /**
    * Index name
    */
-  get index (): string | null {
+  get index(): string | null {
     return this[_request].input.resource.index;
   }
 
   /**
    * Volatile object
    */
-  get volatile (): JSONObject | null {
+  get volatile(): JSONObject | null {
     return this[_request].input.volatile;
   }
 
   /**
    * Response headers
    */
-  get headers (): JSONObject {
+  get headers(): JSONObject {
     return this[_headers].proxy;
   }
 
   /**
    * Request result
    */
-  get result (): any {
+  get result(): any {
     return this[_request].result;
   }
 
-  set result (r: any) {
+  set result(r: any) {
     this[_request].setResult(r);
   }
 
   /**
    * Node identifier
    */
-  get node (): string {
+  get node(): string {
     return (global as any).kuzzle.id;
   }
 
@@ -282,11 +278,11 @@ export class RequestResponse {
    *
    * @returns void
    */
-  configure (
+  configure(
     options: {
       headers?: JSONObject;
       status?: number;
-      format?: 'standard' | 'raw';
+      format?: "standard" | "raw";
     } = {}
   ): void {
     if (options.headers) {
@@ -299,16 +295,15 @@ export class RequestResponse {
 
     if (options.status) {
       this.status = options.status;
-    }
-    else if (this.status === 102) {
+    } else if (this.status === 102) {
       this.status = 200;
     }
 
     switch (options.format) {
-      case 'raw':
+      case "raw":
         this.raw = true;
         break;
-      case 'standard':
+      case "standard":
         this.raw = false;
         break;
     }
@@ -317,14 +312,14 @@ export class RequestResponse {
   /**
    * Gets a header value (case-insensitive)
    */
-  getHeader (name: string): string | null {
+  getHeader(name: string): string | null {
     return this[_headers].getHeader(name);
   }
 
   /**
    * Deletes a header (case-insensitive)
    */
-  removeHeader (name: string) {
+  removeHeader(name: string) {
     return this[_headers].removeHeader(name);
   }
 
@@ -332,20 +327,20 @@ export class RequestResponse {
    * Sets a new array. Behaves the same as Node.js' HTTP response.setHeader
    * method (@see https://nodejs.org/api/http.html#http_response_setheader_name_value)
    */
-  setHeader (name: string, value: string) {
+  setHeader(name: string, value: string) {
     return this[_headers].setHeader(name, value);
   }
 
   /**
    * Adds new multiple headers.
    */
-  setHeaders (headers: JSONObject, ifNotPresent = false) {
-    assert.assertObject('headers', headers);
+  setHeaders(headers: JSONObject, ifNotPresent = false) {
+    assert.assertObject("headers", headers);
 
     if (headers) {
       for (const name of Object.keys(headers)) {
         // When ifNotPresent is set to true, only set the header if no value has been defined before
-        if (! ifNotPresent || this.getHeader(name) === undefined) {
+        if (!ifNotPresent || this.getHeader(name) === undefined) {
           this.setHeader(name, headers[name]);
         }
       }
@@ -355,7 +350,7 @@ export class RequestResponse {
   /**
    * Serializes the response.
    */
-  toJSON (): JSONObject {
+  toJSON(): JSONObject {
     if (this.raw === true) {
       return {
         content: this.result,
@@ -376,7 +371,7 @@ export class RequestResponse {
      * For example "set-cookie" headers should only be visible by the browser,
      * otherwise they may leak information about the server's cookies, since the browser will
      * not be able to restrict them to the domain of the request.
-    */
+     */
     for (const header of restrictedHeaders) {
       if (filteredHeaders[header] !== undefined) {
         filteredHeaders[header] = undefined;

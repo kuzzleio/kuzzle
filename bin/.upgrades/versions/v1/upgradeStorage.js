@@ -19,62 +19,68 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const _ = require('lodash');
+const _ = require("lodash");
 
-const getESConnector = require('../../connectors/es');
-const ProgressBar = require('../../lib/progressBar');
+const getESConnector = require("../../connectors/es");
+const ProgressBar = require("../../lib/progressBar");
 
-const INTERNAL_PREFIX = '%';
-const PUBLIC_PREFIX = '&';
-const NAME_SEPARATOR = '.';
+const INTERNAL_PREFIX = "%";
+const PUBLIC_PREFIX = "&";
+const NAME_SEPARATOR = ".";
 
-function transformProfile (profile) {
-  if (! Array.isArray(profile.policies)) {
+function transformProfile(profile) {
+  if (!Array.isArray(profile.policies)) {
     return profile;
   }
 
-  for (const policy of profile.policies.filter(p => p.restrictedTo)) {
-    for (const restriction of policy.restrictedTo.filter(r => r.collections)) {
-      restriction.collections =
-        restriction.collections.map(c => c.toLowerCase());
+  for (const policy of profile.policies.filter((p) => p.restrictedTo)) {
+    for (const restriction of policy.restrictedTo.filter(
+      (r) => r.collections
+    )) {
+      restriction.collections = restriction.collections.map((c) =>
+        c.toLowerCase()
+      );
     }
   }
   return profile;
 }
 
-function getNewIndexName (index, collection) {
-  const prefix = index[0] === '%' ? '' : PUBLIC_PREFIX;
+function getNewIndexName(index, collection) {
+  const prefix = index[0] === "%" ? "" : PUBLIC_PREFIX;
 
   return `${prefix}${index}${NAME_SEPARATOR}${collection}`;
 }
 
-function fixIndexName (context, index, collection, newIndex) {
+function fixIndexName(context, index, collection, newIndex) {
   const lowercased = newIndex.toLowerCase();
 
   if (lowercased !== newIndex) {
     // uppercase letters were already forbidden in index names
-    context.log.warn(`Index "${index}": collection "${collection}" has been renamed to "${collection.toLowerCase()}"`);
+    context.log.warn(
+      `Index "${index}": collection "${collection}" has been renamed to "${collection.toLowerCase()}"`
+    );
   }
 
   return lowercased;
 }
 
-async function moveData (context, index, collection, newIndex, transform) {
+async function moveData(context, index, collection, newIndex, transform) {
   let page = await context.source.search({
-    body: { sort: [ '_doc' ] },
+    body: { sort: ["_doc"] },
     index,
-    scroll: '1m',
+    scroll: "1m",
     size: context.argv.storagePageSize,
-    type: collection
+    type: collection,
   });
 
   const total = page.body.hits.total;
   const progressBar = new ProgressBar(
     context,
     `Importing: ${index}/${collection}`,
-    total);
+    total
+  );
   let moved = 0;
 
   while (moved < total) {
@@ -96,8 +102,8 @@ async function moveData (context, index, collection, newIndex, transform) {
         create: {
           _id: doc._id,
           _index: newIndex,
-          _type: context._type
-        }
+          _type: context._type,
+        },
       });
       bulk.push(doc._source);
     }
@@ -110,8 +116,8 @@ async function moveData (context, index, collection, newIndex, transform) {
 
     if (moved < total) {
       page = await context.source.scroll({
-        scroll: '1m',
-        scroll_id: page.body._scroll_id
+        scroll: "1m",
+        scroll_id: page.body._scroll_id,
       });
     }
   }
@@ -120,10 +126,10 @@ async function moveData (context, index, collection, newIndex, transform) {
   return total;
 }
 
-async function upgradeMappings (context, index, collection, newIndex) {
+async function upgradeMappings(context, index, collection, newIndex) {
   const mappingsResponse = await context.source.indices.getMapping({
     index,
-    type: collection
+    type: collection,
   });
   const mappings = mappingsResponse.body[index].mappings[collection];
 
@@ -137,14 +143,14 @@ async function upgradeMappings (context, index, collection, newIndex) {
     body: {
       _meta: mappings._meta,
       dynamic: mappings.dynamic || false,
-      properties: mappings.properties
+      properties: mappings.properties,
     },
     index: newIndex,
     type: context._type,
   });
 }
 
-async function createNewIndex (context, newIndex) {
+async function createNewIndex(context, newIndex) {
   const exists = await context.target.indices.exists({ index: newIndex });
 
   if (exists.body) {
@@ -154,7 +160,7 @@ async function createNewIndex (context, newIndex) {
   await context.target.indices.create({ index: newIndex });
 }
 
-async function upgrade (context, index, collection, newIndex) {
+async function upgrade(context, index, collection, newIndex) {
   const fixedIndexName = fixIndexName(context, index, collection, newIndex);
 
   await createNewIndex(context, fixedIndexName);
@@ -163,7 +169,7 @@ async function upgrade (context, index, collection, newIndex) {
   return await moveData(context, index, collection, fixedIndexName);
 }
 
-async function upgradeInternalStorage (context) {
+async function upgradeInternalStorage(context) {
   const config = context.config.services.storageEngine.internalIndex;
   const index = `${INTERNAL_PREFIX}${config.name}`;
   const mapconfig = config.collections;
@@ -184,7 +190,7 @@ async function upgradeInternalStorage (context) {
       await context.target.indices.putMapping({
         body: mappings,
         index: newIndex,
-        type: context._type
+        type: context._type,
       });
 
       total = await moveData(
@@ -192,19 +198,21 @@ async function upgradeInternalStorage (context) {
         index,
         collection,
         newIndex,
-        collection === 'profiles' && transformProfile);
-    }
-    else {
+        collection === "profiles" && transformProfile
+      );
+    } else {
       total = await upgrade(context, index, collection, newIndex);
     }
 
-    context.log.ok(`... migrated internal data: ${collection} (${total} documents)`);
+    context.log.ok(
+      `... migrated internal data: ${collection} (${total} documents)`
+    );
   }
 
   // bootstrap document
   await context.target.create({
-    body: { version: '2.0.0' },
-    id: 'internalIndex.dataModelVersion',
+    body: { version: "2.0.0" },
+    id: "internalIndex.dataModelVersion",
     index: `${index}.config`,
     type: context._type,
   });
@@ -217,12 +225,14 @@ async function upgradeInternalStorage (context) {
   });
 }
 
-async function upgradePluginsStorage (context) {
-  const { body } = await context.source.cat.indices({ format: 'json' });
-  const indexes = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
+async function upgradePluginsStorage(context) {
+  const { body } = await context.source.cat.indices({ format: "json" });
+  const indexes = body
+    .map((b) => b.index)
+    .filter((n) => n.startsWith("%plugin:"));
 
   for (const index of indexes) {
-    const plugin = index.split(':')[1];
+    const plugin = index.split(":")[1];
     const newIndexBase = `%plugin-${plugin}${NAME_SEPARATOR}`;
     const mappings = await context.source.indices.getMapping({ index });
     const collections = Object.keys(mappings.body[index].mappings);
@@ -231,14 +241,16 @@ async function upgradePluginsStorage (context) {
       const newIndex = newIndexBase + collection;
       const total = await upgrade(context, index, collection, newIndex);
 
-      context.log.ok(`... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`);
+      context.log.ok(
+        `... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`
+      );
     }
   }
 }
 
-async function upgradeAliases (context, upgraded) {
+async function upgradeAliases(context, upgraded) {
   const response = await context.source.indices.getAlias({
-    index: Object.keys(upgraded)
+    index: Object.keys(upgraded),
   });
 
   const aliases = {};
@@ -261,11 +273,11 @@ be duplicated across all of an index upgraded collections.`);
 
   const choice = await context.inquire.direct({
     default: false,
-    message: 'Upgrade aliases?',
-    type: 'confirm'
+    message: "Upgrade aliases?",
+    type: "confirm",
   });
 
-  if (! choice) {
+  if (!choice) {
     return;
   }
 
@@ -282,26 +294,28 @@ be duplicated across all of an index upgraded collections.`);
   }
 }
 
-async function upgradeDataStorage (context) {
-  const { body } = await context.source.cat.indices({ format: 'json' });
+async function upgradeDataStorage(context) {
+  const { body } = await context.source.cat.indices({ format: "json" });
   const upgraded = {};
   let indexes = body
-    .map(b => b.index)
-    .filter(n => ! n.startsWith(INTERNAL_PREFIX));
+    .map((b) => b.index)
+    .filter((n) => !n.startsWith(INTERNAL_PREFIX));
 
-  context.log.notice(`There are ${indexes.length} data indexes that can be upgraded`);
+  context.log.notice(
+    `There are ${indexes.length} data indexes that can be upgraded`
+  );
   const choices = {
-    all: 'upgrade all indexes',
-    askCollection: 'choose which collections can be upgraded',
-    askIndex: 'choose which indexes can be upgraded',
-    skip: 'skip all data index upgrades'
+    all: "upgrade all indexes",
+    askCollection: "choose which collections can be upgraded",
+    askIndex: "choose which indexes can be upgraded",
+    skip: "skip all data index upgrades",
   };
 
   const action = await context.inquire.direct({
     choices: Object.values(choices),
     default: choices.all,
-    message: 'You want to',
-    type: 'list'
+    message: "You want to",
+    type: "list",
   });
 
   if (action === choices.skip) {
@@ -310,9 +324,9 @@ async function upgradeDataStorage (context) {
 
   if (action === choices.askIndex) {
     indexes = await context.inquire.direct({
-      choices: indexes.map(i => ({ checked: true, name: i })),
-      message: 'Select the indexes to upgrade:',
-      type: 'checkbox'
+      choices: indexes.map((i) => ({ checked: true, name: i })),
+      message: "Select the indexes to upgrade:",
+      type: "checkbox",
     });
   }
 
@@ -324,15 +338,15 @@ async function upgradeDataStorage (context) {
     if (action === choices.askCollection) {
       context.log.notice(`Starting to upgrade the index ${index}`);
       collections = await context.inquire.direct({
-        choices: collections.map(c => ({ checked: true, name: c })),
-        message: 'Select the collections to upgrade:',
-        type: 'checkbox'
+        choices: collections.map((c) => ({ checked: true, name: c })),
+        message: "Select the collections to upgrade:",
+        type: "checkbox",
       });
     }
 
     upgraded[index] = {
       canBeRemoved: collections.length === allCollections.length,
-      targets: []
+      targets: [],
     };
 
     for (const collection of collections) {
@@ -340,7 +354,9 @@ async function upgradeDataStorage (context) {
       const total = await upgrade(context, index, collection, newIndex);
 
       upgraded[index].targets.push(newIndex);
-      context.log.ok(`... migrated data index ${index}: ${collection} (${total} documents)`);
+      context.log.ok(
+        `... migrated data index ${index}: ${collection} (${total} documents)`
+      );
     }
   }
 
@@ -349,64 +365,67 @@ async function upgradeDataStorage (context) {
   return upgraded;
 }
 
-async function destroyPreviousStructure (context, upgraded) {
+async function destroyPreviousStructure(context, upgraded) {
   // there is no point in destroying the previous structure if not performing
   // an in-place migration
-  if (! context.inPlace) {
+  if (!context.inPlace) {
     return;
   }
 
-  const { body } = await context.source.cat.indices({ format: 'json' });
-  const plugins = body.map(b => b.index).filter(n => n.startsWith('%plugin:'));
+  const { body } = await context.source.cat.indices({ format: "json" });
+  const plugins = body
+    .map((b) => b.index)
+    .filter((n) => n.startsWith("%plugin:"));
 
   let indexes = [
-    '%kuzzle',
+    "%kuzzle",
     ...plugins,
-    ...Object.keys(upgraded).filter(i => upgraded[i].canBeRemoved),
+    ...Object.keys(upgraded).filter((i) => upgraded[i].canBeRemoved),
   ];
 
-
-  context.log.notice('Since this is an in-place migration, the previous structure can be removed.');
-  context.log.notice('(only data indexes with ALL their collections upgraded can be deleted)');
+  context.log.notice(
+    "Since this is an in-place migration, the previous structure can be removed."
+  );
+  context.log.notice(
+    "(only data indexes with ALL their collections upgraded can be deleted)"
+  );
 
   const choices = {
-    everything: 'Yes - remove all upgraded structures',
-    internal: 'Remove only Kuzzle internal data',
-    kuzzleAndPlugins: 'Remove Kuzzle internal data and plugins storages',
-    no: 'No - keep everything as is'
+    everything: "Yes - remove all upgraded structures",
+    internal: "Remove only Kuzzle internal data",
+    kuzzleAndPlugins: "Remove Kuzzle internal data and plugins storages",
+    no: "No - keep everything as is",
   };
 
   const action = await context.inquire.direct({
     choices: Object.values(choices),
     default: choices[0],
-    message: 'Destroy? (THIS CANNOT BE REVERTED)',
-    type: 'list'
+    message: "Destroy? (THIS CANNOT BE REVERTED)",
+    type: "list",
   });
 
   if (action === choices.no) {
-    context.log.ok('Previous structure left intact.');
+    context.log.ok("Previous structure left intact.");
     return;
   }
 
   if (action === choices.kuzzleAndPlugins) {
-    indexes = [ '%kuzzle', ...plugins ];
-  }
-  else if (action === choices.internal) {
-    indexes = [ '%kuzzle' ];
+    indexes = ["%kuzzle", ...plugins];
+  } else if (action === choices.internal) {
+    indexes = ["%kuzzle"];
   }
 
   await context.source.indices.delete({ index: indexes });
-  context.log.ok('Previous structure destroyed.');
+  context.log.ok("Previous structure destroyed.");
 }
 
-module.exports = async function upgradeStorage (context) {
+module.exports = async function upgradeStorage(context) {
   const storageContext = await getESConnector(context);
   const targetInfo = await storageContext.target.info();
-  const targetMajor = targetInfo.body.version.number.split('.')[0];
+  const targetMajor = targetInfo.body.version.number.split(".")[0];
 
-  storageContext._type = storageContext.inPlace && targetMajor === '5'
-    ? 'default'
-    : undefined;
+  storageContext._type =
+    storageContext.inPlace && targetMajor === "5" ? "default" : undefined;
 
   context.log.notice(`
 This script will now start *COPYING* the existing data to the target storage
@@ -418,12 +437,12 @@ overwritten without notice.`);
 
   const confirm = await context.inquire.direct({
     default: true,
-    message: 'Continue?',
-    type: 'confirm'
+    message: "Continue?",
+    type: "confirm",
   });
 
-  if (! confirm) {
-    context.log.error('Aborted by user.');
+  if (!confirm) {
+    context.log.error("Aborted by user.");
     process.exit(0);
   }
 
@@ -432,19 +451,18 @@ overwritten without notice.`);
     await upgradePluginsStorage(storageContext);
     const upgraded = await upgradeDataStorage(storageContext);
 
-    storageContext.log.ok('Storage migration complete.');
+    storageContext.log.ok("Storage migration complete.");
     await destroyPreviousStructure(storageContext, upgraded);
-  }
-  catch (e) {
+  } catch (e) {
     storageContext.log.error(`Storage upgrade failure: ${e.message}`);
 
-    const reason = _.get(e, 'meta.body.error.reason');
+    const reason = _.get(e, "meta.body.error.reason");
     if (reason) {
       storageContext.log.error(`Reason: ${reason}`);
     }
 
     storageContext.log.print(e.stack);
-    storageContext.log.error('Aborted.');
+    storageContext.log.error("Aborted.");
     process.exit(1);
   }
 };

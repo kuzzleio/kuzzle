@@ -19,44 +19,43 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const getRedisConnector = require('../../connectors/redis');
+const getRedisConnector = require("../../connectors/redis");
 
-async function copyKey (context, key) {
-  const
-    dump = await context.source.dumpBuffer(key),
+async function copyKey(context, key) {
+  const dump = await context.source.dumpBuffer(key),
     ttl = Math.max(0, await context.source.pttl(key));
 
   // Breaking change from v1 to v2, due to how indexes are handled:
   // token keys are prefixed "repos/%kuzzle/token" in v1, and
   // "repos/kuzzle/token" in v2
-  const newKey = key.replace('repos/%kuzzle/token', 'repos/kuzzle/token');
+  const newKey = key.replace("repos/%kuzzle/token", "repos/kuzzle/token");
 
-  await context.target.restore(newKey, ttl, dump, 'REPLACE');
+  await context.target.restore(newKey, ttl, dump, "REPLACE");
 }
 
-async function getSourceKeys (context, pattern) {
-  if (! context.source.nodes) {
+async function getSourceKeys(context, pattern) {
+  if (!context.source.nodes) {
     return await context.source.keys(pattern);
   }
 
   const keys = [];
 
-  for (const node of context.source.nodes('master')) {
-    keys.push(...await node.source.keys(pattern));
+  for (const node of context.source.nodes("master")) {
+    keys.push(...(await node.source.keys(pattern)));
   }
 
   return keys;
 }
 
-async function copyDatabase (context, db) {
+async function copyDatabase(context, db) {
   await context.source.select(db);
   await context.target.select(db);
 
   await context.target.flushdb();
 
-  const keys = await getSourceKeys(context, '*');
+  const keys = await getSourceKeys(context, "*");
 
   for (const key of keys) {
     await copyKey(context, key);
@@ -65,26 +64,25 @@ async function copyDatabase (context, db) {
   context.log.ok(`Imported cache keys from database ${db}`);
 }
 
-async function inPlaceMigration (context) {
+async function inPlaceMigration(context) {
   context.log.notice(`
 In-place migration detected: this script will make the changes necessary to
 make the cache data compatible with Kuzzle v2.`);
 
-  const
-    choices = {
-      abort: 'Abort',
-      copy: 'Copy to new keys (obsolete keys will be delete once expired)',
-      move: 'Move keys (cannot be undone, cache won\'t work with Kuzzle v1 anymore)'
+  const choices = {
+      abort: "Abort",
+      copy: "Copy to new keys (obsolete keys will be delete once expired)",
+      move: "Move keys (cannot be undone, cache won't work with Kuzzle v1 anymore)",
     },
     action = await context.inquire.direct({
       choices: Object.values(choices),
       default: choices.copy,
-      message: 'Select how the database should be migrated:',
-      type: 'list'
+      message: "Select how the database should be migrated:",
+      type: "list",
     });
 
   if (action === choices.abort) {
-    context.log.error('Aborted by user.');
+    context.log.error("Aborted by user.");
     process.exit(0);
   }
 
@@ -92,7 +90,7 @@ make the cache data compatible with Kuzzle v2.`);
 
   await context.source.select(db);
 
-  const keys = await getSourceKeys(context, 'repos/*');
+  const keys = await getSourceKeys(context, "repos/*");
 
   for (const key of keys) {
     await copyKey(context, key);
@@ -103,7 +101,7 @@ make the cache data compatible with Kuzzle v2.`);
   }
 }
 
-async function upgradeToTarget (context) {
+async function upgradeToTarget(context) {
   context.log.notice(`
 This script will WIPE TARGET DATABASES from the target cache instance.
 Then, it will COPY all data from the source cache instance, without altering it
@@ -111,39 +109,37 @@ in any way.`);
 
   const confirm = await context.inquire.direct({
     default: true,
-    message: 'Continue?',
-    type: 'confirm'
+    message: "Continue?",
+    type: "confirm",
   });
 
-  if (! confirm) {
-    context.log.error('Aborted by user.');
+  if (!confirm) {
+    context.log.error("Aborted by user.");
     process.exit(0);
   }
 
-  for (const cachedb of ['internalCache', 'memoryStorage']) {
+  for (const cachedb of ["internalCache", "memoryStorage"]) {
     const config = context.config.services[cachedb];
 
     await copyDatabase(context, config.database || 0);
   }
 }
 
-module.exports = async function upgradeCache (context) {
+module.exports = async function upgradeCache(context) {
   const cacheContext = await getRedisConnector(context);
 
   try {
     if (cacheContext.inPlace) {
       await inPlaceMigration(cacheContext);
-    }
-    else {
+    } else {
       await upgradeToTarget(cacheContext);
     }
 
-    cacheContext.log.ok('Cache import complete.');
-  }
-  catch (e) {
+    cacheContext.log.ok("Cache import complete.");
+  } catch (e) {
     cacheContext.log.error(`Cache import failure: ${e.message}`);
     cacheContext.log.print(e.stack);
-    cacheContext.log.error('Aborted.');
+    cacheContext.log.error("Aborted.");
     process.exit(1);
   }
 };

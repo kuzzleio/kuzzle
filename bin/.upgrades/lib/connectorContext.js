@@ -19,18 +19,18 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const UpgradeContext = require('./context');
+const UpgradeContext = require("./context");
 
 class ConnectorContext extends UpgradeContext {
-  constructor (context, source, target) {
+  constructor(context, source, target) {
     super(context);
     this.source = source;
     this.target = target;
   }
 
-  get inPlace () {
+  get inPlace() {
     return this.source === this.target;
   }
 }

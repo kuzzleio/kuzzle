@@ -19,29 +19,30 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const _ = require('lodash');
+const _ = require("lodash");
 
-module.exports = async function check (context) {
+module.exports = async function check(context) {
   let action = false;
-  const warn = msg => context.log.warn(`[CONFIG. FILES] ${msg}`);
+  const warn = (msg) => context.log.warn(`[CONFIG. FILES] ${msg}`);
   const renamed = {
-    'services.db': 'services.storageEngine',
-    'services.internalEngine': 'services.internalIndex',
-    'services.storageEngine.commonMapping._kuzzle_info': 'services.storageEngine.commonMapping.properties._kuzzle_info',
-    'services.storageEngine.dynamic': 'services.storageEngine.commonMapping.dynamic'
+    "services.db": "services.storageEngine",
+    "services.internalEngine": "services.internalIndex",
+    "services.storageEngine.commonMapping._kuzzle_info":
+      "services.storageEngine.commonMapping.properties._kuzzle_info",
+    "services.storageEngine.dynamic":
+      "services.storageEngine.commonMapping.dynamic",
   };
   const deprecated = [
-    'server.entryPoints',
-    'server.protocols.socketio',
-    'server.proxy',
-    'services.garbageCollector',
-    'services.storageEngine.client.apiVersion',
-    'services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt',
-    'services.storageEngine.commonMapping.properties._kuzzle_info.active'
+    "server.entryPoints",
+    "server.protocols.socketio",
+    "server.proxy",
+    "services.garbageCollector",
+    "services.storageEngine.client.apiVersion",
+    "services.storageEngine.commonMapping.properties._kuzzle_info.deletedAt",
+    "services.storageEngine.commonMapping.properties._kuzzle_info.active",
   ];
-
 
   for (const [oldName, newName] of Object.entries(renamed)) {
     if (_.get(context.config, oldName)) {
@@ -58,17 +59,12 @@ module.exports = async function check (context) {
   }
 
   if (action) {
-    const
-      choices = [
-        'Check again',
-        'Abort',
-        'Ignore (not recommended)'
-      ],
+    const choices = ["Check again", "Abort", "Ignore (not recommended)"],
       proceed = await context.inquire.direct({
         choices,
         default: choices[0],
-        message: 'Configuration files need to be updated:',
-        type: 'list'
+        message: "Configuration files need to be updated:",
+        type: "list",
       });
 
     if (proceed === choices[0]) {
@@ -81,5 +77,5 @@ module.exports = async function check (context) {
     }
   }
 
-  context.log.ok('Configuration files checked: OK');
+  context.log.ok("Configuration files checked: OK");
 };
