@@ -5,21 +5,20 @@ on:
   workflow_dispatch:
     inputs:
       doc_deploy:
-        description: 'Deploy Documentation'
+        description: "Deploy Documentation"
         required: true
         default: true
         type: boolean
       dockerhub_deploy:
-        description: 'Deploy to DockerHub'
+        description: "Deploy to DockerHub"
         required: true
         default: true
         type: boolean
       npm_deploy:
-        description: 'Deploy to NPM'
+        description: "Deploy to NPM"
         required: true
         default: true
         type: boolean
-    
 
 jobs:
   # -----------------------------------------------------------------------------
@@ -60,15 +59,15 @@ jobs:
           node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}

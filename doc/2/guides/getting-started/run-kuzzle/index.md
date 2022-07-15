@@ -16,13 +16,13 @@ In this guide we will use Docker and Docker Compose to run those services.
 
 ### Prerequisites
 
- - [Node.js >= 12](https://nodejs.org/en/download/)
- - [Docker](https://docs.docker.com/engine/install/)
- - [Docker Compose](https://docs.docker.com/compose/install/)
- - [Kourou](https://github.com/kuzzleio/kourou)
+- [Node.js >= 12](https://nodejs.org/en/download/)
+- [Docker](https://docs.docker.com/engine/install/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
+- [Kourou](https://github.com/kuzzleio/kourou)
 
 ::: info
-It's recommanded to use Node Version Manager to avoid rights problems when using Node.js and dependencies.  
+It's recommanded to use Node Version Manager to avoid rights problems when using Node.js and dependencies.
 You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
 :::
 
@@ -31,9 +31,9 @@ Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/
 You can install Kourou globally by using NPM: `npm install -g kourou`
 
 ::: warning
-Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.  
-For the sake of simplicity we will use a Docker and Docker Compose throughout this guide. 
-::: 
+Kuzzle uses compiled C++ dependencies so a compile toolchain (a C++ compiler like g++ or clang, make and python) is necessary to run `npm install kuzzle`.
+For the sake of simplicity we will use a Docker and Docker Compose throughout this guide.
+:::
 
 ::: info
 If you encounter issues about permissions when trying to use Docker, please follow the [Docker as a non root user guide](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user).
@@ -45,9 +45,9 @@ First, we will initialize a new application using Kourou:
 
 ```bash
 kourou app:scaffold playground
- 
+
   🚀 Kourou - Scaffolds a new Kuzzle application
- 
+
   ✔ Creating "playground/" directory
   ✔ Creating and rendering application files
   ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
@@ -62,14 +62,14 @@ This will create the following files and directories:
 playground/
 ├── lib                  < application code
 ├── .eslintignore
-├── .eslintrc.json
 ├── .gitignore
-├── .kuzzlerc            < kuzzle configuration file
-├── app.ts               < application entrypoint        
+├── .eslintrc-ts.json
+├── .eslintrc.json
+├── app.ts               < application entrypoint
 ├── docker-compose.yml   < Docker Compose configuration
-├── .mocharc.json
+├── ergol.config.json
 ├── package.json
-├── package-lock.json
+├── Dockerfile
 ├── README.md
 └── tsconfig.json
 ```
@@ -77,15 +77,16 @@ playground/
 The `app.ts` file contain the basic code to run a Kuzzle application. This file is meant to be executed with Node.js as any application.
 
 ```ts
-import { Backend } from 'kuzzle'
+import { Backend } from "kuzzle";
 
-const app = new Backend('playground')
+const app = new Backend("playground");
 
-app.start()
+app
+  .start()
   .then(() => {
-    app.log.info('Application started')
+    app.log.info("Application started");
   })
-  .catch(console.error)
+  .catch(console.error);
 ```
 
 We can now run our first application with `npm run dev:docker`
@@ -101,7 +102,7 @@ Now visit [http://localhost:7512](http://localhost:7512) with your browser. You 
 We can also use the [Admin Console](https://next-console.kuzzle.io) which allows to manage your data, your users and your rights.
 
 ::: info
-The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).  
+The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
@@ -135,6 +136,6 @@ The minimum rights required by an user to connect to the Kuzzle Admin Console ar
 
 :::
 
-<GuidesLinks 
+<GuidesLinks
   :next="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"
 />
