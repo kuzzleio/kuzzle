@@ -39,18 +39,6 @@ These information are only used to define an **ephemeral room** between several 
 :::
 
 First, subscribe to realtime notifications:
-:::: tabs
-
-::: tab wscat
-
-:::
-
-::: tab kourou
-
-:::
-
-::::
-
 
 :::: tabs
 
