@@ -21,6 +21,7 @@
 
 
 import path from 'path';
+import { KuzzleEventEmitter } from './event/kuzzleEventEmitter';
 
 import { murmurHash128 as murmur } from 'murmurhash-native';
 import stringify from 'json-stable-stringify';
@@ -30,7 +31,6 @@ import segfaultHandler from 'node-segfault-handler';
 import _ from 'lodash';
 
 import kuzzleStateEnum from './kuzzleStateEnum';
-import KuzzleEventEmitter from './event/kuzzleEventEmitter';
 import EntryPoint from '../core/network/entryPoint';
 import Funnel from '../api/funnel';
 import PassportWrapper from '../core/auth/passportWrapper';
@@ -57,7 +57,7 @@ import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
 import { NameGenerator } from '../util/name-generator';
 import { OpenApiManager } from '../api/openapi';
 import { sha256 } from '../util/crypto';
-
+import { VirtualIndex } from '../service/storage/virtualIndex';
 export const BACKEND_IMPORT_KEY = 'backend:init:import';
 
 let _kuzzle = null;
@@ -93,29 +93,29 @@ type ImportStatus = {
   firstCall?: boolean;
 }
 
-class Kuzzle extends KuzzleEventEmitter {
-  private config: KuzzleConfiguration;
+export class Kuzzle extends KuzzleEventEmitter {
+  readonly config: KuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  private log: Logger;
+  readonly log: Logger;
   private rootPath: string;
   /**
    * Internal index bootstrapper and accessor
    */
-  private internalIndex: InternalIndexHandler;
+  readonly internalIndex: InternalIndexHandler;
 
-  private pluginsManager: PluginsManager;
-  private tokenManager: TokenManager;
+  readonly pluginsManager: PluginsManager;
+  readonly tokenManager: TokenManager;
   private passport: PassportWrapper;
 
   /**
    * The funnel dispatches messages to API controllers
    */
-  private funnel: Funnel;
+  readonly funnel: Funnel;
 
   /**
    * The router listens to client requests and pass them to the funnel
    */
-  private router: Router;
+  readonly router: Router;
 
   /**
    * Statistics core component
@@ -125,12 +125,12 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Network entry point
    */
-  private entryPoint: EntryPoint;
+  readonly entryPoint: EntryPoint;
 
   /**
    * Validation core component
    */
-  private validation: Validation;
+  readonly validation: Validation;
 
   /**
    * Dump generator
@@ -140,7 +140,9 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
-  private vault: vault;
+  private _vault: vault;
+
+
 
   /**
    * AsyncLocalStorage wrapper
@@ -167,7 +169,7 @@ class Kuzzle extends KuzzleEventEmitter {
     ) => Promise<void>;
   };
 
-  private koncorde: Koncorde;
+  public koncorde: Koncorde;
   private secret: string;
 
   /**
@@ -200,7 +202,7 @@ class Kuzzle extends KuzzleEventEmitter {
     this.entryPoint = new EntryPoint();
     this.validation = new Validation();
     this.dumpGenerator = new DumpGenerator();
-    this.vault = null;
+    this._vault = null;
     this.asyncStore = new AsyncStore();
     this.version = version;
 
@@ -235,7 +237,9 @@ class Kuzzle extends KuzzleEventEmitter {
       });
 
       await (new CacheEngine()).init();
-      await (new StorageEngine()).init();
+      const virtualIndex = new VirtualIndex();
+      const storageEngine = new StorageEngine(virtualIndex);
+      await storageEngine.init();
       await (new RealtimeModule()).init();
       await this.internalIndex.init();
 
@@ -244,10 +248,13 @@ class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
 
+      await virtualIndex.initWithClient(storageEngine.privateClient);
+      await storageEngine.initAfterCluster();
+
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
 
-      this.vault = vault.load(options.vaultKey, options.secretsFile);
+      this._vault = vault.load(options.vaultKey, options.secretsFile);
 
       await this.validation.init();
 
@@ -412,18 +419,18 @@ class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask (...args: any[]) {
-    return super.ask(...args);
+  async ask (event, ...payload: any[]) {
+    return super.ask(event, ...payload);
   }
 
   // For testing purpose
-  async emit (...args: any[]) {
-    return super.emit(...args);
+  emit (event: string, data?: any) {
+    return super.emit(event, data);
   }
 
   // For testing purpose
-  async pipe (...args: any[]) {
-    return super.pipe(...args);
+  async pipe (event, ...payload) {
+    return super.pipe(event, ...payload);
   }
 
   private async importUserMappings (
@@ -696,6 +703,10 @@ class Kuzzle extends KuzzleEventEmitter {
   set state (value) {
     this._state = value;
     this.emit('kuzzle:state:change', value);
+  }
+
+  get vault () {
+    return this._vault;
   }
 
   /**

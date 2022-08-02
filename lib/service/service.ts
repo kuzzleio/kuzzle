@@ -19,18 +19,22 @@
  * limitations under the License.
  */
 
-'use strict';
 
-const Bluebird = require('bluebird');
+import {JSONObject} from 'kuzzle-sdk';
 
-const kerror = require('../kerror');
+import Bluebird from 'bluebird';
+
+import * as kerror from '../kerror';
 
 /**
  * Services base class
  *
  */
 class Service {
-  constructor (name, config) {
+  _name : string;
+  _config : JSONObject;
+  _initTimeout : number;
+  constructor (name : string, config : JSONObject) {
     this._name = name;
     this._config = config;
     this._initTimeout = config.initTimeout
@@ -80,5 +84,7 @@ class Service {
     throw new Error('Not implemented');
   }
 }
+
+export default Service;
 
 module.exports = Service;

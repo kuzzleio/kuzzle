@@ -1,11 +1,13 @@
 import { Backend } from '../core/backend';
+import { Kuzzle } from '../kuzzle/kuzzle';
+
 
 /* eslint-disable @typescript-eslint/no-namespace */
 
 declare global {
   namespace NodeJS {
     interface Global {
-      kuzzle: any;
+      kuzzle: Kuzzle;
       app: Backend;
       NODE_ENV: string;
     }

@@ -19,24 +19,31 @@
  * limitations under the License.
  */
 
-'use strict';
 
 // Most of the functions exposed in this file should be viewed as
 // critical section of code.
 
-const assert = require('assert');
 
-const EventEmitter = require('eventemitter3');
-const Bluebird = require('bluebird');
-const debug = require('debug')('kuzzle:events');
-const { v4: uuidv4 } = require('uuid');
+import Bluebird from 'bluebird';
+import assert from 'assert';
+import EventEmitter from 'eventemitter3';
+import buildDebug from '../../util/debug';
 
-const Promback = require('../../util/promback');
-const memoize = require('../../util/memoize');
-const PipeRunner = require('./pipeRunner');
-const kerror = require('../../kerror');
+const debug = buildDebug('kuzzle:events');
+import { v4 as uuidv4 } from 'uuid';
+import { KuzzleError } from '../../kerror/errors/kuzzleError';
+
+import * as kerror from '../../kerror';
+import Promback from '../../util/promback';
+import memoize from '../../util/memoize';
+
+import PipeRunner from './pipeRunner';
 
 class PluginPipeDefinition {
+  public event: any;
+  public handler: any;
+  public pipeId: any;
+
   constructor (event, handler, pipeId = null) {
     this.event = event;
     this.handler = handler;
@@ -45,7 +52,14 @@ class PluginPipeDefinition {
   }
 }
 
-class KuzzleEventEmitter extends EventEmitter {
+export class KuzzleEventEmitter extends EventEmitter {
+  public superEmit: any;
+  public pipeRunner: any;
+  public pluginPipes: any;
+  public pluginPipeDefinitions: any;
+  public corePipes: any;
+  public coreAnswerers: any;
+  public coreSyncedAnswerers: any;
   constructor (maxConcurrentPipes, pipesBufferSize) {
     super();
     this.superEmit = super.emit;
@@ -125,13 +139,14 @@ class KuzzleEventEmitter extends EventEmitter {
    * @param  {string} event
    * @param  {*} data
    */
-  emit (event, data) {
+  emit (event, data): boolean {
     const events = getWildcardEvents(event);
     debug('Triggering event "%s" with data: %o', event, data);
 
     for (let i = 0; i < events.length; i++) {
       super.emit(events[i], data);
     }
+    return true;
   }
 
   /**
@@ -376,4 +391,3 @@ const getWildcardEvents = memoize(event => {
   return events;
 });
 
-module.exports = KuzzleEventEmitter;

@@ -23,26 +23,25 @@ import { ClientAdapter } from './clientAdapter';
 import { VirtualIndex } from '../../service/storage/virtualIndex';
 import { scopeEnum } from './storeScopeEnum';
 
-//const kerror = require('../../kerror').wrap('services', 'storage');
 import * as kuzzleError from '../../kerror';
 const kerror = kuzzleError.wrap('services', 'storage');
 
 
-//const VirtualIndex = require('../../service/storage/virtualIndex');
 export class StorageEngine {
 
-  publicClient : ClientAdapter = null;
-  privateClient : ClientAdapter = null;
-  virtualIndex : VirtualIndex;
+  publicClient: ClientAdapter = null;
+  privateClient: ClientAdapter = null;
+  virtualIndex: VirtualIndex;
   
-  constructor () {
-    this.virtualIndex = new VirtualIndex();
+  constructor (virtualIndex: VirtualIndex) {
+    this.virtualIndex = virtualIndex;
     // Storage client for public indexes only
     this.publicClient = new ClientAdapter(scopeEnum.PUBLIC, this.virtualIndex);
 
     // Storage client for private indexes only
     this.privateClient = new ClientAdapter(scopeEnum.PRIVATE, this.virtualIndex);
   }
+
 
   /**
    * Initialize storage clients and perform integrity checks
@@ -63,7 +62,14 @@ export class StorageEngine {
         throw kerror.get('index_already_exists', 'public', publicIndex);
       }
     }
-    await this.virtualIndex.init(this.privateClient);
     global.kuzzle.log.info('[✔] Storage initialized');
+  }
+
+  async initAfterCluster () {
+    await Promise.all([
+      this.publicClient.initAfterCluster(),
+      this.privateClient.initAfterCluster(),
+
+    ]);
   }
 }

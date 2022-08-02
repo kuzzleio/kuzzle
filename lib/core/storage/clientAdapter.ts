@@ -22,7 +22,7 @@
 
 import { ElasticSearch } from '../../service/storage/elasticsearch';
 import { IndexCache } from './indexCache';
-const { isPlainObject } = require('../../util/safeObject');
+import { isPlainObject } from '../../util/safeObject';
 import * as kerror from '../../kerror';
 import { Mutex } from '../../util/mutex';
 import { KuzzleError } from '../../kerror/errors';
@@ -47,6 +47,15 @@ export class ClientAdapter {
       virtualIndex);
     this.scope = scope;
     this.cache = new IndexCache();
+  }
+
+  async initAfterCluster () {
+    global.kuzzle.ask('cluster:event:on', `core:storage:${this.scope}:cache:clusterAddCollection`, ({ index: index, collection: collection }) => {
+      this.cache.addCollection(index, collection);
+    });
+    global.kuzzle.on('core:network:internal:message', message => {
+      // Send the notifications to the SDK for the internal Room mechanism
+    });
   }
 
   async init () {
@@ -87,8 +96,7 @@ export class ClientAdapter {
     ));
   }
 
-  async createIndex (index, { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}) {
-    console.log('createIndex ' + index );
+  async createIndex (index: string, { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}) {
     if (this.cache.hasIndex(index)) {
       throw servicesError.get('index_already_exists', this.scope, index);
     }
@@ -98,14 +106,18 @@ export class ClientAdapter {
         throw new KuzzleError('The given physicalIndex does not exist.', 404);
       }
     }
+    this.client._assertValidIndexAndCollection(index);
     this.cache.addIndex(index);
     if (physicalIndex) {
       this.client.createVirtualIndex(index, physicalIndex);
       for (const collection of this.cache.listCollections(physicalIndex)) {
         this.cache.addCollection(index, collection);
+        //send message to propagate cache population :
+        await global.kuzzle.ask('cluster:event:broadcast', `core:storage:${this.scope}:cache:clusterAddCollection`, { collection: collection, index: index, });
+        await global.kuzzle.ask('cluster:event:broadcast', `core:storage:${this.scope}:foo`, { collection, index, });
+
       }
     }
-    
 
     if (! indexCacheOnly && ! physicalIndex) {
       await this.client.createIndex(index);
@@ -708,7 +720,7 @@ export class ClientAdapter {
           }
         }
 
-        return this.client.search({ searchBody, targets, index: null, collection: null }, opts);
+        return this.client.search({ collection: null, index: null, searchBody, targets, }, opts);
       });
 
     /**
