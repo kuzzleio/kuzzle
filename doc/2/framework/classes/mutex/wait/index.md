@@ -7,7 +7,7 @@ description: Mutex class wait() method
 
 # wait
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.19.1"/>
 
 ```js
 async wait ({ attemptDelay = this.attemptDelay, timeout = this.timeout }): Promise<boolean> {

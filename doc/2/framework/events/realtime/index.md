@@ -186,7 +186,7 @@ The provided `subscription` object has the following properties:
 
 ## core:realtime:notification:dispatch:before
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.19.1"/>
 
 | Arguments             | Type              | Description                                 |
 | --------------------- | ----------------- | ------------------------------------------- |
@@ -204,7 +204,7 @@ The provided `subscription` object has the following properties:
 
 ## notify:dispatch
 
-<DeprecatedBadge version="auto-version">
+<DeprecatedBadge version="2.19.1">
 
 This event is deprecated and will be removed in the next major version of Kuzzle.
 
