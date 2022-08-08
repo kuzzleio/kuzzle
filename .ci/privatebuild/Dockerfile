@@ -37,7 +37,7 @@ RUN  set -x \
   \
   && echo "Patch version" \
   && jq ' .version="'${KUZZLE_VERSION}'" ' package.json > package.json.tmp && mv package.json.tmp package.json \
-  && jq ' .version="'${KUZZLE_VERSION}'" ' npm-shrinkwrap.json > npm-shrinkwrap.json.tmp && mv npm-shrinkwrap.json.tmp npm-shrinkwrap.json \
+  && jq ' .version="'${KUZZLE_VERSION}'" ' package-lock.json > package-lock.json.tmp && mv package-lock.json.tmp package-lock.json \
   \
   && echo "Replace koncorde with last commit from security branch" \
   && npm uninstall koncorde \
