@@ -131,7 +131,7 @@
           "message": "The \"_routing\" keyword is forbidden.",
           "class": "BadRequestError"
         },
-        "not_connected":{
+        "not_connected": {
           "description": "Unable to connect to the storage instance",
           "code": 24,
           "message": "Elasticsearch service is not connected.",

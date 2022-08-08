@@ -1,50 +1,50 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
-const EventEmitter = require('eventemitter3');
-const IORedis = require('ioredis');
+const sinon = require("sinon");
+const EventEmitter = require("eventemitter3");
+const IORedis = require("ioredis");
 
-const getBuiltinCommands = (new IORedis({ lazyConnect: true })).getBuiltinCommands;
+const getBuiltinCommands = new IORedis({ lazyConnect: true })
+  .getBuiltinCommands;
 
 /**
  * @param err
  * @constructor
  */
 class RedisClientMock extends EventEmitter {
-  constructor (options, err) {
+  constructor(options, err) {
     super();
     this.options = options;
 
     this.getBuiltinCommands = getBuiltinCommands;
 
-    getBuiltinCommands().forEach(command => {
+    getBuiltinCommands().forEach((command) => {
       this[command] = sinon.stub().resolves();
     });
 
-    this.select = sinon.spy((key, callback) => key > 16
-      ? callback(new Error('Unknown database'))
-      : callback(null));
+    this.select = sinon.spy((key, callback) =>
+      key > 16 ? callback(new Error("Unknown database")) : callback(null)
+    );
 
-    process.nextTick(() => err ? this.emit('error', err) : this.emit('ready'));
+    process.nextTick(() =>
+      err ? this.emit("error", err) : this.emit("ready")
+    );
   }
 
-  scanStream (options) {
+  scanStream(options) {
     const Stream = function () {
-      setTimeout(
-        () => {
-          const prefix = options && options.match
-            ? options.match.replace(/[*?]/g, '')
-            : 'k';
-          const keys = [];
+      setTimeout(() => {
+        const prefix =
+          options && options.match ? options.match.replace(/[*?]/g, "") : "k";
+        const keys = [];
 
-          for (let i = 0; i < 10; i++) {
-            keys.push(prefix + i);
-          }
+        for (let i = 0; i < 10; i++) {
+          keys.push(prefix + i);
+        }
 
-          this.emit('data', keys);
-          this.emit('end', true);
-        },
-        50);
+        this.emit("data", keys);
+        this.emit("end", true);
+      }, 50);
     };
     Stream.prototype = new EventEmitter();
 

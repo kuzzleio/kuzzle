@@ -5,19 +5,26 @@
         "mappings": {
           "dynamic": "strict",
           "_meta": { "field": "value" },
-          "properties": { "fieldA": { "type": "keyword"}, "fieldB": { "type": "integer"} }
+          "properties": {
+            "fieldA": { "type": "keyword" },
+            "fieldB": { "type": "integer" }
+          }
         },
         "settings": {
-          "analysis" : { "analyzer": { "content": { "type": "custom", "tokenizer": "whitespace" } } }
+          "analysis": {
+            "analyzer": {
+              "content": { "type": "custom", "tokenizer": "whitespace" }
+            }
+          }
         }
       },
       "collection2": {
-        "mappings": { "properties": { "fieldC": { "type": "keyword"} } }
+        "mappings": { "properties": { "fieldC": { "type": "keyword" } } }
       }
     },
     "index2": {
       "collection1": {
-        "mappings": { "properties": { "fieldD": { "type": "integer"} } }
+        "mappings": { "properties": { "fieldD": { "type": "integer" } } }
       }
     }
   },
@@ -25,12 +32,14 @@
   "profiles": {
     "profileA": {
       "rateLimit": 50,
-      "policies": [{
+      "policies": [
+        {
           "roleId": "roleB",
           "restrictedTo": [
-            { "index": "index1", "collections": [ "collection1", "collection2"] }
+            { "index": "index1", "collections": ["collection1", "collection2"] }
           ]
-      }]
+        }
+      ]
     },
     "profileB": {
       "policies": [{ "roleId": "roleA" }]
@@ -71,7 +80,7 @@
       }
     },
     "userB": {
-      "content": { "profileIds": ["profileA"], "age": 5}
+      "content": { "profileIds": ["profileA"], "age": 5 }
     }
   }
 }

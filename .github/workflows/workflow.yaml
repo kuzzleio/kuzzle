@@ -1,6 +1,6 @@
 name: Workflow
 
-on: 
+on:
   push:
     branches:
       - master
@@ -23,17 +23,17 @@ jobs:
           echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-  
+
   danger-js:
     name: Danger JS
     uses: kuzzleio/ci-tooling/.github/workflows/danger.yaml@master
     secrets: inherit
     with:
-      DANGER_CONFIG: './.ci/danger.config.yaml'
+      DANGER_CONFIG: "./.ci/danger.config.yaml"
 
-# -----------------------------------------------------------------------------
-# Documentation checks: error codes and dead links
-# -----------------------------------------------------------------------------
+  # -----------------------------------------------------------------------------
+  # Documentation checks: error codes and dead links
+  # -----------------------------------------------------------------------------
 
   doc-dead-links:
     name: Documentation - Check Dead Links
@@ -68,22 +68,22 @@ jobs:
       - uses: ./.github/actions/install-packages
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
-# -----------------------------------------------------------------------------
-# Unit Test and Linting
-# -----------------------------------------------------------------------------
+  # -----------------------------------------------------------------------------
+  # Unit Test and Linting
+  # -----------------------------------------------------------------------------
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
     runs-on: ubuntu-latest
     needs: [prepare-matrix]
     strategy:
-      matrix: 
+      matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - uses: actions/checkout@v2
@@ -93,8 +93,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - uses: ./.github/actions/es-lint
 
   unit-tests:
@@ -112,15 +112,15 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 
-# -----------------------------------------------------------------------------
-# E2E Tests: Functional tests, Monkey tests, Docker image tests
-# -----------------------------------------------------------------------------
+  # -----------------------------------------------------------------------------
+  # E2E Tests: Functional tests, Monkey tests, Docker image tests
+  # -----------------------------------------------------------------------------
 
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
@@ -129,7 +129,7 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-        kuzzle-image: ['kuzzle']
+        kuzzle-image: ["kuzzle"]
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -138,19 +138,19 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
-
 
   functional-tests:
     name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
-        test_set: [http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
+        test_set:
+          [http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-latest
     steps:
@@ -160,8 +160,8 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -187,12 +187,12 @@ jobs:
           node-version: ${{ matrix.node-version }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
+          path: "**/node_modules"
+          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/npm-shrinkwrap.json') }}
       - uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
-    
+
   deploy-workflow:
     name: Deployment Workflow
     needs: [cluster-monkey-tests]

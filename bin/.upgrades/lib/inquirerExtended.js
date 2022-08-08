@@ -19,24 +19,29 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 // Returns an instance of "inquirer" extended with a "direct" function that
 // returns the answer directly, instead of a key-value map of answers.
 // Useful only because we often prompt questions one by one, with tasks in the
 // middle, and this "direct" function helps reducing the clutter.
 
-const
-  assert = require('assert').strict,
-  inquirer = require('inquirer'),
-  _ = require('lodash');
+const assert = require("assert").strict,
+  inquirer = require("inquirer"),
+  _ = require("lodash");
 
-inquirer.direct = async function direct (prompt) {
-  assert(_.isPlainObject(prompt), 'Invalid argument: expected a non-empty object');
-  assert(typeof prompt.name === 'undefined', 'Unexpected "name" argument: if you need to set a name, use inquirer.prompt');
+inquirer.direct = async function direct(prompt) {
+  assert(
+    _.isPlainObject(prompt),
+    "Invalid argument: expected a non-empty object"
+  );
+  assert(
+    typeof prompt.name === "undefined",
+    'Unexpected "name" argument: if you need to set a name, use inquirer.prompt'
+  );
 
   const p = _.cloneDeep(prompt);
-  p.name = 'foo';
+  p.name = "foo";
 
   const { foo } = await inquirer.prompt(p);
 

@@ -1,4 +1,4 @@
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 export type OpenApiDefinition = {
   swagger?: string;
@@ -38,4 +38,4 @@ export type OpenApiDefinition = {
   schemes: string[];
   paths: JSONObject;
   components: JSONObject;
-}
+};

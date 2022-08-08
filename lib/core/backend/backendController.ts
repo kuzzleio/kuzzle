@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { Inflector } from '../../util/inflector';
-import * as kerror from '../../kerror';
-import { ControllerDefinition, Controller } from '../../types';
-import { ApplicationManager } from './index';
-import Plugin from '../plugin/plugin';
+import { Inflector } from "../../util/inflector";
+import * as kerror from "../../kerror";
+import { ControllerDefinition, Controller } from "../../types";
+import { ApplicationManager } from "./index";
+import Plugin from "../plugin/plugin";
 
-const assertionError = kerror.wrap('plugin', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("plugin", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendController extends ApplicationManager {
   /**
@@ -49,9 +49,9 @@ export class BackendController extends ApplicationManager {
    * })
    *
    */
-  register (name: string, definition: ControllerDefinition) {
+  register(name: string, definition: ControllerDefinition) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'controller');
+      throw runtimeError.get("already_started", "controller");
     }
 
     Plugin.checkControllerDefinition(name, definition);
@@ -122,30 +122,34 @@ export class BackendController extends ApplicationManager {
    *
    * @param controller Controller class
    */
-  use (controller: Controller) {
+  use(controller: Controller) {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'controller');
+      throw runtimeError.get("already_started", "controller");
     }
 
-    if (! controller.name) {
-      controller.name = Inflector.kebabCase(controller.constructor.name)
-        .replace('-controller', '');
+    if (!controller.name) {
+      controller.name = Inflector.kebabCase(
+        controller.constructor.name
+      ).replace("-controller", "");
     }
 
     Plugin.checkControllerDefinition(controller.name, controller.definition);
 
-    for (const [action, definition] of Object.entries(controller.definition.actions)) {
-      if (typeof definition.handler !== 'function') {
+    for (const [action, definition] of Object.entries(
+      controller.definition.actions
+    )) {
+      if (typeof definition.handler !== "function") {
         throw assertionError.get(
-          'invalid_controller_definition',
+          "invalid_controller_definition",
           controller.name,
-          `Handler for action "${action}" is not a function.`);
+          `Handler for action "${action}" is not a function.`
+        );
       }
 
       // if the function handler is an instance method,
       // bind the context to the controller instance
       const handlerName = definition.handler.name;
-      if (handlerName && typeof controller[handlerName] === 'function') {
+      if (handlerName && typeof controller[handlerName] === "function") {
         definition.handler = definition.handler.bind(controller);
       }
     }
@@ -159,12 +163,13 @@ export class BackendController extends ApplicationManager {
    * This method also check if the definition is valid to throw with a stacktrace
    * beginning on the user code adding the controller.
    */
-  private add (name: string, definition: ControllerDefinition) {
+  private add(name: string, definition: ControllerDefinition) {
     if (this._application._controllers[name]) {
       throw assertionError.get(
-        'invalid_controller_definition',
+        "invalid_controller_definition",
         name,
-        'A controller with this name already exists');
+        "A controller with this name already exists"
+      );
     }
 
     this._application._controllers[name] = definition;

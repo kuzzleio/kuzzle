@@ -1,4 +1,4 @@
-import { ClientOptions } from '@elastic/elasticsearch';
+import { ClientOptions } from "@elastic/elasticsearch";
 
 export type StorageEngineElasticsearch = {
   /**
@@ -295,6 +295,39 @@ export type StorageEngineElasticsearch = {
             handler: { type: 'text' };
             installedAt: { type: 'date' };
           };
+        };
+      };
+      validations: {
+        properties: {
+          index: { type: "keyword" };
+          collection: { type: "keyword" };
+          validations: {
+            dynamic: "false";
+            properties: Record<string, unknown>;
+          };
+        };
+      };
+      config: {
+        dynamic: "false";
+        properties: Record<string, unknown>;
+      };
+      "api-keys": {
+        dynamic: "false";
+        properties: {
+          userId: { type: "keyword" };
+          hash: { type: "keyword" };
+          description: { type: "text" };
+          expiresAt: { type: "long" };
+          ttl: { type: "keyword" };
+          token: { type: "keyword" };
+        };
+      };
+      installations: {
+        dynamic: "strict";
+        properties: {
+          description: { type: "text" };
+          handler: { type: "text" };
+          installedAt: { type: "date" };
         };
       };
     };

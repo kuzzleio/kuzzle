@@ -1,26 +1,26 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
-const mockRequire = require('mock-require');
-const { NormalizedFilter } = require('koncorde');
+const should = require("should");
+const sinon = require("sinon");
+const mockRequire = require("mock-require");
+const { NormalizedFilter } = require("koncorde");
 
 class ZeroMQPublisherMock {
-  constructor () {
+  constructor() {
     this.bind = sinon.stub().resolves();
     this.send = sinon.stub().resolves();
     this.close = sinon.stub().resolves();
   }
 }
 
-describe('ClusterPublisher', () => {
+describe("ClusterPublisher", () => {
   let ClusterPublisher;
   let publisher;
   let node = { config: { ports: { sync: 7511 } } };
 
   before(() => {
-    mockRequire('zeromq', { Publisher: ZeroMQPublisherMock });
-    ClusterPublisher = mockRequire.reRequire('../../lib/cluster/publisher');
+    mockRequire("zeromq", { Publisher: ZeroMQPublisherMock });
+    ClusterPublisher = mockRequire.reRequire("../../lib/cluster/publisher");
   });
 
   after(() => {
@@ -31,52 +31,51 @@ describe('ClusterPublisher', () => {
     publisher = new ClusterPublisher(node);
   });
 
-  describe('#init', () => {
-    it('should start binding the socket to the command port and load protobuf', async () => {
+  describe("#init", () => {
+    it("should start binding the socket to the command port and load protobuf", async () => {
       await publisher.init();
 
-      should(publisher.socket.bind).be.calledWith('tcp://*:7511');
+      should(publisher.socket.bind).be.calledWith("tcp://*:7511");
       should(publisher.protoroot).not.be.null();
     });
   });
 
-  describe('#send', () => {
+  describe("#send", () => {
     beforeEach(async () => {
       publisher.bufferSend = sinon.stub();
       await publisher.init();
     });
 
-    it('should encode the message with protobuf and pass it to bufferSend', () => {
+    it("should encode the message with protobuf and pass it to bufferSend", () => {
       const lastMessageId = publisher.lastMessageId;
-      const messageId = publisher.send(
-        'DumpRequest',
-        { suffix: 'suffix' });
+      const messageId = publisher.send("DumpRequest", { suffix: "suffix" });
 
       should(messageId).be.eql(publisher.lastMessageId);
       should(publisher.bufferSend).be.calledWith(
-        'DumpRequest',
-        Buffer.from('08011206737566666978', 'hex'));
+        "DumpRequest",
+        Buffer.from("08011206737566666978", "hex")
+      );
       should(messageId > lastMessageId).be.true();
     });
   });
 
-  describe('#bufferSend', () => {
-    it('should send the content of the buffer', async () => {
+  describe("#bufferSend", () => {
+    it("should send the content of the buffer", async () => {
       await publisher.init();
-      publisher.buffer.push({ data: 'data1', topic: 'topic1' });
+      publisher.buffer.push({ data: "data1", topic: "topic1" });
 
-      await publisher.bufferSend('topic2', 'data2');
+      await publisher.bufferSend("topic2", "data2");
 
       should(publisher.state).be.eql(1); // READY
       should(publisher.buffer).be.empty();
       should(publisher.socket.send)
-        .be.calledWith(['topic1', 'data1'])
-        .be.calledWith(['topic2', 'data2']);
+        .be.calledWith(["topic1", "data1"])
+        .be.calledWith(["topic2", "data2"]);
     });
   });
 
-  describe('#dispose', () => {
-    it('should close the socket', async () => {
+  describe("#dispose", () => {
+    it("should close the socket", async () => {
       await publisher.init();
       const socket = publisher.socket;
 
@@ -87,287 +86,263 @@ describe('ClusterPublisher', () => {
     });
   });
 
-  describe('commands', () => {
+  describe("commands", () => {
     beforeEach(() => {
-      publisher.send = sinon.stub().returns('response');
+      publisher.send = sinon.stub().returns("response");
     });
 
-    describe('#sendNewRealtimeRoom', () => {
-      it('should send the appropriate command and payload', () => {
-        const normalized = new NormalizedFilter(['filters'], 'roomId', 'index/collection');
+    describe("#sendNewRealtimeRoom", () => {
+      it("should send the appropriate command and payload", () => {
+        const normalized = new NormalizedFilter(
+          ["filters"],
+          "roomId",
+          "index/collection"
+        );
         const result = publisher.sendNewRealtimeRoom(normalized);
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'NewRealtimeRoom',
-          {
-            filter: '["filters"]',
-            id: 'roomId',
-            index: 'index/collection',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("NewRealtimeRoom", {
+          filter: '["filters"]',
+          id: "roomId",
+          index: "index/collection",
+        });
       });
     });
 
-    describe('#sendRemoveRealtimeRoom', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendRemoveRealtimeRoom('roomId');
+    describe("#sendRemoveRealtimeRoom", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendRemoveRealtimeRoom("roomId");
 
-        should(publisher.send).be.calledWith(
-          'RemoveRealtimeRoom',
-          { roomId: 'roomId' });
-        should(result).be.eql('response');
+        should(publisher.send).be.calledWith("RemoveRealtimeRoom", {
+          roomId: "roomId",
+        });
+        should(result).be.eql("response");
       });
     });
 
-    describe('#sendUnsubscription', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendUnsubscription('roomId');
+    describe("#sendUnsubscription", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendUnsubscription("roomId");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'Unsubscription',
-          { roomId: 'roomId' });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("Unsubscription", {
+          roomId: "roomId",
+        });
       });
     });
 
-    describe('#sendSubscription', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendSubscription('roomId');
+    describe("#sendSubscription", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendSubscription("roomId");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'Subscription',
-          { roomId: 'roomId' });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("Subscription", {
+          roomId: "roomId",
+        });
       });
     });
 
-    describe('#sendDocumentNotification', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendDocumentNotification", () => {
+      it("should send the appropriate command and payload", () => {
         const notification = {
-          action: 'action',
-          collection: 'collection',
-          controller: 'controller',
-          index: 'index',
-          protocol: 'protocol',
-          requestId: 'requestId',
-          result: ['result'],
-          scope: 'scope',
-          status: 'status',
-          timestamp: 'timestamp',
-          volatile: ['volatile'],
+          action: "action",
+          collection: "collection",
+          controller: "controller",
+          index: "index",
+          protocol: "protocol",
+          requestId: "requestId",
+          result: ["result"],
+          scope: "scope",
+          status: "status",
+          timestamp: "timestamp",
+          volatile: ["volatile"],
         };
         const result = publisher.sendDocumentNotification(
-          ['rooms'],
-          notification);
+          ["rooms"],
+          notification
+        );
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'DocumentNotification',
-          {
-            ...notification,
-            rooms: ['rooms'],
-            result: '["result"]',
-            volatile: '["volatile"]',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("DocumentNotification", {
+          ...notification,
+          rooms: ["rooms"],
+          result: '["result"]',
+          volatile: '["volatile"]',
+        });
       });
     });
 
-    describe('#sendUserNotification', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendUserNotification", () => {
+      it("should send the appropriate command and payload", () => {
         const notification = {
-          action: 'action',
-          collection: 'collection',
-          controller: 'controller',
-          index: 'index',
-          protocol: 'protocol',
-          result: ['result'],
-          status: 'status',
-          timestamp: 'timestamp',
-          user: 'user',
-          volatile: ['volatile'],
+          action: "action",
+          collection: "collection",
+          controller: "controller",
+          index: "index",
+          protocol: "protocol",
+          result: ["result"],
+          status: "status",
+          timestamp: "timestamp",
+          user: "user",
+          volatile: ["volatile"],
         };
-        const result = publisher.sendUserNotification(
-          'room',
-          notification);
+        const result = publisher.sendUserNotification("room", notification);
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'UserNotification',
-          {
-            ...notification,
-            room: 'room',
-            result: '["result"]',
-            volatile: '["volatile"]',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("UserNotification", {
+          ...notification,
+          room: "room",
+          result: '["result"]',
+          volatile: '["volatile"]',
+        });
       });
     });
 
-    describe('#sendNewAuthStrategy', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendNewAuthStrategy", () => {
+      it("should send the appropriate command and payload", () => {
         const result = publisher.sendNewAuthStrategy(
-          'strategyName',
-          'pluginName',
-          'strategy');
+          "strategyName",
+          "pluginName",
+          "strategy"
+        );
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'NewAuthStrategy',
-          {
-            pluginName: 'pluginName',
-            strategy: 'strategy',
-            strategyName: 'strategyName',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("NewAuthStrategy", {
+          pluginName: "pluginName",
+          strategy: "strategy",
+          strategyName: "strategyName",
+        });
       });
     });
 
-    describe('#sendRemoveAuthStrategy', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendRemoveAuthStrategy", () => {
+      it("should send the appropriate command and payload", () => {
         const result = publisher.sendRemoveAuthStrategy(
-          'strategyName',
-          'pluginName');
+          "strategyName",
+          "pluginName"
+        );
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'RemoveAuthStrategy',
-          {
-            pluginName: 'pluginName',
-            strategyName: 'strategyName',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("RemoveAuthStrategy", {
+          pluginName: "pluginName",
+          strategyName: "strategyName",
+        });
       });
     });
 
-    describe('#sendDumpRequest', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendDumpRequest('suffix');
+    describe("#sendDumpRequest", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendDumpRequest("suffix");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'DumpRequest',
-          {
-            suffix: 'suffix',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("DumpRequest", {
+          suffix: "suffix",
+        });
       });
     });
 
-    describe('#sendAddIndex', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendAddIndex('scope', 'index');
+    describe("#sendAddIndex", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendAddIndex("scope", "index");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'AddIndex',
-          {
-            scope: 'scope',
-            index: 'index',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("AddIndex", {
+          scope: "scope",
+          index: "index",
+        });
       });
     });
 
-    describe('#sendAddCollection', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendAddCollection", () => {
+      it("should send the appropriate command and payload", () => {
         const result = publisher.sendAddCollection(
-          'scope',
-          'index',
-          'collection');
+          "scope",
+          "index",
+          "collection"
+        );
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'AddCollection',
-          {
-            scope: 'scope',
-            index: 'index',
-            collection: 'collection',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("AddCollection", {
+          scope: "scope",
+          index: "index",
+          collection: "collection",
+        });
       });
     });
 
-    describe('#sendRemoveIndexes', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendRemoveIndexes('scope', 'indexes');
+    describe("#sendRemoveIndexes", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendRemoveIndexes("scope", "indexes");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'RemoveIndexes',
-          {
-            scope: 'scope',
-            indexes: 'indexes',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("RemoveIndexes", {
+          scope: "scope",
+          indexes: "indexes",
+        });
       });
     });
 
-    describe('#sendRemoveCollection', () => {
-      it('should send the appropriate command and payload', () => {
+    describe("#sendRemoveCollection", () => {
+      it("should send the appropriate command and payload", () => {
         const result = publisher.sendRemoveCollection(
-          'scope',
-          'index',
-          'collection');
+          "scope",
+          "index",
+          "collection"
+        );
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'RemoveCollection',
-          {
-            scope: 'scope',
-            index: 'index',
-            collection: 'collection',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("RemoveCollection", {
+          scope: "scope",
+          index: "index",
+          collection: "collection",
+        });
       });
     });
 
-    describe('#sendClusterWideEvent', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendClusterWideEvent('event', ['payload']);
+    describe("#sendClusterWideEvent", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendClusterWideEvent("event", ["payload"]);
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'ClusterWideEvent',
-          {
-            event: 'event',
-            payload: '["payload"]',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("ClusterWideEvent", {
+          event: "event",
+          payload: '["payload"]',
+        });
       });
     });
 
-    describe('#sendNodeShutdown', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendNodeShutdown('nodeId');
+    describe("#sendNodeShutdown", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendNodeShutdown("nodeId");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'NodeShutdown',
-          {
-            nodeId: 'nodeId',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("NodeShutdown", {
+          nodeId: "nodeId",
+        });
       });
     });
 
-    describe('#sendNodeEvicted', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendNodeEvicted(
-          'evictor',
-          'nodeId',
-          'reason');
+    describe("#sendNodeEvicted", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendNodeEvicted("evictor", "nodeId", "reason");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'NodeEvicted',
-          {
-            evictor: 'evictor',
-            nodeId: 'nodeId',
-            reason: 'reason',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("NodeEvicted", {
+          evictor: "evictor",
+          nodeId: "nodeId",
+          reason: "reason",
+        });
       });
     });
 
-    describe('#sendHeartbeat', () => {
-      it('should send the appropriate command and payload', () => {
-        const result = publisher.sendHeartbeat('address');
+    describe("#sendHeartbeat", () => {
+      it("should send the appropriate command and payload", () => {
+        const result = publisher.sendHeartbeat("address");
 
-        should(result).be.eql('response');
-        should(publisher.send).be.calledWith(
-          'Heartbeat',
-          {
-            address: 'address',
-          });
+        should(result).be.eql("response");
+        should(publisher.send).be.calledWith("Heartbeat", {
+          address: "address",
+        });
       });
     });
   });

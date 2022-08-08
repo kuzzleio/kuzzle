@@ -21,7 +21,7 @@ DocumentCreate:
     200:
       description: "Creates a new document in the persistent data storage."
       schema:
-          $ref: "#/components/document/DocumentCreateResponse"
+        $ref: "#/components/document/DocumentCreateResponse"
 
 components:
   schemas:

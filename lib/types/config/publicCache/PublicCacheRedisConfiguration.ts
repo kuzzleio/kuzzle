@@ -2,8 +2,8 @@ export type PublicCacheRedisConfiguration = {
   /**
    * @default 'redis'
    */
-  backend: 'redis';
-  
+  backend: "redis";
+
   clusterOptions: {
     /**
      * @default true
@@ -12,8 +12,8 @@ export type PublicCacheRedisConfiguration = {
   };
 
   /**
-  * @default 5
-  */
+   * @default 5
+   */
   database: number;
 
   node: {
@@ -34,4 +34,4 @@ export type PublicCacheRedisConfiguration = {
    * @default false
    */
   overrideDnsLookup: boolean;
-}
+};

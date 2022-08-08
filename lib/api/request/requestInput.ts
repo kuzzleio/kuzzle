@@ -19,28 +19,28 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
-import { InternalError } from '../../kerror/errors/internalError';
-import * as assert from '../../util/assertType';
+import { InternalError } from "../../kerror/errors/internalError";
+import * as assert from "../../util/assertType";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
-const _jwt = 'jwt\u200b';
-const _volatile = 'volatile\u200b';
-const _body = 'body\u200b';
-const _headers = 'headers\u200b';
-const _controller = 'controller\u200b';
-const _action = 'action\u200b';
+const _jwt = "jwt\u200b";
+const _volatile = "volatile\u200b";
+const _body = "body\u200b";
+const _headers = "headers\u200b";
+const _controller = "controller\u200b";
+const _action = "action\u200b";
 
 // any property not listed here will be copied into
 // RequestInput.args
 const resourceProperties = new Set([
-  'jwt',
-  'volatile',
-  'body',
-  'controller',
-  'action',
+  "jwt",
+  "volatile",
+  "body",
+  "controller",
+  "action",
 ]);
 
 /**
@@ -49,40 +49,40 @@ const resourceProperties = new Set([
 export class RequestResource {
   private args: JSONObject;
 
-  constructor (args: JSONObject) {
+  constructor(args: JSONObject) {
     this.args = args;
   }
 
   /**
    * Document ID
    */
-  get _id (): string | null {
+  get _id(): string | null {
     return this.args._id;
   }
 
-  set _id (str: string) {
+  set _id(str: string) {
     this.args._id = str;
   }
 
   /**
    * Index name
    */
-  get index (): string | null {
+  get index(): string | null {
     return this.args.index;
   }
 
-  set index (str: string) {
+  set index(str: string) {
     this.args.index = str;
   }
 
   /**
    * Collection name
    */
-  get collection (): string | null {
+  get collection(): string | null {
     return this.args.collection;
   }
 
-  set collection (str: string) {
+  set collection(str: string) {
     this.args.collection = str;
   }
 }
@@ -145,9 +145,9 @@ export class RequestInput {
    *
    * Any undefined option is set to null
    */
-  constructor (data) {
-    if (! data || typeof data !== 'object' || Array.isArray(data)) {
-      throw new InternalError('Input request data must be a non-null object');
+  constructor(data) {
+    if (!data || typeof data !== "object" || Array.isArray(data)) {
+      throw new InternalError("Input request data must be a non-null object");
     }
 
     this[_jwt] = null;
@@ -162,7 +162,7 @@ export class RequestInput {
 
     // copy into this.args only unrecognized properties
     for (const k of Object.keys(data)) {
-      if (! resourceProperties.has(k)) {
+      if (!resourceProperties.has(k)) {
         this.args[k] = data[k];
       }
     }
@@ -200,12 +200,12 @@ export class RequestInput {
    *   body
    *  }
    */
-  get jwt (): string | null {
+  get jwt(): string | null {
     return this[_jwt];
   }
 
-  set jwt (str: string) {
-    this[_jwt] = assert.assertString('jwt', str);
+  set jwt(str: string) {
+    this[_jwt] = assert.assertString("jwt", str);
   }
 
   /**
@@ -225,14 +225,14 @@ export class RequestInput {
    *   body
    *  }
    */
-  get controller (): string | null {
+  get controller(): string | null {
     return this[_controller];
   }
 
-  set controller (str: string) {
+  set controller(str: string) {
     // can only be set once
-    if (! this[_controller]) {
-      this[_controller] = assert.assertString('controller', str);
+    if (!this[_controller]) {
+      this[_controller] = assert.assertString("controller", str);
     }
   }
 
@@ -253,14 +253,14 @@ export class RequestInput {
    *   body
    *  }
    */
-  get action (): string | null {
+  get action(): string | null {
     return this[_action];
   }
 
-  set action (str: string) {
+  set action(str: string) {
     // can only be set once
-    if (! this[_action]) {
-      this[_action] = assert.assertString('action', str);
+    if (!this[_action]) {
+      this[_action] = assert.assertString("action", str);
     }
   }
 
@@ -282,12 +282,12 @@ export class RequestInput {
    *   body         <== that
    *  }
    */
-  get body (): JSONObject | null {
+  get body(): JSONObject | null {
     return this[_body];
   }
 
-  set body (obj: JSONObject) {
-    this[_body] = assert.assertObject('body', obj);
+  set body(obj: JSONObject) {
+    this[_body] = assert.assertObject("body", obj);
   }
 
   /**
@@ -295,12 +295,12 @@ export class RequestInput {
    *
    * @deprecated Use RequestContext.connection.misc.headers instead
    */
-  get headers (): JSONObject | null {
+  get headers(): JSONObject | null {
     return this[_headers];
   }
 
-  set headers (obj: JSONObject) {
-    this[_headers] = assert.assertObject('headers', obj);
+  set headers(obj: JSONObject) {
+    this[_headers] = assert.assertObject("headers", obj);
   }
 
   /**
@@ -320,11 +320,11 @@ export class RequestInput {
    *   body
    *  }
    */
-  get volatile (): JSONObject | null {
+  get volatile(): JSONObject | null {
     return this[_volatile];
   }
 
-  set volatile (obj: JSONObject) {
-    this[_volatile] = assert.assertObject('volatile', obj);
+  set volatile(obj: JSONObject) {
+    this[_volatile] = assert.assertObject("volatile", obj);
   }
 }

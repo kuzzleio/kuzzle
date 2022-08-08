@@ -1,17 +1,17 @@
-'use strict';
+"use strict";
 
-const should = require('should');
+const should = require("should");
 
-const KuzzleMock = require('../../mocks/kuzzle.mock');
+const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const PluginRepository = require('../../../lib/core/plugin/pluginRepository');
-const cacheDbEnum = require('../../../lib/core/cache/cacheDbEnum');
-const scopeEnum = require('../../../lib/core/storage/storeScopeEnum');
-const Store = require('../../../lib/core/shared/store');
+const PluginRepository = require("../../../lib/core/plugin/pluginRepository");
+const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
+const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const Store = require("../../../lib/core/shared/store");
 
-describe('core/plugin/pluginRepository', () => {
-  const someObject = { _id: 'someId', some: { defined: 'object' } };
-  const someCollection = 'someCollection';
+describe("core/plugin/pluginRepository", () => {
+  const someObject = { _id: "someId", some: { defined: "object" } };
+  const someCollection = "someCollection";
   const SomeConstructor = function () {};
   let kuzzle;
   let store;
@@ -19,7 +19,7 @@ describe('core/plugin/pluginRepository', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    store = new Store('pluginName', scopeEnum.PRIVATE);
+    store = new Store("pluginName", scopeEnum.PRIVATE);
 
     pluginRepository = new PluginRepository(store, someCollection);
     pluginRepository.init({
@@ -27,9 +27,9 @@ describe('core/plugin/pluginRepository', () => {
     });
   });
 
-  describe('#constructor', () => {
-    it('should construct and init object properly', () => {
-      should(pluginRepository.index).be.equal('pluginName');
+  describe("#constructor", () => {
+    it("should construct and init object properly", () => {
+      should(pluginRepository.index).be.equal("pluginName");
       should(pluginRepository.collection).be.equal(someCollection);
       should(pluginRepository.ObjectConstructor).be.exactly(SomeConstructor);
       should(pluginRepository.store).be.exactly(store);
@@ -37,93 +37,94 @@ describe('core/plugin/pluginRepository', () => {
     });
   });
 
-  describe('#serializeToDatabase', () => {
-    it('should copy the argument and remove _id from the copy serializeToCache', () => {
+  describe("#serializeToDatabase", () => {
+    it("should copy the argument and remove _id from the copy serializeToCache", () => {
       const copy = Object.assign({}, someObject);
 
       delete copy._id;
 
-      should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(copy);
+      should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(
+        copy
+      );
     });
   });
 
-  describe('#create', () => {
-    it('should proxify persistToDatabase with method create properly', async () => {
+  describe("#create", () => {
+    it("should proxify persistToDatabase with method create properly", async () => {
       await pluginRepository.create(someObject);
 
-      const args = kuzzle.ask
-        .withArgs('core:storage:private:document:create')
-        .firstCall
-        .args;
+      const args = kuzzle.ask.withArgs("core:storage:private:document:create")
+        .firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
-      should(args[3]).be.deepEqual(pluginRepository.serializeToDatabase(someObject));
-      should(args[4]).match({ id: 'someId' });
+      should(args[3]).be.deepEqual(
+        pluginRepository.serializeToDatabase(someObject)
+      );
+      should(args[4]).match({ id: "someId" });
     });
   });
 
-  describe('#createOrReplace', () => {
-    it('should proxify persistToDatabase with method createOrReplace properly', async () => {
+  describe("#createOrReplace", () => {
+    it("should proxify persistToDatabase with method createOrReplace properly", async () => {
       await pluginRepository.createOrReplace(someObject);
 
-      const args = kuzzle.ask
-        .withArgs('core:storage:private:document:createOrReplace')
-        .firstCall
-        .args;
+      const args = kuzzle.ask.withArgs(
+        "core:storage:private:document:createOrReplace"
+      ).firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
-      should(args[3]).be.exactly('someId');
-      should(args[4]).be.deepEqual(pluginRepository.serializeToDatabase(someObject));
+      should(args[3]).be.exactly("someId");
+      should(args[4]).be.deepEqual(
+        pluginRepository.serializeToDatabase(someObject)
+      );
     });
   });
 
-  describe('#replace', () => {
-    it('should proxify persistToDatabase with method replace properly', async () => {
+  describe("#replace", () => {
+    it("should proxify persistToDatabase with method replace properly", async () => {
       await pluginRepository.replace(someObject);
 
-      const args = kuzzle.ask
-        .withArgs('core:storage:private:document:replace')
-        .firstCall
-        .args;
+      const args = kuzzle.ask.withArgs("core:storage:private:document:replace")
+        .firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
-      should(args[3]).be.exactly('someId');
-      should(args[4]).be.deepEqual(pluginRepository.serializeToDatabase(someObject));
+      should(args[3]).be.exactly("someId");
+      should(args[4]).be.deepEqual(
+        pluginRepository.serializeToDatabase(someObject)
+      );
     });
   });
 
-  describe('#update', () => {
-    it('should proxify persistToDatabase with method update properly', async () => {
+  describe("#update", () => {
+    it("should proxify persistToDatabase with method update properly", async () => {
       await pluginRepository.update(someObject);
 
-      const args = kuzzle.ask
-        .withArgs('core:storage:private:document:update')
-        .firstCall
-        .args;
+      const args = kuzzle.ask.withArgs("core:storage:private:document:update")
+        .firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
-      should(args[3]).be.exactly('someId');
-      should(args[4]).be.deepEqual(pluginRepository.serializeToDatabase(someObject));
+      should(args[3]).be.exactly("someId");
+      should(args[4]).be.deepEqual(
+        pluginRepository.serializeToDatabase(someObject)
+      );
     });
   });
 
-  describe('#delete', () => {
-    it('should call parent method delete with proper arguments', async () => {
-      await pluginRepository.delete('someId', { refresh: 'wait_for' });
+  describe("#delete", () => {
+    it("should call parent method delete with proper arguments", async () => {
+      await pluginRepository.delete("someId", { refresh: "wait_for" });
 
-      const args = kuzzle.ask
-        .withArgs('core:storage:private:document:delete')
-        .firstCall
-        .args;
+      const args = kuzzle.ask.withArgs("core:storage:private:document:delete")
+        .firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
-      should(args[3]).be.exactly('someId');
-      should(args[4]).be.deepEqual({ refresh: 'wait_for' });
+      should(args[3]).be.exactly("someId");
+      should(args[4]).be.deepEqual({ refresh: "wait_for" });
     });
   });
 });

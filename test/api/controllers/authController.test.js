@@ -1,25 +1,27 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
-const should = require('should');
-const jwt = require('jsonwebtoken');
-const Bluebird = require('bluebird');
+const sinon = require("sinon");
+const should = require("should");
+const jwt = require("jsonwebtoken");
+const Bluebird = require("bluebird");
 
 const {
   Request,
   UnauthorizedError,
   BadRequestError,
   InternalError: KuzzleInternalError,
-  PluginImplementationError
-} = require('../../../index');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
+  PluginImplementationError,
+} = require("../../../index");
+const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const AuthController = require('../../../lib/api/controllers/authController');
-const { Token } = require('../../../lib/model/security/token');
-const { User } = require('../../../lib/model/security/user');
-const { NativeController } = require('../../../lib/api/controllers/baseController');
+const AuthController = require("../../../lib/api/controllers/authController");
+const { Token } = require("../../../lib/model/security/token");
+const { User } = require("../../../lib/model/security/user");
+const {
+  NativeController,
+} = require("../../../lib/api/controllers/baseController");
 
-describe('Test the auth controller', () => {
+describe("Test the auth controller", () => {
   let request;
   let requestcookieAuth;
   let kuzzle;
@@ -28,101 +30,105 @@ describe('Test the auth controller', () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    kuzzle.config.security.jwt.secret = 'test-secret';
+    kuzzle.config.security.jwt.secret = "test-secret";
     kuzzle.config.http.cookieAuthentication = false;
-    kuzzle.ask.withArgs('core:security:user:anonymous:get').resolves({ _id: '-1' });
+    kuzzle.ask
+      .withArgs("core:security:user:anonymous:get")
+      .resolves({ _id: "-1" });
 
     user = new User();
     kuzzle.passport.authenticate.returns(Bluebird.resolve(user));
     kuzzle.pluginsManager.strategies.mockup = {};
     request = new Request({
-      controller: 'auth',
-      action: 'login',
-      strategy: 'mockup',
+      controller: "auth",
+      action: "login",
+      strategy: "mockup",
       body: {
-        username: 'jdoe'
+        username: "jdoe",
       },
-      foo: 'bar'
+      foo: "bar",
     });
 
     requestcookieAuth = new Request({
-      controller: 'auth',
-      action: 'login',
-      strategy: 'mockup',
+      controller: "auth",
+      action: "login",
+      strategy: "mockup",
       body: {
-        username: 'jdoe'
+        username: "jdoe",
       },
-      foo: 'bar',
-      cookieAuth: true
+      foo: "bar",
+      cookieAuth: true,
     });
 
-    requestcookieAuth.input.headers = { cookie: 'authToken=;' };
+    requestcookieAuth.input.headers = { cookie: "authToken=;" };
 
     authController = new AuthController();
 
     return authController.init();
   });
 
-  describe('#constructor', () => {
-    it('should inherit the base constructor', () => {
+  describe("#constructor", () => {
+    it("should inherit the base constructor", () => {
       should(authController).instanceOf(NativeController);
     });
   });
 
-  describe('#checkRights', () => {
+  describe("#checkRights", () => {
     let userObject;
 
     beforeEach(() => {
       userObject = {
-        isActionAllowed: sinon.stub().resolves(true)
+        isActionAllowed: sinon.stub().resolves(true),
       };
 
       request.context.user = userObject;
 
       request.input.body = {
-        controller: 'document',
-        action: 'create'
+        controller: "document",
+        action: "create",
       };
     });
 
-    it('should check if the action is allowed for the user', async () => {
+    it("should check if the action is allowed for the user", async () => {
       const response = await authController.checkRights(request);
 
       should(userObject.isActionAllowed).be.calledWithMatch({
         input: {
-          controller: 'document',
-          action: 'create',
-        }
+          controller: "document",
+          action: "create",
+        },
       });
       should(response).be.eql({ allowed: true });
     });
 
-    it('should reject if the provided request is not valid', async () => {
+    it("should reject if the provided request is not valid", async () => {
       request.input.body.controller = null;
 
-      await should(authController.checkRights(request))
-        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+      await should(authController.checkRights(request)).be.rejectedWith({
+        id: "api.assert.missing_argument",
+      });
 
-      request.input.body.controller = 'document';
+      request.input.body.controller = "document";
       request.input.body.action = null;
 
-      await should(authController.checkRights(request))
-        .be.rejectedWith({ id: 'api.assert.missing_argument' });
+      await should(authController.checkRights(request)).be.rejectedWith({
+        id: "api.assert.missing_argument",
+      });
     });
   });
 
-  describe('#login', () => {
+  describe("#login", () => {
     let createTokenStub;
 
     beforeEach(() => {
-      createTokenStub = kuzzle.ask.withArgs('core:security:token:create');
+      createTokenStub = kuzzle.ask.withArgs("core:security:token:create");
     });
 
-    it('should resolve to a valid jwt token if authentication succeed', async () => {
+    it("should resolve to a valid jwt token if authentication succeed", async () => {
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -132,14 +138,14 @@ describe('Test the auth controller', () => {
 
       const response = await authController.login(request);
 
-      should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
-        strategy: 'mockup',
-        content: user
+      should(kuzzle.pipe).calledWith("auth:strategyAuthenticated", {
+        strategy: "mockup",
+        content: user,
       });
 
       should(response).match({
-        _id: 'foobar',
-        jwt: 'bar',
+        _id: "foobar",
+        jwt: "bar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -147,18 +153,18 @@ describe('Test the auth controller', () => {
       should(createTokenStub).calledOnce();
     });
 
-    it('should refresh the token if it already exists', async () => {
+    it("should refresh the token if it already exists", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "foo",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -172,18 +178,18 @@ describe('Test the auth controller', () => {
       should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
     });
 
-    it('should send back the same token if it already exists and it is an API Key', async () => {
+    it("should send back the same token if it already exists and it is an API Key", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'kapikey-foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "kapikey-foo",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -195,26 +201,26 @@ describe('Test the auth controller', () => {
 
       should(kuzzle.tokenManager.getConnectedUserToken).be.called();
       should(response).match({
-        _id: 'foobar',
-        jwt: 'kapikey-foo',
+        _id: "foobar",
+        jwt: "kapikey-foo",
         expiresAt: 4567,
         ttl: 1234,
       });
       should(kuzzle.tokenManager.refresh).not.be.called();
     });
 
-    it('should send back the same token if it already exists and it has an infinite TTL', async () => {
+    it("should send back the same token if it already exists and it has an infinite TTL", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "foo",
+        userId: "foobar",
         expiresAt: -1,
         ttl: -1,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -226,75 +232,80 @@ describe('Test the auth controller', () => {
 
       should(kuzzle.tokenManager.getConnectedUserToken).be.called();
       should(response).match({
-        _id: 'foobar',
-        jwt: 'foo',
+        _id: "foobar",
+        jwt: "foo",
         expiresAt: -1,
         ttl: -1,
       });
       should(kuzzle.tokenManager.refresh).not.be.called();
     });
 
-    it('should modify the result according to auth:strategyAuthenticated pipe events', async () => {
+    it("should modify the result according to auth:strategyAuthenticated pipe events", async () => {
       kuzzle.pipe
-        .withArgs('auth:strategyAuthenticated')
-        .resolves({ strategy: 'foobar', content: { foo: 'bar' } });
+        .withArgs("auth:strategyAuthenticated")
+        .resolves({ strategy: "foobar", content: { foo: "bar" } });
 
       const response = await authController.login(request);
 
-      should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
-        strategy: 'mockup',
-        content: user
+      should(kuzzle.pipe).calledWith("auth:strategyAuthenticated", {
+        strategy: "mockup",
+        content: user,
       });
-      should(response).match({ foo: 'bar' });
+      should(response).match({ foo: "bar" });
       should(createTokenStub).not.be.called();
     });
 
-    it('should handle strategy\'s headers and status code in case of multi-step authentication strategy', async () => {
-      const redir = { headers: { Location: 'http://github.com' }, statusCode: 302 };
+    it("should handle strategy's headers and status code in case of multi-step authentication strategy", async () => {
+      const redir = {
+        headers: { Location: "http://github.com" },
+        statusCode: 302,
+      };
 
       kuzzle.passport.authenticate.resolves(redir);
 
       const response = await authController.login(request);
 
       should(kuzzle.pipe).not.be.called();
-      should(response.headers.Location).be.equal('http://github.com');
+      should(response.headers.Location).be.equal("http://github.com");
       should(response.statusCode).be.equal(302);
       should(request.status).be.equal(302);
       should(request.response).match({
         status: 302,
-        headers: { Location: 'http://github.com' }
+        headers: { Location: "http://github.com" },
       });
 
-      should(kuzzle.ask.withArgs('core:security:token:create')).not.be.called();
+      should(kuzzle.ask.withArgs("core:security:token:create")).not.be.called();
     });
 
-    it('should call passport.authenticate with input body and query string', async () => {
+    it("should call passport.authenticate with input body and query string", async () => {
       createTokenStub.resolves(new Token());
       await authController.login(request);
 
       should(kuzzle.passport.authenticate)
         .be.calledOnce()
         .be.calledWithMatch({
-          body: { username: 'jdoe' },
-          query: { foo: 'bar' }
+          body: { username: "jdoe" },
+          query: { foo: "bar" },
         });
     });
 
-    it('should reject if no strategy is specified', () => {
+    it("should reject if no strategy is specified", () => {
       delete request.input.args.strategy;
 
-      return should(authController.login(request))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "strategy".'
-        });
+      return should(authController.login(request)).rejectedWith(
+        BadRequestError,
+        {
+          id: "api.assert.missing_argument",
+          message: 'Missing argument "strategy".',
+        }
+      );
     });
 
-    it('should be able to set authentication expiration', async () => {
+    it("should be able to set authentication expiration", async () => {
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -302,52 +313,55 @@ describe('Test the auth controller', () => {
       createTokenStub.resolves(token);
       kuzzle.passport.authenticate.resolves(user);
 
-      request.input.args.expiresIn = '1s';
+      request.input.args.expiresIn = "1s";
 
       const response = await authController.login(request);
 
       should(response).match({
-        _id: 'foobar',
-        jwt: 'bar',
+        _id: "foobar",
+        jwt: "bar",
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       should(createTokenStub).be.calledWith(
-        'core:security:token:create',
+        "core:security:token:create",
         user,
-        { expiresIn: '1s' });
+        { expiresIn: "1s" }
+      );
     });
 
-    it('should reject if authentication fails', () => {
-      kuzzle.passport.authenticate.rejects(new Error('error'));
+    it("should reject if authentication fails", () => {
+      kuzzle.passport.authenticate.rejects(new Error("error"));
 
       return should(authController.login(request)).be.rejected();
     });
 
-    it('should reject in case of unknown strategy', () => {
-      request.input.args.strategy = 'foobar';
+    it("should reject in case of unknown strategy", () => {
+      request.input.args.strategy = "foobar";
 
-      return should(authController.login(request))
-        .rejectedWith(BadRequestError, {
-          id: 'security.credentials.unknown_strategy'
-        });
+      return should(authController.login(request)).rejectedWith(
+        BadRequestError,
+        {
+          id: "security.credentials.unknown_strategy",
+        }
+      );
     });
   });
 
-  describe('#login with cookies', () => {
+  describe("#login with cookies", () => {
     let createTokenStub;
 
     beforeEach(() => {
       kuzzle.config.http.cookieAuthentication = true;
-      createTokenStub = kuzzle.ask.withArgs('core:security:token:create');
+      createTokenStub = kuzzle.ask.withArgs("core:security:token:create");
     });
 
-    it('should resolve to a valid jwt token in the header if authentication succeed ', async () => {
+    it("should resolve to a valid jwt token in the header if authentication succeed ", async () => {
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -357,37 +371,40 @@ describe('Test the auth controller', () => {
 
       const response = await authController.login(requestcookieAuth);
 
-      should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
-        strategy: 'mockup',
-        content: user
+      should(kuzzle.pipe).calledWith("auth:strategyAuthenticated", {
+        strategy: "mockup",
+        content: user,
       });
 
       should.exists(requestcookieAuth.response.headers);
-      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
-      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(requestcookieAuth.response.headers["Set-Cookie"]);
+      should(requestcookieAuth.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(response).be.deepEqual({
-        _id: 'foobar',
+        _id: "foobar",
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       should(createTokenStub).calledOnce();
     });
 
-    it('should refresh the token if it already exists', async () => {
+    it("should refresh the token if it already exists", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "foo",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -401,30 +418,32 @@ describe('Test the auth controller', () => {
       should(kuzzle.tokenManager.refresh).be.calledWith(existingToken, token);
 
       should.exists(requestcookieAuth.response.headers);
-      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
-      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(requestcookieAuth.response.headers["Set-Cookie"]);
+      should(requestcookieAuth.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(response).be.deepEqual({
-        _id: 'foobar',
+        _id: "foobar",
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
-
     });
 
-    it('should send back the same token if it is an API Key and not refresh it', async () => {
+    it("should send back the same token if it is an API Key and not refresh it", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'kapikey-foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "kapikey-foo",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -438,30 +457,32 @@ describe('Test the auth controller', () => {
       should(kuzzle.tokenManager.refresh).not.be.called();
 
       should.exists(requestcookieAuth.response.headers);
-      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
-      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=kapikey-foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(requestcookieAuth.response.headers["Set-Cookie"]);
+      should(requestcookieAuth.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=kapikey-foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(response).be.deepEqual({
-        _id: 'foobar',
+        _id: "foobar",
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
-
     });
 
-    it('should send back the same token if it has an infinite TTL and not refresh it', async () => {
+    it("should send back the same token if it has an infinite TTL and not refresh it", async () => {
       const existingToken = new Token({
-        _id: 'foobar#foo',
-        jwt: 'foo',
-        userId: 'foobar',
+        _id: "foobar#foo",
+        jwt: "foo",
+        userId: "foobar",
         expiresAt: -1,
         ttl: -1,
       });
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -475,79 +496,86 @@ describe('Test the auth controller', () => {
       should(kuzzle.tokenManager.refresh).not.be.called();
 
       should.exists(requestcookieAuth.response.headers);
-      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
-      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(requestcookieAuth.response.headers["Set-Cookie"]);
+      should(requestcookieAuth.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(response).be.deepEqual({
-        _id: 'foobar',
+        _id: "foobar",
         expiresAt: -1,
-        ttl: -1
+        ttl: -1,
       });
-
     });
 
-    it('should modify the result according to auth:strategyAuthenticated pipe events', async () => {
+    it("should modify the result according to auth:strategyAuthenticated pipe events", async () => {
       kuzzle.pipe
-        .withArgs('auth:strategyAuthenticated')
-        .resolves({ strategy: 'foobar', content: { foo: 'bar' } });
+        .withArgs("auth:strategyAuthenticated")
+        .resolves({ strategy: "foobar", content: { foo: "bar" } });
 
       const response = await authController.login(requestcookieAuth);
 
-      should(kuzzle.pipe).calledWith('auth:strategyAuthenticated', {
-        strategy: 'mockup',
-        content: user
+      should(kuzzle.pipe).calledWith("auth:strategyAuthenticated", {
+        strategy: "mockup",
+        content: user,
       });
-      should(response).match({ foo: 'bar' });
+      should(response).match({ foo: "bar" });
       should(createTokenStub).not.be.called();
     });
 
-    it('should handle strategy\'s headers and status code in case of multi-step authentication strategy', async () => {
-      const redir = { headers: { Location: 'http://github.com' }, statusCode: 302 };
+    it("should handle strategy's headers and status code in case of multi-step authentication strategy", async () => {
+      const redir = {
+        headers: { Location: "http://github.com" },
+        statusCode: 302,
+      };
 
       kuzzle.passport.authenticate.resolves(redir);
 
       const response = await authController.login(requestcookieAuth);
 
       should(kuzzle.pipe).not.be.called();
-      should(response.headers.Location).be.equal('http://github.com');
+      should(response.headers.Location).be.equal("http://github.com");
       should(response.statusCode).be.equal(302);
       should(requestcookieAuth.status).be.equal(302);
       should(requestcookieAuth.response).match({
         status: 302,
-        headers: { Location: 'http://github.com' }
+        headers: { Location: "http://github.com" },
       });
 
-      should(kuzzle.ask.withArgs('core:security:token:create')).not.be.called();
+      should(kuzzle.ask.withArgs("core:security:token:create")).not.be.called();
     });
 
-    it('should call passport.authenticate with input body and query string', async () => {
+    it("should call passport.authenticate with input body and query string", async () => {
       createTokenStub.resolves(new Token());
       await authController.login(requestcookieAuth);
 
       should(kuzzle.passport.authenticate)
         .be.calledOnce()
         .be.calledWithMatch({
-          body: { username: 'jdoe' },
-          query: { foo: 'bar' }
+          body: { username: "jdoe" },
+          query: { foo: "bar" },
         });
     });
 
-    it('should reject if no strategy is specified', () => {
+    it("should reject if no strategy is specified", () => {
       delete requestcookieAuth.input.args.strategy;
 
-      return should(authController.login(requestcookieAuth))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.missing_argument',
-          message: 'Missing argument "strategy".'
-        });
+      return should(authController.login(requestcookieAuth)).rejectedWith(
+        BadRequestError,
+        {
+          id: "api.assert.missing_argument",
+          message: 'Missing argument "strategy".',
+        }
+      );
     });
 
-    it('should be able to set authentication expiration', async () => {
+    it("should be able to set authentication expiration", async () => {
       const token = new Token({
-        _id: 'foobar#bar',
-        jwt: 'bar',
-        userId: 'foobar',
+        _id: "foobar#bar",
+        jwt: "bar",
+        userId: "foobar",
         expiresAt: 4567,
         ttl: 1234,
       });
@@ -555,272 +583,315 @@ describe('Test the auth controller', () => {
       createTokenStub.resolves(token);
       kuzzle.passport.authenticate.resolves(user);
 
-      requestcookieAuth.input.args.expiresIn = '1s';
+      requestcookieAuth.input.args.expiresIn = "1s";
 
       const response = await authController.login(requestcookieAuth);
 
       should.exists(requestcookieAuth.response.headers);
-      should.exists(requestcookieAuth.response.headers['Set-Cookie']);
-      should(requestcookieAuth.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(requestcookieAuth.response.headers["Set-Cookie"]);
+      should(requestcookieAuth.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(response).be.deepEqual({
-        _id: 'foobar',
+        _id: "foobar",
         expiresAt: 4567,
-        ttl: 1234
+        ttl: 1234,
       });
 
       should(createTokenStub).be.calledWith(
-        'core:security:token:create',
+        "core:security:token:create",
         user,
-        { expiresIn: '1s' });
+        { expiresIn: "1s" }
+      );
     });
 
-    it('should reject if authentication fails', () => {
-      kuzzle.passport.authenticate.rejects(new Error('error'));
+    it("should reject if authentication fails", () => {
+      kuzzle.passport.authenticate.rejects(new Error("error"));
 
       return should(authController.login(requestcookieAuth)).be.rejected();
     });
 
-    it('should reject in case of unknown strategy', () => {
-      requestcookieAuth.input.args.strategy = 'foobar';
+    it("should reject in case of unknown strategy", () => {
+      requestcookieAuth.input.args.strategy = "foobar";
 
-      return should(authController.login(requestcookieAuth))
-        .rejectedWith(BadRequestError, {
-          id: 'security.credentials.unknown_strategy'
-        });
+      return should(authController.login(requestcookieAuth)).rejectedWith(
+        BadRequestError,
+        {
+          id: "security.credentials.unknown_strategy",
+        }
+      );
     });
   });
 
-  describe('#logout', () => {
+  describe("#logout", () => {
     beforeEach(() => {
       const signedToken = jwt.sign(
-        { _id: 'admin' },
+        { _id: "admin" },
         kuzzle.config.security.jwt.secret,
-        { algorithm: kuzzle.config.security.jwt.algorithm });
+        { algorithm: kuzzle.config.security.jwt.algorithm }
+      );
       const t = new Token({
-        _id: 'foo#' + signedToken,
-        userId: 'foo',
+        _id: "foo#" + signedToken,
+        userId: "foo",
         jwt: signedToken,
       });
 
-      request = new Request({
-        controller: 'auth',
-        action: 'logout',
-        jwt: signedToken
-      }, {
-        connectionId: 'papagaya',
-        token: t,
-        user: { _id: 'foo' }
-      });
+      request = new Request(
+        {
+          controller: "auth",
+          action: "logout",
+          jwt: signedToken,
+        },
+        {
+          connectionId: "papagaya",
+          token: t,
+          user: { _id: "foo" },
+        }
+      );
     });
 
-    it('should expire token', async () => {
+    it("should expire token", async () => {
       const response = await authController.logout(request);
 
-      should(kuzzle.ask)
-        .calledWith('core:security:token:delete', request.context.token);
+      should(kuzzle.ask).calledWith(
+        "core:security:token:delete",
+        request.context.token
+      );
 
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens that are not API Keys at once', async () => {
+    it("should expire all tokens that are not API Keys at once", async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', { keepApiKeys: true });
+      should(kuzzle.ask).calledWith("core:security:token:deleteByKuid", "foo", {
+        keepApiKeys: true,
+      });
     });
 
-    it('should emit an error if the token cannot be expired', () => {
-      const error = new Error('Mocked error');
+    it("should emit an error if the token cannot be expired", () => {
+      const error = new Error("Mocked error");
 
-      kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
+      kuzzle.ask.withArgs("core:security:token:delete").rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
     });
 
-    it('should reject if invoked by an anonymous user', () => {
-      request.context.user._id = '-1';
+    it("should reject if invoked by an anonymous user", () => {
+      request.context.user._id = "-1";
 
       return should(authController.logout(request)).rejectedWith(
         UnauthorizedError,
-        { id: 'security.rights.unauthorized' });
+        { id: "security.rights.unauthorized" }
+      );
     });
 
-    it('should not expires the token if this is an API Key', async () => {
-      Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey' });
+    it("should not expires the token if this is an API Key", async () => {
+      Object.defineProperty(request.context.token, "type", {
+        get: () => "apiKey",
+      });
       await authController.logout(request);
 
-      should(kuzzle.ask)
-        .not.be.calledWith('core:security:token:delete', request.context.token);
+      should(kuzzle.ask).not.be.calledWith(
+        "core:security:token:delete",
+        request.context.token
+      );
     });
   });
 
-  describe('#logout with cookies', () => {
+  describe("#logout with cookies", () => {
     beforeEach(() => {
       kuzzle.config.http.cookieAuthentication = true;
 
       const signedToken = jwt.sign(
-        { _id: 'admin' },
+        { _id: "admin" },
         kuzzle.config.security.jwt.secret,
-        { algorithm: kuzzle.config.security.jwt.algorithm });
+        { algorithm: kuzzle.config.security.jwt.algorithm }
+      );
       const t = new Token({
-        _id: 'foo#' + signedToken,
-        userId: 'foo',
+        _id: "foo#" + signedToken,
+        userId: "foo",
         jwt: signedToken,
       });
 
-      request = new Request({
-        controller: 'auth',
-        action: 'logout',
-        cookieAuth: true,
-      }, {
-        connectionId: 'papagaya',
-        token: t,
-        user: { _id: 'foo' }
-      });
+      request = new Request(
+        {
+          controller: "auth",
+          action: "logout",
+          cookieAuth: true,
+        },
+        {
+          connectionId: "papagaya",
+          token: t,
+          user: { _id: "foo" },
+        }
+      );
 
       request.input.headers = { cookie: `authToken=${signedToken};` };
     });
 
-    it('should nullify the authToken cookie', async () => {
+    it("should nullify the authToken cookie", async () => {
       await authController.logout(request);
 
       should.exists(request.response.headers);
-      should.exists(request.response.headers['Set-Cookie']);
-      should(request.response.headers['Set-Cookie']).be.an.Array()
+      should.exists(request.response.headers["Set-Cookie"]);
+      should(request.response.headers["Set-Cookie"])
+        .be.an.Array()
         .and.match(/authToken=null; Path=\/; HttpOnly; SameSite=Strict/);
     });
 
-    it('should expire token', async () => {
+    it("should expire token", async () => {
       const response = await authController.logout(request);
 
-      should(kuzzle.ask)
-        .calledWith('core:security:token:delete', request.context.token);
+      should(kuzzle.ask).calledWith(
+        "core:security:token:delete",
+        request.context.token
+      );
 
       should(response.responseObject).be.instanceof(Object);
     });
 
-    it('should expire all tokens that are not ApiKeys at once', async () => {
+    it("should expire all tokens that are not ApiKeys at once", async () => {
       request.input.args.global = true;
 
       await authController.logout(request);
 
-      should(kuzzle.ask).calledWith('core:security:token:deleteByKuid', 'foo', { keepApiKeys: true });
+      should(kuzzle.ask).calledWith("core:security:token:deleteByKuid", "foo", {
+        keepApiKeys: true,
+      });
     });
 
-    it('should emit an error if the token cannot be expired', () => {
-      const error = new Error('Mocked error');
+    it("should emit an error if the token cannot be expired", () => {
+      const error = new Error("Mocked error");
 
-      kuzzle.ask.withArgs('core:security:token:delete').rejects(error);
+      kuzzle.ask.withArgs("core:security:token:delete").rejects(error);
 
       return should(authController.logout(request)).be.rejectedWith(error);
     });
 
-    it('should not expire the token if this is an apikey', async () => {
-      Object.defineProperty(request.context.token, 'type', { get: () => 'apiKey' });
+    it("should not expire the token if this is an apikey", async () => {
+      Object.defineProperty(request.context.token, "type", {
+        get: () => "apiKey",
+      });
       const response = await authController.logout(request);
 
-      should(kuzzle.ask)
-        .not.be.calledWith('core:security:token:delete', request.context.token);
-      
+      should(kuzzle.ask).not.be.calledWith(
+        "core:security:token:delete",
+        request.context.token
+      );
+
       should(response.responseObject).be.instanceof(Object);
     });
   });
 
-  describe('#getCurrentUser', () => {
-    it('should return the user given in the context', async () => {
+  describe("#getCurrentUser", () => {
+    it("should return the user given in the context", async () => {
       const req = new Request(
         { body: {} },
         {
-          token: { userId: 'admin' },
-          user: { _id: 'admin' }
-        });
+          token: { userId: "admin" },
+          user: { _id: "admin" },
+        }
+      );
 
       const response = await authController.getCurrentUser(req);
 
       should(response).match(req.context.user);
     });
 
-    it('should a PluginImplementationError if a plugin throws a non-KuzzleError error', () => {
-      const req = new Request({ body: {} }, { token: { userId: 'admin' }, user: { _id: 'admin' } });
+    it("should a PluginImplementationError if a plugin throws a non-KuzzleError error", () => {
+      const req = new Request(
+        { body: {} },
+        { token: { userId: "admin" }, user: { _id: "admin" } }
+      );
 
-      kuzzle.pluginsManager.listStrategies.returns(['foo']);
-      kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('bar')));
+      kuzzle.pluginsManager.listStrategies.returns(["foo"]);
+      kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+        Bluebird.reject(new Error("bar"))
+      );
 
-      return should(authController.getCurrentUser(req)).be.rejectedWith(PluginImplementationError);
+      return should(authController.getCurrentUser(req)).be.rejectedWith(
+        PluginImplementationError
+      );
     });
   });
 
-  describe('#checkToken', () => {
+  describe("#checkToken", () => {
     let testToken;
 
     beforeEach(() => {
       request = new Request(
         {
-          action: 'checkToken',
-          controller: 'auth',
-          body: { token: 'foobar' }
+          action: "checkToken",
+          controller: "auth",
+          body: { token: "foobar" },
         },
-        {});
-      testToken = new Token({ expiresAt: 42, userId: 'durres' });
+        {}
+      );
+      testToken = new Token({ expiresAt: 42, userId: "durres" });
     });
 
-    it('should return anonymous token if no token is specified', async () => {
+    it("should return anonymous token if no token is specified", async () => {
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', null)
-        .resolves(new Token({ userId: '-1' }));
+        .withArgs("core:security:token:verify", null)
+        .resolves(new Token({ userId: "-1" }));
 
-      const response = await authController.checkToken(new Request({ body: {} }));
+      const response = await authController.checkToken(
+        new Request({ body: {} })
+      );
 
       await should(verifyStub).calledOnce();
       await should(response).be.an.Object();
-      await should(response.kuid).be.equal('-1');
+      await should(response.kuid).be.equal("-1");
       await should(response.expiresAt).be.equal(null);
       await should(response.valid).be.equal(true);
     });
 
-    it('should return a valid response if the token is valid', async () => {
+    it("should return a valid response if the token is valid", async () => {
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.body.token)
+        .withArgs("core:security:token:verify", request.input.body.token)
         .resolves(testToken);
 
       const response = await authController.checkToken(request);
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
-      should(response.kuid).be.eql('durres');
+      should(response.kuid).be.eql("durres");
       should(response.valid).be.true();
       should(response.state).be.undefined();
       should(response.expiresAt).be.eql(testToken.expiresAt);
     });
 
-    it('should return a valid response if the token is not valid', async () => {
+    it("should return a valid response if the token is not valid", async () => {
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.body.token)
-        .rejects(new UnauthorizedError('foobar'));
+        .withArgs("core:security:token:verify", request.input.body.token)
+        .rejects(new UnauthorizedError("foobar"));
 
       const response = await authController.checkToken(request);
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
       should(response.valid).be.false();
-      should(response.state).be.eql('foobar');
+      should(response.state).be.eql("foobar");
       should(response.expiresAt).be.undefined();
     });
 
-    it('should return a rejected promise if an error occurs', () => {
-      const error = new KuzzleInternalError('Foobar');
+    it("should return a rejected promise if an error occurs", () => {
+      const error = new KuzzleInternalError("Foobar");
       kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.body.token)
+        .withArgs("core:security:token:verify", request.input.body.token)
         .rejects(error);
 
       return should(authController.checkToken(request)).be.rejectedWith(error);
     });
   });
 
-  describe('#checkToken with cookies', () => {
+  describe("#checkToken with cookies", () => {
     let testToken;
 
     beforeEach(() => {
@@ -828,201 +899,209 @@ describe('Test the auth controller', () => {
 
       request = new Request(
         {
-          action: 'checkToken',
-          controller: 'auth',
+          action: "checkToken",
+          controller: "auth",
           body: {},
           cookieAuth: true,
         },
-        {});
+        {}
+      );
 
-      request.input.jwt = 'foobar';
-      testToken = new Token({ expiresAt: 42, userId: 'durres' });
+      request.input.jwt = "foobar";
+      testToken = new Token({ expiresAt: 42, userId: "durres" });
     });
 
-    it('should return anonymous token if no token is provided in the cookie', async () => {
+    it("should return anonymous token if no token is provided in the cookie", async () => {
       kuzzle.config.http.cookieAuthentication = true;
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', null)
-        .resolves(new Token({ userId: '-1' }));
-      
+        .withArgs("core:security:token:verify", null)
+        .resolves(new Token({ userId: "-1" }));
+
       const req = new Request({ body: {}, cookieAuth: true });
       req.input.headers = {
-        cookie: 'authToken=;',
+        cookie: "authToken=;",
       };
 
       const response = await authController.checkToken(req);
 
       await should(verifyStub).calledOnce();
       await should(response).be.an.Object();
-      await should(response.kuid).be.equal('-1');
+      await should(response.kuid).be.equal("-1");
       await should(response.expiresAt).be.equal(null);
       await should(response.valid).be.equal(true);
     });
 
-    it('should return a valid response if the token is valid', async () => {
+    it("should return a valid response if the token is valid", async () => {
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.jwt)
+        .withArgs("core:security:token:verify", request.input.jwt)
         .resolves(testToken);
 
       const response = await authController.checkToken(request);
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
-      should(response.kuid).be.eql('durres');
+      should(response.kuid).be.eql("durres");
       should(response.valid).be.true();
       should(response.state).be.undefined();
       should(response.expiresAt).be.eql(testToken.expiresAt);
     });
 
-    it('should return a valid response if the token is not valid', async () => {
+    it("should return a valid response if the token is not valid", async () => {
       const verifyStub = kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.jwt)
-        .rejects(new UnauthorizedError('foobar'));
+        .withArgs("core:security:token:verify", request.input.jwt)
+        .rejects(new UnauthorizedError("foobar"));
 
       const response = await authController.checkToken(request);
 
       should(verifyStub).calledOnce();
       should(response).be.instanceof(Object);
       should(response.valid).be.false();
-      should(response.state).be.eql('foobar');
+      should(response.state).be.eql("foobar");
       should(response.expiresAt).be.undefined();
     });
 
-    it('should return a rejected promise if an error occurs', () => {
-      const error = new KuzzleInternalError('Foobar');
+    it("should return a rejected promise if an error occurs", () => {
+      const error = new KuzzleInternalError("Foobar");
       kuzzle.ask
-        .withArgs('core:security:token:verify', request.input.jwt)
+        .withArgs("core:security:token:verify", request.input.jwt)
         .rejects(error);
 
       return should(authController.checkToken(request)).be.rejectedWith(error);
     });
   });
 
-  describe('#refreshToken', () => {
-    it('should reject if the user is not authenticated', () => {
-      return should(authController.refreshToken(new Request(
-        {},
-        { token: { userId: 'anonymous', _id: '-1' }, user: { _id: '-1' } }
-      )))
-        .rejectedWith(
-          UnauthorizedError,
-          { id: 'security.rights.unauthorized' });
+  describe("#refreshToken", () => {
+    it("should reject if the user is not authenticated", () => {
+      return should(
+        authController.refreshToken(
+          new Request(
+            {},
+            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } }
+          )
+        )
+      ).rejectedWith(UnauthorizedError, { id: "security.rights.unauthorized" });
     });
 
-    it('should provide a new jwt and expire the current one ', async () => {
+    it("should provide a new jwt and expire the current one ", async () => {
       const newToken = {
-        _id: '_id',
-        jwt: 'new-token',
-        userId: 'userId',
-        ttl: 'ttl',
-        expiresAt: 42
+        _id: "_id",
+        jwt: "new-token",
+        userId: "userId",
+        ttl: "ttl",
+        expiresAt: 42,
       };
       const req = new Request(
-        { expiresIn: '42h' },
+        { expiresIn: "42h" },
         {
           token: {
-            userId: 'user',
-            _id: '_id',
-            jwt: 'jwt',
-            refreshed: false
+            userId: "user",
+            _id: "_id",
+            jwt: "jwt",
+            refreshed: false,
           },
           user: {
-            _id: 'user'
-          }
+            _id: "user",
+          },
         }
       );
 
-      kuzzle.ask.withArgs('core:security:token:refresh').resolves(newToken);
+      kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
 
       const response = await authController.refreshToken(req);
 
       should(response).eql({
-        _id: 'userId',
-        jwt: 'new-token',
+        _id: "userId",
+        jwt: "new-token",
         expiresAt: 42,
-        ttl: 'ttl'
+        ttl: "ttl",
       });
 
       should(kuzzle.ask).calledWith(
-        'core:security:token:refresh',
+        "core:security:token:refresh",
         req.context.user,
         req.context.token,
-        req.input.args.expiresIn);
+        req.input.args.expiresIn
+      );
     });
   });
 
-  describe('#refreshToken with cookies', () => {
+  describe("#refreshToken with cookies", () => {
     beforeEach(() => {
       kuzzle.config.internal.allowAllOrigins = false;
       kuzzle.config.http.cookieAuthentication = true;
     });
 
-    it('should reject if the user is not authenticated', () => {
-      return should(authController.refreshToken(new Request(
-        { cookieAuth: true },
-        { token: { userId: 'anonymous', _id: '-1' }, user: { _id: '-1' } }
-      )))
-        .rejectedWith(
-          UnauthorizedError,
-          { id: 'security.rights.unauthorized' });
+    it("should reject if the user is not authenticated", () => {
+      return should(
+        authController.refreshToken(
+          new Request(
+            { cookieAuth: true },
+            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } }
+          )
+        )
+      ).rejectedWith(UnauthorizedError, { id: "security.rights.unauthorized" });
     });
 
-    it('should provide a new jwt and expire the current one ', async () => {
+    it("should provide a new jwt and expire the current one ", async () => {
       const newToken = {
-        _id: '_id',
-        jwt: 'new-token',
-        userId: 'userId',
-        ttl: 'ttl',
-        expiresAt: 42
+        _id: "_id",
+        jwt: "new-token",
+        userId: "userId",
+        ttl: "ttl",
+        expiresAt: 42,
       };
       const req = new Request(
         {
-          expiresIn: '42h',
-          cookieAuth: true
+          expiresIn: "42h",
+          cookieAuth: true,
         },
         {
           token: {
-            userId: 'user',
-            _id: '_id',
-            jwt: 'jwt',
-            refreshed: false
+            userId: "user",
+            _id: "_id",
+            jwt: "jwt",
+            refreshed: false,
           },
           user: {
-            _id: 'user'
-          }
+            _id: "user",
+          },
         }
       );
 
-      kuzzle.ask.withArgs('core:security:token:refresh').resolves(newToken);
+      kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
 
       const response = await authController.refreshToken(req);
 
       should(response).eql({
-        _id: 'userId',
+        _id: "userId",
         expiresAt: 42,
-        ttl: 'ttl'
+        ttl: "ttl",
       });
 
       should.exists(req.response.headers);
-      should.exists(req.response.headers['Set-Cookie']);
-      should(req.response.headers['Set-Cookie']).be.an.Array()
-        .and.match(/authToken=new-token; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/);
+      should.exists(req.response.headers["Set-Cookie"]);
+      should(req.response.headers["Set-Cookie"])
+        .be.an.Array()
+        .and.match(
+          /authToken=new-token; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+        );
 
       should(kuzzle.ask).calledWith(
-        'core:security:token:refresh',
+        "core:security:token:refresh",
         req.context.user,
         req.context.token,
-        req.input.args.expiresIn);
+        req.input.args.expiresIn
+      );
     });
   });
 
-  describe('#updateSelf', () => {
-    it('should return a valid response', async () => {
+  describe("#updateSelf", () => {
+    it("should return a valid response", async () => {
       const r = new Request(
-        { body: { foo: 'bar' } },
+        { body: { foo: "bar" } },
         {
-          token: { userId: 'admin', _id: 'admin' },
-          user: { _id: 'admin' }
+          token: { userId: "admin", _id: "admin" },
+          user: { _id: "admin" },
         }
       );
       kuzzle.ask.resolves(user);
@@ -1032,438 +1111,592 @@ describe('Test the auth controller', () => {
       should(response).be.instanceof(Object);
 
       should(kuzzle.ask).calledWith(
-        'core:security:user:update',
+        "core:security:user:update",
         r.context.user._id,
         null,
         r.input.body,
         {
-          refresh: 'wait_for',
+          refresh: "wait_for",
           retryOnConflict: 10,
           userId: r.context.user._id,
-        });
+        }
+      );
     });
 
-    it('should reject an error if profile is specified', () => {
+    it("should reject an error if profile is specified", () => {
       const r = new Request(
-        { body: { foo: 'bar', profileIds: ['test'] } },
-        { token: { userId: 'admin', _id: 'admin' }, user: { _id: 'admin' } });
+        { body: { foo: "bar", profileIds: ["test"] } },
+        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } }
+      );
 
-      return should(authController.updateSelf(r))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.forbidden_argument',
-          message: 'The argument "body.profileIds" is not allowed by this API action.'
-        });
+      return should(authController.updateSelf(r)).rejectedWith(
+        BadRequestError,
+        {
+          id: "api.assert.forbidden_argument",
+          message:
+            'The argument "body.profileIds" is not allowed by this API action.',
+        }
+      );
     });
 
-    it('should reject an error if _id is specified in the body', () => {
+    it("should reject an error if _id is specified in the body", () => {
       const r = new Request(
-        { body: { foo: 'bar', _id: 'test' } },
-        { token: { userId: 'admin', _id: 'admin' }, user: { _id: 'admin' } });
+        { body: { foo: "bar", _id: "test" } },
+        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } }
+      );
 
-      return should(authController.updateSelf(r))
-        .rejectedWith(BadRequestError, {
-          id: 'api.assert.forbidden_argument',
-          message: 'The argument "body._id" is not allowed by this API action.'
-        });
+      return should(authController.updateSelf(r)).rejectedWith(
+        BadRequestError,
+        {
+          id: "api.assert.forbidden_argument",
+          message: 'The argument "body._id" is not allowed by this API action.',
+        }
+      );
     });
 
-    it('should reject an error if current user is anonymous', () => {
+    it("should reject an error if current user is anonymous", () => {
       const r = new Request(
-        { body: { foo: 'bar' } },
-        { token: { userId: '-1' }, user: { _id: '-1' } });
+        { body: { foo: "bar" } },
+        { token: { userId: "-1" }, user: { _id: "-1" } }
+      );
 
       return should(authController.updateSelf(r)).rejectedWith(
         UnauthorizedError,
-        { id: 'security.rights.unauthorized' });
+        { id: "security.rights.unauthorized" }
+      );
     });
   });
 
-  describe('#getMyRights', () => {
-    const req = new Request({ body: {} }, { token: { userId: 'test' }, user: {
-      _id: 'test',
-      getRights: () => {
-        return Bluebird.resolve({
-          rights1: { controller: 'read', action: 'get', index: 'foo', collection: 'bar', value: 'allowed' },
-          rights2: { controller: 'write', action: 'delete', index: '*', collection: '*', value: 'conditional' }
-        });
+  describe("#getMyRights", () => {
+    const req = new Request(
+      { body: {} },
+      {
+        token: { userId: "test" },
+        user: {
+          _id: "test",
+          getRights: () => {
+            return Bluebird.resolve({
+              rights1: {
+                controller: "read",
+                action: "get",
+                index: "foo",
+                collection: "bar",
+                value: "allowed",
+              },
+              rights2: {
+                controller: "write",
+                action: "delete",
+                index: "*",
+                collection: "*",
+                value: "conditional",
+              },
+            });
+          },
+        },
       }
-    } });
+    );
 
-    it('should be able to get current user\'s rights', () => {
-      return authController.getMyRights(req)
-        .then(response => {
-          should(response).be.instanceof(Object);
-          should(response.hits).be.an.Array();
-          should(response.hits).length(2);
+    it("should be able to get current user's rights", () => {
+      return authController.getMyRights(req).then((response) => {
+        should(response).be.instanceof(Object);
+        should(response.hits).be.an.Array();
+        should(response.hits).length(2);
 
-          let filteredItem = response.hits.filter(item => {
-            return item.controller === 'read' &&
-              item.action === 'get' &&
-              item.index === 'foo' &&
-              item.collection === 'bar';
-          });
-          should(filteredItem).length(1);
-          should(filteredItem[0].value).be.equal('allowed');
-
-          filteredItem = response.hits.filter(item => {
-            return item.controller === 'write' &&
-              item.action === 'delete' &&
-              item.index === '*' &&
-              item.collection === '*';
-          });
-          should(filteredItem).length(1);
-          should(filteredItem[0].value).be.equal('conditional');
+        let filteredItem = response.hits.filter((item) => {
+          return (
+            item.controller === "read" &&
+            item.action === "get" &&
+            item.index === "foo" &&
+            item.collection === "bar"
+          );
         });
+        should(filteredItem).length(1);
+        should(filteredItem[0].value).be.equal("allowed");
+
+        filteredItem = response.hits.filter((item) => {
+          return (
+            item.controller === "write" &&
+            item.action === "delete" &&
+            item.index === "*" &&
+            item.collection === "*"
+          );
+        });
+        should(filteredItem).length(1);
+        should(filteredItem[0].value).be.equal("conditional");
+      });
     });
   });
 
-  describe('#getAuthenticationStrategies', () => {
-    it('should return a valid response', () => {
+  describe("#getAuthenticationStrategies", () => {
+    it("should return a valid response", () => {
       should(kuzzle.pluginsManager.listStrategies).be.a.Function();
 
-      return authController.getStrategies()
-        .then(result => {
-          should(kuzzle.pluginsManager.listStrategies).calledOnce();
-          should(result).be.instanceof(Array).of.length(0);
-        });
+      return authController.getStrategies().then((result) => {
+        should(kuzzle.pluginsManager.listStrategies).calledOnce();
+        should(result).be.instanceof(Array).of.length(0);
+      });
     });
   });
 
-  describe('Credentials', () => {
-    describe('#createMyCredentials', () => {
-      it('should call the plugin create method', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'createCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+  describe("Credentials", () => {
+    describe("#createMyCredentials", () => {
+      it("should call the plugin create method", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "createCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.createMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({ foo: 'bar' });
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('create');
-            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]).be.eql('validate');
-            should(methodStub).be.calledTwice();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.deepEqual({ some: 'credentials' });
-            should(methodStub.firstCall.args[2]).be.eql('someUserId');
-            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
-            should(methodStub.secondCall.args[0]).be.eql(request);
-            should(methodStub.secondCall.args[1]).be.deepEqual({ some: 'credentials' });
-            should(methodStub.secondCall.args[2]).be.eql('someUserId');
-            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
+        return authController.createMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({ foo: "bar" });
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("create");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+          ).be.eql("validate");
+          should(methodStub).be.calledTwice();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.deepEqual({
+            some: "credentials",
           });
+          should(methodStub.firstCall.args[2]).be.eql("someUserId");
+          should(methodStub.firstCall.args[3]).be.eql("someStrategy");
+          should(methodStub.secondCall.args[0]).be.eql(request);
+          should(methodStub.secondCall.args[1]).be.deepEqual({
+            some: "credentials",
+          });
+          should(methodStub.secondCall.args[2]).be.eql("someUserId");
+          should(methodStub.secondCall.args[3]).be.eql("someStrategy");
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is received', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'createCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+      it("should throw a PluginImplementationError if a non-KuzzleError is received", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "createCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
+        );
 
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.createMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+        return should(
+          authController.createMyCredentials(request)
+        ).be.rejectedWith(PluginImplementationError);
       });
     });
 
-    describe('#updateMyCredentials', () => {
-      it('should call the plugin update method', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'createCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+    describe("#updateMyCredentials", () => {
+      it("should call the plugin update method", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "createCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.updateMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({ foo: 'bar' });
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('update');
-            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]).be.eql('validate');
-            should(methodStub).be.calledTwice();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.deepEqual({ some: 'credentials' });
-            should(methodStub.firstCall.args[2]).be.eql('someUserId');
-            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
-            should(methodStub.secondCall.args[0]).be.eql(request);
-            should(methodStub.secondCall.args[1]).be.deepEqual({ some: 'credentials' });
-            should(methodStub.secondCall.args[2]).be.eql('someUserId');
-            should(methodStub.secondCall.args[3]).be.eql('someStrategy');
+        return authController.updateMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({ foo: "bar" });
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("update");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+          ).be.eql("validate");
+          should(methodStub).be.calledTwice();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.deepEqual({
+            some: "credentials",
           });
+          should(methodStub.firstCall.args[2]).be.eql("someUserId");
+          should(methodStub.firstCall.args[3]).be.eql("someStrategy");
+          should(methodStub.secondCall.args[0]).be.eql(request);
+          should(methodStub.secondCall.args[1]).be.deepEqual({
+            some: "credentials",
+          });
+          should(methodStub.secondCall.args[2]).be.eql("someUserId");
+          should(methodStub.secondCall.args[3]).be.eql("someStrategy");
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is thrown', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'createCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+      it("should throw a PluginImplementationError if a non-KuzzleError is thrown", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "createCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.updateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+        return should(
+          authController.updateMyCredentials(request)
+        ).be.rejectedWith(PluginImplementationError);
       });
     });
 
-    describe('#credentialsExist', () => {
-      it('should call the plugin exists method', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'hasCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+    describe("#credentialsExist", () => {
+      it("should call the plugin exists method", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "hasCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
-        kuzzle.pluginsManager.listStrategies = sinon.stub().returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod = sinon.stub().returns(methodStub);
+        );
+        kuzzle.pluginsManager.listStrategies = sinon
+          .stub()
+          .returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod = sinon
+          .stub()
+          .returns(methodStub);
 
-        return authController.credentialsExist(request)
-          .then(result => {
-            should(result).be.deepEqual({ foo: 'bar' });
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('exists');
-            should(methodStub).be.calledOnce();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.eql('someUserId');
-            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
-          });
+        return authController.credentialsExist(request).then((result) => {
+          should(result).be.deepEqual({ foo: "bar" });
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("exists");
+          should(methodStub).be.calledOnce();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.eql("someUserId");
+          should(methodStub.firstCall.args[2]).be.eql("someStrategy");
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'hasCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+      it("should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "hasCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.credentialsExist(request)).be.rejectedWith(PluginImplementationError);
+        return should(authController.credentialsExist(request)).be.rejectedWith(
+          PluginImplementationError
+        );
       });
     });
 
-    describe('#validateMyCredentials', () => {
-      it('should call the plugin validate method', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'validateCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+    describe("#validateMyCredentials", () => {
+      it("should call the plugin validate method", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "validateCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.validateMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({ foo: 'bar' });
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('validate');
-            should(methodStub).be.calledOnce();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.deepEqual({ some: 'credentials' });
-            should(methodStub.firstCall.args[2]).be.eql('someUserId');
-            should(methodStub.firstCall.args[3]).be.eql('someStrategy');
+        return authController.validateMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({ foo: "bar" });
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("validate");
+          should(methodStub).be.calledOnce();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.deepEqual({
+            some: "credentials",
           });
+          should(methodStub.firstCall.args[2]).be.eql("someUserId");
+          should(methodStub.firstCall.args[3]).be.eql("someStrategy");
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'validateCredentials',
-          strategy: 'someStrategy',
-          body: {
-            some: 'credentials'
+      it("should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "validateCredentials",
+            strategy: "someStrategy",
+            body: {
+              some: "credentials",
+            },
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        }, {
-          user: {
-            _id: 'someUserId'
-          }
-        });
+        );
 
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.validateMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+        return should(
+          authController.validateMyCredentials(request)
+        ).be.rejectedWith(PluginImplementationError);
       });
     });
 
-    describe('#deleteMyCredentials', () => {
-      it('should call the plugin delete method', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'deleteCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+    describe("#deleteMyCredentials", () => {
+      it("should call the plugin delete method", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "deleteCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.deleteMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({ acknowledged: true });
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('delete');
-            should(methodStub).be.calledOnce();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.eql('someUserId');
-            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
-          });
+        return authController.deleteMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({ acknowledged: true });
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("delete");
+          should(methodStub).be.calledOnce();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.eql("someUserId");
+          should(methodStub.firstCall.args[2]).be.eql("someStrategy");
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'deleteCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+      it("should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "deleteCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
+        );
 
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.deleteMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+        return should(
+          authController.deleteMyCredentials(request)
+        ).be.rejectedWith(PluginImplementationError);
       });
     });
 
-    describe('#getMyCredentials', () => {
-      it('should call the plugin getInfo method if it is provided', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'getCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+    describe("#getMyCredentials", () => {
+      it("should call the plugin getInfo method if it is provided", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "getCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(true);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.getMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({ foo: 'bar' });
-            should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getInfo');
-            should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]).be.eql('getInfo');
-            should(methodStub).be.calledOnce();
-            should(methodStub.firstCall.args[0]).be.eql(request);
-            should(methodStub.firstCall.args[1]).be.eql('someUserId');
-            should(methodStub.firstCall.args[2]).be.eql('someStrategy');
-          });
+        return authController.getMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({ foo: "bar" });
+          should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          ).be.eql("getInfo");
+          should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          ).be.eql("getInfo");
+          should(methodStub).be.calledOnce();
+          should(methodStub.firstCall.args[0]).be.eql(request);
+          should(methodStub.firstCall.args[1]).be.eql("someUserId");
+          should(methodStub.firstCall.args[2]).be.eql("someStrategy");
+        });
       });
 
-      it('should resolve to an empty object if getInfo method is not provided', () => {
-        const methodStub = sinon.stub().returns(Promise.resolve({ foo: 'bar' }));
-        request = new Request({
-          controller: 'security',
-          action: 'getCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+      it("should resolve to an empty object if getInfo method is not provided", () => {
+        const methodStub = sinon
+          .stub()
+          .returns(Promise.resolve({ foo: "bar" }));
+        request = new Request(
+          {
+            controller: "security",
+            action: "getCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        );
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(false);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
 
-        return authController.getMyCredentials(request)
-          .then(result => {
-            should(result).be.deepEqual({});
-            should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
-            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]).be.eql('someStrategy');
-            should(kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]).be.eql('getInfo');
-            should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
-          });
+        return authController.getMyCredentials(request).then((result) => {
+          should(result).be.deepEqual({});
+          should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
+          should(
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          ).be.eql("someStrategy");
+          should(
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          ).be.eql("getInfo");
+          should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
+        });
       });
 
-      it('should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin', () => {
-        request = new Request({
-          controller: 'security',
-          action: 'getCredentials',
-          strategy: 'someStrategy'
-        }, {
-          user: {
-            _id: 'someUserId'
+      it("should throw a PluginImplementationError if a non-KuzzleError is thrown by a plugin", () => {
+        request = new Request(
+          {
+            controller: "security",
+            action: "getCredentials",
+            strategy: "someStrategy",
+          },
+          {
+            user: {
+              _id: "someUserId",
+            },
           }
-        });
+        );
 
-        kuzzle.pluginsManager.listStrategies.returns(['someStrategy']);
+        kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(true);
-        kuzzle.pluginsManager.getStrategyMethod.returns(() => Bluebird.reject(new Error('foo')));
+        kuzzle.pluginsManager.getStrategyMethod.returns(() =>
+          Bluebird.reject(new Error("foo"))
+        );
 
-        return should(authController.getMyCredentials(request)).be.rejectedWith(PluginImplementationError);
+        return should(authController.getMyCredentials(request)).be.rejectedWith(
+          PluginImplementationError
+        );
       });
     });
   });

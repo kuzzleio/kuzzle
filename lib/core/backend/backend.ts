@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import fs from 'fs';
+import fs from "fs";
 
-import Kuzzle from '../../kuzzle';
-import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import * as kerror from '../../kerror';
-import { JSONObject } from '../../../index';
+import Kuzzle from "../../kuzzle";
+import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
+import * as kerror from "../../kerror";
+import { JSONObject } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -38,26 +38,30 @@ import {
   BackendOpenApi,
   InternalLogger,
   BackendErrors,
-} from './index';
+} from "./index";
 
-const assertionError = kerror.wrap('plugin', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("plugin", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 let _app = null;
 
-Reflect.defineProperty(global, 'app', {
+Reflect.defineProperty(global, "app", {
   configurable: true,
   enumerable: false,
-  get () {
+  get() {
     if (_app === null) {
-      throw new Error('App instance not found. Are you sure you have already started your application?');
+      throw new Error(
+        "App instance not found. Are you sure you have already started your application?"
+      );
     }
 
     return _app;
   },
-  set (value) {
+  set(value) {
     if (_app !== null) {
-      throw new Error('Cannot build an App instance: another one already exists');
+      throw new Error(
+        "Cannot build an App instance: another one already exists"
+      );
     }
 
     _app = value;
@@ -77,15 +81,19 @@ export class Backend {
   protected _plugins = {};
   protected _import = {
     mappings: {},
-    onExistingUsers: 'skip',
+    onExistingUsers: "skip",
     profiles: {},
     roles: {},
     userMappings: {},
-    users: {}
+    users: {},
   };
   protected _vaultKey?: string;
   protected _secretsFile?: string;
-  protected _installationsWaitingList: Array<{id: string; description?: string; handler: () => void}> = [];
+  protected _installationsWaitingList: Array<{
+    id: string;
+    description?: string;
+    handler: () => void;
+  }> = [];
 
   /**
    * Requiring the PluginObject on module top level creates cyclic dependency
@@ -215,43 +223,42 @@ export class Backend {
    *
    * @param name - Your application name
    */
-  constructor (name: string) {
+  constructor(name: string) {
     /**
      * Requiring the PluginObject on module top level creates cyclic dependency
      */
-    Reflect.defineProperty(this, 'PluginObject', {
-      value: require('../plugin/plugin')
+    Reflect.defineProperty(this, "PluginObject", {
+      value: require("../plugin/plugin"),
     });
 
-    if (! this.PluginObject.checkName(name)) {
-      throw assertionError.get('invalid_application_name', name);
+    if (!this.PluginObject.checkName(name)) {
+      throw assertionError.get("invalid_application_name", name);
     }
 
     this._name = name;
 
-    Reflect.defineProperty(this, '_kuzzle', {
-      writable: true
+    Reflect.defineProperty(this, "_kuzzle", {
+      writable: true,
     });
 
-    Reflect.defineProperty(this, '_sdk', {
-      writable: true
+    Reflect.defineProperty(this, "_sdk", {
+      writable: true,
     });
 
     /**
      * Set the "started" property in this event so developers can use runtime
      * features in pipes/hooks attached to this event.
      */
-    this._pipes['kuzzle:state:ready'] = [
+    this._pipes["kuzzle:state:ready"] = [
       async () => {
         this.started = true;
       },
     ];
 
     try {
-      const info = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+      const info = JSON.parse(fs.readFileSync("./package.json", "utf8"));
       this.version = info.version;
-    }
-    catch (error) {
+    } catch (error) {
       // Silent if no version can be found
     }
 
@@ -274,8 +281,7 @@ export class Backend {
 
     try {
       this.commit = this._readCommit();
-    }
-    catch {
+    } catch {
       // catch errors and leave commit value to "null"
     }
   }
@@ -283,9 +289,9 @@ export class Backend {
   /**
    * Starts the Kuzzle application with the defined features
    */
-  async start (): Promise<void> {
+  async start(): Promise<void> {
     if (this.started) {
-      throw runtimeError.get('already_started', 'start');
+      throw runtimeError.get("already_started", "start");
     }
 
     this._kuzzle = new Kuzzle(this.config.content);
@@ -299,9 +305,10 @@ export class Backend {
       });
     }
 
-    const application = new this.PluginObject(
-      this._instanceProxy,
-      { application: true, name: this.name });
+    const application = new this.PluginObject(this._instanceProxy, {
+      application: true,
+      name: this.name,
+    });
 
     application.version = this.version;
     application.commit = this.commit;
@@ -331,9 +338,9 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger (event: string, ...payload): Promise<any> {
-    if (! this.started) {
-      throw runtimeError.get('unavailable_before_start', 'trigger');
+  trigger(event: string, ...payload): Promise<any> {
+    if (!this.started) {
+      throw runtimeError.get("unavailable_before_start", "trigger");
     }
 
     return this._kuzzle.pipe(event, ...payload);
@@ -348,18 +355,28 @@ export class Backend {
    * @param {string | undefined} description - Optional: Describe the purpose of this installation
    *
    */
-  install (id: string, handler: () => Promise<void>, description?: string): void {
+  install(
+    id: string,
+    handler: () => Promise<void>,
+    description?: string
+  ): void {
     if (this.started) {
-      throw runtimeError.get('already_started', 'install');
+      throw runtimeError.get("already_started", "install");
     }
-    if (typeof id !== 'string') {
-      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    if (typeof id !== "string") {
+      throw kerror.get("validation", "assert", "invalid_type", "id", "string");
     }
-    if (typeof handler !== 'function') {
-      throw kerror.get('validation', 'assert', 'invalid_type', 'handler', 'function');
+    if (typeof handler !== "function") {
+      throw kerror.get(
+        "validation",
+        "assert",
+        "invalid_type",
+        "handler",
+        "function"
+      );
     }
-    if (description && typeof description !== 'string') {
-      throw kerror.get('validation', 'assert', 'invalid_type', 'id', 'string');
+    if (description && typeof description !== "string") {
+      throw kerror.get("validation", "assert", "invalid_type", "id", "string");
     }
 
     this._installationsWaitingList.push({ description, handler, id });
@@ -368,16 +385,16 @@ export class Backend {
   /**
    * Application Name
    */
-  get name (): string {
+  get name(): string {
     return this._name;
   }
 
   /**
    * EmbeddedSDK instance
    */
-  get sdk (): EmbeddedSDK {
-    if (! this.started) {
-      throw runtimeError.get('unavailable_before_start', 'sdk');
+  get sdk(): EmbeddedSDK {
+    if (!this.started) {
+      throw runtimeError.get("unavailable_before_start", "sdk");
     }
 
     return this._sdk;
@@ -386,15 +403,15 @@ export class Backend {
   /**
    * Cluster node ID
    */
-  get nodeId (): string {
-    if (! this.started) {
-      throw runtimeError.get('unavailable_before_start', 'nodeId');
+  get nodeId(): string {
+    if (!this.started) {
+      throw runtimeError.get("unavailable_before_start", "nodeId");
     }
 
     return this._kuzzle.id;
   }
 
-  private get _instanceProxy () {
+  private get _instanceProxy() {
     return {
       api: this._controllers,
       hooks: this._hooks,
@@ -407,29 +424,28 @@ export class Backend {
   /**
    * Try to read the current commit hash.
    */
-  private _readCommit (dir = process.cwd(), depth = 3) {
+  private _readCommit(dir = process.cwd(), depth = 3) {
     if (depth === 0) {
       return null;
     }
 
     const gitDir = `${dir}/.git`;
 
-    if (! fs.existsSync(gitDir) && depth > 0) {
+    if (!fs.existsSync(gitDir) && depth > 0) {
       return this._readCommit(`${dir}/..`, depth - 1);
     }
 
-    if (! fs.statSync(gitDir).isDirectory()) {
+    if (!fs.statSync(gitDir).isDirectory()) {
       return null;
     }
 
-    const ref = fs.readFileSync(`${dir}/.git/HEAD`, 'utf8').split('ref: ')[1];
-    const refFile = `${dir}/.git/${ref}`.replace('\n', '');
+    const ref = fs.readFileSync(`${dir}/.git/HEAD`, "utf8").split("ref: ")[1];
+    const refFile = `${dir}/.git/${ref}`.replace("\n", "");
 
-    if (! fs.existsSync(refFile)) {
+    if (!fs.existsSync(refFile)) {
       return null;
     }
 
-    return fs.readFileSync(refFile, 'utf8').replace('\n', '');
+    return fs.readFileSync(refFile, "utf8").replace("\n", "");
   }
-
 }
