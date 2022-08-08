@@ -207,28 +207,31 @@ export class Mutex {
    *
    * @return {Promise.<boolean>} True if the ressource has been unlocked before the `timeout`
    */
-  async wait ({ attemptDelay = this.attemptDelay, timeout = this.timeout }): Promise<boolean> {
+  async wait({
+    attemptDelay = this.attemptDelay,
+    timeout = this.timeout,
+  }): Promise<boolean> {
     let duration = 0;
 
     let isLocked = true;
 
     do {
       isLocked = await global.kuzzle.ask(
-        'core:cache:internal:get',
-        this.resource);
+        "core:cache:internal:get",
+        this.resource
+      );
 
       duration += attemptDelay;
 
       if (isLocked && (timeout === -1 || duration <= timeout)) {
         await Bluebird.delay(attemptDelay);
       }
-    }
-    while (isLocked && (timeout === -1 || duration <= timeout));
+    } while (isLocked && (timeout === -1 || duration <= timeout));
 
-    return ! isLocked;
+    return !isLocked;
   }
 
-  get locked () {
+  get locked() {
     return this._locked;
   }
 }

@@ -132,13 +132,13 @@ describe("#mutex", () => {
     });
   });
 
-  describe('#wait', () => {
+  describe("#wait", () => {
     beforeEach(() => {
-      kuzzle.ask.withArgs('core:cache:internal:store').resolves(true);
+      kuzzle.ask.withArgs("core:cache:internal:store").resolves(true);
     });
 
-    it ('should wait resolve when the ressource is freed', async () => {
-      const mutex = new Mutex('foo', { timeout: 0 });
+    it("should wait resolve when the ressource is freed", async () => {
+      const mutex = new Mutex("foo", { timeout: 0 });
 
       await mutex.lock();
 
@@ -151,11 +151,11 @@ describe("#mutex", () => {
       should(res).be.true();
     });
 
-    it ('should resolved to false if the timeout exceed', async () => {
-      kuzzle.ask.withArgs('core:cache:internal:get').resolves(true);
+    it("should resolved to false if the timeout exceed", async () => {
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves(true);
 
-      const mutex = new Mutex('foo', { timeout: 0 });
-      const otherMutex = new Mutex('foo', { timeout: 0 });
+      const mutex = new Mutex("foo", { timeout: 0 });
+      const otherMutex = new Mutex("foo", { timeout: 0 });
 
       await otherMutex.lock();
 
@@ -165,7 +165,7 @@ describe("#mutex", () => {
     });
   });
 
-  describe('#unlock', () => {
+  describe("#unlock", () => {
     beforeEach(() => {
       kuzzle.ask.withArgs("core:cache:internal:store").resolves(true);
     });

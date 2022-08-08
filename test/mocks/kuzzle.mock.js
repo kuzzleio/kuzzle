@@ -32,8 +32,8 @@ class KuzzleMock extends KuzzleEventEmitter {
     // ========== EVENTS ==========
 
     // emit + pipe mocks
-    sinon.stub(this, 'pipe').callsFake(async (...args) => {
-      if (typeof args[0] === 'string' && this.pluginPipes.get(args[0])) {
+    sinon.stub(this, "pipe").callsFake(async (...args) => {
+      if (typeof args[0] === "string" && this.pluginPipes.get(args[0])) {
         let pipeArgs = [...args.slice(1)];
 
         try {
@@ -41,13 +41,12 @@ class KuzzleMock extends KuzzleEventEmitter {
             pipeArgs = [await handler(...pipeArgs)].slice(0, 1);
           }
           return pipeArgs[0];
-        }
-        catch (e) {
+        } catch (e) {
           return args[1];
         }
       }
 
-      if (typeof args[args.length - 1] !== 'function') {
+      if (typeof args[args.length - 1] !== "function") {
         return Bluebird.resolve(...args.slice(1));
       }
 

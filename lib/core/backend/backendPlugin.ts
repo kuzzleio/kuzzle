@@ -87,9 +87,13 @@ export class BackendPlugin extends ApplicationManager {
    *
    * @param name Plugin name
    */
-  get<TPlugin extends Plugin> (name: string): TPlugin {
-    if (! this._application._plugins[name]) {
-      throw assertionError.get('plugin_not_found', name, didYouMean(name, this.list()));
+  get<TPlugin extends Plugin>(name: string): TPlugin {
+    if (!this._application._plugins[name]) {
+      throw assertionError.get(
+        "plugin_not_found",
+        name,
+        didYouMean(name, this.list())
+      );
     }
 
     return this._application._plugins[name].plugin;

@@ -9,7 +9,7 @@ export type StorageEngineElasticsearch = {
   /**
    * @default "elasticsearch"
    */
-  backend: 'elasticsearch';
+  backend: "elasticsearch";
 
   /**
    * Elasticsearch constructor options. Use this field to specify your
@@ -43,7 +43,7 @@ export type StorageEngineElasticsearch = {
     /**
      * @default "false"
      */
-    dynamic: 'true' | 'false' | 'strict';
+    dynamic: "true" | "false" | "strict";
 
     properties: {
       _kuzzle_info: {
@@ -128,7 +128,7 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 'false'
            */
-          dynamic: 'true' | 'false' | 'strict';
+          dynamic: "true" | "false" | "strict";
 
           properties: {
             /**
@@ -161,17 +161,17 @@ export type StorageEngineElasticsearch = {
         };
 
         mappings: {
-          dynamic: 'false';
+          dynamic: "false";
           properties: {
-            tags: { type: 'keyword' };
+            tags: { type: "keyword" };
             policies: {
               properties: {
-                roleId: { type: 'keyword' };
+                roleId: { type: "keyword" };
                 restrictedTo: {
-                  type: 'nested';
+                  type: "nested";
                   properties: {
-                    index: { type: 'keyword' };
-                    collections: { type: 'keyword' };
+                    index: { type: "keyword" };
+                    collections: { type: "keyword" };
                   };
                 };
               };
@@ -194,11 +194,11 @@ export type StorageEngineElasticsearch = {
         };
 
         mappings: {
-          dynamic: 'false';
+          dynamic: "false";
           properties: {
-            tags: { type: 'keyword' };
+            tags: { type: "keyword" };
             controllers: {
-              dynamic: 'false';
+              dynamic: "false";
               properties: Record<string, unknown>;
             };
           };
@@ -220,10 +220,10 @@ export type StorageEngineElasticsearch = {
 
         mappings: {
           properties: {
-            index: { type: 'keyword' };
-            collection: { type: 'keyword' };
+            index: { type: "keyword" };
+            collection: { type: "keyword" };
             validations: {
-              dynamic: 'false';
+              dynamic: "false";
               properties: Record<string, unknown>;
             };
           };
@@ -244,12 +244,12 @@ export type StorageEngineElasticsearch = {
         };
 
         mappings: {
-          dynamic: 'false';
+          dynamic: "false";
           properties: Record<string, unknown>;
         };
       };
 
-      'api-keys': {
+      "api-keys": {
         settings: {
           /**
            * @default 1
@@ -263,14 +263,14 @@ export type StorageEngineElasticsearch = {
         };
 
         mappings: {
-          dynamic: 'false';
+          dynamic: "false";
           properties: {
-            userId: { type: 'keyword' };
-            hash: { type: 'keyword' };
-            description: { type: 'text' };
-            expiresAt: { type: 'long' };
-            ttl: { type: 'keyword' };
-            token: { type: 'keyword' };
+            userId: { type: "keyword" };
+            hash: { type: "keyword" };
+            description: { type: "text" };
+            expiresAt: { type: "long" };
+            ttl: { type: "keyword" };
+            token: { type: "keyword" };
           };
         };
       };
@@ -289,11 +289,11 @@ export type StorageEngineElasticsearch = {
         };
 
         mappings: {
-          dynamic: 'strict';
+          dynamic: "strict";
           properties: {
-            description: { type: 'text' };
-            handler: { type: 'text' };
-            installedAt: { type: 'date' };
+            description: { type: "text" };
+            handler: { type: "text" };
+            installedAt: { type: "date" };
           };
         };
       };
@@ -332,9 +332,9 @@ export type StorageEngineElasticsearch = {
       };
     };
   };
-  maxScrollDuration: '1m';
+  maxScrollDuration: "1m";
   defaults: {
     onUpdateConflictRetries: 0;
-    scrollTTL: '15s';
+    scrollTTL: "15s";
   };
-}
+};

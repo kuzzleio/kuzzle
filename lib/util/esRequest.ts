@@ -19,39 +19,39 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
+import _ from "lodash";
 
 // Dynamic index settings specified in the elasticsearch documentation :
 // https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings
 const dynamicESSettings = [
-  'number_of_replicas',
-  'search',
-  'search.idle.after',
-  'refresh_interval',
-  'max_result_window',
-  'max_inner_result_window',
-  'max_rescore_window',
-  'max_docvalue_fields_search',
-  'max_script_fields',
-  'max_ngram_diff',
-  'max_shingle_diff',
-  'blocks',
-  'blocks.read_only',
-  'blocks.read_only_allow_delete',
-  'blocks.read',
-  'blocks.write',
-  'blocks.metadata',
-  'max_refresh_listeners',
-  'highlight.max_analyzed_offset',
-  'max_terms_count',
-  'max_regex_length',
-  'routing.allocation.enable',
-  'routing.rebalance.enable',
-  'gc_deletes',
-  'default_pipeline',
-  'final_pipeline'
+  "number_of_replicas",
+  "search",
+  "search.idle.after",
+  "refresh_interval",
+  "max_result_window",
+  "max_inner_result_window",
+  "max_rescore_window",
+  "max_docvalue_fields_search",
+  "max_script_fields",
+  "max_ngram_diff",
+  "max_shingle_diff",
+  "blocks",
+  "blocks.read_only",
+  "blocks.read_only_allow_delete",
+  "blocks.read",
+  "blocks.write",
+  "blocks.metadata",
+  "max_refresh_listeners",
+  "highlight.max_analyzed_offset",
+  "max_terms_count",
+  "max_regex_length",
+  "routing.allocation.enable",
+  "routing.rebalance.enable",
+  "gc_deletes",
+  "default_pipeline",
+  "final_pipeline",
 ];
 
-export function getESIndexDynamicSettings (requestSettings: object): object {
+export function getESIndexDynamicSettings(requestSettings: object): object {
   return _.pick(requestSettings, dynamicESSettings);
 }
