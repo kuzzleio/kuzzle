@@ -287,6 +287,12 @@
           "message": "The %s (\"%s\") contains invalid characters \",+*\" or is equal to \"_all\" which is forbidden",
           "code": 50,
           "class": "BadRequestError"
+        },
+        "wrong_es_static_settings_for_collection_recreation": {
+          "description": "The ES static settings specified at the creation of an existing collection does not match existing settings",
+          "message": "Attempt to recreate an existing collection %s of index %s of scope %s with non matching static setting : %s at %s while existing one is at %s",
+          "code": 51,
+          "class": "BadRequestError"
         }
       }
     },

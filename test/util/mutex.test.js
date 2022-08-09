@@ -132,6 +132,39 @@ describe("#mutex", () => {
     });
   });
 
+  describe("#wait", () => {
+    beforeEach(() => {
+      kuzzle.ask.withArgs("core:cache:internal:store").resolves(true);
+    });
+
+    it("should wait resolve when the ressource is freed", async () => {
+      const mutex = new Mutex("foo", { timeout: 0 });
+
+      await mutex.lock();
+
+      const waitResult = mutex.wait({ timeout: -1 });
+
+      await mutex.unlock();
+
+      const res = await waitResult;
+
+      should(res).be.true();
+    });
+
+    it("should resolved to false if the timeout exceed", async () => {
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves(true);
+
+      const mutex = new Mutex("foo", { timeout: 0 });
+      const otherMutex = new Mutex("foo", { timeout: 0 });
+
+      await otherMutex.lock();
+
+      const waitResult = await mutex.wait({ timeout: 0 });
+
+      should(waitResult).be.false();
+    });
+  });
+
   describe("#unlock", () => {
     beforeEach(() => {
       kuzzle.ask.withArgs("core:cache:internal:store").resolves(true);

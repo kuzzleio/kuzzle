@@ -12,7 +12,7 @@ description: BackendPlugin.get method
 Gets the instance of an already loaded plugin.
 
 ```ts
-get (name: string): Plugin
+get<TPlugin extends Plugin> (name: string): TPlugin
 ```
 
 <br/>
@@ -24,5 +24,5 @@ get (name: string): Plugin
 ## Usage
 
 ```js
-const mailerPlugin = app.plugin.get('mailer');
+const mailerPlugin = app.plugin.get<MailerPlugin>('mailer');
 ```

@@ -21,7 +21,7 @@ ADD ./bin /app/bin
 ADD ./config /app/config
 ADD ./lib /app/lib
 ADD ./package.json /app/package.json
-ADD ./npm-shrinkwrap.json /app/npm-shrinkwrap.json
+ADD ./package-lock.json /app/package-lock.json
 ADD ./index.js /app/index.js
 ADD ./.kuzzlerc.sample /app/.kuzzlerc.sample
 
