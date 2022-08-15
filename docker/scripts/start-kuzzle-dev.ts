@@ -163,6 +163,16 @@ app.errors.register('app', 'api', 'custom', {
   message: 'Custom %s error',
 });
 
+app.hook.register(
+  'generic:document:afterUpdate',
+  async (documents, request: KuzzleRequest) => {
+    await app.sdk.document.createOrReplace(
+      request.getIndex(),
+      request.getCollection(),
+      'generic:document:afterUpdate',
+      {});
+  });
+
 app.controller.register('tests', {
   actions: {
     customError: {

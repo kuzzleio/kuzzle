@@ -229,6 +229,9 @@ Feature: Plugin Events
     Then I should receive a result matching:
       | _id     | "redacted"             |
       | _source | { "type": "localBus" } |
+    # Check hooks arguments
+    Then The document "nyc-open-data":"yellow-taxi":"generic:document:afterUpdate" content match:
+      | _kuzzle_info.author | "_STRING_" |
 
   @mappings @events
   Scenario: Upsert and modify documents with document:generic:beforeUpdate
