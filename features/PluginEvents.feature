@@ -166,8 +166,8 @@ Feature: Plugin Events
       | destination | "Hà Giang" |
       | company     | "Cau Me"   |
     Then The document "bus-5-vn" content match:
-      | destination | "Sa Pa"   |
-      | company     | "SOO"     |
+      | destination | "Sa Pa" |
+      | company     | "SOO"   |
     # deleteFields
     When I successfully execute the action "document":"deleteFields" with args:
       | index      | "nyc-open-data"               |
@@ -230,36 +230,36 @@ Feature: Plugin Events
       | _id     | "redacted"             |
       | _source | { "type": "localBus" } |
     # Check hooks arguments
-    Then The document "nyc-open-data":"yellow-taxi":"generic:document:afterUpdate" content match:
-      | _kuzzle_info.author | "_STRING_" |
+    Then The document "generic:document:afterUpdate" content match:
+      | _kuzzle_info.author | null |
 
   @mappings @events
   Scenario: Upsert and modify documents with document:generic:beforeUpdate
     Given an existing collection "nyc-open-data":"yellow-taxi"
     When I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
-      | _source.leaveAt | "'10:30'"              |
+      | _source.leaveAt | "'10:30'"  |
       | _id             | "'bus-vn'" |
     When I successfully execute the action "document":"upsert" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "foobar"               |
+      | index      | "nyc-open-data"                                                                   |
+      | collection | "yellow-taxi"                                                                     |
+      | _id        | "foobar"                                                                          |
       | body       | { "changes": { "destination": "Ninh Binh" }, "default": { "company": "Cau Me" } } |
-      | source     | true                   |
+      | source     | true                                                                              |
     Then The document "bus-vn" content match:
       | destination | "Ninh Binh" |
-      | company     | "Cau Me"   |
-      | leaveAt     | "10:30"    |
+      | company     | "Cau Me"    |
+      | leaveAt     | "10:30"     |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:beforeUpdate" with the following changes:
-      | _source.leaveAt | "'12:30'"              |
+      | _source.leaveAt | "'12:30'"  |
       | _id             | "'bus-vn'" |
     # update
     When I successfully execute the action "document":"upsert" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "foobar"               |
+      | index      | "nyc-open-data"                                                                   |
+      | collection | "yellow-taxi"                                                                     |
+      | _id        | "foobar"                                                                          |
       | body       | { "changes": { "destination": "Hà Giang" }, "default": { "company": "Oh Noes" } } |
-      | source     | true                   |
+      | source     | true                                                                              |
     Then The document "bus-vn" content match:
       | destination | "Hà Giang" |
       | company     | "Cau Me"   |
@@ -292,24 +292,24 @@ Feature: Plugin Events
       | _source.type | "'sleepingBus'"  |
       | _id          | "'confidential'" |
     When I successfully execute the action "document":"upsert" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "confidential"         |
+      | index      | "nyc-open-data"                                                                                      |
+      | collection | "yellow-taxi"                                                                                        |
+      | _id        | "confidential"                                                                                       |
       | body       | { "changes": { "destination": "Ninh Binh", "duration": "12h" }, "default": { "company": "Cau Me" } } |
-      | source     | true                   |
+      | source     | true                                                                                                 |
     Then I should receive a result matching:
-      | _id      | "confidential"                                                                  |
-      | _source  | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus", "company": "Cau Me" } |
+      | _id     | "confidential"                                                                                |
+      | _source | { "destination": "Ninh Binh", "duration": "12h", "type": "sleepingBus", "company": "Cau Me" } |
     # Change pipe modifications
     And I "activate" the "plugin" pipe on "generic:document:afterUpdate" with the following changes:
       | _source.type | "'localBus'" |
       | _id          | "'redacted'" |
     When I successfully execute the action "document":"upsert" with args:
-      | index      | "nyc-open-data"        |
-      | collection | "yellow-taxi"          |
-      | _id        | "bus-travel"           |
+      | index      | "nyc-open-data"                                                                                      |
+      | collection | "yellow-taxi"                                                                                        |
+      | _id        | "bus-travel"                                                                                         |
       | body       | { "changes": { "destination": "Ninh Binh", "duration": "12h" }, "default": { "company": "Cau Me" } } |
-      | source     | true                   |
+      | source     | true                                                                                                 |
     Then I should receive a result matching:
       | _id     | "redacted"             |
       | _source | { "type": "localBus" } |
