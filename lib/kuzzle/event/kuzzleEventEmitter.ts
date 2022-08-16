@@ -29,7 +29,6 @@ import buildDebug from "../../util/debug";
 
 const debug = buildDebug("kuzzle:events");
 import { v4 as uuidv4 } from "uuid";
-import { KuzzleError } from "../../kerror/errors/kuzzleError";
 
 import * as kerror from "../../kerror";
 import Promback from "../../util/promback";

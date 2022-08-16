@@ -57,6 +57,7 @@ export class ClientAdapter {
         this.cache.addCollection(index, collection);
       }
     );
+    //eslint-disable-next-line @typescript-eslint/no-unused-vars
     global.kuzzle.on("core:network:internal:message", (message) => {
       // Send the notifications to the SDK for the internal Room mechanism
     });

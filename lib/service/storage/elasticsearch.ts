@@ -162,7 +162,7 @@ export class ElasticSearch extends Service {
 
   async init() {
     await this._initSequence();
-    const indexes = await this.listIndexes();
+    await this.listIndexes();
   }
 
   get scope() {
@@ -1799,7 +1799,7 @@ export class ElasticSearch extends Service {
     index,
     collection,
     documents,
-    { refresh = null, timeout = undefined, userId = null } = {}
+    { refresh = null, userId = null } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const actionNames = ["index", "create", "update", "delete"];
@@ -2742,12 +2742,7 @@ export class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ documents, errors }>
    */
-  async mDelete(
-    index,
-    collection,
-    ids,
-    { refresh = null, timeout = undefined } = {}
-  ) {
+  async mDelete(index, collection, ids, { refresh = null } = {}) {
     const query = { ids: { values: [] } },
       validIds = [],
       partialErrors = [];
