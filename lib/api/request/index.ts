@@ -1,7 +1,7 @@
-export * from './kuzzleRequest';
+export * from "./kuzzleRequest";
 
-export * from './requestContext';
+export * from "./requestContext";
 
-export * from './requestInput';
+export * from "./requestInput";
 
-export * from './requestResponse';
+export * from "./requestResponse";

@@ -1,16 +1,16 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const rewire = require('rewire');
-const sinon = require('sinon');
+const should = require("should");
+const rewire = require("rewire");
+const sinon = require("sinon");
 
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const RedisClientMock = require('../../mocks/service/redisClient.mock');
-const RedisClusterClientMock = require('../../mocks/service/redisClusterClient.mock');
+const KuzzleMock = require("../../mocks/kuzzle.mock");
+const RedisClientMock = require("../../mocks/service/redisClient.mock");
+const RedisClusterClientMock = require("../../mocks/service/redisClusterClient.mock");
 
-const Redis = rewire('../../../lib/service/cache/redis');
+const Redis = rewire("../../../lib/service/cache/redis");
 
-describe('Redis', () => {
+describe("Redis", () => {
   let redis;
   let config;
 
@@ -18,18 +18,18 @@ describe('Redis', () => {
     new KuzzleMock();
 
     sinon
-      .stub(Redis.prototype, '_buildClient')
+      .stub(Redis.prototype, "_buildClient")
       .callsFake((options) => new RedisClientMock(options));
     sinon
-      .stub(Redis.prototype, '_buildClusterClient')
+      .stub(Redis.prototype, "_buildClusterClient")
       .callsFake((options) => new RedisClusterClientMock(options));
 
     config = {
       node: {
-        host: 'redis',
-        port: 6379
+        host: "redis",
+        port: 6379,
       },
-      pingKeepAlive: 60000
+      pingKeepAlive: 60000,
     };
 
     redis = new Redis(config);
@@ -40,43 +40,54 @@ describe('Redis', () => {
     Redis.prototype._buildClusterClient.restore();
   });
 
-  it('should init a redis client with default (0) database', async () => {
+  it("should init a redis client with default (0) database", async () => {
     await redis.init();
 
     should(redis.client).be.an.Object();
     should(redis.client.select).not.be.called();
   });
 
-  it('should raise an error if unable to connect', () => {
-    Redis.prototype._buildClient
-      .returns((new RedisClientMock(undefined, new Error('connection error'))));
+  it("should raise an error if unable to connect", () => {
+    Redis.prototype._buildClient.returns(
+      new RedisClientMock(undefined, new Error("connection error"))
+    );
 
     const testredis = new Redis(config);
 
     return should(testredis.init()).be.rejected();
   });
 
-  it('should allow listing keys using pattern matching', async () => {
+  it("should allow listing keys using pattern matching", async () => {
     await redis.init();
 
-    const keys = await redis.searchKeys('s*');
+    const keys = await redis.searchKeys("s*");
 
-    should(keys)
-      .be.eql(['s0', 's1', 's2', 's3', 's4', 's5', 's6', 's7', 's8', 's9']);
+    should(keys).be.eql([
+      "s0",
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+    ]);
   });
 
-  it('should allow executing multiple commands', async () => {
+  it("should allow executing multiple commands", async () => {
     await redis.init();
 
     const commands = [
-      [ 'set', 'a', 1 ],
-      [ 'get', 'a' ],
-      [ 'del', 'a' ],
+      ["set", "a", 1],
+      ["get", "a"],
+      ["del", "a"],
     ];
     const wanted = [
-      [ null, 'OK' ],
-      [ null, '1' ],
-      [ null, 1 ],
+      [null, "OK"],
+      [null, "1"],
+      [null, 1],
     ];
 
     redis.client.multi.returns({ exec: () => wanted });
@@ -87,11 +98,11 @@ describe('Redis', () => {
     should(result).match(wanted);
   });
 
-  it('should do nothing when attempting to execute a list of empty commands', () => {
+  it("should do nothing when attempting to execute a list of empty commands", () => {
     return should(redis.mExecute([])).be.fulfilledWith([]);
   });
 
-  it('#info should return a properly formatted response', async () => {
+  it("#info should return a properly formatted response", async () => {
     await redis.init();
 
     // eslint-disable-next-line require-atomic-updates
@@ -190,19 +201,17 @@ db5:keys=1,expires=0,avg_ttl=0
 `);
 
     return should(redis.info()).be.fulfilledWith({
-      memoryPeak: '19.33M',
-      memoryUsed: '919.52K',
-      mode: 'standalone',
-      type: 'redis',
-      version: '3.0.7',
+      memoryPeak: "19.33M",
+      memoryUsed: "919.52K",
+      mode: "standalone",
+      type: "redis",
+      version: "3.0.7",
     });
   });
 
-  it('should build a client instance of Cluster if several nodes are defined', async () => {
+  it("should build a client instance of Cluster if several nodes are defined", async () => {
     config = {
-      nodes: [
-        { host: 'foobar', port: 6379 }
-      ]
+      nodes: [{ host: "foobar", port: 6379 }],
     };
     redis = new Redis(config);
 
@@ -211,15 +220,13 @@ db5:keys=1,expires=0,avg_ttl=0
     should(redis._buildClusterClient).be.called();
   });
 
-  it('should override DNS validation on a client instance of Cluster if option is enabled', async () => {
+  it("should override DNS validation on a client instance of Cluster if option is enabled", async () => {
     config = {
       clusterOptions: {
-        enableReadyCheck: true
+        enableReadyCheck: true,
       },
-      nodes: [
-        { host: 'foobar', port: 6379 }
-      ],
-      overrideDnsLookup: true
+      nodes: [{ host: "foobar", port: 6379 }],
+      overrideDnsLookup: true,
     };
     redis = new Redis(config);
 
@@ -230,30 +237,31 @@ db5:keys=1,expires=0,avg_ttl=0
     should(options.dnsLookup).be.a.Function();
   });
 
-  it('should pass redis and cluster options to a client instance of Cluster', async () => {
+  it("should pass redis and cluster options to a client instance of Cluster", async () => {
     config = {
-      nodes: [
-        { host: 'foobar', port: 6379 }
-      ],
+      nodes: [{ host: "foobar", port: 6379 }],
       clusterOptions: {
-        enableReadyCheck: false
+        enableReadyCheck: false,
       },
       options: {
-        username: 'foo',
-        password: 'bar'
-      }
+        username: "foo",
+        password: "bar",
+      },
     };
     redis = new Redis(config);
 
     await redis.init();
 
     should(redis._buildClusterClient).be.called();
-    should(redis.client.options).match({ enableReadyCheck: false, redisOptions: { username: 'foo', password: 'bar' } });
+    should(redis.client.options).match({
+      enableReadyCheck: false,
+      redisOptions: { username: "foo", password: "bar" },
+    });
   });
 
-  it('should build a client instance of Redis if only one node is defined', async () => {
+  it("should build a client instance of Redis if only one node is defined", async () => {
     config = {
-      node: { host: 'foobar', port: 6379 },
+      node: { host: "foobar", port: 6379 },
     };
 
     redis = new Redis(config);
@@ -263,31 +271,31 @@ db5:keys=1,expires=0,avg_ttl=0
     should(redis._buildClient).be.called();
   });
 
-  it('should pass redis options to a client instance of Redis', async () => {
+  it("should pass redis options to a client instance of Redis", async () => {
     config = {
-      node: { host: 'foobar', port: 6379 },
+      node: { host: "foobar", port: 6379 },
       options: {
-        username: 'foo',
-        password: 'bar'
-      }
+        username: "foo",
+        password: "bar",
+      },
     };
     redis = new Redis(config);
 
     await redis.init();
 
     should(redis._buildClient).be.called();
-    should(redis.client.options).match({ username: 'foo', password: 'bar' });
+    should(redis.client.options).match({ username: "foo", password: "bar" });
   });
 
-  it('should setup the keep alive at initialization', async () => {
+  it("should setup the keep alive at initialization", async () => {
     redis._setupKeepAlive = sinon.stub();
     await redis.init();
 
     should(redis._setupKeepAlive).be.calledOnce();
   });
 
-  describe('#_setupKeepAlive', () => {
-    it('should set a interval that ping redis when connection is ready', async () => {
+  describe("#_setupKeepAlive", () => {
+    it("should set a interval that ping redis when connection is ready", async () => {
       redis._ping = sinon.stub().resolves();
       should(redis.pingIntervalID).be.null();
       await redis.init();
@@ -296,18 +304,18 @@ db5:keys=1,expires=0,avg_ttl=0
       should(redis.pingIntervalID).not.be.null();
     });
 
-    it('should clear the interval when an error occurs in the connection', async () => {
+    it("should clear the interval when an error occurs in the connection", async () => {
       await redis.init();
 
       should(redis.pingIntervalID).not.be.null();
-      await redis.client.emit('error', new Error('foobar'));
+      await redis.client.emit("error", new Error("foobar"));
 
       should(redis.pingIntervalID).be.null();
     });
   });
 
-  describe('#_ping', () => {
-    it('should ping redis', async () => {
+  describe("#_ping", () => {
+    it("should ping redis", async () => {
       await redis.init();
       redis.client.ping = sinon.stub().resolves();
 
@@ -317,33 +325,33 @@ db5:keys=1,expires=0,avg_ttl=0
     });
   });
 
-  describe('#store', () => {
+  describe("#store", () => {
     beforeEach(() => {
       return redis.init();
     });
 
-    it('should create a key/value pair with default options', async () => {
-      await redis.store('foo', 'bar');
+    it("should create a key/value pair with default options", async () => {
+      await redis.store("foo", "bar");
 
-      should(redis.client.set).calledWith('foo', 'bar');
+      should(redis.client.set).calledWith("foo", "bar");
     });
 
     it('should send an NX option if the "onlyIfNew" option is set', async () => {
-      await redis.store('foo', 'bar', { onlyIfNew: true });
+      await redis.store("foo", "bar", { onlyIfNew: true });
 
-      should(redis.client.set).calledWith('foo', 'bar', 'NX');
+      should(redis.client.set).calledWith("foo", "bar", "NX");
     });
 
     it('should send a PX option if the "ttl" option is set', async () => {
-      await redis.store('foo', 'bar', { ttl: 123 });
+      await redis.store("foo", "bar", { ttl: 123 });
 
-      should(redis.client.set).calledWith('foo', 'bar', 'PX', 123);
+      should(redis.client.set).calledWith("foo", "bar", "PX", 123);
     });
 
-    it('should mix NX and PX options if needed', async () => {
-      await redis.store('foo', 'bar', { onlyIfNew: true, ttl: 456 });
+    it("should mix NX and PX options if needed", async () => {
+      await redis.store("foo", "bar", { onlyIfNew: true, ttl: 456 });
 
-      should(redis.client.set).calledWith('foo', 'bar', 'NX', 'PX', 456);
+      should(redis.client.set).calledWith("foo", "bar", "NX", "PX", 456);
     });
   });
 });

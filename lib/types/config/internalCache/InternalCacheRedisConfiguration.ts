@@ -1,7 +1,7 @@
 export type InternalCacheConfiguration = {
   /**
    * The cache service relies on Redis sample settings for Redis service (see also https://github.com/luin/ioredis)
-   * 
+   *
    * 1. using a single Redis database:
    *  * node:
    *    * host:
@@ -18,7 +18,7 @@ export type InternalCacheConfiguration = {
    *    Redis specific options compatible with IORedis.
    *    See Redis client constructor available options:
    *    https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
-   * 
+   *
    * 2. using a master/slaves Redis instance with Redis sentinels
    *   (cf. http://redis.io/topics/sentinel):
    *  * node:
@@ -41,7 +41,7 @@ export type InternalCacheConfiguration = {
    *      Redis specific options compatible with IORedis.
    *      See Redis client constructor available options:
    *      https://github.com/luin/ioredis/blob/master/API.md#redis--eventemitter
-   * 
+   *
    * 3. using a redis cluster (cf. http://redis.io/topics/cluster-spec):
    *   * nodes: array of master nodes of the cluster
    *     * host:
@@ -68,24 +68,24 @@ export type InternalCacheConfiguration = {
    *       This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
    *       See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
    */
-    
+
   /**
    * @default 'redis'
-  */
-  backend: 'redis';
+   */
+  backend: "redis";
 
   clusterOptions: {
-  /**
-   * @default true
-   */
+    /**
+     * @default true
+     */
     enableReadyCheck: boolean;
   };
-     
+
   /**
    * @default 0
-  */
+   */
   database: number;
-  
+
   node: {
     /**
      * @default "localhost"
@@ -102,16 +102,16 @@ export type InternalCacheConfiguration = {
    *    Redis specific options compatible with IORedis.
    *    See Redis client constructor available options:
    *    https://github.com/luin/ioredis/blob/master/API.md#new-redisport-host-options
-   * 
-  */
+   *
+   */
   options?: Record<string, unknown>;
 
   /**
-  * Only available when using a Redis Cluster config.
-  * Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
-  * This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
-  *  See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
-  * @default false
-  */
+   * Only available when using a Redis Cluster config.
+   * Use with caution: if set to true, it makes Kuzzle skip DNS validation for TLS certificates
+   * This is the only way to connect to an AWS Elasticache Cluster with TLS encryption.
+   *  See: https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
+   * @default false
+   */
   overrideDnsLookup: boolean;
-}
+};

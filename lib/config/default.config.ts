@@ -1,5 +1,5 @@
-import httpRoutes from '../api/httpRoutes.js';
-import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
+import httpRoutes from "../api/httpRoutes.js";
+import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 
 /* eslint-disable sort-keys */
 
@@ -15,31 +15,25 @@ import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
  */
 
 const defaultConfig: KuzzleConfiguration = {
-
   // @deprecated
   realtime: {
-    pcreSupport: false
+    pcreSupport: false,
   },
 
   dump: {
     enabled: false,
     history: {
       coredump: 3,
-      reports: 5
+      reports: 5,
     },
-    path: './dump/',
-    gcore: 'gcore',
-    dateFormat: 'YYYYMMDD-HHmmss',
+    path: "./dump/",
+    gcore: "gcore",
+    dateFormat: "YYYYMMDD-HHmmss",
     handledErrors: {
       enabled: true,
-      whitelist: [
-        'RangeError',
-        'TypeError',
-        'KuzzleError',
-        'InternalError'
-      ],
-      minInterval: 10 * 60 * 1000
-    }
+      whitelist: ["RangeError", "TypeError", "KuzzleError", "InternalError"],
+      minInterval: 10 * 60 * 1000,
+    },
   },
 
   /*
@@ -50,11 +44,12 @@ const defaultConfig: KuzzleConfiguration = {
    */
   http: {
     routes: httpRoutes,
-    accessControlAllowOrigin: '*',
+    accessControlAllowOrigin: "*",
     accessControlAllowOriginUseRegExp: false,
-    accessControlAllowMethods: 'GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD',
-    accessControlAllowHeaders: 'Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile',
-    cookieAuthentication: true
+    accessControlAllowMethods: "GET,POST,PUT,PATCH,DELETE,OPTIONS,HEAD",
+    accessControlAllowHeaders:
+      "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
+    cookieAuthentication: true,
   },
 
   limits: {
@@ -67,7 +62,7 @@ const defaultConfig: KuzzleConfiguration = {
     subscriptionConditionsCount: 100,
     subscriptionMinterms: 0,
     subscriptionRooms: 1000000,
-    subscriptionDocumentTTL: 259200000
+    subscriptionDocumentTTL: 259200000,
   },
 
   application: {},
@@ -80,91 +75,91 @@ const defaultConfig: KuzzleConfiguration = {
       initTimeout: 10000,
       maxConcurrentPipes: 50,
       pipesBufferSize: 50000,
-      include: [
-        'kuzzle-plugin-logger',
-        'kuzzle-plugin-auth-passport-local',
-      ]
+      include: ["kuzzle-plugin-logger", "kuzzle-plugin-auth-passport-local"],
     },
-    'kuzzle-plugin-logger': {
+    "kuzzle-plugin-logger": {
       services: {
         stdout: {
-          level: 'info',
+          level: "info",
           addDate: true,
-          dateFormat: 'YYYY-MM-DD HH-mm-ss'
-        }
-      }
+          dateFormat: "YYYY-MM-DD HH-mm-ss",
+        },
+      },
     },
-    'kuzzle-plugin-auth-passport-local': {
-      algorithm: 'sha512',
+    "kuzzle-plugin-auth-passport-local": {
+      algorithm: "sha512",
       stretching: true,
-      digest: 'hex',
-      encryption: 'hmac',
+      digest: "hex",
+      encryption: "hmac",
       requirePassword: false,
       resetPasswordExpiresIn: -1,
-      passwordPolicies: []
-    }
+      passwordPolicies: [],
+    },
   },
 
   repositories: {
     common: {
-      cacheTTL: 1440000
-    }
+      cacheTTL: 1440000,
+    },
   },
 
   security: {
-    restrictedProfileIds: ['default'],
+    debug: {
+      native_debug_protocol: false,
+    },
+    restrictedProfileIds: ["default"],
     jwt: {
-      algorithm: 'HS256',
-      expiresIn: '1h',
+      algorithm: "HS256",
+      expiresIn: "1h",
       gracePeriod: 1000,
       maxTTL: -1,
-      secret: null
+      secret: null,
     },
     authToken: {
-      algorithm: 'HS256',
-      expiresIn: '1h',
+      algorithm: "HS256",
+      expiresIn: "1h",
       gracePeriod: 1000,
       maxTTL: -1,
-      secret: null
+      secret: null,
     },
     apiKey: {
-      maxTTL: -1
+      maxTTL: -1,
     },
     default: {
       role: {
         controllers: {
-          '*': {
+          "*": {
             actions: {
-              '*': true
-            }
-          }
-        }
-      }
+              "*": true,
+            },
+          },
+        },
+      },
     },
     standard: {
       profiles: {
         admin: {
           rateLimit: 0,
-          policies: [ { roleId: 'admin' } ]
+          policies: [{ roleId: "admin" }],
         },
         default: {
           rateLimit: 10,
-          policies: [ { roleId: 'default' } ]
+          policies: [{ roleId: "default" }],
         },
         anonymous: {
           rateLimit: 200,
-          policies: [ { roleId: 'anonymous' } ]
-        }
+          policies: [{ roleId: "anonymous" }],
+        },
       },
       roles: {
         admin: {
           controllers: {
-            '*': {
+            "*": {
               actions: {
-                '*': true
-              }
-            }
-          }
+                "*": true,
+              },
+            },
+          },
         },
         default: {
           controllers: {
@@ -174,15 +169,15 @@ const defaultConfig: KuzzleConfiguration = {
                 getCurrentUser: true,
                 getMyRights: true,
                 logout: true,
-                updateSelf: true
-              }
+                updateSelf: true,
+              },
             },
             server: {
               actions: {
-                publicApi: true
-              }
-            }
-          }
+                publicApi: true,
+              },
+            },
+          },
         },
         anonymous: {
           controllers: {
@@ -191,52 +186,52 @@ const defaultConfig: KuzzleConfiguration = {
                 checkToken: true,
                 getCurrentUser: true,
                 getMyRights: true,
-                login: true
-              }
+                login: true,
+              },
             },
             server: {
               actions: {
                 publicApi: true,
-                openapi: true
-              }
-            }
-          }
-        }
-      }
-    }
+                openapi: true,
+              },
+            },
+          },
+        },
+      },
+    },
   },
 
   server: {
     logs: {
       transports: [
         {
-          transport: 'console',
-          level: 'info',
+          transport: "console",
+          level: "info",
           stderrLevels: [],
-          silent: true
-        }
+          silent: true,
+        },
       ],
-      accessLogFormat: 'combined',
-      accessLogIpOffset: 0
+      accessLogFormat: "combined",
+      accessLogIpOffset: 0,
     },
-    maxRequestSize: '1MB',
+    maxRequestSize: "1MB",
     port: 7512,
     protocols: {
       http: {
         allowCompression: true,
         enabled: true,
         maxEncodingLayers: 3,
-        maxFormFileSize: '1MB',
+        maxFormFileSize: "1MB",
       },
       mqtt: {
         enabled: false,
         allowPubSub: false,
         developmentMode: false,
         disconnectDelay: 250,
-        requestTopic: 'Kuzzle/request',
-        responseTopic: 'Kuzzle/response',
+        requestTopic: "Kuzzle/request",
+        responseTopic: "Kuzzle/response",
         server: {
-          port: 1883
+          port: 1883,
         },
         realtimeNotifications: true,
       },
@@ -246,7 +241,7 @@ const defaultConfig: KuzzleConfiguration = {
         compression: false,
         rateLimit: 0,
         realtimeNotifications: true,
-      }
+      },
     },
     strictSdkVersion: true,
   },
@@ -254,140 +249,189 @@ const defaultConfig: KuzzleConfiguration = {
   services: {
     common: {
       defaultInitTimeout: 120000,
-      retryInterval: 1000
+      retryInterval: 1000,
     },
     internalCache: {
-      backend: 'redis',
+      backend: "redis",
       clusterOptions: {
-        enableReadyCheck: true
+        enableReadyCheck: true,
       },
       database: 0,
       node: {
-        host: 'localhost',
-        port: 6379
+        host: "localhost",
+        port: 6379,
       },
       options: {},
-      overrideDnsLookup: false
+      overrideDnsLookup: false,
     },
     memoryStorage: {
-      backend: 'redis',
+      backend: "redis",
       clusterOptions: {
-        enableReadyCheck: true
+        enableReadyCheck: true,
       },
       database: 5,
       node: {
-        host: 'localhost',
-        port: 6379
+        host: "localhost",
+        port: 6379,
       },
       options: {},
-      overrideDnsLookup: false
+      overrideDnsLookup: false,
     },
     internalIndex: {
-      bootstrapLockTimeout: 60000
+      bootstrapLockTimeout: 60000,
     },
     storageEngine: {
-      aliases: ['storageEngine'],
-      backend: 'elasticsearch',
+      aliases: ["storageEngine"],
+      backend: "elasticsearch",
       client: {
-        node: 'http://localhost:9200'
+        node: "http://localhost:9200",
       },
       commonMapping: {
-        dynamic: 'false',
+        dynamic: "false",
         properties: {
           _kuzzle_info: {
             properties: {
-              author: { type: 'keyword' },
-              createdAt: { type: 'date' },
-              updater: { type: 'keyword' },
-              updatedAt: { type: 'date' }
-            }
-          }
-        }
+              author: { type: "keyword" },
+              createdAt: { type: "date" },
+              updater: { type: "keyword" },
+              updatedAt: { type: "date" },
+            },
+          },
+        },
       },
       internalIndex: {
-        name: 'kuzzle',
+        name: "kuzzle",
         collections: {
           users: {
-            dynamic: 'false',
-            properties: {
-              profileIds: { type: 'keyword' }
-            }
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "false",
+              properties: {
+                profileIds: { type: "keyword" },
+              },
+            },
           },
           profiles: {
-            dynamic: 'false',
-            properties: {
-              tags: { type: 'keyword' },
-              policies: {
-                properties: {
-                  roleId: { type: 'keyword' },
-                  restrictedTo: {
-                    type: 'nested',
-                    properties: {
-                      index: { type: 'keyword' },
-                      collections: { type: 'keyword' }
-                    }
-                  }
-                }
-              }
-            }
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "false",
+              properties: {
+                tags: { type: "keyword" },
+                policies: {
+                  properties: {
+                    roleId: { type: "keyword" },
+                    restrictedTo: {
+                      type: "nested",
+                      properties: {
+                        index: { type: "keyword" },
+                        collections: { type: "keyword" },
+                      },
+                    },
+                  },
+                },
+              },
+            },
           },
           roles: {
-            dynamic: 'false',
-            properties: {
-              tags: { type: 'keyword' },
-              controllers: {
-                dynamic: 'false',
-                properties: {}
-              }
-            }
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "false",
+              properties: {
+                tags: { type: "keyword" },
+                controllers: {
+                  dynamic: "false",
+                  properties: {},
+                },
+              },
+            },
           },
           validations: {
-            properties: {
-              index: { type: 'keyword' },
-              collection: { type: 'keyword' },
-              validations: {
-                dynamic: 'false',
-                properties: {}
-              }
-            }
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              properties: {
+                index: { type: "keyword" },
+                collection: { type: "keyword" },
+                validations: {
+                  dynamic: "false",
+                  properties: {},
+                },
+              },
+            },
           },
           config: {
-            dynamic: 'false',
-            properties: {}
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "false",
+              properties: {},
+            },
           },
-          'api-keys': {
-            dynamic: 'false',
-            properties: {
-              userId: { type: 'keyword' },
-              hash: { type: 'keyword' },
-              description: { type: 'text' },
-              expiresAt: { type: 'long' },
-              ttl: { type: 'keyword' },
-              token: { type: 'keyword' }
-            }
+          "api-keys": {
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "false",
+              properties: {
+                userId: { type: "keyword" },
+                hash: { type: "keyword" },
+                description: { type: "text" },
+                expiresAt: { type: "long" },
+                ttl: { type: "keyword" },
+                token: { type: "keyword" },
+              },
+            },
           },
           installations: {
-            dynamic: 'strict',
-            properties: {
-              description: { type: 'text' },
-              handler: { type: 'text' },
-              installedAt: { type: 'date' }
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
             },
-          }
-        }
+            mappings: {
+              dynamic: "strict",
+              properties: {
+                description: { type: "text" },
+                handler: { type: "text" },
+                installedAt: { type: "date" },
+              },
+            },
+          },
+        },
       },
-      maxScrollDuration: '1m',
+      maxScrollDuration: "1m",
       defaults: {
         onUpdateConflictRetries: 0,
-        scrollTTL: '15s'
-      }
-    }
+        scrollTTL: "15s",
+      },
+    },
   },
 
   stats: {
     enabled: true,
     ttl: 3600,
-    statsInterval: 10
+    statsInterval: 10,
   },
 
   cluster: {
@@ -396,7 +440,7 @@ const defaultConfig: KuzzleConfiguration = {
     heartbeat: 2000,
     interface: null,
     ipv6: false,
-    ip: 'private',
+    ip: "private",
     joinTimeout: 60000,
     minimumNodes: 1,
     ports: {
@@ -406,8 +450,7 @@ const defaultConfig: KuzzleConfiguration = {
     syncTimeout: 5000,
   },
   /** @type {DocumentSpecification} */
-  validation: {
-  },
+  validation: {},
 };
 
 export default defaultConfig;

@@ -1,7 +1,10 @@
-import { PublicCacheRedisConfiguration, InternalCacheConfiguration, StorageEngineElasticsearch } from '../index';
+import {
+  PublicCacheRedisConfiguration,
+  InternalCacheConfiguration,
+  StorageEngineElasticsearch,
+} from "../index";
 
 export type ServicesConfiguration = {
-
   common: {
     /**
      * Time in ms after which a service is considered failing if
@@ -29,7 +32,7 @@ export type ServicesConfiguration = {
 
   /**
    * The database engine used for Kuzzle internal index
-  */
+   */
   internalIndex: {
     /**
      * Maximum amount of time (in milliseconds)
@@ -44,4 +47,4 @@ export type ServicesConfiguration = {
    * currently the only storage layer we support.
    */
   storageEngine: StorageEngineElasticsearch;
-  }
+};

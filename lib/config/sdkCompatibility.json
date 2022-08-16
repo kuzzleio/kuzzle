@@ -1,9 +1,9 @@
 {
-  "js":       { "min": 7 },
-  "csharp":   { "min": 2 },
-  "cpp":      { "min": 2 },
-  "java":     { "min": 3 },
-  "android":  { "min": 5 },
-  "go":       { "min": 3 },
-  "php":      { "min": 4 }
+  "js": { "min": 7 },
+  "csharp": { "min": 2 },
+  "cpp": { "min": 2 },
+  "java": { "min": 3 },
+  "android": { "min": 5 },
+  "go": { "min": 3 },
+  "php": { "min": 4 }
 }

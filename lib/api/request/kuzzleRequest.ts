@@ -19,35 +19,35 @@
  * limitations under the License.
  */
 
-import { isPlainObject } from '../../util/safeObject';
-import { get, set } from 'lodash';
-import moment from 'moment';
-import * as uuid from 'uuid';
-import { nanoid } from 'nanoid';
+import { isPlainObject } from "../../util/safeObject";
+import { get, set } from "lodash";
+import moment from "moment";
+import * as uuid from "uuid";
+import { nanoid } from "nanoid";
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
-import { RequestInput } from './requestInput';
-import { RequestResponse } from './requestResponse';
-import { RequestContext } from './requestContext';
-import { KuzzleError, InternalError } from '../../kerror/errors';
-import * as kerror from '../../kerror';
-import { Deprecation, User, HttpStream } from '../../types';
-import * as assert from '../../util/assertType';
+import { RequestInput } from "./requestInput";
+import { RequestResponse } from "./requestResponse";
+import { RequestContext } from "./requestContext";
+import { KuzzleError, InternalError } from "../../kerror/errors";
+import * as kerror from "../../kerror";
+import { Deprecation, User, HttpStream } from "../../types";
+import * as assert from "../../util/assertType";
 
-const assertionError = kerror.wrap('api', 'assert');
+const assertionError = kerror.wrap("api", "assert");
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
-const _internalId = 'internalId\u200b';
-const _status = 'status\u200b';
-const _input = 'input\u200b';
-const _error = 'error\u200b';
-const _result = 'result\u200b';
-const _context = 'context\u200b';
-const _timestamp = 'timestamp\u200b';
-const _response = 'response\u200b';
-const _deprecations = 'deprecations\u200b';
+const _internalId = "internalId\u200b";
+const _status = "status\u200b";
+const _input = "input\u200b";
+const _error = "error\u200b";
+const _result = "result\u200b";
+const _context = "context\u200b";
+const _timestamp = "timestamp\u200b";
+const _response = "response\u200b";
+const _deprecations = "deprecations\u200b";
 
 /**
  * The `KuzzleRequest` class represents a request being processed by Kuzzle.
@@ -62,7 +62,7 @@ export class KuzzleRequest {
    */
   public id: string;
 
-  constructor (data: any, options: any) {
+  constructor(data: any, options: any) {
     this[_internalId] = nanoid();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -77,15 +77,15 @@ export class KuzzleRequest {
     this[_input].headers = this[_context].connection.misc.headers;
 
     this.id = data.requestId
-      ? assert.assertString('requestId', data.requestId)
+      ? assert.assertString("requestId", data.requestId)
       : nanoid();
 
     this[_timestamp] = data.timestamp || Date.now();
 
     // handling provided options
     if (options !== undefined && options !== null) {
-      if (typeof options !== 'object' || Array.isArray(options)) {
-        throw new InternalError('Request options must be an object');
+      if (typeof options !== "object" || Array.isArray(options)) {
+        throw new InternalError("Request options must be an object");
       }
 
       /*
@@ -105,11 +105,15 @@ export class KuzzleRequest {
       if (options.error) {
         if (options.error instanceof Error) {
           this.setError(options.error);
-        }
-        else {
-          const error = new KuzzleError(options.error.message, options.error.status || 500);
+        } else {
+          const error = new KuzzleError(
+            options.error.message,
+            options.error.status || 500
+          );
 
-          for (const prop of Object.keys(options.error).filter(key => key !== 'message' && key !== 'status')) {
+          for (const prop of Object.keys(options.error).filter(
+            (key) => key !== "message" && key !== "status"
+          )) {
             error[prop] = options.error[prop];
           }
 
@@ -128,67 +132,67 @@ export class KuzzleRequest {
   /**
    * Request internal ID
    */
-  get internalId (): string {
+  get internalId(): string {
     return this[_internalId];
   }
 
   /**
    * Deprecation warnings for the API action
    */
-  get deprecations (): Deprecation[] | void {
+  get deprecations(): Deprecation[] | void {
     return this[_deprecations];
   }
 
   /**
    * Request timestamp (in Epoch-micro)
    */
-  get timestamp (): number {
+  get timestamp(): number {
     return this[_timestamp];
   }
 
   /**
    * Request HTTP status
    */
-  get status (): number {
+  get status(): number {
     return this[_status];
   }
 
-  set status (i: number) {
-    this[_status] = assert.assertInteger('status', i);
+  set status(i: number) {
+    this[_status] = assert.assertInteger("status", i);
   }
 
   /**
    * Request input
    */
-  get input (): RequestInput {
+  get input(): RequestInput {
     return this[_input];
   }
 
   /**
    * Request context
    */
-  get context (): RequestContext {
+  get context(): RequestContext {
     return this[_context];
   }
 
   /**
    * Request error
    */
-  get error (): KuzzleError | null {
+  get error(): KuzzleError | null {
     return this[_error];
   }
 
   /**
    * Request result
    */
-  get result (): any | null {
+  get result(): any | null {
     return this[_result];
   }
 
   /**
    * Request response
    */
-  get response (): RequestResponse {
+  get response(): RequestResponse {
     if (this[_response] === null) {
       this[_response] = new RequestResponse(this);
     }
@@ -199,19 +203,22 @@ export class KuzzleRequest {
   /**
    * Adds an error to the request, and sets the request's status to the error one.
    */
-  setError (error: Error) {
-    if (! error || ! (error instanceof Error)) {
-      throw new InternalError('Cannot set non-error object as a request\'s error');
+  setError(error: Error) {
+    if (!error || !(error instanceof Error)) {
+      throw new InternalError(
+        "Cannot set non-error object as a request's error"
+      );
     }
 
-    this[_error] = error instanceof KuzzleError ? error : new InternalError(error);
+    this[_error] =
+      error instanceof KuzzleError ? error : new InternalError(error);
     this.status = this[_error].status;
   }
 
   /**
    * Sets the request error to null and status to 200
    */
-  clearError () {
+  clearError() {
     this[_error] = null;
     this.status = 200;
   }
@@ -227,7 +234,7 @@ export class KuzzleRequest {
    *    - `headers` (JSONObject): additional response protocol headers (default: null)
    *    - `raw` (boolean): instead of a Kuzzle response, forward the result directly (default: false)
    */
-  setResult (
+  setResult(
     result: any,
     options: {
       /**
@@ -245,18 +252,21 @@ export class KuzzleRequest {
     } = {}
   ) {
     if (result instanceof Error) {
-      throw new InternalError('cannot set an error as a request\'s response');
+      throw new InternalError("cannot set an error as a request's response");
     }
 
-    if (this.context.connection.protocol !== 'http' && result instanceof HttpStream) {
-      throw kerror.get('api', 'assert', 'forbidden_stream');
+    if (
+      this.context.connection.protocol !== "http" &&
+      result instanceof HttpStream
+    ) {
+      throw kerror.get("api", "assert", "forbidden_stream");
     }
 
     this.status = options.status || 200;
 
     if (options.headers) {
       this.response.configure({
-        headers: options.headers
+        headers: options.headers,
       });
     }
 
@@ -273,8 +283,8 @@ export class KuzzleRequest {
    * @param version version where the used component has been deprecated
    * @param message message displayed in the warning
    */
-  addDeprecation (version: string, message: string) {
-    if (global.NODE_ENV !== 'development') {
+  addDeprecation(version: string, message: string) {
+    if (global.NODE_ENV !== "development") {
       return;
     }
 
@@ -283,10 +293,9 @@ export class KuzzleRequest {
       version,
     };
 
-    if (! this.deprecations) {
+    if (!this.deprecations) {
       this[_deprecations] = [deprecation];
-    }
-    else {
+    } else {
       this.deprecations.push(deprecation);
     }
   }
@@ -296,7 +305,7 @@ export class KuzzleRequest {
    * across the network and then used to instantiate a new Request
    * object
    */
-  serialize (): { data: JSONObject; options: JSONObject } {
+  serialize(): { data: JSONObject; options: JSONObject } {
     const serialized = {
       data: {
         _id: this[_input].args._id,
@@ -331,7 +340,7 @@ export class KuzzleRequest {
    * This can be used to match Koncorde filter rather than the Request object
    * because it has properties defined with invisible unicode characters.
    */
-  pojo () {
+  pojo() {
     return {
       context: {
         connection: this.context.connection,
@@ -365,16 +374,17 @@ export class KuzzleRequest {
    *
    * It can only be 'elasticsearch' or 'koncorde'
    */
-  getLangParam (): 'elasticsearch' | 'koncorde' {
-    const lang = this.getString('lang', 'elasticsearch');
+  getLangParam(): "elasticsearch" | "koncorde" {
+    const lang = this.getString("lang", "elasticsearch");
 
-    if (lang !== 'elasticsearch' && lang !== 'koncorde') {
+    if (lang !== "elasticsearch" && lang !== "koncorde") {
       throw kerror.get(
-        'api',
-        'assert',
-        'invalid_argument',
-        'lang',
-        '"elasticsearch" or "koncorde"');
+        "api",
+        "assert",
+        "invalid_argument",
+        "lang",
+        '"elasticsearch" or "koncorde"'
+      );
     }
 
     return lang;
@@ -387,7 +397,7 @@ export class KuzzleRequest {
    *
    * @param name parameter name
    */
-  getBodyBoolean (name: string): boolean {
+  getBodyBoolean(name: string): boolean {
     const body = this.input.body;
 
     if (body === null) {
@@ -409,7 +419,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a number
    */
-  getBodyNumber (name: string, def: number | undefined = undefined): number {
+  getBodyNumber(name: string, def: number | undefined = undefined): number {
     const body = this.input.body;
 
     if (body === null) {
@@ -417,7 +427,7 @@ export class KuzzleRequest {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this._getNumber(body, name, `body.${name}`, def);
@@ -435,7 +445,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an integer
    */
-  getBodyInteger (name: string, def: number | undefined = undefined): number {
+  getBodyInteger(name: string, def: number | undefined = undefined): number {
     const body = this.input.body;
 
     if (body === null) {
@@ -443,7 +453,7 @@ export class KuzzleRequest {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this._getInteger(body, name, `body.${name}`, def);
@@ -461,7 +471,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a string
    */
-  getBodyString (name: string, def: string | undefined = undefined): string {
+  getBodyString(name: string, def: string | undefined = undefined): string {
     const body = this.input.body;
 
     if (body === null) {
@@ -469,7 +479,7 @@ export class KuzzleRequest {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this._getString(body, name, `body.${name}`, def);
@@ -487,7 +497,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
-  getBodyArray (name: string, def: [] | undefined = undefined) {
+  getBodyArray(name: string, def: [] | undefined = undefined) {
     const body = this.input.body;
 
     if (body === null) {
@@ -495,7 +505,7 @@ export class KuzzleRequest {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this._getArray(body, name, `body.${name}`, def);
@@ -513,7 +523,10 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an object
    */
-  getBodyObject (name: string, def: JSONObject | undefined = undefined): JSONObject {
+  getBodyObject(
+    name: string,
+    def: JSONObject | undefined = undefined
+  ): JSONObject {
     const body = this.input.body;
 
     if (body === null) {
@@ -521,7 +534,7 @@ export class KuzzleRequest {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this._getObject(body, name, `body.${name}`, def);
@@ -534,7 +547,7 @@ export class KuzzleRequest {
    *
    * @param name parameter name
    */
-  getBoolean (name: string): boolean {
+  getBoolean(name: string): boolean {
     return this._getBoolean(this.input.args, name, name, true);
   }
 
@@ -548,7 +561,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a number
    */
-  getNumber (name: string, def: number | undefined = undefined): number {
+  getNumber(name: string, def: number | undefined = undefined): number {
     return this._getNumber(this.input.args, name, name, def);
   }
 
@@ -562,7 +575,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an integer
    */
-  getInteger (name: string, def: number | undefined = undefined): number {
+  getInteger(name: string, def: number | undefined = undefined): number {
     return this._getInteger(this.input.args, name, name, def);
   }
 
@@ -576,13 +589,13 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not a string
    */
-  getString (name: string, def: string | undefined = undefined) {
+  getString(name: string, def: string | undefined = undefined) {
     return this._getString(this.input.args, name, name, def);
   }
 
   /**
    * Gets a parameter from a request arguments and checks that it is an array
-   * 
+   *
    * If the request argument is a JSON String instead of an array, it will be parsed
    * and returned if it is a valid JSON array, otherwise it will @throws {api.assert.invalid_type}.
    *
@@ -593,18 +606,18 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array
    */
-  getArray (name: string, def: [] | undefined = undefined): any[] {
+  getArray(name: string, def: [] | undefined = undefined): any[] {
     return this._getArray(this.input.args, name, name, def, true);
   }
 
   /**
    * @deprecated do not use, Use getArray instead
-   * 
+   *
    * Gets a parameter from a request arguments and checks that it is an array
-   * 
+   *
    * If the request argument is a String instead of an array, it will be JSON parsed
    * and returned if it is a valid JSON array, otherwise it will return the string splitted on `,`.
-   * 
+   *
    *
    * @param name parameter name
    * @param def default value to return if the parameter is not set
@@ -613,37 +626,36 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an array or a string
    */
-  getArrayLegacy (name: string, def: [] | undefined = undefined): any[] {
+  getArrayLegacy(name: string, def: [] | undefined = undefined): any[] {
     const value = get(this.input.args, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', name);
+      throw assertionError.get("missing_argument", name);
     }
 
     if (Array.isArray(value)) {
       return value;
     }
 
-    if (typeof value !== 'string') {
-      throw assertionError.get('invalid_type', name, 'array');
+    if (typeof value !== "string") {
+      throw assertionError.get("invalid_type", name, "array");
     }
 
     // If we are using the HTTP protocol and we have a string instead of an Array
     // we try to parse it as JSON
-    if (this.context.connection.protocol === 'http') {
+    if (this.context.connection.protocol === "http") {
       try {
         const parsedValue = JSON.parse(value);
 
         if (Array.isArray(parsedValue)) {
           return parsedValue;
         }
-      }
-      catch (e) {
+      } catch (e) {
         // Do nothing, let the code continue
       }
     }
 
-    return value.split(',');
+    return value.split(",");
   }
 
   /**
@@ -651,7 +663,7 @@ export class KuzzleRequest {
    *
    * If the request argument is a JSON String instead of an object, it will be parsed
    * and returned if it is a valid JSON object, otherwise it will @throws {api.assert.invalid_type}.
-   * 
+   *
    * @param name parameter name
    * @param def default value to return if the parameter is not set
    *
@@ -659,7 +671,7 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If the fetched parameter is not an object
    */
-  getObject (name: string, def: JSONObject | undefined = undefined): JSONObject {
+  getObject(name: string, def: JSONObject | undefined = undefined): JSONObject {
     return this._getObject(this.input.args, name, name, def, true);
   }
 
@@ -674,16 +686,16 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If parameter value is not a valid date.
    */
-  getDate (name: string, format?: string): string {
+  getDate(name: string, format?: string): string {
     const args = this.input.args;
     if (args[name] === undefined) {
-      throw assertionError.get('missing_argument', name);
+      throw assertionError.get("missing_argument", name);
     }
-    if (format && ! moment(args[name], format, true).isValid()) {
-      throw assertionError.get('invalid_type', name, 'date');
+    if (format && !moment(args[name], format, true).isValid()) {
+      throw assertionError.get("invalid_type", name, "date");
     }
-    if (! moment(args[name], moment.ISO_8601).isValid()) {
-      throw assertionError.get('invalid_type', name, 'date');
+    if (!moment(args[name], moment.ISO_8601).isValid()) {
+      throw assertionError.get("invalid_type", name, "date");
     }
     return this.getString(name);
   }
@@ -696,13 +708,13 @@ export class KuzzleRequest {
    *                                       value provided
    * @throws {api.assert.invalid_type} If parameter value is not a valid date.
    */
-  getTimestamp (name: string): number {
+  getTimestamp(name: string): number {
     const args = this.input.args;
     if (args[name] === undefined) {
-      throw assertionError.get('missing_argument', name);
+      throw assertionError.get("missing_argument", name);
     }
-    if ( moment(args[name], true).isValid() === false) {
-      throw assertionError.get('invalid_type', name, 'date');
+    if (moment(args[name], true).isValid() === false) {
+      throw assertionError.get("invalid_type", name, "date");
     }
     return this.getInteger(name);
   }
@@ -710,10 +722,10 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex ({ required = true } = {}): string {
+  getIndex({ required = true } = {}): string {
     const index = this.input.args.index;
 
-    this.checkRequired(index, 'index', required);
+    this.checkRequired(index, "index", required);
 
     return index ? String(index) : null;
   }
@@ -721,10 +733,10 @@ export class KuzzleRequest {
   /**
    * Returns the collection specified in the request
    */
-  getCollection ({ required = true } = {}): string {
+  getCollection({ required = true } = {}): string {
     const collection = this.input.args.collection;
 
-    this.checkRequired(collection, 'collection', required);
+    this.checkRequired(collection, "collection", required);
 
     return collection ? String(collection) : null;
   }
@@ -732,13 +744,13 @@ export class KuzzleRequest {
   /**
    * Returns the index and collection specified in the request
    */
-  getIndexAndCollection (): { index: string; collection: string } {
-    if (! this.input.args.index) {
-      throw assertionError.get('missing_argument', 'index');
+  getIndexAndCollection(): { index: string; collection: string } {
+    if (!this.input.args.index) {
+      throw assertionError.get("missing_argument", "index");
     }
 
-    if (! this.input.args.collection) {
-      throw assertionError.get('missing_argument', 'collection');
+    if (!this.input.args.collection) {
+      throw assertionError.get("missing_argument", "collection");
     }
 
     return {
@@ -755,13 +767,13 @@ export class KuzzleRequest {
    * @throws {api.assert.body_required} If the body is not set and if no default
    *                                    value is provided
    */
-  getBody (def: JSONObject | undefined = undefined): JSONObject {
+  getBody(def: JSONObject | undefined = undefined): JSONObject {
     if (this.input.body === null) {
       if (def !== undefined) {
         return def;
       }
 
-      throw assertionError.get('body_required');
+      throw assertionError.get("body_required");
     }
 
     return this.input.body;
@@ -775,30 +787,30 @@ export class KuzzleRequest {
    *    - `generator`: function used to generate an ID (default: 'uuid.v4')
    *
    */
-  getId (
+  getId(
     options: {
-      ifMissing?: 'error' | 'generate' | 'ignore';
+      ifMissing?: "error" | "generate" | "ignore";
       generator?: () => string;
-    } = { generator: uuid.v4, ifMissing: 'error' }
+    } = { generator: uuid.v4, ifMissing: "error" }
   ): string {
     const id = this.input.args._id;
 
     options.generator = options.generator || uuid.v4; // Default to uuid v4
 
-    if (! id) {
-      if (options.ifMissing === 'generate') {
+    if (!id) {
+      if (options.ifMissing === "generate") {
         return options.generator();
       }
 
-      if (options.ifMissing === 'ignore') {
+      if (options.ifMissing === "ignore") {
         return null;
       }
 
-      throw assertionError.get('missing_argument', '_id');
+      throw assertionError.get("missing_argument", "_id");
     }
 
-    if (typeof id !== 'string') {
-      throw assertionError.get('invalid_type', '_id', 'string');
+    if (typeof id !== "string") {
+      throw assertionError.get("invalid_type", "_id", "string");
     }
 
     return String(id);
@@ -807,7 +819,7 @@ export class KuzzleRequest {
   /**
    * Returns the current user kuid
    */
-  getKuid (): string | null {
+  getKuid(): string | null {
     if (this.context && this.context.user && this.context.user._id) {
       return this.context.user._id;
     }
@@ -818,7 +830,7 @@ export class KuzzleRequest {
   /**
    * Returns the current user
    */
-  getUser (): User | null {
+  getUser(): User | null {
     if (this.context && this.context.user) {
       return this.context.user;
     }
@@ -829,30 +841,31 @@ export class KuzzleRequest {
   /**
    * Returns the search body query according to the http method
    */
-  getSearchBody (): JSONObject {
-    if ( this.context.connection.protocol !== 'http'
-      || this.context.connection.misc.verb !== 'GET'
+  getSearchBody(): JSONObject {
+    if (
+      this.context.connection.protocol !== "http" ||
+      this.context.connection.misc.verb !== "GET"
     ) {
       return this.getBody({});
     }
 
-    return this.getObject('searchBody', {});
+    return this.getObject("searchBody", {});
   }
 
   /**
    * Returns the search params.
    */
-  getSearchParams (): {
+  getSearchParams(): {
     from: number;
     query: JSONObject;
     scrollTTL: string;
     searchBody: JSONObject;
     size: number;
-    } {
-    const from = this.getInteger('from', 0);
-    const size = this.getInteger('size', 10);
+  } {
+    const from = this.getInteger("from", 0);
+    const size = this.getInteger("size", 10);
     const scrollTTL = this.getScrollTTLParam();
-    const query = this.getBodyObject('query', {});
+    const query = this.getBodyObject("query", {});
     const searchBody = this.getSearchBody();
 
     return { from, query, scrollTTL, searchBody, size };
@@ -861,11 +874,11 @@ export class KuzzleRequest {
   /**
    * Extract string scroll ttl param from the request or returns undefined
    */
-  getScrollTTLParam (): string {
+  getScrollTTLParam(): string {
     const scrollTTLParam = this.input.args.scroll;
 
-    if (scrollTTLParam && typeof scrollTTLParam !== 'string') {
-      throw assertionError.get('invalid_type', 'scroll', 'string');
+    if (scrollTTLParam && typeof scrollTTLParam !== "string") {
+      throw assertionError.get("invalid_type", "scroll", "string");
     }
 
     return scrollTTLParam;
@@ -874,32 +887,35 @@ export class KuzzleRequest {
   /**
    * Gets the refresh value.
    */
-  getRefresh (defaultValue: 'false' | 'wait_for' = 'false'): 'false' | 'wait_for' {
+  getRefresh(
+    defaultValue: "false" | "wait_for" = "false"
+  ): "false" | "wait_for" {
     if (this.input.args.refresh === undefined) {
       return defaultValue;
     }
 
-    if ( this.input.args.refresh === false
-      || this.input.args.refresh === 'false'
-      || this.input.args.refresh === null
+    if (
+      this.input.args.refresh === false ||
+      this.input.args.refresh === "false" ||
+      this.input.args.refresh === null
     ) {
-      return 'false';
+      return "false";
     }
 
-    return 'wait_for';
+    return "wait_for";
   }
 
   /**
    * Returns true if the current user have `admin` profile
    */
-  userIsAdmin (): boolean {
+  userIsAdmin(): boolean {
     const user = this.getUser();
 
-    if (! user) {
+    if (!user) {
       return false;
     }
 
-    return user.profileIds.includes('admin');
+    return user.profileIds.includes("admin");
   }
 
   /**
@@ -910,7 +926,7 @@ export class KuzzleRequest {
    * @param errorName name to use in error messages
    * @param querystring if true, the object is expected to be found in a querystring
    */
-  private _getBoolean (
+  private _getBoolean(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -922,17 +938,14 @@ export class KuzzleRequest {
     // whatever its value.
     // If a user needs to unset the option, they need to remove it from the
     // querystring.
-    if (this.context.connection.protocol === 'http' && querystring) {
+    if (this.context.connection.protocol === "http" && querystring) {
       value = value !== undefined;
       set(obj, name, value);
-    }
-    else if (value === undefined || value === null) {
+    } else if (value === undefined || value === null) {
       value = false;
-    }
-    else if (typeof value !== 'boolean') {
-      throw assertionError.get('invalid_type', errorName, 'boolean');
-    }
-    else {
+    } else if (typeof value !== "boolean") {
+      throw assertionError.get("invalid_type", errorName, "boolean");
+    } else {
       value = Boolean(value);
     }
 
@@ -947,7 +960,7 @@ export class KuzzleRequest {
    * @param errorName - name to use in error messages
    * @param def default value
    */
-  private _getNumber (
+  private _getNumber(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -956,13 +969,13 @@ export class KuzzleRequest {
     let value = get(obj, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', errorName);
+      throw assertionError.get("missing_argument", errorName);
     }
 
     value = Number.parseFloat(value);
 
     if (Number.isNaN(value)) {
-      throw assertionError.get('invalid_type', errorName, 'number');
+      throw assertionError.get("invalid_type", errorName, "number");
     }
 
     return value;
@@ -976,7 +989,7 @@ export class KuzzleRequest {
    * @param errorName name to use in error messages
    * @param def default value
    */
-  private _getInteger (
+  private _getInteger(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -985,13 +998,13 @@ export class KuzzleRequest {
     let value = get(obj, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', errorName);
+      throw assertionError.get("missing_argument", errorName);
     }
 
     value = Number.parseFloat(value);
 
-    if (Number.isNaN(value) || ! Number.isSafeInteger(value)) {
-      throw assertionError.get('invalid_type', errorName, 'integer');
+    if (Number.isNaN(value) || !Number.isSafeInteger(value)) {
+      throw assertionError.get("invalid_type", errorName, "integer");
     }
 
     return value;
@@ -1005,7 +1018,7 @@ export class KuzzleRequest {
    * @param errorName name to use in error messages
    * @param def default value
    */
-  private _getString (
+  private _getString(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -1014,11 +1027,11 @@ export class KuzzleRequest {
     const value = get(obj, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', errorName);
+      throw assertionError.get("missing_argument", errorName);
     }
 
-    if (typeof value !== 'string') {
-      throw assertionError.get('invalid_type', errorName, 'string');
+    if (typeof value !== "string") {
+      throw assertionError.get("invalid_type", errorName, "string");
     }
 
     return value;
@@ -1032,7 +1045,7 @@ export class KuzzleRequest {
    * @param errorName name to use in error messages
    * @param def default value
    */
-  private _getArray (
+  private _getArray(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -1042,15 +1055,16 @@ export class KuzzleRequest {
     const value = get(obj, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', errorName);
+      throw assertionError.get("missing_argument", errorName);
     }
 
-    if (! Array.isArray(value)) {
+    if (!Array.isArray(value)) {
       // If we are using the HTTP protocol and we have a string instead of an Array
       // we try to parse it as JSON
-      if ( this.context.connection.protocol === 'http'
-        && querystring
-        && typeof value === 'string'
+      if (
+        this.context.connection.protocol === "http" &&
+        querystring &&
+        typeof value === "string"
       ) {
         try {
           const parsedValue = JSON.parse(value);
@@ -1061,12 +1075,11 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        }
-        catch (e) {
+        } catch (e) {
           // Do nothing, let the error be thrown below
         }
       }
-      throw assertionError.get('invalid_type', errorName, 'array');
+      throw assertionError.get("invalid_type", errorName, "array");
     }
 
     return value;
@@ -1081,7 +1094,7 @@ export class KuzzleRequest {
    * @param def default value
    * @param querystring if true, the object is expected to be found in a querystring
    */
-  private _getObject (
+  private _getObject(
     obj: JSONObject,
     name: string,
     errorName: string,
@@ -1091,15 +1104,16 @@ export class KuzzleRequest {
     const value = get(obj, name, def);
 
     if (value === undefined) {
-      throw assertionError.get('missing_argument', errorName);
+      throw assertionError.get("missing_argument", errorName);
     }
 
-    if (! isPlainObject(value)) {
+    if (!isPlainObject(value)) {
       // If we are using the HTTP protocol and we have a string instead of an Array
       // we try to parse it as JSON
-      if ( this.context.connection.protocol === 'http'
-        && querystring
-        && typeof value === 'string'
+      if (
+        this.context.connection.protocol === "http" &&
+        querystring &&
+        typeof value === "string"
       ) {
         try {
           const parsedValue = JSON.parse(value);
@@ -1110,12 +1124,11 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        }
-        catch (e) {
+        } catch (e) {
           // Do nothing, let the error be thrown below
         }
       }
-      throw assertionError.get('invalid_type', errorName, 'object');
+      throw assertionError.get("invalid_type", errorName, "object");
     }
 
     return value;
@@ -1124,9 +1137,9 @@ export class KuzzleRequest {
   /**
    * Throw `missing_argument` when this one is required
    */
-  private checkRequired (arg: string, argName: string, required: boolean) {
-    if (required && ! arg) {
-      throw assertionError.get('missing_argument', argName);
+  private checkRequired(arg: string, argName: string, required: boolean) {
+    if (required && !arg) {
+      throw assertionError.get("missing_argument", argName);
     }
   }
 }

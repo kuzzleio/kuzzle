@@ -211,3 +211,8 @@ lib/util/koncordeCompat.js
 lib/util/mutex.js
 lib/util/name-generator.js
 lib/util/readYamlFile.js
+lib/api/controllers/debugController.js
+lib/api/openapi/components/security/index.js
+lib/config/documentEventAliases.js
+lib/types/DebugModule.js
+lib/util/time.js

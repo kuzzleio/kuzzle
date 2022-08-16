@@ -1,9 +1,24 @@
 name: Workflow Deployments
 
-on: 
-  push:
-    branches:
-      - master
+on:
+  workflow_call:
+  workflow_dispatch:
+    inputs:
+      doc_deploy:
+        description: "Deploy Documentation"
+        required: true
+        default: true
+        type: boolean
+      dockerhub_deploy:
+        description: "Deploy to DockerHub"
+        required: true
+        default: true
+        type: boolean
+      npm_deploy:
+        description: "Deploy to NPM"
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   # -----------------------------------------------------------------------------
@@ -11,37 +26,30 @@ jobs:
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.doc_deploy }}
     runs-on: ubuntu-latest
-    needs: [cluster-monkey-tests, error-codes-check]
     steps:
       - uses: actions/checkout@v2
         with:
           fetch-depth: 0
-      - uses: ./.github/actions/install-packages
-      - uses: actions/github-script@v4
-        id: chose-documentation-framework-version
-        with:
-          script: |
-            return context.ref === 'refs/heads/master' ? 'master' : 'develop'
       - name: Extract references from context
         shell: bash
         id: extract-refs
         run: |
           echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
           echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-          echo "::set-output name=branch::$(echo $GITHUB_REF | cut -d/ -f 3)"
-      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+      - uses: convictional/trigger-workflow-and-wait@v1.6.3
         with:
           owner: kuzzleio
           repo: documentation
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
-          ref: ${{ steps.chose-documentation-framework-version.outputs.result }}
-          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ steps.extract-refs.outputs.branch }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+          ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
+          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
-    needs: [cluster-monkey-tests]
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -51,7 +59,7 @@ jobs:
           node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
       - uses: actions/cache@v2
         with:
-          path: '**/node_modules'
+          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -59,7 +67,7 @@ jobs:
         id: buildx
         uses: docker/setup-buildx-action@v1
       - name: Login to DockerHub
-        uses: docker/login-action@v1 
+        uses: docker/login-action@v1
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
@@ -84,7 +92,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    needs: [cluster-monkey-tests]
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2

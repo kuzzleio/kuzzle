@@ -21,7 +21,7 @@
 
 /**
  * Target definition
- * 
+ *
  * Target are used to specify multiple index and collection
  * inside of a single query
  * @example

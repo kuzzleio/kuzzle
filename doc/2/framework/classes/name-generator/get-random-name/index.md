@@ -7,7 +7,7 @@ description: NameGenerator class getRandomName() method
 
 # getRandomName
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.19.0" />
 
 Returns a random name.
 

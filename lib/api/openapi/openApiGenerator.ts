@@ -19,27 +19,27 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
+import _ from "lodash";
 
-import { Inflector } from '../../util/inflector';
-import { JSONObject } from '../../../index';
+import { Inflector } from "../../util/inflector";
+import { JSONObject } from "../../../index";
 
 const routeUrlMatch = /:([^/]*)/g;
 
 /**
  * Generate basic openApi Controller
  */
-function generateController (route: JSONObject, definition: JSONObject) {
+function generateController(route: JSONObject, definition: JSONObject) {
   if (route.controller === undefined) {
     return;
   }
 
-  if (! _.some(definition.tags, { name: route.controller })) {
+  if (!_.some(definition.tags, { name: route.controller })) {
     const capitalizedController = Inflector.pascalCase(route.controller);
 
     definition.tags.push({
       description: `${capitalizedController} Controller`,
-      name: route.controller
+      name: route.controller,
     });
   }
 
@@ -47,7 +47,7 @@ function generateController (route: JSONObject, definition: JSONObject) {
     route.openapi.tags = [];
   }
 
-  if (! route.openapi.tags.includes(route.controller)) {
+  if (!route.openapi.tags.includes(route.controller)) {
     route.openapi.tags.push(route.controller);
   }
 }
@@ -55,7 +55,7 @@ function generateController (route: JSONObject, definition: JSONObject) {
 /**
  * Generate basic openApi Summary
  */
-function generateSummary (route: JSONObject) {
+function generateSummary(route: JSONObject) {
   if (route.openapi.description === undefined) {
     route.openapi.description = `Controller: ${route.controller}.`;
   }
@@ -68,7 +68,7 @@ function generateSummary (route: JSONObject) {
 /**
  * Generate basic openApi Parameters
  */
-function generateParameters (route: JSONObject) {
+function generateParameters(route: JSONObject) {
   if (route.openapi.parameters === undefined) {
     route.openapi.parameters = [];
 
@@ -76,10 +76,10 @@ function generateParameters (route: JSONObject) {
     while (m !== null) {
       routeUrlMatch.lastIndex++;
       route.openapi.parameters.push({
-        in: 'path',
+        in: "path",
         name: m[1],
         required: true,
-        schema: { type: 'string' }
+        schema: { type: "string" },
       });
 
       m = routeUrlMatch.exec(route.path);
@@ -93,12 +93,12 @@ function generateParameters (route: JSONObject) {
 /**
  * Generate basic openApi Response
  */
-function generateResponse (route: JSONObject) {
+function generateResponse(route: JSONObject) {
   if (route.openapi.responses === undefined) {
     route.openapi.responses = {
-      '200': {
-        description: 'OK'
-      }
+      "200": {
+        description: "OK",
+      },
     };
   }
 }
@@ -108,7 +108,10 @@ function generateResponse (route: JSONObject) {
  *
  * @returns {object} openApi object
  */
-export function generateOpenApi (routes: JSONObject[], definition: JSONObject): JSONObject {
+export function generateOpenApi(
+  routes: JSONObject[],
+  definition: JSONObject
+): JSONObject {
   for (const route of routes) {
     // Make sure route verbs are lowercase
     if (route.verb !== undefined) {
@@ -116,7 +119,7 @@ export function generateOpenApi (routes: JSONObject[], definition: JSONObject): 
     }
 
     // Set :param notation to {param}
-    route.formattedPath = route.path.replace(routeUrlMatch, '{$1}');
+    route.formattedPath = route.path.replace(routeUrlMatch, "{$1}");
 
     if (definition.paths[route.formattedPath] === undefined) {
       definition.paths[route.formattedPath] = {};

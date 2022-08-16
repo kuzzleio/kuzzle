@@ -19,21 +19,21 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
-import * as assert from '../../util/assertType';
-import { User, Token } from '../../types';
+import * as assert from "../../util/assertType";
+import { User, Token } from "../../types";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output
-const _token = 'token\u200b';
-const _user = 'user\u200b';
-const _connection = 'connection\u200b';
+const _token = "token\u200b";
+const _user = "user\u200b";
+const _connection = "connection\u200b";
 // Connection class properties
-const _c_id = 'id\u200b';
-const _c_protocol = 'protocol\u200b';
-const _c_ips = 'ips\u200b';
-const _c_misc = 'misc\u200b';
+const _c_id = "id\u200b";
+const _c_protocol = "protocol\u200b";
+const _c_ips = "ips\u200b";
+const _c_misc = "misc\u200b";
 
 export type ContextMisc = {
   /**
@@ -61,7 +61,7 @@ export type ContextMisc = {
  * Information about the connection at the origin of the request.
  */
 export class Connection {
-  constructor (connection: any) {
+  constructor(connection: any) {
     this[_c_id] = null;
     this[_c_protocol] = null;
     this[_c_ips] = [];
@@ -69,15 +69,14 @@ export class Connection {
 
     Object.seal(this);
 
-    if (typeof connection !== 'object' || connection === null) {
+    if (typeof connection !== "object" || connection === null) {
       return;
     }
 
     for (const prop of Object.keys(connection)) {
-      if (['id', 'protocol', 'ips'].includes(prop)) {
+      if (["id", "protocol", "ips"].includes(prop)) {
         this[prop] = connection[prop];
-      }
-      else {
+      } else {
         this.misc[prop] = connection[prop];
       }
     }
@@ -86,52 +85,52 @@ export class Connection {
   /**
    * Unique identifier of the user connection
    */
-  set id (str: string) {
-    this[_c_id] = assert.assertString('connection.id', str);
+  set id(str: string) {
+    this[_c_id] = assert.assertString("connection.id", str);
   }
 
-  get id (): string | null {
+  get id(): string | null {
     return this[_c_id];
   }
 
   /**
    * Network protocol name
    */
-  set protocol (str: string) {
-    this[_c_protocol] = assert.assertString('connection.protocol', str);
+  set protocol(str: string) {
+    this[_c_protocol] = assert.assertString("connection.protocol", str);
   }
 
-  get protocol (): string | null {
+  get protocol(): string | null {
     return this[_c_protocol];
   }
 
   /**
    * Chain of IP addresses, starting from the client
    */
-  set ips (arr: string[]) {
-    this[_c_ips] = assert.assertArray('connection.ips', arr, 'string');
+  set ips(arr: string[]) {
+    this[_c_ips] = assert.assertArray("connection.ips", arr, "string");
   }
 
-  get ips (): string[] {
+  get ips(): string[] {
     return this[_c_ips];
   }
 
   /**
    * Additional informations about the connection
    */
-  get misc (): ContextMisc {
+  get misc(): ContextMisc {
     return this[_c_misc];
   }
 
   /**
    * Serializes the Connection object
    */
-  toJSON (): JSONObject {
+  toJSON(): JSONObject {
     return {
       id: this[_c_id],
       ips: this[_c_ips],
       protocol: this[_c_protocol],
-      ...this[_c_misc]
+      ...this[_c_misc],
     };
   }
 }
@@ -143,8 +142,7 @@ export class Connection {
  * and origin (connection, protocol).
  */
 export class RequestContext {
-  constructor (options: any = {}) {
-
+  constructor(options: any = {}) {
     this[_token] = null;
     this[_user] = null;
     this[_connection] = new Connection(options.connection);
@@ -167,7 +165,7 @@ export class RequestContext {
   /**
    * Serializes the RequestContext object
    */
-  toJSON (): JSONObject {
+  toJSON(): JSONObject {
     return {
       connection: this[_connection].toJSON(),
       token: this[_token],
@@ -179,51 +177,51 @@ export class RequestContext {
    * @deprecated use connection.id instead
    * Internal connection ID
    */
-  get connectionId (): string | null {
+  get connectionId(): string | null {
     return this[_connection].id;
   }
 
-  set connectionId (str: string) {
-    this[_connection].id = assert.assertString('connectionId', str);
+  set connectionId(str: string) {
+    this[_connection].id = assert.assertString("connectionId", str);
   }
 
   /**
    * @deprecated use connection.protocol instead
    */
-  get protocol (): string | null {
+  get protocol(): string | null {
     return this[_connection].protocol;
   }
 
-  set protocol (str: string) {
-    this[_connection].protocol = assert.assertString('protocol', str);
+  set protocol(str: string) {
+    this[_connection].protocol = assert.assertString("protocol", str);
   }
 
   /**
    * Connection that initiated the request
    */
-  get connection (): Connection {
+  get connection(): Connection {
     return this[_connection];
   }
 
   /**
    * Authentication token
    */
-  get token (): Token | null {
+  get token(): Token | null {
     return this[_token];
   }
 
-  set token (obj: Token | null) {
-    this[_token] = assert.assertObject('token', obj);
+  set token(obj: Token | null) {
+    this[_token] = assert.assertObject("token", obj);
   }
 
   /**
    * Associated user
    */
-  get user (): User | null {
+  get user(): User | null {
     return this[_user];
   }
 
-  set user (obj: User | null) {
-    this[_user] = assert.assertObject('user', obj);
+  set user(obj: User | null) {
+    this[_user] = assert.assertObject("user", obj);
   }
 }

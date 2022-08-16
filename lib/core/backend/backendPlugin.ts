@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { Inflector } from '../../util/inflector';
-import * as kerror from '../../kerror';
-import { JSONObject } from '../../../index';
-import { Plugin } from '../../types';
-import { ApplicationManager } from './index';
-import didYouMean from '../../util/didYouMean';
+import { Inflector } from "../../util/inflector";
+import * as kerror from "../../kerror";
+import { JSONObject } from "../../../index";
+import { Plugin } from "../../types";
+import { ApplicationManager } from "./index";
+import didYouMean from "../../util/didYouMean";
 
-const assertionError = kerror.wrap('plugin', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("plugin", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendPlugin extends ApplicationManager {
   /**
@@ -42,35 +42,41 @@ export class BackendPlugin extends ApplicationManager {
    *    - `manifest`: Manually add a manifest definition
    *    - `deprecationWarning`: If false, does not display deprecation warnings
    */
-  use (
+  use(
     plugin: Plugin,
-    options: { name?: string; manifest?: JSONObject; deprecationWarning?: boolean } = {}
+    options: {
+      name?: string;
+      manifest?: JSONObject;
+      deprecationWarning?: boolean;
+    } = {}
   ): void {
     if (this._application.started) {
-      throw runtimeError.get('already_started', 'plugin');
+      throw runtimeError.get("already_started", "plugin");
     }
 
     // Avoid plain objects
-    if ((typeof plugin.constructor !== 'function'
-      || plugin.constructor.name === 'Object')
-      && ! options.name
+    if (
+      (typeof plugin.constructor !== "function" ||
+        plugin.constructor.name === "Object") &&
+      !options.name
     ) {
-      throw assertionError.get('no_name_provided');
+      throw assertionError.get("no_name_provided");
     }
 
-    const name: string = options.name
-      || Inflector.kebabCase(plugin.constructor.name.replace('Plugin', ''));
+    const name: string =
+      options.name ||
+      Inflector.kebabCase(plugin.constructor.name.replace("Plugin", ""));
 
-    if (! this._application.PluginObject.checkName(name)) {
-      throw assertionError.get('invalid_plugin_name', name);
+    if (!this._application.PluginObject.checkName(name)) {
+      throw assertionError.get("invalid_plugin_name", name);
     }
 
     if (this._application._plugins[name]) {
-      throw assertionError.get('name_already_exists', name);
+      throw assertionError.get("name_already_exists", name);
     }
 
-    if (typeof plugin.init !== 'function') {
-      throw assertionError.get('init_not_found', name);
+    if (typeof plugin.init !== "function") {
+      throw assertionError.get("init_not_found", name);
     }
 
     this._application._plugins[name] = { options, plugin };
@@ -81,9 +87,13 @@ export class BackendPlugin extends ApplicationManager {
    *
    * @param name Plugin name
    */
-  get (name: string): Plugin {
-    if (! this._application._plugins[name]) {
-      throw assertionError.get('plugin_not_found', name, didYouMean(name, this.list()));
+  get<TPlugin extends Plugin>(name: string): TPlugin {
+    if (!this._application._plugins[name]) {
+      throw assertionError.get(
+        "plugin_not_found",
+        name,
+        didYouMean(name, this.list())
+      );
     }
 
     return this._application._plugins[name].plugin;
@@ -92,7 +102,7 @@ export class BackendPlugin extends ApplicationManager {
   /**
    * Lists loaded plugins
    */
-  list (): string[] {
+  list(): string[] {
     return Object.keys(this._application._plugins);
   }
 }
