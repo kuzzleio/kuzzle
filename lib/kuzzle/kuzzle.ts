@@ -19,9 +19,8 @@
  * limitations under the License.
  */
 
-
-import path from 'path';
-import { KuzzleEventEmitter } from './event/kuzzleEventEmitter';
+import path from "path";
+import { KuzzleEventEmitter } from "./event/kuzzleEventEmitter";
 
 import { murmurHash128 as murmur } from "murmurhash-native";
 import stringify from "json-stable-stringify";
@@ -30,41 +29,44 @@ import Bluebird from "bluebird";
 import segfaultHandler from "node-segfault-handler";
 import _ from "lodash";
 
-import kuzzleStateEnum from './kuzzleStateEnum';
-import EntryPoint from '../core/network/entryPoint';
-import Funnel from '../api/funnel';
-import PassportWrapper from '../core/auth/passportWrapper';
-import PluginsManager from '../core/plugin/pluginsManager';
-import Router from '../core/network/router';
-import Statistics from '../core/statistics';
-import { TokenManager } from '../core/auth/tokenManager';
-import Validation from '../core/validation';
-import Logger from './log';
-import vault from './vault';
-import DumpGenerator from './dumpGenerator';
-import AsyncStore from '../util/asyncStore';
-import { Mutex } from '../util/mutex';
-import * as kerror from '../kerror';
-import InternalIndexHandler from './internalIndexHandler';
-import CacheEngine from '../core/cache/cacheEngine';
-import SecurityModule from '../core/security';
-import RealtimeModule from '../core/realtime';
-import Cluster from '../cluster';
-import { StorageEngine } from '../core/storage/storageEngine';
-import { InstallationConfig, ImportConfig, SupportConfig, StartOptions } from './../types/Kuzzle';
-import { version } from '../../package.json';
-import { KuzzleConfiguration } from '../types/config/KuzzleConfiguration';
-import { NameGenerator } from '../util/name-generator';
-import { OpenApiManager } from '../api/openapi';
-import { sha256 } from '../util/crypto';
-import { VirtualIndex } from '../service/storage/virtualIndex';
-export const BACKEND_IMPORT_KEY = 'backend:init:import';
+import kuzzleStateEnum from "./kuzzleStateEnum";
+import EntryPoint from "../core/network/entryPoint";
+import Funnel from "../api/funnel";
+import PassportWrapper from "../core/auth/passportWrapper";
+import PluginsManager from "../core/plugin/pluginsManager";
+import Router from "../core/network/router";
+import Statistics from "../core/statistics";
+import { TokenManager } from "../core/auth/tokenManager";
+import Validation from "../core/validation";
+import Logger from "./log";
+import vault from "./vault";
+import DumpGenerator from "./dumpGenerator";
+import AsyncStore from "../util/asyncStore";
+import { Mutex } from "../util/mutex";
+import * as kerror from "../kerror";
+import InternalIndexHandler from "./internalIndexHandler";
+import CacheEngine from "../core/cache/cacheEngine";
+import SecurityModule from "../core/security";
+import RealtimeModule from "../core/realtime";
+import Cluster from "../cluster";
+import { StorageEngine } from "../core/storage/storageEngine";
+import {
+  InstallationConfig,
+  ImportConfig,
+  SupportConfig,
+  StartOptions,
+} from "./../types/Kuzzle";
+import { version } from "../../package.json";
+import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import { NameGenerator } from "../util/name-generator";
+import { OpenApiManager } from "../api/openapi";
+import { sha256 } from "../util/crypto";
+import { VirtualIndex } from "../service/storage/virtualIndex";
+export const BACKEND_IMPORT_KEY = "backend:init:import";
 
 let _kuzzle = null;
 
-
-Reflect.defineProperty(global, 'kuzzle', {
-
+Reflect.defineProperty(global, "kuzzle", {
   configurable: true,
   enumerable: false,
   get() {
@@ -146,8 +148,6 @@ export class Kuzzle extends KuzzleEventEmitter {
    * Vault component (will be initialized after bootstrap)
    */
   private _vault: vault;
-
-
 
   /**
    * AsyncLocalStorage wrapper
@@ -242,11 +242,11 @@ export class Kuzzle extends KuzzleEventEmitter {
         seed: this.config.internal.hash.seed,
       });
 
-      await (new CacheEngine()).init();
+      await new CacheEngine().init();
       const virtualIndex = new VirtualIndex();
       const storageEngine = new StorageEngine(virtualIndex);
       await storageEngine.init();
-      await (new RealtimeModule()).init();
+      await new RealtimeModule().init();
 
       await this.internalIndex.init();
 
@@ -442,17 +442,17 @@ export class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask (event, ...payload: any[]) {
+  async ask(event, ...payload: any[]) {
     return super.ask(event, ...payload);
   }
 
   // For testing purpose
-  emit (event: string, data?: any) {
+  emit(event: string, data?: any) {
     return super.emit(event, data);
   }
 
   // For testing purpose
-  async pipe (event, ...payload) {
+  async pipe(event, ...payload) {
     return super.pipe(event, ...payload);
   }
 
@@ -740,7 +740,7 @@ export class Kuzzle extends KuzzleEventEmitter {
     this.emit("kuzzle:state:change", value);
   }
 
-  get vault () {
+  get vault() {
     return this._vault;
   }
 
@@ -829,5 +829,3 @@ export class Kuzzle extends KuzzleEventEmitter {
 }
 
 module.exports = Kuzzle;
-
-

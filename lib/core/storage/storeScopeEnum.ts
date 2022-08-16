@@ -30,8 +30,6 @@
  * @enum {storeScopeEnum}
  */
 export enum scopeEnum {
-  PRIVATE= 'private',
-  PUBLIC = 'public',
+  PRIVATE = "private",
+  PUBLIC = "public",
 }
-
-

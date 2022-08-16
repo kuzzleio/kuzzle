@@ -158,6 +158,7 @@ lib/model/security/token.js
 lib/model/security/user.js
 lib/service/service.js
 lib/service/storage/elasticsearch.js
+lib/service/storage/virtualIndex.js
 lib/types/Controller.js
 lib/types/ControllerDefinition.js
 lib/types/ControllerRights.js

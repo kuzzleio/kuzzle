@@ -96,9 +96,9 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updatedAt: {
-              type: string;
-            };
+          updatedAt: {
+            type: string;
+          };
 
           /**
            * @default
@@ -309,11 +309,11 @@ export type StorageEngineElasticsearch = {
             installedAt: { type: "date" };
           };
         };
-        'virtual-indexes' : {
-          dynamic: 'strict';
+        "virtual-indexes": {
+          dynamic: "strict";
           properties: {
-            real: { type: 'text' };
-            virtual: { type: 'text' };
+            real: { type: "text" };
+            virtual: { type: "text" };
           };
         };
       };

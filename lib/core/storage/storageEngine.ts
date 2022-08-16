@@ -19,43 +19,38 @@
  * limitations under the License.
  */
 
-import { ClientAdapter } from './clientAdapter';
-import { VirtualIndex } from '../../service/storage/virtualIndex';
-import { scopeEnum } from './storeScopeEnum';
+import { ClientAdapter } from "./clientAdapter";
+import { VirtualIndex } from "../../service/storage/virtualIndex";
+import { scopeEnum } from "./storeScopeEnum";
 
-import * as kuzzleError from '../../kerror';
-const kerror = kuzzleError.wrap('services', 'storage');
-
+import * as kuzzleError from "../../kerror";
+const kerror = kuzzleError.wrap("services", "storage");
 
 export class StorageEngine {
-
   publicClient: ClientAdapter = null;
   privateClient: ClientAdapter = null;
   virtualIndex: VirtualIndex;
-  
-  constructor (virtualIndex: VirtualIndex) {
+
+  constructor(virtualIndex: VirtualIndex) {
     this.virtualIndex = virtualIndex;
 
     // Storage client for public indexes only
     this.publicClient = new ClientAdapter(scopeEnum.PUBLIC, this.virtualIndex);
 
     // Storage client for private indexes only
-    this.privateClient = new ClientAdapter(scopeEnum.PRIVATE, this.virtualIndex);
+    this.privateClient = new ClientAdapter(
+      scopeEnum.PRIVATE,
+      this.virtualIndex
+    );
   }
-
 
   /**
    * Initialize storage clients and perform integrity checks
    *
    * @returns {Promise}
    */
-  async init () {
-    await Promise.all([
-      this.publicClient.init(),
-      this.privateClient.init(),
-
-    ]);
-
+  async init() {
+    await Promise.all([this.publicClient.init(), this.privateClient.init()]);
 
     const privateIndexes = await this.privateClient.cache.listIndexes();
 
@@ -67,11 +62,10 @@ export class StorageEngine {
     global.kuzzle.log.info("[✔] Storage initialized");
   }
 
-  async initAfterCluster () {
+  async initAfterCluster() {
     await Promise.all([
       this.publicClient.initAfterCluster(),
       this.privateClient.initAfterCluster(),
-
     ]);
   }
 }

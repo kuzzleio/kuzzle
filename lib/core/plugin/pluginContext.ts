@@ -23,20 +23,20 @@ import Bluebird from "bluebird";
 import { Koncorde } from "../shared/KoncordeWrapper";
 import { Client } from "@elastic/elasticsearch";
 import { JSONObject } from "kuzzle-sdk";
-import Bluebird from 'bluebird';
-import { Koncorde } from '../shared/KoncordeWrapper';
-import { Client } from '@elastic/elasticsearch';
-import { JSONObject } from 'kuzzle-sdk';
+import Bluebird from "bluebird";
+import { Koncorde } from "../shared/KoncordeWrapper";
+import { Client } from "@elastic/elasticsearch";
+import { JSONObject } from "kuzzle-sdk";
 
-import { EmbeddedSDK } from '../shared/sdk/embeddedSdk';
-import PluginRepository from './pluginRepository';
-import Store from '../shared/store';
-import { ElasticSearch } from '../../service/storage/elasticsearch';
-import { isPlainObject } from '../../util/safeObject';
-import Promback from '../../util/promback';
-import { Mutex } from '../../util/mutex';
-import * as kerror from '../../kerror';
-import { scopeEnum } from '../storage/storeScopeEnum';
+import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
+import PluginRepository from "./pluginRepository";
+import Store from "../shared/store";
+import { ElasticSearch } from "../../service/storage/elasticsearch";
+import { isPlainObject } from "../../util/safeObject";
+import Promback from "../../util/promback";
+import { Mutex } from "../../util/mutex";
+import * as kerror from "../../kerror";
+import { scopeEnum } from "../storage/storeScopeEnum";
 
 import {
   BadRequestError,
@@ -283,10 +283,7 @@ export class PluginContext {
 
     /* context.constructors =============================================== */
 
-    const pluginStore = new Store(
-      pluginIndex,
-      scopeEnum.PRIVATE);
-
+    const pluginStore = new Store(pluginIndex, scopeEnum.PRIVATE);
 
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository(
@@ -314,10 +311,10 @@ export class PluginContext {
     }
 
     // eslint-disable-next-line no-inner-declarations
-    function PluginContextESClient (): Client {
-      return ElasticSearch
-        .buildClient(global.kuzzle.config.services.storageEngine.client);
-
+    function PluginContextESClient(): Client {
+      return ElasticSearch.buildClient(
+        global.kuzzle.config.services.storageEngine.client
+      );
     }
 
     this.constructors = {

@@ -1,7 +1,5 @@
-import { Backend } from '../core/backend';
-import { Kuzzle } from '../kuzzle/kuzzle';
-
-
+import { Backend } from "../core/backend";
+import { Kuzzle } from "../kuzzle/kuzzle";
 
 /* eslint-disable @typescript-eslint/no-namespace */
 

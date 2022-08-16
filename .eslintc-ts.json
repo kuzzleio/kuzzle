@@ -4,5 +4,9 @@
     "plugin:kuzzle/default",
     "plugin:kuzzle/node",
     "plugin:kuzzle/typescript"
-  ]
+  ],
+  "rules": {
+    "no-shadow": "off",
+    "@typescript-eslint/no-shadow": ["error"]
+  }
 }

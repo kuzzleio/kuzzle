@@ -19,23 +19,21 @@
  * limitations under the License.
  */
 
+import { JSONObject } from "kuzzle-sdk";
 
-import {JSONObject} from 'kuzzle-sdk';
+import Bluebird from "bluebird";
 
-import Bluebird from 'bluebird';
-
-import * as kerror from '../kerror';
-
+import * as kerror from "../kerror";
 
 /**
  * Services base class
  *
  */
 class Service {
-  _name : string;
-  _config : JSONObject;
-  _initTimeout : number;
-  constructor (name : string, config : JSONObject) {
+  _name: string;
+  _config: JSONObject;
+  _initTimeout: number;
+  constructor(name: string, config: JSONObject) {
     this._name = name;
     this._config = config;
     this._initTimeout =

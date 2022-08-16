@@ -19,14 +19,12 @@
  * limitations under the License.
  */
 
-
-import { ElasticSearch } from '../../service/storage/elasticsearch';
-import { IndexCache } from './indexCache';
-import { isPlainObject } from '../../util/safeObject';
-import * as kerror from '../../kerror';
-import { Mutex } from '../../util/mutex';
-import { KuzzleError } from '../../kerror/errors';
-
+import { ElasticSearch } from "../../service/storage/elasticsearch";
+import { IndexCache } from "./indexCache";
+import { isPlainObject } from "../../util/safeObject";
+import * as kerror from "../../kerror";
+import { Mutex } from "../../util/mutex";
+import { KuzzleError } from "../../kerror/errors";
 
 const servicesError = kerror.wrap("services", "storage");
 
@@ -41,24 +39,28 @@ export class ClientAdapter {
   /**
    * @param {storeScopeEnum} scope
    */
-  constructor (scope, virtualIndex) {
+  constructor(scope, virtualIndex) {
     this.client = new ElasticSearch(
       global.kuzzle.config.services.storageEngine,
       scope,
-      virtualIndex);
+      virtualIndex
+    );
     this.scope = scope;
     this.cache = new IndexCache();
   }
 
-  async initAfterCluster () {
-    global.kuzzle.ask('cluster:event:on', `core:storage:${this.scope}:cache:clusterAddCollection`, ({ index: index, collection: collection }) => {
-      this.cache.addCollection(index, collection);
-    });
-    global.kuzzle.on('core:network:internal:message', message => {
+  async initAfterCluster() {
+    global.kuzzle.ask(
+      "cluster:event:on",
+      `core:storage:${this.scope}:cache:clusterAddCollection`,
+      ({ index: index, collection: collection }) => {
+        this.cache.addCollection(index, collection);
+      }
+    );
+    global.kuzzle.on("core:network:internal:message", (message) => {
       // Send the notifications to the SDK for the internal Room mechanism
     });
   }
-
 
   async init() {
     await this.client.init();
@@ -98,15 +100,17 @@ export class ClientAdapter {
     );
   }
 
-  async createIndex (index: string, { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}) {
-
+  async createIndex(
+    index: string,
+    { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}
+  ) {
     if (this.cache.hasIndex(index)) {
       throw servicesError.get("index_already_exists", this.scope, index);
     }
-    
+
     if (physicalIndex) {
-      if (! this.cache.hasIndex(physicalIndex)) {
-        throw new KuzzleError('The given physicalIndex does not exist.', 404);
+      if (!this.cache.hasIndex(physicalIndex)) {
+        throw new KuzzleError("The given physicalIndex does not exist.", 404);
       }
     }
     this.client._assertValidIndexAndCollection(index);
@@ -116,15 +120,23 @@ export class ClientAdapter {
       for (const collection of this.cache.listCollections(physicalIndex)) {
         this.cache.addCollection(index, collection);
         //send message to propagate cache population :
-        await global.kuzzle.ask('cluster:event:broadcast', `core:storage:${this.scope}:cache:clusterAddCollection`, {
-          collection: collection,
-          index: index,
-        });
-        await global.kuzzle.ask('cluster:event:broadcast', `core:storage:${this.scope}:foo`, {collection, index,});
+        await global.kuzzle.ask(
+          "cluster:event:broadcast",
+          `core:storage:${this.scope}:cache:clusterAddCollection`,
+          {
+            collection: collection,
+            index: index,
+          }
+        );
+        await global.kuzzle.ask(
+          "cluster:event:broadcast",
+          `core:storage:${this.scope}:foo`,
+          { collection, index }
+        );
       }
     }
 
-    if (! indexCacheOnly && ! physicalIndex) {
+    if (!indexCacheOnly && !physicalIndex) {
       await this.client.createIndex(index);
     }
 
@@ -751,9 +763,12 @@ export class ClientAdapter {
       `core:storage:${this.scope}:document:search`,
       (index, collection, searchBody, opts) => {
         this.cache.assertCollectionExists(index, collection);
-        return this.client.search({ collection, index, searchBody, targets: null }, opts);
-      });
-
+        return this.client.search(
+          { collection, index, searchBody, targets: null },
+          opts
+        );
+      }
+    );
 
     /**
      * Search for multiples documents
@@ -772,9 +787,12 @@ export class ClientAdapter {
           }
         }
 
-        return this.client.search({ collection: null, index: null, searchBody, targets, }, opts);
-      });
-
+        return this.client.search(
+          { collection: null, index: null, searchBody, targets },
+          opts
+        );
+      }
+    );
 
     /**
      * Update a document
@@ -1072,4 +1090,3 @@ export class ClientAdapter {
     }
   }
 }
-

@@ -291,12 +291,11 @@ const defaultConfig: KuzzleConfiguration = {
         properties: {
           _kuzzle_info: {
             properties: {
-              author: { type: 'keyword' },
-              createdAt: { type: 'date' },
-              updater: { type: 'keyword' },
-              updatedAt: { type: 'date' },
-              index: { type: 'keyword' },
-
+              author: { type: "keyword" },
+              createdAt: { type: "date" },
+              updater: { type: "keyword" },
+              updatedAt: { type: "date" },
+              index: { type: "keyword" },
             },
           },
         },
@@ -420,14 +419,14 @@ const defaultConfig: KuzzleConfiguration = {
               },
             },
           },
-          'virtual-indexes': {
-            dynamic: 'strict',
+          "virtual-indexes": {
+            dynamic: "strict",
             properties: {
-              real: { type: 'text' },
-              virtual: { type: 'text' }
-            }
-          }
-        }
+              real: { type: "text" },
+              virtual: { type: "text" },
+            },
+          },
+        },
       },
       maxScrollDuration: "1m",
       defaults: {
