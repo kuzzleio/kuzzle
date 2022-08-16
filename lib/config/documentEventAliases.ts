@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import DocumentController from '../api/controllers/documentController';
+import DocumentController from "../api/controllers/documentController";
 
 interface EventAliases {
   list: Record<string, unknown>;
@@ -27,7 +27,10 @@ interface EventAliases {
   notBefore: string[];
 }
 
-function filter (obj: Record<string, unknown>, expectValue: string): Array<string> {
+function filter(
+  obj: Record<string, unknown>,
+  expectValue: string
+): Array<string> {
   const result = [];
 
   for (const [action, event] of Object.entries(obj)) {
@@ -41,11 +44,11 @@ function filter (obj: Record<string, unknown>, expectValue: string): Array<strin
 
 export const documentEventAliases: EventAliases = {
   list: {
-    delete: filter(DocumentController.actions, 'delete'),
-    get: filter(DocumentController.actions, 'get'),
-    update: filter(DocumentController.actions, 'update'),
-    write: filter(DocumentController.actions, 'write'),
+    delete: filter(DocumentController.actions, "delete"),
+    get: filter(DocumentController.actions, "get"),
+    update: filter(DocumentController.actions, "update"),
+    write: filter(DocumentController.actions, "write"),
   },
-  namespace: 'generic:document',
-  notBefore: ['search', 'deleteByQuery', 'updateByQuery', 'export'],
+  namespace: "generic:document",
+  notBefore: ["search", "deleteByQuery", "updateByQuery", "export"],
 };

@@ -1,13 +1,12 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const { IDCardRenewer } = require('../../../lib/cluster/workers/IDCardRenewer');
+const { IDCardRenewer } = require("../../../lib/cluster/workers/IDCardRenewer");
 
-describe('ClusterIDCardRenewer', () => {
-
-  describe('#init', () => {
+describe("ClusterIDCardRenewer", () => {
+  describe("#init", () => {
     let idCardRenewer;
 
     beforeEach(() => {
@@ -20,84 +19,82 @@ describe('ClusterIDCardRenewer', () => {
       };
     });
 
-    it('should initialize the redis client', async () => {
+    it("should initialize the redis client", async () => {
       await idCardRenewer.init({
         redis: {
           config: {
-            initTimeout: 42
+            initTimeout: 42,
           },
-          name: 'foo'
-        }
+          name: "foo",
+        },
       });
 
-      should(idCardRenewer.initRedis)
-        .be.calledOnce()
-        .and.be.calledWith(
-          {
-            initTimeout: 42
-          },
-          'foo');
+      should(idCardRenewer.initRedis).be.calledOnce().and.be.calledWith(
+        {
+          initTimeout: 42,
+        },
+        "foo"
+      );
     });
 
-    it('should init variable based on the given config', async () => {
+    it("should init variable based on the given config", async () => {
       await idCardRenewer.init({
         redis: {
           config: {
-            initTimeout: 42
+            initTimeout: 42,
           },
-          name: 'foo'
+          name: "foo",
         },
-        nodeIdKey: 'nodeIdKey',
+        nodeIdKey: "nodeIdKey",
         refreshDelay: 666,
       });
 
-      should(idCardRenewer.nodeIdKey).be.eql('nodeIdKey');
+      should(idCardRenewer.nodeIdKey).be.eql("nodeIdKey");
       should(idCardRenewer.refreshDelay).be.eql(666);
       should(idCardRenewer.refreshTimer).not.null();
       should(idCardRenewer.disposed).be.false();
     });
 
-    it('should set an interval that will call the method renewIDCard', async () => {
+    it("should set an interval that will call the method renewIDCard", async () => {
       idCardRenewer.renewIDCard = sinon.stub().resolves();
-      const stub = sinon.spy(global, 'setInterval');
+      const stub = sinon.spy(global, "setInterval");
 
       await idCardRenewer.init({
         redis: {
           config: {
-            initTimeout: 42
+            initTimeout: 42,
           },
-          name: 'foo'
+          name: "foo",
         },
-        nodeIdKey: 'nodeIdKey',
+        nodeIdKey: "nodeIdKey",
         refreshDelay: 1,
       });
 
       await new Promise((res) => setTimeout(res, 1));
 
       should(idCardRenewer.renewIDCard).be.calledTwice();
-      should(stub)
-        .be.calledOnce()
-        .and.be.calledWith(sinon.match.func, 1);
+      should(stub).be.calledOnce().and.be.calledWith(sinon.match.func, 1);
     });
 
-    it('should notify parent when initialization is finished', async () => {
+    it("should notify parent when initialization is finished", async () => {
       await idCardRenewer.init({
         redis: {
           config: {
-            initTimeout: 42
+            initTimeout: 42,
           },
-          name: 'foo'
+          name: "foo",
         },
-        nodeIdKey: 'nodeIdKey',
+        nodeIdKey: "nodeIdKey",
         refreshDelay: 1,
       });
 
-      should(idCardRenewer.parentPort.postMessage)
-        .be.calledWith({ initialized: true });
+      should(idCardRenewer.parentPort.postMessage).be.calledWith({
+        initialized: true,
+      });
     });
   });
 
-  describe('#renewIDCard', () => {
+  describe("#renewIDCard", () => {
     let idCardRenewer;
 
     beforeEach(async () => {
@@ -108,7 +105,7 @@ describe('ClusterIDCardRenewer', () => {
           commands: {
             pexpire: sinon.stub().resolves(1),
             del: sinon.stub().resolves(),
-          }
+          },
         };
       };
 
@@ -116,24 +113,24 @@ describe('ClusterIDCardRenewer', () => {
         postMessage: sinon.stub(),
       };
 
-      sinon.stub(idCardRenewer, 'dispose').resolves();
+      sinon.stub(idCardRenewer, "dispose").resolves();
 
       await idCardRenewer.init({
-        nodeIdKey: 'foo',
+        nodeIdKey: "foo",
         redis: {},
         refreshDelay: 100,
-        refreshMultiplier: 4
+        refreshMultiplier: 4,
       });
     });
 
-    it('should call pexpire to refresh the key expiration time', async () => {
+    it("should call pexpire to refresh the key expiration time", async () => {
       idCardRenewer.redis.commands.pexpire.resetHistory();
 
       await idCardRenewer.renewIDCard();
 
       should(idCardRenewer.redis.commands.pexpire)
         .be.calledOnce()
-        .and.be.calledWith('foo', 400);
+        .and.be.calledWith("foo", 400);
 
       should(idCardRenewer.dispose).not.be.called();
       should(idCardRenewer.parentPort.postMessage)
@@ -141,7 +138,7 @@ describe('ClusterIDCardRenewer', () => {
         .be.calledWith({ initialized: true });
     });
 
-    it('should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card', async () => {
+    it("should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card", async () => {
       idCardRenewer.redis.commands.pexpire.resolves(0); // Failed to renew the ID Card before the key expired
       await idCardRenewer.renewIDCard();
 
@@ -150,10 +147,10 @@ describe('ClusterIDCardRenewer', () => {
       should(idCardRenewer.dispose).be.called();
       should(idCardRenewer.parentPort.postMessage)
         .be.called()
-        .and.be.calledWith({ error: 'Node too slow: ID card expired' });
+        .and.be.calledWith({ error: "Node too slow: ID card expired" });
     });
 
-    it('should not do nothing if already disposed', async () => {
+    it("should not do nothing if already disposed", async () => {
       idCardRenewer.redis.commands.pexpire.resetHistory();
       idCardRenewer.disposed = true;
       await idCardRenewer.renewIDCard();
@@ -166,7 +163,7 @@ describe('ClusterIDCardRenewer', () => {
     });
   });
 
-  describe('#dispose', () => {
+  describe("#dispose", () => {
     let idCardRenewer;
 
     beforeEach(async () => {
@@ -177,7 +174,7 @@ describe('ClusterIDCardRenewer', () => {
           commands: {
             pexpire: sinon.stub().resolves(1),
             del: sinon.stub().resolves(),
-          }
+          },
         };
       };
 
@@ -186,21 +183,21 @@ describe('ClusterIDCardRenewer', () => {
       };
 
       await idCardRenewer.init({
-        nodeIdKey: 'foo',
+        nodeIdKey: "foo",
         redis: {},
         refreshDelay: 100,
       });
     });
 
-    it('should set disposed to true and delete the nodeIdKey inside redis when called', async () => {
+    it("should set disposed to true and delete the nodeIdKey inside redis when called", async () => {
       await idCardRenewer.dispose();
 
-      should(idCardRenewer.redis.commands.del).be.calledWith('foo');
+      should(idCardRenewer.redis.commands.del).be.calledWith("foo");
       should(idCardRenewer.disposed).be.true();
       should(idCardRenewer.refreshTimer).be.null();
     });
 
-    it('should not delete redis key if redis is not init', async () => {
+    it("should not delete redis key if redis is not init", async () => {
       const redis = idCardRenewer.redis;
       idCardRenewer.redis = null;
 
@@ -209,15 +206,15 @@ describe('ClusterIDCardRenewer', () => {
       should(redis.commands.del).not.be.called();
     });
 
-    it('should do nothing when already disposed', async () => {
+    it("should do nothing when already disposed", async () => {
       idCardRenewer.disposed = true;
       await idCardRenewer.dispose();
 
       should(idCardRenewer.redis.commands.del).not.be.called();
     });
 
-    it('should not do anything if not initialized before calling dispose', async () => {
-      const clearIntervalStub = sinon.spy(global, 'clearInterval');
+    it("should not do anything if not initialized before calling dispose", async () => {
+      const clearIntervalStub = sinon.spy(global, "clearInterval");
       idCardRenewer = new IDCardRenewer();
 
       idCardRenewer.initRedis = async () => {
@@ -225,7 +222,7 @@ describe('ClusterIDCardRenewer', () => {
           commands: {
             pexpire: sinon.stub().resolves(1),
             del: sinon.stub().resolves(),
-          }
+          },
         };
       };
 
@@ -235,7 +232,6 @@ describe('ClusterIDCardRenewer', () => {
 
       should(idCardRenewer.disposed).be.true();
       should(clearIntervalStub).not.be.called();
-
     });
   });
 });

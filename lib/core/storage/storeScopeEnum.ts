@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-
 /**
  * @typedef {string} storeScopeEnum
  */
@@ -34,4 +33,5 @@ export enum scopeEnum {
   PRIVATE= 'private',
   PUBLIC = 'public',
 }
+
 

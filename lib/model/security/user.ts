@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-import _ from 'lodash';
+import _ from "lodash";
 
-import Rights from './rights';
-import * as kerror from '../../kerror';
-import { Profile } from './profile';
-import { KuzzleRequest } from '../../../index';
-import { Target } from '../../types';
+import Rights from "./rights";
+import * as kerror from "../../kerror";
+import { Profile } from "./profile";
+import { KuzzleRequest } from "../../../index";
+import { Target } from "../../types";
 
 /**
  * @class User
@@ -34,7 +34,7 @@ export class User {
   public _id: string;
   public profileIds: string[];
 
-  constructor () {
+  constructor() {
     this._id = null;
     this.profileIds = [];
   }
@@ -42,24 +42,24 @@ export class User {
   /**
    * @returns {Promise<Profile[]>}
    */
-  getProfiles (): Promise<Profile[]> {
-    if (! global.kuzzle) {
-      return kerror.reject('security', 'user', 'uninitialized', this._id);
+  getProfiles(): Promise<Profile[]> {
+    if (!global.kuzzle) {
+      return kerror.reject("security", "user", "uninitialized", this._id);
     }
 
-    return global.kuzzle.ask('core:security:profile:mGet', this.profileIds);
+    return global.kuzzle.ask("core:security:profile:mGet", this.profileIds);
   }
 
   /**
    * @returns {Promise}
    */
-  async getRights () {
+  async getRights() {
     const profiles = await this.getProfiles();
-    const results = await Promise.all(profiles.map(p => p.getRights()));
+    const results = await Promise.all(profiles.map((p) => p.getRights()));
 
     const rights = {};
 
-    results.forEach(right => _.assignWith(rights, right, Rights.merge));
+    results.forEach((right) => _.assignWith(rights, right, Rights.merge));
 
     return rights;
   }
@@ -68,12 +68,12 @@ export class User {
    * @param {Request} request
    * @returns {Promise.<boolean>}
    */
-  async isActionAllowed (request: KuzzleRequest): Promise<boolean> {
+  async isActionAllowed(request: KuzzleRequest): Promise<boolean> {
     if (this.profileIds === undefined || this.profileIds.length === 0) {
       return false;
     }
 
-    const targets = request.getArray('targets', []);
+    const targets = request.getArray("targets", []);
 
     const profiles = await this.getProfiles();
     if (targets.length === 0) {
@@ -95,36 +95,36 @@ export class User {
    * while skipping the ones that includes a wildcard since they will be expanded
    * later on, based on index and collections authorized for the given user.
    */
-  private async areTargetsAllowed (
+  private async areTargetsAllowed(
     request: KuzzleRequest,
     profiles: Profile[],
     targets: Target[]
   ) {
-    const profilesPolicies = await Promise.all(profiles.map(
-      profile => profile.getAllowedPolicies(request)));
+    const profilesPolicies = await Promise.all(
+      profiles.map((profile) => profile.getAllowedPolicies(request))
+    );
 
     // Every target must be allowed by at least one profile
     for (const target of targets) {
-
       // Skip targets with no Index or Collection
-      if (! target.index || ! target.collections) {
+      if (!target.index || !target.collections) {
         continue;
       }
 
       // TODO: Support Wildcard
-      if (target.index.includes('*')) {
+      if (target.index.includes("*")) {
         return false;
       }
 
       for (const collection of target.collections) {
         // TODO: Support Wildcard
-        if (collection.includes('*')) {
+        if (collection.includes("*")) {
           return false;
         }
 
-        const isTargetAllowed = profilesPolicies.some(
-          policies => policies.some(
-            policy => policy.role.checkRestrictions(
+        const isTargetAllowed = profilesPolicies.some((policies) =>
+          policies.some((policy) =>
+            policy.role.checkRestrictions(
               target.index,
               collection,
               policy.restrictedTo
@@ -132,7 +132,7 @@ export class User {
           )
         );
 
-        if (! isTargetAllowed) {
+        if (!isTargetAllowed) {
           return false;
         }
       }
@@ -140,5 +140,4 @@ export class User {
 
     return true;
   }
-
 }

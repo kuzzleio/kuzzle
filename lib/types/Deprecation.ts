@@ -32,4 +32,4 @@ export type Deprecation = {
    * Information about the deprecation, replacement, etc.
    */
   message: string;
-}
+};

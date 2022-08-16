@@ -26,6 +26,7 @@ import Bluebird from 'bluebird';
 
 import * as kerror from '../kerror';
 
+
 /**
  * Services base class
  *
@@ -37,15 +38,16 @@ class Service {
   constructor (name : string, config : JSONObject) {
     this._name = name;
     this._config = config;
-    this._initTimeout = config.initTimeout
-      || global.kuzzle.config.services.common.defaultInitTimeout;
+    this._initTimeout =
+      config.initTimeout ||
+      global.kuzzle.config.services.common.defaultInitTimeout;
   }
 
-  get config () {
+  get config() {
     return this._config;
   }
 
-  get name () {
+  get name() {
     return this._name;
   }
 
@@ -55,13 +57,12 @@ class Service {
    *
    * @returns {Promise}
    */
-  init () {
-    return Bluebird
-      .resolve(this._initSequence())
+  init() {
+    return Bluebird.resolve(this._initSequence())
       .timeout(this._initTimeout)
-      .catch(e => {
+      .catch((e) => {
         if (e instanceof Bluebird.TimeoutError) {
-          throw kerror.get('core', 'fatal', 'service_timeout', this._name);
+          throw kerror.get("core", "fatal", "service_timeout", this._name);
         }
 
         throw e;
@@ -72,16 +73,16 @@ class Service {
    * @abstract
    * @returns {Promise}
    */
-  _initSequence () {
-    throw new Error('Not implemented');
+  _initSequence() {
+    throw new Error("Not implemented");
   }
 
   /**
    * @abstract
    * @returns {Promise}
    */
-  info () {
-    throw new Error('Not implemented');
+  info() {
+    throw new Error("Not implemented");
   }
 }
 

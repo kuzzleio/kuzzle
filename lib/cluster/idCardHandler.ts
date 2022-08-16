@@ -19,21 +19,21 @@
  * limitations under the License.
  */
 
-import { NameGenerator } from '../util/name-generator';
-import { Worker as WorkerThread } from 'worker_threads';
-import Bluebird from 'bluebird';
+import { NameGenerator } from "../util/name-generator";
+import { Worker as WorkerThread } from "worker_threads";
+import Bluebird from "bluebird";
 
-import '../types';
+import "../types";
 
-const REDIS_PREFIX = '{cluster/node}/';
-const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + 'id-cards-index';
+const REDIS_PREFIX = "{cluster/node}/";
+const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
 
 export type SerializedIdCard = {
   id: string;
   ip: string;
   birthdate: number;
   topology: string[];
-}
+};
 
 export class IdCard {
   /**
@@ -62,14 +62,14 @@ export class IdCard {
    */
   public topology: Set<string>;
 
-  constructor ({ id, ip, birthdate, topology }: SerializedIdCard) {
+  constructor({ id, ip, birthdate, topology }: SerializedIdCard) {
     this.id = id;
     this.ip = ip;
     this.birthdate = birthdate;
     this.topology = new Set(topology);
   }
 
-  serialize (): SerializedIdCard {
+  serialize(): SerializedIdCard {
     return {
       birthdate: this.birthdate,
       id: this.id,
@@ -78,7 +78,7 @@ export class IdCard {
     };
   }
 
-  static unserialize (serialized: SerializedIdCard): IdCard {
+  static unserialize(serialized: SerializedIdCard): IdCard {
     return new IdCard(serialized);
   }
 }
@@ -142,7 +142,7 @@ export class ClusterIdCardHandler {
    */
   private disposed = false;
 
-  constructor (node: any) {
+  constructor(node: any) {
     this.node = node;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
@@ -152,11 +152,11 @@ export class ClusterIdCardHandler {
    * Generates and reserves a unique ID for this node instance.
    * Makes sure that the ID is not already taken by another node instance.
    */
-  async createIdCard (): Promise<void> {
+  async createIdCard(): Promise<void> {
     let reserved = false;
 
     do {
-      this.nodeId = NameGenerator.generateRandomName({ prefix: 'knode' });
+      this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),
@@ -166,14 +166,16 @@ export class ClusterIdCardHandler {
       });
 
       reserved = await this.save({ creation: true });
-    } while (! reserved);
+    } while (!reserved);
 
     await this.addIdCardToIndex();
 
-    this.refreshWorker = this.constructWorker(`${__dirname}/workers/IDCardRenewer.js`);
+    this.refreshWorker = this.constructWorker(
+      `${__dirname}/workers/IDCardRenewer.js`
+    );
     this.refreshWorker.unref();
 
-    this.refreshWorker.on('message', async message => {
+    this.refreshWorker.on("message", async (message) => {
       if (message.error) {
         await this.node.evictSelf(message.error);
       }
@@ -181,7 +183,7 @@ export class ClusterIdCardHandler {
 
     // Transfer informations to the worker
     this.refreshWorker.postMessage({
-      action: 'start', // start the worker
+      action: "start", // start the worker
       kuzzle: {
         config: global.kuzzle.config,
         id: global.kuzzle.id,
@@ -190,7 +192,7 @@ export class ClusterIdCardHandler {
       // Used to configure a redis the same way as the Cache Engine does
       redis: {
         config: global.kuzzle.config.services.internalCache,
-        name: 'internal_adapter',
+        name: "internal_adapter",
       },
       refreshDelay: this.refreshDelay,
       refreshMultiplier: this.refreshMultiplier,
@@ -202,7 +204,7 @@ export class ClusterIdCardHandler {
   /**
    * Helper method to mock worker instantiation in unit tests
    */
-  private constructWorker (path: string) {
+  private constructWorker(path: string) {
     return new WorkerThread(path);
   }
 
@@ -212,17 +214,18 @@ export class ClusterIdCardHandler {
    *
    * Once the worker starts, this timer will be stopped.
    */
-  private startTemporaryRefresh () {
+  private startTemporaryRefresh() {
     this.refreshTimer = setInterval(async () => {
       try {
         await this.save();
-      }
-      catch (error) {
-        global.kuzzle.log.error(`An error occurred while refreshing the ID card during WorkerThread startup: ${error}`);
+      } catch (error) {
+        global.kuzzle.log.error(
+          `An error occurred while refreshing the ID card during WorkerThread startup: ${error}`
+        );
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on('message', ({ initialized }) => {
+    this.refreshWorker.on("message", ({ initialized }) => {
       if (initialized) {
         clearInterval(this.refreshTimer);
         this.refreshTimer = null;
@@ -230,11 +233,11 @@ export class ClusterIdCardHandler {
     });
   }
 
-  async dispose (): Promise<void> {
+  async dispose(): Promise<void> {
     this.disposed = true;
 
     if (this.refreshWorker) {
-      this.refreshWorker.postMessage({ action: 'dispose' });
+      this.refreshWorker.postMessage({ action: "dispose" });
     }
   }
 
@@ -255,21 +258,25 @@ export class ClusterIdCardHandler {
    *
    * @return {Array.<IdCard>}
    */
-  async getRemoteIdCards (): Promise<IdCard[]> {
+  async getRemoteIdCards(): Promise<IdCard[]> {
     const idCards: IdCard[] = [];
 
     let keys: string[] = await global.kuzzle.ask(
-      'core:cache:internal:execute',
-      'smembers',
-      REDIS_ID_CARDS_INDEX);
+      "core:cache:internal:execute",
+      "smembers",
+      REDIS_ID_CARDS_INDEX
+    );
 
-    keys = keys.filter(nodeIdKey => nodeIdKey !== this.nodeIdKey);
+    keys = keys.filter((nodeIdKey) => nodeIdKey !== this.nodeIdKey);
 
     if (keys.length === 0) {
       return idCards;
     }
 
-    const rawIdCards: string[] = await global.kuzzle.ask('core:cache:internal:mget', keys);
+    const rawIdCards: string[] = await global.kuzzle.ask(
+      "core:cache:internal:mget",
+      keys
+    );
     const expiredIdCards: string[] = [];
 
     for (let i = 0; i < keys.length; i++) {
@@ -277,19 +284,19 @@ export class ClusterIdCardHandler {
       // values retrieval
       if (rawIdCards[i] !== null) {
         idCards.push(IdCard.unserialize(JSON.parse(rawIdCards[i])));
-      }
-      else {
+      } else {
         expiredIdCards.push(keys[i]);
       }
     }
 
     // Clean expired ID Card's keys in the index
-    await Bluebird.map(expiredIdCards, idCardKey => {
+    await Bluebird.map(expiredIdCards, (idCardKey) => {
       return global.kuzzle.ask(
-        'core:cache:internal:execute',
-        'srem',
+        "core:cache:internal:execute",
+        "srem",
         REDIS_ID_CARDS_INDEX,
-        idCardKey);
+        idCardKey
+      );
     });
 
     return idCards;
@@ -298,7 +305,7 @@ export class ClusterIdCardHandler {
   /**
    * Adds a remote node IdCard to the node known topology
    */
-  async addNode (id: string): Promise<void> {
+  async addNode(id: string): Promise<void> {
     if (this.disposed || this.idCard.topology.has(id)) {
       return;
     }
@@ -311,8 +318,8 @@ export class ClusterIdCardHandler {
   /**
    * Removes a remote node IdCard from the node known topology
    */
-  async removeNode (id: string): Promise<void> {
-    if (! this.disposed && this.idCard.topology.delete(id)) {
+  async removeNode(id: string): Promise<void> {
+    if (!this.disposed && this.idCard.topology.delete(id)) {
       await this.save();
     }
   }
@@ -322,11 +329,13 @@ export class ClusterIdCardHandler {
    *
    * This set is an index to retrieve ID Cards faster.
    */
-  async addIdCardToIndex (): Promise<void> {
+  async addIdCardToIndex(): Promise<void> {
     await global.kuzzle.ask(
-      'core:cache:internal:execute',
-      'sadd',
-      REDIS_ID_CARDS_INDEX, this.nodeIdKey);
+      "core:cache:internal:execute",
+      "sadd",
+      REDIS_ID_CARDS_INDEX,
+      this.nodeIdKey
+    );
   }
 
   /**
@@ -334,15 +343,16 @@ export class ClusterIdCardHandler {
    *
    * @returns True if the key was set
    */
-  private async save ({ creation } = { creation: false }): Promise<boolean> {
-    if (! this.idCard) {
+  private async save({ creation } = { creation: false }): Promise<boolean> {
+    if (!this.idCard) {
       return false;
     }
 
     return await global.kuzzle.ask(
-      'core:cache:internal:store',
+      "core:cache:internal:store",
       this.nodeIdKey,
       JSON.stringify(this.idCard.serialize()),
-      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier });
+      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier }
+    );
   }
 }

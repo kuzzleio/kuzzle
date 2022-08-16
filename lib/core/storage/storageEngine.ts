@@ -35,6 +35,7 @@ export class StorageEngine {
   
   constructor (virtualIndex: VirtualIndex) {
     this.virtualIndex = virtualIndex;
+
     // Storage client for public indexes only
     this.publicClient = new ClientAdapter(scopeEnum.PUBLIC, this.virtualIndex);
 
@@ -55,14 +56,15 @@ export class StorageEngine {
 
     ]);
 
+
     const privateIndexes = await this.privateClient.cache.listIndexes();
 
     for (const publicIndex of await this.publicClient.cache.listIndexes()) {
       if (privateIndexes.includes(publicIndex)) {
-        throw kerror.get('index_already_exists', 'public', publicIndex);
+        throw kerror.get("index_already_exists", "public", publicIndex);
       }
     }
-    global.kuzzle.log.info('[✔] Storage initialized');
+    global.kuzzle.log.info("[✔] Storage initialized");
   }
 
   async initAfterCluster () {

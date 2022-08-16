@@ -19,17 +19,17 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const checkConfiguration = require('./checkConfiguration');
-const upgradeStorage = require('./upgradeStorage');
-const upgradeCache = require('./upgradeCache');
+const checkConfiguration = require("./checkConfiguration");
+const upgradeStorage = require("./upgradeStorage");
+const upgradeCache = require("./upgradeCache");
 
-module.exports = async function upgrade (context) {
-  context.log.notice('\n\n=== CONFIGURATION FILES ===');
+module.exports = async function upgrade(context) {
+  context.log.notice("\n\n=== CONFIGURATION FILES ===");
   await checkConfiguration(context);
-  context.log.notice('\n\n=== STORAGE ===');
+  context.log.notice("\n\n=== STORAGE ===");
   await upgradeStorage(context);
-  context.log.notice('\n\n=== CACHE ===');
+  context.log.notice("\n\n=== CACHE ===");
   await upgradeCache(context);
 };

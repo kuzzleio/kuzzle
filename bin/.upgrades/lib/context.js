@@ -19,28 +19,29 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
-const rc = require('rc');
+const rc = require("rc");
 
-const inquirer = require('./inquirerExtended');
-const Logger = require('./logger');
+const inquirer = require("./inquirerExtended");
+const Logger = require("./logger");
 
 import defaultConfiguration from '../../../lib/config/default.config';
 const { version: currentVersion } = require('../../../package.json');
 
+
 class Version {
-  constructor () {
+  constructor() {
     this.from = null;
     this.list = [];
   }
 }
 
 class UpgradeContext {
-  constructor (args) {
+  constructor(args) {
     // copy constructor
     if (args instanceof UpgradeContext) {
       this.config = args.config;
@@ -48,8 +49,7 @@ class UpgradeContext {
       this.inquire = args.inquire;
       this.version = args.version;
       this.argv = args.argv;
-    }
-    else {
+    } else {
       this.config = null;
       this.log = new Logger(args);
       this.inquire = inquirer;
@@ -58,29 +58,30 @@ class UpgradeContext {
     }
   }
 
-  async init () {
+  async init() {
     await this.loadConfiguration();
 
     if (this.config.configs) {
-      this.log.ok('Configuration files loaded:');
-      this.config.configs.forEach(f => this.log.print(`\t- ${f}`));
+      this.log.ok("Configuration files loaded:");
+      this.config.configs.forEach((f) => this.log.print(`\t- ${f}`));
     }
 
     this.version = await this.getVersions();
   }
 
-  async loadConfiguration () {
+  async loadConfiguration() {
     let cfg;
 
     try {
-      cfg = rc('kuzzle', JSON.parse(JSON.stringify(defaultConfiguration)));
+      cfg = rc("kuzzle", JSON.parse(JSON.stringify(defaultConfiguration)));
       this.config = cfg;
       return;
-    }
-    catch (e) {
+    } catch (e) {
       this.log.error(`Cannot load configuration files: ${e.message}`);
       if (this.config === null) {
-        this.log.error('Check your configuration files, and restart the upgrade script.');
+        this.log.error(
+          "Check your configuration files, and restart the upgrade script."
+        );
         process.exit(1);
       }
     }
@@ -92,12 +93,12 @@ class UpgradeContext {
     // user to fix the situation
     const retry = await this.inquire.direct({
       default: true,
-      message: 'Retry?',
-      type: 'confirm'
+      message: "Retry?",
+      type: "confirm",
     });
 
-    if (! retry) {
-      this.log.error('Aborted by user action.');
+    if (!retry) {
+      this.log.error("Aborted by user action.");
       process.exit(1);
     }
 
@@ -108,28 +109,29 @@ class UpgradeContext {
    * Asks the user the source version to upgrade from
    * @returns {Version}
    */
-  async getVersions () {
+  async getVersions() {
     const version = new Version();
 
     this.log.print(`Current Kuzzle version: ${currentVersion}`);
 
     version.list = fs
-      .readdirSync(
-        path.resolve(`${__dirname}/../versions`),
-        { withFileTypes: true })
-      .filter(entry => entry.isDirectory() && entry.name.match(/^v\d+$/))
-      .map(entry => entry.name)
-      .sort((a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1)));
+      .readdirSync(path.resolve(`${__dirname}/../versions`), {
+        withFileTypes: true,
+      })
+      .filter((entry) => entry.isDirectory() && entry.name.match(/^v\d+$/))
+      .map((entry) => entry.name)
+      .sort(
+        (a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1))
+      );
 
     if (version.list.length === 1) {
       version.from = version.list[0];
-    }
-    else {
+    } else {
       version.from = await inquirer.direct({
         choices: version.list,
         default: version.list[version.list.length - 1],
-        message: 'Migrate from which version',
-        type: 'list'
+        message: "Migrate from which version",
+        type: "list",
       });
 
       version.list = version.list.slice(version.list.indexOf(version.from));

@@ -23,12 +23,12 @@
 import path from 'path';
 import { KuzzleEventEmitter } from './event/kuzzleEventEmitter';
 
-import { murmurHash128 as murmur } from 'murmurhash-native';
-import stringify from 'json-stable-stringify';
-import { Koncorde } from 'koncorde';
-import Bluebird from 'bluebird';
-import segfaultHandler from 'node-segfault-handler';
-import _ from 'lodash';
+import { murmurHash128 as murmur } from "murmurhash-native";
+import stringify from "json-stable-stringify";
+import { Koncorde } from "koncorde";
+import Bluebird from "bluebird";
+import segfaultHandler from "node-segfault-handler";
+import _ from "lodash";
 
 import kuzzleStateEnum from './kuzzleStateEnum';
 import EntryPoint from '../core/network/entryPoint';
@@ -64,18 +64,23 @@ let _kuzzle = null;
 
 
 Reflect.defineProperty(global, 'kuzzle', {
+
   configurable: true,
   enumerable: false,
-  get () {
+  get() {
     if (_kuzzle === null) {
-      throw new Error('Kuzzle instance not found. Did you try to use a live-only feature before starting your application?');
+      throw new Error(
+        "Kuzzle instance not found. Did you try to use a live-only feature before starting your application?"
+      );
     }
 
     return _kuzzle;
   },
-  set (value) {
+  set(value) {
     if (_kuzzle !== null) {
-      throw new Error('Cannot build a Kuzzle instance: another one already exists');
+      throw new Error(
+        "Cannot build a Kuzzle instance: another one already exists"
+      );
     }
 
     _kuzzle = value;
@@ -91,7 +96,7 @@ type ImportStatus = {
   locked?: boolean;
   initialized?: boolean;
   firstCall?: boolean;
-}
+};
 
 export class Kuzzle extends KuzzleEventEmitter {
   readonly config: KuzzleConfiguration;
@@ -177,10 +182,11 @@ export class Kuzzle extends KuzzleEventEmitter {
    */
   public id: string;
 
-  constructor (config: KuzzleConfiguration) {
+  constructor(config: KuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
-      config.plugins.common.pipesBufferSize);
+      config.plugins.common.pipesBufferSize
+    );
 
     global.kuzzle = this;
 
@@ -190,7 +196,7 @@ export class Kuzzle extends KuzzleEventEmitter {
 
     this.log = new Logger();
 
-    this.rootPath = path.resolve(path.join(__dirname, '../..'));
+    this.rootPath = path.resolve(path.join(__dirname, "../.."));
 
     this.internalIndex = new InternalIndexHandler();
     this.pluginsManager = new PluginsManager();
@@ -222,18 +228,18 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @this {Kuzzle}
    */
-  async start (application: any, options: StartOptions = { import: {} }) {
+  async start(application: any, options: StartOptions = { import: {} }) {
     this.registerSignalHandlers();
 
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
-      await this.pipe('kuzzle:state:start');
+      await this.pipe("kuzzle:state:start");
 
       // Koncorde realtime engine
       this.koncorde = new Koncorde({
         maxConditions: this.config.limits.subscriptionConditionsCount,
-        regExpEngine: this.config.realtime.pcreSupport ? 'js' : 're2',
-        seed: this.config.internal.hash.seed
+        regExpEngine: this.config.realtime.pcreSupport ? "js" : "re2",
+        seed: this.config.internal.hash.seed,
       });
 
       await (new CacheEngine()).init();
@@ -241,9 +247,10 @@ export class Kuzzle extends KuzzleEventEmitter {
       const storageEngine = new StorageEngine(virtualIndex);
       await storageEngine.init();
       await (new RealtimeModule()).init();
+
       await this.internalIndex.init();
 
-      await (new SecurityModule()).init();
+      await new SecurityModule().init();
 
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
@@ -272,44 +279,54 @@ export class Kuzzle extends KuzzleEventEmitter {
 
       this.pluginsManager.application = application;
       await this.pluginsManager.init(options.plugins);
-      this.log.info(`[✔] Successfully loaded ${this.pluginsManager.loadedPlugins.length} plugins: ${this.pluginsManager.loadedPlugins.join(', ')}`);
+      this.log.info(
+        `[✔] Successfully loaded ${
+          this.pluginsManager.loadedPlugins.length
+        } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
+      );
 
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
       await this.loadInitialState(options.import, options.support);
 
-      await this.ask('core:security:verify');
+      await this.ask("core:security:verify");
 
       this.router.init();
 
-      this.log.info('[✔] Core components loaded');
+      this.log.info("[✔] Core components loaded");
 
       await this.install(options.installations);
 
-      this.log.info(`[✔] Start "${this.pluginsManager.application.name}" application`);
+      this.log.info(
+        `[✔] Start "${this.pluginsManager.application.name}" application`
+      );
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
-        this.pluginsManager.routes);
+        this.pluginsManager.routes
+      );
 
       // @deprecated
-      await this.pipe('kuzzle:start');
+      await this.pipe("kuzzle:start");
 
-      await this.pipe('kuzzle:state:live');
+      await this.pipe("kuzzle:state:live");
 
       await this.entryPoint.startListening();
 
-      await this.pipe('kuzzle:state:ready');
+      await this.pipe("kuzzle:state:ready");
 
-      this.log.info(`[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`);
+      this.log.info(
+        `[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`
+      );
 
       // @deprecated
-      this.emit('core:kuzzleStart', 'Kuzzle is ready to accept requests');
+      this.emit("core:kuzzleStart", "Kuzzle is ready to accept requests");
 
       this._state = kuzzleStateEnum.RUNNING;
-    }
-    catch (error) {
-      this.log.error(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
+    } catch (error) {
+      this.log.error(
+        `[X] Cannot start Kuzzle ${this.version}: ${error.message}`
+      );
 
       throw error;
     }
@@ -320,17 +337,16 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * This will init the cluster if it's enabled.
    */
-  private async initKuzzleNode (): Promise<string> {
+  private async initKuzzleNode(): Promise<string> {
     let id;
 
     if (this.config.cluster.enabled) {
-      id = await (new Cluster()).init();
+      id = await new Cluster().init();
 
-      this.log.info('[✔] Cluster initialized');
-    }
-    else {
-      id = NameGenerator.generateRandomName({ prefix: 'knode' });
-      this.log.info('[X] Cluster disabled: single node mode.');
+      this.log.info("[✔] Cluster initialized");
+    } else {
+      id = NameGenerator.generateRandomName({ prefix: "knode" });
+      this.log.info("[X] Cluster disabled: single node mode.");
     }
 
     return id;
@@ -341,25 +357,27 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise}
    */
-  async shutdown (): Promise<void> {
+  async shutdown(): Promise<void> {
     this._state = kuzzleStateEnum.SHUTTING_DOWN;
 
-    this.log.info('Initiating shutdown...');
+    this.log.info("Initiating shutdown...");
 
     // Ask the network layer to stop accepting new request
-    this.entryPoint.dispatch('shutdown');
+    this.entryPoint.dispatch("shutdown");
 
-    await this.pipe('kuzzle:shutdown');
+    await this.pipe("kuzzle:shutdown");
 
     // @deprecated
-    this.emit('core:shutdown');
+    this.emit("core:shutdown");
 
     while (this.funnel.remainingRequests !== 0) {
-      this.log.info(`[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`);
+      this.log.info(
+        `[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`
+      );
       await Bluebird.delay(1000);
     }
 
-    this.log.info('Halted.');
+    this.log.info("Halted.");
 
     process.exit(0);
   }
@@ -371,49 +389,54 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async install (installations: InstallationConfig[]): Promise<void> {
-    if (! installations || ! installations.length) {
+  async install(installations: InstallationConfig[]): Promise<void> {
+    if (!installations || !installations.length) {
       return;
     }
 
-    const mutex = new Mutex('backend:installations');
+    const mutex = new Mutex("backend:installations");
     await mutex.lock();
 
     try {
       for (const installation of installations) {
         const isAlreadyInstalled = await this.ask(
-          'core:storage:private:document:exist',
-          'kuzzle',
-          'installations',
-          installation.id );
+          "core:storage:private:document:exist",
+          "kuzzle",
+          "installations",
+          installation.id
+        );
 
-        if (! isAlreadyInstalled) {
+        if (!isAlreadyInstalled) {
           try {
             await installation.handler();
-          }
-          catch (error) {
+          } catch (error) {
             throw kerror.get(
-              'plugin',
-              'runtime',
-              'unexpected_installation_error',
-              installation.id, error);
+              "plugin",
+              "runtime",
+              "unexpected_installation_error",
+              installation.id,
+              error
+            );
           }
 
           await this.ask(
-            'core:storage:private:document:create',
-            'kuzzle',
-            'installations',
+            "core:storage:private:document:create",
+            "kuzzle",
+            "installations",
             {
               description: installation.description,
               handler: installation.handler.toString(),
-              installedAt: Date.now() },
-            { id: installation.id });
+              installedAt: Date.now(),
+            },
+            { id: installation.id }
+          );
 
-          this.log.info(`[✔] Install code "${installation.id}" successfully executed`);
+          this.log.info(
+            `[✔] Install code "${installation.id}" successfully executed`
+          );
         }
       }
-    }
-    finally {
+    } finally {
       await mutex.unlock();
     }
   }
@@ -433,27 +456,27 @@ export class Kuzzle extends KuzzleEventEmitter {
     return super.pipe(event, ...payload);
   }
 
-  private async importUserMappings (
+  private async importUserMappings(
     config: {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.firstCall) {
+    if (!status.firstCall) {
       return;
     }
 
     const toImport = config.toImport;
 
-    if (! _.isEmpty(toImport.userMappings)) {
-      await this.internalIndex.updateMapping('users', toImport.userMappings);
-      await this.internalIndex.refreshCollection('users');
-      this.log.info('[✔] User mappings import successful');
+    if (!_.isEmpty(toImport.userMappings)) {
+      await this.internalIndex.updateMapping("users", toImport.userMappings);
+      await this.internalIndex.refreshCollection("users");
+      this.log.info("[✔] User mappings import successful");
     }
   }
 
-  private async importMappings (
+  private async importMappings(
     config: {
       toImport: ImportConfig;
       toSupport: SupportConfig;
@@ -463,109 +486,106 @@ export class Kuzzle extends KuzzleEventEmitter {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
-    if (! _.isEmpty(toSupport.mappings) && ! _.isEmpty(toImport.mappings)) {
+    if (!_.isEmpty(toSupport.mappings) && !_.isEmpty(toImport.mappings)) {
       throw kerror.get(
-        'plugin',
-        'runtime',
-        'incompatible',
-        '_support.mappings',
-        'import.mappings');
-    }
-    else if (! _.isEmpty(toSupport.mappings)) {
+        "plugin",
+        "runtime",
+        "incompatible",
+        "_support.mappings",
+        "import.mappings"
+      );
+    } else if (!_.isEmpty(toSupport.mappings)) {
       await this.ask(
-        'core:storage:public:mappings:import',
+        "core:storage:public:mappings:import",
         toSupport.mappings,
         {
           /**
            * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
            * we just want to load the mapping in our own index cache and not in the database.
            */
-          indexCacheOnly: status.initialized || ! status.locked,
+          indexCacheOnly: status.initialized || !status.locked,
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
-        });
-      this.log.info('[✔] Mappings import successful');
-    }
-    else if (! _.isEmpty(toImport.mappings)) {
-      await this.ask('core:storage:public:mappings:import',
-        toImport.mappings,
-        {
-          /**
-           * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
-           * we just want to load the mapping in our own index cache and not in the database.
-           */
-          indexCacheOnly: status.initialized || ! status.locked,
-          propagate: false, // Each node needs to do the import themselves
-          refresh: true,
-
-        });
-      this.log.info('[✔] Mappings import successful');
+        }
+      );
+      this.log.info("[✔] Mappings import successful");
+    } else if (!_.isEmpty(toImport.mappings)) {
+      await this.ask("core:storage:public:mappings:import", toImport.mappings, {
+        /**
+         * If it's the first time the mapping are loaded and another node is already importing the mapping into the database
+         * we just want to load the mapping in our own index cache and not in the database.
+         */
+        indexCacheOnly: status.initialized || !status.locked,
+        propagate: false, // Each node needs to do the import themselves
+        refresh: true,
+      });
+      this.log.info("[✔] Mappings import successful");
     }
   }
 
-  private async importFixtures (
+  private async importFixtures(
     config: {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.firstCall) {
+    if (!status.firstCall) {
       return;
     }
 
     const toSupport = config.toSupport;
 
-    if (! _.isEmpty(toSupport.fixtures)) {
-      await this.ask('core:storage:public:document:import', toSupport.fixtures);
-      this.log.info('[✔] Fixtures import successful');
+    if (!_.isEmpty(toSupport.fixtures)) {
+      await this.ask("core:storage:public:document:import", toSupport.fixtures);
+      this.log.info("[✔] Fixtures import successful");
     }
   }
 
-  private async importPermissions (
+  private async importPermissions(
     config: {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
     status: ImportStatus
   ): Promise<void> {
-    if (! status.firstCall) {
+    if (!status.firstCall) {
       return;
     }
 
     const toImport = config.toImport;
     const toSupport = config.toSupport;
 
-    const isPermissionsToImport = ! (
-      _.isEmpty(toImport.profiles)
-      && _.isEmpty(toImport.roles)
-      && _.isEmpty(toImport.users)
+    const isPermissionsToImport = !(
+      _.isEmpty(toImport.profiles) &&
+      _.isEmpty(toImport.roles) &&
+      _.isEmpty(toImport.users)
     );
-    const isPermissionsToSupport = toSupport.securities
-      && ! (
-        _.isEmpty(toSupport.securities.profiles)
-        && _.isEmpty(toSupport.securities.roles)
-        && _.isEmpty(toSupport.securities.users)
+    const isPermissionsToSupport =
+      toSupport.securities &&
+      !(
+        _.isEmpty(toSupport.securities.profiles) &&
+        _.isEmpty(toSupport.securities.roles) &&
+        _.isEmpty(toSupport.securities.users)
       );
     if (isPermissionsToSupport && isPermissionsToImport) {
       throw kerror.get(
-        'plugin',
-        'runtime',
-        'incompatible',
-        '_support.securities',
-        'import profiles roles or users');
-    }
-    else if (isPermissionsToSupport) {
-      await this.ask('core:security:load', toSupport.securities,
-        {
-          force: true,
-          refresh: 'wait_for'
-        });
-      this.log.info('[✔] Securities import successful');
-    }
-    else if (isPermissionsToImport) {
-      await this.ask('core:security:load',
+        "plugin",
+        "runtime",
+        "incompatible",
+        "_support.securities",
+        "import profiles roles or users"
+      );
+    } else if (isPermissionsToSupport) {
+      await this.ask("core:security:load", toSupport.securities, {
+        force: true,
+        refresh: "wait_for",
+      });
+      this.log.info("[✔] Securities import successful");
+    } else if (isPermissionsToImport) {
+      await this.ask(
+        "core:security:load",
         {
           profiles: toImport.profiles,
           roles: toImport.roles,
@@ -574,20 +594,26 @@ export class Kuzzle extends KuzzleEventEmitter {
         {
           onExistingUsers: toImport.onExistingUsers,
           onExistingUsersWarning: true,
-          refresh: 'wait_for',
-        });
-      this.log.info('[✔] Permissions import successful');
+          refresh: "wait_for",
+        }
+      );
+      this.log.info("[✔] Permissions import successful");
     }
   }
   /**
    * Check if every import has been done, if one of them is not finished yet, wait for it
    */
-  private async _waitForImportToFinish () {
+  private async _waitForImportToFinish() {
     const importTypes = Object.keys(this.importTypes);
 
     for (const importType of importTypes) {
       // If the import is done, we pop it from the queue to check the next one
-      if (await this.ask('core:cache:internal:get', `${BACKEND_IMPORT_KEY}:${importType}`)) {
+      if (
+        await this.ask(
+          "core:cache:internal:get",
+          `${BACKEND_IMPORT_KEY}:${importType}`
+        )
+      ) {
         return;
       }
 
@@ -603,15 +629,19 @@ export class Kuzzle extends KuzzleEventEmitter {
    *
    * @returns {Promise<void>}
    */
-  async loadInitialState (toImport: ImportConfig = {}, toSupport: SupportConfig = {}): Promise<void> {
-    if ( _.isEmpty(toImport.mappings)
-      && _.isEmpty(toImport.profiles)
-      && _.isEmpty(toImport.roles)
-      && _.isEmpty(toImport.userMappings)
-      && _.isEmpty(toImport.users)
-      && _.isEmpty(toSupport.fixtures)
-      && _.isEmpty(toSupport.mappings)
-      && _.isEmpty(toSupport.securities)
+  async loadInitialState(
+    toImport: ImportConfig = {},
+    toSupport: SupportConfig = {}
+  ): Promise<void> {
+    if (
+      _.isEmpty(toImport.mappings) &&
+      _.isEmpty(toImport.profiles) &&
+      _.isEmpty(toImport.roles) &&
+      _.isEmpty(toImport.userMappings) &&
+      _.isEmpty(toImport.users) &&
+      _.isEmpty(toSupport.fixtures) &&
+      _.isEmpty(toSupport.mappings) &&
+      _.isEmpty(toSupport.securities)
     ) {
       return;
     }
@@ -623,18 +653,18 @@ export class Kuzzle extends KuzzleEventEmitter {
         const importPayload = {};
 
         switch (type) {
-          case 'fixtures':
-            _.set(importPayload, 'toSupport.fixtures', toSupport.fixtures);
+          case "fixtures":
+            _.set(importPayload, "toSupport.fixtures", toSupport.fixtures);
             break;
-          case 'mappings':
-            _.set(importPayload, 'toSupport.mappings', toSupport.mappings);
-            _.set(importPayload, 'toImport.mappings', toImport.mappings);
+          case "mappings":
+            _.set(importPayload, "toSupport.mappings", toSupport.mappings);
+            _.set(importPayload, "toImport.mappings", toImport.mappings);
             break;
-          case 'permissions':
-            _.set(importPayload, 'toSupport.securities', toSupport.securities);
-            _.set(importPayload, 'toImport.profiles', toImport.profiles);
-            _.set(importPayload, 'toImport.roles', toImport.roles);
-            _.set(importPayload, 'toImport.users', toImport.users);
+          case "permissions":
+            _.set(importPayload, "toSupport.securities", toSupport.securities);
+            _.set(importPayload, "toImport.profiles", toImport.profiles);
+            _.set(importPayload, "toImport.roles", toImport.roles);
+            _.set(importPayload, "toImport.users", toImport.users);
             break;
         }
 
@@ -642,8 +672,9 @@ export class Kuzzle extends KuzzleEventEmitter {
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
 
         const existingHash = await this.ask(
-          'core:cache:internal:get',
-          `${BACKEND_IMPORT_KEY}:${type}`);
+          "core:cache:internal:get",
+          `${BACKEND_IMPORT_KEY}:${type}`
+        );
 
         const initialized = existingHash === importPayloadHash;
         const locked = await mutex.lock();
@@ -651,58 +682,62 @@ export class Kuzzle extends KuzzleEventEmitter {
         await importMethod(
           { toImport, toSupport },
           {
-            firstCall: ! initialized && locked,
+            firstCall: !initialized && locked,
             initialized,
             locked,
           }
         );
 
-        if (! initialized && locked) {
+        if (!initialized && locked) {
           lockedMutex.push(mutex);
 
           await this.ask(
-            'core:cache:internal:store',
+            "core:cache:internal:store",
             `${BACKEND_IMPORT_KEY}:${type}`,
-            importPayloadHash);
+            importPayloadHash
+          );
         }
       }
 
       await this._waitForImportToFinish();
 
-      this.log.info('[✔] Import successful');
-    }
-    finally {
-      await Promise.all(lockedMutex.map(mutex => mutex.unlock()));
+      this.log.info("[✔] Import successful");
+    } finally {
+      await Promise.all(lockedMutex.map((mutex) => mutex.unlock()));
     }
   }
 
-  dump (suffix) {
+  dump(suffix) {
     return this.dumpGenerator.dump(suffix);
   }
 
-  hash (input: any) {
+  hash(input: any) {
     let inString;
 
     switch (typeof input) {
-      case 'string':
-      case 'number':
-      case 'boolean':
+      case "string":
+      case "number":
+      case "boolean":
         inString = input;
         break;
       default:
         inString = stringify(input);
     }
 
-    return murmur(Buffer.from(inString), 'hex', this.config.internal.hash.seed as number);
+    return murmur(
+      Buffer.from(inString),
+      "hex",
+      this.config.internal.hash.seed as number
+    );
   }
 
-  get state () {
+  get state() {
     return this._state;
   }
 
-  set state (value) {
+  set state(value) {
     this._state = value;
-    this.emit('kuzzle:state:change', value);
+    this.emit("kuzzle:state:change", value);
   }
 
   get vault () {
@@ -715,56 +750,60 @@ export class Kuzzle extends KuzzleEventEmitter {
    * - unhandled-rejection
    * - uncaught-exception
    */
-  registerSignalHandlers () {
-    process.removeAllListeners('unhandledRejection');
-    process.on('unhandledRejection', (reason, promise) => {
+  registerSignalHandlers() {
+    process.removeAllListeners("unhandledRejection");
+    process.on("unhandledRejection", (reason, promise) => {
       if (reason !== undefined) {
         if (reason instanceof Error) {
-          this.log.error(`ERROR: unhandledRejection: ${reason.message}. Reason: ${reason.stack}`);
-        }
-        else {
+          this.log.error(
+            `ERROR: unhandledRejection: ${reason.message}. Reason: ${reason.stack}`
+          );
+        } else {
           this.log.error(`ERROR: unhandledRejection: ${reason}`);
         }
-      }
-      else {
+      } else {
         this.log.error(`ERROR: unhandledRejection: ${promise}`);
       }
 
       // Crashing on an unhandled rejection is a good idea during development
       // as it helps spotting code errors. And according to the warning messages,
       // this is what Node.js will do automatically in future versions anyway.
-      if (global.NODE_ENV === 'development') {
-        this.log.error('Kuzzle caught an unhandled rejected promise and will shutdown.');
-        this.log.error('This behavior is only triggered if global.NODE_ENV is set to "development"');
+      if (global.NODE_ENV === "development") {
+        this.log.error(
+          "Kuzzle caught an unhandled rejected promise and will shutdown."
+        );
+        this.log.error(
+          'This behavior is only triggered if global.NODE_ENV is set to "development"'
+        );
 
         throw reason;
       }
     });
 
-    process.removeAllListeners('uncaughtException');
-    process.on('uncaughtException', err => {
+    process.removeAllListeners("uncaughtException");
+    process.on("uncaughtException", (err) => {
       this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
-      this.dumpAndExit('uncaught-exception');
+      this.dumpAndExit("uncaught-exception");
     });
 
     // abnormal termination signals => generate a core dump
-    for (const signal of ['SIGQUIT', 'SIGABRT']) {
+    for (const signal of ["SIGQUIT", "SIGABRT"]) {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.error(`ERROR: Caught signal: ${signal}`);
-        this.dumpAndExit('signal-'.concat(signal.toLowerCase()));
+        this.dumpAndExit("signal-".concat(signal.toLowerCase()));
       });
     }
 
     // signal SIGTRAP is used to generate a kuzzle dump without stopping it
-    process.removeAllListeners('SIGTRAP');
-    process.on('SIGTRAP', () => {
-      this.log.error('Caught signal SIGTRAP => generating a core dump');
-      this.dump('signal-sigtrap');
+    process.removeAllListeners("SIGTRAP");
+    process.on("SIGTRAP", () => {
+      this.log.error("Caught signal SIGTRAP => generating a core dump");
+      this.dump("signal-sigtrap");
     });
 
     // gracefully exits on normal termination
-    for (const signal of ['SIGINT', 'SIGTERM']) {
+    for (const signal of ["SIGINT", "SIGTERM"]) {
       process.removeAllListeners(signal);
       process.on(signal, () => {
         this.log.info(`Caught signal ${signal} => gracefully exit`);
@@ -775,12 +814,11 @@ export class Kuzzle extends KuzzleEventEmitter {
     segfaultHandler.registerHandler();
   }
 
-  async dumpAndExit (suffix) {
+  async dumpAndExit(suffix) {
     if (this.config.dump.enabled) {
       try {
         await this.dump(suffix);
-      }
-      catch (error) {
+      } catch (error) {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

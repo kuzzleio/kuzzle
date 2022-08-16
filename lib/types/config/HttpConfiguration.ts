@@ -6,7 +6,6 @@
  */
 
 export type HttpConfiguration = {
-
   routes: any;
   /**
    * Sets the default Access-Control-Allow-Origin HTTP
@@ -42,8 +41,8 @@ export type HttpConfiguration = {
    * Allows browser clients to connect to Kuzzle with cookies.
    *   /!\ This should not be allowed if the "http.accessControlAllowOrigin"
    *   configuration contains a wildcard ("*").
-   * 
+   *
    * @default true
-  */
+   */
   cookieAuthentication: boolean;
-}
+};

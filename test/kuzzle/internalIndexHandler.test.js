@@ -1,15 +1,15 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
-const should = require('should');
-const mockrequire = require('mock-require');
-const { TimeoutError } = require('bluebird');
+const sinon = require("sinon");
+const should = require("should");
+const mockrequire = require("mock-require");
+const { TimeoutError } = require("bluebird");
 
-const { InternalError: KuzzleInternalError } = require('../../index');
-const KuzzleMock = require('../mocks/kuzzle.mock');
-const MutexMock = require('../mocks/mutex.mock');
+const { InternalError: KuzzleInternalError } = require("../../index");
+const KuzzleMock = require("../mocks/kuzzle.mock");
+const MutexMock = require("../mocks/mutex.mock");
 
-describe('#kuzzle/InternalIndexHandler', () => {
+describe("#kuzzle/InternalIndexHandler", () => {
   let InternalIndexHandler;
   let internalIndexHandler;
   let kuzzle;
@@ -22,30 +22,32 @@ describe('#kuzzle/InternalIndexHandler', () => {
     internalIndexName = kuzzle.config.services.storageEngine.internalIndex.name;
   });
 
-  describe('#init', () => {
+  describe("#init", () => {
     before(() => {
-      mockrequire('../../lib/util/mutex', { Mutex: MutexMock });
+      mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
 
       // the shared object "Store" also uses mutexes that we need to mock
-      mockrequire.reRequire('../../lib/core/shared/store');
+      mockrequire.reRequire("../../lib/core/shared/store");
 
-      InternalIndexHandler = mockrequire.reRequire('../../lib/kuzzle/internalIndexHandler');
+      InternalIndexHandler = mockrequire.reRequire(
+        "../../lib/kuzzle/internalIndexHandler"
+      );
     });
 
     after(() => {
       mockrequire.stopAll();
     });
 
-    it('should initialize internal collections', async () => {
+    it("should initialize internal collections", async () => {
       const collections = {
-        foo: { name: 'foo' },
-        bar: { name: 'bar' },
-        baz: { name: 'baz' },
+        foo: { name: "foo" },
+        bar: { name: "bar" },
+        baz: { name: "baz" },
       };
 
       kuzzle.config.services.storageEngine.internalIndex = {
         collections,
-        name: 'fooindex',
+        name: "fooindex",
       };
 
       internalIndexHandler = new InternalIndexHandler();
@@ -53,110 +55,126 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.init();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:collection:create',
-        'fooindex',
-        'foo',
-        { mappings: collections.foo });
+        "core:storage:private:collection:create",
+        "fooindex",
+        "foo",
+        { mappings: collections.foo }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:collection:create',
-        'fooindex',
-        'bar',
-        { mappings: collections.bar });
+        "core:storage:private:collection:create",
+        "fooindex",
+        "bar",
+        { mappings: collections.bar }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:collection:create',
-        'fooindex',
-        'baz',
-        { mappings: collections.baz });
+        "core:storage:private:collection:create",
+        "fooindex",
+        "baz",
+        { mappings: collections.baz }
+      );
     });
 
-    it('should bootstrap if able to acquire a mutex lock', async () => {
-      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
+    it("should bootstrap if able to acquire a mutex lock", async () => {
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
 
-      sinon.stub(internalIndexHandler, '_bootstrapSequence').resolves();
+      sinon.stub(internalIndexHandler, "_bootstrapSequence").resolves();
 
       await internalIndexHandler.init();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:exist',
+        "core:storage:private:document:exist",
         internalIndexName,
-        'config',
-        internalIndexHandler._BOOTSTRAP_DONE_ID);
+        "config",
+        internalIndexHandler._BOOTSTRAP_DONE_ID
+      );
 
       const mutex = MutexMock.__getLastMutex();
 
-      should(mutex.resource).eql('InternalIndexBootstrap');
+      should(mutex.resource).eql("InternalIndexBootstrap");
       should(mutex.lock).calledOnce();
       should(mutex.unlock).calledOnce();
 
       should(internalIndexHandler._bootstrapSequence).calledOnce();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
+        "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID });
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+      );
     });
 
-    it('should not bootstrap if the bootstrap document is present', async () => {
-      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(true);
+    it("should not bootstrap if the bootstrap document is present", async () => {
+      kuzzle.ask.withArgs("core:storage:private:document:exist").resolves(true);
 
-      sinon.stub(internalIndexHandler, '_bootstrapSequence').resolves();
+      sinon.stub(internalIndexHandler, "_bootstrapSequence").resolves();
 
       await internalIndexHandler.init();
 
       should(internalIndexHandler._bootstrapSequence).not.called();
 
       should(kuzzle.ask).not.calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
+        "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID });
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+      );
     });
 
-    it('should not mark the indexes as bootstrapped if a failure occured', async () => {
+    it("should not mark the indexes as bootstrapped if a failure occured", async () => {
       const err = new Error();
-      sinon.stub(internalIndexHandler, '_bootstrapSequence').rejects(err);
+      sinon.stub(internalIndexHandler, "_bootstrapSequence").rejects(err);
 
-      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
 
       await should(internalIndexHandler.init()).rejectedWith(err);
 
       should(kuzzle.ask).not.calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
+        "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID });
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+      );
     });
 
-    it('should wrap bootstrap timeout errors', async () => {
+    it("should wrap bootstrap timeout errors", async () => {
       const err = new TimeoutError();
 
-      sinon.stub(internalIndexHandler, '_bootstrapSequence').rejects(err);
+      sinon.stub(internalIndexHandler, "_bootstrapSequence").rejects(err);
 
-      kuzzle.ask.withArgs('core:storage:private:document:exist').resolves(false);
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
 
-      await should(internalIndexHandler.init())
-        .rejectedWith(KuzzleInternalError, { id: 'services.storage.bootstrap_timeout' });
+      await should(internalIndexHandler.init()).rejectedWith(
+        KuzzleInternalError,
+        { id: "services.storage.bootstrap_timeout" }
+      );
 
       should(kuzzle.ask).not.calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
+        "config",
         sinon.match({ timestamp: sinon.match.number }),
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID });
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+      );
     });
   });
 
-  describe('#_bootstrapSequence', () => {
-    it('should trigger a complete bootstrap of the internal structures', async () => {
-      sinon.stub(internalIndexHandler, 'createInitialSecurities');
-      sinon.stub(internalIndexHandler, 'createInitialValidations');
-      sinon.stub(internalIndexHandler, '_persistSecret');
+  describe("#_bootstrapSequence", () => {
+    it("should trigger a complete bootstrap of the internal structures", async () => {
+      sinon.stub(internalIndexHandler, "createInitialSecurities");
+      sinon.stub(internalIndexHandler, "createInitialValidations");
+      sinon.stub(internalIndexHandler, "_persistSecret");
 
       await internalIndexHandler._bootstrapSequence();
 
@@ -165,109 +183,116 @@ describe('#kuzzle/InternalIndexHandler', () => {
       should(internalIndexHandler._persistSecret).called();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
+        "config",
         sinon.match({ version: sinon.match.string }),
-        { id: internalIndexHandler._DATAMODEL_VERSION_ID });
+        { id: internalIndexHandler._DATAMODEL_VERSION_ID }
+      );
     });
   });
 
-  describe('#createInitialSecurities', () => {
-    it('should bootstrap default roles', async () => {
+  describe("#createInitialSecurities", () => {
+    it("should bootstrap default roles", async () => {
       await internalIndexHandler.createInitialSecurities();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'roles',
-        'admin',
+        "roles",
+        "admin",
         {
           controllers: {
-            '*': {
+            "*": {
               actions: {
-                '*': true,
+                "*": true,
               },
             },
           },
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'roles',
-        'default',
+        "roles",
+        "default",
         {
           controllers: {
-            '*': {
+            "*": {
               actions: {
-                '*': true,
+                "*": true,
               },
             },
           },
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'roles',
-        'anonymous',
+        "roles",
+        "anonymous",
         {
           controllers: {
-            '*': {
+            "*": {
               actions: {
-                '*': true,
+                "*": true,
               },
             },
           },
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
     });
 
-    it('should bootstrap default profiles', async () => {
+    it("should bootstrap default profiles", async () => {
       await internalIndexHandler.createInitialSecurities();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'profiles',
-        'admin',
+        "profiles",
+        "admin",
         {
-          policies: [ { roleId: 'admin' } ],
+          policies: [{ roleId: "admin" }],
           rateLimit: 0,
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'profiles',
-        'default',
+        "profiles",
+        "default",
         {
-          policies: [ { roleId: 'default' } ],
+          policies: [{ roleId: "default" }],
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'profiles',
-        'anonymous',
+        "profiles",
+        "anonymous",
         {
-          policies: [ { roleId: 'anonymous' } ],
+          policies: [{ roleId: "anonymous" }],
         },
-        { refresh: 'wait_for' });
+        { refresh: "wait_for" }
+      );
     });
   });
 
-  describe('#createInitialValidations', () => {
-    it('should bootstrap default validation rules', async () => {
+  describe("#createInitialValidations", () => {
+    it("should bootstrap default validation rules", async () => {
       kuzzle.config.validation = {
         index: {
           collection: {
-            foo: 'bar',
+            foo: "bar",
           },
         },
       };
@@ -275,85 +300,91 @@ describe('#kuzzle/InternalIndexHandler', () => {
       await internalIndexHandler.createInitialValidations();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:createOrReplace',
+        "core:storage:private:document:createOrReplace",
         internalIndexName,
-        'validations',
-        'index#collection',
-        kuzzle.config.validation.index.collection);
+        "validations",
+        "index#collection",
+        kuzzle.config.validation.index.collection
+      );
     });
   });
 
-  describe('#_persistSecret', () => {
-    const randomBytesMock = sinon.stub().returns(Buffer.from('12345'));
+  describe("#_persistSecret", () => {
+    const randomBytesMock = sinon.stub().returns(Buffer.from("12345"));
 
     before(() => {
-      mockrequire('crypto', {
+      mockrequire("crypto", {
         randomBytes: randomBytesMock,
       });
 
-      InternalIndexHandler = mockrequire.reRequire('../../lib/kuzzle/internalIndexHandler');
+      InternalIndexHandler = mockrequire.reRequire(
+        "../../lib/kuzzle/internalIndexHandler"
+      );
     });
 
     after(() => {
-      mockrequire.stop('crypto');
+      mockrequire.stop("crypto");
     });
 
     beforeEach(() => {
       randomBytesMock.resetHistory();
     });
 
-    it('should use the configured seed, if one is present', async () => {
-      kuzzle.config.security.jwt.secret = 'foobar';
+    it("should use the configured seed, if one is present", async () => {
+      kuzzle.config.security.jwt.secret = "foobar";
 
       await internalIndexHandler._persistSecret();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
-        sinon.match({ seed: 'foobar' }),
-        { id: internalIndexHandler._JWT_SECRET_ID });
+        "config",
+        sinon.match({ seed: "foobar" }),
+        { id: internalIndexHandler._JWT_SECRET_ID }
+      );
 
       should(randomBytesMock).not.called();
     });
 
-    it('should auto-generate a new random seed if none is present in the config file', async () => {
+    it("should auto-generate a new random seed if none is present in the config file", async () => {
       await internalIndexHandler._persistSecret();
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:create',
+        "core:storage:private:document:create",
         internalIndexName,
-        'config',
-        sinon.match({ seed: randomBytesMock().toString('hex') }),
-        { id: internalIndexHandler._JWT_SECRET_ID });
+        "config",
+        sinon.match({ seed: randomBytesMock().toString("hex") }),
+        { id: internalIndexHandler._JWT_SECRET_ID }
+      );
 
       should(randomBytesMock).calledWith(512);
     });
 
-    it('should forward document creation rejections', () => {
+    it("should forward document creation rejections", () => {
       const err = new Error();
 
-      kuzzle.ask.withArgs('core:storage:private:document:create').rejects(err);
+      kuzzle.ask.withArgs("core:storage:private:document:create").rejects(err);
 
       return should(internalIndexHandler._persistSecret()).rejectedWith(err);
     });
   });
 
-  describe('#getSecret', () => {
-    it('should fetch the secret seed from the storage space', async () => {
-      kuzzle.ask.withArgs('core:storage:private:document:get').resolves({
+  describe("#getSecret", () => {
+    it("should fetch the secret seed from the storage space", async () => {
+      kuzzle.ask.withArgs("core:storage:private:document:get").resolves({
         _source: {
-          seed: 'foobar',
+          seed: "foobar",
         },
       });
 
-      await should(internalIndexHandler.getSecret()).fulfilledWith('foobar');
+      await should(internalIndexHandler.getSecret()).fulfilledWith("foobar");
 
       should(kuzzle.ask).calledWith(
-        'core:storage:private:document:get',
+        "core:storage:private:document:get",
         internalIndexName,
-        'config',
-        internalIndexHandler._JWT_SECRET_ID);
+        "config",
+        internalIndexHandler._JWT_SECRET_ID
+      );
     });
   });
 });

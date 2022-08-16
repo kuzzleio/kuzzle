@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Client } from '@elastic/elasticsearch';
+import { Client } from "@elastic/elasticsearch";
 
 import {ElasticSearch} from '../../service/storage/elasticsearch';
 import { JSONObject } from '../../../index';
@@ -29,7 +29,7 @@ export class BackendStorage extends ApplicationManager {
   private _client: Client = null;
   private _Client: new (clientConfig?: any) => Client = null;
 
-  constructor (application: Backend) {
+  constructor(application: Backend) {
     super(application);
   }
 
@@ -39,12 +39,13 @@ export class BackendStorage extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get StorageClient (): new (clientConfig?: any) => Client {
-    if (! this._Client) {
+  get StorageClient(): new (clientConfig?: any) => Client {
+    if (!this._Client) {
       const kuzzle = this._kuzzle;
 
       this._Client = function ESClient (clientConfig: JSONObject = {}) {
         return ElasticSearch.buildClient({
+
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
         });
@@ -63,7 +64,6 @@ export class BackendStorage extends ApplicationManager {
       this._client = ElasticSearch
         .buildClient(this._kuzzle.config.services.storageEngine.client);
     }
-
     return this._client;
   }
 }

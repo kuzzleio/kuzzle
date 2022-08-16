@@ -1,44 +1,46 @@
-'use strict';
+"use strict";
 
-const util = require('util');
+const util = require("util");
 
-const should = require('should');
-const mockrequire = require('mock-require');
+const should = require("should");
+const mockrequire = require("mock-require");
 
-const KuzzleMock = require('../../mocks/kuzzle.mock');
+const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-describe('Backend', () => {
+describe("Backend", () => {
   let application;
   let Backend;
 
   beforeEach(() => {
-    mockrequire('../../../lib/kuzzle', KuzzleMock);
+    mockrequire("../../../lib/kuzzle", KuzzleMock);
 
-    ({ Backend } = mockrequire.reRequire('../../../lib/core/backend/backend'));
+    ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
 
-    application = new Backend('black-mesa');
+    application = new Backend("black-mesa");
   });
 
   afterEach(() => {
     mockrequire.stopAll();
   });
 
-  describe('Logger', () => {
-    describe('#_log', () => {
-      it('should exposes log methods and call kuzzle ones', async () => {
+  describe("Logger", () => {
+    describe("#_log", () => {
+      it("should exposes log methods and call kuzzle ones", async () => {
         await application.start();
 
-        application.log.debug('debug');
-        application.log.info('info');
-        application.log.warn('warn');
-        application.log.error('error');
-        application.log.verbose({ info: 'verbose' });
+        application.log.debug("debug");
+        application.log.info("info");
+        application.log.warn("warn");
+        application.log.error("error");
+        application.log.verbose({ info: "verbose" });
 
-        should(global.kuzzle.log.debug).be.calledWith(util.inspect('debug'));
-        should(global.kuzzle.log.info).be.calledWith(util.inspect('info'));
-        should(global.kuzzle.log.warn).be.calledWith(util.inspect('warn'));
-        should(global.kuzzle.log.error).be.calledWith(util.inspect('error'));
-        should(global.kuzzle.log.verbose).be.calledWith(util.inspect({ info: 'verbose' }));
+        should(global.kuzzle.log.debug).be.calledWith(util.inspect("debug"));
+        should(global.kuzzle.log.info).be.calledWith(util.inspect("info"));
+        should(global.kuzzle.log.warn).be.calledWith(util.inspect("warn"));
+        should(global.kuzzle.log.error).be.calledWith(util.inspect("error"));
+        should(global.kuzzle.log.verbose).be.calledWith(
+          util.inspect({ info: "verbose" })
+        );
       });
     });
   });

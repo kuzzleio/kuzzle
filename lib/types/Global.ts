@@ -2,6 +2,7 @@ import { Backend } from '../core/backend';
 import { Kuzzle } from '../kuzzle/kuzzle';
 
 
+
 /* eslint-disable @typescript-eslint/no-namespace */
 
 declare global {

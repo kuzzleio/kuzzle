@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import * as kerror from '../../kerror';
-import { EventHandler } from '../../types';
-import { ApplicationManager } from './index';
+import * as kerror from "../../kerror";
+import { EventHandler } from "../../types";
+import { ApplicationManager } from "./index";
 
-const assertionError = kerror.wrap('plugin', 'assert');
-const runtimeError = kerror.wrap('plugin', 'runtime');
+const assertionError = kerror.wrap("plugin", "assert");
+const runtimeError = kerror.wrap("plugin", "runtime");
 
 export class BackendPipe extends ApplicationManager {
   /**
@@ -33,32 +33,37 @@ export class BackendPipe extends ApplicationManager {
    * @param event - Event name
    * @param handler - Function to execute when the event is triggered
    */
-  register (event: string, handler: EventHandler, options: any = {}): string | void {
+  register(
+    event: string,
+    handler: EventHandler,
+    options: any = {}
+  ): string | void {
     if (this._application.started && options.dynamic !== true) {
-      throw runtimeError.get('already_started', 'pipe.register');
+      throw runtimeError.get("already_started", "pipe.register");
     }
 
-    if (typeof handler !== 'function') {
-      throw assertionError.get('invalid_pipe', event);
+    if (typeof handler !== "function") {
+      throw assertionError.get("invalid_pipe", event);
     }
 
     if (this._application.started) {
       return global.kuzzle.pluginsManager.registerPipe(
         global.kuzzle.pluginsManager.application,
         event,
-        handler);
+        handler
+      );
     }
 
-    if (! this._application._pipes[event]) {
+    if (!this._application._pipes[event]) {
       this._application._pipes[event] = [];
     }
 
     this._application._pipes[event].push(handler);
   }
 
-  unregister (pipeId: string): void {
-    if (! this._application.started) {
-      throw runtimeError.get('unavailable_before_start', 'pipe.unregister');
+  unregister(pipeId: string): void {
+    if (!this._application.started) {
+      throw runtimeError.get("unavailable_before_start", "pipe.unregister");
     }
 
     global.kuzzle.pluginsManager.unregisterPipe(pipeId);

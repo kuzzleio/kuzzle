@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 /**
  * Represents a realtime subscription of a connection to a room.
@@ -44,13 +44,13 @@ export class Subscription {
 
   public kuid: string;
 
-  constructor (
+  constructor(
     index: string,
     collection: string,
     filters: JSONObject,
     roomId: string,
     connectionId: string,
-    user: { _id: string },
+    user: { _id: string }
   ) {
     this.connectionId = connectionId;
     this.roomId = roomId;
@@ -59,6 +59,6 @@ export class Subscription {
     this.collection = collection;
     this.filters = filters;
 
-    this.kuid = user && user._id || null;
+    this.kuid = (user && user._id) || null;
   }
 }

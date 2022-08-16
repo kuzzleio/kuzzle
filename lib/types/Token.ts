@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 /**
  * Kuzzle authentication token.
@@ -65,4 +65,3 @@ export interface Token extends JSONObject {
    */
   type: string;
 }
-

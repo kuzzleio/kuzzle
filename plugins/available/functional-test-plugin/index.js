@@ -1,3 +1,3 @@
-'use strict';
+"use strict";
 
-module.exports = require('./functionalTestPlugin');
+module.exports = require("./functionalTestPlugin");

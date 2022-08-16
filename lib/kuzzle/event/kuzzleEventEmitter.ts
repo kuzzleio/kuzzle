@@ -20,6 +20,7 @@
  */
 
 
+
 // Most of the functions exposed in this file should be viewed as
 // critical section of code.
 
@@ -45,6 +46,7 @@ class PluginPipeDefinition {
   public pipeId: any;
 
   constructor (event, handler, pipeId = null) {
+
     this.event = event;
     this.handler = handler;
 
@@ -61,6 +63,7 @@ export class KuzzleEventEmitter extends EventEmitter {
   public coreAnswerers: any;
   public coreSyncedAnswerers: any;
   constructor (maxConcurrentPipes, pipesBufferSize) {
+
     super();
     this.superEmit = super.emit;
     this.pipeRunner = new PipeRunner(maxConcurrentPipes, pipesBufferSize);
@@ -92,10 +95,13 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {String}   event
    * @param  {Function} fn
    */
-  onPipe (event, fn) {
-    assert(typeof fn === 'function', `Cannot listen to pipe event ${event}: "${fn}" is not a function`);
+  onPipe(event, fn) {
+    assert(
+      typeof fn === "function",
+      `Cannot listen to pipe event ${event}: "${fn}" is not a function`
+    );
 
-    if (! this.corePipes.has(event)) {
+    if (!this.corePipes.has(event)) {
       this.corePipes.set(event, []);
     }
 
@@ -109,14 +115,19 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {String}   event
    * @param  {Function} fn
    */
-  onAsk (event, fn) {
-    assert(typeof fn === 'function', `Cannot listen to ask event "${event}": "${fn}" is not a function`);
-    assert(! this.coreAnswerers.has(event), `Cannot add a listener to the ask event "${event}": event has already an answerer`);
+  onAsk(event, fn) {
+    assert(
+      typeof fn === "function",
+      `Cannot listen to ask event "${event}": "${fn}" is not a function`
+    );
+    assert(
+      !this.coreAnswerers.has(event),
+      `Cannot add a listener to the ask event "${event}": event has already an answerer`
+    );
 
     this.coreAnswerers.set(event, fn);
   }
 
-  
   /**
    * Registers a core 'callback' answerer
    * There can only be 0 or 1 answerer per callback event.
@@ -124,9 +135,15 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {String}   event
    * @param  {Function} fn
    */
-  onCall (event, fn) {
-    assert(typeof fn === 'function', `Cannot register callback for event "${event}": "${fn}" is not a function`);
-    assert(! this.coreSyncedAnswerers.has(event), `Cannot register callback for event "${event}": a callback has already been registered`);
+  onCall(event, fn) {
+    assert(
+      typeof fn === "function",
+      `Cannot register callback for event "${event}": "${fn}" is not a function`
+    );
+    assert(
+      !this.coreSyncedAnswerers.has(event),
+      `Cannot register callback for event "${event}": a callback has already been registered`
+    );
 
     this.coreSyncedAnswerers.set(event, fn);
   }
@@ -140,6 +157,7 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {*} data
    */
   emit (event, data): boolean {
+
     const events = getWildcardEvents(event);
     debug('Triggering event "%s" with data: %o', event, data);
 
@@ -168,13 +186,16 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {*} payload
    * @returns {Promise.<*>|null}
    */
-  pipe (event, ...payload) {
+  pipe(event, ...payload) {
     debug('Triggering pipe "%s" with payload: %o', event, payload);
 
     let callback = null;
 
     // safe: a pipe's payload can never contain functions
-    if (payload.length > 0 && typeof payload[payload.length - 1] === 'function') {
+    if (
+      payload.length > 0 &&
+      typeof payload[payload.length - 1] === "function"
+    ) {
       callback = payload.pop();
     }
 
@@ -185,7 +206,7 @@ export class KuzzleEventEmitter extends EventEmitter {
       const targets = this.pluginPipes.get(events[i]);
 
       if (targets) {
-        targets.forEach(t => funcs.push(t));
+        targets.forEach((t) => funcs.push(t));
       }
     }
 
@@ -200,8 +221,7 @@ export class KuzzleEventEmitter extends EventEmitter {
 
     if (funcs.length === 0) {
       pipeCallback.call(callbackContext, null, ...payload);
-    }
-    else {
+    } else {
       this.pipeRunner.run(funcs, payload, pipeCallback, callbackContext);
     }
 
@@ -211,21 +231,28 @@ export class KuzzleEventEmitter extends EventEmitter {
   /**
    * Emits an "ask" event to get information about the provided payload
    */
-  async ask (event, ...payload) {
+  async ask(event, ...payload) {
     debug('Triggering ask "%s" with payload: %o', event, payload);
 
     const fn = this.coreAnswerers.get(event);
 
-    if (! fn) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', `the requested ask event '${event}' doesn't have an answerer`);
+    if (!fn) {
+      throw kerror.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `the requested ask event '${event}' doesn't have an answerer`
+      );
     }
 
     const response = await fn(...payload);
 
-    getWildcardEvents(event).forEach(ev => super.emit(ev, {
-      args: payload,
-      response,
-    }));
+    getWildcardEvents(event).forEach((ev) =>
+      super.emit(ev, {
+        args: payload,
+        response,
+      })
+    );
 
     return response;
   }
@@ -233,21 +260,28 @@ export class KuzzleEventEmitter extends EventEmitter {
   /**
    * Calls a callback to get information about the provided payload
    */
-  call (event, ...payload) {
+  call(event, ...payload) {
     debug('Triggering callback "%s" with payload: %o', event, payload);
 
     const fn = this.coreSyncedAnswerers.get(event);
 
-    if (! fn) {
-      throw kerror.get('core', 'fatal', 'assertion_failed', `the requested callback event '${event}' doesn't have an answerer`);
+    if (!fn) {
+      throw kerror.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `the requested callback event '${event}' doesn't have an answerer`
+      );
     }
 
     const response = fn(...payload);
 
-    getWildcardEvents(event).forEach(ev => super.emit(ev, {
-      args: payload,
-      response,
-    }));
+    getWildcardEvents(event).forEach((ev) =>
+      super.emit(ev, {
+        args: payload,
+        response,
+      })
+    );
 
     return response;
   }
@@ -256,35 +290,32 @@ export class KuzzleEventEmitter extends EventEmitter {
    * Registers a plugin hook.
    * Catch any error in the handler and emit the hook:onError event.
    */
-  registerPluginHook (pluginName, event, fn) {
+  registerPluginHook(pluginName, event, fn) {
     this.on(event, (...args) => {
       try {
         const ret = fn(...args, event);
 
-        if (typeof ret === 'object' && typeof ret.catch === 'function') {
-          ret.catch(error => {
-            if (event !== 'hook:onError') {
-              this.emit('hook:onError', { error, event, pluginName });
-            }
-            else {
-              this.emit('plugin:hook:loop-error', { error, pluginName });
+        if (typeof ret === "object" && typeof ret.catch === "function") {
+          ret.catch((error) => {
+            if (event !== "hook:onError") {
+              this.emit("hook:onError", { error, event, pluginName });
+            } else {
+              this.emit("plugin:hook:loop-error", { error, pluginName });
             }
           });
         }
-      }
-      catch (error) {
-        if (event !== 'hook:onError') {
-          this.emit('hook:onError', { error, event, pluginName });
-        }
-        else {
-          this.emit('plugin:hook:loop-error', { error, pluginName });
+      } catch (error) {
+        if (event !== "hook:onError") {
+          this.emit("hook:onError", { error, event, pluginName });
+        } else {
+          this.emit("plugin:hook:loop-error", { error, pluginName });
         }
       }
     });
   }
 
-  registerPluginPipe (event, handler) {
-    if (! this.pluginPipes.has(event)) {
+  registerPluginPipe(event, handler) {
+    if (!this.pluginPipes.has(event)) {
       this.pluginPipes.set(event, []);
     }
 
@@ -297,19 +328,18 @@ export class KuzzleEventEmitter extends EventEmitter {
     return definition.pipeId;
   }
 
-  unregisterPluginPipe (pipeId) {
+  unregisterPluginPipe(pipeId) {
     const definition = this.pluginPipeDefinitions.get(pipeId);
 
-    if (! definition) {
-      throw kerror.get('plugin', 'runtime', 'unknown_pipe', pipeId);
+    if (!definition) {
+      throw kerror.get("plugin", "runtime", "unknown_pipe", pipeId);
     }
 
     const handlers = this.pluginPipes.get(definition.event);
     handlers.splice(handlers.indexOf(definition.handler), 1);
     if (handlers.length > 0) {
       this.pluginPipes.set(definition.event, handlers);
-    }
-    else {
+    } else {
       this.pluginPipes.delete(definition.event);
     }
 
@@ -322,7 +352,7 @@ export class KuzzleEventEmitter extends EventEmitter {
    * @param  {string}  event
    * @return {Boolean}       [description]
    */
-  hasAskAnswerer (event) {
+  hasAskAnswerer(event) {
     return this.coreAnswerers.has(event);
   }
 }
@@ -336,7 +366,7 @@ export class KuzzleEventEmitter extends EventEmitter {
  *
  * @warning Critical section of code
  */
-async function pipeCallback (error, ...updated) {
+async function pipeCallback(error, ...updated) {
   /* eslint-disable no-invalid-this */
   if (error) {
     this.promback.reject(error);
@@ -346,7 +376,7 @@ async function pipeCallback (error, ...updated) {
   const corePipes = this.instance.corePipes.get(this.targetEvent);
 
   if (corePipes) {
-    await Bluebird.map(corePipes, fn => fn(...updated));
+    await Bluebird.map(corePipes, (fn) => fn(...updated));
   }
 
   for (let i = 0; i < this.events.length; i++) {
@@ -369,9 +399,9 @@ async function pipeCallback (error, ...updated) {
  * @param {String} event
  * @returns {Array<String>} wildcard events
  */
-const getWildcardEvents = memoize(event => {
+const getWildcardEvents = memoize((event) => {
   const events = [event];
-  const delimIndex = event.lastIndexOf(':');
+  const delimIndex = event.lastIndexOf(":");
 
   if (delimIndex === -1) {
     return events;
@@ -380,7 +410,7 @@ const getWildcardEvents = memoize(event => {
   const scope = event.slice(0, delimIndex);
   const name = event.slice(delimIndex + 1);
 
-  ['before', 'after'].forEach(prefix => {
+  ["before", "after"].forEach((prefix) => {
     if (name.startsWith(prefix)) {
       events.push(`${scope}:${prefix}*`);
     }

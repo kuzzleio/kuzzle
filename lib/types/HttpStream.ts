@@ -19,12 +19,11 @@
  * limitations under the License.
  */
 
-import { Readable } from 'stream';
-
+import { Readable } from "stream";
 
 export type HttpStreamProperties = {
   totalBytes?: number;
-}
+};
 
 /**
  * A simple class used to wrap a Readable stream
@@ -35,11 +34,14 @@ export class HttpStream {
   public readonly totalBytes: number;
   private _destroyed = false;
 
-  constructor (
+  private get readableState() {
+    // @ts-ignore
+    return this.stream._readableState;
+  }
+
+  constructor(
     readableStream: Readable,
-    {
-      totalBytes = -1
-    }: HttpStreamProperties = {}
+    { totalBytes = -1 }: HttpStreamProperties = {}
   ) {
     this.stream = readableStream;
     this.totalBytes = totalBytes;
@@ -49,24 +51,24 @@ export class HttpStream {
   /**
    * Returns if the stream is errored
    */
-  get errored (): boolean {
-    // @ts-ignore
-    return this.stream._readableState.errored !== null // @ts-ignore
-        && this.stream._readableState.errored !== undefined;
+  get errored(): boolean {
+    return (
+      this.readableState.errored !== null &&
+      this.readableState.errored !== undefined
+    );
   }
 
   /**
    * Get the error
    */
-  get error (): Error {
-    // @ts-ignore
-    return this.stream._readableState.errored;
+  get error(): Error {
+    return this.readableState.errored;
   }
 
   /**
    * Returns if the stream has been destroyed
    */
-  get destroyed (): boolean {
+  get destroyed(): boolean {
     return this._destroyed;
   }
 
@@ -74,7 +76,7 @@ export class HttpStream {
    * Destroy the stream
    * true if the stream has been destroyed
    */
-  destroy (): boolean {
+  destroy(): boolean {
     if (this._destroyed) {
       return false;
     }
