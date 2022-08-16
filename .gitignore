@@ -203,9 +203,11 @@ lib/types/realtime/RealtimeScope.js
 lib/types/realtime/RealtimeUsers.js
 lib/types/realtime/RoomList.js
 lib/util/array.js
+lib/util/async.js
 lib/util/bufferedPassThrough.js
 lib/util/crypto.js
 lib/util/dump-collection.js
+lib/util/esRequest.js
 lib/util/inflector.js
 lib/util/interfaces.js
 lib/util/koncordeCompat.js

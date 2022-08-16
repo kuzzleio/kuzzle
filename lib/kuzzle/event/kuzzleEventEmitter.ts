@@ -55,6 +55,7 @@ export class KuzzleEventEmitter extends EventEmitter {
   public pipeRunner: any;
   public pluginPipes: any;
   public pluginPipeDefinitions: any;
+  //eslint-disable-next-line @typescript-eslint/ban-types
   public corePipes: Map<string, Function[]>;
   public coreAnswerers: any;
   public coreSyncedAnswerers: any;
@@ -366,7 +367,7 @@ async function pipeCallback(error, ...updated) {
     this.promback.reject(error);
     return;
   }
-
+  //eslint-disable-next-line @typescript-eslint/ban-types
   const corePipes: Function[] = this.instance.corePipes.get(this.targetEvent);
 
   if (corePipes) {
