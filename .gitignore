@@ -128,7 +128,10 @@ lib/core/security/profileRepository.js
 lib/core/shared/KoncordeWrapper.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
+lib/core/storage/clientAdapter.js
 lib/core/storage/indexCache.js
+lib/core/storage/storageEngine.js
+lib/core/storage/storeScopeEnum.js
 lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js
 lib/kerror/errors/externalServiceError.js
@@ -148,10 +151,13 @@ lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
 lib/kerror/index.js
 lib/kuzzle/kuzzle.js
+lib/kuzzle/event/kuzzleEventEmitter.js
 lib/model/security/profile.js
 lib/model/security/role.js
 lib/model/security/token.js
 lib/model/security/user.js
+lib/service/service.js
+lib/service/storage/elasticsearch.js
 lib/types/Controller.js
 lib/types/ControllerDefinition.js
 lib/types/ControllerRights.js
