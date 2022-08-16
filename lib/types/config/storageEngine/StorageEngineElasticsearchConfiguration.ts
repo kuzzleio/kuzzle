@@ -309,12 +309,12 @@ export type StorageEngineElasticsearch = {
             installedAt: { type: "date" };
           };
         };
-        "virtual-indexes": {
-          dynamic: "strict";
-          properties: {
-            real: { type: "text" };
-            virtual: { type: "text" };
-          };
+      };
+      "virtual-indexes": {
+        dynamic: "strict";
+        properties: {
+          real: { type: "text" };
+          virtual: { type: "text" };
         };
       };
     };

@@ -23,10 +23,6 @@ import Bluebird from "bluebird";
 import { Koncorde } from "../shared/KoncordeWrapper";
 import { Client } from "@elastic/elasticsearch";
 import { JSONObject } from "kuzzle-sdk";
-import Bluebird from "bluebird";
-import { Koncorde } from "../shared/KoncordeWrapper";
-import { Client } from "@elastic/elasticsearch";
-import { JSONObject } from "kuzzle-sdk";
 
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import PluginRepository from "./pluginRepository";

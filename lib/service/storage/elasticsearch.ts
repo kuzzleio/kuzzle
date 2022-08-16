@@ -366,7 +366,9 @@ export class ElasticSearch extends Service {
     const scrollInfo = JSON.parse(stringifiedScrollInfo);
 
     try {
-      const { body } = await this._client.scroll(esRequest);
+      //const tmp = await this._client.scroll(esRequest);
+      const body: Record<string, any> = (await this._client.scroll(esRequest))
+        .body;
 
       scrollInfo.fetched += body.hits.hits.length;
 
@@ -560,8 +562,8 @@ export class ElasticSearch extends Service {
       }
 
       const formattedInnerHits = {};
-      for (const [name, innerHit] of Object.entries(innerHits)) {
-        // @ts-ignore
+      for (const [name, _innerHit] of Object.entries(innerHits)) {
+        const innerHit: any = _innerHit;
         formattedInnerHits[name] = await Bluebird.map(
           innerHit.hits.hits,
           formatHit
@@ -570,7 +572,7 @@ export class ElasticSearch extends Service {
       return formattedInnerHits;
     }
 
-    const hits = await Bluebird.map(body.hits.hits, async (hit) => ({
+    const hits = await Bluebird.map(body.hits.hits, async (hit: any) => ({
       inner_hits: await formatInnerHits(hit.inner_hits),
       ...(await formatHit(hit)),
     }));
@@ -1109,7 +1111,7 @@ export class ElasticSearch extends Service {
     id,
     fields,
 
-    { refresh, userId = null } = {}
+    { refresh = null, userId = null } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -3118,10 +3120,11 @@ export class ElasticSearch extends Service {
           .toString();
       }
 
-      // @ts-ignore
-      notAvailable = await this._client.indices.exists({
-        index: indice + suffix,
-      }).body;
+      notAvailable = (
+        await this._client.indices.exists({
+          index: indice + suffix,
+        })
+      ).body;
     } while (notAvailable);
 
     return indice + suffix;
@@ -3327,13 +3330,12 @@ export class ElasticSearch extends Service {
     let documents = hits.hits.map((h) => ({ _id: h._id, _source: h._source }));
 
     while (hits.total.value !== documents.length) {
-      // @ts-ignore
       ({
         body: { hits, _scroll_id },
       } = await this._client.scroll({
         scroll: esRequest.scroll,
         scrollId: _scroll_id,
-      }));
+      } as any));
 
       documents = documents.concat(
         hits.hits.map((h) => ({

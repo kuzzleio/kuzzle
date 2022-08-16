@@ -55,7 +55,7 @@ class Service {
    *
    * @returns {Promise}
    */
-  init() {
+  async init() {
     return Bluebird.resolve(this._initSequence())
       .timeout(this._initTimeout)
       .catch((e) => {
@@ -65,13 +65,18 @@ class Service {
 
         throw e;
       });
+    /*
+    setTimeout(() => {throw kerror.get('core', 'fatal', 'service_timeout', this._name)}, this._initTimeout);
+    const r =  await this._initSequence();
+    return r;
+     */
   }
 
   /**
    * @abstract
    * @returns {Promise}
    */
-  _initSequence() {
+  async _initSequence() {
     throw new Error("Not implemented");
   }
 

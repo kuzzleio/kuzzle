@@ -55,7 +55,7 @@ export class KuzzleEventEmitter extends EventEmitter {
   public pipeRunner: any;
   public pluginPipes: any;
   public pluginPipeDefinitions: any;
-  public corePipes: any;
+  public corePipes: Map<string, Function[]>;
   public coreAnswerers: any;
   public coreSyncedAnswerers: any;
   constructor(maxConcurrentPipes, pipesBufferSize) {
@@ -367,7 +367,7 @@ async function pipeCallback(error, ...updated) {
     return;
   }
 
-  const corePipes = this.instance.corePipes.get(this.targetEvent);
+  const corePipes: Function[] = this.instance.corePipes.get(this.targetEvent);
 
   if (corePipes) {
     await Bluebird.map(corePipes, (fn) => fn(...updated));
