@@ -30,8 +30,24 @@ register(event: string, handler: EventHandler): void
 
 ```js
 app.pipe.register('server:afterNow', async (request: KuzzleRequest) => {
-  request.result.now = (new Date()).toUTCString()
+  request.result.now = (new Date()).toUTCString();
 
-  return request
-})
+  return request;
+});
+```
+
+## Strong typing
+
+It's possible to specify the arguments with whom the handler will be called.
+
+This will also ensure that the first argument is returned at the end of the pipe handler.
+
+```js
+app.pipe.register<[Document[], KuzzleRequest]>(
+  'generic:document:afterWrite',
+  async (documents: Document[], request: KuzzleRequest) => {
+    app.log.error(documents)
+
+    return documents;
+  })
 ```

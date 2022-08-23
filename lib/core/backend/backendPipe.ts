@@ -20,7 +20,7 @@
  */
 
 import * as kerror from "../../kerror";
-import { EventHandler } from "../../types";
+import { PipeEventHandler } from "../../types";
 import { ApplicationManager } from "./index";
 
 const assertionError = kerror.wrap("plugin", "assert");
@@ -33,9 +33,9 @@ export class BackendPipe extends ApplicationManager {
    * @param event - Event name
    * @param handler - Function to execute when the event is triggered
    */
-  register(
+  register <TPayload extends [any, any?, any?, any?, any?]> (
     event: string,
-    handler: EventHandler,
+    handler: PipeEventHandler<TPayload>,
     options: any = {}
   ): string | void {
     if (this._application.started && options.dynamic !== true) {

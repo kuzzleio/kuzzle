@@ -29,7 +29,19 @@ register(event: string, handler: EventHandler): void
 ## Usage
 
 ```js
-app.pipe.register('request:onError', async (request: KuzzleRequest) => {
+app.hook.register('request:onError', async (request: KuzzleRequest) => {
   app.log.error(error)
-})
+});
+```
+
+## Strong typing
+
+It's possible to specify the arguments with whom the handler will be called.
+
+```js
+app.hook.register<[Document[], KuzzleRequest]>(
+  'generic:document:afterWrite',
+  async (documents: Document[], request: KuzzleRequest) => {
+    app.log.error(documents)
+  }),
 ```
