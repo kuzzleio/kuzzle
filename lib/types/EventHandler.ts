@@ -19,10 +19,12 @@
  * limitations under the License.
  */
 
-
 /**
  * Type for handler attached to Kuzzle events. Either hooks or pipes.
  */
-export type EventHandler<TPayload extends [any, any?, any?, any?, any?] = any> = (...payload: TPayload) => any;
+export type EventHandler<TPayload extends [any, any?, any?, any?, any?] = any> =
+  (...payload: TPayload) => any;
 
-export type PipeEventHandler<TPayload extends [any, any?, any?, any?, any?] = any> = (...payload: TPayload) => Promise<TPayload[0]>;
+export type PipeEventHandler<
+  TPayload extends [any, any?, any?, any?, any?] = any
+> = (...payload: TPayload) => Promise<TPayload[0]>;

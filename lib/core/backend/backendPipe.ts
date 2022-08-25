@@ -33,7 +33,7 @@ export class BackendPipe extends ApplicationManager {
    * @param event - Event name
    * @param handler - Function to execute when the event is triggered
    */
-  register <TPayload extends [any, any?, any?, any?, any?]> (
+  register<TPayload extends [any, any?, any?, any?, any?]>(
     event: string,
     handler: PipeEventHandler<TPayload>,
     options: any = {}
