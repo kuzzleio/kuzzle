@@ -84,37 +84,3 @@ Feature: Index Controller
       | indexes[0].collections[1].size | "_NUMBER_" |
       | indexes[1].collections[0].size | "_NUMBER_" |
 
-
-  # index:virtual-index =================================================================
-
-  Scenario: Create a virtual index
-    When I successfully execute the action "index":"create" with args:
-      | index                      | "virtual-index-1" |
-      | body.options.physicalIndex | "index1"          |
-    Then I should receive an empty result
-    And I execute the action "index":"list"
-    Then I should receive a result matching:
-      | indexes | ["virtual-index-1"] |
-
-  Scenario: Create a virtual index with false
-    When I successfully execute the action "index":"create" with args:
-      | index                      | "virtual-index-1" |
-      | body.options.physicalIndex | "index1"          |
-    Then I should receive an empty result
-    And I execute the action "index":"list"
-    Then I should receive a result matching:
-      | indexes | ["virtual-index-1"] |
-
-  Scenario: Create a index with illegal character
-    When I execute the action "index":"create" with args:
-      | index | "%kuzzle" |
-    Then I should receive an error matching:
-      | status | 400 |
-    When I execute the action "index":"create" with args:
-      | index | "&kuzzle" |
-    Then I should receive an error matching:
-      | status | 400 |
-    When I execute the action "index":"create" with args:
-      | index | "kuz.zle" |
-    Then I should receive an error matching:
-      | status | 400 |

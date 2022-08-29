@@ -35,6 +35,7 @@ import Promback from "../../util/promback";
 import memoize from "../../util/memoize";
 
 import PipeRunner from "./pipeRunner";
+import {Kuzzle} from "../kuzzle";
 
 class PluginPipeDefinition {
   public event: any;
@@ -227,7 +228,6 @@ export class KuzzleEventEmitter extends EventEmitter {
    */
   async ask(event, ...payload) {
     debug('Triggering ask "%s" with payload: %o', event, payload);
-
     const fn = this.coreAnswerers.get(event);
 
     if (!fn) {

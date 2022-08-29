@@ -19,12 +19,13 @@
  * limitations under the License.
  */
 
-import { ElasticSearch } from "../../service/storage/elasticsearch";
+import { Elasticsearch } from "../../service/storage/elasticsearch";
 import { IndexCache } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
 import { Mutex } from "../../util/mutex";
 import { KuzzleError } from "../../kerror/errors";
+import {VirtualIndex} from "../../service/storage/virtualIndex";
 
 const servicesError = kerror.wrap("services", "storage");
 
@@ -33,20 +34,34 @@ const servicesError = kerror.wrap("services", "storage");
  * and to maintain the index/collection cache.
  */
 export class ClientAdapter {
-  client: ElasticSearch;
+  client: Elasticsearch;
   cache: IndexCache;
   scope: string;
-  /**
-   * @param {storeScopeEnum} scope
-   */
-  constructor(scope, virtualIndex) {
-    this.client = new ElasticSearch(
+  virtualIndex : VirtualIndex;
+
+
+  static getMutex() {
+    return new Mutex("loadMappings", {timeout: -1, ttl: 60000});
+  }
+
+
+  //for Unit test
+  static createElasticSearch(scope, virtualIndex){
+    return new Elasticsearch(
       global.kuzzle.config.services.storageEngine,
       scope,
       virtualIndex
     );
+  }
+
+  /**
+   * @param {storeScopeEnum} scope
+   */
+  constructor(scope, virtualIndex) {
+    this.client = ClientAdapter.createElasticSearch(scope, virtualIndex);
     this.scope = scope;
     this.cache = new IndexCache();
+    this.virtualIndex = virtualIndex;
   }
 
   async initAfterCluster() {
@@ -99,6 +114,20 @@ export class ClientAdapter {
     global.kuzzle.onAsk(`core:storage:${this.scope}:translate`, (filters) =>
       this.client.translateKoncordeFilters(filters)
     );
+  }
+
+  async createPhysicalIndex(index: string,
+                            { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}){
+    return this.createIndex(index, {indexCacheOnly, propagate, physicalIndex:null});
+  }
+
+
+  async createVirtualIndex(index: string,
+                            { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}){
+    if(!physicalIndex){
+      throw new KuzzleError("You must specify physicalIndex.", 403);
+    }
+    return this.createIndex(index, {indexCacheOnly, propagate, physicalIndex});
   }
 
   async createIndex(
@@ -350,7 +379,12 @@ export class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:create`,
-      (index, options) => this.createIndex(index, options)
+      (index, options) => this.createPhysicalIndex(index, options)
+    );
+
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:createvirtual`,
+      (index, options) => this.createVirtualIndex(index, options)
     );
 
     /**
@@ -368,6 +402,8 @@ export class ClientAdapter {
      * @param {string} index
      * @return {Promise.<boolean>}
      */
+
+    //TODO : faire une fonction qui, si il a "onlyvirtual", ou "onlyphjysical", va filtrer les index du cache avant de les renvoyer
     global.kuzzle.onAsk(`core:storage:${this.scope}:index:exist`, (index) =>
       this.cache.hasIndex(index)
     );
@@ -376,8 +412,19 @@ export class ClientAdapter {
      * Return a list of all indexes within this adapter's scope
      * @returns {string[]}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, () =>
-      this.cache.listIndexes()
+    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, (onlyVirtual?, onlyPhysical?) => {
+      const indexes = this.cache.listIndexes();
+      if(!onlyPhysical && !onlyVirtual) {
+        return indexes;
+      } else if(onlyPhysical && !onlyVirtual ){
+        return indexes.filter(index=> !this.virtualIndex.isVirtual(index));
+      } else if(!onlyPhysical && onlyVirtual ) {
+        return indexes.filter(index=> this.virtualIndex.isVirtual(index));
+      } else {
+        return [];
+      }
+    }
+
     );
 
     /**
@@ -1040,7 +1087,7 @@ export class ClientAdapter {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 });
+    const mutex = ClientAdapter.getMutex();
 
     await mutex.lock();
 

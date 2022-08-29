@@ -24,7 +24,7 @@ import { KuzzleEventEmitter } from "./event/kuzzleEventEmitter";
 
 import { murmurHash128 as murmur } from "murmurhash-native";
 import stringify from "json-stable-stringify";
-import { Koncorde } from "koncorde";
+import {Koncorde, KoncordeOptions} from "koncorde";
 import Bluebird from "bluebird";
 import segfaultHandler from "node-segfault-handler";
 import _ from "lodash";
@@ -42,7 +42,7 @@ import Logger from "./log";
 import vault from "./vault";
 import DumpGenerator from "./dumpGenerator";
 import AsyncStore from "../util/asyncStore";
-import { Mutex } from "../util/mutex";
+import {Mutex, MutexOptions} from "../util/mutex";
 import * as kerror from "../kerror";
 import InternalIndexHandler from "./internalIndexHandler";
 import CacheEngine from "../core/cache/cacheEngine";
@@ -182,6 +182,41 @@ export class Kuzzle extends KuzzleEventEmitter {
    */
   public id: string;
 
+  //For Unit Test
+  static createStorageEngine(virtualIndex) : StorageEngine{
+    return new StorageEngine(virtualIndex);
+  }
+
+  //For Unit Test
+  static createVirtualIndex() : VirtualIndex {
+    return new VirtualIndex();
+  }
+
+
+  static createKoncorde(options : KoncordeOptions) : Koncorde{
+    return new Koncorde(options);
+  }
+
+  static loadVault(options) {
+    return vault.load(options.vaultKey, options.secretsFile);
+  }
+
+  static async initCacheEngine() {
+    return new CacheEngine().init();
+  }
+
+  static async initSecurityModule(){
+    return new SecurityModule().init();
+  }
+
+  static async initCluster(){
+    return new Cluster().init();
+  }
+
+  static createMutex(resource: string, mutexOption? : MutexOptions) {
+    return new Mutex(resource, mutexOption);
+  }
+
   constructor(config: KuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
@@ -230,27 +265,27 @@ export class Kuzzle extends KuzzleEventEmitter {
    */
   async start(application: any, options: StartOptions = { import: {} }) {
     this.registerSignalHandlers();
-
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe("kuzzle:state:start");
 
       // Koncorde realtime engine
-      this.koncorde = new Koncorde({
-        maxConditions: this.config.limits.subscriptionConditionsCount,
-        regExpEngine: this.config.realtime.pcreSupport ? "js" : "re2",
-        seed: this.config.internal.hash.seed,
-      });
+      this.koncorde = Kuzzle.createKoncorde(
+        {maxConditions : this.config.limits.subscriptionConditionsCount,
+                regExpEngine : this.config.realtime.pcreSupport ? "js" : "re2",
+                seed : this.config.internal.hash.seed});
 
-      await new CacheEngine().init();
-      const virtualIndex = new VirtualIndex();
-      const storageEngine = new StorageEngine(virtualIndex);
+      await Kuzzle.initCacheEngine();
+
+      const virtualIndex = Kuzzle.createVirtualIndex();
+      const storageEngine = Kuzzle.createStorageEngine(virtualIndex);
+
       await storageEngine.init();
       await new RealtimeModule().init();
 
       await this.internalIndex.init();
 
-      await new SecurityModule().init();
+      await Kuzzle.initSecurityModule();
 
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
@@ -261,7 +296,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
 
-      this._vault = vault.load(options.vaultKey, options.secretsFile);
+      this._vault = Kuzzle.loadVault(options);
 
       await this.validation.init();
 
@@ -300,6 +335,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       this.log.info(
         `[✔] Start "${this.pluginsManager.application.name}" application`
       );
+      console.log("et 4");
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
@@ -324,6 +360,8 @@ export class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
+
+      console.log(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
       this.log.error(
         `[X] Cannot start Kuzzle ${this.version}: ${error.message}`
       );
@@ -339,16 +377,13 @@ export class Kuzzle extends KuzzleEventEmitter {
    */
   private async initKuzzleNode(): Promise<string> {
     let id;
-
     if (this.config.cluster.enabled) {
-      id = await new Cluster().init();
-
+      id = await Kuzzle.initCluster();
       this.log.info("[✔] Cluster initialized");
     } else {
       id = NameGenerator.generateRandomName({ prefix: "knode" });
       this.log.info("[X] Cluster disabled: single node mode.");
     }
-
     return id;
   }
 
@@ -394,7 +429,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       return;
     }
 
-    const mutex = new Mutex("backend:installations");
+    const mutex = Kuzzle.createMutex("backend:installations");
     await mutex.lock();
 
     try {
@@ -669,7 +704,7 @@ export class Kuzzle extends KuzzleEventEmitter {
         }
 
         const importPayloadHash = sha256(stringify(importPayload));
-        const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
+        const mutex = Kuzzle.createMutex(`backend:import:${type}`, { timeout: 0 });
 
         const existingHash = await this.ask(
           "core:cache:internal:get",
@@ -827,5 +862,3 @@ export class Kuzzle extends KuzzleEventEmitter {
     await this.shutdown();
   }
 }
-
-module.exports = Kuzzle;

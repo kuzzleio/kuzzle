@@ -7,17 +7,35 @@ const { PreconditionError } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { StorageEngine } = require("../../../lib/core/storage/storageEngine");
+const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
+
+const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 
 describe("#core/storage/StorageEngine", () => {
-  let StorageEngine;
   let storageEngine;
 
+  let initClientAdaptersSave = StorageEngine.initClientAdapters;
+
+  afterEach(() => {
+    StorageEngine.initClientAdapters = initClientAdaptersSave;
+  });
+
   before(() => {
+    /*
     mockRequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
-    StorageEngine = mockRequire.reRequire(
+    ({ StorageEngine } = mockRequire.reRequire(
       "../../../lib/core/storage/storageEngine"
-    );
+    ));
+     */
+
+    StorageEngine.initClientAdapters = function (scopeEnumValue, virtualIndex) {
+      return new ClientAdapterMock(scopeEnumValue, virtualIndex);
+    };
+
+    storageEngine = new StorageEngine(new VirtualIndexMock());
+
+    return storageEngine.init();
   });
 
   after(() => {
@@ -27,7 +45,11 @@ describe("#core/storage/StorageEngine", () => {
   beforeEach(() => {
     new KuzzleMock();
 
-    storageEngine = new StorageEngine();
+    StorageEngine.initClientAdapters = function (scopeEnumValue, virtualIndex) {
+      return new ClientAdapterMock(scopeEnumValue, virtualIndex);
+    };
+
+    storageEngine = new StorageEngine(new VirtualIndexMock());
   });
 
   describe("#constructor", () => {

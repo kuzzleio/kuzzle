@@ -8,6 +8,9 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
 const BaseModel = require("../../../lib/model/storage/baseModel");
+const { VirtualIndex } = require("../../../lib/service/storage/virtualIndex");
+const { StorageEngine } = require("../../../lib/core/storage/storageEngine");
+const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 
 class Model extends BaseModel {
   constructor(_source, _id) {
@@ -26,21 +29,25 @@ class Model extends BaseModel {
 BaseModel.register(Model);
 
 describe("BaseModel", () => {
-  let StorageEngine;
   let storageEngine;
   let kuzzle;
+
+  let initClientAdaptersSave = StorageEngine.initClientAdapters;
+
+  afterEach(() => {
+    StorageEngine.initClientAdapters = initClientAdaptersSave;
+  });
 
   beforeEach(() => {
     Model.prototype._afterDelete = sinon.stub().resolves();
 
     kuzzle = new KuzzleMock();
 
-    mockrequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
+    StorageEngine.initClientAdapters = function (scopeEnum, virtualIndex) {
+      return new ClientAdapterMock(scopeEnum, virtualIndex);
+    };
 
-    StorageEngine = mockrequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
-    );
-    storageEngine = new StorageEngine();
+    storageEngine = new StorageEngine(new VirtualIndexMock());
 
     return storageEngine.init();
   });

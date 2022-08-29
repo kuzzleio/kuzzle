@@ -36,7 +36,7 @@ import { debug as DebugBuilder } from "../../util/debug";
 import ESWrapper from "./esWrapper";
 import QueryTranslator from "./queryTranslator";
 import didYouMean from "../../util/didYouMean";
-import Service from "../service";
+import {Service} from "../service";
 import { assertIsObject } from "../../util/requestAssertions";
 
 import * as kerrorLib from "../../kerror";
@@ -79,7 +79,7 @@ const esStateEnum = Object.freeze({
 });
 let esState = esStateEnum.NONE;
 
-export class ElasticSearch extends Service {
+export class Elasticsearch extends Service {
   /**
    * Returns a new elasticsearch client instance
    *
@@ -88,6 +88,7 @@ export class ElasticSearch extends Service {
   static buildClient(config): Client {
     // Passed to Elasticsearch's client to make it use
     // Bluebird instead of ES6 promises
+
     const defer = function defer() {
       let resolve;
       let reject;
@@ -117,6 +118,11 @@ export class ElasticSearch extends Service {
   _config: JSONObject;
 
   private virtualIndex: VirtualIndex;
+
+  static getRandomNumber(max){
+    return randomNumber(max)
+  }
+
   constructor(config: JSONObject, scope = scopeEnum.PUBLIC, virtualIndex) {
     super("elasticsearch", config);
     this.virtualIndex = virtualIndex;
@@ -193,7 +199,7 @@ export class ElasticSearch extends Service {
       );
     }
 
-    this._client = ElasticSearch.buildClient(this._config.client);
+    this._client = Elasticsearch.buildClient(this._config.client);
 
     await this.waitForElasticsearch();
 
@@ -267,9 +273,13 @@ export class ElasticSearch extends Service {
    * @returns {Promise.<Object>}
    */
   async stats() {
+
+
     const esRequest = {
       metric: ["docs", "store"],
     };
+
+
 
     const { body } = await this._client.indices.stats(esRequest);
     const indexes = {};
@@ -401,6 +411,7 @@ export class ElasticSearch extends Service {
    * @param {String} index - Index name
    * @param {String} collection - Collection name
    * @param {Object} searchBody - Search request body (query, sort, etc.)
+   * @param target contain index and collections for multisearch. If target is not null, index and collection sould be null.
    * @param {Object} options - from (undefined), size (undefined), scroll (undefined)
    *
    * @returns {Promise.<{ scrollId, hits, aggregations, suggest, total }>}
@@ -508,7 +519,6 @@ export class ElasticSearch extends Service {
   ) {
     let aliasToTargets = {};
     const aliasCache = new Map();
-
     if (searchInfo.targets) {
       /**
        * We need to map the alias to the target index and collection,
@@ -541,6 +551,7 @@ export class ElasticSearch extends Service {
          * to the targets.
          */
         const alias = aliases.find((_alias) => aliasToTargets[_alias]);
+
         // Retrieve index and collection information based on the matching alias
         index = aliasToTargets[alias].index;
         collection = aliasToTargets[alias].collection;
@@ -752,8 +763,9 @@ export class ElasticSearch extends Service {
       // @ts-ignore
       const { body } = await this._client.index(esRequest);
 
+
       return {
-        _id: this.virtualIndex.getVirtualId(body._id, index),
+        _id: this.virtualIndex.getVirtualId(index, body._id),
         _source: esRequest.body,
         _version: body._version,
       };
@@ -778,7 +790,7 @@ export class ElasticSearch extends Service {
     collection,
     id,
     content,
-    { refresh = null, userId = null, injectKuzzleMeta = true } = {}
+    { refresh = false, userId = null, injectKuzzleMeta = true } = {}
   ) {
     const esRequest = {
       body: content,
@@ -1077,7 +1089,6 @@ export class ElasticSearch extends Service {
       debug("Delete by query: %o", esRequest);
       // @ts-ignore
       esRequest.refresh = refresh === "wait_for" ? true : refresh;
-
       const { body } = await this._client.deleteByQuery(esRequest);
 
       return {
@@ -1111,7 +1122,7 @@ export class ElasticSearch extends Service {
     id,
     fields,
 
-    { refresh = null, userId = null } = {}
+    { refresh = undefined, userId = undefined } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1173,7 +1184,7 @@ export class ElasticSearch extends Service {
     collection,
     query,
     changes,
-    { refresh = null, size = 1000, userId = null } = {}
+    { refresh = undefined, size = 1000, userId = null } = {}
   ) {
     try {
       const esRequest = {
@@ -1419,11 +1430,12 @@ export class ElasticSearch extends Service {
       settings = {},
     } = {}
   ) {
+
     if (this.virtualIndex.isVirtual(index)) {
       throw new KuzzleError(
-        "you have not rights to create collection in this index",
+        "you have not rights to create collection in a virtual index",
         403
-      ); //TODO : discuter de cette limite
+      );
     }
 
     this._assertValidIndexAndCollection(index, collection);
@@ -1566,6 +1578,12 @@ export class ElasticSearch extends Service {
       settings = {},
     } = {}
   ) {
+    if (this.virtualIndex.isVirtual(index)) {
+      throw new KuzzleError(
+        "you have not rights to update collection in a virtual index",
+        403
+      );
+    }
     const esRequest = {
       index: await this._getIndice(index, collection),
     };
@@ -1675,6 +1693,14 @@ export class ElasticSearch extends Service {
       properties: undefined,
     }
   ) {
+
+    if (this.virtualIndex.isVirtual(index)) {
+      throw new KuzzleError(
+        "you have not rights to update mapping in a virtual index",
+        403
+      );
+    }
+
     const esRequest = {
       body: undefined,
       index: this._getAlias(index, collection),
@@ -1728,6 +1754,13 @@ export class ElasticSearch extends Service {
       index: this._getAlias(index, collection),
     };
 
+    if (this.virtualIndex.isVirtual(index)) {
+      throw new KuzzleError(
+        "you have not rights to update settings in a virtual index",
+        403
+      );
+    }
+
     await this._client.indices.close(esRequest);
 
     try {
@@ -1752,6 +1785,12 @@ export class ElasticSearch extends Service {
   async truncateCollection(index, collection) {
     let mappings;
     let settings;
+
+    if (this.virtualIndex.isVirtual(index)) {
+      return this.deleteByQuery(index, collection, {})
+    }
+
+
 
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1799,7 +1838,7 @@ export class ElasticSearch extends Service {
     index,
     collection,
     documents,
-    { refresh = null, userId = null } = {}
+    { refresh = undefined, timeout = undefined, userId = undefined } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const actionNames = ["index", "create", "update", "delete"];
@@ -1807,6 +1846,7 @@ export class ElasticSearch extends Service {
     const esRequest = {
       body: documents,
       refresh,
+      timeout,
     };
     const kuzzleMeta = {
       created: {
@@ -1951,7 +1991,7 @@ export class ElasticSearch extends Service {
 
     const schema = this._extractSchema(aliases, { includeHidden });
 
-    return schema.get(this.virtualIndex.getRealIndex(index)) || [];
+    return schema[this.virtualIndex.getRealIndex(index)] || [];
   }
 
   /**
@@ -1963,7 +2003,6 @@ export class ElasticSearch extends Service {
     let body;
 
     try {
-      //TODO : factorisation
       ({ body } = await this._client.cat.aliases({ format: "json" }));
     } catch (error) {
       throw this._esWrapper.formatESError(error);
@@ -1975,7 +2014,7 @@ export class ElasticSearch extends Service {
       includeVirtual: includeVirtual,
     });
 
-    return Array.from(schema.keys());
+    return Object.keys(schema);
   }
 
   /**
@@ -2002,11 +2041,8 @@ export class ElasticSearch extends Service {
       includeVirtual: includeVirtual,
     }); //TODO => true
 
-    for (const [index, collections] of schema) {
-      schema.set(
-        index,
-        collections.filter((c) => c !== HIDDEN_COLLECTION)
-      );
+    for (const [index, collections] of Object.entries(schema)) {
+      schema[index] = collections.filter((c) => c !== HIDDEN_COLLECTION);
     }
 
     return schema;
@@ -2050,6 +2086,10 @@ export class ElasticSearch extends Service {
    * @returns {Promise}
    */
   async deleteCollection(index, collection) {
+    if(this.virtualIndex.isVirtual(index)){
+      //      throw kerror.get("collection_reserved", HIDDEN_COLLECTION);
+      throw kerror.get("delete_virtual_collection");
+    }
     const esRequest = {
       index: await this._getIndice(index, collection),
     };
@@ -2072,12 +2112,20 @@ export class ElasticSearch extends Service {
    *
    * @returns {Promise.<String[]>}
    */
-  async deleteIndexes(indexes = []) {
+  async deleteIndexes(indexes = []) : Promise<string[]> {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
-    const deleted = new Set();
-
+    const deleted = new Set<string>();
+    for (const index of indexes) {
+      if(this.virtualIndex.isVirtual(index)) {
+        //TODO : remove second await?
+        await this.removeDocumentsFromVirtualIndex(index);
+        await this.virtualIndex.removeVirtualIndex(index);
+        deleted.add(index);
+        //indexes = indexes.filter(i => index !=i );
+      }
+    }
     try {
       const { body } = await this._client.cat.aliases({ format: "json" });
 
@@ -2093,9 +2141,7 @@ export class ElasticSearch extends Service {
           }
 
           deleted.add(index);
-          if (this.virtualIndex.isVirtual(index)) {
-            this.virtualIndex.removeVirtualIndex(index); //TODO : factorier pour le faire en un seul appel( pour beaucoup plus tard) ou faire un systèmpe de flush
-          } else {
+          if (!this.virtualIndex.isVirtual(index)) {
             request.index.push(indice);
           }
 
@@ -2105,7 +2151,9 @@ export class ElasticSearch extends Service {
       );
 
       debug("Delete indexes: %o", esRequest);
-      await this._client.indices.delete(esRequest);
+      if(esRequest.index.length!=0){
+        await this._client.indices.delete(esRequest);
+      }
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -2121,8 +2169,6 @@ export class ElasticSearch extends Service {
    * @returns {Promise}
    */
   async deleteIndex(index) {
-    //TODO : virtual index !!! //TODO : physical index !!!
-
     await this.deleteIndexes([index]);
     return null;
   }
@@ -2293,7 +2339,7 @@ export class ElasticSearch extends Service {
     index,
     collection,
     documents,
-    { refresh = null, timeout = undefined, userId = null } = {}
+    { refresh = undefined, timeout = undefined, userId = undefined } = {}
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2387,9 +2433,9 @@ export class ElasticSearch extends Service {
     collection,
     documents,
     {
-      refresh = null,
+      refresh = undefined,
       timeout = undefined,
-      userId = null,
+      userId = undefined,
       injectKuzzleMeta = true,
       limits = true,
       source = true,
@@ -2461,12 +2507,8 @@ export class ElasticSearch extends Service {
     index,
     collection,
     documents,
-    {
-      refresh = null,
-      retryOnConflict = 0,
-      timeout = undefined,
-      userId = null,
-    } = {}
+    // @ts-ignore
+    { refresh, retryOnConflict = 0, timeout, userId = null } = {}
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2478,6 +2520,7 @@ export class ElasticSearch extends Service {
       },
       kuzzleMeta = {
         _kuzzle_info: {
+          index : this.virtualIndex.getRealIndex(index),
           updatedAt: Date.now(),
           updater: getKuid(userId),
         },
@@ -2558,7 +2601,7 @@ export class ElasticSearch extends Service {
     collection,
     documents,
     {
-      refresh = null,
+      refresh = undefined,
       retryOnConflict = 0,
       timeout = undefined,
       userId = null,
@@ -2661,7 +2704,7 @@ export class ElasticSearch extends Service {
     index,
     collection,
     documents,
-    { refresh = null, timeout = undefined, userId = null } = {}
+    { refresh = undefined, timeout = undefined, userId = null } = {}
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2742,10 +2785,12 @@ export class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ documents, errors }>
    */
-  async mDelete(index, collection, ids, { refresh = null } = {}) {
+  async mDelete(index: string, collection: string, ids: string[], { refresh = undefined } = {}) {
+
     const query = { ids: { values: [] } },
       validIds = [],
       partialErrors = [];
+
 
     /**
      * @warning Critical code section
@@ -2756,7 +2801,7 @@ export class ElasticSearch extends Service {
       const _id = ids[i];
 
       if (typeof _id === "string") {
-        validIds.push(_id);
+        validIds.push( _id);
       } else {
         partialErrors.push({
           _id,
@@ -3105,7 +3150,7 @@ export class ElasticSearch extends Service {
     let notAvailable;
     let suffix;
     do {
-      suffix = `.${randomNumber(100000)}`;
+      suffix = `.${Elasticsearch.getRandomNumber(100000)}`;
 
       const overflow = Buffer.from(indice + suffix).length - 255;
       if (overflow > 0) {
@@ -3234,8 +3279,11 @@ export class ElasticSearch extends Service {
   _extractSchema(
     aliases,
     { includeHidden = false, includeVirtual = true } = {}
-  ): Map<string, Array<string>> {
-    const schema = new Map<string, Array<string>>();
+  ): { [key: string]: string[]; } {
+    //const schema = new Map<string, Array<string>>();
+    var stuff: { [key: string]: string[]; } = {};
+    const schema = {};
+
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
@@ -3246,20 +3294,20 @@ export class ElasticSearch extends Service {
         alias[INDEX_PREFIX_POSITION_IN_ALIAS] === this._indexPrefix &&
         (collectionName !== HIDDEN_COLLECTION || includeHidden)
       ) {
-        if (!schema.has(indexName)) {
-          schema.set(indexName, []);
+        if (!schema[indexName]) {
+          schema[indexName] = [];
         }
 
-        if (!schema.get(indexName).includes(collectionName)) {
-          schema.get(indexName).push(collectionName);
+        if (!schema[indexName].includes(collectionName)) {
+          schema[indexName].push(collectionName);
         }
       }
     }
 
     if (includeVirtual) {
       for (const [key, value] of this.virtualIndex.softTenant) {
-        if (schema.has(value)) {
-          schema.set(key, schema.get(value));
+        if (schema[value]) {
+          schema[key] = schema[value];
         }
       }
     }
@@ -3577,6 +3625,15 @@ export class ElasticSearch extends Service {
   public async createVirtualIndex(virtualIndex: string, index: string) {
     return this.virtualIndex.createVirtualIndex(virtualIndex, index);
   }
+
+  private async removeDocumentsFromVirtualIndex(index: string) {
+    const collections = await this.listCollections(index);
+    return Promise.all(collections.map(async collection =>
+    {
+      await this.refreshCollection(index, collection);
+      this.deleteByQuery(index, collection, {})
+    }));
+  }
 }
 
 /**
@@ -3632,7 +3689,6 @@ function getKuid(userId) {
   if (!userId) {
     return null;
   }
-
   return String(userId);
 }
 

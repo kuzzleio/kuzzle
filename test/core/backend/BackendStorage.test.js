@@ -5,15 +5,18 @@ const mockrequire = require("mock-require");
 const { Client: ElasticsearchClient } = require("@elastic/elasticsearch");
 
 const KuzzleMock = require("../../mocks/kuzzle.mock");
+const { Backend } = require('../../../lib/core/backend');
 
 describe("Backend", () => {
   let application;
   let Backend;
 
   beforeEach(() => {
-    mockrequire("../../../lib/kuzzle", KuzzleMock);
-
     ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
+
+    Backend.createKuzzle = function (kuzzleConfiguration) {
+      return new KuzzleMock();
+    };
 
     application = new Backend("black-mesa");
   });

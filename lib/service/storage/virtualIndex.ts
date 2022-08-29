@@ -1,7 +1,9 @@
 import Crypto from "crypto";
 import { ClientAdapter } from "../../core/storage/clientAdapter";
 
-import Service from "../service";
+import {Service} from "../service";
+import {Elasticsearch} from "./elasticsearch";
+import {stringify} from "yaml";
 
 export class VirtualIndex extends Service {
   public static createEvent = "virtualindex:create";
@@ -10,7 +12,7 @@ export class VirtualIndex extends Service {
     super("VirtualIndex", global.kuzzle.config.services.storageEngine);
   }
 
-  public softTenant: Map<string, string> = new Map(); //Key : virtual index, value : real index
+  public softTenant: Map<string, string> = new Map(); //Key : virtual index, value : real index //TODO rename!
   private clientAdapter: ClientAdapter;
 
   async initWithClient(clientAdapter: ClientAdapter): Promise<void> {
@@ -28,7 +30,7 @@ export class VirtualIndex extends Service {
   editSoftTenantMap(notification) {
     if (notification.action === "create" || notification.action === "update") {
       const source = notification.result._source;
-      this.softTenant.set(source.real, source.virtual);
+      this.softTenant.set(source.virtual, source.real);
     }
   }
 
@@ -68,18 +70,29 @@ export class VirtualIndex extends Service {
       VirtualIndex.createEvent,
       { real: index, virtual: virtualIndex }
     );
-    this.editSoftTenantMap({ real: index, virtual: virtualIndex });
+    //this.editSoftTenantMap({ real: index, virtual: virtualIndex });
+    this.softTenant.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",
-      "virtual-indexes",
+      "virtualindexes",
       "list",
-      { real: index, virtual: virtualIndex }
+      { real: index, virtual: virtualIndex },
+      { id: index+virtualIndex}
     );
   }
 
-  removeVirtualIndex(index: string) {
+  async removeVirtualIndex(index: string) {
     //TODO : persistance
+    const realIndex = this.softTenant.get(index);
     this.softTenant.delete(index);
+    const id = realIndex+index;
+    await global.kuzzle.ask(
+      "core:storage:private:document:delete",
+      "virtualindexes",
+      "list",
+      id
+    );
+
   }
 
   async initVirtualTenantList() {
@@ -87,20 +100,22 @@ export class VirtualIndex extends Service {
     if (this.softTenant.size === 0) {
       this.softTenant = new Map<string, string>();
       //this.softTenant.set("virtual-index", "hard-index"); //TODO : micro-controller
-      this.softTenant.set("virtual-index-2", "index2"); //TODO : remove?
-      this.softTenant.set("virtual-index-3", "index2"); //TODO : remove?
+      //this.softTenant.set("virtual-index-2", "index2"); //TODO : remove
+      //this.softTenant.set("virtual-index-3", "index2"); //TODO : remove
       let from = 0;
       let total = Number.MAX_VALUE;
 
       do {
         const list = await global.kuzzle.ask(
           "core:storage:private:document:search",
-          "virtual-indexes",
+          "virtualindexes",
           "list",
           { from: from, size: 100 }
         );
         total = list.total;
+        console.log('loading virtual index!');
         for (const hit of list.hits) {
+          console.log('virtual : ' + hit._source.virtual);
           this.softTenant.set(hit._source.virtual, hit._source.real);
         }
         from += 100;
@@ -110,12 +125,12 @@ export class VirtualIndex extends Service {
 
   async buildCollection() {
     try {
-      await this.clientAdapter.createIndex("virtual-indexes"); //Replace with kuzzle.ask()
+      await this.clientAdapter.createIndex("virtualindexes"); //Replace with kuzzle.ask()
     } catch (e) {
       /* already created */
     }
     try {
-      await this.clientAdapter.createCollection("virtual-indexes", "list", {
+      await this.clientAdapter.createCollection("virtualindexes", "list", {
         //Replace with kuzzle.ask()
         mappings: {
           _meta: undefined,

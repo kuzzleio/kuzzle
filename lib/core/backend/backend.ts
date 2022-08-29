@@ -21,10 +21,11 @@
 
 import fs from "fs";
 
-import Kuzzle from "../../kuzzle";
+import {Kuzzle} from "../../kuzzle";
+
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { JSONObject } from "../../../index";
+import {JSONObject, KuzzleConfiguration} from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -218,6 +219,11 @@ export class Backend {
    */
   public _support: JSONObject = {};
 
+  //to be mocked
+  public static createKuzzle(kuzzleConfiguration : KuzzleConfiguration){
+    return new Kuzzle(kuzzleConfiguration);
+  }
+
   /**
    * Instantiates a new Kuzzle application
    *
@@ -294,7 +300,7 @@ export class Backend {
       throw runtimeError.get("already_started", "start");
     }
 
-    this._kuzzle = new Kuzzle(this.config.content);
+    this._kuzzle = Backend.createKuzzle(this.config.content);
 
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);

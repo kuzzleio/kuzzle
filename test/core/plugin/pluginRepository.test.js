@@ -6,7 +6,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 
 const PluginRepository = require("../../../lib/core/plugin/pluginRepository");
 const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const scopeEnum = require("../../../lib/core/storage/storeScopeEnum").scopeEnum;
 const Store = require("../../../lib/core/shared/store");
 
 describe("core/plugin/pluginRepository", () => {

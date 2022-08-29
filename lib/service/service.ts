@@ -29,7 +29,7 @@ import * as kerror from "../kerror";
  * Services base class
  *
  */
-class Service {
+export class Service {
   _name: string;
   _config: JSONObject;
   _initTimeout: number;
@@ -89,6 +89,3 @@ class Service {
   }
 }
 
-export default Service;
-
-module.exports = Service;

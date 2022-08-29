@@ -27,6 +27,17 @@ Given(
 );
 
 Then(
+  "I remove the collection {string}:{string}",
+  async function (index, collection) {
+    try {
+      this.props.result = await this.sdk.collection.delete(index, collection);
+    } catch (e) {
+      this.props.error = e;
+    }
+  }
+);
+
+Then(
   "I {string} the collection {string}:{string} with:",
   async function (action, index, collection, dataTable) {
     let mappings = {},

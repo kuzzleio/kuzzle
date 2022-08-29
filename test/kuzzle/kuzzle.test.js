@@ -12,12 +12,16 @@ const MutexMock = require("../mocks/mutex.mock.js");
 const Plugin = require("../../lib/core/plugin/plugin");
 const kuzzleStateEnum = require("../../lib/kuzzle/kuzzleStateEnum");
 const { sha256 } = require("../../lib/util/crypto");
+const VirtualIndexMock = require("../mocks/virtualIndex.mock");
+const StorageEngineMock = require("../mocks/storageEngine.mock");
+const { Kuzzle } = require("../../lib/kuzzle/kuzzle");
+const { Koncorde, KoncordeOptions } = require("koncorde");
+const { MutexOptions } = require("../../lib/util/mutex");
 
 const config = require("../../lib/config").loadConfig();
 
 describe("/lib/kuzzle/kuzzle.js", () => {
   let kuzzle;
-  let Kuzzle;
   let application;
   let clusterModuleInitStub;
 
@@ -42,17 +46,24 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     "vault",
   ];
 
-  function _mockKuzzle(KuzzleConstructor) {
+  function _mockKuzzle() {
     Reflect.deleteProperty(global, "kuzzle");
-    const k = new KuzzleConstructor(config);
+    const k = new Kuzzle(config);
     const mock = new KuzzleMock();
 
     mockedProperties.forEach((p) => {
-      k[p] = mock[p];
+      try {
+        k[p] = mock[p];
+      } catch (e) {
+        //probably a getter and not a real property
+      }
     });
 
     return k;
   }
+
+  const FakeKoncorde = new sinon.stub();
+  let koncorde;
 
   beforeEach(() => {
     clusterModuleInitStub = sinon.stub().resolves();
@@ -65,17 +76,43 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     };
 
     mockrequire("../../lib/core/cache/cacheEngine", coreModuleStub);
-    mockrequire("../../lib/core/storage/storageEngine", coreModuleStub);
     mockrequire("../../lib/core/security", coreModuleStub);
     mockrequire("../../lib/core/realtime", coreModuleStub);
     mockrequire("../../lib/cluster", clusterModuleStub);
-    mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
+    //mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
+    Kuzzle.createVirtualIndex = function () {
+      return new VirtualIndexMock();
+    };
 
-    mockrequire.reRequire("../../lib/kuzzle/kuzzle");
-    Kuzzle = rewire("../../lib/kuzzle/kuzzle");
-    Kuzzle.__set__("console", { log: () => {} });
+    Kuzzle.createStorageEngine = function (virtualIndexLocal) {
+      return new StorageEngineMock();
+    };
 
-    kuzzle = _mockKuzzle(Kuzzle);
+    Kuzzle.initCluster = function () {
+      return { init: sinon.stub().resolves() };
+    };
+
+    Kuzzle.initCacheEngine = function () {
+      return { init: sinon.stub().resolves() };
+    };
+
+    Kuzzle.initSecurityModule = function () {
+      return { init: sinon.stub().resolves() };
+    };
+
+    Kuzzle.loadVault = function (myConfig) {
+      return { default: { load: () => {} } };
+    };
+
+    Kuzzle.createKoncorde = function (options) {
+      koncorde = new FakeKoncorde(options);
+    };
+
+    Kuzzle.createMutex = function (resource, mutexOption) {
+      return new MutexMock();
+    };
+
+    kuzzle = _mockKuzzle();
     application = new Plugin(
       { init: sinon.stub() },
       { name: "application", application: true, openApi: "openApi" }
@@ -84,7 +121,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
   afterEach(() => {
     mockrequire.stopAll();
-    Kuzzle.__set__("console", console);
+    Kuzzle.console = "console";
   });
 
   it("should build a kuzzle server object with emit and listen event", (done) => {
@@ -94,86 +131,77 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
   describe("#start", () => {
     it("should init the components in proper order", async () => {
-      const Koncorde = sinon.stub();
+      /*
       const stubbedKuzzle = Kuzzle.__with__({
         koncorde_1: { Koncorde },
         vault_1: { default: { load: () => {} } },
       });
+      */
 
-      await stubbedKuzzle(async () => {
-        kuzzle = _mockKuzzle(Kuzzle);
+      kuzzle = _mockKuzzle();
 
-        kuzzle.install = sinon.stub().resolves();
-        kuzzle.loadInitialState = sinon.stub().resolves();
-        const options = {
-          import: { something: "here" },
-          installations: [{ id: "foo", handler: () => {} }],
-          support: { something: "here" },
-        };
+      kuzzle.install = sinon.stub().resolves();
+      kuzzle.loadInitialState = sinon.stub().resolves();
+      const options = {
+        import: { something: "here" },
+        installations: [{ id: "foo", handler: () => {} }],
+        support: { something: "here" },
+      };
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
 
-        should(kuzzle.state).be.eql(kuzzleStateEnum.STARTING);
+      await kuzzle.start(application, options);
 
-        await kuzzle.start(application, options);
+      sinon.assert.callOrder(
+        kuzzle.pipe, // kuzzle:state:start
+        kuzzle.internalIndex.init,
+        // clusterModuleInitStub,
+        kuzzle.validation.init,
+        kuzzle.tokenManager.init,
+        kuzzle.funnel.init,
+        kuzzle.statistics.init,
+        kuzzle.validation.curateSpecification,
+        kuzzle.entryPoint.init,
+        kuzzle.pluginsManager.init,
+        kuzzle.loadInitialState.withArgs(options.import, options.support),
+        kuzzle.ask.withArgs("core:security:verify"),
+        kuzzle.router.init,
+        kuzzle.install.withArgs(options.installations),
+        kuzzle.pipe.withArgs("kuzzle:start"),
+        kuzzle.pipe.withArgs("kuzzle:state:live"),
+        kuzzle.entryPoint.startListening,
+        kuzzle.pipe.withArgs("kuzzle:state:ready"),
+        kuzzle.emit.withArgs("core:kuzzleStart")
+      );
 
-        sinon.assert.callOrder(
-          kuzzle.pipe, // kuzzle:state:start
-          kuzzle.internalIndex.init,
-          // clusterModuleInitStub,
-          kuzzle.validation.init,
-          kuzzle.tokenManager.init,
-          kuzzle.funnel.init,
-          kuzzle.statistics.init,
-          kuzzle.validation.curateSpecification,
-          kuzzle.entryPoint.init,
-          kuzzle.pluginsManager.init,
-          kuzzle.loadInitialState.withArgs(options.import, options.support),
-          kuzzle.ask.withArgs("core:security:verify"),
-          kuzzle.router.init,
-          kuzzle.install.withArgs(options.installations),
-          kuzzle.pipe.withArgs("kuzzle:start"),
-          kuzzle.pipe.withArgs("kuzzle:state:live"),
-          kuzzle.entryPoint.startListening,
-          kuzzle.pipe.withArgs("kuzzle:state:ready"),
-          kuzzle.emit.withArgs("core:kuzzleStart")
-        );
-
-        should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
-      });
+      should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
     });
 
     // @deprecated
     it("should instantiate Koncorde with PCRE support if asked to", async () => {
-      const Koncorde = sinon.stub();
-      const stubbedKuzzle = Kuzzle.__with__({
-        koncorde_1: { Koncorde },
-        vault_1: { default: { load: () => {} } },
-      });
+      const baseKuzzle = _mockKuzzle();
 
-      await stubbedKuzzle(async () => {
-        const baseKuzzle = _mockKuzzle(Kuzzle);
+      //const baseKuzzle = new Kuzzle();
 
-        baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
+      baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        await baseKuzzle.start(application);
+      await baseKuzzle.start(application);
 
-        const kuzzleWithPCRE = _mockKuzzle(Kuzzle);
+      const kuzzleWithPCRE = _mockKuzzle();
 
-        kuzzleWithPCRE.ask = sinon.stub().resolves();
-        kuzzleWithPCRE.ask.withArgs("core:cache:internal:get").resolves(1);
+      kuzzleWithPCRE.ask = sinon.stub().resolves();
+      kuzzleWithPCRE.ask.withArgs("core:cache:internal:get").resolves(1);
 
-        kuzzleWithPCRE.config = JSON.parse(
-          JSON.stringify(kuzzleWithPCRE.config)
-        );
+      kuzzleWithPCRE.config = JSON.parse(JSON.stringify(kuzzleWithPCRE.config));
 
-        kuzzleWithPCRE.config.realtime.pcreSupport = true;
+      kuzzleWithPCRE.config.realtime.pcreSupport = true;
 
-        await kuzzleWithPCRE.start(application);
-      });
+      await kuzzleWithPCRE.start(application);
 
-      should(Koncorde.firstCall).calledWithMatch({ regExpEngine: "re2" });
-      should(Koncorde.secondCall).calledWithMatch({ regExpEngine: "js" });
+      console.log(FakeKoncorde.firstCall.args[0]);
+      should(FakeKoncorde.firstCall).calledWithMatch({ regExpEngine: "re2" });
+      should(FakeKoncorde.secondCall).calledWithMatch({ regExpEngine: "js" });
     });
 
     it("should start all services and register errors handlers if enabled on kuzzle.start", () => {
@@ -181,6 +209,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       let processOnSpy = sinon.spy();
       let processRemoveAllListenersSpy = sinon.spy();
 
+      /*
       return Kuzzle.__with__({
         process: {
           ...process,
@@ -191,48 +220,48 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           removeAllListeners: processRemoveAllListenersSpy,
         },
       })(() => {
-        kuzzle = _mockKuzzle(Kuzzle);
-        kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        return kuzzle.start(application);
-      }).then(() => {
-        should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly(
-          "unhandledRejection"
-        );
-        should(processOnSpy.getCall(0).args[0]).be.exactly(
-          "unhandledRejection"
-        );
+       */
+      kuzzle = _mockKuzzle();
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-        should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly(
-          "uncaughtException"
-        );
-        should(processOnSpy.getCall(1).args[0]).be.exactly("uncaughtException");
+      return kuzzle.start(application);
+      //}).then(() => {
+      should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly(
+        "unhandledRejection"
+      );
+      should(processOnSpy.getCall(0).args[0]).be.exactly("unhandledRejection");
 
-        should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly(
-          "SIGQUIT"
-        );
-        should(processOnSpy.getCall(2).args[0]).be.exactly("SIGQUIT");
+      should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly(
+        "uncaughtException"
+      );
+      should(processOnSpy.getCall(1).args[0]).be.exactly("uncaughtException");
 
-        should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly(
-          "SIGABRT"
-        );
-        should(processOnSpy.getCall(3).args[0]).be.exactly("SIGABRT");
+      should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly(
+        "SIGQUIT"
+      );
+      should(processOnSpy.getCall(2).args[0]).be.exactly("SIGQUIT");
 
-        should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly(
-          "SIGTRAP"
-        );
-        should(processOnSpy.getCall(4).args[0]).be.exactly("SIGTRAP");
+      should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly(
+        "SIGABRT"
+      );
+      should(processOnSpy.getCall(3).args[0]).be.exactly("SIGABRT");
 
-        should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly(
-          "SIGINT"
-        );
-        should(processOnSpy.getCall(5).args[0]).be.exactly("SIGINT");
+      should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly(
+        "SIGTRAP"
+      );
+      should(processOnSpy.getCall(4).args[0]).be.exactly("SIGTRAP");
 
-        should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly(
-          "SIGTERM"
-        );
-        should(processOnSpy.getCall(6).args[0]).be.exactly("SIGTERM");
-      });
+      should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly(
+        "SIGINT"
+      );
+      should(processOnSpy.getCall(5).args[0]).be.exactly("SIGINT");
+
+      should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly(
+        "SIGTERM"
+      );
+      should(processOnSpy.getCall(6).args[0]).be.exactly("SIGTERM");
+      // });
     });
   });
 
@@ -312,8 +341,9 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     });
 
     it("should call the handler and work properly", async () => {
-      await kuzzle.install([{ id: "id", handler, description: "description" }]);
+      kuzzle = _mockKuzzle();
 
+      await kuzzle.install([{ id: "id", handler, description: "description" }]);
       should(kuzzle.ask).be.calledTwice();
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:document:exist",

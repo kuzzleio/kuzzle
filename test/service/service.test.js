@@ -3,7 +3,7 @@
 const sinon = require("sinon"),
   should = require("should"),
   KuzzleMock = require("../mocks/kuzzle.mock"),
-  Service = require("../../lib/service/service");
+  { Service } = require("../../lib/service/service");
 
 describe("Service", () => {
   let name, config, kuzzle, service;

@@ -43,6 +43,56 @@ Then(
 );
 
 Then(
+  "The document {string}:{string}:{string} content match:",
+  async function (index, collection, documentId, dataTable) {
+    const expectedContent = this.parseObject(dataTable);
+
+    const document = await this.sdk.document.get(index, collection, documentId);
+
+    for (const [key, value] of Object.entries(expectedContent)) {
+      should(_.get(document._source, key)).be.eql(value);
+    }
+  }
+);
+
+Then(
+  "The document does not exist:",
+  async function (index, collection, documentId, dataTable) {
+    const expectedContent = this.parseObject(dataTable);
+
+    const document = await this.sdk.document.get(index, collection, documentId);
+
+    for (const [key, value] of Object.entries(expectedContent)) {
+      should(_.get(document._source, key)).be.eql(value);
+    }
+  }
+);
+
+Then(
+  /The document "(.*?)":"(.*?)":"(.*?)" does( not)? exist/,
+  async function (index, collection, documentId, not) {
+    console.log(
+      "does the document : " + index,
+      collection,
+      documentId + " exist?"
+    );
+    const exists = await this.sdk.document.exists(
+      index,
+      collection,
+      documentId
+    );
+
+    if (not && exists) {
+      throw new Error(`Document ${documentId} exists, but it shouldn't`);
+    }
+
+    if (!not && !exists) {
+      throw new Error(`Expected document ${documentId} to exist`);
+    }
+  }
+);
+
+Then(
   "I {string} the following multiple documents:",
   async function (action, dataTable) {
     action = `m${action[0].toUpperCase() + action.slice(1)}`;

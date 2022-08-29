@@ -9,27 +9,30 @@ const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
 const BaseModel = require("../../../lib/model/storage/baseModel");
 const ApiKey = require("../../../lib/model/storage/apiKey");
+const { StorageEngine } = require("../../../lib/core/storage/storageEngine");
+const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 
 describe("ApiKey", () => {
-  let StorageEngine;
   let storageEngine;
   let kuzzle;
+
+  let initClientAdaptersSave = StorageEngine.initClientAdapters;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    mockrequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
+    StorageEngine.initClientAdapters = function (scopeEnum, virtualIndex) {
+      return new ClientAdapterMock(scopeEnum, virtualIndex);
+    };
 
-    StorageEngine = mockrequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
-    );
-    storageEngine = new StorageEngine();
+    storageEngine = new StorageEngine(new VirtualIndexMock());
 
     return storageEngine.init();
   });
 
   afterEach(() => {
     mockrequire.stopAll();
+    StorageEngine.initClientAdapters = initClientAdaptersSave;
   });
 
   describe("ApiKey.create", () => {

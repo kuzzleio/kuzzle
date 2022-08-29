@@ -31,14 +31,27 @@ export class StorageEngine {
   privateClient: ClientAdapter = null;
   virtualIndex: VirtualIndex;
 
+  get public(){
+    return this.publicClient;
+  }
+
+  get private(){
+    return this.privateClient;
+  }
+
+  // to be mocked in Unit Test
+  static initClientAdapters(scopeEnum : string, virtualIndex: VirtualIndex){
+    return new ClientAdapter( scopeEnum, virtualIndex);
+  }
+
   constructor(virtualIndex: VirtualIndex) {
     this.virtualIndex = virtualIndex;
 
     // Storage client for public indexes only
-    this.publicClient = new ClientAdapter(scopeEnum.PUBLIC, this.virtualIndex);
+    this.publicClient = StorageEngine.initClientAdapters(scopeEnum.PUBLIC, this.virtualIndex);
 
     // Storage client for private indexes only
-    this.privateClient = new ClientAdapter(
+    this.privateClient = StorageEngine.initClientAdapters(
       scopeEnum.PRIVATE,
       this.virtualIndex
     );

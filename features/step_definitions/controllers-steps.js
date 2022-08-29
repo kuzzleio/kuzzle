@@ -90,6 +90,20 @@ Then(
 );
 
 Then(
+  /I should receive a ("(.*?)" )?array (not )?containing:$/,
+  function (name, not, rawList) {
+    const result = name ? this.props.result[name] : this.props.result;
+    for (const element of JSON.parse(rawList)) {
+      if (not) {
+        should(result).not.containEql(element);
+      } else {
+        should(result).containEql(element);
+      }
+    }
+  }
+);
+
+Then(
   /I should receive a ("(.*?)" )?array containing (\d+) elements/,
   function (name, expectedCount) {
     const result = name ? this.props.result[name] : this.props.result;

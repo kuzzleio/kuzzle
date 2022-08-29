@@ -1,7 +1,7 @@
 "use strict";
 
 const sinon = require("sinon");
-const ClientAdapter = require("../../lib/core/storage/clientAdapter");
+const { ClientAdapter } = require("../../lib/core/storage/clientAdapter");
 
 class ClientAdapterMock extends ClientAdapter {
   constructor(kuzzle, scope) {
@@ -13,7 +13,6 @@ class ClientAdapterMock extends ClientAdapter {
       this.registerDocumentEvents();
       this.registerMappingEvents();
       this.registerCacheEvents();
-
       global.kuzzle.onAsk(
         `core:storage:${this.scope}:info:get`,
         sinon.stub().resolves()

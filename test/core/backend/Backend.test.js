@@ -6,15 +6,17 @@ const mockrequire = require("mock-require");
 
 const { EmbeddedSDK } = require("../../../lib/core/shared/sdk/embeddedSdk");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
+let { Backend } = require("../../../lib/core/backend");
 
 describe("Backend", () => {
   let application;
-  let Backend;
 
   beforeEach(() => {
-    mockrequire("../../../lib/kuzzle", KuzzleMock);
-
     ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
+
+    Backend.createKuzzle = function (kuzzleConfiguration) {
+      return new KuzzleMock();
+    };
 
     application = new Backend("black-mesa");
   });

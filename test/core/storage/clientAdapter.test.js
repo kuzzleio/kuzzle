@@ -10,26 +10,20 @@ const {
   PreconditionError,
 } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
-const ElasticsearchMock = require("../../mocks/elasticsearch.mock");
 const MutexMock = require("../../mocks/mutex.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
+const { ClientAdapter } = require("../../../lib/core/storage/clientAdapter");
+const ElasticsearchMock = require("../../mocks/elasticsearch.mock");
+const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 
 describe("#core/storage/ClientAdapter", () => {
-  let ClientAdapter;
   let publicAdapter;
   let privateAdapter;
   let kuzzle;
 
   before(() => {
     mockRequire("../../../lib/util/mutex", { Mutex: MutexMock });
-    mockRequire(
-      "../../../lib/service/storage/elasticsearch",
-      ElasticsearchMock
-    );
-    ClientAdapter = mockRequire.reRequire(
-      "../../../lib/core/storage/clientAdapter"
-    );
   });
 
   after(() => {
@@ -40,8 +34,19 @@ describe("#core/storage/ClientAdapter", () => {
     kuzzle = new KuzzleMock();
     kuzzle.ask.restore();
 
-    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
-    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
+    ClientAdapter.createElasticSearch = function (scope, virtualIndex) {
+      return new ElasticsearchMock(
+        global.kuzzle.config.services.storageEngine,
+        scope,
+        virtualIndex
+      );
+    };
+    ClientAdapter.getMutex = function () {
+      return new MutexMock("loadMappings", { timeout: -1, ttl: 60000 });
+    };
+    const virtualIndex = new VirtualIndexMock();
+    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC, virtualIndex);
+    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE, virtualIndex);
 
     return Promise.all(
       [publicAdapter, privateAdapter].map((adapter) => {
@@ -67,6 +72,13 @@ describe("#core/storage/ClientAdapter", () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
+      ClientAdapter.createElasticSearch = function (scope, virtualIndex) {
+        return new ElasticsearchMock(
+          global.kuzzle.config.services.storageEngine,
+          scope,
+          virtualIndex
+        );
+      };
       uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
       sinon.stub(uninitializedAdapter, "populateCache").resolves();
 
@@ -77,9 +89,7 @@ describe("#core/storage/ClientAdapter", () => {
 
     it("should initialize a new ES client", async () => {
       should(uninitializedAdapter.client.init).not.called();
-
       await uninitializedAdapter.init();
-
       should(uninitializedAdapter.client.init).calledOnce();
       should(uninitializedAdapter.populateCache).calledOnce();
     });
@@ -89,6 +99,13 @@ describe("#core/storage/ClientAdapter", () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
+      ClientAdapter.createElastisSearch = function (scope, virtualIndex) {
+        return new ElasticsearchMock(
+          global.kuzzle.config.services.storageEngine,
+          scope,
+          virtualIndex
+        );
+      };
       uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
 
       // prevents event conflicts with the already initialized adapters above
@@ -570,7 +587,12 @@ describe("#core/storage/ClientAdapter", () => {
       });
 
       it('should register a "mappings:import" event', async () => {
+        //sinon.stub(kuzzle, "ask").resolves();
+        kuzzle.onAsk("core:cache:internal:store", () => {
+          console.log(new Error().stack);
+        });
         for (const adapter of [publicAdapter, privateAdapter]) {
+          console.log("for!");
           await kuzzle.ask(
             `core:storage:${adapter.scope}:mappings:import`,
             mappings,
@@ -579,7 +601,7 @@ describe("#core/storage/ClientAdapter", () => {
               indexCacheOnly: false,
             }
           );
-
+          console.log(adapter.client.createIndex.getCall(0));
           should(adapter.client.createIndex).calledWith("index");
           should(adapter.client.createCollection).calledWith(
             "index",
@@ -1587,12 +1609,13 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection"
           );
-
+          console.log(adapter.client.search.getCall(0).args);
           should(adapter.client.search).calledWith(
             {
               index: "index",
               collection: "collection",
               searchBody: "query",
+              targets: null,
             },
             "options"
           );
@@ -1632,6 +1655,8 @@ describe("#core/storage/ClientAdapter", () => {
             .calledWith("index1", "collection1")
             .and.calledWith("index1", "collection2");
 
+          console.log(adapter.client.search.args);
+
           should(adapter.client.search).calledWith(
             {
               targets: [
@@ -1641,6 +1666,8 @@ describe("#core/storage/ClientAdapter", () => {
                 },
               ],
               searchBody: "query",
+              index: null,
+              collection: null,
             },
             "options"
           );

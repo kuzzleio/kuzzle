@@ -15,8 +15,10 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ESClientMock = require("../../mocks/service/elasticsearchClient.mock");
 const { randomNumberMock } = require("../../mocks/name-generator.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 const { Mutex } = require("../../../lib/util/mutex");
+const { Elasticsearch } = require("../../../lib/service/storage/elasticsearch");
+const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 
 describe("Test: ElasticSearch service", () => {
   let kuzzle;
@@ -27,13 +29,16 @@ describe("Test: ElasticSearch service", () => {
   let elasticsearch;
   let timestamp;
   let esClientError;
-  let ES;
+  let ES = Elasticsearch;
 
   before(() => {
+    /*
     mockRequire("../../../lib/util/name-generator", {
       randomNumber: randomNumberMock,
     });
     ES = mockRequire.reRequire("../../../lib/service/storage/elasticsearch");
+     */
+    ES.getRandomNumber = randomNumberMock;
   });
 
   after(() => {
@@ -51,10 +56,20 @@ describe("Test: ElasticSearch service", () => {
 
     esClientError = new Error("es client fail");
 
-    ES.buildClient = () => new ESClientMock();
-    elasticsearch = new ES(kuzzle.config.services.storageEngine);
+    const virtualIndex = new VirtualIndexMock();
 
-    await elasticsearch.init();
+    ES.buildClient = function (config) {
+      console.log("build fake client");
+      return new ESClientMock();
+    };
+
+    elasticsearch = new ES(
+      kuzzle.config.services.storageEngine,
+      scopeEnum.PUBLIC,
+      virtualIndex
+    );
+
+    await elasticsearch._initSequence();
 
     elasticsearch._esWrapper = {
       reject: sinon.spy((error) => Promise.reject(error)),
@@ -72,11 +87,18 @@ describe("Test: ElasticSearch service", () => {
   });
 
   describe("#constructor", () => {
-    it("should initialize properties", () => {
-      const esPublic = new ES(kuzzle.config.services.storageEngine);
+    it("should create instances", () => {
+      const virtualIndex = new VirtualIndexMock();
+
+      const esPublic = new ES(
+        kuzzle.config.services.storageEngine,
+        scopeEnum.PUBLIC,
+        virtualIndex
+      );
       const esInternal = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE
+        scopeEnum.PRIVATE,
+        virtualIndex
       );
 
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
@@ -87,10 +109,18 @@ describe("Test: ElasticSearch service", () => {
 
   describe("#init", () => {
     it("should initialize properly", () => {
-      elasticsearch = new ES(kuzzle.config.services.storageEngine);
-      elasticsearch._buildClient = () => new ESClientMock();
+      const virtualIndex = new VirtualIndexMock();
 
-      const promise = elasticsearch.init();
+      elasticsearch = new ES(
+        kuzzle.config.services.storageEngine,
+        scopeEnum.PUBLIC,
+        virtualIndex
+      );
+      elasticsearch._buildClient = function () {
+        return new ESClientMock();
+      };
+
+      const promise = elasticsearch._initSequence();
 
       return should(promise)
         .be.fulfilledWith()
@@ -170,6 +200,7 @@ describe("Test: ElasticSearch service", () => {
 
   describe("#scroll", () => {
     it("should be able to scroll an old search", async () => {
+      console.log("et 1");
       const cacheStub = kuzzle.ask.withArgs("core:cache:internal:get").resolves(
         JSON.stringify({
           fetched: 1,
@@ -185,7 +216,7 @@ describe("Test: ElasticSearch service", () => {
           ],
         })
       );
-
+      console.log("et 2");
       elasticsearch._client.scroll.resolves({
         body: {
           _scroll_id: "azerty",
@@ -198,21 +229,20 @@ describe("Test: ElasticSearch service", () => {
           },
         },
       });
-
+      console.log("et 3");
       elasticsearch._getAliasFromIndice = sinon.stub();
+      console.log("et 4");
       elasticsearch._getAliasFromIndice
         .withArgs("&foo.foo")
         .returns(["@&foo.foo"]);
+      console.log("et 5");
       elasticsearch._getAliasFromIndice
         .withArgs("&bar.bar")
         .returns(["@&bar.bar"]);
-
       const result = await elasticsearch.scroll("i-am-scroll-id", {
         scrollTTL: "10s",
       });
-
       should(cacheStub).calledOnce();
-
       const redisKey = cacheStub.firstCall.args[1];
 
       // 3:
@@ -237,14 +267,12 @@ describe("Test: ElasticSearch service", () => {
         }),
         { ttl: 10000 }
       );
-
       should(elasticsearch._client.clearScroll).not.called();
-
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scroll: "10s",
         scrollId: "i-am-scroll-id",
       });
-
+      console.log("result : " + JSON.stringify(result));
       should(result).be.match({
         aggregations: undefined,
         hits: [
@@ -3762,6 +3790,7 @@ describe("Test: ElasticSearch service", () => {
         _kuzzle_info: {
           author: null,
           createdAt: timestamp,
+          index: index,
           updater: null,
           updatedAt: null,
         },
@@ -3931,6 +3960,7 @@ describe("Test: ElasticSearch service", () => {
     beforeEach(() => {
       kuzzleMeta = {
         _kuzzle_info: {
+          index: index,
           updater: null,
           updatedAt: timestamp,
         },
@@ -3993,6 +4023,7 @@ describe("Test: ElasticSearch service", () => {
           { _id: "mehry", _source: { city: "Kathmandu", ...kuzzleMeta } },
           { _id: "liia", _source: { city: "Ho Chi Minh City", ...kuzzleMeta } },
         ];
+        console.log("TEST.esRequest : " + JSON.stringify(esRequest));
         should(elasticsearch._mExecute).be.calledWithMatch(
           esRequest,
           toImport,
@@ -5066,14 +5097,21 @@ describe("Test: ElasticSearch service", () => {
     let publicES;
 
     beforeEach(async () => {
-      publicES = new ES(kuzzle.config.services.storageEngine);
+      const virtualIndex = new VirtualIndexMock();
+
+      publicES = new ES(
+        kuzzle.config.services.storageEngine,
+        scopeEnum.PUBLIC,
+        virtualIndex
+      );
       internalES = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE
+        scopeEnum.PRIVATE,
+        virtualIndex
       );
 
-      await publicES.init();
-      await internalES.init();
+      await publicES._initSequence();
+      await internalES._initSequence();
     });
 
     describe("#_getAlias", () => {

@@ -293,6 +293,12 @@
           "message": "Attempt to recreate an existing collection %s of index %s of scope %s with non matching static setting : %s at %s while existing one is at %s",
           "code": 51,
           "class": "BadRequestError"
+        },
+        "delete_virtual_collection": {
+          "description": "Remove virtual collection is forbidden",
+          "message": "You can't remove a virtual collection. ",
+          "code": 52,
+          "class": "BadRequestError"
         }
       }
     },
