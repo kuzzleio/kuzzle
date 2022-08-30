@@ -32,7 +32,7 @@ import { isPlainObject } from "../../util/safeObject";
 import Promback from "../../util/promback";
 import { Mutex } from "../../util/mutex";
 import * as kerror from "../../kerror";
-import { scopeEnum } from "../storage/storeScopeEnum";
+import { ScopeEnum } from "../storage/storeScopeEnum";
 
 import {
   BadRequestError,
@@ -279,7 +279,7 @@ export class PluginContext {
 
     /* context.constructors =============================================== */
 
-    const pluginStore = new Store(pluginIndex, scopeEnum.PRIVATE);
+    const pluginStore = new Store(pluginIndex, ScopeEnum.PRIVATE);
 
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository(

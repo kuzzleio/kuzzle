@@ -12,7 +12,7 @@ const {
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const MutexMock = require("../../mocks/mutex.mock");
 
-const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
+const { ScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 const { ClientAdapter } = require("../../../lib/core/storage/clientAdapter");
 const ElasticsearchMock = require("../../mocks/elasticsearch.mock");
 const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
@@ -45,8 +45,8 @@ describe("#core/storage/ClientAdapter", () => {
       return new MutexMock("loadMappings", { timeout: -1, ttl: 60000 });
     };
     const virtualIndex = new VirtualIndexMock();
-    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC, virtualIndex);
-    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE, virtualIndex);
+    publicAdapter = new ClientAdapter(ScopeEnum.PUBLIC, virtualIndex);
+    privateAdapter = new ClientAdapter(ScopeEnum.PRIVATE, virtualIndex);
 
     return Promise.all(
       [publicAdapter, privateAdapter].map((adapter) => {
@@ -58,13 +58,13 @@ describe("#core/storage/ClientAdapter", () => {
 
   describe("#constructor", () => {
     it("should instantiate an ES client with the right scope", () => {
-      should(publicAdapter.scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.scope).eql(scopeEnum.PRIVATE);
+      should(publicAdapter.scope).eql(ScopeEnum.PUBLIC);
+      should(privateAdapter.scope).eql(ScopeEnum.PRIVATE);
 
       should(publicAdapter.client).not.eql(privateAdapter.client);
 
-      should(publicAdapter.client._scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.client._scope).eql(scopeEnum.PRIVATE);
+      should(publicAdapter.client._scope).eql(ScopeEnum.PUBLIC);
+      should(privateAdapter.client._scope).eql(ScopeEnum.PRIVATE);
     });
   });
 
@@ -79,7 +79,7 @@ describe("#core/storage/ClientAdapter", () => {
           virtualIndex
         );
       };
-      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(ScopeEnum.PUBLIC);
       sinon.stub(uninitializedAdapter, "populateCache").resolves();
 
       // prevents event conflicts with the already initialized adapters above
@@ -106,7 +106,7 @@ describe("#core/storage/ClientAdapter", () => {
           virtualIndex
         );
       };
-      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(ScopeEnum.PUBLIC);
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
@@ -588,11 +588,8 @@ describe("#core/storage/ClientAdapter", () => {
 
       it('should register a "mappings:import" event', async () => {
         //sinon.stub(kuzzle, "ask").resolves();
-        kuzzle.onAsk("core:cache:internal:store", () => {
-          console.log(new Error().stack);
-        });
+        kuzzle.onAsk("core:cache:internal:store", () => {});
         for (const adapter of [publicAdapter, privateAdapter]) {
-          console.log("for!");
           await kuzzle.ask(
             `core:storage:${adapter.scope}:mappings:import`,
             mappings,
@@ -601,7 +598,6 @@ describe("#core/storage/ClientAdapter", () => {
               indexCacheOnly: false,
             }
           );
-          console.log(adapter.client.createIndex.getCall(0));
           should(adapter.client.createIndex).calledWith("index");
           should(adapter.client.createCollection).calledWith(
             "index",
@@ -1609,7 +1605,6 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection"
           );
-          console.log(adapter.client.search.getCall(0).args);
           should(adapter.client.search).calledWith(
             {
               index: "index",
@@ -1654,8 +1649,6 @@ describe("#core/storage/ClientAdapter", () => {
           should(adapter.cache.assertCollectionExists)
             .calledWith("index1", "collection1")
             .and.calledWith("index1", "collection2");
-
-          console.log(adapter.client.search.args);
 
           should(adapter.client.search).calledWith(
             {

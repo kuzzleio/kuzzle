@@ -15,7 +15,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ESClientMock = require("../../mocks/service/elasticsearchClient.mock");
 const { randomNumberMock } = require("../../mocks/name-generator.mock");
 
-const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
+const { ScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 const { Mutex } = require("../../../lib/util/mutex");
 const { Elasticsearch } = require("../../../lib/service/storage/elasticsearch");
 const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
@@ -58,14 +58,13 @@ describe("Test: ElasticSearch service", () => {
 
     const virtualIndex = new VirtualIndexMock();
 
-    ES.buildClient = function (config) {
-      console.log("build fake client");
+    ES.buildClient = function () {
       return new ESClientMock();
     };
 
     elasticsearch = new ES(
       kuzzle.config.services.storageEngine,
-      scopeEnum.PUBLIC,
+      ScopeEnum.PUBLIC,
       virtualIndex
     );
 
@@ -92,12 +91,12 @@ describe("Test: ElasticSearch service", () => {
 
       const esPublic = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PUBLIC,
+        ScopeEnum.PUBLIC,
         virtualIndex
       );
       const esInternal = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE,
+        ScopeEnum.PRIVATE,
         virtualIndex
       );
 
@@ -113,7 +112,7 @@ describe("Test: ElasticSearch service", () => {
 
       elasticsearch = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PUBLIC,
+        ScopeEnum.PUBLIC,
         virtualIndex
       );
       elasticsearch._buildClient = function () {
@@ -200,7 +199,6 @@ describe("Test: ElasticSearch service", () => {
 
   describe("#scroll", () => {
     it("should be able to scroll an old search", async () => {
-      console.log("et 1");
       const cacheStub = kuzzle.ask.withArgs("core:cache:internal:get").resolves(
         JSON.stringify({
           fetched: 1,
@@ -216,7 +214,6 @@ describe("Test: ElasticSearch service", () => {
           ],
         })
       );
-      console.log("et 2");
       elasticsearch._client.scroll.resolves({
         body: {
           _scroll_id: "azerty",
@@ -229,13 +226,10 @@ describe("Test: ElasticSearch service", () => {
           },
         },
       });
-      console.log("et 3");
       elasticsearch._getAliasFromIndice = sinon.stub();
-      console.log("et 4");
       elasticsearch._getAliasFromIndice
         .withArgs("&foo.foo")
         .returns(["@&foo.foo"]);
-      console.log("et 5");
       elasticsearch._getAliasFromIndice
         .withArgs("&bar.bar")
         .returns(["@&bar.bar"]);
@@ -272,7 +266,6 @@ describe("Test: ElasticSearch service", () => {
         scroll: "10s",
         scrollId: "i-am-scroll-id",
       });
-      console.log("result : " + JSON.stringify(result));
       should(result).be.match({
         aggregations: undefined,
         hits: [
@@ -4023,7 +4016,6 @@ describe("Test: ElasticSearch service", () => {
           { _id: "mehry", _source: { city: "Kathmandu", ...kuzzleMeta } },
           { _id: "liia", _source: { city: "Ho Chi Minh City", ...kuzzleMeta } },
         ];
-        console.log("TEST.esRequest : " + JSON.stringify(esRequest));
         should(elasticsearch._mExecute).be.calledWithMatch(
           esRequest,
           toImport,
@@ -5101,12 +5093,12 @@ describe("Test: ElasticSearch service", () => {
 
       publicES = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PUBLIC,
+        ScopeEnum.PUBLIC,
         virtualIndex
       );
       internalES = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE,
+        ScopeEnum.PRIVATE,
         virtualIndex
       );
 

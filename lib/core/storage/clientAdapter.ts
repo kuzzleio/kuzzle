@@ -25,7 +25,7 @@ import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
 import { Mutex } from "../../util/mutex";
 import { KuzzleError } from "../../kerror/errors";
-import {VirtualIndex} from "../../service/storage/virtualIndex";
+import { VirtualIndex } from "../../service/storage/virtualIndex";
 
 const servicesError = kerror.wrap("services", "storage");
 
@@ -37,16 +37,14 @@ export class ClientAdapter {
   client: Elasticsearch;
   cache: IndexCache;
   scope: string;
-  virtualIndex : VirtualIndex;
-
+  virtualIndex: VirtualIndex;
 
   static getMutex() {
-    return new Mutex("loadMappings", {timeout: -1, ttl: 60000});
+    return new Mutex("loadMappings", { timeout: -1, ttl: 60000 });
   }
 
-
   //for Unit test
-  static createElasticSearch(scope, virtualIndex){
+  static createElasticSearch(scope, virtualIndex) {
     return new Elasticsearch(
       global.kuzzle.config.services.storageEngine,
       scope,
@@ -116,18 +114,29 @@ export class ClientAdapter {
     );
   }
 
-  async createPhysicalIndex(index: string,
-                            { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}){
-    return this.createIndex(index, {indexCacheOnly, propagate, physicalIndex:null});
+  async createPhysicalIndex(
+    index: string,
+    { indexCacheOnly = false, propagate = true } = {}
+  ) {
+    return this.createIndex(index, {
+      indexCacheOnly,
+      physicalIndex: null,
+      propagate,
+    });
   }
 
-
-  async createVirtualIndex(index: string,
-                            { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}){
-    if(!physicalIndex){
+  async createVirtualIndex(
+    index: string,
+    { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}
+  ) {
+    if (!physicalIndex) {
       throw new KuzzleError("You must specify physicalIndex.", 403);
     }
-    return this.createIndex(index, {indexCacheOnly, propagate, physicalIndex});
+    return this.createIndex(index, {
+      indexCacheOnly,
+      physicalIndex,
+      propagate,
+    });
   }
 
   async createIndex(
@@ -412,19 +421,19 @@ export class ClientAdapter {
      * Return a list of all indexes within this adapter's scope
      * @returns {string[]}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, (onlyVirtual?, onlyPhysical?) => {
-      const indexes = this.cache.listIndexes();
-      if(!onlyPhysical && !onlyVirtual) {
-        return indexes;
-      } else if(onlyPhysical && !onlyVirtual ){
-        return indexes.filter(index=> !this.virtualIndex.isVirtual(index));
-      } else if(!onlyPhysical && onlyVirtual ) {
-        return indexes.filter(index=> this.virtualIndex.isVirtual(index));
-      } else {
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:list`,
+      (onlyVirtual?, onlyPhysical?) => {
+        const indexes = this.cache.listIndexes();
+        if (!onlyPhysical && !onlyVirtual) {
+          return indexes;
+        } else if (onlyPhysical && !onlyVirtual) {
+          return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
+        } else if (!onlyPhysical && onlyVirtual) {
+          return indexes.filter((index) => this.virtualIndex.isVirtual(index));
+        }
         return [];
       }
-    }
-
     );
 
     /**

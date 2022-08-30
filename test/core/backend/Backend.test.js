@@ -14,7 +14,7 @@ describe("Backend", () => {
   beforeEach(() => {
     ({ Backend } = mockrequire.reRequire("../../../lib/core/backend/backend"));
 
-    Backend.createKuzzle = function (kuzzleConfiguration) {
+    Backend.createKuzzle = function () {
       return new KuzzleMock();
     };
 

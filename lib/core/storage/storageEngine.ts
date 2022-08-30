@@ -21,7 +21,7 @@
 
 import { ClientAdapter } from "./clientAdapter";
 import { VirtualIndex } from "../../service/storage/virtualIndex";
-import { scopeEnum } from "./storeScopeEnum";
+import { ScopeEnum } from "./storeScopeEnum";
 
 import * as kuzzleError from "../../kerror";
 const kerror = kuzzleError.wrap("services", "storage");
@@ -31,28 +31,31 @@ export class StorageEngine {
   privateClient: ClientAdapter = null;
   virtualIndex: VirtualIndex;
 
-  get public(){
+  get public() {
     return this.publicClient;
   }
 
-  get private(){
+  get private() {
     return this.privateClient;
   }
 
   // to be mocked in Unit Test
-  static initClientAdapters(scopeEnum : string, virtualIndex: VirtualIndex){
-    return new ClientAdapter( scopeEnum, virtualIndex);
+  static initClientAdapters(scopeEnum: string, virtualIndex: VirtualIndex) {
+    return new ClientAdapter(scopeEnum, virtualIndex);
   }
 
   constructor(virtualIndex: VirtualIndex) {
     this.virtualIndex = virtualIndex;
 
     // Storage client for public indexes only
-    this.publicClient = StorageEngine.initClientAdapters(scopeEnum.PUBLIC, this.virtualIndex);
+    this.publicClient = StorageEngine.initClientAdapters(
+      ScopeEnum.PUBLIC,
+      this.virtualIndex
+    );
 
     // Storage client for private indexes only
     this.privateClient = StorageEngine.initClientAdapters(
-      scopeEnum.PRIVATE,
+      ScopeEnum.PRIVATE,
       this.virtualIndex
     );
   }

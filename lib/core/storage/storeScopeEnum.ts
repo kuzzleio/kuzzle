@@ -29,7 +29,7 @@
  * @readOnly
  * @enum {storeScopeEnum}
  */
-export enum scopeEnum {
+export enum ScopeEnum {
   PRIVATE = "private",
   PUBLIC = "public",
 }

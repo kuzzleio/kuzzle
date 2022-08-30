@@ -24,7 +24,7 @@ import { KuzzleEventEmitter } from "./event/kuzzleEventEmitter";
 
 import { murmurHash128 as murmur } from "murmurhash-native";
 import stringify from "json-stable-stringify";
-import {Koncorde, KoncordeOptions} from "koncorde";
+import { Koncorde, KoncordeOptions } from "koncorde";
 import Bluebird from "bluebird";
 import segfaultHandler from "node-segfault-handler";
 import _ from "lodash";
@@ -42,7 +42,7 @@ import Logger from "./log";
 import vault from "./vault";
 import DumpGenerator from "./dumpGenerator";
 import AsyncStore from "../util/asyncStore";
-import {Mutex, MutexOptions} from "../util/mutex";
+import { Mutex, MutexOptions } from "../util/mutex";
 import * as kerror from "../kerror";
 import InternalIndexHandler from "./internalIndexHandler";
 import CacheEngine from "../core/cache/cacheEngine";
@@ -183,17 +183,16 @@ export class Kuzzle extends KuzzleEventEmitter {
   public id: string;
 
   //For Unit Test
-  static createStorageEngine(virtualIndex) : StorageEngine{
+  static createStorageEngine(virtualIndex): StorageEngine {
     return new StorageEngine(virtualIndex);
   }
 
   //For Unit Test
-  static createVirtualIndex() : VirtualIndex {
+  static createVirtualIndex(): VirtualIndex {
     return new VirtualIndex();
   }
 
-
-  static createKoncorde(options : KoncordeOptions) : Koncorde{
+  static createKoncorde(options: KoncordeOptions): Koncorde {
     return new Koncorde(options);
   }
 
@@ -205,16 +204,20 @@ export class Kuzzle extends KuzzleEventEmitter {
     return new CacheEngine().init();
   }
 
-  static async initSecurityModule(){
+  static async initSecurityModule() {
     return new SecurityModule().init();
   }
 
-  static async initCluster(){
+  static async initCluster() {
     return new Cluster().init();
   }
 
-  static createMutex(resource: string, mutexOption? : MutexOptions) {
+  static createMutex(resource: string, mutexOption?: MutexOptions) {
     return new Mutex(resource, mutexOption);
+  }
+
+  static getProcess(){
+    return process;
   }
 
   constructor(config: KuzzleConfiguration) {
@@ -270,10 +273,11 @@ export class Kuzzle extends KuzzleEventEmitter {
       await this.pipe("kuzzle:state:start");
 
       // Koncorde realtime engine
-      this.koncorde = Kuzzle.createKoncorde(
-        {maxConditions : this.config.limits.subscriptionConditionsCount,
-                regExpEngine : this.config.realtime.pcreSupport ? "js" : "re2",
-                seed : this.config.internal.hash.seed});
+      this.koncorde = Kuzzle.createKoncorde({
+        maxConditions: this.config.limits.subscriptionConditionsCount,
+        regExpEngine: this.config.realtime.pcreSupport ? "js" : "re2",
+        seed: this.config.internal.hash.seed,
+      });
 
       await Kuzzle.initCacheEngine();
 
@@ -335,7 +339,6 @@ export class Kuzzle extends KuzzleEventEmitter {
       this.log.info(
         `[✔] Start "${this.pluginsManager.application.name}" application`
       );
-      console.log("et 4");
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
@@ -360,8 +363,6 @@ export class Kuzzle extends KuzzleEventEmitter {
 
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
-
-      console.log(`[X] Cannot start Kuzzle ${this.version}: ${error.message}`);
       this.log.error(
         `[X] Cannot start Kuzzle ${this.version}: ${error.message}`
       );
@@ -414,7 +415,7 @@ export class Kuzzle extends KuzzleEventEmitter {
 
     this.log.info("Halted.");
 
-    process.exit(0);
+    Kuzzle.getProcess().exit(0);
   }
 
   /**
@@ -704,7 +705,9 @@ export class Kuzzle extends KuzzleEventEmitter {
         }
 
         const importPayloadHash = sha256(stringify(importPayload));
-        const mutex = Kuzzle.createMutex(`backend:import:${type}`, { timeout: 0 });
+        const mutex = Kuzzle.createMutex(`backend:import:${type}`, {
+          timeout: 0,
+        });
 
         const existingHash = await this.ask(
           "core:cache:internal:get",
@@ -786,8 +789,8 @@ export class Kuzzle extends KuzzleEventEmitter {
    * - uncaught-exception
    */
   registerSignalHandlers() {
-    process.removeAllListeners("unhandledRejection");
-    process.on("unhandledRejection", (reason, promise) => {
+    Kuzzle.getProcess().removeAllListeners("unhandledRejection");
+    Kuzzle.getProcess().on("unhandledRejection", (reason, promise) => {
       if (reason !== undefined) {
         if (reason instanceof Error) {
           this.log.error(
@@ -815,32 +818,32 @@ export class Kuzzle extends KuzzleEventEmitter {
       }
     });
 
-    process.removeAllListeners("uncaughtException");
-    process.on("uncaughtException", (err) => {
+    Kuzzle.getProcess().removeAllListeners("uncaughtException");
+    Kuzzle.getProcess().on("uncaughtException", (err) => {
       this.log.error(`ERROR: uncaughtException: ${err.message}\n${err.stack}`);
       this.dumpAndExit("uncaught-exception");
     });
 
     // abnormal termination signals => generate a core dump
     for (const signal of ["SIGQUIT", "SIGABRT"]) {
-      process.removeAllListeners(signal);
-      process.on(signal, () => {
+      Kuzzle.getProcess().removeAllListeners(signal);
+      Kuzzle.getProcess().on(signal, () => {
         this.log.error(`ERROR: Caught signal: ${signal}`);
         this.dumpAndExit("signal-".concat(signal.toLowerCase()));
       });
     }
 
     // signal SIGTRAP is used to generate a kuzzle dump without stopping it
-    process.removeAllListeners("SIGTRAP");
-    process.on("SIGTRAP", () => {
+    Kuzzle.getProcess().removeAllListeners("SIGTRAP");
+    Kuzzle.getProcess().on("SIGTRAP", () => {
       this.log.error("Caught signal SIGTRAP => generating a core dump");
       this.dump("signal-sigtrap");
     });
 
     // gracefully exits on normal termination
     for (const signal of ["SIGINT", "SIGTERM"]) {
-      process.removeAllListeners(signal);
-      process.on(signal, () => {
+      Kuzzle.getProcess().removeAllListeners(signal);
+      Kuzzle.getProcess().on(signal, () => {
         this.log.info(`Caught signal ${signal} => gracefully exit`);
         this.shutdown();
       });

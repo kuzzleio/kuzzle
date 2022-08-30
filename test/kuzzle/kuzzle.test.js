@@ -3,7 +3,6 @@
 const sinon = require("sinon");
 const should = require("should");
 const mockrequire = require("mock-require");
-const rewire = require("rewire");
 const Bluebird = require("bluebird");
 const stringify = require("json-stable-stringify");
 
@@ -14,17 +13,29 @@ const kuzzleStateEnum = require("../../lib/kuzzle/kuzzleStateEnum");
 const { sha256 } = require("../../lib/util/crypto");
 const VirtualIndexMock = require("../mocks/virtualIndex.mock");
 const StorageEngineMock = require("../mocks/storageEngine.mock");
-const { Kuzzle } = require("../../lib/kuzzle/kuzzle");
-const { Koncorde, KoncordeOptions } = require("koncorde");
-const { MutexOptions } = require("../../lib/util/mutex");
+let { Kuzzle } = require("../../lib/kuzzle/kuzzle");
 
 const config = require("../../lib/config").loadConfig();
+
+class ProcessMock {
+  on() {}
+  exit() {}
+  //removeAllListeners() {}
+  async emit() {}
+  constructor() {
+    sinon.spy(this, "on");
+    sinon.spy(this, "exit");
+    this.removeAllListeners = sinon.spy();
+    //sinon.spy(this, "removeAllListeners");
+    sinon.stub(this, "emit").resolves();
+  }
+}
 
 describe("/lib/kuzzle/kuzzle.js", () => {
   let kuzzle;
   let application;
   let clusterModuleInitStub;
-
+  let processMock;
   const mockedProperties = [
     "adminController",
     "ask",
@@ -46,9 +57,9 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     "vault",
   ];
 
-  function _mockKuzzle() {
+  function _mockKuzzle(customKuzzle = Kuzzle) {
     Reflect.deleteProperty(global, "kuzzle");
-    const k = new Kuzzle(config);
+    const k = new customKuzzle(config);
     const mock = new KuzzleMock();
 
     mockedProperties.forEach((p) => {
@@ -63,7 +74,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
   }
 
   const FakeKoncorde = new sinon.stub();
-  let koncorde;
 
   beforeEach(() => {
     clusterModuleInitStub = sinon.stub().resolves();
@@ -84,7 +94,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       return new VirtualIndexMock();
     };
 
-    Kuzzle.createStorageEngine = function (virtualIndexLocal) {
+    Kuzzle.createStorageEngine = function () {
       return new StorageEngineMock();
     };
 
@@ -100,16 +110,22 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       return { init: sinon.stub().resolves() };
     };
 
-    Kuzzle.loadVault = function (myConfig) {
+    Kuzzle.loadVault = function () {
       return { default: { load: () => {} } };
     };
 
     Kuzzle.createKoncorde = function (options) {
-      koncorde = new FakeKoncorde(options);
+      return new FakeKoncorde(options);
     };
 
-    Kuzzle.createMutex = function (resource, mutexOption) {
+    Kuzzle.createMutex = function () {
       return new MutexMock();
+    };
+
+    processMock = new ProcessMock();
+
+    Kuzzle.getProcess = function () {
+      return processMock;
     };
 
     kuzzle = _mockKuzzle();
@@ -199,69 +215,54 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
       await kuzzleWithPCRE.start(application);
 
-      console.log(FakeKoncorde.firstCall.args[0]);
       should(FakeKoncorde.firstCall).calledWithMatch({ regExpEngine: "re2" });
       should(FakeKoncorde.secondCall).calledWithMatch({ regExpEngine: "js" });
     });
 
     it("should start all services and register errors handlers if enabled on kuzzle.start", () => {
-      let processExitSpy = sinon.spy();
-      let processOnSpy = sinon.spy();
-      let processRemoveAllListenersSpy = sinon.spy();
-
-      /*
-      return Kuzzle.__with__({
-        process: {
-          ...process,
-          env: {},
-          exit: processExitSpy,
-          on: processOnSpy,
-          emit: sinon.stub(),
-          removeAllListeners: processRemoveAllListenersSpy,
-        },
-      })(() => {
-
-       */
-      kuzzle = _mockKuzzle();
+      kuzzle = _mockKuzzle(Kuzzle);
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-      return kuzzle.start(application);
-      //}).then(() => {
-      should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly(
-        "unhandledRejection"
-      );
-      should(processOnSpy.getCall(0).args[0]).be.exactly("unhandledRejection");
+      kuzzle.start(application).then(() => {
+        should(processMock.removeAllListeners.getCall(0).args[0]).be.exactly(
+          "unhandledRejection"
+        );
+        should(processMock.on.getCall(0).args[0]).be.exactly(
+          "unhandledRejection"
+        );
 
-      should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly(
-        "uncaughtException"
-      );
-      should(processOnSpy.getCall(1).args[0]).be.exactly("uncaughtException");
+        should(processMock.removeAllListeners.getCall(1).args[0]).be.exactly(
+          "uncaughtException"
+        );
+        should(processMock.on.getCall(1).args[0]).be.exactly(
+          "uncaughtException"
+        );
 
-      should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly(
-        "SIGQUIT"
-      );
-      should(processOnSpy.getCall(2).args[0]).be.exactly("SIGQUIT");
+        should(processMock.removeAllListeners.getCall(2).args[0]).be.exactly(
+          "SIGQUIT"
+        );
+        should(processMock.on.getCall(2).args[0]).be.exactly("SIGQUIT");
 
-      should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly(
-        "SIGABRT"
-      );
-      should(processOnSpy.getCall(3).args[0]).be.exactly("SIGABRT");
+        should(processMock.removeAllListeners.getCall(3).args[0]).be.exactly(
+          "SIGABRT"
+        );
+        should(processMock.on.getCall(3).args[0]).be.exactly("SIGABRT");
 
-      should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly(
-        "SIGTRAP"
-      );
-      should(processOnSpy.getCall(4).args[0]).be.exactly("SIGTRAP");
+        should(processMock.removeAllListeners.getCall(4).args[0]).be.exactly(
+          "SIGTRAP"
+        );
+        should(processMock.on.getCall(4).args[0]).be.exactly("SIGTRAP");
 
-      should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly(
-        "SIGINT"
-      );
-      should(processOnSpy.getCall(5).args[0]).be.exactly("SIGINT");
+        should(processMock.removeAllListeners.getCall(5).args[0]).be.exactly(
+          "SIGINT"
+        );
+        should(processMock.on.getCall(5).args[0]).be.exactly("SIGINT");
 
-      should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly(
-        "SIGTERM"
-      );
-      should(processOnSpy.getCall(6).args[0]).be.exactly("SIGTERM");
-      // });
+        should(processMock.removeAllListeners.getCall(6).args[0]).be.exactly(
+          "SIGTERM"
+        );
+        should(processMock.on.getCall(6).args[0]).be.exactly("SIGTERM");
+      });
     });
   });
 

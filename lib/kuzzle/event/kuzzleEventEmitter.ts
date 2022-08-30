@@ -35,7 +35,6 @@ import Promback from "../../util/promback";
 import memoize from "../../util/memoize";
 
 import PipeRunner from "./pipeRunner";
-import {Kuzzle} from "../kuzzle";
 
 class PluginPipeDefinition {
   public event: any;

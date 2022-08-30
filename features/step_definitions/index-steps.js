@@ -89,7 +89,7 @@ Then(
   function (index, callback) {
     this.sdk.index
       .delete(index)
-      .then((body) => {
+      .then(() => {
         callback();
       })
       .catch((error) => callback(error));

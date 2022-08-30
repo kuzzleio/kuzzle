@@ -2,13 +2,11 @@
 
 const should = require("should");
 const sinon = require("sinon");
-const mockrequire = require("mock-require");
 
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
 const BaseModel = require("../../../lib/model/storage/baseModel");
-const { VirtualIndex } = require("../../../lib/service/storage/virtualIndex");
 const { StorageEngine } = require("../../../lib/core/storage/storageEngine");
 const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 

@@ -1,9 +1,7 @@
 import Crypto from "crypto";
 import { ClientAdapter } from "../../core/storage/clientAdapter";
 
-import {Service} from "../service";
-import {Elasticsearch} from "./elasticsearch";
-import {stringify} from "yaml";
+import { Service } from "../service";
 
 export class VirtualIndex extends Service {
   public static createEvent = "virtualindex:create";
@@ -77,7 +75,7 @@ export class VirtualIndex extends Service {
       "virtualindexes",
       "list",
       { real: index, virtual: virtualIndex },
-      { id: index+virtualIndex}
+      { id: index + virtualIndex }
     );
   }
 
@@ -85,14 +83,13 @@ export class VirtualIndex extends Service {
     //TODO : persistance
     const realIndex = this.softTenant.get(index);
     this.softTenant.delete(index);
-    const id = realIndex+index;
+    const id = realIndex + index;
     await global.kuzzle.ask(
       "core:storage:private:document:delete",
       "virtualindexes",
       "list",
       id
     );
-
   }
 
   async initVirtualTenantList() {
@@ -113,9 +110,7 @@ export class VirtualIndex extends Service {
           { from: from, size: 100 }
         );
         total = list.total;
-        console.log('loading virtual index!');
         for (const hit of list.hits) {
-          console.log('virtual : ' + hit._source.virtual);
           this.softTenant.set(hit._source.virtual, hit._source.real);
         }
         from += 100;

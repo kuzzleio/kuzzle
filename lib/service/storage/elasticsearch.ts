@@ -20,7 +20,7 @@
  */
 
 import { VirtualIndex } from "./virtualIndex";
-import { scopeEnum } from "../../core/storage/storeScopeEnum";
+import { ScopeEnum } from "../../core/storage/storeScopeEnum";
 import { Client } from "@elastic/elasticsearch";
 import { KuzzleError } from "../../kerror/errors";
 
@@ -36,7 +36,7 @@ import { debug as DebugBuilder } from "../../util/debug";
 import ESWrapper from "./esWrapper";
 import QueryTranslator from "./queryTranslator";
 import didYouMean from "../../util/didYouMean";
-import {Service} from "../service";
+import { Service } from "../service";
 import { assertIsObject } from "../../util/requestAssertions";
 
 import * as kerrorLib from "../../kerror";
@@ -105,7 +105,7 @@ export class Elasticsearch extends Service {
   }
 
   _client: Client;
-  _scope: scopeEnum;
+  _scope: ScopeEnum;
   _indexPrefix: string;
   _esWrapper: ESWrapper;
   _esVersion: string;
@@ -119,16 +119,16 @@ export class Elasticsearch extends Service {
 
   private virtualIndex: VirtualIndex;
 
-  static getRandomNumber(max){
-    return randomNumber(max)
+  static getRandomNumber(max) {
+    return randomNumber(max);
   }
 
-  constructor(config: JSONObject, scope = scopeEnum.PUBLIC, virtualIndex) {
+  constructor(config: JSONObject, scope = ScopeEnum.PUBLIC, virtualIndex) {
     super("elasticsearch", config);
     this.virtualIndex = virtualIndex;
     this._scope = scope;
     this._indexPrefix =
-      scope === scopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
+      scope === ScopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
 
     this._client = null;
     this._esWrapper = null;
@@ -273,13 +273,9 @@ export class Elasticsearch extends Service {
    * @returns {Promise.<Object>}
    */
   async stats() {
-
-
     const esRequest = {
       metric: ["docs", "store"],
     };
-
-
 
     const { body } = await this._client.indices.stats(esRequest);
     const indexes = {};
@@ -762,7 +758,6 @@ export class Elasticsearch extends Service {
     try {
       // @ts-ignore
       const { body } = await this._client.index(esRequest);
-
 
       return {
         _id: this.virtualIndex.getVirtualId(index, body._id),
@@ -1430,7 +1425,6 @@ export class Elasticsearch extends Service {
       settings = {},
     } = {}
   ) {
-
     if (this.virtualIndex.isVirtual(index)) {
       throw new KuzzleError(
         "you have not rights to create collection in a virtual index",
@@ -1693,7 +1687,6 @@ export class Elasticsearch extends Service {
       properties: undefined,
     }
   ) {
-
     if (this.virtualIndex.isVirtual(index)) {
       throw new KuzzleError(
         "you have not rights to update mapping in a virtual index",
@@ -1787,10 +1780,8 @@ export class Elasticsearch extends Service {
     let settings;
 
     if (this.virtualIndex.isVirtual(index)) {
-      return this.deleteByQuery(index, collection, {})
+      return this.deleteByQuery(index, collection, {});
     }
-
-
 
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -2086,7 +2077,7 @@ export class Elasticsearch extends Service {
    * @returns {Promise}
    */
   async deleteCollection(index, collection) {
-    if(this.virtualIndex.isVirtual(index)){
+    if (this.virtualIndex.isVirtual(index)) {
       //      throw kerror.get("collection_reserved", HIDDEN_COLLECTION);
       throw kerror.get("delete_virtual_collection");
     }
@@ -2112,13 +2103,13 @@ export class Elasticsearch extends Service {
    *
    * @returns {Promise.<String[]>}
    */
-  async deleteIndexes(indexes = []) : Promise<string[]> {
+  async deleteIndexes(indexes = []): Promise<string[]> {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
     const deleted = new Set<string>();
     for (const index of indexes) {
-      if(this.virtualIndex.isVirtual(index)) {
+      if (this.virtualIndex.isVirtual(index)) {
         //TODO : remove second await?
         await this.removeDocumentsFromVirtualIndex(index);
         await this.virtualIndex.removeVirtualIndex(index);
@@ -2151,7 +2142,7 @@ export class Elasticsearch extends Service {
       );
 
       debug("Delete indexes: %o", esRequest);
-      if(esRequest.index.length!=0){
+      if (esRequest.index.length !== 0) {
         await this._client.indices.delete(esRequest);
       }
     } catch (error) {
@@ -2520,7 +2511,7 @@ export class Elasticsearch extends Service {
       },
       kuzzleMeta = {
         _kuzzle_info: {
-          index : this.virtualIndex.getRealIndex(index),
+          index: this.virtualIndex.getRealIndex(index),
           updatedAt: Date.now(),
           updater: getKuid(userId),
         },
@@ -2785,12 +2776,15 @@ export class Elasticsearch extends Service {
    *
    * @returns {Promise.<{ documents, errors }>
    */
-  async mDelete(index: string, collection: string, ids: string[], { refresh = undefined } = {}) {
-
+  async mDelete(
+    index: string,
+    collection: string,
+    ids: string[],
+    { refresh = undefined } = {}
+  ) {
     const query = { ids: { values: [] } },
       validIds = [],
       partialErrors = [];
-
 
     /**
      * @warning Critical code section
@@ -2801,7 +2795,7 @@ export class Elasticsearch extends Service {
       const _id = ids[i];
 
       if (typeof _id === "string") {
-        validIds.push( _id);
+        validIds.push(_id);
       } else {
         partialErrors.push({
           _id,
@@ -3279,11 +3273,8 @@ export class Elasticsearch extends Service {
   _extractSchema(
     aliases,
     { includeHidden = false, includeVirtual = true } = {}
-  ): { [key: string]: string[]; } {
-    //const schema = new Map<string, Array<string>>();
-    var stuff: { [key: string]: string[]; } = {};
+  ): { [key: string]: string[] } {
     const schema = {};
-
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
@@ -3628,11 +3619,12 @@ export class Elasticsearch extends Service {
 
   private async removeDocumentsFromVirtualIndex(index: string) {
     const collections = await this.listCollections(index);
-    return Promise.all(collections.map(async collection =>
-    {
-      await this.refreshCollection(index, collection);
-      this.deleteByQuery(index, collection, {})
-    }));
+    return Promise.all(
+      collections.map(async (collection) => {
+        await this.refreshCollection(index, collection);
+        this.deleteByQuery(index, collection, {});
+      })
+    );
   }
 }
 

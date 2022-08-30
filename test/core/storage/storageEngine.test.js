@@ -10,7 +10,7 @@ const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 const { StorageEngine } = require("../../../lib/core/storage/storageEngine");
 const VirtualIndexMock = require("../../mocks/virtualIndex.mock");
 
-const { scopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
+const { ScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 
 describe("#core/storage/StorageEngine", () => {
   let storageEngine;
@@ -55,10 +55,10 @@ describe("#core/storage/StorageEngine", () => {
   describe("#constructor", () => {
     it("should instantiate a client adapter per storage scope", () => {
       should(storageEngine.public).instanceOf(ClientAdapterMock);
-      should(storageEngine.public.scope).eql(scopeEnum.PUBLIC);
+      should(storageEngine.public.scope).eql(ScopeEnum.PUBLIC);
 
       should(storageEngine.private).instanceOf(ClientAdapterMock);
-      should(storageEngine.private.scope).eql(scopeEnum.PRIVATE);
+      should(storageEngine.private.scope).eql(ScopeEnum.PRIVATE);
     });
   });
 

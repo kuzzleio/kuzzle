@@ -21,11 +21,11 @@
 
 import fs from "fs";
 
-import {Kuzzle} from "../../kuzzle";
+import { Kuzzle } from "../../kuzzle";
 
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import {JSONObject, KuzzleConfiguration} from "../../../index";
+import { JSONObject, KuzzleConfiguration } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -220,7 +220,7 @@ export class Backend {
   public _support: JSONObject = {};
 
   //to be mocked
-  public static createKuzzle(kuzzleConfiguration : KuzzleConfiguration){
+  public static createKuzzle(kuzzleConfiguration: KuzzleConfiguration) {
     return new Kuzzle(kuzzleConfiguration);
   }
 
