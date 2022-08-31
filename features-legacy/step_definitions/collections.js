@@ -189,13 +189,7 @@ When(
   "I update the mapping of {string}:{string} with {string}",
   function (index, collection, rawMapping) {
     const mapping = JSON.parse(rawMapping);
-    try {
-      this.props.result = this.api.updateMapping(index, collection, mapping);
-      return this.props.result;
-    } catch (e) {
-      this.props.error = e;
-      throw e;
-    }
+    return this.api.updateMapping(index, collection, mapping);
   }
 );
 
