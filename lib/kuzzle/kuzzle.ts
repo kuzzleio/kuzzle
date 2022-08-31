@@ -216,7 +216,7 @@ export class Kuzzle extends KuzzleEventEmitter {
     return new Mutex(resource, mutexOption);
   }
 
-  static getProcess(){
+  static getProcess() {
     return process;
   }
 

@@ -151,6 +151,7 @@ lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
 lib/kerror/index.js
 lib/kuzzle/kuzzle.js
+lib/kuzzle/index.js
 lib/kuzzle/event/kuzzleEventEmitter.js
 lib/model/security/profile.js
 lib/model/security/role.js
