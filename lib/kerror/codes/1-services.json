@@ -298,25 +298,25 @@
           "description": "Remove virtual collection is forbidden",
           "message": "You can't remove a virtual collection. ",
           "code": 52,
-          "class": "ForbiddenError"
+          "class": "BadRequestError"
         },
         "create_virtual_collection": {
           "description": "create collection in a virtual index is forbidden",
           "message": "you have not rights to create collection in a virtual index",
           "code": 53,
-          "class": "ForbiddenError"
+          "class": "BadRequestError"
         },
         "update_virtual_collection": {
           "description": "update collection in a virtual index is forbidden",
           "message": "you have not rights to update collection in a virtual index",
           "code": 54,
-          "class": "ForbiddenError"
+          "class": "BadRequestError"
         },
         "update_virtual_index": {
           "description": "update settings in a virtual index is forbidden",
           "message": "you have not rights to update settings in a virtual index",
           "code": 55,
-          "class": "ForbiddenError"
+          "class": "BadRequestError"
         }
       }
     },

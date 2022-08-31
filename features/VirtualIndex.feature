@@ -26,7 +26,7 @@ Feature: VirtualIndex
     When I "create" the collection "virtual2":"collection" with:
       | mappings | { "properties": { "name": { "type": "keyword" } } } |
     Then I should receive an error matching:
-      | status | 403 |
+      | status | 400 |
 
   Scenario: Remove a collection in a virtual Index
     Given an index "realindex3"
@@ -35,7 +35,7 @@ Feature: VirtualIndex
     And I create a virtual index named "virtual3" referencing "realindex3"
     When I remove the collection "virtual3":"collection"
     Then I should receive an error matching:
-      | status | 403 |
+      | status | 400 |
 
     Scenario: Update virtual collection mapping
       Given an index "realindex5"
@@ -45,7 +45,7 @@ Feature: VirtualIndex
       And I "update" the collection "virtual5":"collection" with:
         | dynamic | "strict" |
       Then I should receive an error matching:
-        | status | 403 |
+        | status | 400 |
 
   Scenario: Remove a virtualIndex
     Given an index "realindex4"

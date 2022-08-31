@@ -26,10 +26,7 @@ export class VirtualIndex extends Service {
   }
 
   editSoftTenantMap(notification) {
-    if (notification.action === "create" || notification.action === "update") {
-      const source = notification.result._source;
-      this.softTenant.set(source.virtual, source.real);
-    }
+    this.softTenant.set(notification.virtual, notification.real);
   }
 
   getRealIndex(name: string): string {
@@ -68,7 +65,7 @@ export class VirtualIndex extends Service {
       VirtualIndex.createEvent,
       { real: index, virtual: virtualIndex }
     );
-    //this.editSoftTenantMap({ real: index, virtual: virtualIndex });
+
     this.softTenant.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",

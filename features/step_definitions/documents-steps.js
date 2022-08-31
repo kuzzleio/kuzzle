@@ -71,11 +71,6 @@ Then(
 Then(
   /The document "(.*?)":"(.*?)":"(.*?)" does( not)? exist/,
   async function (index, collection, documentId, not) {
-    console.log(
-      "does the document : " + index,
-      collection,
-      documentId + " exist?"
-    );
     const exists = await this.sdk.document.exists(
       index,
       collection,
