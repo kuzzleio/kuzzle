@@ -22,7 +22,6 @@
 import { VirtualIndex } from "./virtualIndex";
 import { ScopeEnum } from "../../core/storage/storeScopeEnum";
 import { Client } from "@elastic/elasticsearch";
-import { KuzzleError } from "../../kerror/errors";
 
 import assert from "assert";
 import _ from "lodash";
