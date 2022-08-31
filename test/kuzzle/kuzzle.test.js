@@ -312,7 +312,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         // @deprecated
         should(kuzzle.emit).calledWith("core:shutdown");
 
-        should(process.exit).calledOnce().calledWith(0);
+        should(Kuzzle.getProcess().exit).calledOnce().calledWith(0);
       } finally {
         process.exit.restore();
         Bluebird.delay.restore();
