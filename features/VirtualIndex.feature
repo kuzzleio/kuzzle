@@ -35,7 +35,7 @@ Feature: VirtualIndex
     And I create a virtual index named "virtual3" referencing "realindex3"
     When I remove the collection "virtual3":"collection"
     Then I should receive an error matching:
-      | status | 400 |
+      | status | 403 |
 
     Scenario: Update virtual collection mapping
       Given an index "realindex5"

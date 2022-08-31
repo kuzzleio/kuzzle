@@ -1426,10 +1426,7 @@ export class Elasticsearch extends Service {
     } = {}
   ) {
     if (this.virtualIndex.isVirtual(index)) {
-      throw new KuzzleError(
-        "you have not rights to create collection in a virtual index",
-        403
-      );
+      throw kerror.get("create_virtual_collection");
     }
 
     this._assertValidIndexAndCollection(index, collection);
@@ -1573,10 +1570,7 @@ export class Elasticsearch extends Service {
     } = {}
   ) {
     if (this.virtualIndex.isVirtual(index)) {
-      throw new KuzzleError(
-        "you have not rights to update collection in a virtual index",
-        403
-      );
+      throw kerror.get("update_virtual_collection");
     }
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1688,10 +1682,7 @@ export class Elasticsearch extends Service {
     }
   ) {
     if (this.virtualIndex.isVirtual(index)) {
-      throw new KuzzleError(
-        "you have not rights to update mapping in a virtual index",
-        403
-      );
+      throw kerror.get("update_virtual_collection");
     }
 
     const esRequest = {
@@ -1748,10 +1739,7 @@ export class Elasticsearch extends Service {
     };
 
     if (this.virtualIndex.isVirtual(index)) {
-      throw new KuzzleError(
-        "you have not rights to update settings in a virtual index",
-        403
-      );
+      throw kerror.get("update_virtual_index");
     }
 
     await this._client.indices.close(esRequest);
@@ -2078,7 +2066,6 @@ export class Elasticsearch extends Service {
    */
   async deleteCollection(index, collection) {
     if (this.virtualIndex.isVirtual(index)) {
-      //      throw kerror.get("collection_reserved", HIDDEN_COLLECTION);
       throw kerror.get("delete_virtual_collection");
     }
     const esRequest = {
