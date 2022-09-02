@@ -34,7 +34,7 @@ export class BackendPipe extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    */
   register<TEventDefinition extends EventDefinition = EventDefinition>(
-    event: string,
+    event: TEventDefinition["name"],
     handler: PipeEventHandler<TEventDefinition>,
     options: any = {}
   ): string | void {

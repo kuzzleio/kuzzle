@@ -24,7 +24,7 @@ import fs from "fs";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { JSONObject } from "../../../index";
+import { EventDefinition, JSONObject } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -338,7 +338,10 @@ export class Backend {
    *
    * @returns {Promise<any>}
    */
-  trigger(event: string, ...payload): Promise<any> {
+  trigger<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    ...payload: TEventDefinition["args"]
+  ): Promise<TEventDefinition["args"][0]> {
     if (!this.started) {
       throw runtimeError.get("unavailable_before_start", "trigger");
     }

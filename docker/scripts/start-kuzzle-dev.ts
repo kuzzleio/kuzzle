@@ -6,7 +6,7 @@
 import should from 'should/as-function';
 import { omit } from 'lodash';
 
-import { Backend, EventDefinition, KuzzleRequest, Mutex } from '../../index';
+import { Backend, KDocument, KDocumentContent, EventGenericDocumentBeforeUpdate, KuzzleRequest, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 import functionalFixtures from '../../features/fixtures/imports.json';
 
@@ -86,15 +86,40 @@ app.controller.register('pipes', {
 
 /* Actual code for tests start here */
 
-type EventToto = {
-  name: 'event:lol';
+/**
+ * This function is never call bu simply ensure the correctness of types definition
+ */
+function ensureEventDefinitionTypes () {
+  type EventFoobar = {
+    name: 'event:foobar';
 
-  args: [number, string];
+    args: [number, string];
+  }
+
+  app.pipe.register<EventFoobar>('event:foobar', async (age: number, name: string) => {
+    return age;
+  });
+
+  app.hook.register<EventFoobar>('event:foobar', (age: number, name: string) => {
+  });
+
+  app.cluster.on<EventFoobar>('event:foobar', async (age: number, name: string) => {
+  });
+
+  app.cluster.broadcast<EventFoobar>('event:foobar', 30);
+
+  const promise: Promise<number> = app.trigger<EventFoobar>('event:foobar', 30, 'Tuan');
+
+  interface PersonContent extends KDocumentContent {
+    name: string;
+  }
+
+  app.pipe.register<EventGenericDocumentBeforeUpdate<PersonContent>>(
+    'generic:document:beforeUpdate',
+    async (documents: KDocument<PersonContent>[], request: KuzzleRequest) => {
+      return documents
+    });
 }
-
-app.pipe.register<EventToto>('event:lol', async (age, name) => {
-  return age;
-})
 
 // Pipe registration
 app.pipe.register('server:afterNow', async (request) => {

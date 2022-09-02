@@ -16,7 +16,7 @@ This method can only be used before the application is started.
 :::
 
 ```ts
-register(event: string, handler: EventHandler): void
+register(event: string, handler: PipeEventHandler): void
 ```
 
 <br/>
@@ -24,7 +24,7 @@ register(event: string, handler: EventHandler): void
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `handler` | <pre>[EventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
+| `handler` | <pre>[PipeEventHandler](/core/2/framework/types/event-handler)</pre> | Function to execute when the event is triggered |
 
 ## Usage
 
@@ -43,11 +43,17 @@ It's possible to specify the arguments with whom the handler will be called.
 This will also ensure that the first argument is returned at the end of the pipe handler.
 
 ```js
-app.pipe.register<[Document[], KuzzleRequest]>(
+type EventGenericDocumentAfterWrite = {
+  name: 'generic:document:afterWrite';
+
+  args: [Document[], KuzzleRequest];
+}
+
+app.pipe.register<EventGenericDocumentAfterWrite>(
   'generic:document:afterWrite',
   async (documents: Document[], request: KuzzleRequest) => {
-    app.log.error(documents)
+    app.log.error(documents);
 
     return documents;
-  })
+  });
 ```

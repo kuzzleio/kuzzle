@@ -35,18 +35,27 @@ export type EventDefinition = {
    * Arguments of the event
    */
   args: any[];
-}
-
-export type HookEventHandler<TEventDefinition extends EventDefinition = EventDefinition> = (...args: TEventDefinition["args"]) => void;
-
-export type PipeEventHandler<TEventDefinition extends EventDefinition = EventDefinition> = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
+};
 
 /**
- * Type for handler attached to Kuzzle events. Either hooks or pipes.
+ * Handler for hook events
  */
-// export type EventHandler<TPayload extends [any, any?, any?, any?, any?] = any> =
-//   (...payload: TPayload) => any;
+export type HookEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => void;
 
-// export type PipeEventHandler<
-//   TPayload extends [any, any?, any?, any?, any?] = any
-// > = (...payload: TPayload) => Promise<TPayload[0]>;
+/**
+ * Handler for pipe event.
+ *
+ * It should return a promise resolving the first received argument.
+ */
+export type PipeEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
+
+/**
+ * Handler for cluster event.
+ */
+export type ClusterEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => any;

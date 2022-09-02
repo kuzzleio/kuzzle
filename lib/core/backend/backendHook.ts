@@ -35,8 +35,8 @@ export class BackendHook extends ApplicationManager {
    *
    */
   register<TEventDefinition extends EventDefinition = EventDefinition>(
-    event: string,
-    handler: HookEventHandler<TEventDefinition>,
+    event: TEventDefinition["name"],
+    handler: HookEventHandler<TEventDefinition>
   ): void {
     if (this._application.started) {
       throw runtimeError.get("already_started", "hook");

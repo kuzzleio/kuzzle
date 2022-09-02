@@ -57,3 +57,4 @@ export * from "./config/DumpConfiguration";
 export * from "./OpenApiDefinition";
 export * from "./errors/ErrorDefinition";
 export * from "./errors/ErrorDomains";
+export * from "./events/EventGenericDocument";
