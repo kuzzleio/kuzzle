@@ -21,7 +21,6 @@
 
 import {
   EventDefinition,
-  JSONObject,
   ClusterEventHandler,
 } from "../../../index";
 
