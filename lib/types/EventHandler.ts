@@ -20,11 +20,33 @@
  */
 
 /**
+ * Describe an event with it's name and the handler function arguments
+ */
+export type EventDefinition = {
+  /**
+   * Name of the event
+   *
+   * @example
+   * "core:document:create:after"
+   */
+  name: string;
+
+  /**
+   * Arguments of the event
+   */
+  args: any[];
+}
+
+export type HookEventHandler<TEventDefinition extends EventDefinition = EventDefinition> = (...args: TEventDefinition["args"]) => void;
+
+export type PipeEventHandler<TEventDefinition extends EventDefinition = EventDefinition> = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
+
+/**
  * Type for handler attached to Kuzzle events. Either hooks or pipes.
  */
-export type EventHandler<TPayload extends [any, any?, any?, any?, any?] = any> =
-  (...payload: TPayload) => any;
+// export type EventHandler<TPayload extends [any, any?, any?, any?, any?] = any> =
+//   (...payload: TPayload) => any;
 
-export type PipeEventHandler<
-  TPayload extends [any, any?, any?, any?, any?] = any
-> = (...payload: TPayload) => Promise<TPayload[0]>;
+// export type PipeEventHandler<
+//   TPayload extends [any, any?, any?, any?, any?] = any
+// > = (...payload: TPayload) => Promise<TPayload[0]>;

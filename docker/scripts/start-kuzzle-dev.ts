@@ -6,7 +6,7 @@
 import should from 'should/as-function';
 import { omit } from 'lodash';
 
-import { Backend, KuzzleRequest, Mutex } from '../../index';
+import { Backend, EventDefinition, KuzzleRequest, Mutex } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 import functionalFixtures from '../../features/fixtures/imports.json';
 
@@ -85,6 +85,16 @@ app.controller.register('pipes', {
 });
 
 /* Actual code for tests start here */
+
+type EventToto = {
+  name: 'event:lol';
+
+  args: [number, string];
+}
+
+app.pipe.register<EventToto>('event:lol', async (age, name) => {
+  return age;
+})
 
 // Pipe registration
 app.pipe.register('server:afterNow', async (request) => {
