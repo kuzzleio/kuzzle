@@ -61,6 +61,7 @@ import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import { NameGenerator } from "../util/name-generator";
 import { OpenApiManager } from "../api/openapi";
 import { sha256 } from "../util/crypto";
+import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
 
 export const BACKEND_IMPORT_KEY = "backend:init:import";
 
@@ -155,6 +156,11 @@ class Kuzzle extends KuzzleEventEmitter {
   private asyncStore: AsyncStore;
 
   /**
+   * Kuzzle internal debugger
+   */
+  private debugger: KuzzleDebugger;
+
+  /**
    * Kuzzle version
    */
   private version: string;
@@ -210,6 +216,7 @@ class Kuzzle extends KuzzleEventEmitter {
     this.dumpGenerator = new DumpGenerator();
     this.vault = null;
     this.asyncStore = new AsyncStore();
+    this.debugger = new KuzzleDebugger();
     this.version = version;
 
     this.importTypes = {
@@ -242,6 +249,7 @@ class Kuzzle extends KuzzleEventEmitter {
         seed: this.config.internal.hash.seed,
       });
 
+      await this.debugger.init();
       await new CacheEngine().init();
       await new StorageEngine().init();
       await new RealtimeModule().init();
