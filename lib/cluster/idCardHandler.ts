@@ -142,10 +142,21 @@ export class ClusterIdCardHandler {
    */
   private disposed = false;
 
+  /**
+   * Flag that prevent the node from being evicted from the cluster
+   * by the cluster eviction mechanism when in debug mode because the node can be slowed down
+   */
+  private evictionPrevented = false;
+
   constructor(node: any) {
     this.node = node;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
+  }
+
+  async preventEviction(prevent: boolean) {
+    this.evictionPrevented = prevent;
+    this.refreshWorker.postMessage({ action: "preventEviction", state: prevent });
   }
 
   /**
@@ -177,7 +188,21 @@ export class ClusterIdCardHandler {
 
     this.refreshWorker.on("message", async (message) => {
       if (message.error) {
-        await this.node.evictSelf(message.error);
+        /**
+         * Do not evict the node if the debugger is enabled
+         * Otherwise, the debugger will be killed
+         * and the user will not be able to debug the node anymore
+         * 
+         * The node will still be evicted from the topology by the other nodes as its ID Card has not been refreshed
+         * but the node will still maintain his state.
+         * 
+         * This should never happend because the refresh of the ID Cards is in another thread and will not be frozen when the main thread
+         * is overloaded, the only way this happens is when we are making a Coredump which freezes the Worker Thread and prevent the
+         * ID Card from being refreshed in time.
+         */
+        if (! this.evictionPrevented) {
+          await this.node.evictSelf(message.error);
+        }
       }
     });
 
