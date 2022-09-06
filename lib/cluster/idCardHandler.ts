@@ -20,10 +20,11 @@
  */
 
 import { NameGenerator } from "../util/name-generator";
-import { Worker as WorkerThread } from "worker_threads";
+import { ChildProcess as ChildProcess, fork } from "child_process";
 import Bluebird from "bluebird";
 
 import "../types";
+import { JSONObject } from "kuzzle-sdk";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
@@ -117,7 +118,7 @@ export class ClusterIdCardHandler {
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
    */
-  private refreshWorker: WorkerThread = null;
+  private refreshWorker: ChildProcess = null;
 
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
@@ -142,21 +143,10 @@ export class ClusterIdCardHandler {
    */
   private disposed = false;
 
-  /**
-   * Flag that prevent the node from being evicted from the cluster
-   * by the cluster eviction mechanism when in debug mode because the node can be slowed down
-   */
-  private evictionPrevented = false;
-
   constructor(node: any) {
     this.node = node;
     this.ip = node.ip;
     this.refreshDelay = node.heartbeatDelay;
-  }
-
-  async preventEviction(prevent: boolean) {
-    this.evictionPrevented = prevent;
-    this.refreshWorker.postMessage({ action: "preventEviction", state: prevent });
   }
 
   /**
@@ -186,28 +176,14 @@ export class ClusterIdCardHandler {
     );
     this.refreshWorker.unref();
 
-    this.refreshWorker.on("message", async (message) => {
+    this.refreshWorker.on("message", async (message: JSONObject) => {
       if (message.error) {
-        /**
-         * Do not evict the node if the debugger is enabled
-         * Otherwise, the debugger will be killed
-         * and the user will not be able to debug the node anymore
-         * 
-         * The node will still be evicted from the topology by the other nodes as its ID Card has not been refreshed
-         * but the node will still maintain his state.
-         * 
-         * This should never happend because the refresh of the ID Cards is in another thread and will not be frozen when the main thread
-         * is overloaded, the only way this happens is when we are making a Coredump which freezes the Worker Thread and prevent the
-         * ID Card from being refreshed in time.
-         */
-        if (! this.evictionPrevented) {
-          await this.node.evictSelf(message.error);
-        }
+        await this.node.evictSelf(message.error);
       }
     });
 
     // Transfer informations to the worker
-    this.refreshWorker.postMessage({
+    this.refreshWorker.send({
       action: "start", // start the worker
       kuzzle: {
         config: global.kuzzle.config,
@@ -229,8 +205,8 @@ export class ClusterIdCardHandler {
   /**
    * Helper method to mock worker instantiation in unit tests
    */
-  private constructWorker(path: string) {
-    return new WorkerThread(path);
+  private constructWorker(path: string): ChildProcess {
+    return fork(path);
   }
 
   /**
@@ -250,7 +226,7 @@ export class ClusterIdCardHandler {
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on("message", ({ initialized }) => {
+    this.refreshWorker.on("message", ({ initialized }: {initialized: JSONObject}) => {
       if (initialized) {
         clearInterval(this.refreshTimer);
         this.refreshTimer = null;
@@ -259,10 +235,14 @@ export class ClusterIdCardHandler {
   }
 
   async dispose(): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+  
     this.disposed = true;
 
-    if (this.refreshWorker) {
-      this.refreshWorker.postMessage({ action: "dispose" });
+    if (this.refreshWorker && this.refreshWorker.connected) {
+      this.refreshWorker.send({ action: "dispose" });
     }
   }
 
