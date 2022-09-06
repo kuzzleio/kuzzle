@@ -174,7 +174,6 @@ export class ClusterIdCardHandler {
     this.refreshWorker = this.constructWorker(
       `${__dirname}/workers/IDCardRenewer.js`
     );
-    this.refreshWorker.unref();
 
     this.refreshWorker.on("message", async (message: JSONObject) => {
       if (message.error) {
@@ -246,7 +245,11 @@ export class ClusterIdCardHandler {
     this.disposed = true;
 
     if (this.refreshWorker && this.refreshWorker.connected && !this.refreshWorker.killed && this.refreshWorker.channel) {
-      this.refreshWorker.send({ action: "dispose" });
+      try {
+        this.refreshWorker.send({ action: "dispose" });
+      } catch (e) {
+        // It could happens that the worker has been killed before the dispose causing send to fail
+      }
     }
   }
 
