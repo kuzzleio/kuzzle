@@ -182,6 +182,10 @@ export class ClusterIdCardHandler {
       }
     });
 
+    this.refreshWorker.on("close", () => {
+      this.disposed = true;
+    });
+
     // Transfer informations to the worker
     this.refreshWorker.send({
       action: "start", // start the worker
@@ -241,7 +245,7 @@ export class ClusterIdCardHandler {
   
     this.disposed = true;
 
-    if (this.refreshWorker && this.refreshWorker.connected) {
+    if (this.refreshWorker && this.refreshWorker.connected && !this.refreshWorker.killed && this.refreshWorker.channel) {
       this.refreshWorker.send({ action: "dispose" });
     }
   }
