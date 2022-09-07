@@ -7,7 +7,7 @@ description: EventHandler type definition
 
 # EventHandler
 
-The `XXXEventHandler` typse represents a handler function used with a pipe or a hook to listen to events.
+The `XXXEventHandler` type represents a handler function used with a pipe or a hook to listen to events.
 
 See [Event System](/core/2/guides/develop-on-kuzzle/event-system)
 

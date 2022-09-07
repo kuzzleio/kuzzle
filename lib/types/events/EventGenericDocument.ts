@@ -1,7 +1,7 @@
 import { KuzzleRequest, KDocument, JSONObject } from "../../../";
 
 /**
- * Events with documents having only have the `_id`
+ * Events with documents only having the `_id`
  */
 type EventGenericDocumentPartial<name extends string> = {
   name: `generic:document:${name}`;

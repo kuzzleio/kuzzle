@@ -87,7 +87,7 @@ app.controller.register('pipes', {
 /* Actual code for tests start here */
 
 /**
- * This function is never call bu simply ensure the correctness of types definition
+ * This function is never call but simply ensure the correctness of types definition
  */
 function ensureEventDefinitionTypes () {
   type EventFoobar = {
