@@ -7,11 +7,11 @@ description: Plugin abstract class properties
 
 # Plugin
 
-Base class for [External Plugins](/core/2/guides/write-plugins).  
+Base class for [External Plugins](/core/2/guides/write-plugins).
 
 Plugins registered with the [BackendPlugin.use](/core/2/framework/classes/backend-plugin/use) method must extends this abstract class.
 
-Some properties of the `Plugin` class allows to define a set of features that will be integrated to the plugin. 
+Some properties of the `Plugin` class allows to define a set of features that will be integrated to the plugin.
 
 ## `api`
 
@@ -57,14 +57,14 @@ This property allows to define plugin features.
 |------------------------------------------------------------------------|-------------------------|
 | <pre>`PluginHookDefinition`</pre> | Allows to define hooks on events |
 
-The `PluginHookDefinition` type is an object with each key as an event name and the value is a valid [EventHandler](/core/2/framework/types/event-handler).
+The `PluginHookDefinition` type is an object with each key as an event name and the value is a valid [HookEventHandler](/core/2/framework/types/event-handler).
 
 ```js
 export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: HookEventHandler | HookEventHandler[]
 }
 ```
 
@@ -78,14 +78,14 @@ This property allows to define plugin features.
 |------------------------------------------------------------------------|-------------------------|
 | <pre>`PluginPipeDefinition`</pre> | Allows to define pipess on events |
 
-The `PluginPipeDefinition` type is an object with each key as an event name and the value is a valid [EventHandler](/core/2/framework/types/event-handler).
+The `PluginPipeDefinition` type is an object with each key as an event name and the value is a valid [PipeEventHandler](/core/2/framework/types/event-handler).
 
 ```js
 export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[]
+  [event: string]: PipeEventHandler | PipeEventHandler[]
 }
 ```
 

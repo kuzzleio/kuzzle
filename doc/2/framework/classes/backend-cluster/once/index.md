@@ -14,7 +14,7 @@ Listens to an event emitted with [BackendCluster.broadcast](/core/2/framework/cl
 The registered listener will be called exactly once, after which it will be removed from the listeners list.
 
 ```ts
-once (event: string, listener: EventHandler): Promise<void>
+once (event: string, listener: ClusterEventHandler): Promise<void>
 ```
 
 <br/>
@@ -22,7 +22,7 @@ once (event: string, listener: EventHandler): Promise<void>
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `listener` | <pre>[EventHandler](/core/2/framework/types/event-handler)</pre> | Listener function. Called exactly once. |
+| `listener` | <pre>[ClusterEventHandler](/core/2/framework/types/event-handler)</pre> | Listener function. Called exactly once. |
 
 ## Usage
 
