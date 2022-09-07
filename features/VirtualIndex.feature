@@ -67,7 +67,6 @@ Feature: VirtualIndex
     When I'm able to delete the index named "virtual4"
     Then I can't find the index named "virtual4" in index list
     And The document "realindex4":"collection":"virtual4document2" does not exist
-    And The document "realindex4":"collection":"virtual4document2" does not exist
 
   Scenario: truncate a virtualIndex
     Given an index "realindex6"

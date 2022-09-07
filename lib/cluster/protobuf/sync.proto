@@ -159,6 +159,17 @@ message AddCollection {
   string collection = 4;
 }
 
+message AddVirtualIndex {
+      uint64 messageId = 1;
+      string virtual = 2;
+      string real = 3;
+}
+
+message RemoveVirtualIndex {
+    uint64 messageId = 1;
+    string virtual = 2;
+}
+
 message RemoveIndexes {
   uint64 messageId = 1;
   string scope = 2;

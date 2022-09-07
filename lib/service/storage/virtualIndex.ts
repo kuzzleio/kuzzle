@@ -4,7 +4,15 @@ import { ClientAdapter } from "../../core/storage/clientAdapter";
 import { Service } from "../service";
 
 export class VirtualIndex extends Service {
-  public static createEvent = "virtualindex:create";
+  //"core:storage:index:create:after"
+  public static createEvent = "core:storage:virtualindex:cache:create";
+  public static deleteEvent = "core:storage:virtualindex:cache:delete";
+
+  public static createVirtualIndexEvent =
+    "core:storage:virtualindex:create:after";
+
+  public static deleteVirtualIndexEvent =
+    "core:storage:virtualindex:delete:after";
 
   constructor() {
     super("VirtualIndex", global.kuzzle.config.services.storageEngine);
@@ -18,15 +26,21 @@ export class VirtualIndex extends Service {
     await this.buildCollection();
     await this.initVirtualTenantList();
 
-    await global.kuzzle.ask(
-      "cluster:event:on",
-      VirtualIndex.createEvent,
-      (info) => this.editSoftTenantMap(info)
+    global.kuzzle.onAsk(VirtualIndex.createEvent, (real, virtual) =>
+      this.addInSoftTenantMap(real, virtual)
+    );
+
+    global.kuzzle.onAsk(VirtualIndex.deleteEvent, (info) =>
+      this.removeInSoftTenantMap(info)
     );
   }
 
-  editSoftTenantMap(notification) {
-    this.softTenant.set(notification.virtual, notification.real);
+  addInSoftTenantMap(real, virtual) {
+    this.softTenant.set(virtual, real);
+  }
+
+  removeInSoftTenantMap(notification) {
+    this.softTenant.delete(notification);
   }
 
   getRealIndex(name: string): string {
@@ -60,11 +74,17 @@ export class VirtualIndex extends Service {
 
   public async createVirtualIndex(virtualIndex: string, index: string) {
     //TODO : cluster //TODO : throw exception if "index" is virtual
+    /*
     await global.kuzzle.ask(
       "cluster:event:broadcast",
       VirtualIndex.createEvent,
       { real: index, virtual: virtualIndex }
     );
+     */
+    global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
+      real: index,
+      virtual: virtualIndex,
+    });
 
     this.softTenant.set(virtualIndex, index);
     await global.kuzzle.ask(
@@ -79,6 +99,9 @@ export class VirtualIndex extends Service {
   async removeVirtualIndex(index: string) {
     //TODO : persistance
     const realIndex = this.softTenant.get(index);
+    global.kuzzle.emit(VirtualIndex.deleteVirtualIndexEvent, {
+      virtual: index,
+    });
     this.softTenant.delete(index);
     const id = realIndex + index;
     await global.kuzzle.ask(
