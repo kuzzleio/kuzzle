@@ -7,7 +7,7 @@ description: EventHandler type definition
 
 # EventHandler
 
-The `EventHandler` type represents a handler function used with a pipe or a hook to listen to events.
+The `XXXEventHandler` type represents a handler function used with a pipe or a hook to listen to events.
 
 See [Event System](/core/2/guides/develop-on-kuzzle/event-system)
 
@@ -16,7 +16,7 @@ See [Event System](/core/2/guides/develop-on-kuzzle/event-system)
 **Example:**
 
 ```js
-import { EventHandler, KuzzleRequest } from 'kuzzle';
+import { PipeEventHandler, KuzzleRequest } from 'kuzzle';
 
-const pipeHandler: EventHandler = async (request: KuzzleRequest) => request
+const pipeHandler: PipeEventHandler = async (request: KuzzleRequest) => request
 ```
