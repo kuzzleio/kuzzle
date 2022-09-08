@@ -77,11 +77,4 @@ export class StorageEngine {
     }
     global.kuzzle.log.info("[✔] Storage initialized");
   }
-
-  async initAfterCluster() {
-    await Promise.all([
-      this.publicClient.initAfterCluster(),
-      this.privateClient.initAfterCluster(),
-    ]);
-  }
 }

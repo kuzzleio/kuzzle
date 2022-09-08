@@ -62,8 +62,6 @@ export class ClientAdapter {
     this.virtualIndex = virtualIndex;
   }
 
-
-
   async init() {
     await this.client.init();
     await this.populateCache();

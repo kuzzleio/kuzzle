@@ -6,7 +6,6 @@ const sinon = require("sinon");
 class StorageEngineMock extends StorageEngine {
   constructor() {
     super();
-    sinon.stub(this, "initAfterCluster").resolves();
     sinon.stub(this, "init").resolves();
   }
 }
