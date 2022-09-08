@@ -59,3 +59,8 @@ export type PipeEventHandler<
 export type ClusterEventHandler<
   TEventDefinition extends EventDefinition = EventDefinition
 > = (...args: TEventDefinition["args"]) => any;
+
+/**
+ * @deprecated Use HookEventHandler, PipeEventHandler or ClusterEventHandler
+ */
+export type EventHandler = (...payload: any) => any;
