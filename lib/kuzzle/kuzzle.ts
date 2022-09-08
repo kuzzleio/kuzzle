@@ -294,8 +294,7 @@ export class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
 
-      await virtualIndex.initWithClient(storageEngine.privateClient);
-      await storageEngine.initAfterCluster();
+      await virtualIndex.init();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();

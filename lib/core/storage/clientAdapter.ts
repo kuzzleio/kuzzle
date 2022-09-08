@@ -62,19 +62,7 @@ export class ClientAdapter {
     this.virtualIndex = virtualIndex;
   }
 
-  async initAfterCluster() {
-    global.kuzzle.ask(
-      "cluster:event:on",
-      `core:storage:${this.scope}:cache:clusterAddCollection`,
-      ({ index: index, collection: collection }) => {
-        this.cache.addCollection(index, collection);
-      }
-    );
-    //eslint-disable-next-line @typescript-eslint/no-unused-vars
-    global.kuzzle.on("core:network:internal:message", (message) => {
-      // Send the notifications to the SDK for the internal Room mechanism
-    });
-  }
+
 
   async init() {
     await this.client.init();
@@ -159,19 +147,11 @@ export class ClientAdapter {
       for (const collection of this.cache.listCollections(physicalIndex)) {
         this.cache.addCollection(index, collection);
         //send message to propagate cache population :
-        await global.kuzzle.ask(
-          "cluster:event:broadcast",
-          `core:storage:${this.scope}:cache:clusterAddCollection`,
-          {
-            collection: collection,
-            index: index,
-          }
-        );
-        await global.kuzzle.ask(
-          "cluster:event:broadcast",
-          `core:storage:${this.scope}:foo`,
-          { collection, index }
-        );
+        global.kuzzle.emit("core:storage:collection:create:after", {
+          collection,
+          index,
+          scope: this.scope,
+        });
       }
     }
 
@@ -1007,7 +987,9 @@ export class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:cache:addCollection`,
-      (index, collection) => this.cache.addCollection(index, collection)
+      (index, collection) => {
+        this.cache.addCollection(index, collection);
+      }
     );
 
     /**

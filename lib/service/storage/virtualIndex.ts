@@ -1,10 +1,8 @@
 import Crypto from "crypto";
-import { ClientAdapter } from "../../core/storage/clientAdapter";
 
 import { Service } from "../service";
 
 export class VirtualIndex extends Service {
-  //"core:storage:index:create:after"
   public static createEvent = "core:storage:virtualindex:cache:create";
   public static deleteEvent = "core:storage:virtualindex:cache:delete";
 
@@ -19,10 +17,8 @@ export class VirtualIndex extends Service {
   }
 
   public softTenant: Map<string, string> = new Map(); //Key : virtual index, value : real index //TODO rename!
-  private clientAdapter: ClientAdapter;
 
-  async initWithClient(clientAdapter: ClientAdapter): Promise<void> {
-    this.clientAdapter = clientAdapter;
+  async init(): Promise<void> {
     await this.buildCollection();
     await this.initVirtualTenantList();
 
@@ -74,13 +70,7 @@ export class VirtualIndex extends Service {
 
   public async createVirtualIndex(virtualIndex: string, index: string) {
     //TODO : cluster //TODO : throw exception if "index" is virtual
-    /*
-    await global.kuzzle.ask(
-      "cluster:event:broadcast",
-      VirtualIndex.createEvent,
-      { real: index, virtual: virtualIndex }
-    );
-     */
+
     global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
       real: index,
       virtual: virtualIndex,
@@ -97,7 +87,6 @@ export class VirtualIndex extends Service {
   }
 
   async removeVirtualIndex(index: string) {
-    //TODO : persistance
     const realIndex = this.softTenant.get(index);
     global.kuzzle.emit(VirtualIndex.deleteVirtualIndexEvent, {
       virtual: index,
@@ -116,9 +105,6 @@ export class VirtualIndex extends Service {
     //TODO : from database
     if (this.softTenant.size === 0) {
       this.softTenant = new Map<string, string>();
-      //this.softTenant.set("virtual-index", "hard-index"); //TODO : micro-controller
-      //this.softTenant.set("virtual-index-2", "index2"); //TODO : remove
-      //this.softTenant.set("virtual-index-3", "index2"); //TODO : remove
       let from = 0;
       let total = Number.MAX_VALUE;
 
@@ -140,24 +126,32 @@ export class VirtualIndex extends Service {
 
   async buildCollection() {
     try {
-      await this.clientAdapter.createIndex("virtualindexes"); //Replace with kuzzle.ask()
+      await global.kuzzle.ask(
+        "core:storage:private:index:create",
+        "virtualindexes",
+        {}
+      );
     } catch (e) {
-      /* already created */
+      //already created
     }
     try {
-      await this.clientAdapter.createCollection("virtualindexes", "list", {
-        //Replace with kuzzle.ask()
-        mappings: {
-          _meta: undefined,
-          dynamic: "strict",
-          properties: {
-            real: { type: "text" },
-            virtual: { type: "text" },
+      await global.kuzzle.ask(
+        "core:storage:private:collection:create",
+        "virtualindexes",
+        "list",
+        {
+          mappings: {
+            _meta: undefined,
+            dynamic: "strict",
+            properties: {
+              real: { type: "text" },
+              virtual: { type: "text" },
+            },
           },
-        },
-      });
+        }
+      );
     } catch (e) {
-      /* already created */
+      //already created
     }
   }
 }
