@@ -2955,6 +2955,7 @@ export class Elasticsearch extends Service {
     for (let i = 0; i < documents.length; i++) {
       const document = documents[i];
 
+      /*
       if (!isPlainObject(document.body) && !prepareMUpsert) {
         rejected.push({
           document,
@@ -2983,7 +2984,9 @@ export class Elasticsearch extends Service {
           reason: "document _id must be a string",
           status: 400,
         });
-      } else {
+
+       */
+      if(!this._isRejectedDocument(document, rejected, prepareMUpsert, requireId)) {
         let extractedDocument;
         if (prepareMUpsert) {
           extractedDocument = {
@@ -3020,9 +3023,59 @@ export class Elasticsearch extends Service {
       }
     }
     /* end critical code section */
-
     return { documentsToGet, extractedDocuments, rejected };
   }
+
+  /**
+   * Return true if the document is rejected, and add reject reason in rejected array
+   * else, return false
+   * @param document
+   * @param rejected
+   * @param prepareMUpsert
+   * @param requireId
+   */
+  _isRejectedDocument(document, rejected, prepareMUpsert, requireId) :boolean{
+    if (!isPlainObject(document.body) && !prepareMUpsert) {
+      rejected.push({
+        document,
+        reason: "document body must be an object",
+        status: 400,
+      });
+      return true;
+    }
+    if (!isPlainObject(document.changes) && prepareMUpsert) {
+      rejected.push({
+        document,
+        reason: "document changes must be an object",
+        status: 400,
+      });
+      return true;
+    }
+    if (
+      prepareMUpsert &&
+      document.default &&
+      !isPlainObject(document.default)
+    ) {
+      rejected.push({
+        document,
+        reason: "document default must be an object",
+        status: 400,
+      });
+      return true;
+    }
+    if (requireId && typeof document._id !== "string") {
+      rejected.push({
+        document,
+        reason: "document _id must be a string",
+        status: 400,
+      });
+      return true;
+    }
+    return false;
+  }
+
+
+
 
   /**
    * Throws an error if the provided mapping is invalid
@@ -3275,22 +3328,7 @@ export class Elasticsearch extends Service {
     const schema = {};
 
     for (const alias of aliases) {
-      const [indexName, collectionName] = alias
-        .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
-        .split(NAME_SEPARATOR);
-
-      if (
-        alias[INDEX_PREFIX_POSITION_IN_ALIAS] === this._indexPrefix &&
-        (collectionName !== HIDDEN_COLLECTION || includeHidden)
-      ) {
-        if (!schema[indexName]) {
-          schema[indexName] = [];
-        }
-
-        if (!schema[indexName].includes(collectionName)) {
-          schema[indexName].push(collectionName);
-        }
-      }
+      this._extractAliasSchema(alias, includeHidden, schema);
     }
 
     if (includeVirtual) {
@@ -3302,6 +3340,25 @@ export class Elasticsearch extends Service {
     }
 
     return schema;
+  }
+
+  _extractAliasSchema(alias, includeHidden, schema){
+    const [indexName, collectionName] = alias
+      .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
+      .split(NAME_SEPARATOR);
+
+    if (
+      alias[INDEX_PREFIX_POSITION_IN_ALIAS] === this._indexPrefix &&
+      (collectionName !== HIDDEN_COLLECTION || includeHidden)
+    ) {
+      if (!schema[indexName]) {
+        schema[indexName] = [];
+      }
+
+      if (!schema[indexName].includes(collectionName)) {
+        schema[indexName].push(collectionName);
+      }
+    }
   }
 
   /**
@@ -3388,7 +3445,7 @@ export class Elasticsearch extends Service {
    *
    * @param {Object} searchBody - ES search body (with query, aggregations, sort, etc)
    */
-  _sanitizeSearchBody(searchBody, virtualIndex: string = null) {
+  _sanitizeSearchBody(searchBody, index: string = null) {
     // Only allow a whitelist of top level properties
     for (const key of Object.keys(searchBody)) {
       if (searchBody[key] !== undefined && !this.searchBodyKeys.includes(key)) {
@@ -3405,42 +3462,46 @@ export class Elasticsearch extends Service {
       searchBody.query = { match_all: {} };
     }
 
-    if (virtualIndex && this.virtualIndex.isVirtual(virtualIndex)) {
-      const filteredQuery = {
-        bool: {
-          filter: [],
-          must: {},
-          should: null,
-        },
-      };
-      if (searchBody.query.bool) {
-        filteredQuery.bool = searchBody.query.bool;
-        if (!filteredQuery.bool.filter) {
-          filteredQuery.bool.filter = []; //add query bool in filter
-        } else if (!Array.isArray(filteredQuery.bool.filter)) {
-          filteredQuery.bool.filter = [filteredQuery.bool.filter];
-        }
-      } else {
-        filteredQuery.bool.must = searchBody.query;
-      }
-      filteredQuery.bool.filter.push({
-        //TODO : imparfait si la requete contient un should :s
-        term: {
-          "_kuzzle_info.index": virtualIndex,
-        },
-      });
-      if (filteredQuery.bool.should) {
-        filteredQuery.bool.filter.push({
-          bool: {
-            should: filteredQuery.bool.should,
-          },
-        });
-        delete filteredQuery.bool.should;
-      }
-      searchBody.query = filteredQuery;
+    if (index && this.virtualIndex.isVirtual(index)) {
+      this._sanitizeSearchBodyForVirtualIndex(searchBody, index);
     }
 
     return searchBody;
+  }
+
+  _sanitizeSearchBodyForVirtualIndex(searchBody, index){
+    const filteredQuery = {
+      bool: {
+        filter: [],
+        must: {},
+        should: null,
+      },
+    };
+    if (searchBody.query.bool) {
+      filteredQuery.bool = searchBody.query.bool;
+      if (!filteredQuery.bool.filter) {
+        filteredQuery.bool.filter = []; //add query bool in filter
+      } else if (!Array.isArray(filteredQuery.bool.filter)) {
+        filteredQuery.bool.filter = [filteredQuery.bool.filter];
+      }
+    } else {
+      filteredQuery.bool.must = searchBody.query;
+    }
+    filteredQuery.bool.filter.push({
+      //TODO : imparfait si la requete contient un should :s
+      term: {
+        "_kuzzle_info.index": index,
+      },
+    });
+    if (filteredQuery.bool.should) {
+      filteredQuery.bool.filter.push({
+        bool: {
+          should: filteredQuery.bool.should,
+        },
+      });
+      delete filteredQuery.bool.should;
+    }
+    searchBody.query = filteredQuery;
   }
 
   /**
