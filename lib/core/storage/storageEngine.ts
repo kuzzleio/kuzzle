@@ -68,9 +68,9 @@ export class StorageEngine {
   async init() {
     await Promise.all([this.publicClient.init(), this.privateClient.init()]);
 
-    const privateIndexes = await this.privateClient.cache.listIndexes();
+    const privateIndexes = this.privateClient.cache.listIndexes();
 
-    for (const publicIndex of await this.publicClient.cache.listIndexes()) {
+    for (const publicIndex of this.publicClient.cache.listIndexes()) {
       if (privateIndexes.includes(publicIndex)) {
         throw kerror.get("index_already_exists", "public", publicIndex);
       }

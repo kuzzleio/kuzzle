@@ -1851,26 +1851,7 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < esRequest.body.length; i++) {
       const item = esRequest.body[i];
-      const action = Object.keys(item)[0];
-
-      if (actionNames.indexOf(action) !== -1) {
-        lastAction = action;
-
-        item[action]._index = alias;
-
-        if (item[action]._type) {
-          item[action]._type = undefined;
-        }
-      } else if (lastAction === "index" || lastAction === "create") {
-        item._kuzzle_info = kuzzleMeta.created;
-      } else if (lastAction === "update") {
-        // we can only update metadata on a partial update, or on an upsert
-        for (const prop of ["doc", "upsert"]) {
-          if (isPlainObject(item[prop])) {
-            item[prop]._kuzzle_info = kuzzleMeta.updated;
-          }
-        }
-      }
+      lastAction = this.prepareItem(item, actionNames, lastAction, alias, kuzzleMeta);
     }
     /* end critical code section */
 
@@ -1897,54 +1878,81 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < body.items.length; i++) {
       const row = body.items[i];
-      const action = Object.keys(row)[0];
-      const item = row[action];
-
-      if (item.status >= 400) {
-        const error = {
-          _id: item._id,
-          _source: null,
-          error: null,
-          status: item.status,
-        };
-
-        // update action contain body in "doc" field
-        // the delete action is not followed by an action payload
-        if (action === "update") {
-          error._source = documents[idx + 1].doc;
-          error._source._kuzzle_info = undefined;
-        } else if (action !== "delete") {
-          error._source = documents[idx + 1];
-          error._source._kuzzle_info = undefined;
-        }
-
-        // ES response does not systematicaly include an error object
-        // (e.g. delete action with 404 status)
-        if (item.error) {
-          error.error = {
-            reason: item.error.reason,
-            type: item.error.type,
-          };
-        }
-
-        result.errors.push({ [action]: error });
-      } else {
-        result.items.push({
-          [action]: {
-            _id: item._id,
-            status: item.status,
-          },
-        });
-      }
-
-      // the delete action is not followed by an action payload
-      idx = action === "delete" ? idx + 1 : idx + 2;
+      this.formatItemResult(result, row, idx, documents);
+      idx = Object.keys(row)[0] === "delete" ? idx + 1 : idx + 2;
     }
     /* end critical code section */
-
     return result;
   }
 
+  /**
+   * return the last action
+   */
+  prepareItem(item, actionNames, lastAction, alias, kuzzleMeta){
+    const action = Object.keys(item)[0];
+
+    if (actionNames.indexOf(action) !== -1) {
+
+      item[action]._index = alias;
+
+      if (item[action]._type) {
+        item[action]._type = undefined;
+      }
+    } else if (lastAction === "index" || lastAction === "create") {
+      item._kuzzle_info = kuzzleMeta.created;
+    } else if (lastAction === "update") {
+      // we can only update metadata on a partial update, or on an upsert
+      for (const prop of ["doc", "upsert"]) {
+        if (isPlainObject(item[prop])) {
+          item[prop]._kuzzle_info = kuzzleMeta.updated;
+        }
+      }
+    }
+    return action;
+  }
+
+
+  formatItemResult(result, row, idx, documents){
+    const action = Object.keys(row)[0];
+    const item = row[action];
+
+    if (item.status >= 400) {
+      const error = {
+        _id: item._id,
+        _source: null,
+        error: null,
+        status: item.status,
+      };
+
+      // update action contain body in "doc" field
+      // the delete action is not followed by an action payload
+      if (action === "update") {
+        error._source = documents[idx + 1].doc;
+        error._source._kuzzle_info = undefined;
+      } else if (action !== "delete") {
+        error._source = documents[idx + 1];
+        error._source._kuzzle_info = undefined;
+      }
+
+      // ES response does not systematicaly include an error object
+      // (e.g. delete action with 404 status)
+      if (item.error) {
+        error.error = {
+          reason: item.error.reason,
+          type: item.error.type,
+        };
+      }
+
+      result.errors.push({ [action]: error });
+    } else {
+      result.items.push({
+        [action]: {
+          _id: item._id,
+          status: item.status,
+        },
+      });
+    }
+  }
   /**
    * Retrieves the complete list of existing collections in the current index
    *
@@ -2875,36 +2883,7 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < body.items.length; i++) {
       const item = body.items[i];
-      const result = item[Object.keys(item)[0]];
-
-      if (result.status >= 400) {
-        if (result.status === 404) {
-          partialErrors.push({
-            document: {
-              _id: documents[i]._id,
-              body: documents[i]._source,
-            },
-            reason: "document not found",
-            status: result.status,
-          });
-        } else {
-          partialErrors.push({
-            document: documents[i],
-            reason: result.error.reason,
-            status: result.status,
-          });
-        }
-      } else {
-        successes.push({
-          _id: result._id,
-          _source: source ? documents[i]._source : undefined,
-          _version: result._version,
-          created: result.result === "created",
-          get: result.get,
-          result: result.result,
-          status: result.status, // used by mUpdate to get the full document body
-        });
-      }
+      this.processExecutedItem(item, partialErrors, successes, documents[i], source);
     }
     /* end critical code section */
 
@@ -2912,6 +2891,39 @@ export class Elasticsearch extends Service {
       errors: partialErrors, // @todo rename items to documents
       items: successes,
     };
+  }
+
+  processExecutedItem(item, partialErrors, successes, document, source){
+    const result = item[Object.keys(item)[0]];
+
+    if (result.status >= 400) {
+      if (result.status === 404) {
+        partialErrors.push({
+          document: {
+            _id: document._id,
+            body: document._source,
+          },
+          reason: "document not found",
+          status: result.status,
+        });
+      } else {
+        partialErrors.push({
+          document: document,
+          reason: result.error.reason,
+          status: result.status,
+        });
+      }
+    } else {
+      successes.push({
+        _id: result._id,
+        _source: source ? document._source : undefined,
+        _version: result._version,
+        created: result.result === "created",
+        get: result.get,
+        result: result.result,
+        status: result.status, // used by mUpdate to get the full document body
+      });
+    }
   }
 
   /**

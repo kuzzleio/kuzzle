@@ -1082,48 +1082,52 @@ export class ClientAdapter {
 
     try {
       for (const index of Object.keys(fixtures)) {
-        if (!isPlainObject(fixtures[index])) {
-          throw kerror.get(
-            "api",
-            "assert",
-            "invalid_argument",
-            fixtures[index],
-            "object"
-          );
-        }
-
-        for (const [collection, mappings] of Object.entries(fixtures[index])) {
-          try {
-            await this.createIndex(index, {
-              indexCacheOnly: options.indexCacheOnly,
-              physicalIndex: options.physicalIndex,
-              propagate: options.propagate,
-            });
-          } catch (error) {
-            // @cluster: ignore if the index already exists to prevent race
-            // conditions with index cache propagation
-            if (error.id !== "services.storage.index_already_exists") {
-              throw error;
-            }
-          }
-
-          await this.createCollection(
-            index,
-            collection,
-            options.rawMappings ? { mappings } : mappings,
-            {
-              indexCacheOnly: options.indexCacheOnly,
-              propagate: options.propagate,
-            }
-          );
-
-          if (options.refresh && !options.indexCacheOnly) {
-            await this.client.refreshCollection(index, collection);
-          }
-        }
+        await this.loadIndexMappings(index, fixtures[index], options);
       }
     } finally {
       await mutex.unlock();
+    }
+  }
+
+  async loadIndexMappings(index, indexFixtures, options){
+    if (!isPlainObject(indexFixtures)) {
+      throw kerror.get(
+        "api",
+        "assert",
+        "invalid_argument",
+        indexFixtures,
+        "object"
+      );
+    }
+
+    for (const [collection, mappings] of Object.entries(indexFixtures)) {
+      try {
+        await this.createIndex(index, {
+          indexCacheOnly: options.indexCacheOnly,
+          physicalIndex: options.physicalIndex,
+          propagate: options.propagate,
+        });
+      } catch (error) {
+        // @cluster: ignore if the index already exists to prevent race
+        // conditions with index cache propagation
+        if (error.id !== "services.storage.index_already_exists") {
+          throw error;
+        }
+      }
+
+      await this.createCollection(
+        index,
+        collection,
+        options.rawMappings ? { mappings } : mappings,
+        {
+          indexCacheOnly: options.indexCacheOnly,
+          propagate: options.propagate,
+        }
+      );
+
+      if (options.refresh && !options.indexCacheOnly) {
+        await this.client.refreshCollection(index, collection);
+      }
     }
   }
 }
