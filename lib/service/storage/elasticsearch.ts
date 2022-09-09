@@ -2951,38 +2951,6 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < documents.length; i++) {
       const document = documents[i];
-
-      /*
-      if (!isPlainObject(document.body) && !prepareMUpsert) {
-        rejected.push({
-          document,
-          reason: "document body must be an object",
-          status: 400,
-        });
-      } else if (!isPlainObject(document.changes) && prepareMUpsert) {
-        rejected.push({
-          document,
-          reason: "document changes must be an object",
-          status: 400,
-        });
-      } else if (
-        prepareMUpsert &&
-        document.default &&
-        !isPlainObject(document.default)
-      ) {
-        rejected.push({
-          document,
-          reason: "document default must be an object",
-          status: 400,
-        });
-      } else if (requireId && typeof document._id !== "string") {
-        rejected.push({
-          document,
-          reason: "document _id must be a string",
-          status: 400,
-        });
-
-       */
       if(!this._isRejectedDocument(document, rejected, prepareMUpsert, requireId)) {
         let extractedDocument;
         if (prepareMUpsert) {
