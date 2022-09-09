@@ -31,7 +31,6 @@ import Bluebird from "bluebird";
 import semver from "semver";
 
 import { debug as DebugBuilder } from "../../util/debug";
-//const debug = require('../../util/debug')('kuzzle:services:elasticsearch');
 import ESWrapper from "./esWrapper";
 import QueryTranslator from "./queryTranslator";
 import didYouMean from "../../util/didYouMean";
@@ -122,7 +121,7 @@ export class Elasticsearch extends Service {
     return randomNumber(max);
   }
 
-  constructor(config: JSONObject, scope = ScopeEnum.PUBLIC, virtualIndex) {
+  constructor(config: JSONObject, scope, virtualIndex) {
     super("elasticsearch", config);
     this.virtualIndex = virtualIndex;
     this._scope = scope;
@@ -371,7 +370,6 @@ export class Elasticsearch extends Service {
     const scrollInfo = JSON.parse(stringifiedScrollInfo);
 
     try {
-      //const tmp = await this._client.scroll(esRequest);
       const body: Record<string, any> = (await this._client.scroll(esRequest))
         .body;
 
@@ -2108,7 +2106,6 @@ export class Elasticsearch extends Service {
         await this.removeDocumentsFromVirtualIndex(index);
         await this.virtualIndex.removeVirtualIndex(index);
         deleted.add(index);
-        //indexes = indexes.filter(i => index !=i );
       }
     }
     try {

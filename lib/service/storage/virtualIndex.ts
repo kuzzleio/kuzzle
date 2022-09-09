@@ -106,7 +106,7 @@ export class VirtualIndex extends Service {
     if (this.softTenant.size === 0) {
       this.softTenant = new Map<string, string>();
       let from = 0;
-      let total = Number.MAX_VALUE;
+      let total;
 
       do {
         const list = await global.kuzzle.ask(

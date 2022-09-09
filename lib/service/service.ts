@@ -65,11 +65,6 @@ export class Service {
 
         throw e;
       });
-    /*
-    setTimeout(() => {throw kerror.get('core', 'fatal', 'service_timeout', this._name)}, this._initTimeout);
-    const r =  await this._initSequence();
-    return r;
-     */
   }
 
   /**
