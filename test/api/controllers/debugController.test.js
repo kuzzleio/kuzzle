@@ -1,12 +1,10 @@
 "use strict";
 
 const should = require("should");
-const sinon = require("sinon");
 
-const { Request, PreconditionError, InternalError } = require("../../../index");
+const { Request, InternalError } = require("../../../index");
 const { DebugController } = require("../../../lib/api/controllers");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
-const DebugModuleMock = require("../../mocks/debugModule.mock");
 
 describe("Test: debug controller", () => {
   let debugController;
@@ -23,8 +21,7 @@ describe("Test: debug controller", () => {
     it("should connect the debugger", async () => {
       await debugController.enable();
 
-      await should(kuzzle.ask)
-        .be.calledWith('core:debugger:enable');
+      await should(kuzzle.ask).be.calledWith("core:debugger:enable");
     });
   });
 
@@ -32,8 +29,7 @@ describe("Test: debug controller", () => {
     it("should do nothing if the debugger is not enabled", async () => {
       await debugController.disable();
 
-      await should(kuzzle.ask)
-        .be.calledWith('core:debugger:disable');
+      await should(kuzzle.ask).be.calledWith("core:debugger:disable");
     });
   });
 
@@ -42,15 +38,17 @@ describe("Test: debug controller", () => {
     beforeEach(async () => {
       request = new Request({});
     });
-  
+
     it("should ask 'core:debugger:post' with method and params", async () => {
       request.input.body = {
         method: "Debugger.enable",
       };
       await debugController.post(request);
 
-      await should(kuzzle.ask)
-        .be.calledWith("core:debugger:post", "Debugger.enable");
+      await should(kuzzle.ask).be.calledWith(
+        "core:debugger:post",
+        "Debugger.enable"
+      );
     });
   });
 
@@ -76,8 +74,11 @@ describe("Test: debug controller", () => {
       request.context.connection.id = "foobar";
 
       await debugController.addListener(request);
-      await should(kuzzle.ask)
-        .be.calledWith("core:debugger:addListener", "Kuzzle.DebugModuleMock.event_foo", "foobar");
+      await should(kuzzle.ask).be.calledWith(
+        "core:debugger:addListener",
+        "Kuzzle.DebugModuleMock.event_foo",
+        "foobar"
+      );
     });
   });
 
@@ -103,8 +104,11 @@ describe("Test: debug controller", () => {
       request.context.connection.id = "foobar";
 
       await debugController.removeListener(request);
-      await should(kuzzle.ask)
-      .be.calledWith("core:debugger:removeListener", "Kuzzle.DebugModuleMock.event_foo", "foobar");
+      await should(kuzzle.ask).be.calledWith(
+        "core:debugger:removeListener",
+        "Kuzzle.DebugModuleMock.event_foo",
+        "foobar"
+      );
     });
   });
 });

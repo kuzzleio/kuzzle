@@ -128,9 +128,7 @@ describe("ClusterIDCardRenewer", () => {
         .and.be.calledWith("foo", 400);
 
       should(idCardRenewer.dispose).not.be.called();
-      should(process.send)
-        .be.calledOnce()
-        .be.calledWith({ initialized: true });
+      should(process.send).be.calledOnce().be.calledWith({ initialized: true });
     });
 
     it("should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card", async () => {
@@ -152,9 +150,7 @@ describe("ClusterIDCardRenewer", () => {
 
       should(idCardRenewer.redis.commands.pexpire).not.be.called();
       should(idCardRenewer.dispose).not.be.called();
-      should(process.send)
-        .be.calledOnce()
-        .be.calledWith({ initialized: true });
+      should(process.send).be.calledOnce().be.calledWith({ initialized: true });
     });
   });
 

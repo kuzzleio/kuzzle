@@ -3,7 +3,7 @@
 const should = require("should");
 const sinon = require("sinon");
 
-const { Request, PreconditionError, InternalError } = require("../../../index");
+const { PreconditionError } = require("../../../index");
 const { KuzzleDebugger } = require("../../../lib/core/debug/kuzzleDebugger");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const DebugModuleMock = require("../../mocks/debugModule.mock");
@@ -233,11 +233,11 @@ describe("Test: Kuzzle Debugger", () => {
     });
 
     it('should throw if the method starting with "Kuzzle." is not an existing method', async () => {
-
-      await should(kuzzleDebugger.post("Kuzzle.unexisting.method")).be.rejectedWith(
-        PreconditionError,
-        { id: "core.debugger.method_not_found" }
-      );
+      await should(
+        kuzzleDebugger.post("Kuzzle.unexisting.method")
+      ).be.rejectedWith(PreconditionError, {
+        id: "core.debugger.method_not_found",
+      });
     });
 
     it('should throw if trying to call a method from the CDP when "security.debug.native_debug_protocol" is not enabled', async () => {
@@ -269,14 +269,16 @@ describe("Test: Kuzzle Debugger", () => {
 
     it("should throw if the debugger is not enabled", async () => {
       kuzzleDebugger.debuggerStatus = false;
-      await should(kuzzleDebugger.addListener("Kuzzle.DebugModuleMock.event_foo", "foobar")).be.rejectedWith(
-        PreconditionError,
-        { id: "core.debugger.not_enabled" }
-      );
+      await should(
+        kuzzleDebugger.addListener("Kuzzle.DebugModuleMock.event_foo", "foobar")
+      ).be.rejectedWith(PreconditionError, { id: "core.debugger.not_enabled" });
     });
 
     it("should add the connectionId to the list of listener for the requested event", async () => {
-      await kuzzleDebugger.addListener("Kuzzle.DebugModuleMock.event_foo", "foobar");
+      await kuzzleDebugger.addListener(
+        "Kuzzle.DebugModuleMock.event_foo",
+        "foobar"
+      );
       should(
         kuzzleDebugger.events.get("Kuzzle.DebugModuleMock.event_foo")
       ).be.eql(new Set(["foobar"]));
@@ -293,17 +295,22 @@ describe("Test: Kuzzle Debugger", () => {
 
     it("should throw if the debugger is not enabled", async () => {
       kuzzleDebugger.debuggerStatus = false;
-      await should(kuzzleDebugger.removeListener("Kuzzle.DebugModuleMock.event_foo", "foobar")).be.rejectedWith(
-        PreconditionError,
-        { id: "core.debugger.not_enabled" }
-      );
+      await should(
+        kuzzleDebugger.removeListener(
+          "Kuzzle.DebugModuleMock.event_foo",
+          "foobar"
+        )
+      ).be.rejectedWith(PreconditionError, { id: "core.debugger.not_enabled" });
     });
 
     it("should remove the connectionId from the list of listener for the requested event", async () => {
       kuzzleDebugger.events = new Map([
         ["Kuzzle.DebugModuleMock.event_foo", new Set(["foobar"])],
       ]);
-      await kuzzleDebugger.removeListener("Kuzzle.DebugModuleMock.event_foo", "foobar");
+      await kuzzleDebugger.removeListener(
+        "Kuzzle.DebugModuleMock.event_foo",
+        "foobar"
+      );
       should(
         kuzzleDebugger.events.get("Kuzzle.DebugModuleMock.event_foo")
       ).be.eql(new Set([]));

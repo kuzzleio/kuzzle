@@ -141,7 +141,7 @@ describe("ClusterIdCardHandler", () => {
         send: stub,
         connected: true,
         killed: false,
-        channel: {}
+        channel: {},
       };
 
       await idCardHandler.dispose();

@@ -7,7 +7,7 @@ class ChildProcessMock extends EventEmitter {
     super();
     this.path = path;
     this.send = sinon.stub();
-    this.connected =  true;
+    this.connected = true;
     this.killed = false;
     this.channel = {};
   }
