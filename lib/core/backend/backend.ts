@@ -26,7 +26,11 @@ import { Kuzzle } from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
 
-import { KuzzleConfiguration, EventDefinition, JSONObject } from "../../../index";
+import {
+  KuzzleConfiguration,
+  EventDefinition,
+  JSONObject,
+} from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
