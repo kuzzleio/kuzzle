@@ -9,7 +9,8 @@ export class ClusterDebugModule extends DebugModule {
     });
   }
 
-  async init(_inspector: Session): Promise<void> {
+  // @eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async init(inspector: Session): Promise<void> {
     // Nothing to do (eslint complains if this method is not implemented)
   }
 
