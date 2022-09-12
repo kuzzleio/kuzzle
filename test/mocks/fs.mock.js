@@ -18,6 +18,7 @@ class FsMock {
     this.lstatSync = sinon.stub().returns({
       isFile: sinon.stub().returns(true),
     });
+    this.rmdirSync = sinon.stub();
     this.mkdirSync = sinon.stub();
     this.readdir = sinon.stub();
     this.readdirSync = sinon.stub().returns([]);

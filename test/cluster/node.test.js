@@ -564,7 +564,9 @@ describe("#Cluster Node", () => {
     });
 
     it("should synchronize successful dump requests", () => {
-      kuzzle.emit("admin:afterDump", "suffix");
+      kuzzle.emit("admin:afterDump", {
+        getString: sinon.stub().returns("suffix"),
+      });
 
       should(node.publisher.sendDumpRequest).calledOnce().calledWith("suffix");
     });
