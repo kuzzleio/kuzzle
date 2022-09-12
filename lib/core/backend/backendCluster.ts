@@ -19,8 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "../../../index";
-import { EventHandler } from "../../types";
+import { EventDefinition, ClusterEventHandler } from "../../../index";
 
 export class BackendCluster {
   /**
@@ -30,7 +29,10 @@ export class BackendCluster {
    * @param  {JSONObject}    payload
    * @return {Promise<void>}
    */
-  async broadcast(event: string, payload: JSONObject): Promise<void> {
+  async broadcast<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    payload: TEventDefinition["args"][0]
+  ): Promise<void> {
     await global.kuzzle.ask("cluster:event:broadcast", event, payload);
   }
 
@@ -38,10 +40,13 @@ export class BackendCluster {
    * Registers a listener to the provided event name.
    *
    * @param  {string}        event
-   * @param  {EventHandler}      listener
+   * @param  {ClusterEventHandler}      listener
    * @return {Promise<void>}       [description]
    */
-  async on(event: string, listener: EventHandler): Promise<void> {
+  async on<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    listener: ClusterEventHandler<TEventDefinition>
+  ): Promise<void> {
     await global.kuzzle.ask("cluster:event:on", event, listener);
   }
 
@@ -50,10 +55,13 @@ export class BackendCluster {
    * invoked only once, after which it will be removed from the listeners list.
    *
    * @param  {string}        event
-   * @param  {EventHandler}      listener
+   * @param  {ClusterEventHandler}      listener
    * @return {Promise<void>}
    */
-  async once(event: string, listener: EventHandler): Promise<void> {
+  async once<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    listener: ClusterEventHandler<TEventDefinition>
+  ): Promise<void> {
     await global.kuzzle.ask("cluster:event:once", event, listener);
   }
 
@@ -63,10 +71,13 @@ export class BackendCluster {
    * one is removed.
    *
    * @param  {string}        event
-   * @param  {EventHandler}      listener
+   * @param  {ClusterEventHandler}      listener
    * @return {Promise<void>}
    */
-  async off(event: string, listener: EventHandler): Promise<void> {
+  async off<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    listener: ClusterEventHandler<TEventDefinition>
+  ): Promise<void> {
     await global.kuzzle.ask("cluster:event:off", event, listener);
   }
 

@@ -20,7 +20,7 @@
  */
 
 import * as kerror from "../../kerror";
-import { EventHandler } from "../../types";
+import { HookEventHandler, EventDefinition } from "../../types";
 import { ApplicationManager } from "./index";
 
 const assertionError = kerror.wrap("plugin", "assert");
@@ -34,7 +34,10 @@ export class BackendHook extends ApplicationManager {
    * @param handler - Function to execute when the event is triggered
    *
    */
-  register(event: string, handler: EventHandler): void {
+  register<TEventDefinition extends EventDefinition = EventDefinition>(
+    event: TEventDefinition["name"],
+    handler: HookEventHandler<TEventDefinition>
+  ): void {
     if (this._application.started) {
       throw runtimeError.get("already_started", "hook");
     }
