@@ -9,7 +9,7 @@ export class ClusterDebugModule extends DebugModule {
     });
   }
 
-  async init(inspector: Session): Promise<void> {
+  async init(_inspector: Session): Promise<void> {
     // Nothing to do (eslint complains if this method is not implemented)
   }
 
