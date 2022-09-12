@@ -229,22 +229,30 @@ export class ClusterIdCardHandler {
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on("message", ({ initialized }: {initialized: JSONObject}) => {
-      if (initialized) {
-        clearInterval(this.refreshTimer);
-        this.refreshTimer = null;
+    this.refreshWorker.on(
+      "message",
+      ({ initialized }: { initialized: JSONObject }) => {
+        if (initialized) {
+          clearInterval(this.refreshTimer);
+          this.refreshTimer = null;
+        }
       }
-    });
+    );
   }
 
   async dispose(): Promise<void> {
     if (this.disposed) {
       return;
     }
-  
+
     this.disposed = true;
 
-    if (this.refreshWorker && this.refreshWorker.connected && !this.refreshWorker.killed && this.refreshWorker.channel) {
+    if (
+      this.refreshWorker &&
+      this.refreshWorker.connected &&
+      !this.refreshWorker.killed &&
+      this.refreshWorker.channel
+    ) {
       try {
         this.refreshWorker.send({ action: "dispose" });
       } catch (e) {
