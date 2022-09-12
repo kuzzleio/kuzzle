@@ -12,7 +12,7 @@ description: BackendCluster.on method
 Listens to event emitted with [BackendCluster.broadcast](/core/2/framework/classes/backend-cluster/broadcast).
 
 ```ts
-on (event: string, listener: EventHandler): Promise<void>
+on (event: string, listener: ClusterEventHandler): Promise<void>
 ```
 
 <br/>
@@ -20,7 +20,7 @@ on (event: string, listener: EventHandler): Promise<void>
 | Argument | Type                  | Description                   |
 |----------|-----------------------|-------------------------------|
 | `event` | <pre>string</pre> | Event name |
-| `listener` | <pre>[EventHandler](/core/2/framework/types/event-handler)</pre> | Listener function. Called as many times as the listened event is received. |
+| `listener` | <pre>[ClusterEventHandler](/core/2/framework/types/event-handler)</pre> | Listener function. Called as many times as the listened event is received. |
 
 ## Usage
 
