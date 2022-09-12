@@ -155,8 +155,8 @@ export class KuzzleEventEmitter extends EventEmitter {
     const events = getWildcardEvents(event);
     debug('Triggering event "%s" with data: %o', event, data);
 
-    for (let i = 0; i < events.length; i++) {
-      super.emit(events[i], data);
+    for (const subevent of events) {
+      super.emit(subevent, data);
     }
     return true;
   }
@@ -196,8 +196,8 @@ export class KuzzleEventEmitter extends EventEmitter {
     const events = getWildcardEvents(event);
     const funcs = [];
 
-    for (let i = 0; i < events.length; i++) {
-      const targets = this.pluginPipes.get(events[i]);
+    for (const subevent of events) {
+      const targets = this.pluginPipes.get(subevent);
 
       if (targets) {
         targets.forEach((t) => funcs.push(t));
@@ -372,8 +372,8 @@ async function pipeCallback(error, ...updated) {
     await Bluebird.map(corePipes, (fn) => fn(...updated));
   }
 
-  for (let i = 0; i < this.events.length; i++) {
-    this.instance.superEmit(this.events[i], ...updated);
+  for (const event of this.events) {
+    this.instance.superEmit(event, ...updated);
   }
 
   this.promback.resolve(updated[0]);

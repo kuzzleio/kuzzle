@@ -79,6 +79,7 @@ describe("ClusterSubscriber", () => {
       should(subscriber.handlers).be.eql({
         AddCollection: subscriber.handleCollectionAddition,
         AddIndex: subscriber.handleIndexAddition,
+        AddVirtualIndex: subscriber.handleVirtualIndexAddition,
         ClusterWideEvent: subscriber.handleClusterWideEvent,
         DocumentNotification: subscriber.handleDocumentNotification,
         DumpRequest: subscriber.handleDumpRequest,
@@ -95,6 +96,7 @@ describe("ClusterSubscriber", () => {
         RemoveCollection: subscriber.handleCollectionRemoval,
         RemoveIndexes: subscriber.handleIndexesRemoval,
         RemoveRealtimeRoom: subscriber.handleRealtimeRoomRemoval,
+        RemoveVirtualIndex: subscriber.handleVirtualIndexRemoval,
         ResetSecurity: subscriber.handleResetSecurity,
         Shutdown: subscriber.handleShutdown,
         Subscription: subscriber.handleSubscription,

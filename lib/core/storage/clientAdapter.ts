@@ -1089,7 +1089,7 @@ export class ClientAdapter {
     }
   }
 
-  async loadIndexMappings(index, indexFixtures, options){
+  async loadIndexMappings(index, indexFixtures, options) {
     if (!isPlainObject(indexFixtures)) {
       throw kerror.get(
         "api",

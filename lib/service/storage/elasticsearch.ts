@@ -25,7 +25,7 @@ import { Client } from "@elastic/elasticsearch";
 
 import assert from "assert";
 import _ from "lodash";
-import { Client as StorageClient } from "@elastic/elasticsearch";
+//import { Client as StorageClient } from "@elastic/elasticsearch";
 import ms from "ms";
 import Bluebird from "bluebird";
 import semver from "semver";
@@ -99,7 +99,8 @@ export class Elasticsearch extends Service {
       return { promise, reject, resolve };
     };
 
-    return new StorageClient({ defer, ...config });
+    return new Client({ defer, ...config });
+    //return new StorageClient({ defer, ...config });
   }
 
   _client: Client;
@@ -1383,7 +1384,6 @@ export class Elasticsearch extends Service {
     const aliases = body.map(({ alias: name }) => name);
     for (const alias of aliases) {
       const indexName = this._extractIndex(alias);
-
       if (index === indexName) {
         const indexType =
           alias[INDEX_PREFIX_POSITION_IN_ALIAS] === PRIVATE_PREFIX
@@ -1849,7 +1849,13 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < esRequest.body.length; i++) {
       const item = esRequest.body[i];
-      lastAction = this.prepareItem(item, actionNames, lastAction, alias, kuzzleMeta);
+      lastAction = this.prepareItem(
+        item,
+        actionNames,
+        lastAction,
+        alias,
+        kuzzleMeta
+      );
     }
     /* end critical code section */
 
@@ -1886,11 +1892,10 @@ export class Elasticsearch extends Service {
   /**
    * return the last action
    */
-  prepareItem(item, actionNames, lastAction, alias, kuzzleMeta){
+  prepareItem(item, actionNames, lastAction, alias, kuzzleMeta) {
     const action = Object.keys(item)[0];
 
     if (actionNames.indexOf(action) !== -1) {
-
       item[action]._index = alias;
 
       if (item[action]._type) {
@@ -1909,8 +1914,7 @@ export class Elasticsearch extends Service {
     return action;
   }
 
-
-  formatItemResult(result, row, idx, documents){
+  formatItemResult(result, row, idx, documents) {
     const action = Object.keys(row)[0];
     const item = row[action];
 
@@ -2880,7 +2884,13 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < body.items.length; i++) {
       const item = body.items[i];
-      this.processExecutedItem(item, partialErrors, successes, documents[i], source);
+      this.processExecutedItem(
+        item,
+        partialErrors,
+        successes,
+        documents[i],
+        source
+      );
     }
     /* end critical code section */
 
@@ -2890,7 +2900,7 @@ export class Elasticsearch extends Service {
     };
   }
 
-  processExecutedItem(item, partialErrors, successes, document, source){
+  processExecutedItem(item, partialErrors, successes, document, source) {
     const result = item[Object.keys(item)[0]];
 
     if (result.status >= 400) {
@@ -2951,7 +2961,9 @@ export class Elasticsearch extends Service {
      */
     for (let i = 0; i < documents.length; i++) {
       const document = documents[i];
-      if(!this._isRejectedDocument(document, rejected, prepareMUpsert, requireId)) {
+      if (
+        !this._isRejectedDocument(document, rejected, prepareMUpsert, requireId)
+      ) {
         let extractedDocument;
         if (prepareMUpsert) {
           extractedDocument = {
@@ -2999,7 +3011,7 @@ export class Elasticsearch extends Service {
    * @param prepareMUpsert
    * @param requireId
    */
-  _isRejectedDocument(document, rejected, prepareMUpsert, requireId) :boolean{
+  _isRejectedDocument(document, rejected, prepareMUpsert, requireId): boolean {
     if (!isPlainObject(document.body) && !prepareMUpsert) {
       rejected.push({
         document,
@@ -3038,9 +3050,6 @@ export class Elasticsearch extends Service {
     }
     return false;
   }
-
-
-
 
   /**
    * Throws an error if the provided mapping is invalid
@@ -3149,7 +3158,7 @@ export class Elasticsearch extends Service {
    * @returns {String} Available indice name (eg: '&nepali.liia2')
    */
   async _getAvailableIndice(index, collection) {
-    let indice = this._getAlias(index, collection).substr(
+    let indice = this._getAlias(index, collection).substring(
       INDEX_PREFIX_POSITION_IN_ALIAS
     );
 
@@ -3259,9 +3268,9 @@ export class Elasticsearch extends Service {
    * @returns {String} Index name
    */
   _extractIndex(alias) {
-    return alias.substr(
+    return alias.substring(
       INDEX_PREFIX_POSITION_IN_ALIAS + 1,
-      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1
+      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS + 1
     );
   }
 
@@ -3275,7 +3284,7 @@ export class Elasticsearch extends Service {
   _extractCollection(alias) {
     const separatorPos = alias.indexOf(NAME_SEPARATOR);
 
-    return alias.substr(separatorPos + 1, alias.length);
+    return alias.substring(separatorPos + 1, alias.length + 1);
   }
 
   /**
@@ -3307,9 +3316,9 @@ export class Elasticsearch extends Service {
     return schema;
   }
 
-  _extractAliasSchema(alias, includeHidden, schema){
+  _extractAliasSchema(alias, includeHidden, schema) {
     const [indexName, collectionName] = alias
-      .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
+      .substring(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length + 1)
       .split(NAME_SEPARATOR);
 
     if (
@@ -3434,7 +3443,7 @@ export class Elasticsearch extends Service {
     return searchBody;
   }
 
-  _sanitizeSearchBodyForVirtualIndex(searchBody, index){
+  _sanitizeSearchBodyForVirtualIndex(searchBody, index) {
     const filteredQuery = {
       bool: {
         filter: [],

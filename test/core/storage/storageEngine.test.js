@@ -71,12 +71,8 @@ describe("#core/storage/StorageEngine", () => {
     });
 
     it("should throw if a private index and a public one share the same name", async () => {
-      storageEngine.public.cache.listIndexes.resolves(["foo", "bar", "ohnoes"]);
-      storageEngine.private.cache.listIndexes.resolves([
-        "baz",
-        "ohnoes",
-        "qux",
-      ]);
+      storageEngine.public.cache.listIndexes.returns(["foo", "bar", "ohnoes"]);
+      storageEngine.private.cache.listIndexes.returns(["baz", "ohnoes", "qux"]);
 
       return should(storageEngine.init()).rejectedWith(PreconditionError, {
         id: "services.storage.index_already_exists",
