@@ -20,6 +20,47 @@
  */
 
 /**
- * Type for handler attached to Kuzzle events. Either hooks or pipes.
+ * Describe an event with it's name and the handler function arguments
+ */
+export type EventDefinition = {
+  /**
+   * Name of the event
+   *
+   * @example
+   * "core:document:create:after"
+   */
+  name: string;
+
+  /**
+   * Arguments of the event
+   */
+  args: any[];
+};
+
+/**
+ * Handler for hook events
+ */
+export type HookEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => void;
+
+/**
+ * Handler for pipe event.
+ *
+ * It should return a promise resolving the first received argument.
+ */
+export type PipeEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
+
+/**
+ * Handler for cluster event.
+ */
+export type ClusterEventHandler<
+  TEventDefinition extends EventDefinition = EventDefinition
+> = (...args: TEventDefinition["args"]) => any;
+
+/**
+ * @deprecated Use HookEventHandler, PipeEventHandler or ClusterEventHandler
  */
 export type EventHandler = (...payload: any) => any;
