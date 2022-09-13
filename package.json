@@ -69,7 +69,7 @@
     "murmurhash-native": "^3.5.0",
     "nanoid": "^3.3.3",
     "ndjson": "^2.0.0",
-    "node-segfault-handler": "^1.0.4",
+    "node-segfault-handler": "^1.1.0",
     "passport": "^0.5.2",
     "prettier": "^2.7.1",
     "protobufjs": "~6.11.2",

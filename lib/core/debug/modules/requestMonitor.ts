@@ -1,8 +1,8 @@
-import { DebugModule } from '../../types/DebugModule';
-import * as kerror from '../../kerror';
-import { JSONObject } from '../../../index';
-import { KuzzleRequest } from '../../api/request';
-import { nano } from '../../util/time';
+import { DebugModule } from '../../../types/DebugModule';
+import * as kerror from '../../../kerror';
+import { JSONObject } from '../../../../index';
+import { KuzzleRequest } from '../../../api/request';
+import { nano } from '../../../util/time';
 
 type MonitoringParams = {
   reportProgressInterval?: number; // Milliseconds
@@ -44,11 +44,17 @@ export class RequestMonitor extends DebugModule {
     );
   }
 
+  /**
+   * Initialization routine called when the debugger is enabled
+   */
   async init () {
     global.kuzzle.on('request:beforeExecution', this.beforeRequestExecution.bind(this));
     global.kuzzle.on('request:afterExecution', this.afterRequestExecution.bind(this));
   }
 
+  /**
+   * Cleanup routine called when the debugger is disabled
+   */
   async cleanup () {
     this.monitoringInProgress = false;
     this.requestsStatistics = {};
@@ -93,10 +99,7 @@ export class RequestMonitor extends DebugModule {
       throw kerror.get('core', 'debugger', 'monitor_not_running', 'Requests');
     }
 
-    this.monitoringInProgress = false;
-    this.requestExecutionTimers.clear();
-    this.requestsStatistics = {};
-    clearInterval(this.monitoringInterval);
+    await this.cleanup();
   }
 
   private async beforeRequestExecution (request: KuzzleRequest) {

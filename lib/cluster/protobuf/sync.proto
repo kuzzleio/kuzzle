@@ -21,6 +21,11 @@ message NodeShutdown {
   string nodeId = 2;
 }
 
+message NodePreventEviction {
+  uint64 messageId = 1;
+  bool evictionPrevented = 2;
+}
+
 message NewRealtimeRoom {
   uint64 messageId = 1;
   string index = 2;
