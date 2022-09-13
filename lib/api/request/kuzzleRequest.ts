@@ -23,7 +23,6 @@ import { isPlainObject } from "../../util/safeObject";
 import { get, set } from "lodash";
 import moment from "moment";
 import * as uuid from "uuid";
-import { nanoid } from "nanoid";
 
 import { JSONObject } from "kuzzle-sdk";
 
@@ -63,7 +62,7 @@ export class KuzzleRequest {
   public id: string;
 
   constructor(data: any, options: any) {
-    this[_internalId] = nanoid();
+    this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
     this[_context] = new RequestContext(options);
@@ -78,7 +77,7 @@ export class KuzzleRequest {
 
     this.id = data.requestId
       ? assert.assertString("requestId", data.requestId)
-      : nanoid();
+      : uuid.v4();
 
     this[_timestamp] = data.timestamp || Date.now();
 

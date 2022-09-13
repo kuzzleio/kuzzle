@@ -67,7 +67,7 @@ export class DebugController extends NativeController {
     const method = request.getBodyString("method");
     const params = request.getBodyObject("params", {});
 
-    return global.kuzzle.ask('core:debugger:post', method, params);
+    return global.kuzzle.ask("core:debugger:post", method, params);
   }
 
   /**
@@ -87,7 +87,11 @@ export class DebugController extends NativeController {
 
     const event = request.getBodyString("event");
 
-    global.kuzzle.ask("core:debugger:addListener", event, request.context.connection.id);
+    global.kuzzle.ask(
+      "core:debugger:addListener",
+      event,
+      request.context.connection.id
+    );
   }
 
   /**
@@ -105,7 +109,11 @@ export class DebugController extends NativeController {
     }
 
     const event = request.getBodyString("event");
-    
-    global.kuzzle.ask("core:debugger:removeListener", event, request.context.connection.id);
+
+    global.kuzzle.ask(
+      "core:debugger:removeListener",
+      event,
+      request.context.connection.id
+    );
   }
 }

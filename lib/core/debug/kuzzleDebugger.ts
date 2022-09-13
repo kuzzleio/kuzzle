@@ -28,12 +28,9 @@ export class KuzzleDebugger {
    * List of DebugModule for DebugController
    * Used to add new methods and events to the protocol
    */
-  private modules: DebugModule[] = [
-    new ClusterDebugModule()
-  ];
+  private modules: DebugModule[] = [new ClusterDebugModule()];
 
   async init() {
-
     this.inspector = new Inspector.Session();
 
     // Remove connection id from the list of listeners for each event
@@ -79,10 +76,16 @@ export class KuzzleDebugger {
   async registerAsks() {
     global.kuzzle.onAsk("core:debugger:enable", () => this.enable());
     global.kuzzle.onAsk("core:debugger:disable", () => this.disable());
-    global.kuzzle.onAsk("core:debugger:post", (method, params) => this.post(method, params));
+    global.kuzzle.onAsk("core:debugger:post", (method, params) =>
+      this.post(method, params)
+    );
     global.kuzzle.onAsk("core:debugger:isEnabled", () => this.debuggerStatus);
-    global.kuzzle.onAsk("core:debugger:removeListener", (event, connectionId) => this.removeListener(event, connectionId));
-    global.kuzzle.onAsk("core:debugger:addListener", (event, connectionId) => this.addListener(event, connectionId));
+    global.kuzzle.onAsk("core:debugger:removeListener", (event, connectionId) =>
+      this.removeListener(event, connectionId)
+    );
+    global.kuzzle.onAsk("core:debugger:addListener", (event, connectionId) =>
+      this.addListener(event, connectionId)
+    );
   }
 
   /**

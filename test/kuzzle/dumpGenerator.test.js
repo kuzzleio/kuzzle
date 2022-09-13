@@ -184,7 +184,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
     // (9 - 5 + 1) directories
     // (+1 because we are about to create a new one,
     // and we don't want the limit to be exceeded)
-    should(fsStub.removeSync.callCount).be.eql(5);
+    should(fsStub.rmdirSync.callCount).be.eql(5);
   });
 
   it("should delete coredumps in reports directories, if over the limit", async () => {

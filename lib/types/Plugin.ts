@@ -23,7 +23,7 @@ import { PluginContext } from "../core/plugin/pluginContext";
 import { ControllerDefinition } from "./ControllerDefinition";
 import { PluginManifest } from "./PluginManifest";
 import { StrategyDefinition } from "./StrategyDefinition";
-import { EventHandler } from "./EventHandler";
+import { PipeEventHandler, HookEventHandler } from "./EventHandler";
 import { JSONObject } from "../../index";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
@@ -45,7 +45,7 @@ export type PluginHookDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[];
+  [event: string]: HookEventHandler | HookEventHandler[];
 };
 
 /**
@@ -55,7 +55,7 @@ export type PluginPipeDefinition = {
   /**
    * Event name or wildcard event.
    */
-  [event: string]: EventHandler | EventHandler[];
+  [event: string]: PipeEventHandler | PipeEventHandler[];
 };
 
 /**
