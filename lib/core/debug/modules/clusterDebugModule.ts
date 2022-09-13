@@ -13,12 +13,12 @@ export class ClusterDebugModule extends DebugModule {
     
   }
 
-  async preventNodeEviction(params: { evictionPrevented?: boolean }): Promise<void> {
-    if (params.evictionPrevented === undefined) {
+  async preventNodeEviction(params: { enable?: boolean }): Promise<void> {
+    if (params.enable === undefined) {
       throw kerror.get("api", "assert", "missing_argument", "evictionPrevented");
     }
 
-    global.kuzzle.ask("cluster:node:preventEviction", params.evictionPrevented);
+    global.kuzzle.ask("cluster:node:preventEviction", params.enable);
   }
   
   async cleanup(): Promise<void> {

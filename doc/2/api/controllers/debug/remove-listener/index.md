@@ -30,6 +30,10 @@ This only works using a Websocket connection since notification can only be sent
 
 - `event`: event name to stop listening to.
 
+:::info
+For [Debug Modules](/core/2/api/debug-modules) you must use the following format `Kuzzle.<module name>.<event name>` for the event name.
+:::
+
 ## Response
 
 
