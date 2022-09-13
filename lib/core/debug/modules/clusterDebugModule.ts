@@ -14,16 +14,9 @@ export class ClusterDebugModule extends DebugModule {
     // Nothing to do (eslint complains if this method is not implemented)
   }
 
-  async preventNodeEviction(params: {
-    enable?: boolean;
-  }): Promise<void> {
+  async preventNodeEviction(params: { enable?: boolean }): Promise<void> {
     if (params.enable === undefined) {
-      throw kerror.get(
-        "api",
-        "assert",
-        "missing_argument",
-        "enable"
-      );
+      throw kerror.get("api", "assert", "missing_argument", "enable");
     }
 
     global.kuzzle.ask("cluster:node:preventEviction", params.enable);
