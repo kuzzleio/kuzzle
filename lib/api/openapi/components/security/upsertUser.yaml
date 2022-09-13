@@ -31,7 +31,7 @@ SecurityUpsertUser:
       description: "Updates or creates a user."
       schema:
         $ref: "#/components/security/SecurityUpsertUserResponse"
-      
+
 components:
   schemas:
     SecurityUpsertUserRequest:
@@ -53,7 +53,6 @@ components:
                   type: "integer"
                 _source:
                   type: "object"
-                  description: " (optional) actualized user content. This property appears only if the \"source\" option is set to true"
+                  description: ' (optional) actualized user content. This property appears only if the "source" option is set to true'
                 created:
                   type: "boolean"
-

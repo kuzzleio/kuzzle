@@ -1,10 +1,10 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
+const sinon = require("sinon");
 
 // Mock for the core/network/entryPoint class
 class EntryPointMock {
-  constructor (config = {}) {
+  constructor(config = {}) {
     this.config = config;
     this.execute = sinon.stub().yields({});
     this.newConnection = sinon.stub();

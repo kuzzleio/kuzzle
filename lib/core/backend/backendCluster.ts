@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-import { JSONObject } from '../../../index';
-import { EventHandler } from '../../types';
+import { JSONObject } from "../../../index";
+import { EventHandler } from "../../types";
 
 export class BackendCluster {
   /**
@@ -30,8 +30,8 @@ export class BackendCluster {
    * @param  {JSONObject}    payload
    * @return {Promise<void>}
    */
-  async broadcast (event: string, payload: JSONObject): Promise<void> {
-    await global.kuzzle.ask('cluster:event:broadcast', event, payload);
+  async broadcast(event: string, payload: JSONObject): Promise<void> {
+    await global.kuzzle.ask("cluster:event:broadcast", event, payload);
   }
 
   /**
@@ -41,8 +41,8 @@ export class BackendCluster {
    * @param  {EventHandler}      listener
    * @return {Promise<void>}       [description]
    */
-  async on (event: string, listener: EventHandler): Promise<void> {
-    await global.kuzzle.ask('cluster:event:on', event, listener);
+  async on(event: string, listener: EventHandler): Promise<void> {
+    await global.kuzzle.ask("cluster:event:on", event, listener);
   }
 
   /**
@@ -53,8 +53,8 @@ export class BackendCluster {
    * @param  {EventHandler}      listener
    * @return {Promise<void>}
    */
-  async once (event: string, listener: EventHandler): Promise<void> {
-    await global.kuzzle.ask('cluster:event:once', event, listener);
+  async once(event: string, listener: EventHandler): Promise<void> {
+    await global.kuzzle.ask("cluster:event:once", event, listener);
   }
 
   /**
@@ -66,8 +66,8 @@ export class BackendCluster {
    * @param  {EventHandler}      listener
    * @return {Promise<void>}
    */
-  async off (event: string, listener: EventHandler): Promise<void> {
-    await global.kuzzle.ask('cluster:event:off', event, listener);
+  async off(event: string, listener: EventHandler): Promise<void> {
+    await global.kuzzle.ask("cluster:event:off", event, listener);
   }
 
   /**
@@ -76,7 +76,7 @@ export class BackendCluster {
    * @param  {string}        event
    * @return {Promise<void>}
    */
-  async removeAllListeners (event: string): Promise<void> {
-    await global.kuzzle.ask('cluster:event:removeAllListeners', event);
+  async removeAllListeners(event: string): Promise<void> {
+    await global.kuzzle.ask("cluster:event:removeAllListeners", event);
   }
 }

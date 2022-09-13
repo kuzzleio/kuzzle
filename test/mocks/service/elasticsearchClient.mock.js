@@ -1,6 +1,6 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
+const sinon = require("sinon");
 
 /**
  * Mocks an elasticsearch client instance
@@ -8,7 +8,7 @@ const sinon = require('sinon');
  * @constructor
  */
 class ElasticsearchClientMock {
-  constructor () {
+  constructor() {
     this.bulk = sinon.stub().resolves();
     this.count = sinon.stub().resolves();
     this.create = sinon.stub().resolves();
@@ -19,9 +19,9 @@ class ElasticsearchClientMock {
     this.info = sinon.stub().resolves({
       body: {
         version: {
-          number: '7.0.0'
-        }
-      }
+          number: "7.0.0",
+        },
+      },
     });
     this.mget = sinon.stub().resolves();
     this.update = sinon.stub().resolves();
@@ -32,7 +32,7 @@ class ElasticsearchClientMock {
 
     this.cat = {
       aliases: sinon.stub().resolves(),
-      indices: sinon.stub().resolves()
+      indices: sinon.stub().resolves(),
     };
 
     this.cluster = {
@@ -41,7 +41,7 @@ class ElasticsearchClientMock {
           number_of_pending_tasks: 0,
         },
       }),
-      stats: sinon.stub().resolves()
+      stats: sinon.stub().resolves(),
     };
 
     this.indices = {

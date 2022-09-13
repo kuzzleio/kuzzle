@@ -1,15 +1,15 @@
-import { ClientOptions } from '@elastic/elasticsearch';
+import { ClientOptions } from "@elastic/elasticsearch";
 
 export type StorageEngineElasticsearch = {
   /**
    * @default ['storageEngine']
-  */
+   */
   aliases: string[];
 
   /**
    * @default "elasticsearch"
-  */
-  backend: 'elasticsearch';
+   */
+  backend: "elasticsearch";
 
   /**
    * Elasticsearch constructor options. Use this field to specify your
@@ -24,7 +24,7 @@ export type StorageEngineElasticsearch = {
    *    node: 'http://localhost:9200'
    * }
    *
-  */
+   */
   client: ClientOptions;
 
   /**
@@ -42,8 +42,8 @@ export type StorageEngineElasticsearch = {
   commonMapping: {
     /**
      * @default "false"
-    */
-    dynamic: 'true' | 'false' | 'strict';
+     */
+    dynamic: "true" | "false" | "strict";
 
     properties: {
       _kuzzle_info: {
@@ -70,11 +70,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            createdAt: {
-              type: string;
-            };
+          createdAt: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -83,11 +83,11 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updater: {
-              type: string;
-            };
+          updater: {
+            type: string;
+          };
 
-            /**
+          /**
            * @default
            *
            * [
@@ -96,108 +96,212 @@ export type StorageEngineElasticsearch = {
            *   }
            * ]
            */
-            updatedAt: {
-              type: string;
-            };
+          updatedAt: {
+            type: string;
+          };
         };
       };
-      };
     };
+  };
 
-    internalIndex: {
-      /**
-      * @default "kuzzle"
-      */
-      name: string;
+  internalIndex: {
+    /**
+     * @default "kuzzle"
+     */
+    name: string;
 
-      collections: {
-        users: {
+    collections: {
+      users: {
+        settings: {
           /**
-          * @default 'false'
-          */
-          dynamic: 'true' | 'false' | 'strict';
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          /**
+           * @default 'false'
+           */
+          dynamic: "true" | "false" | "strict";
 
           properties: {
             /**
-              * @default
-              *
-              * [
-              *   {
-              *     type: 'keyword',
-              *   }
-              * ]
-              */
+             * @default
+             *
+             * [
+             *   {
+             *     type: 'keyword',
+             *   }
+             * ]
+             */
             profileIds: {
               type: string;
             };
           };
         };
-        profiles: {
-          dynamic: 'false';
+      };
+
+      profiles: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "false";
           properties: {
-            tags: { type: 'keyword' };
+            tags: { type: "keyword" };
             policies: {
               properties: {
-                roleId: { type: 'keyword' };
+                roleId: { type: "keyword" };
                 restrictedTo: {
-                  type: 'nested';
+                  type: "nested";
                   properties: {
-                    index: { type: 'keyword' };
-                    collections: { type: 'keyword' };
+                    index: { type: "keyword" };
+                    collections: { type: "keyword" };
                   };
                 };
               };
             };
           };
         };
-        roles: {
-          dynamic: 'false';
+      };
+
+      roles: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "false";
           properties: {
-            tags: { type: 'keyword' };
+            tags: { type: "keyword" };
             controllers: {
-              dynamic: 'false';
+              dynamic: "false";
               properties: Record<string, unknown>;
             };
           };
         };
-        validations: {
+      };
+
+      validations: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
           properties: {
-            index: { type: 'keyword' };
-            collection: { type: 'keyword' };
+            index: { type: "keyword" };
+            collection: { type: "keyword" };
             validations: {
-              dynamic: 'false';
+              dynamic: "false";
               properties: Record<string, unknown>;
             };
           };
         };
-        config: {
-          dynamic: 'false';
+      };
+
+      config: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "false";
           properties: Record<string, unknown>;
         };
-        'api-keys': {
-          dynamic: 'false';
+      };
+
+      "api-keys": {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "false";
           properties: {
-            userId: { type: 'keyword' };
-            hash: { type: 'keyword' };
-            description: { type: 'text' };
-            expiresAt: { type: 'long' };
-            ttl: { type: 'keyword' };
-            token: { type: 'keyword' };
+            userId: { type: "keyword" };
+            hash: { type: "keyword" };
+            description: { type: "text" };
+            expiresAt: { type: "long" };
+            ttl: { type: "keyword" };
+            token: { type: "keyword" };
           };
         };
-        installations: {
-          dynamic: 'strict';
+      };
+
+      installations: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "strict";
           properties: {
-            description: { type: 'text' };
-            handler: { type: 'text' };
-            installedAt: { type: 'date' };
+            description: { type: "text" };
+            handler: { type: "text" };
+            installedAt: { type: "date" };
           };
         };
       };
     };
-    maxScrollDuration: '1m';
-    defaults: {
-      onUpdateConflictRetries: 0;
-      scrollTTL: '15s';
-    };
-}
+  };
+  maxScrollDuration: "1m";
+  defaults: {
+    onUpdateConflictRetries: 0;
+    scrollTTL: "15s";
+  };
+};

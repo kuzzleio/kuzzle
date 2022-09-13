@@ -19,16 +19,15 @@
  * limitations under the License.
  */
 
-import { KuzzleRequest } from '../request';
-import { NativeController } from './baseController';
-import Inspector from 'inspector';
-import * as kerror from '../../kerror';
-import { DebugModule } from '../../types/DebugModule';
-import { JSONObject } from 'kuzzle-sdk';
-import get from 'lodash/get';
-import { RequestMonitor } from '../../core/debug/requestMonitor';
+import { KuzzleRequest } from "../request";
+import { NativeController } from "./baseController";
+import Inspector from "inspector";
+import * as kerror from "../../kerror";
+import { DebugModule } from "../../types/DebugModule";
+import { JSONObject } from "kuzzle-sdk";
+import get from "lodash/get";
 
-const DEBUGGER_EVENT = 'kuzzle-debugger-event';
+const DEBUGGER_EVENT = "kuzzle-debugger-event";
 
 type DebugModuleMethod = (params: JSONObject) => any;
 
@@ -55,28 +54,27 @@ export class DebugController extends NativeController {
    * Used to add new methods and events to the protocol
    */
   private modules: DebugModule[] = [
-    new RequestMonitor(),
   ];
 
-  constructor () {
+  constructor() {
     super([
-      'nodeVersion',
-      'enable',
-      'disable',
-      'post',
-      'addListener',
-      'removeListener',
+      "nodeVersion",
+      "enable",
+      "disable",
+      "post",
+      "addListener",
+      "removeListener",
     ]);
   }
 
-  async init () {
+  async init() {
     super.init();
 
     this.inspector = new Inspector.Session();
 
     // Remove connection id from the list of listeners for each event
-    global.kuzzle.on('connection:remove', connectionId => {
-      if (! this.debuggerStatus) {
+    global.kuzzle.on("connection:remove", (connectionId) => {
+      if (!this.debuggerStatus) {
         return;
       }
 
@@ -85,29 +83,25 @@ export class DebugController extends NativeController {
       }
     });
 
-    this.inspector.on('inspectorNotification', async (payload) => {
-      if (! this.debuggerStatus) {
+    this.inspector.on("inspectorNotification", async (payload) => {
+      if (!this.debuggerStatus) {
         return;
       }
 
       await this.notifyGlobalListeners(payload.method, payload);
 
       const listeners = this.events.get(payload.method);
-      if (! listeners) {
+      if (!listeners) {
         return;
       }
 
       const promises = [];
       for (const connectionId of listeners) {
         promises.push(
-          this.notifyConnection(
-            connectionId,
-            DEBUGGER_EVENT,
-            {
-              event: payload.method,
-              result: payload
-            }
-          )
+          this.notifyConnection(connectionId, DEBUGGER_EVENT, {
+            event: payload.method,
+            result: payload,
+          })
         );
       }
 
@@ -116,14 +110,14 @@ export class DebugController extends NativeController {
     });
   }
 
-  async nodeVersion () {
+  async nodeVersion() {
     return process.version;
   }
 
   /**
    * Connect the debugger
    */
-  async enable () {
+  async enable() {
     if (this.debuggerStatus) {
       return;
     }
@@ -135,28 +129,39 @@ export class DebugController extends NativeController {
       await module.init(this.inspector);
 
       for (const methodName of module.methods) {
-        if (! module[methodName]) {
-          throw new Error(`Missing implementation of method "${methodName}" inside DebugModule "${module.name}"`);
+        if (!module[methodName]) {
+          throw new Error(
+            `Missing implementation of method "${methodName}" inside DebugModule "${module.name}"`
+          );
         }
-        this.kuzzlePostMethods.set(`Kuzzle.${module.name}.${methodName}`, module[methodName].bind(module));
+        this.kuzzlePostMethods.set(
+          `Kuzzle.${module.name}.${methodName}`,
+          module[methodName].bind(module)
+        );
       }
 
       for (const eventName of module.events) {
-        module.on(eventName, async payload => {
+        module.on(eventName, async (payload) => {
+          if (!this.debuggerStatus) {
+            return;
+          }
+
           const event = `Kuzzle.${module.name}.${eventName}`;
           await this.notifyGlobalListeners(event, payload);
 
           const listeners = this.events.get(event);
-          if (! listeners) {
+          if (!listeners) {
             return;
           }
 
           const promises = [];
           for (const connectionId of listeners) {
-            promises.push(this.notifyConnection(connectionId, DEBUGGER_EVENT, {
-              event,
-              result: payload
-            }));
+            promises.push(
+              this.notifyConnection(connectionId, DEBUGGER_EVENT, {
+                event,
+                result: payload,
+              })
+            );
           }
 
           // No need to catch, notify is already try-catched
@@ -169,8 +174,8 @@ export class DebugController extends NativeController {
   /**
    * Disconnect the debugger and clears all the events listeners
    */
-  async disable () {
-    if (! this.debuggerStatus) {
+  async disable() {
+    if (!this.debuggerStatus) {
       return;
     }
 
@@ -178,7 +183,7 @@ export class DebugController extends NativeController {
       for (const eventName of module.events) {
         module.removeAllListeners(eventName);
       }
-      await module.cleanup(); 
+      await module.cleanup();
     }
 
     this.inspector.disconnect();
@@ -191,47 +196,57 @@ export class DebugController extends NativeController {
    * Trigger action from debugger directly following the Chrome Debug Protocol
    * See: https://chromedevtools.github.io/devtools-protocol/v8/
    */
-  async post (request: KuzzleRequest) {
-    if (! this.debuggerStatus) {
-      throw kerror.get('core', 'debugger', 'not_enabled');
+  async post(request: KuzzleRequest) {
+    if (!this.debuggerStatus) {
+      throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    const method = request.getBodyString('method');
-    const params = request.getBodyObject('params', {});
+    const method = request.getBodyString("method");
+    const params = request.getBodyObject("params", {});
 
-    if (method.startsWith('Kuzzle.')) {
+    if (method.startsWith("Kuzzle.")) {
       const debugModuleMethod = this.kuzzlePostMethods.get(method);
 
       if (debugModuleMethod) {
-        return await debugModuleMethod(params);
+        return debugModuleMethod(params);
       }
-      throw kerror.get('core', 'debugger', 'method_not_found', method);
+      throw kerror.get("core", "debugger", "method_not_found", method);
     }
 
-    if (! get(global.kuzzle.config, 'security.debug.native_debug_protocol')) {
-      throw kerror.get('core', 'debugger', 'native_debug_protocol_usage_denied');
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
     }
 
-    return await this.inspectorPost(method, params);
+    return this.inspectorPost(method, params);
   }
 
   /**
    * Make the websocket connection listen and receive events from Chrome Debug Protocol
    * See events from: https://chromedevtools.github.io/devtools-protocol/v8/
    */
-  async addListener (request: KuzzleRequest) {
-    if (request.context.connection.protocol !== 'websocket') {
-      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:addListener');
+  async addListener(request: KuzzleRequest) {
+    if (request.context.connection.protocol !== "websocket") {
+      throw kerror.get(
+        "api",
+        "assert",
+        "unsupported_protocol",
+        request.context.connection.protocol,
+        "debug:addListener"
+      );
     }
 
-    if (! this.debuggerStatus) {
-      throw kerror.get('core', 'debugger', 'not_enabled');
+    if (!this.debuggerStatus) {
+      throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    const event = request.getBodyString('event');
+    const event = request.getBodyString("event");
 
     let listeners = this.events.get(event);
-    if (! listeners) {
+    if (!listeners) {
       listeners = new Set();
       this.events.set(event, listeners);
     }
@@ -242,16 +257,22 @@ export class DebugController extends NativeController {
   /**
    * Remove the websocket connection from the events' listeners
    */
-  async removeListener (request: KuzzleRequest) {
-    if (request.context.connection.protocol !== 'websocket') {
-      throw kerror.get('api', 'assert', 'unsupported_protocol', request.context.connection.protocol, 'debug:removeListener');
+  async removeListener(request: KuzzleRequest) {
+    if (request.context.connection.protocol !== "websocket") {
+      throw kerror.get(
+        "api",
+        "assert",
+        "unsupported_protocol",
+        request.context.connection.protocol,
+        "debug:removeListener"
+      );
     }
 
-    if (! this.debuggerStatus) {
-      throw kerror.get('core', 'debugger', 'not_enabled');
+    if (!this.debuggerStatus) {
+      throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    const event = request.getBodyString('event');
+    const event = request.getBodyString("event");
 
     const listeners = this.events.get(event);
 
@@ -263,25 +284,29 @@ export class DebugController extends NativeController {
   /**
    * Execute a method using the Chrome Debug Protocol
    * @param method Chrome Debug Protocol method to execute
-   * @param params 
-   * @returns 
+   * @param params
+   * @returns
    */
-  private async inspectorPost (method: string, params: JSONObject) {
-    if (! this.debuggerStatus) {
-      throw kerror.get('core', 'debugger', 'not_enabled');
+  private async inspectorPost(
+    method: string,
+    params: JSONObject
+  ): Promise<JSONObject> {
+    if (!this.debuggerStatus) {
+      throw kerror.get("core", "debugger", "not_enabled");
     }
 
     let resolve;
 
-    const promise = new Promise(res => {
+    const promise = new Promise((res) => {
       resolve = res;
     });
 
     this.inspector.post(method, params, (err, res) => {
       if (err) {
-        resolve({ error: JSON.stringify(Object.getOwnPropertyDescriptors(err)) });
-      }
-      else {
+        resolve({
+          error: JSON.stringify(Object.getOwnPropertyDescriptors(err)),
+        });
+      } else {
         resolve(res);
       }
     });
@@ -292,27 +317,33 @@ export class DebugController extends NativeController {
   /**
    * Sends a direct notification to a websocket connection without having to listen to a specific room
    */
-  private async notifyConnection (connectionId: string, event: string, payload: JSONObject) {
+  private async notifyConnection(
+    connectionId: string,
+    event: string,
+    payload: JSONObject
+  ) {
     global.kuzzle.entryPoint._notify({
       channels: [event],
-      connectionId: connectionId,
-      payload: payload,
+      connectionId,
+      payload,
     });
   }
 
-  private async notifyGlobalListeners (event: string, payload: JSONObject) {
-    const listeners = this.events.get('*');
+  private async notifyGlobalListeners(event: string, payload: JSONObject) {
+    const listeners = this.events.get("*");
 
-    if (! listeners) {
+    if (!listeners) {
       return;
     }
 
     const promises = [];
     for (const connectionId of listeners) {
-      promises.push(this.notifyConnection (connectionId, DEBUGGER_EVENT, {
-        event,
-        result: payload
-      }));
+      promises.push(
+        this.notifyConnection(connectionId, DEBUGGER_EVENT, {
+          event,
+          result: payload,
+        })
+      );
     }
 
     // No need to catch, notify is already try-catched

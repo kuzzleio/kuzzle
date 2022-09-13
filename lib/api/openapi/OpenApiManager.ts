@@ -34,46 +34,46 @@ import {
   OpenApiDocumentValidateComponent,
   OpenApiSecurityUpsertUserComponent,
   OpenApiDocumentmCreateOrReplaceComponent,
-} from './components';
-import { OpenApiDefinition } from '../../types/OpenApiDefinition';
-import { version } from '../../../package.json';
-import { generateOpenApi } from './openApiGenerator';
+} from "./components";
+import { OpenApiDefinition } from "../../types/OpenApiDefinition";
+import { version } from "../../../package.json";
+import { generateOpenApi } from "./openApiGenerator";
 
 export class OpenApiManager {
   /* eslint-disable sort-keys */
   public kuzzleDefinition: OpenApiDefinition = {
-    swagger: '2.0',
+    swagger: "2.0",
     info: {
-      title: 'Kuzzle API',
-      description: 'Kuzzle HTTP API definition',
+      title: "Kuzzle API",
+      description: "Kuzzle HTTP API definition",
       contact: {
-        name: 'Kuzzle team',
-        url: 'https://kuzzle.io',
-        email: 'support@kuzzle.io',
-        discord: 'http://join.discord.kuzzle.io'
+        name: "Kuzzle team",
+        url: "https://kuzzle.io",
+        email: "support@kuzzle.io",
+        discord: "http://join.discord.kuzzle.io",
       },
       license: {
-        name: 'Apache 2',
-        url: 'http://opensource.org/licenses/apache2.0'
+        name: "Apache 2",
+        url: "http://opensource.org/licenses/apache2.0",
       },
-      version: version
+      version: version,
     },
     externalDocs: {
-      description: 'Kuzzle API Documentation',
-      url: 'https://docs.kuzzle.io/core/2/api/'
+      description: "Kuzzle API Documentation",
+      url: "https://docs.kuzzle.io/core/2/api/",
     },
     servers: [
       {
-        url: 'https://{baseUrl}:{port}',
-        description: 'Kuzzle Base Url',
+        url: "https://{baseUrl}:{port}",
+        description: "Kuzzle Base Url",
         variables: {
-          baseUrl: { default: 'localhost' },
-          port: { default: 7512 }
+          baseUrl: { default: "localhost" },
+          port: { default: 7512 },
         },
-      }
+      },
     ],
     tags: [],
-    schemes: [ 'https', 'http' ],
+    schemes: ["https", "http"],
     paths: {},
     components: {
       ...OpenApiPayloadsDefinitions,
@@ -94,8 +94,8 @@ export class OpenApiManager {
       security: {
         ...OpenApiSecurityUpsertUserComponent,
         ...OpenApiDocumentmCreateOrReplaceComponent,
-      }
-    }
+      },
+    },
   };
   /* eslint-enable sort-keys */
 
@@ -105,7 +105,11 @@ export class OpenApiManager {
    * @param applicationDefinition Application OpenApi definition
    * @param pluginsManager PluginsManager instance
    */
-  constructor (applicationDefinition: OpenApiDefinition, kuzzleRoutes: any[], pluginsRoutes: any[]) {
+  constructor(
+    applicationDefinition: OpenApiDefinition,
+    kuzzleRoutes: any[],
+    pluginsRoutes: any[]
+  ) {
     this.applicationDefinition = applicationDefinition;
 
     generateOpenApi(kuzzleRoutes, this.kuzzleDefinition);
@@ -115,9 +119,12 @@ export class OpenApiManager {
     this.registerAskEvents();
   }
 
-  registerAskEvents () {
-    global.kuzzle.onAsk('core:api:openapi:kuzzle', () => this.kuzzleDefinition);
+  registerAskEvents() {
+    global.kuzzle.onAsk("core:api:openapi:kuzzle", () => this.kuzzleDefinition);
 
-    global.kuzzle.onAsk('core:api:openapi:app', () => this.applicationDefinition);
+    global.kuzzle.onAsk(
+      "core:api:openapi:app",
+      () => this.applicationDefinition
+    );
   }
 }

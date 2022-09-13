@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-import { KuzzleError } from './kuzzleError';
+import { KuzzleError } from "./kuzzleError";
 
 export class MultipleErrorsError extends KuzzleError {
   public errors: Array<KuzzleError>;
   public count: number;
 
-  constructor (
+  constructor(
     message: string,
     errors: KuzzleError[] = [],
     id?: string,
@@ -37,15 +37,14 @@ export class MultipleErrorsError extends KuzzleError {
     this.count = errors.length;
   }
 
-  toJSON () {
+  toJSON() {
     const serialized = super.toJSON();
 
     serialized.count = this.count;
 
     try {
-      serialized.errors = this.errors.map(error => error.toJSON());
-    }
-    catch (error) {
+      serialized.errors = this.errors.map((error) => error.toJSON());
+    } catch (error) {
       serialized.errors = this.errors;
     }
 

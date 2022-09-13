@@ -1,8 +1,8 @@
-'use strict';
+"use strict";
 
-const sinon = require('sinon');
+const sinon = require("sinon");
 
-function mockAssertion (object) {
+function mockAssertion(object) {
   object.assertBodyHasNotAttributes = sinon.stub();
   object.assertIsStrategyRegistered = sinon.stub();
   object.assertIndexExists = sinon.stub();

@@ -7,7 +7,7 @@ description: NameGenerator class getRandomAdjective() method
 
 # getRandomAdjective
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.19.0" />
 
 Returns a random adjective.
 

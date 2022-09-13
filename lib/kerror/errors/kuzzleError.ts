@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import * as util from 'util';
+import * as util from "util";
 
-import { JSONObject } from 'kuzzle-sdk';
+import { JSONObject } from "kuzzle-sdk";
 
 /**
  * API error are instances of this class.
@@ -49,7 +49,7 @@ export class KuzzleError extends Error {
    */
   public props: string[];
 
-  constructor (message: string, status: number, id?: string, code?: number) {
+  constructor(message: string, status: number, id?: string, code?: number) {
     super(message);
 
     this.status = status;
@@ -61,8 +61,7 @@ export class KuzzleError extends Error {
     if (util.types.isNativeError(message)) {
       this.message = message.message;
       this.stack = message.stack;
-    }
-    else {
+    } else {
       this.message = message;
       Error.captureStackTrace(this, KuzzleError);
     }
@@ -71,11 +70,11 @@ export class KuzzleError extends Error {
   /**
    * Error class name (e.g: 'NotFoundError')
    */
-  get name (): string {
+  get name(): string {
     return this.constructor.name;
   }
 
-  toJSON (): JSONObject {
+  toJSON(): JSONObject {
     return {
       code: this.code,
       id: this.id,

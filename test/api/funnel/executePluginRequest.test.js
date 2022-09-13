@@ -1,17 +1,14 @@
-'use strict';
+"use strict";
 
-const should = require('should');
-const sinon = require('sinon');
+const should = require("should");
+const sinon = require("sinon");
 
-const KuzzleMock = require('../../mocks/kuzzle.mock');
-const { MockNativeController } = require('../../mocks/controller.mock');
-const FunnelController = require('../../../lib/api/funnel');
-const {
-  Request,
-  NotFoundError
-} = require('../../../index');
+const KuzzleMock = require("../../mocks/kuzzle.mock");
+const { MockNativeController } = require("../../mocks/controller.mock");
+const FunnelController = require("../../../lib/api/funnel");
+const { Request, NotFoundError } = require("../../../index");
 
-describe('funnel.executePluginRequest', () => {
+describe("funnel.executePluginRequest", () => {
   let kuzzle;
   let originalHandleErrorDump;
   let funnel;
@@ -19,41 +16,41 @@ describe('funnel.executePluginRequest', () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     funnel = new FunnelController();
-    funnel.controllers.set('testme', new MockNativeController());
+    funnel.controllers.set("testme", new MockNativeController());
     originalHandleErrorDump = funnel.handleErrorDump;
     funnel.handleErrorDump = sinon.stub();
   });
 
-  it('should fail if an unknown controller is invoked', () => {
-    const rq = new Request({ controller: 'foo', action: 'bar' });
+  it("should fail if an unknown controller is invoked", () => {
+    const rq = new Request({ controller: "foo", action: "bar" });
 
-    return funnel.executePluginRequest(rq)
-      .then(() => Promise.reject(new Error('Should not resolve')))
-      .catch(err => {
+    return funnel
+      .executePluginRequest(rq)
+      .then(() => Promise.reject(new Error("Should not resolve")))
+      .catch((err) => {
         should(err).be.instanceOf(NotFoundError);
-        should(err.id).be.eql('api.process.controller_not_found');
+        should(err.id).be.eql("api.process.controller_not_found");
         should(kuzzle.emit).not.be.called();
       });
   });
 
-  it('should execute the request', () => {
-    const rq = new Request({ controller: 'testme', action: 'succeed' });
+  it("should execute the request", () => {
+    const rq = new Request({ controller: "testme", action: "succeed" });
 
-    return funnel.executePluginRequest(rq)
-      .then(res => {
-        should(funnel.controllers.get('testme').succeed)
-          .calledOnce()
-          .calledWith(rq);
+    return funnel.executePluginRequest(rq).then((res) => {
+      should(funnel.controllers.get("testme").succeed)
+        .calledOnce()
+        .calledWith(rq);
 
-        should(res).equal(rq);
-      });
+      should(res).equal(rq);
+    });
   });
 
-  it('should dump on errors in whitelist', done => {
+  it("should dump on errors in whitelist", (done) => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.config.dump.enabled = true;
 
-    const rq = new Request({ controller: 'testme', action: 'fail' });
+    const rq = new Request({ controller: "testme", action: "fail" });
 
     const callback = () => {
       setTimeout(() => {
@@ -61,49 +58,48 @@ describe('funnel.executePluginRequest', () => {
           should(kuzzle.log.error).be.calledOnce();
           should(kuzzle.dump).be.called();
           done();
-        }
-        catch (e) {
+        } catch (e) {
           done(e);
         }
       }, 50);
     };
 
-    funnel.executePluginRequest(rq)
-      .then(() => done(new Error('Should not resolve')))
-      .catch (e => {
-        if (e === funnel.controllers.get('testme').failResult) {
+    funnel
+      .executePluginRequest(rq)
+      .then(() => done(new Error("Should not resolve")))
+      .catch((e) => {
+        if (e === funnel.controllers.get("testme").failResult) {
           return callback();
         }
         done(e);
       });
   });
 
-  it('should not dump on errors if dump is disabled', done => {
+  it("should not dump on errors if dump is disabled", (done) => {
     funnel.handleErrorDump = originalHandleErrorDump;
     kuzzle.config.dump.enabled = false;
 
-    const rq = new Request({ controller: 'testme', action: 'fail' });
+    const rq = new Request({ controller: "testme", action: "fail" });
 
     const callback = () => {
       setTimeout(() => {
         try {
           should(kuzzle.dump).not.be.called();
           done();
-        }
-        catch (e) {
+        } catch (e) {
           done(e);
         }
       }, 50);
     };
 
-    funnel.executePluginRequest(rq)
-      .then(() => done(new Error('Should not resolve')))
-      .catch (e => {
-        if (e === funnel.controllers.get('testme').failResult) {
+    funnel
+      .executePluginRequest(rq)
+      .then(() => done(new Error("Should not resolve")))
+      .catch((e) => {
+        if (e === funnel.controllers.get("testme").failResult) {
           return callback();
         }
         done(e);
       });
   });
-
 });

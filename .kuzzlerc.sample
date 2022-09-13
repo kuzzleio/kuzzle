@@ -220,6 +220,14 @@
   // The security section contains the configuration for Kuzzle permissions
   // mechanism
   "security": {
+    // [debug]
+    // Configuration for the Debug Controller
+    // * native_debug_protocol:
+    //    Allows the Debug Controller to use methods from the Chrome Devtools Protocol,
+    //    see (https://chromedevtools.github.io/devtools-protocol/v8) 
+    "debug": {
+      "native_debug_protocol": false
+    },
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"
@@ -771,57 +779,98 @@
         }
       },
       // Internal index default name and collections
+      // When starting, at initialisation, kuzzle will attempt
+      // to update all ES dynamic settings of existing internal
+      // index's collections. Static settings are setted only at
+      // creation.
+      // See https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings
       "internalIndex": {
         "name": "kuzzle",
         "collections": {
-          "dynamic": "false",
           "users": {
-            "properties": {
-              "profileIds": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "profileIds": { "type": "keyword" }
+              }
             }
           },
           "profiles": {
-            "dynamic": "false",
-            "properties": {
-              "policies": {
-                "properties":  {
-                  "roleId": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "policies": {
+                  "properties":  {
+                    "roleId": { "type": "keyword" }
+                  }
                 }
               }
             }
           },
           "roles": {
-            "dynamic": "false",
-            "properties": {
-              "controllers": {
-                "dynamic": "false",
-                "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "controllers": {
+                  "dynamic": "false",
+                  "properties": {}
+                }
               }
             }
           },
           "validations": {
-            "properties": {
-              "index": { "type": "keyword" },
-              "collection": { "type": "keyword" },
-              "validations": {
-                "dynamic": "false",
-                "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "properties": {
+                "index": { "type": "keyword" },
+                "collection": { "type": "keyword" },
+                "validations": {
+                  "dynamic": "false",
+                  "properties": {}
+                }
               }
             }
           },
           "config": {
-            "dynamic": "false",
-            "properties": {}
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {}
+            }
           },
           "api-keys": {
-            "dynamic": "false",
-            "properties": {
-              "userId": { "type": "keyword" },
-              "hash": { "type": "keyword" },
-              "expiresAt": { "type": "long" },
-              "ttl": { "type": "keyword" },
-              "description": { "type": "text" },
-              "token": { "type": "keyword" }
+            "settings": {
+              "number_of_shards": 1,
+              "number_of_replicas": 1
+            },
+            "mappings": {
+              "dynamic": "false",
+              "properties": {
+                "userId": { "type": "keyword" },
+                "hash": { "type": "keyword" },
+                "expiresAt": { "type": "long" },
+                "ttl": { "type": "keyword" },
+                "description": { "type": "text" },
+                "token": { "type": "keyword" }
+              }
             }
           }
         }

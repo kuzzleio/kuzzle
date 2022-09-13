@@ -19,10 +19,10 @@
  * limitations under the License.
  */
 
-import { RealtimeScope, RealtimeUsers } from '../../types';
-import * as kerror from '../../kerror';
+import { RealtimeScope, RealtimeUsers } from "../../types";
+import * as kerror from "../../kerror";
 
-const realtimeError = kerror.wrap('core', 'realtime');
+const realtimeError = kerror.wrap("core", "realtime");
 
 /**
  * A channel define how notifications should be send for a particular realtime
@@ -51,49 +51,49 @@ export class Channel {
    *
    * This is 10x faster than murmur.
    */
-  static hash (channel: Channel) {
-    let str = '';
+  static hash(channel: Channel) {
+    let str = "";
 
     switch (channel.users) {
-      case 'all':
-        str += '1';
+      case "all":
+        str += "1";
         break;
-      case 'in':
-        str += '2';
+      case "in":
+        str += "2";
         break;
-      case 'out':
-        str += '3';
+      case "out":
+        str += "3";
         break;
-      case 'none':
-        str += '3';
+      case "none":
+        str += "3";
         break;
     }
 
     switch (channel.cluster) {
       case true:
-        str += '1';
+        str += "1";
         break;
       case false:
-        str += '2';
+        str += "2";
         break;
     }
 
     switch (channel.scope) {
-      case 'all':
-        str += '1';
+      case "all":
+        str += "1";
         break;
-      case 'in':
-        str += '2';
+      case "in":
+        str += "2";
         break;
-      case 'out':
-        str += '3';
+      case "out":
+        str += "3";
         break;
     }
 
     return str;
   }
 
-  static USERS_ALLOWED_VALUES = ['all', 'in', 'out', 'none'];
+  static USERS_ALLOWED_VALUES = ["all", "in", "out", "none"];
 
   static SCOPE_ALLOWED_VALUES = Channel.USERS_ALLOWED_VALUES;
 
@@ -128,24 +128,28 @@ export class Channel {
    */
   public cluster: boolean;
 
-  constructor (
+  constructor(
     roomId: string,
     {
-      scope = 'all',
-      users = 'none',
+      scope = "all",
+      users = "none",
       propagate = true,
-    }: { scope?: RealtimeScope; users?: RealtimeUsers; propagate?: boolean } = {}
+    }: {
+      scope?: RealtimeScope;
+      users?: RealtimeUsers;
+      propagate?: boolean;
+    } = {}
   ) {
     this.scope = scope;
     this.users = users;
     this.cluster = propagate;
 
-    if (! Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
-      throw realtimeError.get('invalid_scope');
+    if (!Channel.SCOPE_ALLOWED_VALUES.includes(this.scope)) {
+      throw realtimeError.get("invalid_scope");
     }
 
-    if (! Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
-      throw realtimeError.get('invalid_users');
+    if (!Channel.USERS_ALLOWED_VALUES.includes(this.users)) {
+      throw realtimeError.get("invalid_users");
     }
 
     this.name = `${roomId}-${Channel.hash(this)}`;

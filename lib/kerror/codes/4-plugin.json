@@ -3,7 +3,7 @@
   "subDomains": {
     "assert": {
       "code": 1,
-      "errors" : {
+      "errors": {
         "invalid_plugins_dir": {
           "description": "The enabled plugins directory cannot be opened",
           "code": 1,
@@ -164,7 +164,7 @@
     },
     "strategy": {
       "code": 3,
-      "errors" : {
+      "errors": {
         "invalid_description": {
           "description": "The strategy.description field must be an object",
           "code": 1,

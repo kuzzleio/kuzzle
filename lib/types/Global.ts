@@ -1,4 +1,4 @@
-import { Backend } from '../core/backend';
+import { Backend } from "../core/backend";
 
 /* eslint-disable @typescript-eslint/no-namespace */
 

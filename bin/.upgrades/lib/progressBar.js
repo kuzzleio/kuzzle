@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
-const moment = require('moment');
+const moment = require("moment");
 
 // Simple progress bar making the wait for long tasks more bearable
 class ProgressBar {
-  constructor (context, text, total, barSize = 20) {
+  constructor(context, text, total, barSize = 20) {
     this.text = text;
     this.total = total;
     this.barSize = barSize;
@@ -34,36 +34,34 @@ class ProgressBar {
     this.start = Date.now();
   }
 
-  destroy () {
-    this.bar.updateBottomBar('');
+  destroy() {
+    this.bar.updateBottomBar("");
     this.bar.close();
   }
 
-  update (count) {
-    const
-      remaining = this._getRemainingTime(count),
+  update(count) {
+    const remaining = this._getRemainingTime(count),
       str = `${this.text}
 ${this._getBar(count)}(remaining: ${remaining}) ${count} / ${this.total}`;
 
     this.bar.updateBottomBar(str);
   }
 
-  _getRemainingTime (count) {
-    const
-      elapsed = Date.now() - this.start,
-      remaining = count > 0
-        ? Math.round(this.total * elapsed / count) - elapsed
-        : 0;
+  _getRemainingTime(count) {
+    const elapsed = Date.now() - this.start,
+      remaining =
+        count > 0 ? Math.round((this.total * elapsed) / count) - elapsed : 0;
 
-    return moment(remaining).format('mm:ss');
+    return moment(remaining).format("mm:ss");
   }
 
-  _getBar (count) {
-    const
-      percent = count * 100 / this.total,
-      progress = Math.round(percent * this.barSize / 100);
+  _getBar(count) {
+    const percent = (count * 100) / this.total,
+      progress = Math.round((percent * this.barSize) / 100);
 
-    return '[' + '#'.repeat(progress) + '-'.repeat(this.barSize - progress) + ']';
+    return (
+      "[" + "#".repeat(progress) + "-".repeat(this.barSize - progress) + "]"
+    );
   }
 }
 

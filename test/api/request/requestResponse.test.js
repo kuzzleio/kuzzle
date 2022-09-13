@@ -1,13 +1,13 @@
-'use strict';
+"use strict";
 
-const should = require('should');
+const should = require("should");
 
-const { BadRequestError } = require('../../../lib/kerror/errors');
-const { Request } = require('../../../lib/api/request');
-const { RequestResponse } = require('../../../lib/api/request');
-const KuzzleMock = require('../../mocks/kuzzle.mock');
+const { BadRequestError } = require("../../../lib/kerror/errors");
+const { Request } = require("../../../lib/api/request");
+const { RequestResponse } = require("../../../lib/api/request");
+const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-describe('#RequestResponse', () => {
+describe("#RequestResponse", () => {
   let req;
   let kuzzle;
 
@@ -16,15 +16,15 @@ describe('#RequestResponse', () => {
     kuzzle = new KuzzleMock();
 
     req = new Request({
-      index: 'index',
-      collection: 'collection',
-      controller: 'controller',
-      action: 'action'
+      index: "index",
+      collection: "collection",
+      controller: "controller",
+      action: "action",
     });
   });
 
-  describe('#constructor', () => {
-    it('should populate a valid response object', () => {
+  describe("#constructor", () => {
+    it("should populate a valid response object", () => {
       let response = new RequestResponse(req);
 
       should(response.status).be.exactly(req.status);
@@ -36,33 +36,32 @@ describe('#RequestResponse', () => {
       should(response.index).be.exactly(req.input.args.index);
       should(response.volatile).be.exactly(req.input.volatile);
       should(response.headers).match({
-        'X-Kuzzle-Node': 'knode-nasty-author-4242'
+        "X-Kuzzle-Node": "knode-nasty-author-4242",
       });
       should(response.result).be.exactly(req.result);
       should(response.node).be.eql(kuzzle.id);
       should(response.deprecations).be.undefined();
     });
 
-    it('should throw if we try to extend the response', () => {
+    it("should throw if we try to extend the response", () => {
       let response = new RequestResponse(req);
 
       should(() => {
-        response.foo = 'bar'; 
+        response.foo = "bar";
       }).throw(TypeError);
     });
   });
 
-  describe('#properties', () => {
-    it('should set the request status', () => {
+  describe("#properties", () => {
+    it("should set the request status", () => {
       const response = new RequestResponse(req);
 
       response.status = 666;
       should(req.status).be.exactly(666);
     });
 
-    it('should set the request error', () => {
-      const
-        error = new BadRequestError('test'),
+    it("should set the request error", () => {
+      const error = new BadRequestError("test"),
         response = new RequestResponse(req);
 
       response.error = error;
@@ -70,9 +69,8 @@ describe('#RequestResponse', () => {
       should(req.status).be.exactly(error.status);
     });
 
-    it('should set the request result', () => {
-      const
-        result = { foo: 'bar' },
+    it("should set the request result", () => {
+      const result = { foo: "bar" },
         response = new RequestResponse(req);
 
       response.result = result;
@@ -80,68 +78,67 @@ describe('#RequestResponse', () => {
     });
   });
 
-  describe('headers', () => {
+  describe("headers", () => {
     let response;
 
     beforeEach(() => {
       response = new RequestResponse(req);
     });
 
-    it('should set headers without changing their names', () => {
-      response.setHeader('X-Foo', 'Bar');
-      response.setHeader('X-Bar', 'Baz');
+    it("should set headers without changing their names", () => {
+      response.setHeader("X-Foo", "Bar");
+      response.setHeader("X-Bar", "Baz");
 
       should(response.headers).match({
-        'X-Foo': 'Bar',
-        'X-Bar': 'Baz'
+        "X-Foo": "Bar",
+        "X-Bar": "Baz",
       });
     });
 
-    it('should store cookies in an array', () => {
-      response.setHeader('Set-Cookie', 'test');
-      should(response.headers['Set-Cookie'])
-        .be.an.Array()
-        .have.length(1);
-      should(response.headers['Set-Cookie'][0]).be.exactly('test');
+    it("should store cookies in an array", () => {
+      response.setHeader("Set-Cookie", "test");
+      should(response.headers["Set-Cookie"]).be.an.Array().have.length(1);
+      should(response.headers["Set-Cookie"][0]).be.exactly("test");
 
-      response.setHeader('Set-Cookie', 'test2');
-      should(response.headers['Set-Cookie'][1]).be.exactly('test2');
+      response.setHeader("Set-Cookie", "test2");
+      should(response.headers["Set-Cookie"][1]).be.exactly("test2");
     });
 
-    it('should overwrite common HTTP headers when submitting new values', () => {
+    it("should overwrite common HTTP headers when submitting new values", () => {
       [
-        'age',
-        'authorization',
-        'content-length',
-        'content-type',
-        'etag',
-        'expires',
-        'from',
-        'host',
-        'if-modified-since',
-        'if-unmodified-since',
-        'last-modified, location',
-        'max-forwards',
-        'proxy-authorization',
-        'referer',
-        'retry-after',
-        'user-agent'
-      ].forEach(name => {
+        "age",
+        "authorization",
+        "content-length",
+        "content-type",
+        "etag",
+        "expires",
+        "from",
+        "host",
+        "if-modified-since",
+        "if-unmodified-since",
+        "last-modified, location",
+        "max-forwards",
+        "proxy-authorization",
+        "referer",
+        "retry-after",
+        "user-agent",
+      ].forEach((name) => {
         for (let i = 0; i < 10; i++) {
           response.setHeader(name, `foobar${i}`);
         }
 
         should(response.headers[name]).be.exactly(
-          'foobar9',
-          `Header tested: ${name}`);
+          "foobar9",
+          `Header tested: ${name}`
+        );
       });
     });
 
-    it('should not duplicate header keys', () => {
-      [ 'Content-Length', 'X-Foo', 'Set-Cookie' ].forEach(name => {
-        response.setHeader(name, 'foo');
-        response.setHeader(name.toLowerCase(), 'bar');
-        response.setHeader(name.toUpperCase(), 'baz');
+    it("should not duplicate header keys", () => {
+      ["Content-Length", "X-Foo", "Set-Cookie"].forEach((name) => {
+        response.setHeader(name, "foo");
+        response.setHeader(name.toLowerCase(), "bar");
+        response.setHeader(name.toUpperCase(), "baz");
 
         should(response.headers)
           .have.property(name)
@@ -150,231 +147,236 @@ describe('#RequestResponse', () => {
       });
     });
 
-    it('should add values to existing regular headers', () => {
-      response.setHeader('X-Baz', 'Foo');
-      response.setHeader('X-Baz', 'Bar');
+    it("should add values to existing regular headers", () => {
+      response.setHeader("X-Baz", "Foo");
+      response.setHeader("X-Baz", "Bar");
 
-      should(response.headers['X-Baz']).be.exactly('Foo, Bar');
+      should(response.headers["X-Baz"]).be.exactly("Foo, Bar");
     });
 
-    it('should set multiple headers to the existing headers', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('test', 'test');
+    it("should set multiple headers to the existing headers", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("test", "test");
 
-      response.setHeaders({ test: 'test', banana: '42' });
+      response.setHeaders({ test: "test", banana: "42" });
 
-      should(response.headers).have.property('X-Foo');
-      should(response.headers).have.property('test', 'test, test');
-      should(response.headers).have.property('banana', '42');
+      should(response.headers).have.property("X-Foo");
+      should(response.headers).have.property("test", "test, test");
+      should(response.headers).have.property("banana", "42");
     });
 
-    it('should not set headers if already existing', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('test', 'test');
+    it("should not set headers if already existing", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("test", "test");
 
-      response.setHeaders({ test: 'foobar', banana: '42' }, true);
+      response.setHeaders({ test: "foobar", banana: "42" }, true);
 
-      should(response.headers).have.property('X-Foo');
-      should(response.headers).have.property('test', 'test');
-      should(response.headers).have.property('banana', '42');
+      should(response.headers).have.property("X-Foo");
+      should(response.headers).have.property("test", "test");
+      should(response.headers).have.property("banana", "42");
     });
 
-    it('should do nothing if a null header is provided', () => {
+    it("should do nothing if a null header is provided", () => {
       response.setHeaders(null);
 
       should(response.headers).match({
-        'X-Kuzzle-Node': 'knode-nasty-author-4242'
+        "X-Kuzzle-Node": "knode-nasty-author-4242",
       });
     });
 
-    it('should merge duplicates when injecting properties directly into the object', () => {
-      response.headers.oh = 'noes11!1';
-      response.headers.OH = 'NOES!!1!';
+    it("should merge duplicates when injecting properties directly into the object", () => {
+      response.headers.oh = "noes11!1";
+      response.headers.OH = "NOES!!1!";
 
-      should(response.headers.oh).eql('noes11!1, NOES!!1!');
-      should(response.headers.OH).eql('noes11!1, NOES!!1!');
+      should(response.headers.oh).eql("noes11!1, NOES!!1!");
+      should(response.headers.OH).eql("noes11!1, NOES!!1!");
 
       const headersPOJO = JSON.parse(JSON.stringify(response.headers));
 
-      should(headersPOJO.oh).eql('noes11!1, NOES!!1!');
+      should(headersPOJO.oh).eql("noes11!1, NOES!!1!");
       should(headersPOJO.OH).be.undefined();
     });
 
-    it('should throw if setHeader is called with non-string names', () => {
-      [ {}, 1.42, true, [] ].forEach(name => {
-        should(() => response.setHeader(name, 'test')).throw(BadRequestError);
+    it("should throw if setHeader is called with non-string names", () => {
+      [{}, 1.42, true, []].forEach((name) => {
+        should(() => response.setHeader(name, "test")).throw(BadRequestError);
       });
     });
 
-    it('should do nothing if a null or undefined header name is provided', () => {
-      [ null, undefined ].forEach(name => {
-        should(() => response.setHeader(name, 'foo')).not.throw();
+    it("should do nothing if a null or undefined header name is provided", () => {
+      [null, undefined].forEach((name) => {
+        should(() => response.setHeader(name, "foo")).not.throw();
 
         should(response.headers).match({
-          'X-Kuzzle-Node': 'knode-nasty-author-4242'
+          "X-Kuzzle-Node": "knode-nasty-author-4242",
         });
       });
     });
 
-    it('should stringify values passed to setHeader', () => {
+    it("should stringify values passed to setHeader", () => {
       [
-        { foo: 'bar' },
+        { foo: "bar" },
         1.42,
         true,
-        ['baz', true, null],
+        ["baz", true, null],
         null,
-        undefined
-      ].forEach(value => {
-        response.setHeader('test', value);
+        undefined,
+      ].forEach((value) => {
+        response.setHeader("test", value);
 
         should(response.headers.test).eql(String(value));
 
-        response.removeHeader('test');
+        response.removeHeader("test");
       });
     });
   });
 
-  describe('removeHeader', () => {
+  describe("removeHeader", () => {
     let response;
 
     beforeEach(() => {
       response = new RequestResponse(req);
     });
 
-    it('should remove the asked header', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('X-Bar', 'bar');
+    it("should remove the asked header", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("X-Bar", "bar");
 
-      response.removeHeader('X-Foo');
+      response.removeHeader("X-Foo");
 
-      should(response.headers).not.have.property('X-Foo');
-      should(response.headers).have.property('X-Bar', 'bar');
+      should(response.headers).not.have.property("X-Foo");
+      should(response.headers).have.property("X-Bar", "bar");
     });
 
-    it('should remove the asked header (case insensitive)', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('X-Bar', 'bar');
+    it("should remove the asked header (case insensitive)", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("X-Bar", "bar");
 
-      response.removeHeader('x-fOO');
+      response.removeHeader("x-fOO");
 
-      should(response.headers).not.have.property('X-Foo');
-      should(response.headers).have.property('X-Bar', 'bar');
+      should(response.headers).not.have.property("X-Foo");
+      should(response.headers).have.property("X-Bar", "bar");
     });
   });
 
-  describe('getHeader', () => {
+  describe("getHeader", () => {
     let response;
 
     beforeEach(() => {
       response = new RequestResponse(req);
     });
 
-    it('should fetch the asked header', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('X-Bar', 'bar');
+    it("should fetch the asked header", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("X-Bar", "bar");
 
-      should(response.getHeader('X-Foo')).eql('foo');
+      should(response.getHeader("X-Foo")).eql("foo");
     });
 
-    it('should fetch the asked header (case insensitive)', () => {
-      response.setHeader('X-Foo', 'foo');
-      response.setHeader('X-Bar', 'bar');
+    it("should fetch the asked header (case insensitive)", () => {
+      response.setHeader("X-Foo", "foo");
+      response.setHeader("X-Bar", "bar");
 
-      should(response.getHeader('x-fOO')).eql('foo');
+      should(response.getHeader("x-fOO")).eql("foo");
     });
   });
 
-  describe('configure', () => {
+  describe("configure", () => {
     let response;
 
     beforeEach(() => {
       response = new RequestResponse(req);
     });
 
-    it('should allow the user to configure the headers of the response', () => {
-      const testHeader = { 'X-Foo': 'foo' };
+    it("should allow the user to configure the headers of the response", () => {
+      const testHeader = { "X-Foo": "foo" };
 
       response.configure({ headers: testHeader });
-      should(response.getHeader('X-Foo')).eql('foo');
+      should(response.getHeader("X-Foo")).eql("foo");
     });
 
-    it('should allow the user to configure the status of the response', () => {
+    it("should allow the user to configure the status of the response", () => {
       response.configure({ status: 402 });
       should(response.status).eql(402);
     });
 
-    it('should allow the user to configure the format of the response', () => {
-      response.configure({ format: 'raw' });
+    it("should allow the user to configure the format of the response", () => {
+      response.configure({ format: "raw" });
       should(response.raw).be.true();
-      response.configure({ format: 'standard' });
+      response.configure({ format: "standard" });
       should(response.raw).be.false();
     });
   });
 
-  describe('toJSON', () => {
-    it('should return a valid JSON object in Kuzzle format', () => {
+  describe("toJSON", () => {
+    it("should return a valid JSON object in Kuzzle format", () => {
       let response = new RequestResponse(req);
 
-      should(response.toJSON()).have.properties(['raw', 'status', 'requestId', 'content', 'headers']);
+      should(response.toJSON()).have.properties([
+        "raw",
+        "status",
+        "requestId",
+        "content",
+        "headers",
+      ]);
       should(response.toJSON().content).have.properties([
-        'error',
-        'requestId',
-        'controller',
-        'action',
-        'collection',
-        'index',
-        'volatile',
-        'result',
-        'deprecations',
-        'headers',
+        "error",
+        "requestId",
+        "controller",
+        "action",
+        "collection",
+        "index",
+        "volatile",
+        "result",
+        "deprecations",
+        "headers",
       ]);
       should(response.toJSON().raw).be.false();
     });
 
-    it('should only include headers added using response.configure', () => {
+    it("should only include headers added using response.configure", () => {
       let response = new RequestResponse(req);
 
       response.configure({
         headers: {
-          'x-foo': 'bar',
-          'set-cookie': 'cookie'
-        }
+          "x-foo": "bar",
+          "set-cookie": "cookie",
+        },
       });
-      
+
       // Should not be included in the response content headers
-      response.setHeader('x-bar', 'baz');
+      response.setHeader("x-bar", "baz");
 
       // Check some headers are removed from the response content headers
       should(response.toJSON().content.headers).match({
-        'x-foo': 'bar',
-        'set-cookie': undefined,
+        "x-foo": "bar",
+        "set-cookie": undefined,
       });
 
       should(response.toJSON().headers).match({
-        'x-foo': 'bar',
-        'set-cookie': ['cookie'],
-        'x-bar': 'baz'
+        "x-foo": "bar",
+        "set-cookie": ["cookie"],
+        "x-bar": "baz",
       });
     });
 
-    it('should return a valid JSON object in raw format', () => {
+    it("should return a valid JSON object in raw format", () => {
       let response = new RequestResponse(req);
 
       response.raw = true;
-      response.setHeader('x-foo', 'bar');
-      response.setHeader('set-cookie', 'cookie');
-      response.result = 'foobar';
+      response.setHeader("x-foo", "bar");
+      response.setHeader("set-cookie", "cookie");
+      response.result = "foobar";
       response.status = 666;
 
-      should(response.toJSON()).have.properties(['raw', 'content', 'headers']);
+      should(response.toJSON()).have.properties(["raw", "content", "headers"]);
       should(response.toJSON().status).be.eql(666);
-      should(response.toJSON().content).be.eql('foobar');
+      should(response.toJSON().content).be.eql("foobar");
       should(response.toJSON().raw).be.true();
       should(response.toJSON().headers).match({
-        'x-foo': 'bar',
-        'set-cookie': ['cookie']
+        "x-foo": "bar",
+        "set-cookie": ["cookie"],
       });
     });
   });
-
 });

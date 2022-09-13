@@ -19,27 +19,27 @@
  * limitations under the License.
  */
 
-import Bluebird from 'bluebird';
-import { JSONObject } from 'kuzzle-sdk';
-import { Koncorde, NormalizedFilter } from 'koncorde';
+import Bluebird from "bluebird";
+import { JSONObject } from "kuzzle-sdk";
+import { Koncorde, NormalizedFilter } from "koncorde";
 
-import { KuzzleRequest, Request, RequestContext } from '../../api/request';
-import * as kerror from '../../kerror';
-import createDebug from '../../util/debug';
+import { KuzzleRequest, Request, RequestContext } from "../../api/request";
+import * as kerror from "../../kerror";
+import createDebug from "../../util/debug";
 import {
   fromKoncordeIndex,
   getCollections,
   toKoncordeIndex,
-} from '../../util/koncordeCompat';
-import { User, RoomList } from '../../types';
-import { Channel } from './channel';
-import { ConnectionRooms } from './connectionRooms';
-import { Room } from './room';
-import { Subscription } from './subscription';
+} from "../../util/koncordeCompat";
+import { User, RoomList } from "../../types";
+import { Channel } from "./channel";
+import { ConnectionRooms } from "./connectionRooms";
+import { Room } from "./room";
+import { Subscription } from "./subscription";
 
-const realtimeError = kerror.wrap('core', 'realtime');
+const realtimeError = kerror.wrap("core", "realtime");
 
-const debug = createDebug('kuzzle:realtime:hotelClerk');
+const debug = createDebug("kuzzle:realtime:hotelClerk");
 
 /**
  * The HotelClerk is responsible of keeping the list of rooms and subscriptions
@@ -92,7 +92,7 @@ export class HotelClerk {
    */
   private koncorde: Koncorde;
 
-  constructor (realtimeModule: any) {
+  constructor(realtimeModule: any) {
     this.module = realtimeModule;
 
     this.koncorde = global.kuzzle.koncorde;
@@ -101,7 +101,7 @@ export class HotelClerk {
   /**
    * Registers the ask events.
    */
-  async init (): Promise<void> {
+  async init(): Promise<void> {
     /**
      * Create a new, empty room.
      * @param {string} index
@@ -110,16 +110,16 @@ export class HotelClerk {
      * @returns {boolean} status indicating if the room was created or not
      */
     global.kuzzle.onAsk(
-      'core:realtime:room:create',
-      (index, collection, roomId) => this.newRoom(index, collection, roomId));
+      "core:realtime:room:create",
+      (index, collection, roomId) => this.newRoom(index, collection, roomId)
+    );
 
     /**
      * Joins an existing room.
      * @param  {Request} request
      * @returns {Promise}
      */
-    global.kuzzle.onAsk(
-      'core:realtime:join', request => this.join(request));
+    global.kuzzle.onAsk("core:realtime:join", (request) => this.join(request));
 
     /**
      * Return the list of index, collection, rooms (+ their users count)
@@ -130,7 +130,7 @@ export class HotelClerk {
      * @return {number}
      * @throws {NotFoundError} If the roomId does not exist
      */
-    global.kuzzle.onAsk('core:realtime:list', user => this.list(user));
+    global.kuzzle.onAsk("core:realtime:list", (user) => this.list(user));
 
     /**
      * Given an index, returns the list of collections having subscriptions
@@ -138,26 +138,26 @@ export class HotelClerk {
      * @param  {string} index
      * @return {Array.<string>}
      */
-    global.kuzzle.onAsk(
-      'core:realtime:collections:get',
-      index => this.listCollections(index));
+    global.kuzzle.onAsk("core:realtime:collections:get", (index) =>
+      this.listCollections(index)
+    );
 
     /**
      * Removes a user and all their subscriptions.
      * @param  {string} connectionId
      */
-    global.kuzzle.onAsk(
-      'core:realtime:connection:remove',
-      connectionId => this.removeConnection(connectionId));
+    global.kuzzle.onAsk("core:realtime:connection:remove", (connectionId) =>
+      this.removeConnection(connectionId)
+    );
 
     /**
      * Adds a new user subscription
      * @param  {Request} request
      * @return {Object|null}
      */
-    global.kuzzle.onAsk(
-      'core:realtime:subscribe',
-      request => this.subscribe(request));
+    global.kuzzle.onAsk("core:realtime:subscribe", (request) =>
+      this.subscribe(request)
+    );
 
     /**
      * Unsubscribes a user from a room
@@ -167,30 +167,32 @@ export class HotelClerk {
      * @param {boolean} [notify]
      */
     global.kuzzle.onAsk(
-      'core:realtime:unsubscribe',
+      "core:realtime:unsubscribe",
       (connectionId, roomId, notify) => {
         return this.unsubscribe(connectionId, roomId, notify);
-      });
+      }
+    );
 
     /**
      * Returns inner metrics from the HotelClerk
      * @return {{rooms: number, subscriptions: number}}
      */
-    global.kuzzle.onAsk(
-      'core:realtime:hotelClerk:metrics',
-      () => this.metrics());
+    global.kuzzle.onAsk("core:realtime:hotelClerk:metrics", () =>
+      this.metrics()
+    );
 
     /**
      * Clear the hotel clerk and properly disconnect connections.
      */
-    global.kuzzle.on('kuzzle:shutdown', () => this.clearConnections());
+    global.kuzzle.on("kuzzle:shutdown", () => this.clearConnections());
 
     /**
      * Clear subscriptions when a connection is dropped
      */
-    global.kuzzle.on('connection:remove', connection => {
-      this.removeConnection(connection.id)
-        .catch(err => global.kuzzle.log.info(err));
+    global.kuzzle.on("connection:remove", (connection) => {
+      this.removeConnection(connection.id).catch((err) =>
+        global.kuzzle.log.info(err)
+      );
     });
   }
 
@@ -206,15 +208,17 @@ export class HotelClerk {
    *         has a different name with same filter) or if there is an error
    *         during room creation
    */
-  async subscribe (request: KuzzleRequest): Promise<{ channel: string; roomId: string }> {
+  async subscribe(
+    request: KuzzleRequest
+  ): Promise<{ channel: string; roomId: string }> {
     const { index, collection } = request.input.resource;
 
-    if (! index) {
-      return kerror.reject('api', 'assert', 'missing_argument', 'index');
+    if (!index) {
+      return kerror.reject("api", "assert", "missing_argument", "index");
     }
 
-    if (! collection) {
-      return kerror.reject('api', 'assert', 'missing_argument', 'collection');
+    if (!collection) {
+      return kerror.reject("api", "assert", "missing_argument", "collection");
     }
 
     /*
@@ -228,7 +232,7 @@ export class HotelClerk {
      * is made on the very last moment and is essential to ensure
      * that no zombie subscription can be performed
      */
-    if (! global.kuzzle.router.isConnectionAlive(request.context)) {
+    if (!global.kuzzle.router.isConnectionAlive(request.context)) {
       return null;
     }
 
@@ -237,10 +241,10 @@ export class HotelClerk {
     try {
       normalized = this.koncorde.normalize(
         request.input.body,
-        toKoncordeIndex(index, collection));
-    }
-    catch (e) {
-      throw kerror.get('api', 'assert', 'koncorde_dsl_error', e.message);
+        toKoncordeIndex(index, collection)
+      );
+    } catch (e) {
+      throw kerror.get("api", "assert", "koncorde_dsl_error", e.message);
     }
 
     this.createRoom(normalized);
@@ -250,23 +254,23 @@ export class HotelClerk {
      * The fact is that to prevent the event loop from switching to another function
      * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
-     * 
+     *
      * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
-     * 
+     *
      * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
      * and we execute it right after the subscription this way we keep descending the execution stack without returning and
      * without switching context.
      */
     const afterSubscribeCallback = async (subscribed) => {
       if (subscribed) {
-        global.kuzzle.call('core:realtime:subscribe:after', normalized.id);
-  
+        global.kuzzle.call("core:realtime:subscribe:after", normalized.id);
+
         // @deprecated -- to be removed in next major version
         // we have to recreate the old "diff" object
-        await global.kuzzle.pipe('core:hotelClerk:addSubscription', {
+        await global.kuzzle.pipe("core:hotelClerk:addSubscription", {
           changed: subscribed,
           collection,
           connectionId: request.context.connection.id,
@@ -280,7 +284,8 @@ export class HotelClerk {
     const { channel } = await this.subscribeToRoom(
       normalized.id,
       request,
-      afterSubscribeCallback);
+      afterSubscribeCallback
+    );
 
     const subscription = new Subscription(
       index,
@@ -288,9 +293,10 @@ export class HotelClerk {
       request.input.body,
       normalized.id,
       request.context.connection.id,
-      request.context.user);
+      request.context.user
+    );
 
-    global.kuzzle.emit('core:realtime:user:subscribe:after', subscription);
+    global.kuzzle.emit("core:realtime:user:subscribe:after", subscription);
 
     return {
       channel,
@@ -301,7 +307,7 @@ export class HotelClerk {
   /**
    * Returns the list of collections of an index with realtime rooms.
    */
-  listCollections (index: string): string[] {
+  listCollections(index: string): string[] {
     return getCollections(this.koncorde, index);
   }
 
@@ -311,16 +317,17 @@ export class HotelClerk {
    * The room may exists on another cluster node, if it's the case, the normalized
    * filters will be fetched from the cluster.
    */
-  async join (request: KuzzleRequest): Promise<{ channel; roomId }> {
+  async join(request: KuzzleRequest): Promise<{ channel; roomId }> {
     const roomId = request.input.body.roomId;
 
-    if (! this.rooms.has(roomId)) {
+    if (!this.rooms.has(roomId)) {
       const normalized: NormalizedFilter = await global.kuzzle.ask(
-        'cluster:realtime:filters:get',
-        roomId);
+        "cluster:realtime:filters:get",
+        roomId
+      );
 
-      if (! normalized) {
-        throw realtimeError.get('room_not_found', roomId);
+      if (!normalized) {
+        throw realtimeError.get("room_not_found", roomId);
       }
 
       this.createRoom(normalized);
@@ -331,23 +338,27 @@ export class HotelClerk {
      * The fact is that to prevent the event loop from switching to another function
      * we need to keep descending the execution stack without returning in a function that has been awaited
      * otherwise once we return to the await keyword the event loop will switch to another function.
-     * 
+     *
      * Everything needs to be atomic (multiple operation done without interruption) otherwise we might
      * run into some issues where the room is created but another request has deleted it before we can
      * subscribe to it.
      * All because the subscription was not atomic.
-     * 
+     *
      * So to keep the context of execution we use a lambda that we give to the subscribeToRoom function
      * and we execute it right after the subscription this way we keep descending the execution stack without returning and
      * without switching context.
      */
     const afterSubscribeCallback = async (subscribed, cluster) => {
       if (cluster && subscribed) {
-        global.kuzzle.call('core:realtime:subscribe:after', roomId);
+        global.kuzzle.call("core:realtime:subscribe:after", roomId);
       }
     };
 
-    const { channel } = await this.subscribeToRoom(roomId, request, afterSubscribeCallback);
+    const { channel } = await this.subscribeToRoom(
+      roomId,
+      request,
+      afterSubscribeCallback
+    );
 
     return {
       channel,
@@ -360,27 +371,33 @@ export class HotelClerk {
    * on all index/collection pairs that the requesting user is allowed to
    * subscribe.
    */
-  async list (user: User): Promise<RoomList> {
+  async list(user: User): Promise<RoomList> {
     // We need the room list from the cluster's full state, NOT the one stored
     // in Koncorde: the latter also contains subscriptions created by the
     // framework (or by plugins), and we don't want those to appear in the API
-    const fullStateRooms: RoomList = await global.kuzzle.ask('cluster:realtime:room:list');
+    const fullStateRooms: RoomList = await global.kuzzle.ask(
+      "cluster:realtime:room:list"
+    );
 
-    const isAllowedRequest = new KuzzleRequest({
-      action: 'subscribe',
-      controller: 'realtime',
-    }, {});
+    const isAllowedRequest = new KuzzleRequest(
+      {
+        action: "subscribe",
+        controller: "realtime",
+      },
+      {}
+    );
 
     for (const [index, collections] of Object.entries(fullStateRooms)) {
       isAllowedRequest.input.resource.index = index;
 
       const toRemove = await Bluebird.filter(
         Object.keys(collections),
-        collection => {
+        (collection) => {
           isAllowedRequest.input.resource.collection = collection;
 
-          return ! user.isActionAllowed(isAllowedRequest);
-        });
+          return !user.isActionAllowed(isAllowedRequest);
+        }
+      );
 
       for (const collection of toRemove) {
         delete fullStateRooms[index][collection];
@@ -395,17 +412,19 @@ export class HotelClerk {
    *
    * Usually called when an user has been disconnected from Kuzzle.
    */
-  async removeConnection (connectionId: string, notify = true): Promise<void> {
+  async removeConnection(connectionId: string, notify = true): Promise<void> {
     const connectionRooms = this.subscriptions.get(connectionId);
 
-    if (! connectionRooms) {
+    if (!connectionRooms) {
       // No need to raise an error if the connection does not have room subscriptions
       return;
     }
 
-    await Bluebird.map(connectionRooms.roomIds, (roomId: string) => (
-      this.unsubscribe(connectionId, roomId, notify).catch(global.kuzzle.log.error)
-    ));
+    await Bluebird.map(connectionRooms.roomIds, (roomId: string) =>
+      this.unsubscribe(connectionId, roomId, notify).catch(
+        global.kuzzle.log.error
+      )
+    );
   }
 
   /**
@@ -413,10 +432,10 @@ export class HotelClerk {
    *   - trigger appropriate core events
    *   - send user exit room notifications
    */
-  async clearConnections (): Promise<void> {
-    await Bluebird.map(this.subscriptions.keys(), (connectionId: string) => (
+  async clearConnections(): Promise<void> {
+    await Bluebird.map(this.subscriptions.keys(), (connectionId: string) =>
       this.removeConnection(connectionId, false)
-    ));
+    );
   }
 
   /**
@@ -424,12 +443,16 @@ export class HotelClerk {
    *  - save the subscription on the provided room with volatile data
    *  - add the connection to the list of active connections of the room
    */
-  private registerSubscription (connectionId: string, roomId: string, volatile: JSONObject): void {
-    debug('Add room %s for connection %s', roomId, connectionId);
+  private registerSubscription(
+    connectionId: string,
+    roomId: string,
+    volatile: JSONObject
+  ): void {
+    debug("Add room %s for connection %s", roomId, connectionId);
 
     let connectionRooms = this.subscriptions.get(connectionId);
 
-    if (! connectionRooms) {
+    if (!connectionRooms) {
       connectionRooms = new ConnectionRooms();
       this.subscriptions.set(connectionId, connectionRooms);
     }
@@ -444,7 +467,7 @@ export class HotelClerk {
    *
    * @returns {void}
    */
-  private createRoom (normalized: NormalizedFilter): void {
+  private createRoom(normalized: NormalizedFilter): void {
     const { index: koncordeIndex, id: roomId } = normalized;
     const { index, collection } = fromKoncordeIndex(koncordeIndex);
 
@@ -455,15 +478,15 @@ export class HotelClerk {
     const roomsLimit = global.kuzzle.config.limits.subscriptionRooms;
 
     if (roomsLimit > 0 && this.roomsCount >= roomsLimit) {
-      throw realtimeError.get('too_many_rooms');
+      throw realtimeError.get("too_many_rooms");
     }
 
     this.koncorde.store(normalized);
 
-    global.kuzzle.call('core:realtime:room:create:after', normalized);
+    global.kuzzle.call("core:realtime:room:create:after", normalized);
 
     // @deprecated -- to be removed in the next major version of kuzzle
-    global.kuzzle.emit('room:new', { collection, index, roomId });
+    global.kuzzle.emit("room:new", { collection, index, roomId });
 
     /*
       In some very rare cases, the room may have been created between
@@ -484,34 +507,33 @@ export class HotelClerk {
    * Also delete the rooms if it was the last connection subscribing to it.
    *
    */
-  async unsubscribe (connectionId: string, roomId: string, notify = true) {
+  async unsubscribe(connectionId: string, roomId: string, notify = true) {
     const connectionRooms = this.subscriptions.get(connectionId);
     const requestContext = new RequestContext({
-      connection: { id: connectionId }
+      connection: { id: connectionId },
     });
 
-    if (! connectionRooms) {
-      throw realtimeError.get('not_subscribed', connectionId, roomId);
+    if (!connectionRooms) {
+      throw realtimeError.get("not_subscribed", connectionId, roomId);
     }
 
     const volatile = connectionRooms.getVolatile(roomId);
 
     if (volatile === undefined) {
-      throw realtimeError.get('not_subscribed', connectionId, roomId);
+      throw realtimeError.get("not_subscribed", connectionId, roomId);
     }
 
     if (connectionRooms.count > 1) {
       connectionRooms.removeRoom(roomId);
-    }
-    else {
+    } else {
       this.subscriptions.delete(connectionId);
     }
 
     const room = this.rooms.get(roomId);
 
-    if (! room) {
+    if (!room) {
       global.kuzzle.log.error(`Cannot remove room "${roomId}": room not found`);
-      throw realtimeError.get('room_not_found', roomId);
+      throw realtimeError.get("room_not_found", roomId);
     }
 
     for (const channel of Object.keys(room.channels)) {
@@ -534,25 +556,27 @@ export class HotelClerk {
     // notification
     const request = new Request(
       {
-        action: 'unsubscribe',
+        action: "unsubscribe",
         collection: room.collection,
-        controller: 'realtime',
+        controller: "realtime",
         index: room.index,
         volatile,
       },
-      requestContext);
+      requestContext
+    );
 
     // Do not send an unsubscription notification if the room has been destroyed
     // because the other nodes already had destroyed it in the full state
-    if ( notify
-      && this.rooms.has(roomId)
-      && room.channels.size > 0
-      && ! roomDeleted
+    if (
+      notify &&
+      this.rooms.has(roomId) &&
+      room.channels.size > 0 &&
+      !roomDeleted
     ) {
-      global.kuzzle.call('core:realtime:unsubscribe:after', roomId);
+      global.kuzzle.call("core:realtime:unsubscribe:after", roomId);
 
       // @deprecated -- to be removed in next major version
-      await global.kuzzle.pipe('core:hotelClerk:removeRoomForCustomer', {
+      await global.kuzzle.pipe("core:hotelClerk:removeRoomForCustomer", {
         requestContext,
         room: {
           collection: room.collection,
@@ -562,7 +586,9 @@ export class HotelClerk {
       });
     }
 
-    await this.module.notifier.notifyUser(roomId, request, 'out', { count: room.size });
+    await this.module.notifier.notifyUser(roomId, request, "out", {
+      count: room.size,
+    });
 
     const kuid = global.kuzzle.tokenManager.getKuidFromConnection(connectionId);
 
@@ -572,9 +598,10 @@ export class HotelClerk {
       undefined,
       roomId,
       connectionId,
-      { _id: kuid });
+      { _id: kuid }
+    );
 
-    global.kuzzle.emit('core:realtime:user:unsubscribe:after', {
+    global.kuzzle.emit("core:realtime:user:unsubscribe:after", {
       /* @deprecated */
       requestContext,
       /* @deprecated */
@@ -590,7 +617,7 @@ export class HotelClerk {
   /**
    * Returns inner metrics from the HotelClerk
    */
-  metrics (): {rooms: number; subscriptions: number} {
+  metrics(): { rooms: number; subscriptions: number } {
     return {
       rooms: this.roomsCount,
       subscriptions: this.subscriptions.size,
@@ -601,7 +628,7 @@ export class HotelClerk {
    * Deletes a room if no user has subscribed to it, and removes it also from the
    * real-time engine
    */
-  private async removeRoom (roomId: string): Promise<void> {
+  private async removeRoom(roomId: string): Promise<void> {
     this.roomsCount--;
     this.rooms.delete(roomId);
 
@@ -609,13 +636,12 @@ export class HotelClerk {
     // The cluster will also remove the room from Koncorde if no other node
     // uses it.
     // (this node may have no subscribers on it, but other nodes might)
-    await global.kuzzle.ask('cluster:realtime:room:remove', roomId);
+    await global.kuzzle.ask("cluster:realtime:room:remove", roomId);
 
     // @deprecated -- to be removed in the next major version
     try {
-      await global.kuzzle.pipe('room:remove', roomId);
-    }
-    catch (e) {
+      await global.kuzzle.pipe("room:remove", roomId);
+    } catch (e) {
       return;
     }
   }
@@ -627,10 +653,13 @@ export class HotelClerk {
    * on the room if it does not already exists.
    *
    */
-  private async subscribeToRoom (
+  private async subscribeToRoom(
     roomId: string,
     request: KuzzleRequest,
-    afterSubscribeCallback: (subscribed: boolean, cluster: boolean) => Promise<void>,
+    afterSubscribeCallback: (
+      subscribed: boolean,
+      cluster: boolean
+    ) => Promise<void>
   ): Promise<{ channel: string; cluster: boolean; subscribed: boolean }> {
     let subscribed = false;
     let notifyPromise;
@@ -642,17 +671,14 @@ export class HotelClerk {
     const connectionRooms = this.subscriptions.get(connectionId);
     const room = this.rooms.get(roomId);
 
-    if (! connectionRooms || ! connectionRooms.hasRoom(roomId)) {
+    if (!connectionRooms || !connectionRooms.hasRoom(roomId)) {
       subscribed = true;
       this.registerSubscription(connectionId, roomId, request.input.volatile);
 
-      notifyPromise = this.module.notifier.notifyUser(
-        roomId,
-        request,
-        'in',
-        { count: room.size });
-    }
-    else {
+      notifyPromise = this.module.notifier.notifyUser(roomId, request, "in", {
+        count: room.size,
+      });
+    } else {
       notifyPromise = Bluebird.resolve();
     }
 
@@ -676,8 +702,8 @@ export class HotelClerk {
    *
    * @returns True if a new room has been created
    */
-  private newRoom (index: string, collection: string, roomId: string): boolean {
-    if (! this.rooms.has(roomId)) {
+  private newRoom(index: string, collection: string, roomId: string): boolean {
+    if (!this.rooms.has(roomId)) {
       this.rooms.set(roomId, new Room(roomId, index, collection));
 
       return true;
