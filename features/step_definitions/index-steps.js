@@ -15,7 +15,7 @@ When(
     const body = await this.sdk.query({
       index: index,
       controller: "index",
-      action: "createvirtual",
+      action: "createVirtual",
       body: {
         options: {
           physicalIndex: realIndex,

@@ -370,7 +370,7 @@ export class ClientAdapter {
     );
 
     global.kuzzle.onAsk(
-      `core:storage:${this.scope}:index:createvirtual`,
+      `core:storage:${this.scope}:index:createVirtual`,
       (index, options) => this.createVirtualIndex(index, options)
     );
 
