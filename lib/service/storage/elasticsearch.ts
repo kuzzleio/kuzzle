@@ -3306,7 +3306,7 @@ export class Elasticsearch extends Service {
     }
 
     if (includeVirtual) {
-      for (const [key, value] of this.virtualIndex.softTenant) {
+      for (const [key, value] of this.virtualIndex.virtualIndexMap) {
         if (schema[value]) {
           schema[key] = schema[value];
         }

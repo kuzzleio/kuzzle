@@ -32,12 +32,6 @@ describe("Test: ElasticSearch service", () => {
   let ES = Elasticsearch;
 
   before(() => {
-    /*
-    mockRequire("../../../lib/util/name-generator", {
-      randomNumber: randomNumberMock,
-    });
-    ES = mockRequire.reRequire("../../../lib/service/storage/elasticsearch");
-     */
     ES.getRandomNumber = randomNumberMock;
   });
 
@@ -3783,7 +3777,7 @@ describe("Test: ElasticSearch service", () => {
         _kuzzle_info: {
           author: null,
           createdAt: timestamp,
-          index: index,
+          index,
           updater: null,
           updatedAt: null,
         },
@@ -3953,7 +3947,7 @@ describe("Test: ElasticSearch service", () => {
     beforeEach(() => {
       kuzzleMeta = {
         _kuzzle_info: {
-          index: index,
+          index,
           updater: null,
           updatedAt: timestamp,
         },

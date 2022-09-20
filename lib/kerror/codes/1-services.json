@@ -296,7 +296,7 @@
         },
         "delete_virtual_collection": {
           "description": "Remove virtual collection is forbidden",
-          "message": "You can't remove a virtual collection. ",
+          "message": "You can't remove a virtual collection.",
           "code": 52,
           "class": "BadRequestError"
         },

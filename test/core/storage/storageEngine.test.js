@@ -22,12 +22,6 @@ describe("#core/storage/StorageEngine", () => {
   });
 
   before(() => {
-    /*
-    mockRequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
-    ({ StorageEngine } = mockRequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
-    ));
-     */
 
     StorageEngine.initClientAdapters = function (scopeEnumValue, virtualIndex) {
       return new ClientAdapterMock(scopeEnumValue, virtualIndex);

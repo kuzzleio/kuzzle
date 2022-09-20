@@ -26,7 +26,6 @@ class ProcessMock {
     sinon.spy(this, "on");
     sinon.spy(this, "exit");
     this.removeAllListeners = sinon.spy();
-    //sinon.spy(this, "removeAllListeners");
     sinon.stub(this, "emit").resolves();
   }
 }
@@ -89,7 +88,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     mockrequire("../../lib/core/security", coreModuleStub);
     mockrequire("../../lib/core/realtime", coreModuleStub);
     mockrequire("../../lib/cluster", clusterModuleStub);
-    //mockrequire("../../lib/util/mutex", { Mutex: MutexMock });
     Kuzzle.createVirtualIndex = function () {
       return new VirtualIndexMock();
     };
@@ -147,12 +145,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
   describe("#start", () => {
     it("should init the components in proper order", async () => {
-      /*
-      const stubbedKuzzle = Kuzzle.__with__({
-        koncorde_1: { Koncorde },
-        vault_1: { default: { load: () => {} } },
-      });
-      */
 
       kuzzle = _mockKuzzle();
 
@@ -197,8 +189,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     // @deprecated
     it("should instantiate Koncorde with PCRE support if asked to", async () => {
       const baseKuzzle = _mockKuzzle();
-
-      //const baseKuzzle = new Kuzzle();
 
       baseKuzzle._waitForImportToFinish = sinon.stub().resolves();
 

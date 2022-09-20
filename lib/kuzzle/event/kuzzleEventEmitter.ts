@@ -35,13 +35,14 @@ import Promback from "../../util/promback";
 import memoize from "../../util/memoize";
 
 import PipeRunner from "./pipeRunner";
+import {EventDefinition, PipeEventHandler} from "../../types";
 
 class PluginPipeDefinition {
-  public event: any;
+  public event: string;
   public handler: any;
-  public pipeId: any;
+  public pipeId: string;
 
-  constructor(event, handler, pipeId = null) {
+  constructor(event:string, handler, pipeId = null) {
     this.event = event;
     this.handler = handler;
 
@@ -51,13 +52,13 @@ class PluginPipeDefinition {
 
 export class KuzzleEventEmitter extends EventEmitter {
   public superEmit: any;
-  public pipeRunner: any;
-  public pluginPipes: any;
-  public pluginPipeDefinitions: any;
+  public pipeRunner: PipeRunner;
+  public pluginPipes: Map<string, PipeEventHandler[]>;
+  public pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
   //eslint-disable-next-line @typescript-eslint/ban-types
   public corePipes: Map<string, Function[]>;
-  public coreAnswerers: any;
-  public coreSyncedAnswerers: any;
+  public coreAnswerers: Map<string,Function>;
+  public coreSyncedAnswerers: Map<string,Function>;
   constructor(maxConcurrentPipes, pipesBufferSize) {
     super();
     this.superEmit = super.emit;

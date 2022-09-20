@@ -587,7 +587,6 @@ describe("#core/storage/ClientAdapter", () => {
       });
 
       it('should register a "mappings:import" event', async () => {
-        //sinon.stub(kuzzle, "ask").resolves();
         kuzzle.onAsk("core:cache:internal:store", () => {});
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(

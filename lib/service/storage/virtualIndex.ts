@@ -16,7 +16,7 @@ export class VirtualIndex extends Service {
     super("VirtualIndex", global.kuzzle.config.services.storageEngine);
   }
 
-  public softTenant: Map<string, string> = new Map(); //Key : virtual index, value : real index //TODO rename!
+  public virtualIndexMap: Map<string, string> = new Map(); //Key : virtual index, value : real index
 
   async init(): Promise<void> {
     await this.buildCollection();
@@ -32,22 +32,22 @@ export class VirtualIndex extends Service {
   }
 
   addInSoftTenantMap(real, virtual) {
-    this.softTenant.set(virtual, real);
+    this.virtualIndexMap.set(virtual, real);
   }
 
   removeInSoftTenantMap(notification) {
-    this.softTenant.delete(notification);
+    this.virtualIndexMap.delete(notification);
   }
 
   getRealIndex(name: string): string {
-    if (this.softTenant.has(name)) {
-      return this.softTenant.get(name);
+    if (this.virtualIndexMap.has(name)) {
+      return this.virtualIndexMap.get(name);
     }
     return name;
   }
 
   isVirtual(name: string): boolean {
-    return this.softTenant.has(name);
+    return this.virtualIndexMap.has(name);
   }
 
   getId(index: string, id: string): string {
@@ -76,7 +76,7 @@ export class VirtualIndex extends Service {
       virtual: virtualIndex,
     });
 
-    this.softTenant.set(virtualIndex, index);
+    this.virtualIndexMap.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",
       "virtualindexes",
@@ -87,11 +87,11 @@ export class VirtualIndex extends Service {
   }
 
   async removeVirtualIndex(index: string) {
-    const realIndex = this.softTenant.get(index);
+    const realIndex = this.virtualIndexMap.get(index);
     global.kuzzle.emit(VirtualIndex.deleteVirtualIndexEvent, {
       virtual: index,
     });
-    this.softTenant.delete(index);
+    this.virtualIndexMap.delete(index);
     const id = realIndex + index;
     await global.kuzzle.ask(
       "core:storage:private:document:delete",
@@ -103,8 +103,8 @@ export class VirtualIndex extends Service {
 
   async initVirtualTenantList() {
     //TODO : from database
-    if (this.softTenant.size === 0) {
-      this.softTenant = new Map<string, string>();
+    if (this.virtualIndexMap.size === 0) {
+      this.virtualIndexMap = new Map<string, string>();
       let from = 0;
       let total;
 
@@ -117,7 +117,7 @@ export class VirtualIndex extends Service {
         );
         total = list.total;
         for (const hit of list.hits) {
-          this.softTenant.set(hit._source.virtual, hit._source.real);
+          this.virtualIndexMap.set(hit._source.virtual, hit._source.real);
         }
         from += 100;
       } while (from < total);
