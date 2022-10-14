@@ -727,6 +727,8 @@ export class Elasticsearch extends Service {
     // @ts-ignore
     { id, refresh, userId = null } = {}
   ) {
+    console.log('--------create------------');
+    console.log(index+ ' - ' + collection + ' - ' + JSON.stringify(content));
     assertIsObject(content);
     if (!id && this.virtualIndex.isVirtual(index)) {
       id = this.virtualIndex.randomString(20);
@@ -785,6 +787,7 @@ export class Elasticsearch extends Service {
     content,
     { refresh = false, userId = null, injectKuzzleMeta = true } = {}
   ) {
+    console.trace();
     const esRequest = {
       body: content,
       id: this.virtualIndex.getId(index, id),
@@ -2332,12 +2335,13 @@ export class Elasticsearch extends Service {
         _kuzzle_info: {
           author: getKuid(userId),
           createdAt: Date.now(),
+          index: index,
           updatedAt: null,
           updater: null,
         },
       },
       { rejected, extractedDocuments, documentsToGet } =
-        this._extractMDocuments(documents, kuzzleMeta, { prepareMGet: true });
+        this._extractMDocuments(index, documents, kuzzleMeta, { prepareMGet: true });
 
     // prepare the mget request, but only for document having a specified id
     const { body } =
@@ -2449,6 +2453,7 @@ export class Elasticsearch extends Service {
       timeout,
     };
     const { rejected, extractedDocuments } = this._extractMDocuments(
+      index,
       documents,
       kuzzleMeta
     );
@@ -2496,6 +2501,7 @@ export class Elasticsearch extends Service {
     // @ts-ignore
     { refresh, retryOnConflict = 0, timeout, userId = null } = {}
   ) {
+    console.log('-------------------------mupdate----------------------------------');
     const alias = this._getAlias(index, collection),
       toImport = [],
       esRequest = {
@@ -2506,15 +2512,20 @@ export class Elasticsearch extends Service {
       },
       kuzzleMeta = {
         _kuzzle_info: {
-          index: this.virtualIndex.getRealIndex(index),
+          index: index,
           updatedAt: Date.now(),
           updater: getKuid(userId),
         },
       },
       { rejected, extractedDocuments } = this._extractMDocuments(
+        index,
         documents,
         kuzzleMeta
       );
+
+    console.log('rejected : ' + JSON.stringify(rejected));
+
+    console.log('extractedDocuments : ' + JSON.stringify(extractedDocuments));
 
     /**
      * @warning Critical code section
@@ -2556,6 +2567,9 @@ export class Elasticsearch extends Service {
     }
     /* end critical code section */
 
+    console.log('esRequest : ' + JSON.stringify(esRequest));
+    console.log('toImport : ' + JSON.stringify(toImport));
+
     const response = await this._mExecute(esRequest, toImport, rejected);
 
     // with _source: true, ES returns the updated document in
@@ -2569,6 +2583,8 @@ export class Elasticsearch extends Service {
       status: item.status,
     }));
 
+
+    console.log('---end---');
     return response;
   }
 
@@ -2618,6 +2634,7 @@ export class Elasticsearch extends Service {
     };
 
     const { rejected, extractedDocuments } = this._extractMDocuments(
+      index,
       documents,
       kuzzleMeta,
       {
@@ -2702,7 +2719,7 @@ export class Elasticsearch extends Service {
         },
       },
       { rejected, extractedDocuments, documentsToGet } =
-        this._extractMDocuments(documents, kuzzleMeta, {
+        this._extractMDocuments(index, documents, kuzzleMeta, {
           prepareMGet: true,
           requireId: true,
         });
@@ -2946,6 +2963,7 @@ export class Elasticsearch extends Service {
    * @returns {Object} { rejected, extractedDocuments, documentsToGet }
    */
   _extractMDocuments(
+    index,
     documents,
     metadata,
     { prepareMGet = false, requireId = false, prepareMUpsert = false } = {}
@@ -2985,9 +3003,13 @@ export class Elasticsearch extends Service {
           };
         }
 
-        if (document._id) {
-          extractedDocument._id = document._id;
+        if (document._id) { //TODO : generate id
+          extractedDocument._id = this.virtualIndex.getId(index, document._id);
+        } else if (this.virtualIndex.isVirtual(index)) {
+          extractedDocument._id = this.virtualIndex.getId(index,this.virtualIndex.randomString(20));
         }
+        document._id = extractedDocument._id;
+
 
         extractedDocuments.push(extractedDocument);
 

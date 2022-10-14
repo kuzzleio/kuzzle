@@ -20,6 +20,47 @@ Feature: VirtualIndex
     And The document "realindex":"collection":"virtualdocument2" content match:
       | name | "document2" |
 
+  Scenario: Creation of a virtualIndex and a multi document on it
+    Given an index "realindex2"
+    When I "create" the collection "realindex2":"collection" with:
+      | mappings | { "properties": { "name": { "type": "keyword" }, "age" : { "type": "integer"} } } |
+    And I can create the following document:
+      | _id  | "document1"             |
+      | body | { "name": "document1" } |
+    Then I should see the collection "realindex2":"collection"
+    And The document "document1" content match:
+      | name | "document1" |
+    When I create a virtual index named "virtual2" referencing "realindex2"
+    Then I should see the collection "virtual2":"collection"
+    When I "create" the following multiple documents:
+      | _id          | body                               |
+      | "document-1" | { "name": "document1", "age": 42 } |
+      | "document-2" | { "name": "document2", "age": 84 } |
+      | "document-3" | { "name": "document2", "age": 21 } |
+    When I "update" the following multiple documents:
+      | _id          | body                   |
+      | "document-1" | { "name": "updated1" } |
+      | "document-2" | { "age": 90 }          |
+    And The document "document-1" content match:
+      | name | "updated1" |
+      | age  | 42         |
+    And The document "document-2" content match:
+      | name | "document2" |
+      | age  | 90          |
+    And I refresh the collection
+    When I perform a bulk deleteByQuery with the query:
+      """
+      {
+        "range": {
+          "age": {
+            "gt": 21
+          }
+        }
+      }
+      """
+    Then I should receive a result matching:
+      | deleted | 2 |
+
   Scenario: Creation of collection in a virtual Index
     Given an index "realindex2"
     When I create a virtual index named "virtual2" referencing "realindex2"

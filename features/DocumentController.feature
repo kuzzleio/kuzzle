@@ -341,10 +341,10 @@ Feature: Document Controller
     And I refresh the collection
     When I export the collection "nyc-open-data":"yellow-taxi" in the format "jsonl"
     Then the streamed data should be equal to:
-      | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                          |
-      | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document1","age":42}}  |
-      | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document2","age":666}} |
-  
+      | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                                                  |
+      | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"index":"nyc-open-data","updatedAt":null,"updater":null},"name":"document1","age":42}}  |
+      | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"index":"nyc-open-data","updatedAt":null,"updater":null},"name":"document2","age":666}} |
+
   @mappings
   @http
   Scenario: Verify exported documents in format csv
