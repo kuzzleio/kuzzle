@@ -2102,7 +2102,7 @@ describe("Test: ElasticSearch service", () => {
         index,
         collection,
         "not an object",
-        () => { }
+        () => {}
       );
 
       return should(promise).be.rejectedWith({
