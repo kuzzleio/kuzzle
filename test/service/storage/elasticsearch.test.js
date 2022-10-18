@@ -2102,7 +2102,7 @@ describe("Test: ElasticSearch service", () => {
         index,
         collection,
         "not an object",
-        () => {}
+        () => { }
       );
 
       return should(promise).be.rejectedWith({
@@ -2452,6 +2452,55 @@ describe("Test: ElasticSearch service", () => {
         BadRequestError,
         { id: "services.storage.invalid_collection_name" }
       );
+    });
+
+    it("should use globalSettings if none are provided", async () => {
+      elasticsearch.config.globalSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(elasticsearch.config.globalSettings);
+    });
+
+    it("should use provided settings if provided", async () => {
+      elasticsearch.config.globalSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+        number_of_shards: 2,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(settings);
+    });
+
+    it("should use partially provided settings", async () => {
+      elasticsearch.config.globalSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.body.settings).eql({
+        number_of_replicas: 1,
+        number_of_shards: 66,
+      });
     });
   });
 
