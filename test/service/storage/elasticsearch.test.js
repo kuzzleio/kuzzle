@@ -5036,6 +5036,29 @@ describe("Test: ElasticSearch service", () => {
 
       should(elasticsearch._client.indices.create).not.be.called();
     });
+
+    it("does create hidden collection based on global settings", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch.config.globalSettings = {
+        number_of_shards: 42,
+        number_of_replicas: 42,
+      };
+
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 42,
+            number_of_replicas: 42,
+          },
+        },
+      });
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
+    });
   });
 
   describe("#_checkMappings", () => {
