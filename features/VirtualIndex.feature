@@ -153,7 +153,7 @@ Feature: VirtualIndex
       """
     Then I debug "result"
     When I successfully execute the action "index":"list" with args:
-      | onlyVirtual | true |
+      | type | "virtual" |
     Then I should receive a "indexes" array containing:
       """
       ["virtual7"]
@@ -163,7 +163,7 @@ Feature: VirtualIndex
       ["realindex7"]
       """
     When I successfully execute the action "index":"list" with args:
-      | onlyPhysical | true |
+      | type | "physical" |
     Then I should receive a "indexes" array containing:
       """
       ["realindex7"]

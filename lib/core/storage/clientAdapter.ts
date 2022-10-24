@@ -401,6 +401,23 @@ export class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:list`,
+      (type?) => {
+        console.log("____________________________________________________");
+        console.log("index:list");
+        console.log(type);
+        const indexes = this.cache.listIndexes();
+        if(type==="virtual"){
+          console.log('virtual');
+          return indexes.filter((index) => this.virtualIndex.isVirtual(index));
+        } else if(type==="physical"){
+          console.log('physical');
+          return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
+        } else {
+          console.log('indexes!');
+          return indexes;
+        }
+      }
+      /*
       (onlyVirtual?, onlyPhysical?) => {
         const indexes = this.cache.listIndexes();
         if (!onlyPhysical && !onlyVirtual) {
@@ -412,6 +429,7 @@ export class ClientAdapter {
         }
         return [];
       }
+       */
     );
 
     /**
