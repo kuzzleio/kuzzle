@@ -22,8 +22,8 @@ export class VirtualIndex extends Service {
     await this.buildCollection();
     await this.initVirtualTenantList();
 
-    global.kuzzle.onAsk(VirtualIndex.createEvent, (real, virtual) =>
-      this.addInSoftTenantMap(real, virtual)
+    global.kuzzle.onAsk(VirtualIndex.createEvent, (physical, virtual) =>
+      this.addInSoftTenantMap(physical, virtual)
     );
 
     global.kuzzle.onAsk(VirtualIndex.deleteEvent, (info) =>
@@ -31,8 +31,8 @@ export class VirtualIndex extends Service {
     );
   }
 
-  addInSoftTenantMap(real, virtual) {
-    this.virtualIndexMap.set(virtual, real);
+  addInSoftTenantMap(physical, virtual) {
+    this.virtualIndexMap.set(virtual, physical);
   }
 
   removeInSoftTenantMap(notification) {
@@ -72,7 +72,7 @@ export class VirtualIndex extends Service {
     //TODO : cluster //TODO : throw exception if "index" is virtual
 
     global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
-      real: index,
+      physical: index,
       virtual: virtualIndex,
     });
 
@@ -81,7 +81,7 @@ export class VirtualIndex extends Service {
       "core:storage:private:document:create",
       "virtualindexes",
       "list",
-      { real: index, virtual: virtualIndex },
+      { physical: index, virtual: virtualIndex },
       { id: index + virtualIndex }
     );
   }
@@ -117,7 +117,7 @@ export class VirtualIndex extends Service {
         );
         total = list.total;
         for (const hit of list.hits) {
-          this.virtualIndexMap.set(hit._source.virtual, hit._source.real);
+          this.virtualIndexMap.set(hit._source.virtual, hit._source.physical);
         }
         from += 100;
       } while (from < total);
@@ -144,7 +144,7 @@ export class VirtualIndex extends Service {
             _meta: undefined,
             dynamic: "strict",
             properties: {
-              real: { type: "text" },
+              physical: { type: "text" },
               virtual: { type: "text" },
             },
           },

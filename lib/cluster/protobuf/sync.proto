@@ -162,7 +162,7 @@ message AddCollection {
 message AddVirtualIndex {
       uint64 messageId = 1;
       string virtual = 2;
-      string real = 3;
+      string physical = 3;
 }
 
 message RemoveVirtualIndex {

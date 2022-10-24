@@ -313,7 +313,7 @@ export type StorageEngineElasticsearch = {
       "virtual-indexes": {
         dynamic: "strict";
         properties: {
-          real: { type: "text" };
+          physical: { type: "text" };
           virtual: { type: "text" };
         };
       };
