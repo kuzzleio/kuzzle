@@ -2454,8 +2454,8 @@ describe("Test: ElasticSearch service", () => {
       );
     });
 
-    it("should use globalSettings if none are provided", async () => {
-      elasticsearch.config.globalSettings = {
+    it("should use defaultSettings if none are provided", async () => {
+      elasticsearch.config.defaultSettings = {
         number_of_replicas: 42,
         number_of_shards: 66,
       };
@@ -2463,11 +2463,11 @@ describe("Test: ElasticSearch service", () => {
       await elasticsearch.createCollection(index, collection);
 
       const esReq = elasticsearch._client.indices.create.firstCall.args[0];
-      should(esReq.body.settings).eql(elasticsearch.config.globalSettings);
+      should(esReq.body.settings).eql(elasticsearch.config.defaultSettings);
     });
 
     it("should use provided settings if provided", async () => {
-      elasticsearch.config.globalSettings = {
+      elasticsearch.config.defaultSettings = {
         number_of_replicas: 42,
         number_of_shards: 66,
       };
@@ -2484,7 +2484,7 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should use partially provided settings", async () => {
-      elasticsearch.config.globalSettings = {
+      elasticsearch.config.defaultSettings = {
         number_of_replicas: 42,
         number_of_shards: 66,
       };
@@ -5039,7 +5039,7 @@ describe("Test: ElasticSearch service", () => {
 
     it("does create hidden collection based on global settings", async () => {
       elasticsearch._client.indices.create.resolves({});
-      elasticsearch.config.globalSettings = {
+      elasticsearch.config.defaultSettings = {
         number_of_shards: 42,
         number_of_replicas: 42,
       };

@@ -779,7 +779,7 @@
         }
       },
       // Global settings to apply by default (can be overriden by user requests)
-      "globalSettings": {
+      "defaultSettings": {
         "number_of_shards": 1,
         "number_of_replicas": 1
       },

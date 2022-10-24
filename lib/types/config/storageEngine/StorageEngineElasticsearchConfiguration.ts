@@ -112,7 +112,7 @@ export type StorageEngineElasticsearch = {
    *   number_of_replicas: 1
    * }
    */
-  globalSettings: {
+  defaultSettings: {
     /**
      * @default 1
      */
