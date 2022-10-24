@@ -317,7 +317,19 @@
           "message": "you have not rights to update settings in a virtual index",
           "code": 55,
           "class": "BadRequestError"
+        },
+        "physicalIndex_does_not_exist": {
+          "description": "You need an existing physical index",
+          "message": "The given physicalIndex does not exist.",
+          "code": 56,
+          "class": "NotFoundError"
         }
+      },
+      "physicalIndex_not_specified": {
+        "description": "You must specify physicalIndex",
+        "message": "The given physicalIndex does not exist.",
+        "code": 57,
+        "class": "BadRequestError"
       }
     },
     "cache": {

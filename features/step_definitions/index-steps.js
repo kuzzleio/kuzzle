@@ -16,11 +16,7 @@ When(
       index: index,
       controller: "index",
       action: "createVirtual",
-      body: {
-        options: {
-          physicalIndex: realIndex,
-        },
-      },
+      physicalIndex: realIndex,
     });
     this.props.index = index;
 

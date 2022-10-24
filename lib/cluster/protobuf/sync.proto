@@ -160,14 +160,14 @@ message AddCollection {
 }
 
 message AddVirtualIndex {
-      uint64 messageId = 1;
-      string virtual = 2;
-      string physical = 3;
+  uint64 messageId = 1;
+  string virtual = 2;
+  string physical = 3;
 }
 
 message RemoveVirtualIndex {
-    uint64 messageId = 1;
-    string virtual = 2;
+  uint64 messageId = 1;
+  string virtual = 2;
 }
 
 message RemoveIndexes {

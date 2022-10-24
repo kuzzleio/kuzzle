@@ -100,69 +100,60 @@ export class ClientAdapter {
     );
   }
 
-  async createPhysicalIndex(
+  async createIndex(
     index: string,
     { indexCacheOnly = false, propagate = true } = {}
   ) {
-    return this.createIndex(index, {
-      indexCacheOnly,
-      physicalIndex: null,
-      propagate,
-    });
-  }
-
-  async createVirtualIndex(
-    index: string,
-    { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}
-  ) {
-    if (!physicalIndex) {
-      throw new KuzzleError("You must specify physicalIndex.", 403);
-    }
-    return this.createIndex(index, {
-      indexCacheOnly,
-      physicalIndex,
-      propagate,
-    });
-  }
-
-  async createIndex(
-    index: string,
-    { indexCacheOnly = false, propagate = true, physicalIndex = null } = {}
-  ) {
-    if (this.cache.hasIndex(index)) {
-      throw servicesError.get("index_already_exists", this.scope, index);
-    }
-
-    if (physicalIndex) {
-      if (!this.cache.hasIndex(physicalIndex)) {
-        throw new KuzzleError("The given physicalIndex does not exist.", 404);
-      }
-    }
-    this.client._assertValidIndexAndCollection(index);
-    this.cache.addIndex(index);
-    if (physicalIndex) {
-      this.client.createVirtualIndex(index, physicalIndex);
-      for (const collection of this.cache.listCollections(physicalIndex)) {
-        this.cache.addCollection(index, collection);
-        //send message to propagate cache population :
-        global.kuzzle.emit("core:storage:collection:create:after", {
-          collection,
-          index,
-          scope: this.scope,
-        });
-      }
-    }
-
-    if (!indexCacheOnly && !physicalIndex) {
+    this.addCache(index);
+    if (!indexCacheOnly) {
       await this.client.createIndex(index);
     }
-
     if (propagate) {
       global.kuzzle.emit("core:storage:index:create:after", {
         index,
         scope: this.scope,
       });
     }
+  }
+
+  async createVirtualIndex(
+    index: string,
+    physicalIndex = null,
+    { indexCacheOnly = false, propagate = true } = {}
+  ) {
+    if (!physicalIndex) {
+      throw servicesError.get("physicalIndex_does_not_exist");
+    }
+    if (!this.cache.hasIndex(physicalIndex)) {
+      throw servicesError.get("physicalIndex_does_not_exist");
+    }
+
+    this.addCache(index);
+    this.client.createVirtualIndex(index, physicalIndex);
+    for (const collection of this.cache.listCollections(physicalIndex)) {
+      this.cache.addCollection(index, collection);
+      //send message to propagate cache population :
+      global.kuzzle.emit("core:storage:collection:create:after", {
+        collection,
+        index,
+        scope: this.scope,
+      });
+    }
+    if (propagate) {
+      global.kuzzle.emit("core:storage:index:create:after", {
+        index,
+        scope: this.scope,
+      });
+    }
+  }
+
+  addCache(index){
+    if (this.cache.hasIndex(index)) {
+      throw servicesError.get("index_already_exists", this.scope, index);
+    }
+
+    this.client._assertValidIndexAndCollection(index);
+    this.cache.addIndex(index);
   }
 
   async createCollection(
@@ -366,12 +357,12 @@ export class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:create`,
-      (index, options) => this.createPhysicalIndex(index, options)
+      (index, options) => this.createIndex(index, options)
     );
 
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:createVirtual`,
-      (index, options) => this.createVirtualIndex(index, options)
+      (index, physicalIndex, options) => this.createVirtualIndex(index, physicalIndex, options)
     );
 
     /**
@@ -1122,7 +1113,6 @@ export class ClientAdapter {
       try {
         await this.createIndex(index, {
           indexCacheOnly: options.indexCacheOnly,
-          physicalIndex: options.physicalIndex,
           propagate: options.propagate,
         });
       } catch (error) {
