@@ -152,7 +152,7 @@ export class ClientAdapter {
       throw servicesError.get("index_already_exists", this.scope, index);
     }
 
-    this.client._assertValidIndexAndCollection(index);
+    this.client.assertValidIndexAndCollection(index);
     this.cache.addIndex(index);
   }
 
@@ -393,9 +393,6 @@ export class ClientAdapter {
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:list`,
       (type?) => {
-        console.log("____________________________________________________");
-        console.log("index:list");
-        console.log(type);
         const indexes = this.cache.listIndexes();
         if(type==="virtual"){
           console.log('virtual');
@@ -408,19 +405,7 @@ export class ClientAdapter {
           return indexes;
         }
       }
-      /*
-      (onlyVirtual?, onlyPhysical?) => {
-        const indexes = this.cache.listIndexes();
-        if (!onlyPhysical && !onlyVirtual) {
-          return indexes;
-        } else if (onlyPhysical && !onlyVirtual) {
-          return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
-        } else if (!onlyPhysical && onlyVirtual) {
-          return indexes.filter((index) => this.virtualIndex.isVirtual(index));
-        }
-        return [];
-      }
-       */
+
     );
 
     /**

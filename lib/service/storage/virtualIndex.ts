@@ -3,14 +3,14 @@ import Crypto from "crypto";
 import { Service } from "../service";
 
 export class VirtualIndex extends Service {
-  public static createEvent = "core:storage:virtualindex:cache:create";
-  public static deleteEvent = "core:storage:virtualindex:cache:delete";
+  public static createEvent = "core:storage:virtual-index:cache:create";
+  public static deleteEvent = "core:storage:virtual-index:cache:delete";
 
   public static createVirtualIndexEvent =
-    "core:storage:virtualindex:create:after";
+    "core:storage:virtual-index:create:after";
 
   public static deleteVirtualIndexEvent =
-    "core:storage:virtualindex:delete:after";
+    "core:storage:virtual-index:delete:after";
 
   constructor() {
     super("VirtualIndex", global.kuzzle.config.services.storageEngine);
@@ -20,7 +20,7 @@ export class VirtualIndex extends Service {
 
   async init(): Promise<void> {
     await this.buildCollection();
-    await this.initVirtualTenantList();
+    await this.initVirtualIndexList();
 
     global.kuzzle.onAsk(VirtualIndex.createEvent, (physical, virtual) =>
       this.addInSoftTenantMap(physical, virtual)
@@ -58,7 +58,11 @@ export class VirtualIndex extends Service {
   }
 
   randomString(size = 20) {
-    return Crypto.randomBytes(size).toString("base64").slice(0, size);
+    const buf = Buffer.alloc(size);
+    for (let i = 0 ; i < 20; i++) {
+      buf.writeUInt8((Math.random() * 255)&255, i);
+    }
+    return buf.toString('base64').slice(0, size);
   }
 
   getVirtualId(index: string, id: string): string {
@@ -69,8 +73,6 @@ export class VirtualIndex extends Service {
   }
 
   public async createVirtualIndex(virtualIndex: string, index: string) {
-    //TODO : cluster //TODO : throw exception if "index" is virtual
-
     global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
       physical: index,
       virtual: virtualIndex,
@@ -79,7 +81,7 @@ export class VirtualIndex extends Service {
     this.virtualIndexMap.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",
-      "virtualindexes",
+      "virtual-indexes",
       "list",
       { physical: index, virtual: virtualIndex },
       { id: index + virtualIndex }
@@ -95,49 +97,51 @@ export class VirtualIndex extends Service {
     const id = realIndex + index;
     await global.kuzzle.ask(
       "core:storage:private:document:delete",
-      "virtualindexes",
+      "virtual-indexes",
       "list",
       id
     );
   }
 
-  async initVirtualTenantList() {
-    //TODO : from database
+  async initVirtualIndexList() {
     if (this.virtualIndexMap.size === 0) {
-      this.virtualIndexMap = new Map<string, string>();
-      let from = 0;
-      let total;
-
-      do {
-        const list = await global.kuzzle.ask(
-          "core:storage:private:document:search",
-          "virtualindexes",
-          "list",
-          { from: from, size: 100 }
-        );
-        total = list.total;
-        for (const hit of list.hits) {
-          this.virtualIndexMap.set(hit._source.virtual, hit._source.physical);
-        }
-        from += 100;
-      } while (from < total);
+      return;
     }
+    this.virtualIndexMap = new Map<string, string>();
+    let from = 0;
+    let total;
+
+    do {
+      const list = await global.kuzzle.ask(
+        "core:storage:private:document:search",
+        "virtual-indexes",
+        "list",
+        { from: from, size: 100 }
+      );
+      total = list.total;
+      for (const hit of list.hits) {
+        this.virtualIndexMap.set(hit._source.virtual, hit._source.physical);
+      }
+      from += 100;
+    } while (from < total);
   }
 
   async buildCollection() {
     try {
       await global.kuzzle.ask(
         "core:storage:private:index:create",
-        "virtualindexes",
+        "virtual-indexes",
         {}
       );
     } catch (e) {
-      //already created
+      if(e.status!==412){ //already created
+        throw e;
+      }
     }
     try {
       await global.kuzzle.ask(
         "core:storage:private:collection:create",
-        "virtualindexes",
+        "virtual-indexes",
         "list",
         {
           mappings: {
@@ -151,7 +155,45 @@ export class VirtualIndex extends Service {
         }
       );
     } catch (e) {
-      //already created
+      if(e.status!==412){ //already created
+        throw e;
+      }
     }
   }
+
+  sanitizeSearchBodyForVirtualIndex(searchBody, index) {
+    const filteredQuery = {
+      bool: {
+        filter: [],
+        must: {},
+        should: null,
+      },
+    };
+    if (searchBody.query.bool) {
+      filteredQuery.bool = searchBody.query.bool;
+      if (!filteredQuery.bool.filter) {
+        filteredQuery.bool.filter = []; //add query bool in filter
+      } else if (!Array.isArray(filteredQuery.bool.filter)) {
+        filteredQuery.bool.filter = [filteredQuery.bool.filter];
+      }
+    } else {
+      filteredQuery.bool.must = searchBody.query;
+    }
+    filteredQuery.bool.filter.push({
+      //TODO : imparfait si la requete contient un should :s
+      term: {
+        "_kuzzle_info.index": index,
+      },
+    });
+    if (filteredQuery.bool.should) {
+      filteredQuery.bool.filter.push({
+        bool: {
+          should: filteredQuery.bool.should,
+        },
+      });
+      delete filteredQuery.bool.should;
+    }
+    searchBody.query = filteredQuery;
+  }
+
 }

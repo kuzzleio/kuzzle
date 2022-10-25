@@ -27,9 +27,9 @@ import * as kuzzleError from "../../kerror";
 const kerror = kuzzleError.wrap("services", "storage");
 
 export class StorageEngine {
-  publicClient: ClientAdapter = null;
-  privateClient: ClientAdapter = null;
-  virtualIndex: VirtualIndex;
+  private publicClient: ClientAdapter = null;
+  private privateClient: ClientAdapter = null;
+  private virtualIndex: VirtualIndex;
 
   get public() {
     return this.publicClient;
@@ -44,8 +44,8 @@ export class StorageEngine {
     return new ClientAdapter(scopeEnum, virtualIndex);
   }
 
-  constructor(virtualIndex: VirtualIndex) {
-    this.virtualIndex = virtualIndex;
+  constructor() {
+    this.virtualIndex = new VirtualIndex();
 
     // Storage client for public indexes only
     this.publicClient = StorageEngine.initClientAdapters(
@@ -68,6 +68,8 @@ export class StorageEngine {
   async init() {
     await Promise.all([this.publicClient.init(), this.privateClient.init()]);
     const privateIndexes = this.privateClient.cache.listIndexes();
+
+    await this.virtualIndex.init();
 
     for (const publicIndex of this.publicClient.cache.listIndexes()) {
       if (privateIndexes.includes(publicIndex)) {

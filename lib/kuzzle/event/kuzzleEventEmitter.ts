@@ -156,8 +156,9 @@ export class KuzzleEventEmitter extends EventEmitter {
     const events = getWildcardEvents(event);
     debug('Triggering event "%s" with data: %o', event, data);
 
-    for (const subevent of events) {
-      super.emit(subevent, data);
+    //for (const subevent of events)  {
+    for (let i = 0; i < events.length; i++) {
+      super.emit(events[i], data);
     }
     return true;
   }
@@ -197,8 +198,8 @@ export class KuzzleEventEmitter extends EventEmitter {
     const events = getWildcardEvents(event);
     const funcs = [];
 
-    for (const subevent of events) {
-      const targets = this.pluginPipes.get(subevent);
+    for (let i = 0; i < events.length; i++) {
+      const targets = this.pluginPipes.get(events[i]);
 
       if (targets) {
         targets.forEach((t) => funcs.push(t));
@@ -366,8 +367,7 @@ async function pipeCallback(error, ...updated) {
     this.promback.reject(error);
     return;
   }
-  //eslint-disable-next-line @typescript-eslint/ban-types
-  const corePipes: Function[] = this.instance.corePipes.get(this.targetEvent);
+    const corePipes: Function[] = this.instance.corePipes.get(this.targetEvent);
 
   if (corePipes) {
     await Bluebird.map(corePipes, (fn) => fn(...updated));

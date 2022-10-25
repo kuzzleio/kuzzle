@@ -101,28 +101,28 @@ type ImportStatus = {
 };
 
 export class Kuzzle extends KuzzleEventEmitter {
-  readonly config: KuzzleConfiguration;
+  public readonly config: KuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  readonly log: Logger;
+  public readonly log: Logger;
   private rootPath: string;
   /**
    * Internal index bootstrapper and accessor
    */
-  readonly internalIndex: InternalIndexHandler;
+  public readonly internalIndex: InternalIndexHandler;
 
-  readonly pluginsManager: PluginsManager;
-  readonly tokenManager: TokenManager;
+  public readonly pluginsManager: PluginsManager;
+  public readonly tokenManager: TokenManager;
   private passport: PassportWrapper;
 
   /**
    * The funnel dispatches messages to API controllers
    */
-  readonly funnel: Funnel;
+  public readonly funnel: Funnel;
 
   /**
    * The router listens to client requests and pass them to the funnel
    */
-  readonly router: Router;
+  public readonly router: Router;
 
   /**
    * Statistics core component
@@ -132,12 +132,12 @@ export class Kuzzle extends KuzzleEventEmitter {
   /**
    * Network entry point
    */
-  readonly entryPoint: EntryPoint;
+  public readonly entryPoint: EntryPoint;
 
   /**
    * Validation core component
    */
-  readonly validation: Validation;
+  public readonly validation: Validation;
 
   /**
    * Dump generator
@@ -182,9 +182,13 @@ export class Kuzzle extends KuzzleEventEmitter {
    */
   public id: string;
 
+  get vault() {
+    return this._vault;
+  }
+
   //For Unit Test
-  static createStorageEngine(virtualIndex): StorageEngine {
-    return new StorageEngine(virtualIndex);
+  static createStorageEngine(): StorageEngine {
+    return new StorageEngine();
   }
 
   //For Unit Test
@@ -281,10 +285,9 @@ export class Kuzzle extends KuzzleEventEmitter {
 
       await Kuzzle.initCacheEngine();
 
-      const virtualIndex = Kuzzle.createVirtualIndex();
-      const storageEngine = Kuzzle.createStorageEngine(virtualIndex);
-
+      const storageEngine = Kuzzle.createStorageEngine();
       await storageEngine.init();
+
       await new RealtimeModule().init();
 
       await this.internalIndex.init();
@@ -294,7 +297,6 @@ export class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
 
-      await virtualIndex.init();
 
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
@@ -777,9 +779,7 @@ export class Kuzzle extends KuzzleEventEmitter {
     this.emit("kuzzle:state:change", value);
   }
 
-  get vault() {
-    return this._vault;
-  }
+
 
   /**
    * Register handlers and do a kuzzle dump for:
