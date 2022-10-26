@@ -422,8 +422,8 @@ const defaultConfig: KuzzleConfiguration = {
           "virtual-indexes": {
             dynamic: "strict",
             properties: {
-              physical: { type: "text" },
-              virtual: { type: "text" },
+              physical: { type: "keyword" },
+              virtual: { type: "keyword" },
             },
           },
         },

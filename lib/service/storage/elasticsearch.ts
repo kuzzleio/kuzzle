@@ -2130,7 +2130,7 @@ export class Elasticsearch extends Service {
       throw this.esWrapper.formatESError(error);
     }
 
-    return Array.from(deleted);
+    return deleted;
   }
 
   /**
@@ -2401,7 +2401,6 @@ export class Elasticsearch extends Service {
    * @returns {Promise.<{ items, errors }>
    */
   async mCreateOrReplace(
-    //TODO : regarder pour les ids
     index,
     collection,
     documents,
@@ -3148,7 +3147,7 @@ export class Elasticsearch extends Service {
    * @return {Promise<*>} the settings of the indice.
    * @private
    */
-  async _getSettings(esRequest) {
+  private async _getSettings(esRequest) {
     const response = await this.client.indices.getSettings(esRequest);
     return response.body[esRequest.index].settings;
   }
@@ -3441,7 +3440,7 @@ export class Elasticsearch extends Service {
     }
 
     if (index && this.virtualIndex.isVirtual(index)) {
-      this.virtualIndex.sanitizeSearchBodyForVirtualIndex(searchBody, index);
+      return this.virtualIndex.sanitizeSearchBodyForVirtualIndex(searchBody, index);
     }
 
     return searchBody;

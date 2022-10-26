@@ -23,19 +23,19 @@ export class VirtualIndex extends Service {
     await this.initVirtualIndexList();
 
     global.kuzzle.onAsk(VirtualIndex.createEvent, (physical, virtual) =>
-      this.addInSoftTenantMap(physical, virtual)
+      this.addInSoftIndexMap(physical, virtual)
     );
 
     global.kuzzle.onAsk(VirtualIndex.deleteEvent, (info) =>
-      this.removeInSoftTenantMap(info)
+      this.removeInSoftIndexMap(info)
     );
   }
 
-  addInSoftTenantMap(physical, virtual) {
+  addInSoftIndexMap(physical, virtual) {
     this.virtualIndexMap.set(virtual, physical);
   }
 
-  removeInSoftTenantMap(notification) {
+  removeInSoftIndexMap(notification) {
     this.virtualIndexMap.delete(notification);
   }
 
@@ -161,7 +161,7 @@ export class VirtualIndex extends Service {
     }
   }
 
-  sanitizeSearchBodyForVirtualIndex(searchBody, index) {
+  sanitizeSearchBodyForVirtualIndex(originalSearchBody, index) {
     const filteredQuery = {
       bool: {
         filter: [],
@@ -169,6 +169,7 @@ export class VirtualIndex extends Service {
         should: null,
       },
     };
+    const searchBody = JSON.parse(JSON.stringify(originalSearchBody));
     if (searchBody.query.bool) {
       filteredQuery.bool = searchBody.query.bool;
       if (!filteredQuery.bool.filter) {
@@ -180,7 +181,7 @@ export class VirtualIndex extends Service {
       filteredQuery.bool.must = searchBody.query;
     }
     filteredQuery.bool.filter.push({
-      //TODO : imparfait si la requete contient un should :s
+      //TODO : Not perfect solution if request contain a should
       term: {
         "_kuzzle_info.index": index,
       },
@@ -193,7 +194,7 @@ export class VirtualIndex extends Service {
       });
       delete filteredQuery.bool.should;
     }
-    searchBody.query = filteredQuery;
+    searchBody.query = JSON.parse(JSON.stringify(filteredQuery));
+    return searchBody;
   }
-
 }
