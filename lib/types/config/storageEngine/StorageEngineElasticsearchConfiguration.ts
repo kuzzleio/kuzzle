@@ -311,10 +311,10 @@ export type StorageEngineElasticsearch = {
         };
       };
       "virtual-indexes": {
-        dynamic: "strict";
+        dynamic: "strict"|"false"|"true";
         properties: {
-          physical: { type: "text" };
-          virtual: { type: "text" };
+          physical: { type: string };
+          virtual: { type: string };
         };
       };
     };
