@@ -156,7 +156,6 @@ export class KuzzleEventEmitter extends EventEmitter {
     const events = getWildcardEvents(event);
     debug('Triggering event "%s" with data: %o', event, data);
 
-    //for (const subevent of events)  {
     for (let i = 0; i < events.length; i++) {
       super.emit(events[i], data);
     }

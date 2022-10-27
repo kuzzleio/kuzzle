@@ -381,7 +381,6 @@ export class ClientAdapter {
      * @return {Promise.<boolean>}
      */
 
-    //TODO : faire une fonction qui, si il a "onlyvirtual", ou "onlyphjysical", va filtrer les index du cache avant de les renvoyer
     global.kuzzle.onAsk(`core:storage:${this.scope}:index:exist`, (index) =>
       this.cache.hasIndex(index)
     );

@@ -181,7 +181,7 @@ export class VirtualIndex extends Service {
       filteredQuery.bool.must = searchBody.query;
     }
     filteredQuery.bool.filter.push({
-      //TODO : Not perfect solution if request contain a should
+      //Warning : Not perfect solution if request contain a should
       term: {
         "_kuzzle_info.index": index,
       },
