@@ -658,6 +658,7 @@ export class Elasticsearch extends Service {
     const errors = [];
     const items = [];
 
+    // NOSONAR
     for (let i = 0; i < body.docs.length; i++) {
       const doc = body.docs[i];
 
@@ -1180,6 +1181,7 @@ export class Elasticsearch extends Service {
 
       const documents = await this.getAllDocumentsFromQuery(esRequest);
 
+      // NOSONAR
       for (let i = 0; i < documents.length; i++) {
         const document = documents[i];
 
@@ -1664,7 +1666,6 @@ export class Elasticsearch extends Service {
    *
    * @returns {Promise.<{ dynamic, _meta, properties }>}
    */
-  //TODO : create mapping type!
   async updateMapping(index, collection, mappings: CollectionMappings) {
     if (this.virtualIndex.isVirtual(index)) {
       throw kerror.get("update_virtual_collection");
@@ -1839,6 +1840,7 @@ export class Elasticsearch extends Service {
      *
      * bulk body can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < esRequest.body.length; i++) {
       const item = esRequest.body[i];
       lastAction = this.prepareItem(
@@ -1872,6 +1874,7 @@ export class Elasticsearch extends Service {
      *
      * bulk body can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < body.items.length; i++) {
       const row = body.items[i];
       this.formatItemResult(result, row, idx, documents);
@@ -2241,6 +2244,7 @@ export class Elasticsearch extends Service {
     const errors = [];
     const items = [];
 
+    // NOSONAR
     for (let i = 0; i < body.docs.length; i++) {
       const doc = body.docs[i];
 
@@ -2456,6 +2460,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < extractedDocuments.length; i++) {
       esRequest.body.push({
         index: {
@@ -2518,6 +2523,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < extractedDocuments.length; i++) {
       const extractedDocument = extractedDocuments[i];
 
@@ -2629,6 +2635,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < extractedDocuments.length; i++) {
       esRequest.body.push(
         {
@@ -2788,6 +2795,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < ids.length; i++) {
       const _id = ids[i];
 
@@ -2813,6 +2821,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < validIds.length; i++) {
       const validId = validIds[i];
       const item = items[idx];
@@ -2968,6 +2977,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
+    // NOSONAR
     for (let i = 0; i < documents.length; i++) {
       const document = documents[i];
       if (
