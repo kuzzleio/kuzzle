@@ -297,7 +297,6 @@ export class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       this.id = await this.initKuzzleNode();
 
-
       // Secret used to generate JWTs
       this.secret = await this.internalIndex.getSecret();
 
@@ -778,8 +777,6 @@ export class Kuzzle extends KuzzleEventEmitter {
     this._state = value;
     this.emit("kuzzle:state:change", value);
   }
-
-
 
   /**
    * Register handlers and do a kuzzle dump for:

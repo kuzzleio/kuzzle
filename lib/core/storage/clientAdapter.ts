@@ -24,7 +24,6 @@ import { IndexCache } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
 import { Mutex } from "../../util/mutex";
-import { KuzzleError } from "../../kerror/errors";
 import { VirtualIndex } from "../../service/storage/virtualIndex";
 
 const servicesError = kerror.wrap("services", "storage");
@@ -119,7 +118,7 @@ export class ClientAdapter {
   async createVirtualIndex(
     index: string,
     physicalIndex = null,
-    { indexCacheOnly = false, propagate = true } = {}
+    { propagate = true } = {}
   ) {
     if (!physicalIndex) {
       throw servicesError.get("physicalIndex_does_not_exist");
@@ -147,7 +146,7 @@ export class ClientAdapter {
     }
   }
 
-  addCache(index){
+  addCache(index) {
     if (this.cache.hasIndex(index)) {
       throw servicesError.get("index_already_exists", this.scope, index);
     }
@@ -362,7 +361,8 @@ export class ClientAdapter {
 
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:createVirtual`,
-      (index, physicalIndex, options) => this.createVirtualIndex(index, physicalIndex, options)
+      (index, physicalIndex, options) =>
+        this.createVirtualIndex(index, physicalIndex, options)
     );
 
     /**
@@ -390,23 +390,15 @@ export class ClientAdapter {
      * Return a list of all indexes within this adapter's scope
      * @returns {string[]}
      */
-    global.kuzzle.onAsk(
-      `core:storage:${this.scope}:index:list`,
-      (type?) => {
-        const indexes = this.cache.listIndexes();
-        if(type==="virtual"){
-          console.log('virtual');
-          return indexes.filter((index) => this.virtualIndex.isVirtual(index));
-        } else if(type==="physical"){
-          console.log('physical');
-          return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
-        } else {
-          console.log('indexes!');
-          return indexes;
-        }
+    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, (type?) => {
+      const indexes = this.cache.listIndexes();
+      if (type === "virtual") {
+        return indexes.filter((index) => this.virtualIndex.isVirtual(index));
+      } else if (type === "physical") {
+        return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
       }
-
-    );
+      return indexes;
+    });
 
     /**
      * Delete multiple indexes

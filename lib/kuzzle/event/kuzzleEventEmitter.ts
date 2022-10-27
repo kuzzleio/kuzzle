@@ -35,14 +35,14 @@ import Promback from "../../util/promback";
 import memoize from "../../util/memoize";
 
 import PipeRunner from "./pipeRunner";
-import {EventDefinition, PipeEventHandler} from "../../types";
+import { PipeEventHandler } from "../../types";
 
 class PluginPipeDefinition {
   public event: string;
   public handler: any;
   public pipeId: string;
 
-  constructor(event:string, handler, pipeId = null) {
+  constructor(event: string, handler, pipeId = null) {
     this.event = event;
     this.handler = handler;
 
@@ -56,9 +56,9 @@ export class KuzzleEventEmitter extends EventEmitter {
   public pluginPipes: Map<string, PipeEventHandler[]>;
   public pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
   //eslint-disable-next-line @typescript-eslint/ban-types
-  public corePipes: Map<string, Function[]>;
-  public coreAnswerers: Map<string,Function>;
-  public coreSyncedAnswerers: Map<string,Function>;
+  public corePipes: Map<string, PipeEventHandler[]>;
+  public coreAnswerers: Map<string, PipeEventHandler>;
+  public coreSyncedAnswerers: Map<string, PipeEventHandler>;
   constructor(maxConcurrentPipes, pipesBufferSize) {
     super();
     this.superEmit = super.emit;
@@ -367,7 +367,9 @@ async function pipeCallback(error, ...updated) {
     this.promback.reject(error);
     return;
   }
-    const corePipes: Function[] = this.instance.corePipes.get(this.targetEvent);
+  const corePipes: PipeEventHandler[] = this.instance.corePipes.get(
+    this.targetEvent
+  );
 
   if (corePipes) {
     await Bluebird.map(corePipes, (fn) => fn(...updated));

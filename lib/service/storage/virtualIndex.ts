@@ -1,5 +1,3 @@
-import Crypto from "crypto";
-
 import { Service } from "../service";
 
 export class VirtualIndex extends Service {
@@ -59,10 +57,10 @@ export class VirtualIndex extends Service {
 
   randomString(size = 20) {
     const buf = Buffer.alloc(size);
-    for (let i = 0 ; i < 20; i++) {
-      buf.writeUInt8((Math.random() * 255)&255, i);
+    for (let i = 0; i < 20; i++) {
+      buf.writeUInt8((Math.random() * 255) & 255, i);
     }
-    return buf.toString('base64').slice(0, size);
+    return buf.toString("base64").slice(0, size);
   }
 
   getVirtualId(index: string, id: string): string {
@@ -134,7 +132,8 @@ export class VirtualIndex extends Service {
         {}
       );
     } catch (e) {
-      if(e.status!==412){ //already created
+      if (e.status !== 412) {
+        //already created
         throw e;
       }
     }
@@ -155,7 +154,8 @@ export class VirtualIndex extends Service {
         }
       );
     } catch (e) {
-      if(e.status!==412){ //already created
+      if (e.status !== 412) {
+        //already created
         throw e;
       }
     }

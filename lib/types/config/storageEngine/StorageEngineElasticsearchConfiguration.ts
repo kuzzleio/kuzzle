@@ -311,7 +311,7 @@ export type StorageEngineElasticsearch = {
         };
       };
       "virtual-indexes": {
-        dynamic: "strict"|"false"|"true";
+        dynamic: "strict" | "false" | "true";
         properties: {
           physical: { type: string };
           virtual: { type: string };

@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-
-
 import assert from "assert";
 import ms from "ms";
 import _ from "lodash";
@@ -43,7 +41,7 @@ import { isPlainObject } from "../../util/safeObject";
 import extractFields from "../../util/extractFields";
 import { Mutex } from "../../util/mutex";
 import { randomNumber } from "../../util/name-generator";
-import {CollectionMappings, JSONObject} from "kuzzle-sdk";
+import { CollectionMappings, JSONObject } from "kuzzle-sdk";
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
 
@@ -1405,7 +1403,7 @@ export class Elasticsearch extends Service {
     index,
     collection,
     {
-      mappings  = {
+      mappings = {
         _meta: undefined,
         dynamic: undefined,
         properties: undefined,
@@ -1515,7 +1513,11 @@ export class Elasticsearch extends Service {
    *
    * @returns {Promise.<{ dynamic, _meta, properties }>}
    */
-  async getMapping(index, collection, { includeKuzzleMeta = false } = {}) : Promise<CollectionMappings> {
+  async getMapping(
+    index,
+    collection,
+    { includeKuzzleMeta = false } = {}
+  ): Promise<CollectionMappings> {
     const indice = await this.getIndice(index, collection);
     const esRequest = {
       index: indice,
@@ -1581,7 +1583,10 @@ export class Elasticsearch extends Service {
 
     try {
       if (!_.isEmpty(mappings)) {
-        const previousMappings : CollectionMappings = await this.getMapping(index, collection);
+        const previousMappings: CollectionMappings = await this.getMapping(
+          index,
+          collection
+        );
 
         await this.updateMapping(index, collection, mappings);
 
@@ -1660,11 +1665,7 @@ export class Elasticsearch extends Service {
    * @returns {Promise.<{ dynamic, _meta, properties }>}
    */
   //TODO : create mapping type!
-  async updateMapping(
-    index,
-    collection,
-    mappings : CollectionMappings
-  ) {
+  async updateMapping(index, collection, mappings: CollectionMappings) {
     if (this.virtualIndex.isVirtual(index)) {
       throw kerror.get("update_virtual_collection");
     }
@@ -1676,9 +1677,13 @@ export class Elasticsearch extends Service {
 
     this.checkDynamicProperty(mappings);
 
-    const collectionMappings : CollectionMappings = await this.getMapping(index, collection, {
-      includeKuzzleMeta: true,
-    });
+    const collectionMappings: CollectionMappings = await this.getMapping(
+      index,
+      collection,
+      {
+        includeKuzzleMeta: true,
+      }
+    );
 
     this.checkMappings(mappings);
 
@@ -1748,7 +1753,7 @@ export class Elasticsearch extends Service {
    * @returns {Promise}
    */
   async truncateCollection(index, collection) {
-    let mappings : CollectionMappings;
+    let mappings: CollectionMappings;
     let settings;
 
     if (this.virtualIndex.isVirtual(index)) {
@@ -2090,7 +2095,7 @@ export class Elasticsearch extends Service {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
-    const deleted = new Array<string>;
+    const deleted = new Array<string>();
     for (const index of indexes) {
       if (this.virtualIndex.isVirtual(index)) {
         await this.removeDocumentsFromVirtualIndex(index);
@@ -2323,8 +2328,12 @@ export class Elasticsearch extends Service {
           updater: null,
         },
       },
-      { rejected, extractedDocuments, documentsToGet } =
-        this.extractMDocuments(index, documents, kuzzleMeta, { prepareMGet: true });
+      { rejected, extractedDocuments, documentsToGet } = this.extractMDocuments(
+        index,
+        documents,
+        kuzzleMeta,
+        { prepareMGet: true }
+      );
 
     // prepare the mget request, but only for document having a specified id
     const { body } =
@@ -2483,7 +2492,6 @@ export class Elasticsearch extends Service {
     // @ts-ignore
     { refresh, retryOnConflict = 0, timeout, userId = null } = {}
   ) {
-    console.log('-------------------------mupdate----------------------------------');
     const alias = this.getAlias(index, collection),
       toImport = [],
       esRequest = {
@@ -2504,10 +2512,6 @@ export class Elasticsearch extends Service {
         documents,
         kuzzleMeta
       );
-
-    console.log('rejected : ' + JSON.stringify(rejected));
-
-    console.log('extractedDocuments : ' + JSON.stringify(extractedDocuments));
 
     /**
      * @warning Critical code section
@@ -2549,9 +2553,6 @@ export class Elasticsearch extends Service {
     }
     /* end critical code section */
 
-    console.log('esRequest : ' + JSON.stringify(esRequest));
-    console.log('toImport : ' + JSON.stringify(toImport));
-
     const response = await this._mExecute(esRequest, toImport, rejected);
 
     // with _source: true, ES returns the updated document in
@@ -2565,8 +2566,6 @@ export class Elasticsearch extends Service {
       status: item.status,
     }));
 
-
-    console.log('---end---');
     return response;
   }
 
@@ -2700,11 +2699,15 @@ export class Elasticsearch extends Service {
           updater: null,
         },
       },
-      { rejected, extractedDocuments, documentsToGet } =
-        this.extractMDocuments(index, documents, kuzzleMeta, {
+      { rejected, extractedDocuments, documentsToGet } = this.extractMDocuments(
+        index,
+        documents,
+        kuzzleMeta,
+        {
           prepareMGet: true,
           requireId: true,
-        });
+        }
+      );
 
     if (documentsToGet.length < 1) {
       return { errors: rejected, items: [] };
@@ -2899,7 +2902,13 @@ export class Elasticsearch extends Service {
     };
   }
 
-  private processExecutedItem(item, partialErrors, successes, document, source) {
+  private processExecutedItem(
+    item,
+    partialErrors,
+    successes,
+    document,
+    source
+  ) {
     const result = item[Object.keys(item)[0]];
 
     if (result.status >= 400) {
@@ -2944,7 +2953,7 @@ export class Elasticsearch extends Service {
    *
    * @returns {Object} { rejected, extractedDocuments, documentsToGet }
    */
-  extractMDocuments(
+  private extractMDocuments(
     index,
     documents,
     metadata,
@@ -2985,13 +2994,16 @@ export class Elasticsearch extends Service {
           };
         }
 
-        if (document._id) { //TODO : generate id
+        if (document._id) {
+          //TODO : generate id
           extractedDocument._id = this.virtualIndex.getId(index, document._id);
         } else if (this.virtualIndex.isVirtual(index)) {
-          extractedDocument._id = this.virtualIndex.getId(index,this.virtualIndex.randomString(20));
+          extractedDocument._id = this.virtualIndex.getId(
+            index,
+            this.virtualIndex.randomString(20)
+          );
         }
         document._id = extractedDocument._id;
-
 
         extractedDocuments.push(extractedDocument);
 
@@ -3015,7 +3027,12 @@ export class Elasticsearch extends Service {
    * @param prepareMUpsert
    * @param requireId
    */
-  private isRejectedDocument(document, rejected, prepareMUpsert, requireId): boolean {
+  private isRejectedDocument(
+    document,
+    rejected,
+    prepareMUpsert,
+    requireId
+  ): boolean {
     if (!isPlainObject(document.body) && !prepareMUpsert) {
       rejected.push({
         document,
@@ -3082,11 +3099,7 @@ export class Elasticsearch extends Service {
 
         if (property === "properties") {
           // type definition level, we don't check
-          this.checkMappings(
-            mapping[property],
-            [...path, "properties"],
-            false
-          );
+          this.checkMappings(mapping[property], [...path, "properties"], false);
         } else if (mapping[property] && mapping[property].properties) {
           // root properties level, check for "properties", "dynamic" and "_meta"
           this.checkMappings(mapping[property], [...path, property], true);
@@ -3201,7 +3214,7 @@ export class Elasticsearch extends Service {
    * @returns {String} Alias name (eg: '@&nepali.liia')
    * @throws If there is not exactly one alias associated that is prefixed with @
    */
-  async getAliasFromIndice(indice) {
+  private async getAliasFromIndice(indice) {
     const { body } = await this.client.indices.getAlias({ index: indice });
     const aliases = Object.keys(body[indice].aliases).filter((alias) =>
       alias.startsWith(ALIAS_PREFIX)
@@ -3346,7 +3359,6 @@ export class Elasticsearch extends Service {
    * @param {String} index Index name
    */
   private async createHiddenCollection(index) {
-
     const mutex = new Mutex(`hiddenCollection/${index}`);
 
     try {
@@ -3440,13 +3452,14 @@ export class Elasticsearch extends Service {
     }
 
     if (index && this.virtualIndex.isVirtual(index)) {
-      return this.virtualIndex.sanitizeSearchBodyForVirtualIndex(searchBody, index);
+      return this.virtualIndex.sanitizeSearchBodyForVirtualIndex(
+        searchBody,
+        index
+      );
     }
 
     return searchBody;
   }
-
-
 
   /**
    * Throw if a script is used in the query.
@@ -3511,7 +3524,7 @@ export class Elasticsearch extends Service {
    *
    * @returns {Number} milliseconds
    */
-  loadMsConfig(key) {
+  private loadMsConfig(key) {
     const configValue = _.get(this._config, key);
 
     assert(
@@ -3533,7 +3546,7 @@ export class Elasticsearch extends Service {
    * Returns true if one of the mappings dynamic property changes value from
    * false to true
    */
-  dynamicChanges(previousMappings, newMappings) {
+  private dynamicChanges(previousMappings, newMappings) {
     const previousValues = findDynamic(previousMappings);
 
     for (const [path, previousValue] of Object.entries(previousValues)) {
@@ -3590,7 +3603,7 @@ export class Elasticsearch extends Service {
   /**
    * Checks if the dynamic properties are correct
    */
-  checkDynamicProperty(mappings) {
+  private checkDynamicProperty(mappings) {
     const dynamicProperties = findDynamic(mappings);
     for (const [path, value] of Object.entries(dynamicProperties)) {
       // Prevent common mistake
