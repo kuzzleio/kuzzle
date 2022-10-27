@@ -650,7 +650,7 @@ export class Elasticsearch extends Service {
     let body;
 
     try {
-      ({ body } = await this.client.mget(esRequest)); 
+      ({ body } = await this.client.mget(esRequest));
     } catch (e) {
       throw this.esWrapper.formatESError(e);
     }
@@ -658,7 +658,6 @@ export class Elasticsearch extends Service {
     const errors = [];
     const items = [];
 
-    
     for (let i = 0; i < body.docs.length; i++) {
       const doc = body.docs[i];
 
@@ -1181,7 +1180,6 @@ export class Elasticsearch extends Service {
 
       const documents = await this.getAllDocumentsFromQuery(esRequest);
 
-      
       for (let i = 0; i < documents.length; i++) {
         const document = documents[i];
 
@@ -1367,7 +1365,7 @@ export class Elasticsearch extends Service {
     let body;
 
     try {
-      ({ body } = await this.client.cat.aliases({ format: "json" })); 
+      ({ body } = await this.client.cat.aliases({ format: "json" }));
     } catch (error) {
       throw this.esWrapper.formatESError(error);
     }
@@ -1833,14 +1831,14 @@ export class Elasticsearch extends Service {
     assertWellFormedRefresh(esRequest);
     this.scriptCheck(documents);
 
-    let lastAction; 
+    let lastAction;
 
     /**
      * @warning Critical code section
      *
      * bulk body can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < esRequest.body.length; i++) {
       const item = esRequest.body[i];
       lastAction = this.prepareItem(
@@ -1874,7 +1872,7 @@ export class Elasticsearch extends Service {
      *
      * bulk body can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < body.items.length; i++) {
       const row = body.items[i];
       this.formatItemResult(result, row, idx, documents);
@@ -2236,7 +2234,7 @@ export class Elasticsearch extends Service {
 
     try {
       // @ts-ignore
-      ({ body } = await this.client.mget(esRequest)); 
+      ({ body } = await this.client.mget(esRequest));
     } catch (e) {
       throw this.esWrapper.formatESError(e);
     }
@@ -2244,7 +2242,6 @@ export class Elasticsearch extends Service {
     const errors = [];
     const items = [];
 
-    
     for (let i = 0; i < body.docs.length; i++) {
       const doc = body.docs[i];
 
@@ -2460,7 +2457,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < extractedDocuments.length; i++) {
       esRequest.body.push({
         index: {
@@ -2523,7 +2520,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < extractedDocuments.length; i++) {
       const extractedDocument = extractedDocuments[i];
 
@@ -2635,7 +2632,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < extractedDocuments.length; i++) {
       esRequest.body.push(
         {
@@ -2795,7 +2792,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < ids.length; i++) {
       const _id = ids[i];
 
@@ -2821,7 +2818,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < validIds.length; i++) {
       const validId = validIds[i];
       const item = items[idx];
@@ -2977,7 +2974,7 @@ export class Elasticsearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    
+
     for (let i = 0; i < documents.length; i++) {
       const document = documents[i];
       if (

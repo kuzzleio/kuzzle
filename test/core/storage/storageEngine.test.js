@@ -22,7 +22,6 @@ describe("#core/storage/StorageEngine", () => {
   });
 
   before(() => {
-
     StorageEngine.initClientAdapters = function (scopeEnumValue, virtualIndex) {
       return new ClientAdapterMock(scopeEnumValue, virtualIndex);
     };

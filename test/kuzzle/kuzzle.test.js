@@ -145,7 +145,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
   describe("#start", () => {
     it("should init the components in proper order", async () => {
-
       kuzzle = _mockKuzzle();
 
       kuzzle.install = sinon.stub().resolves();
