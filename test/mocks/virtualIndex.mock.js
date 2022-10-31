@@ -22,7 +22,7 @@ class VirtualIndexMock extends VirtualIndex {
     };
     sinon.stub(this, "createVirtualIndex").resolves();
     this.removeVirtualIndex = sinon.stub();
-    sinon.stub(this, "initVirtualTenantList").resolves();
+    sinon.stub(this, "initVirtualIndexList").resolves();
     sinon.stub(this, "buildCollection").resolves();
   }
 }

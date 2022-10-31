@@ -56,7 +56,6 @@ export class IndexCache {
   addCollection(index: string, collection: string): void {
     this.addIndex(index);
     const collections = this.indexes.get(index);
-
     collections.add(collection);
   }
 

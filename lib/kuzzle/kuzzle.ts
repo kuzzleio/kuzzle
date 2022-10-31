@@ -271,11 +271,11 @@ export class Kuzzle extends KuzzleEventEmitter {
    * @this {Kuzzle}
    */
   async start(application: any, options: StartOptions = { import: {} }) {
+
     this.registerSignalHandlers();
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);
       await this.pipe("kuzzle:state:start");
-
       // Koncorde realtime engine
       this.koncorde = Kuzzle.createKoncorde({
         maxConditions: this.config.limits.subscriptionConditionsCount,
@@ -315,7 +315,6 @@ export class Kuzzle extends KuzzleEventEmitter {
       // must be initialized before plugins to allow API requests from plugins
       // before opening connections to external users
       await this.entryPoint.init();
-
       this.pluginsManager.application = application;
       await this.pluginsManager.init(options.plugins);
       this.log.info(
@@ -323,7 +322,6 @@ export class Kuzzle extends KuzzleEventEmitter {
           this.pluginsManager.loadedPlugins.length
         } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
       );
-
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
       await this.loadInitialState(options.import, options.support);
@@ -335,7 +333,6 @@ export class Kuzzle extends KuzzleEventEmitter {
       this.log.info("[✔] Core components loaded");
 
       await this.install(options.installations);
-
       this.log.info(
         `[✔] Start "${this.pluginsManager.application.name}" application`
       );

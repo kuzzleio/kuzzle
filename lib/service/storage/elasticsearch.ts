@@ -161,7 +161,7 @@ export class Elasticsearch extends Service {
   }
 
   async init() {
-    await this.initSequence();
+    await this._initSequence();
     await this.listIndexes();
   }
 
@@ -171,7 +171,7 @@ export class Elasticsearch extends Service {
    * @override
    * @returns {Promise}
    */
-  private async initSequence() {
+  async _initSequence() {
     if (this.client) {
       return;
     }
@@ -2096,12 +2096,12 @@ export class Elasticsearch extends Service {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
-    const deleted = new Array<string>();
+    const deleted = new Set<string>();
     for (const index of indexes) {
       if (this.virtualIndex.isVirtual(index)) {
         await this.removeDocumentsFromVirtualIndex(index);
         await this.virtualIndex.removeVirtualIndex(index);
-        deleted.push(index);
+        deleted.add(index);
       }
     }
     try {
@@ -2118,7 +2118,7 @@ export class Elasticsearch extends Service {
             return request;
           }
 
-          deleted.push(index);
+          deleted.add(index);
           if (!this.virtualIndex.isVirtual(index)) {
             request.index.push(indice);
           }
@@ -2136,7 +2136,7 @@ export class Elasticsearch extends Service {
       throw this.esWrapper.formatESError(error);
     }
 
-    return deleted;
+    return Array.from(deleted);
   }
 
   /**
@@ -2353,7 +2353,6 @@ export class Elasticsearch extends Service {
       timeout,
     };
     const toImport = [];
-
     /**
      * @warning Critical code section
      *
@@ -2396,7 +2395,6 @@ export class Elasticsearch extends Service {
       }
     }
     /* end critical code section */
-
     return this._mExecute(esRequest, toImport, rejected);
   }
 
@@ -3002,7 +3000,6 @@ export class Elasticsearch extends Service {
         }
 
         if (document._id) {
-          //TODO : generate id
           extractedDocument._id = this.virtualIndex.getId(index, document._id);
         } else if (this.virtualIndex.isVirtual(index)) {
           extractedDocument._id = this.virtualIndex.getId(

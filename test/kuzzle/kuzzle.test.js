@@ -14,6 +14,7 @@ const { sha256 } = require("../../lib/util/crypto");
 const VirtualIndexMock = require("../mocks/virtualIndex.mock");
 const StorageEngineMock = require("../mocks/storageEngine.mock");
 let { Kuzzle } = require("../../lib/kuzzle/kuzzle");
+const { Logform } = require("winston");
 
 const config = require("../../lib/config").loadConfig();
 
@@ -208,11 +209,11 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       should(FakeKoncorde.secondCall).calledWithMatch({ regExpEngine: "js" });
     });
 
-    it("should start all services and register errors handlers if enabled on kuzzle.start", () => {
+    it("should start all services and register errors handlers if enabled on kuzzle.start", async() => {
       kuzzle = _mockKuzzle(Kuzzle);
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
 
-      kuzzle.start(application).then(() => {
+      await kuzzle.start(application).then(() => {
         should(processMock.removeAllListeners.getCall(0).args[0]).be.exactly(
           "unhandledRejection"
         );
@@ -258,9 +259,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
   describe("#generateId", () => {
     it("should not initialize the cluster if disabled", async () => {
       kuzzle.config.cluster.enabled = false;
-
       await kuzzle.start(application, {});
-
       should(clusterModuleInitStub).not.be.called();
     });
   });

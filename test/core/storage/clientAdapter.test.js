@@ -63,8 +63,8 @@ describe("#core/storage/ClientAdapter", () => {
 
       should(publicAdapter.client).not.eql(privateAdapter.client);
 
-      should(publicAdapter.client._scope).eql(ScopeEnum.PUBLIC);
-      should(privateAdapter.client._scope).eql(ScopeEnum.PRIVATE);
+      should(publicAdapter.client.scope).eql(ScopeEnum.PUBLIC);
+      should(privateAdapter.client.scope).eql(ScopeEnum.PRIVATE);
     });
   });
 
