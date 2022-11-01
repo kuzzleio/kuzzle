@@ -26,7 +26,6 @@ import {
   ScopeOption,
   UserOption,
   Kuzzle,
-  RequestPayload,
   ResponsePayload,
   BaseRequest,
 } from "kuzzle-sdk";
