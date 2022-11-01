@@ -27,10 +27,11 @@ import {
   UserOption,
   Kuzzle,
   RequestPayload,
+  ResponsePayload,
+  BaseRequest,
 } from "kuzzle-sdk";
 
 import _ from "lodash";
-import { ResponsePayload } from "../../../types";
 import { FunnelProtocol } from "./funnelProtocol";
 import { isPlainObject } from "../../../util/safeObject";
 import * as kerror from "../../../kerror";
@@ -149,16 +150,17 @@ export class EmbeddedSDK extends Kuzzle {
    * @param request - API request (https://docs.kuzzle.io/core/2/guides/main-concepts/1-api#other-protocols)
    * @param options - Optional arguments
    */
-  query(
-    request: RequestPayload,
+  query<TRequest extends BaseRequest, TResult>(
+    request: TRequest,
     options: { propagate?: boolean } = {}
-  ): Promise<ResponsePayload> {
+  ): Promise<ResponsePayload<TResult>> {
     // By default, do not propagate realtime notification accross cluster nodes
     if (
       isPlainObject(request) &&
       request.controller === "realtime" &&
       request.action === "subscribe"
     ) {
+      // @ts-expect-error
       request.propagate =
         options.propagate === undefined || options.propagate === null
           ? false

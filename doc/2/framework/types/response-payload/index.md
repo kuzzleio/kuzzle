@@ -13,8 +13,6 @@ This type is returned by the SDK [query](/sdk/js/7/core-classes/kuzzle/query) me
 
 See the [API Response Format](/core/2/guides/main-concepts/api#response-format) documentation.
 
-<<< ./../../../../../lib/types/ResponsePayload.ts
-
 **Example:**
 
 ```js
