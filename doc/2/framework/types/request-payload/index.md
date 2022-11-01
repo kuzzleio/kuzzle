@@ -15,8 +15,6 @@ This type is meant to be used with the SDK [query](/sdk/js/7/core-classes/kuzzle
 
 See the [API KuzzleRequest Format](/core/2/guides/main-concepts/api#other-protocols) documentation.
 
-<<< ./../../../../../lib/types/RequestPayload.ts
-
 **Example:**
 
 ```js

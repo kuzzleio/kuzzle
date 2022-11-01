@@ -121,6 +121,35 @@ function ensureEventDefinitionTypes () {
     });
 }
 
+/**
+ * This function is never call but simply ensure the correctness of types definition
+ */
+async function ensureQueryDefinitionTypes () {
+  type Req = {
+    controller: 'engine';
+    action: 'create';
+    engineId: string;
+    body: {
+      name: string;
+    }
+  }
+
+  type Res = {
+    age: number;
+  }
+
+  const response = await app.sdk.query<Req, Res>({
+    controller: 'engine',
+    action : 'create',
+    engineId: 'test',
+    body: {
+      name: 'test'
+    }
+  });
+
+  const age = response.result.age;
+}
+
 // Pipe registration
 app.pipe.register('server:afterNow', async (request) => {
   const pipe = JSON.parse(await app.sdk.ms.get('app:pipes:server:afterNow'));
