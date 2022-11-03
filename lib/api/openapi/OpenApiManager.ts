@@ -120,7 +120,6 @@ export class OpenApiManager {
   }
 
   registerAskEvents() {
-
     global.kuzzle.onAsk("core:api:openapi:kuzzle", () => this.kuzzleDefinition);
 
     global.kuzzle.onAsk(

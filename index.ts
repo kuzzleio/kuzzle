@@ -18,4 +18,6 @@ export { NameGenerator } from './lib/util/name-generator';
 
 export * from 'kuzzle-sdk';
 
+export {ResponsePayload} from 'kuzzle-sdk';
+
 export * from './lib/core/shared/KoncordeWrapper';

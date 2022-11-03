@@ -271,7 +271,6 @@ export class Kuzzle extends KuzzleEventEmitter {
    * @this {Kuzzle}
    */
   async start(application: any, options: StartOptions = { import: {} }) {
-
     this.registerSignalHandlers();
     try {
       this.log.info(`[ℹ] Starting Kuzzle ${this.version} ...`);

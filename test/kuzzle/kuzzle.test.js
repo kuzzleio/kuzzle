@@ -14,7 +14,6 @@ const { sha256 } = require("../../lib/util/crypto");
 const VirtualIndexMock = require("../mocks/virtualIndex.mock");
 const StorageEngineMock = require("../mocks/storageEngine.mock");
 let { Kuzzle } = require("../../lib/kuzzle/kuzzle");
-const { Logform } = require("winston");
 
 const config = require("../../lib/config").loadConfig();
 
@@ -209,7 +208,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       should(FakeKoncorde.secondCall).calledWithMatch({ regExpEngine: "js" });
     });
 
-    it("should start all services and register errors handlers if enabled on kuzzle.start", async() => {
+    it("should start all services and register errors handlers if enabled on kuzzle.start", async () => {
       kuzzle = _mockKuzzle(Kuzzle);
       kuzzle._waitForImportToFinish = sinon.stub().resolves();
 

@@ -183,7 +183,9 @@ export class VirtualIndex extends Service {
     filteredQuery.bool.filter.push({
       //Warning : Not perfect solution if request contain a should
       term: {
-        "_kuzzle_info.index": index,
+        _kuzzle_info: {
+          index: index,
+        },
       },
     });
     if (filteredQuery.bool.should) {

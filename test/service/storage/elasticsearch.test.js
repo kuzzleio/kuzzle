@@ -5604,6 +5604,110 @@ describe("Test: ElasticSearch service", () => {
 
         should(result).be.deepEqual({ query: { match_all: {} } });
       });
+
+      it("sanitize Search Body For VirtualIndex", () => {
+        searchBody = {
+          query: {},
+        };
+        const virtualIndex = new VirtualIndexMock();
+
+        const result = virtualIndex.sanitizeSearchBodyForVirtualIndex(
+          searchBody,
+          "myVirtualIndex"
+        );
+        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
+          "myVirtualIndex"
+        );
+      });
+
+      it("sanitize complexe Search Body For VirtualIndex", () => {
+        searchBody = {
+          query: {
+            bool: {
+              should: [
+                {
+                  bool: {
+                    must: [
+                      {
+                        range: {
+                          age: {
+                            gte: "22",
+                            lte: "22",
+                          },
+                        },
+                      },
+                    ],
+                    must_not: [],
+                  },
+                },
+              ],
+            },
+          },
+        };
+        const virtualIndex = new VirtualIndexMock();
+
+        let result = virtualIndex.sanitizeSearchBodyForVirtualIndex(
+          searchBody,
+          "myVirtualIndex"
+        );
+        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
+          "myVirtualIndex"
+        );
+
+        should(result.query.bool.filter[1]).be.deepEqual({
+          bool: {
+            should: [
+              {
+                bool: {
+                  must: [
+                    {
+                      range: {
+                        age: {
+                          gte: "22",
+                          lte: "22",
+                        },
+                      },
+                    },
+                  ],
+                  must_not: [],
+                },
+              },
+            ],
+          },
+        });
+
+        searchBody = {
+          query: {
+            bool: {
+              should: [],
+              filter: [],
+            },
+          },
+        };
+        result = virtualIndex.sanitizeSearchBodyForVirtualIndex(
+          searchBody,
+          "myVirtualIndex"
+        );
+        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
+          "myVirtualIndex"
+        );
+
+        searchBody = {
+          query: {
+            bool: {
+              should: [],
+              filter: [],
+            },
+          },
+        };
+        result = virtualIndex.sanitizeSearchBodyForVirtualIndex(
+          searchBody,
+          "myVirtualIndex"
+        );
+        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
+          "myVirtualIndex"
+        );
+      });
     });
 
     describe("#scriptCheck", () => {
