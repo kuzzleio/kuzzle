@@ -149,7 +149,10 @@ export class EmbeddedSDK extends Kuzzle {
    * @param request - API request (https://docs.kuzzle.io/core/2/guides/main-concepts/1-api#other-protocols)
    * @param options - Optional arguments
    */
-  query<TRequest extends BaseRequest = BaseRequest, TResult extends JSONObject = JSONObject>(
+  query<
+    TRequest extends BaseRequest = BaseRequest,
+    TResult extends JSONObject = JSONObject
+  >(
     request: TRequest,
     options: { propagate?: boolean } = {}
   ): Promise<ResponsePayload<TResult>> {
