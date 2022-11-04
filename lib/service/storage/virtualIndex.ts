@@ -127,7 +127,6 @@ export class VirtualIndex extends Service {
   }
 
   async buildCollection() {
-
     try {
       await global.kuzzle.ask(
         "core:storage:private:collection:create",
