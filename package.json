@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.19.6",
+  "version": "2.19.7",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
@@ -26,6 +26,7 @@
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt ./features-legacy",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
+    "prettier": "npx prettier ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin --write",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
     "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint:ts:fix": "eslint --max-warnings=0 --fix ./lib --ext .ts --config .eslintc-ts.json",
