@@ -79,8 +79,8 @@ export class VirtualIndex extends Service {
     this.virtualIndexMap.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",
+      "kuzzle",
       "virtual-indexes",
-      "list",
       { physical: index, virtual: virtualIndex },
       { id: index + virtualIndex }
     );
@@ -95,8 +95,8 @@ export class VirtualIndex extends Service {
     const id = physicalIndex + index;
     await global.kuzzle.ask(
       "core:storage:private:document:delete",
+      "kuzzle",
       "virtual-indexes",
-      "list",
       id
     );
   }
@@ -111,8 +111,8 @@ export class VirtualIndex extends Service {
     do {
       const list = await global.kuzzle.ask(
         "core:storage:private:document:search",
+        "kuzzle",
         "virtual-indexes",
-        "list",
         { from, size: 100 }
       );
       total = 0;
@@ -127,31 +127,19 @@ export class VirtualIndex extends Service {
   }
 
   async buildCollection() {
-    try {
-      await global.kuzzle.ask(
-        "core:storage:private:index:create",
-        "virtual-indexes",
-        {}
-      );
-      await global.kuzzle.ask("core:storage:public:index:list");
-    } catch (e) {
-      if (e.status !== 412) {
-        //already created
-        throw e;
-      }
-    }
+
     try {
       await global.kuzzle.ask(
         "core:storage:private:collection:create",
+        "kuzzle",
         "virtual-indexes",
-        "list",
         {
           mappings: {
             _meta: undefined,
             dynamic: "strict",
             properties: {
-              physical: { type: "text" },
-              virtual: { type: "text" },
+              physical: { type: "keyword" },
+              virtual: { type: "keyword" },
             },
           },
         }
