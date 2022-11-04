@@ -26,6 +26,7 @@
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt ./features-legacy",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
+    "prettier": "npx prettier ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin --write",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
     "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint:ts:fix": "eslint --max-warnings=0 --fix ./lib --ext .ts --config .eslintc-ts.json",

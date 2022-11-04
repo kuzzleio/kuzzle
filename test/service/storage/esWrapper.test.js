@@ -98,7 +98,7 @@ describe("Test: ElasticSearch Wrapper", () => {
       const formatted = esWrapper.formatESError(error);
 
       should(formatted).be.match({
-        message: 'test',
+        message: "test",
         id: "services.storage.unexpected_not_found",
       });
     });
