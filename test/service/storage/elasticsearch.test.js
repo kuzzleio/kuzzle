@@ -5615,9 +5615,9 @@ describe("Test: ElasticSearch service", () => {
           searchBody,
           "myVirtualIndex"
         );
-        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
-          "myVirtualIndex"
-        );
+        should(result.query.bool.filter[0].term).be.deepEqual({
+          "_kuzzle_info.index": "myVirtualIndex",
+        });
       });
 
       it("sanitize complexe Search Body For VirtualIndex", () => {
@@ -5650,9 +5650,9 @@ describe("Test: ElasticSearch service", () => {
           searchBody,
           "myVirtualIndex"
         );
-        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
-          "myVirtualIndex"
-        );
+        should(result.query.bool.filter[0].term).be.deepEqual({
+          "_kuzzle_info.index": "myVirtualIndex",
+        });
 
         should(result.query.bool.filter[1]).be.deepEqual({
           bool: {
@@ -5688,9 +5688,9 @@ describe("Test: ElasticSearch service", () => {
           searchBody,
           "myVirtualIndex"
         );
-        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
-          "myVirtualIndex"
-        );
+        should(result.query.bool.filter[0].term).be.deepEqual({
+          "_kuzzle_info.index": "myVirtualIndex",
+        });
 
         searchBody = {
           query: {
@@ -5704,9 +5704,9 @@ describe("Test: ElasticSearch service", () => {
           searchBody,
           "myVirtualIndex"
         );
-        should(result.query.bool.filter[0].term._kuzzle_info.index).be.equal(
-          "myVirtualIndex"
-        );
+        should(result.query.bool.filter[0].term).be.deepEqual({
+          "_kuzzle_info.index": "myVirtualIndex",
+        });
       });
     });
 

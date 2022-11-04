@@ -22,11 +22,14 @@ describe("#core/storage/StorageEngine", () => {
   });
 
   before(() => {
+    StorageEngine.createVirtualIndex = function () {
+      return new VirtualIndexMock();
+    };
     StorageEngine.initClientAdapters = function (scopeEnumValue, virtualIndex) {
       return new ClientAdapterMock(scopeEnumValue, virtualIndex);
     };
 
-    storageEngine = new StorageEngine(new VirtualIndexMock());
+    storageEngine = new StorageEngine();
 
     return storageEngine.init();
   });

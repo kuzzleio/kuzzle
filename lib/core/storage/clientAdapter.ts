@@ -63,7 +63,7 @@ export class ClientAdapter {
 
   async init() {
     await this.client.init();
-    await this.populateCache();
+    await this.populateCache(false);
 
     this.registerCollectionEvents();
     this.registerIndexEvents();
@@ -77,7 +77,7 @@ export class ClientAdapter {
      * Manually refresh the index cache (e.g. after alias creation)
      */
     global.kuzzle.onAsk(`core:storage:${this.scope}:cache:refresh`, () =>
-      this.populateCache()
+      this.populateCache(true)
     );
 
     /**
@@ -230,8 +230,8 @@ export class ClientAdapter {
    *
    * @returns {Promise}
    */
-  async populateCache() {
-    const schema = await this.client.getSchema();
+  async populateCache(includeVirtual) {
+    const schema = await this.client.getSchema(includeVirtual);
 
     for (const [index, collections] of Object.entries(schema)) {
       this.cache.addIndex(index);

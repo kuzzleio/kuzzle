@@ -39,13 +39,17 @@ export class StorageEngine {
     return this.privateClient;
   }
 
+  static createVirtualIndex(): VirtualIndex {
+    return new VirtualIndex();
+  }
+
   // to be mocked in Unit Test
   static initClientAdapters(scopeEnum: string, virtualIndex: VirtualIndex) {
     return new ClientAdapter(scopeEnum, virtualIndex);
   }
 
   constructor() {
-    this.virtualIndex = new VirtualIndex();
+    this.virtualIndex = StorageEngine.createVirtualIndex();
 
     // Storage client for public indexes only
     this.publicClient = StorageEngine.initClientAdapters(
@@ -70,6 +74,13 @@ export class StorageEngine {
     const privateIndexes = this.privateClient.cache.listIndexes();
 
     await this.virtualIndex.init();
+    await Promise.all([
+      this.publicClient.populateCache(true),
+      this.privateClient.populateCache(true),
+    ]);
+
+    //await global.kuzzle.ask("core:storage:private:cache:refresh");
+    //await global.kuzzle.ask("core:storage:public:cache:refresh");
 
     for (const publicIndex of this.publicClient.cache.listIndexes()) {
       if (privateIndexes.includes(publicIndex)) {

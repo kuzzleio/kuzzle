@@ -162,7 +162,7 @@ export class Elasticsearch extends Service {
 
   async init() {
     await this._initSequence();
-    await this.listIndexes();
+    await this.listIndexes(false);
   }
 
   /**
@@ -1073,8 +1073,8 @@ export class Elasticsearch extends Service {
       debug("Delete by query: %o", esRequest);
       // @ts-ignore
       esRequest.refresh = refresh === "wait_for" ? true : refresh;
-      const { body } = await this.client.deleteByQuery(esRequest);
 
+      const { body } = await this.client.deleteByQuery(esRequest);
       return {
         deleted: body.deleted,
         documents,
@@ -1972,7 +1972,7 @@ export class Elasticsearch extends Service {
 
     const schema = this.extractSchema(aliases, { includeHidden });
 
-    return schema[this.virtualIndex.getRealIndex(index)] || [];
+    return schema[this.virtualIndex.getPhysicalIndex(index)] || [];
   }
 
   /**
@@ -3122,7 +3122,7 @@ export class Elasticsearch extends Service {
    * @returns {String} Alias name (eg: '@&nepali.liia')
    */
   private getAlias(index, collection) {
-    const realIndex = this.virtualIndex.getRealIndex(index);
+    const realIndex = this.virtualIndex.getPhysicalIndex(index);
     return `${ALIAS_PREFIX}${this.indexPrefix}${realIndex}${NAME_SEPARATOR}${collection}`;
   }
 
@@ -3137,7 +3137,7 @@ export class Elasticsearch extends Service {
    * @throws If there is not exactly one indice associated
    */
   private async getIndice(index, collection) {
-    const physicalIndex = this.virtualIndex.getRealIndex(index);
+    const physicalIndex = this.virtualIndex.getPhysicalIndex(index);
     const alias = `${ALIAS_PREFIX}${this.indexPrefix}${physicalIndex}${NAME_SEPARATOR}${collection}`;
     const { body } = await this.client.cat.aliases({
       format: "json",

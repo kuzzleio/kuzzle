@@ -9,7 +9,7 @@ class VirtualIndexMock extends VirtualIndex {
     super();
     sinon.stub(this, "init").resolves();
     this.editSoftTenantMap = sinon.stub();
-    this.getRealIndex = function (name) {
+    this.getPhysicalIndex = function (name) {
       return name;
     };
     this.isVirtual = sinon.stub(false);
