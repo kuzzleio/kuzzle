@@ -43,8 +43,6 @@
   },
   "dependencies": {
     "@elastic/elasticsearch": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
-    "@types/bluebird": "^3.5.36",
-    "@types/js-yaml": "^4.0.5",
     "aedes": "^0.46.3",
     "bluebird": "^3.7.2",
     "cli-color": "^2.0.3",
@@ -93,6 +91,7 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "@types/bluebird": "^3.5.36",
     "@types/js-yaml": "^4.0.5",
     "@types/lodash": "^4.14.184",
     "async": "^3.2.4",
