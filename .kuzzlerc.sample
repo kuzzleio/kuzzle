@@ -778,6 +778,11 @@
           }
         }
       },
+      // Global settings to apply by default (can be overriden by user requests)
+      "globalSettings": {
+        "number_of_shards": 1,
+        "number_of_replicas": 1
+      },
       // Internal index default name and collections
       // When starting, at initialisation, kuzzle will attempt
       // to update all ES dynamic settings of existing internal

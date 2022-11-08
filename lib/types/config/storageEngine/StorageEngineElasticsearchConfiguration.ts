@@ -104,6 +104,26 @@ export type StorageEngineElasticsearch = {
     };
   };
 
+  /**
+   * Global settings to apply by default (if not overridden by user request ones)
+   * @default
+   * {
+   *   number_of_shards: 1,
+   *   number_of_replicas: 0
+   * }
+   */
+  globalSettings: {
+    /**
+     * @default 1
+     */
+    number_of_shards: number;
+
+    /**
+     * @default 1
+     */
+    number_of_replicas: number;
+  };
+
   internalIndex: {
     /**
      * @default "kuzzle"
