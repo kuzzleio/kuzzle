@@ -75,12 +75,9 @@ export class StorageEngine {
 
     await this.virtualIndex.init();
     await Promise.all([
-      this.publicClient.populateCache(true),
-      this.privateClient.populateCache(true),
+      this.publicClient.populateCache({ includeVirtual: true }),
+      this.privateClient.populateCache({ includeVirtual: true }),
     ]);
-
-    //await global.kuzzle.ask("core:storage:private:cache:refresh");
-    //await global.kuzzle.ask("core:storage:public:cache:refresh");
 
     for (const publicIndex of this.publicClient.cache.listIndexes()) {
       if (privateIndexes.includes(publicIndex)) {

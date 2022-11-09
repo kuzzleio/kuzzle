@@ -127,6 +127,18 @@ export class NameGenerator {
       max
     )}`;
   }
+
+  /**
+   * generaite a random string
+   * @param size
+   */
+  static randomString(size = 20): string {
+    const buf = Buffer.alloc(size);
+    for (let i = 0; i < size; i++) {
+      buf.writeUInt8((Math.random() * 255) & 255, i);
+    }
+    return buf.toString("base64").slice(0, size);
+  }
 }
 
 export function randomNumber(max: number): number;

@@ -40,7 +40,7 @@ const kerror = kerrorLib.wrap("services", "storage");
 import { isPlainObject } from "../../util/safeObject";
 import extractFields from "../../util/extractFields";
 import { Mutex } from "../../util/mutex";
-import { randomNumber } from "../../util/name-generator";
+import { NameGenerator, randomNumber } from "../../util/name-generator";
 import { CollectionMappings, JSONObject } from "kuzzle-sdk";
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
@@ -270,8 +270,9 @@ export class Elasticsearch extends Service {
     const { body } = await this.client.indices.stats(esRequest);
     const indexes = {};
     let size = 0;
+    const indices: Record<string, any> = body.indices;
 
-    for (const [indice, indiceInfo] of Object.entries(body.indices)) {
+    for (const [indice, indiceInfo] of Object.entries(indices)) {
       // Ignore non-Kuzzle indices
       if (
         indice[INDEX_PREFIX_POSITION_IN_INDICE] !== PRIVATE_PREFIX &&
@@ -299,17 +300,12 @@ export class Elasticsearch extends Service {
           size: 0,
         };
       }
-      // @ts-ignore
       indexes[indexName].collections.push({
-        // @ts-ignore
         documentCount: indiceInfo.total.docs.count,
         name: collectionName,
-        // @ts-ignore
         size: indiceInfo.total.store.size_in_bytes,
       });
-      // @ts-ignore
       indexes[indexName].size += indiceInfo.total.store.size_in_bytes;
-      // @ts-ignore
       size += indiceInfo.total.store.size_in_bytes;
     }
 
@@ -720,7 +716,7 @@ export class Elasticsearch extends Service {
   ) {
     assertIsObject(content);
     if (!id && this.virtualIndex.isVirtual(index)) {
-      id = this.virtualIndex.randomString(20);
+      id = NameGenerator.randomString(20);
     }
     const esRequest = {
       body: content,
@@ -3004,7 +3000,7 @@ export class Elasticsearch extends Service {
         } else if (this.virtualIndex.isVirtual(index)) {
           extractedDocument._id = this.virtualIndex.getId(
             index,
-            this.virtualIndex.randomString(20)
+            NameGenerator.randomString(20)
           );
         }
         document._id = extractedDocument._id;

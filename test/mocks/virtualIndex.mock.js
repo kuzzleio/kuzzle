@@ -16,7 +16,6 @@ class VirtualIndexMock extends VirtualIndex {
     this.getId = function (index, id) {
       return id;
     };
-    this.randomString = sinon.stub();
     this.getVirtualId = function (index, id) {
       return id;
     };

@@ -374,8 +374,8 @@ async function pipeCallback(error, ...updated) {
     await Bluebird.map(corePipes, (fn) => fn(...updated));
   }
 
-  for (const event of this.events) {
-    this.instance.superEmit(event, ...updated);
+  for (let i = 0; i < this.events.length; i++) {
+    this.instance.superEmit(this.events[i], ...updated);
   }
 
   this.promback.resolve(updated[0]);

@@ -33,12 +33,12 @@ const servicesError = kerror.wrap("services", "storage");
  * and to maintain the index/collection cache.
  */
 export class ClientAdapter {
-  client: Elasticsearch;
-  cache: IndexCache;
-  scope: string;
-  virtualIndex: VirtualIndex;
+  private client: Elasticsearch;
+  private cache: IndexCache;
+  private scope: string;
+  private virtualIndex: VirtualIndex;
 
-  static getMutex() {
+  static getLoadMappingMutex() {
     return new Mutex("loadMappings", { timeout: -1, ttl: 60000 });
   }
 
@@ -63,7 +63,7 @@ export class ClientAdapter {
 
   async init() {
     await this.client.init();
-    await this.populateCache(false);
+    await this.populateCache({ includeVirtual: false });
 
     this.registerCollectionEvents();
     this.registerIndexEvents();
@@ -77,7 +77,7 @@ export class ClientAdapter {
      * Manually refresh the index cache (e.g. after alias creation)
      */
     global.kuzzle.onAsk(`core:storage:${this.scope}:cache:refresh`, () =>
-      this.populateCache(true)
+      this.populateCache({ includeVirtual: true })
     );
 
     /**
@@ -117,7 +117,7 @@ export class ClientAdapter {
 
   async createVirtualIndex(
     index: string,
-    physicalIndex = null,
+    physicalIndex,
     { propagate = true } = {}
   ) {
     if (!physicalIndex) {
@@ -230,7 +230,7 @@ export class ClientAdapter {
    *
    * @returns {Promise}
    */
-  async populateCache(includeVirtual) {
+  async populateCache({ includeVirtual }) {
     const schema = await this.client.getSchema(includeVirtual);
 
     for (const [index, collections] of Object.entries(schema)) {
@@ -389,15 +389,18 @@ export class ClientAdapter {
      * Return a list of all indexes within this adapter's scope
      * @returns {string[]}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:list`, (type?) => {
-      const indexes = this.cache.listIndexes();
-      if (type === "virtual") {
-        return indexes.filter((index) => this.virtualIndex.isVirtual(index));
-      } else if (type === "physical") {
-        return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:list`,
+      (type: string) => {
+        const indexes = this.cache.listIndexes();
+        if (type === "virtual") {
+          return indexes.filter((index) => this.virtualIndex.isVirtual(index));
+        } else if (type === "physical") {
+          return indexes.filter((index) => !this.virtualIndex.isVirtual(index));
+        }
+        return indexes;
       }
-      return indexes;
-    });
+    );
 
     /**
      * Delete multiple indexes
@@ -1061,7 +1064,7 @@ export class ClientAdapter {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    const mutex = ClientAdapter.getMutex();
+    const mutex = ClientAdapter.getLoadMappingMutex();
 
     await mutex.lock();
 

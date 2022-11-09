@@ -14,7 +14,11 @@ export class VirtualIndex extends Service {
     super("VirtualIndex", global.kuzzle.config.services.storageEngine);
   }
 
-  public virtualIndexMap: Map<string, string> = new Map<string, string>(); //Key : virtual index, value : real index
+  /**
+   * Key : virtual index,
+   * value : real index
+   */
+  public virtualIndexMap: Map<string, string> = new Map<string, string>();
 
   async init(): Promise<void> {
     await this.buildCollection();
@@ -55,14 +59,6 @@ export class VirtualIndex extends Service {
     return id;
   }
 
-  randomString(size = 20) {
-    const buf = Buffer.alloc(size);
-    for (let i = 0; i < size; i++) {
-      buf.writeUInt8((Math.random() * 255) & 255, i);
-    }
-    return buf.toString("base64").slice(0, size);
-  }
-
   getVirtualId(index: string, id: string): string {
     if (this.isVirtual(index) && id.startsWith(index)) {
       return id.substring(index.length, id.length);
@@ -71,11 +67,6 @@ export class VirtualIndex extends Service {
   }
 
   public async createVirtualIndex(virtualIndex: string, index: string) {
-    global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
-      physical: index,
-      virtual: virtualIndex,
-    });
-
     this.virtualIndexMap.set(virtualIndex, index);
     await global.kuzzle.ask(
       "core:storage:private:document:create",
@@ -84,13 +75,15 @@ export class VirtualIndex extends Service {
       { physical: index, virtual: virtualIndex },
       { id: index + virtualIndex }
     );
+    global.kuzzle.emit(VirtualIndex.createVirtualIndexEvent, {
+      physical: index,
+      virtual: virtualIndex,
+    });
   }
 
   async removeVirtualIndex(index: string) {
     const physicalIndex = this.virtualIndexMap.get(index);
-    global.kuzzle.emit(VirtualIndex.deleteVirtualIndexEvent, {
-      virtual: index,
-    });
+
     this.virtualIndexMap.delete(index);
     const id = physicalIndex + index;
     await global.kuzzle.ask(
@@ -99,14 +92,14 @@ export class VirtualIndex extends Service {
       "virtual-indexes",
       id
     );
+    global.kuzzle.emit(VirtualIndex.deleteVirtualIndexEvent, {
+      virtual: index,
+    });
   }
 
   async initVirtualIndexList() {
-    //this.virtualIndexMap = new Map<string, string>();
     let from = 0;
     let total;
-    //await new Promise(r => setTimeout(r, 2000));
-    //console.log('initVirtualIndexList(sleep)');
 
     do {
       const list = await global.kuzzle.ask(
