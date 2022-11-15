@@ -206,7 +206,7 @@ export function rawGetFrom(
 
   // If a stacktrace is present, we need to modify the first line because it
   // still contains the original error message
-  if (derivedError.stack && derivedError.stack.length) {
+  if (derivedError.stack && derivedError.stack.length && source.stack) {
     const stackArray = source.stack.split("\n");
     stackArray.shift();
     derivedError.stack = [
