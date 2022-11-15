@@ -2453,6 +2453,55 @@ describe("Test: ElasticSearch service", () => {
         { id: "services.storage.invalid_collection_name" }
       );
     });
+
+    it("should use defaultSettings if none are provided", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(elasticsearch.config.defaultSettings);
+    });
+
+    it("should use provided settings if provided", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+        number_of_shards: 2,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(settings);
+    });
+
+    it("should use partially provided settings", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.body.settings).eql({
+        number_of_replicas: 1,
+        number_of_shards: 66,
+      });
+    });
   });
 
   describe("#getMapping", () => {
@@ -4986,6 +5035,29 @@ describe("Test: ElasticSearch service", () => {
       await elasticsearch._createHiddenCollection("nisantasi");
 
       should(elasticsearch._client.indices.create).not.be.called();
+    });
+
+    it("does create hidden collection based on global settings", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch.config.defaultSettings = {
+        number_of_shards: 42,
+        number_of_replicas: 42,
+      };
+
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 42,
+            number_of_replicas: 42,
+          },
+        },
+      });
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
     });
   });
 
