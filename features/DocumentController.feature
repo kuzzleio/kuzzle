@@ -173,6 +173,46 @@ Feature: Document Controller
       | _id          |
       | "document-1" |
 
+  @mappings
+  Scenario: Search with Koncorde filters and ES clause
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id          | body                                                |
+      | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }  |
+      | "document-2" | { "age": 25, "city": "Istanbul" }                   |
+      | "document-3" | { "name": "Aschen", "age": 27, "city": "Istanbul" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {
+        "and": [
+          {
+            "equals": {
+              "city": "Istanbul"
+            }
+          },
+          {
+            "wildcard": {
+              "name": {
+                "value": "*e*"
+              }
+            }
+          }
+        ]
+      }
+      """
+    And with the following search options:
+      """
+      {
+        "lang": "koncorde"
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array of objects matching:
+      | _id          |
+      | "document-1" |
+      | "document-3" |
+
   @not-http
   @mappings
   Scenario: Search on multiple index and collections
@@ -290,7 +330,7 @@ Feature: Document Controller
     And I should receive a "errors" array matching:
       | "214284"      |
       | "document-42" |
-  
+
   @mappings
   Scenario: Get multiple documents with success and with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
@@ -344,7 +384,7 @@ Feature: Document Controller
       | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                          |
       | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document1","age":42}}  |
       | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document2","age":666}} |
-  
+
   @mappings
   @http
   Scenario: Verify exported documents in format csv
@@ -459,7 +499,7 @@ Feature: Document Controller
     And I count 1 documents
     And The document "document-1" content match:
       | name | "document1" |
-  
+
   @mappings
   Scenario: CreateOrReplace on an existing document
     Given an existing collection "nyc-open-data":"yellow-taxi"
@@ -497,7 +537,7 @@ Feature: Document Controller
       | "document body must be an object" | 400    | { "body": "not a body" } |
     And The document "document-1" content match:
       | name | "document1" |
-  
+
   @mappings
   Scenario: CreateOrReplace multiple documents and return _source
     Given an existing collection "nyc-open-data":"yellow-taxi"
