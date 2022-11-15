@@ -312,7 +312,7 @@ To use a Koncorde filter instead of an Elasticsearch query, you have to pass the
 These filters will be translated into Elasticsearch queries.
 :::
 
-All [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators) are available except the [regex](/core/2/api/koncorde-filters-syntax/clauses#regex) clause and the [bool](/core/2/api/koncorde-filters-syntax/operators#bool) operator.
+All [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators) are available the [bool](/core/2/api/koncorde-filters-syntax/operators#bool) operator.
 
 **Example:** _Combining clauses to create an "AND"-like search query_
 ```bash
@@ -323,6 +323,30 @@ kourou document:search ktm-open-data thamel-taxi '{
   ]
 }'
 ```
+
+Also, native Elasticsearch clause can be used, they will just not be translated and added as-is in the search query.
+
+**Example:** _Using Koncorde clause and native ES clause_
+
+```bash
+kourou document:search ktm-open-data thamel-taxi '{
+  "and": [
+    {
+      "equals": {
+        "city": "Istanbul"
+      }
+    },
+    {
+      "wildcard": {
+        "name": {
+          "value": "*e*"
+        }
+      }
+    }
+  ]
+}'
+```
+
 
 ## Sorting
 
