@@ -177,10 +177,10 @@ Feature: Document Controller
   Scenario: Search with Koncorde filters and ES clause
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:
-      | _id          | body                                                |
-      | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }  |
-      | "document-2" | { "age": 25, "city": "Istanbul" }                   |
-      | "document-3" | { "name": "Aschen", "age": 27, "city": "Istanbul" } |
+      | _id          | body                                                   |
+      | "document-1" | { "name": "Melis", "age": 25, "city": "Istanbul" }     |
+      | "document-2" | { "name": "Cavadanti", "age": 32, "city": "Istanbul" } |
+      | "document-3" | { "name": "Aschen", "age": 27, "city": "Istanbul" }    |
     And I refresh the collection
     When I search documents with the following query:
       """
