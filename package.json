@@ -83,7 +83,7 @@
     "winston-syslog": "^2.6.0",
     "winston-transport": "^4.5.0",
     "yargs": "^17.5.1",
-    "zeromq": "^6.0.0-beta.6"
+    "zeromq": "6.0.0-beta.6"
   },
   "repository": {
     "type": "git",
