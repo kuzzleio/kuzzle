@@ -881,6 +881,23 @@ Feature: Document Controller
     And I count 2 documents matching:
       | job | "developer" |
 
+  @mappings
+  Scenario: Count documents with Koncorde filters
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the following multiple documents:
+      | _id | body                   |
+      | -   | { "job": "developer" } |
+      | -   | { "job": "developer" } |
+      | -   | { "job": "cto" }       |
+    And I refresh the collection
+    When I successfully execute the action "document":"count" with args:
+      | index      | "nyc-open-data"                                   |
+      | collection | "yellow-taxi"                                     |
+      | body       | { "query": { "equals": {"job": "developer" } } }  |
+      | lang       | "koncorde"                                        |
+    Then I should receive a result matching:
+      | count | 2 |
+
   # document:delete ============================================================
 
   @mappings
