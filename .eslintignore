@@ -127,3 +127,5 @@ lib/api/openapi/components/security/index.js
 lib/config/documentEventAliases.js
 lib/types/DebugModule.js
 lib/util/time.js
+lib/util/async.js
+lib/util/esRequest.js

@@ -83,6 +83,26 @@ describe("Test: ElasticSearch Wrapper", () => {
       });
     });
 
+    it("should handle unexpected not found", () => {
+      const error = new Error("test");
+      error.meta = { statusCode: 404 };
+      error.body = {
+        found: false,
+        _id: "mehry",
+        error: {
+          reason: "foo",
+          "resource.id": "bar",
+        },
+      };
+
+      const formatted = esWrapper.formatESError(error);
+
+      should(formatted).be.match({
+        message: "test",
+        id: "services.storage.unexpected_not_found",
+      });
+    });
+
     it("should handle unknown DSL keyword", () => {
       const error = new Error("");
       error.meta = {
