@@ -212,3 +212,4 @@ lib/types/DebugModule.js
 lib/util/time.js
 lib/util/async.js
 lib/util/esRequest.js
+lib/types/events/EventGenericDocument.js
