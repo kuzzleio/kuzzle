@@ -35,30 +35,30 @@ jobs:
   # Documentation checks: error codes and dead links
   # -----------------------------------------------------------------------------
 
-  # doc-dead-links:
-  #   name: Documentation - Check Dead Links
-  #   if: github.event_name == 'pull_request'
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v2
-  #       with:
-  #         fetch-depth: 0
-  #     - uses: ./.github/actions/install-packages
-  #     - name: Extract references from context
-  #       shell: bash
-  #       id: extract-refs
-  #       run: |
-  #         echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
-  #         echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-  #         echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
-  #     - uses: convictional/trigger-workflow-and-wait@v1.3.0
-  #       with:
-  #         owner: kuzzleio
-  #         repo: documentation
-  #         github_token: ${{ secrets.ACCESS_TOKEN_CI }}
-  #         workflow_file_name: dead_links.workflow.yml
-  #         ref: ${{ steps.extract-refs.outputs.fw-branch }}
-  #         inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
+#  doc-dead-links:
+#    name: Documentation - Check Dead Links
+#    if: github.event_name == 'pull_request'
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#        with:
+#          fetch-depth: 0
+#      - uses: ./.github/actions/install-packages
+#      - name: Extract references from context
+#        shell: bash
+#        id: extract-refs
+#        run: |
+#          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
+#          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
+#          echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
+#      - uses: convictional/trigger-workflow-and-wait@v1.3.0
+#        with:
+#          owner: kuzzleio
+#          repo: documentation
+#          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
+#          workflow_file_name: dead_links.workflow.yml
+#          ref: ${{ steps.extract-refs.outputs.fw-branch }}
+#          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
 
   error-codes-check:
     name: Documentation - Error codes check

@@ -2178,6 +2178,7 @@ describe("Test: ElasticSearch service", () => {
       sinon.stub(elasticsearch, "_hasHiddenCollection").resolves(false);
       sinon.stub(elasticsearch, "deleteCollection").resolves();
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -2501,6 +2502,24 @@ describe("Test: ElasticSearch service", () => {
         number_of_replicas: 1,
         number_of_shards: 66,
       });
+    });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for one shard to being active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql(1);
     });
   });
 
@@ -2971,6 +2990,7 @@ describe("Test: ElasticSearch service", () => {
         },
       });
       sinon.stub(elasticsearch, "_getIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").resolves(1);
     });
 
     afterEach(() => {
@@ -3023,6 +3043,24 @@ describe("Test: ElasticSearch service", () => {
             esClientError
           );
         });
+    });
+
+    it("should wait for all shards to be active when using an Elasticsearch cluster", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("all");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for the primary shard to be active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("1");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("1");
     });
   });
 
@@ -5002,6 +5040,7 @@ describe("Test: ElasticSearch service", () => {
       });
 
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(hiddenIndice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -5058,6 +5097,42 @@ describe("Test: ElasticSearch service", () => {
       });
       should(Mutex.prototype.lock).be.called();
       should(Mutex.prototype.unlock).be.called();
+    });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: "all",
+      });
+    });
+
+    it("should wait for only one shard to being active when using a single node Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: 1,
+      });
     });
   });
 
@@ -5406,6 +5481,30 @@ describe("Test: ElasticSearch service", () => {
         await should(
           internalES._getAliasFromIndice("%nepalu.mehry")
         ).not.be.rejectedWith({ id: "services.storage.multiple_indice_alias" });
+      });
+    });
+
+    describe("#_getWaitForActiveShards", () => {
+      it("should return all if an Elasticsearch cluster is used", async () => {
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1", "node2"] });
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql("all");
+      });
+
+      it("should return 1 if a single node Elasticsearch cluster is used", async () => {
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1"] });
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql(1);
       });
     });
 

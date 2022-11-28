@@ -82,6 +82,35 @@ describe("core/network/protocols/http", () => {
     });
   });
 
+  describe("#httpWriteRequestHeaders", () => {
+    let connection;
+
+    beforeEach(async () => {
+      await httpWs.init(entryPoint);
+
+      connection = new ClientConnection("http", ["1.2.3.4"], "foo");
+    });
+
+    it("should write one set-cookie header per cookie configured", () => {
+      const req = new uWSMock.MockHttpRequest("", "", "", {
+        origin: "foo",
+        "Content-Length": 42,
+      });
+      const message = new HttpMessage(connection, req);
+      const response = new uWSMock.MockHttpResponse();
+
+      const request = new KuzzleRequest({});
+      request.response.configure({ headers: { "set-cookie": "foo=bar" } });
+      request.response.configure({ headers: { "set-cookie": "bar=baz" } });
+
+      httpWs.httpWriteRequestHeaders(request, response, message);
+
+      should(response.writeHeader)
+        .be.calledWith(Buffer.from("Set-Cookie"), Buffer.from("foo=bar"))
+        .and.be.calledWith(Buffer.from("Set-Cookie"), Buffer.from("bar=baz"));
+    });
+  });
+
   describe("http errors (not request ones)", () => {
     let connection;
     let message;
