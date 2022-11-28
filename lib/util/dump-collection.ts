@@ -194,31 +194,36 @@ abstract class AbstractDumper {
       throw error;
     });
 
+    try {
     await this.setup();
     await this.writeHeader();
 
-    let results = await global.kuzzle.ask(
-      "core:storage:public:document:search",
-      this.index,
-      this.collection,
-      this.query,
-      {
-        lang: this.options.lang,
-        scroll: this.options.scroll,
-        size: this.options.size,
-      }
-    );
+      let results = await global.kuzzle.ask(
+        "core:storage:public:document:search",
+        this.index,
+        this.collection,
+        this.query,
+        {
+          lang: this.options.lang,
+          scroll: this.options.scroll,
+          size: this.options.size,
+        }
+      );
 
-    do {
-      for (const hit of results.hits) {
-        await this.onResult({
-          _id: hit._id,
-          _source: hit._source,
-        });
-      }
-    } while ((results = await this.scroll(results.scrollId)));
+      do {
+        for (const hit of results.hits) {
+          await this.onResult({
+            _id: hit._id,
+            _source: hit._source,
+          });
+        }
+      } while ((results = await this.scroll(results.scrollId)));
 
-    await this.tearDown();
+      await this.tearDown();
+
+    } catch (e) {
+      this.writeStream.write(e.toString());
+    }
 
     this.writeStream.end();
 
