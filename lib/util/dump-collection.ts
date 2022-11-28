@@ -195,8 +195,8 @@ abstract class AbstractDumper {
     });
 
     try {
-    await this.setup();
-    await this.writeHeader();
+      await this.setup();
+      await this.writeHeader();
 
       let results = await global.kuzzle.ask(
         "core:storage:public:document:search",
@@ -220,7 +220,6 @@ abstract class AbstractDumper {
       } while ((results = await this.scroll(results.scrollId)));
 
       await this.tearDown();
-
     } catch (e) {
       this.writeStream.write(e.toString());
     }
