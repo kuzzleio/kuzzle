@@ -5467,7 +5467,9 @@ describe("Test: ElasticSearch service", () => {
 
     describe("#_getWaitForActiveShards", () => {
       it("should return all if an Elasticsearch cluster is used", async () => {
-        elasticsearch._getNumberOfNodes = sinon.stub().resolves(3);
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1", "node2"] });
 
         const waitForActiveShards =
           await elasticsearch._getWaitForActiveShards();
@@ -5476,7 +5478,9 @@ describe("Test: ElasticSearch service", () => {
       });
 
       it("should return 1 if a single node Elasticsearch cluster is used", async () => {
-        elasticsearch._getNumberOfNodes = sinon.stub().resolves(1);
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1"] });
 
         const waitForActiveShards =
           await elasticsearch._getWaitForActiveShards();
