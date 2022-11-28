@@ -2178,6 +2178,7 @@ describe("Test: ElasticSearch service", () => {
       sinon.stub(elasticsearch, "_hasHiddenCollection").resolves(false);
       sinon.stub(elasticsearch, "deleteCollection").resolves();
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -2504,12 +2505,21 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
-      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns("all");
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
       await elasticsearch.createCollection(index, collection);
 
       const esReq = elasticsearch._client.indices.create.firstCall.args[0];
 
       should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for one shard to being active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql(1);
     });
   });
 
@@ -5011,6 +5021,7 @@ describe("Test: ElasticSearch service", () => {
       });
 
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(hiddenIndice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -5084,6 +5095,24 @@ describe("Test: ElasticSearch service", () => {
           },
         },
         wait_for_active_shards: "all",
+      });
+    });
+
+    it("should wait for only one shard to being active when using a single node Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: 1,
       });
     });
   });
