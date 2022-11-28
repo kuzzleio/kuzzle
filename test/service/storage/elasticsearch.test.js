@@ -2990,6 +2990,7 @@ describe("Test: ElasticSearch service", () => {
         },
       });
       sinon.stub(elasticsearch, "_getIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").resolves(1);
     });
 
     afterEach(() => {
@@ -3042,6 +3043,24 @@ describe("Test: ElasticSearch service", () => {
             esClientError
           );
         });
+    });
+
+    it("should wait for all shards to be active when using an Elasticsearch cluster", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("all");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for the primary shard to be active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("1");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("1");
     });
   });
 
