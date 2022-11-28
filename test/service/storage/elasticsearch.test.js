@@ -2502,6 +2502,15 @@ describe("Test: ElasticSearch service", () => {
         number_of_shards: 66,
       });
     });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns("all");
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
   });
 
   describe("#getMapping", () => {
@@ -5059,6 +5068,24 @@ describe("Test: ElasticSearch service", () => {
       should(Mutex.prototype.lock).be.called();
       should(Mutex.prototype.unlock).be.called();
     });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: "all",
+      });
+    });
   });
 
   describe("#_checkMappings", () => {
@@ -5406,6 +5433,26 @@ describe("Test: ElasticSearch service", () => {
         await should(
           internalES._getAliasFromIndice("%nepalu.mehry")
         ).not.be.rejectedWith({ id: "services.storage.multiple_indice_alias" });
+      });
+    });
+
+    describe("#_getWaitForActiveShards", () => {
+      it("should return all if an Elasticsearch cluster is used", async () => {
+        elasticsearch._getNumberOfNodes = sinon.stub().resolves(3);
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql("all");
+      });
+
+      it("should return 1 if a single node Elasticsearch cluster is used", async () => {
+        elasticsearch._getNumberOfNodes = sinon.stub().resolves(1);
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql(1);
       });
     });
 
