@@ -282,12 +282,17 @@ export class RequestInput {
    *   body         <== that
    *  }
    */
-  get body(): JSONObject | null {
+  get body(): any {
     return this[_body];
   }
 
-  set body(obj: JSONObject) {
-    this[_body] = assert.assertObject("body", obj);
+  set body(obj: any) {
+    if (obj === undefined || obj === null) {
+      this[_body] = null;
+      return;
+    }
+
+    this[_body] = obj;
   }
 
   /**
