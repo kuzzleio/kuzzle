@@ -110,6 +110,31 @@ describe("#RequestInput", () => {
     });
   });
 
+  it("should accept all type of data for the body property but return null if null or undefined", () => {
+    let input = new RequestInput({ body: null });
+    should(input.body).be.null();
+
+    input = new RequestInput({ body: undefined });
+    should(input.body).be.null();
+
+    input = new RequestInput({ body: "foobar" });
+    should(input.body).be.exactly("foobar");
+
+    input = new RequestInput({ body: 123 });
+    should(input.body).be.exactly(123);
+
+    input = new RequestInput({ body: true });
+    should(input.body).be.exactly(true);
+
+    input = new RequestInput({ body: [42, 666] });
+    should(input.body).be.an.Array();
+    should(input.body).match([42, 666]);
+
+    input = new RequestInput({ body: { firstname: "Alex", job: "DevOps" } });
+    should(input.body).be.an.Object();
+    should(input.body).match({ firstname: "Alex", job: "DevOps" });
+  });
+
   it("should not overwrite the controller value if it has already been set", () => {
     let input = new RequestInput({});
 
