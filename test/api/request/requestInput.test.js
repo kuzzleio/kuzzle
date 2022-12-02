@@ -76,37 +76,37 @@ describe("#RequestInput", () => {
     }).throw("Input request data must be a non-null object");
   });
 
-  it("should not throw if an other type than object is provided", () => {
+  it("should throw if an invalid data parameter is provided", () => {
     // testing object-only parameters
-    ["volatile", "body"].forEach((k) => {
+    ["volatile"].forEach((k) => {
       should(function () {
         new RequestInput({ [k]: [] });
-      }).not.throw(`Attribute ${k} must be of type "object"`);
+      }).throw(`Attribute ${k} must be of type "object"`);
       should(function () {
         new RequestInput({ [k]: 123 });
-      }).not.throw(`Attribute ${k} must be of type "object"`);
+      }).throw(`Attribute ${k} must be of type "object"`);
       should(function () {
         new RequestInput({ [k]: false });
-      }).not.throw(`Attribute ${k} must be of type "object"`);
+      }).throw(`Attribute ${k} must be of type "object"`);
       should(function () {
         new RequestInput({ [k]: "foobar" });
-      }).not.throw(`Attribute ${k} must be of type "object"`);
+      }).throw(`Attribute ${k} must be of type "object"`);
     });
 
     // testing string-only parameters
     ["controller", "action", "jwt"].forEach((k) => {
       should(function () {
         new RequestInput({ [k]: [] });
-      }).not.throw(`Attribute ${k} must be of type "string"`);
+      }).throw(`Attribute ${k} must be of type "string"`);
       should(function () {
         new RequestInput({ [k]: 123 });
-      }).not.throw(`Attribute ${k} must be of type "string"`);
+      }).throw(`Attribute ${k} must be of type "string"`);
       should(function () {
         new RequestInput({ [k]: false });
-      }).not.throw(`Attribute ${k} must be of type "string"`);
+      }).throw(`Attribute ${k} must be of type "string"`);
       should(function () {
         new RequestInput({ [k]: {} });
-      }).not.throw(`Attribute ${k} must be of type "string"`);
+      }).throw(`Attribute ${k} must be of type "string"`);
     });
   });
 
