@@ -261,16 +261,16 @@ describe("core/network/protocols/websocket", () => {
       socket = httpWs.server._wsSocket;
     });
 
-    it("should discard the message if no data is provided", () => {
-      httpWs.server._wsOnMessage(null);
+    it("should discard the message if no data is provided", async () => {
+      await httpWs.server._wsOnMessage(null);
       should(entryPoint.execute).not.be.called();
 
-      httpWs.server._wsOnMessage(Buffer.from(""));
+      await httpWs.server._wsOnMessage(Buffer.from(""));
       should(entryPoint.execute).not.be.called();
     });
 
-    it("should forward an error immediately if the payload cannot be parsed", () => {
-      httpWs.server._wsOnMessage("{ohnoes}");
+    it("should forward an error immediately if the payload cannot be parsed", async () => {
+      await httpWs.server._wsOnMessage("{ohnoes}");
 
       should(httpWs.server._wsSocket.send).calledOnce();
 
@@ -284,9 +284,9 @@ describe("core/network/protocols/websocket", () => {
       should(entryPoint.execute).not.be.called();
     });
 
-    it("should execute a standardized Request if a valid payload is provided", () => {
+    it("should execute a standardized Request if a valid payload is provided", async () => {
       entryPoint.execute.yields({ requestId: "foobar", content: {} });
-      httpWs.server._wsOnMessage('{"controller":"foo","action":"bar"}');
+      await httpWs.server._wsOnMessage('{"controller":"foo","action":"bar"}');
 
       const clientConnection = entryPoint.newConnection.firstCall.args[0];
 
@@ -315,8 +315,8 @@ describe("core/network/protocols/websocket", () => {
       should(parsed).match({ room: "foobar" });
     });
 
-    it("should respond with an error if it cannot cast to a KuzzleRequest object", () => {
-      httpWs.server._wsOnMessage('{"controller": 123}');
+    it("should respond with an error if it cannot cast to a KuzzleRequest object", async () => {
+      await httpWs.server._wsOnMessage('{"controller": 123}');
 
       should(entryPoint.execute).not.called();
 
@@ -332,21 +332,21 @@ describe("core/network/protocols/websocket", () => {
       });
     });
 
-    it("should enforce the rate limit if one is set", () => {
+    it("should enforce the rate limit if one is set", async () => {
       httpWs.wsConfig.rateLimit = 2;
 
-      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
+      await httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(1);
       should(socket.last).eql(httpWs.now);
       should(entryPoint.execute).calledOnce();
 
       entryPoint.execute.resetHistory();
-      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
+      await httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(2);
       should(entryPoint.execute).calledOnce();
 
       entryPoint.execute.resetHistory();
-      httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
+      await httpWs.server._wsOnMessage('{"controller":"foo", "action":"bar"}');
       should(socket.count).eql(3);
       should(entryPoint.execute).not.called();
 
@@ -362,8 +362,8 @@ describe("core/network/protocols/websocket", () => {
       });
     });
 
-    it("should send an applicative PONG response to an applicative PING request", () => {
-      httpWs.server._wsOnMessage('{"p":1}');
+    it("should send an applicative PONG response to an applicative PING request", async () => {
+      await httpWs.server._wsOnMessage('{"p":1}');
 
       should(entryPoint.execute).not.called();
 
@@ -371,7 +371,7 @@ describe("core/network/protocols/websocket", () => {
       should(payload).be.instanceof(Buffer);
       should(payload.toString()).eql('{"p":2}');
 
-      httpWs.server._wsOnMessage(
+      await httpWs.server._wsOnMessage(
         '{"p":1, "controller": "foo", "action":"bar"}'
       );
       should(entryPoint.execute).calledOnce();
