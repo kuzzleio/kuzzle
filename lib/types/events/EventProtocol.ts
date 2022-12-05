@@ -1,4 +1,5 @@
 import { JSONObject, PipeEventHandler } from "../../../";
+import { ClientConnection } from "../ClientConnection";
 import { HttpMessage } from "../HttpMessage";
 
 export type EventHTTPBeforeParsingPayload = {
@@ -16,11 +17,11 @@ export type EventHTTPAfterParsingPayload = {
 export type EventWebsocketBeforeParsingPayload = {
   name: `protocol:websocket:beforeParsingPayload`;
 
-  args: [{ payload: Buffer }];
+  args: [{ connection: ClientConnection, payload: Buffer }];
 } & PipeEventHandler;
 
 export type EventWebsocketAfterParsingPayload = {
   name: `protocol:websocket:afterParsingPayload`;
 
-  args: [{ payload: JSONObject }];
+  args: [{ connection: ClientConnection, payload: JSONObject }];
 } & PipeEventHandler;
