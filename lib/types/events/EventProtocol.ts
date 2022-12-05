@@ -5,23 +5,23 @@ import { HttpMessage } from "../HttpMessage";
 export type EventHTTPBeforeParsingPayload = {
   name: `protocol:http:beforeParsingPayload`;
 
-  args: [{ message: HttpMessage, payload: Buffer }];
+  args: [{ message: HttpMessage; payload: Buffer }];
 } & PipeEventHandler;
 
 export type EventHTTPAfterParsingPayload = {
   name: `protocol:http:afterParsingPayload`;
 
-  args: [{ message: HttpMessage, payload: JSONObject }];
+  args: [{ message: HttpMessage; payload: JSONObject }];
 } & PipeEventHandler;
 
 export type EventWebsocketBeforeParsingPayload = {
   name: `protocol:websocket:beforeParsingPayload`;
 
-  args: [{ connection: ClientConnection, payload: Buffer }];
+  args: [{ connection: ClientConnection; payload: Buffer }];
 } & PipeEventHandler;
 
 export type EventWebsocketAfterParsingPayload = {
   name: `protocol:websocket:afterParsingPayload`;
 
-  args: [{ connection: ClientConnection, payload: JSONObject }];
+  args: [{ connection: ClientConnection; payload: JSONObject }];
 } & PipeEventHandler;
