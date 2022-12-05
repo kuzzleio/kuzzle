@@ -57,3 +57,4 @@ export * from "./OpenApiDefinition";
 export * from "./errors/ErrorDefinition";
 export * from "./errors/ErrorDomains";
 export * from "./events/EventGenericDocument";
+export * from "./events/EventProtocol";
