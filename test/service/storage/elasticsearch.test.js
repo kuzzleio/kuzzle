@@ -3502,6 +3502,7 @@ describe("Test: ElasticSearch service", () => {
     beforeEach(() => {
       sinon.stub(elasticsearch, "_createHiddenCollection").resolves();
       sinon.stub(elasticsearch, "_getIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_checkIfAliasExists").resolves(undefined);
     });
 
     afterEach(() => {
@@ -3524,6 +3525,15 @@ describe("Test: ElasticSearch service", () => {
       await elasticsearch.deleteCollection(index, collection);
 
       should(elasticsearch._createHiddenCollection).be.called();
+    });
+
+    it("should delete the remaining alias if it still exists", async () => {
+      elasticsearch._checkIfAliasExists.resolves(['myalias']);
+      elasticsearch._client.indices.deleteAlias = sinon.stub().resolves();
+
+      await elasticsearch.deleteCollection(index, collection);
+
+      should(elasticsearch._client.indices.deleteAlias).be.called()
     });
   });
 
