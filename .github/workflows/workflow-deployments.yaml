@@ -27,7 +27,7 @@ jobs:
   doc-deploy:
     name: Documentation - Deploy
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.doc_deploy }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
         with:
@@ -50,7 +50,7 @@ jobs:
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -93,7 +93,7 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages

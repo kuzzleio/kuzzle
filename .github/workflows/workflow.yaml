@@ -16,7 +16,7 @@ env:
 jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - id: set-matrix
         run: |
@@ -38,7 +38,7 @@ jobs:
 #  doc-dead-links:
 #    name: Documentation - Check Dead Links
 #    if: github.event_name == 'pull_request'
-#    runs-on: ubuntu-20.04
+#    runs-on: ubuntu-18.04
 #    steps:
 #      - uses: actions/checkout@v2
 #        with:
@@ -62,7 +62,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -80,7 +80,7 @@ jobs:
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     needs: [prepare-matrix]
     strategy:
       matrix:
@@ -103,7 +103,7 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/actions/install-packages
@@ -125,7 +125,7 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
     name: Build and Run ${{ matrix.kuzzle-image }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -152,7 +152,7 @@ jobs:
         test_set:
           [http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v2
@@ -170,7 +170,7 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
