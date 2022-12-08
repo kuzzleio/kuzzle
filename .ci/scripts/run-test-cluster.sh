@@ -16,7 +16,7 @@ npm install
 
 if [ "$REBUILD" == "true" ];
 then
-  npm rebuild
+  docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
 fi
 
 npm run build-ts
