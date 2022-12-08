@@ -13,6 +13,11 @@ echo "Testing Kuzzle against node v$NODE_VERSION"
 echo "Installing dependencies..."
 npm install --unsafe-perm
 
+if [ "$REBUILD" == "true" ];
+then
+  docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
+fi
+
 npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."

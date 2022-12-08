@@ -81,7 +81,7 @@ class MockHttpResponse {
   }
 
   _onData(data, isLast) {
-    this._onDataHandler(data, isLast);
+    return this._onDataHandler(data, isLast);
   }
 
   _onAborted() {
@@ -138,7 +138,7 @@ class App {
       throw new Error('Missing "message" handler');
     }
 
-    this._wsConfig.message(this._wsSocket, data);
+    return this._wsConfig.message(this._wsSocket, data);
   }
 
   _wsOnDrain() {
@@ -160,7 +160,7 @@ class App {
   _httpOnMessage(method, url, qs, headers) {
     this._httpResponse = new MockHttpResponse();
 
-    this._httpMessageHandler(
+    return this._httpMessageHandler(
       this._httpResponse,
       new MockHttpRequest(method, url, qs, headers)
     );
