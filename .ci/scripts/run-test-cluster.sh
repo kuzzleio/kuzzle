@@ -12,14 +12,14 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 echo "Installing dependencies..."
-docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm ci
+npm install
 
 if [ "$REBUILD" == "true" ];
 then
-  npm rebuild
+  docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
 fi
 
-docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm run build-ts
+npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
