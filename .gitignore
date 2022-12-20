@@ -199,7 +199,7 @@ lib/util/array.js
 lib/util/bufferedPassThrough.js
 lib/util/crypto.js
 lib/util/dump-collection.js
-lib/util/inflector.js
+lib/util/Inflector.js
 lib/util/interfaces.js
 lib/util/koncordeCompat.js
 lib/util/mutex.js
