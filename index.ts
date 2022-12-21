@@ -12,7 +12,7 @@ export * from './lib/kerror/errors';
 
 export * from './lib/util/mutex';
 
-export * from './lib/util/inflector';
+export * from './lib/util/Inflector';
 
 export { NameGenerator } from './lib/util/name-generator';
 
