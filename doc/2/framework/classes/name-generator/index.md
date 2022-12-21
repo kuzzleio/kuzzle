@@ -4,3 +4,4 @@ title: NameGenerator
 description: NameGenerator class definition
 code: true
 ---
+<RedirectToFirstChild />

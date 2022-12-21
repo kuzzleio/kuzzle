@@ -4,3 +4,4 @@ title: BackendOpenApi
 description: BackendOpenApi class definition
 code: true
 ---
+<RedirectToFirstChild />

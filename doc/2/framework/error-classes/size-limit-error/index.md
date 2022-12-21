@@ -4,3 +4,4 @@ title: SizeLimitError
 description: SizeLimitError class
 code: true
 ---
+<RedirectToFirstChild />

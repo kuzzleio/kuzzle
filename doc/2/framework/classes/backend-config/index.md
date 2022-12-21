@@ -4,3 +4,4 @@ title: BackendConfig
 description: BackendConfig class definition
 code: true
 ---
+<RedirectToFirstChild />

@@ -1,11 +1,16 @@
 ---
 code: false
 type: page
-title: Secrets Vault
-description: Securely store your application secrets
+title: 
+description: 
 order: 300
+title: Secrets Vault | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Securely store your application secrets
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, Secrets Vault
 ---
-
 # Secrets Vault
 
 When you develop an application with Kuzzle, you may **need to use secrets** such as API keys or authentication information.

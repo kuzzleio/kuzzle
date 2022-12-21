@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Event System
-description: Interact with Internal Events
 order: 300
+title:  Event System | Develop on Kuzzle | Guide | Core
+meta:
+  - name: description
+    content: Interact with Internal Events
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource, Event System
 ---
-
 # Event System
 
 Most of the **internal tasks performed by Kuzzle trigger events**.

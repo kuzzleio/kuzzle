@@ -4,3 +4,4 @@ title: ForbiddenError
 description: ForbiddenError class
 code: true
 ---
+<RedirectToFirstChild />

@@ -1,10 +1,15 @@
 ---
 code: false
 type: page
-title: Customize the API Behavior
-description: Use the fine-grained middleware-like system
 order: 800
+title:  Customize the API Behavior | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Use the fine-grained middleware-like system
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Customize the API Behavior 
 ---
+
 
 # Customize the API Behavior
 

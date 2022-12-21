@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Authentication
-description: Authenticate your users through the multi-strategy system
 order: 500
+title:  Authentication | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content: Authenticate your users through the multi-strategy system
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Authentication
 ---
 
 # Authentication

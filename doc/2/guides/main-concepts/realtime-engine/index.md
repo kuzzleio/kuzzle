@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Realtime Engine
-description: Subscribe to realtime notifications from database and use pub/sub engine
 order: 600
+title: Realtime Engine| Main Concepts | Guide | Core
+meta:
+  - name: description
+    content: Subscribe to realtime notifications from database and use pub/sub engine
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Realtime Engine
 ---
-
 # Realtime Engine
 
 Kuzzle is shipped with its own **high-performance Realtime Engine** for sending notifications to clients connected through the API.
@@ -25,7 +28,7 @@ The process is as follows:
  - A second client posts a message in that room,
  - The first client receives a notification.
 
-![kuzzle-pub-sub](./pub-sub.png)
+![kuzzle-pub-sub image description ](./pub-sub.png)
 
 Subscription to a room is done via the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) method. It takes 3 parameters, used to **describe a specific room**:
  - Name of an index,
@@ -277,7 +280,7 @@ Each subscription filter **defines a scope**. All documents in the collection ca
 
 Once a client has subscribed to notifications with filters, they will receive notifications each time a document **enters or exits the scope** defined by the filters.
 
-![subscription-filter-scope](./subscription-filter-scope.png)
+![subscription-filter-scope image description](./subscription-filter-scope.png)
 
 ::: warning
 Notification about document exiting the scope will only be received for documents that previously entered the scope.

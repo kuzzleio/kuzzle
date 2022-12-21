@@ -4,3 +4,4 @@ title: GatewayTimeoutError
 description: GatewayTimeoutError class
 code: true
 ---
+<RedirectToFirstChild />

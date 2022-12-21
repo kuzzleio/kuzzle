@@ -4,3 +4,4 @@ title: ServiceUnavailableError
 description: ServiceUnavailableError class
 code: true
 ---
+<RedirectToFirstChild />

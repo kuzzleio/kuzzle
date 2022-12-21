@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Create new Controllers
-description: Extends Kuzzle API with new actions
 order: 700
+title: Create new Controllers | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Extends Kuzzle API with new actions
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Create new controllers
 ---
 
 # Create new Controllers

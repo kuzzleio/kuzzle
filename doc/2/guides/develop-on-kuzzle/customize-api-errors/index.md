@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Customize API Errors
-description: Returns custom errors in API responses
 order: 600
+title: Customize API Errors | Develop on Kuzzle | Guide | Core
+meta:
+  - name: description
+    content: Returns custom errors in API responses
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  Customize API Errors
 ---
-
 # Customize API Errors
 
 It is possible to customize the errors that we want to return in case of failure of an API request.

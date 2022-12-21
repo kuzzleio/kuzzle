@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: notify
+title:  Notify | Protocol Methods | Write protocols | Guide
+meta:
+  - name: description
+    content: Asks the protocol to send data to a specific connection, on some of its channels.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write protocols, start, notify
 ---
 
 # notify

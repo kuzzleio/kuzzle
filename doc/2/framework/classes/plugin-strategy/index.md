@@ -4,3 +4,4 @@ title: PluginStrategy
 description: PluginStrategy class definition
 code: true
 ---
+<RedirectToFirstChild />

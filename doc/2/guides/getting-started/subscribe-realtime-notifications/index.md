@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Subscribe to Realtime Notifications
-description: Use the Realtime Engine to subscribe to database change
 order: 500
+title:  Subscribe to Realtime Notifications | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Use the Realtime Engine to subscribe to database change
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime 
 ---
-
 # Subscribe to Realtime Notifications
 
 Kuzzle integrates an **advanced realtime engine**. It can work in a classic pub/sub mode but also as a realtime database notification engine.

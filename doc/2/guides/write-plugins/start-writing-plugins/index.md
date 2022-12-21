@@ -1,9 +1,14 @@
 ---
 code: false
 type: page
-title: Start Writing a Plugin
-description: Setup environment for plugin development
+
 order: 100
+title: Start Writing a Plugin | Write plugins | Guide | Core
+meta:
+  - name: description
+    content: Setup environment for plugin development
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, Plugins Features
 ---
 
 # Start Writing a Plugin

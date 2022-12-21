@@ -4,3 +4,4 @@ title: BackendHook
 description: BackendHook class definition
 code: true
 ---
+<RedirectToFirstChild />

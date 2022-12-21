@@ -1,9 +1,13 @@
 ---
 code: true
 type: page
-title: removeConnection
+title: removeConnection | Protocol Entrypoint | Write protocols | Guide
+meta:
+  - name: description
+    content: Removes a client connection from Kuzzle.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol entrypoint, removeConnection
 ---
-
 # removeConnection
 
 

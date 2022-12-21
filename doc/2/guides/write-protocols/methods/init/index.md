@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: init
+title:  init | Write protocols | Guide 
+meta:
+  - name: description
+    content: Initializes the protocol.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write protocols, start, HTTP, MQTT, init
 ---
 
 # init

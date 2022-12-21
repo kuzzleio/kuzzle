@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Start Writing a protocol
-description: Setup environment for protocol development
 order: 100
+title:  Start Writing a protocol | Write protocols | Guide
+meta:
+  - name: description
+    content: Setup environment for protocol development
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write protocoles, start, HTTP, MQTT
 ---
-
 # Start Writing a Protocol
 
 Kuzzle has native support for the following network protocols: [HTTP](/core/2/api/protocols/http), [MQTT](/core/2/api/protocols/mqtt) (disabled by default), and [Websocket](/core/2/api/protocols/websocket).

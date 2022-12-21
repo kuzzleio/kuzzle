@@ -1,8 +1,13 @@
 ---
 code: false
 type: page
-title: Hooks
 order: 200
+title: Hooks | Old Guides | Write plugins | Guide 
+meta:
+  - name: description
+    content: Hooks are asynchronous listeners, plugged to events, and receiving information regarding that event.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, old guides, Hooks
 ---
 
 <DeprecatedBadge version="2.8.0" />

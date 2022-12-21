@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: joinChannel
+title:  joinChannel | Write protocols | Guide
+meta:
+  - name: description
+    content: Informs the protocol that one of its connected users joined a channel.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write protocols, start, HTTP, MQTT, joinChannel
 ---
 
 # joinChannel
