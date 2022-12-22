@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 200
-title:  Kuzzle Getting Started | Guide | Core
+title: Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Learn how to use Kuzzle to develop your backend application
