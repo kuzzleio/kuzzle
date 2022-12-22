@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 800
-title:  Customize the API Behavior | Kuzzle Getting Started | Guide | Core
+title: Customize the API Behavior | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Use the fine-grained middleware-like system
