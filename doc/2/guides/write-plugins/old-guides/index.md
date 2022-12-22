@@ -2,8 +2,6 @@
 code: false
 type: branch
 order: 400
-title: 
-description: 
 title: Old Guides | Write plugins | Guide 
 meta:
   - name: description
