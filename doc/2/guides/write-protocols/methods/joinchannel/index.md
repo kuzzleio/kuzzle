@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  joinChannel | Write protocols | Guide
+title: joinChannel | Write protocols | Guide
 meta:
   - name: description
     content: Informs the protocol that one of its connected users joined a channel.
