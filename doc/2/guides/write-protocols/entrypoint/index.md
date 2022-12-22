@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 300
-title:  Protocol Entrypoint | Write protocols | Guides | Core
+title: Protocol Entrypoint | Write protocols | Guides | Core
 meta:
   - name: description
     content: Protocol Entrypoint Reference
