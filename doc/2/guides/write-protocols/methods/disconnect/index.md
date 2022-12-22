@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  disconnect | Write protocols | Guide
+title: disconnect | Write protocols | Guide
 meta:
   - name: description
     content: Asks the protocol to force-close a connection.
