@@ -1,7 +1,6 @@
 ---
 code: false
 type: page
-title: Controllers
 order: 400
 title: Controllers | Old Guides | Write plugins | Guide 
 meta:
