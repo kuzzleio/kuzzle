@@ -3,7 +3,7 @@ code: false
 type: branch
 order: 700
 
-title:  Write protocols | Guide
+title: Write protocols | Guide
 meta:
   - name: description
     content: Write communication protocols for Kuzzle API
