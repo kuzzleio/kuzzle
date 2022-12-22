@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 200
-title:  General Purpose Backend | Kuzzle Introduction | Guide | Core
+title: General Purpose Backend | Kuzzle Introduction | Guide | Core
 meta:
   - name: description
     content: Kuzzle main concepts and features overview
