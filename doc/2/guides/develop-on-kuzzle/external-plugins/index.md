@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 500
-title:  External Plugins | Develop on Kuzzle | Guide | Core
+title: External Plugins | Develop on Kuzzle | Guide | Core
 meta:
   - name: description
     content: Use External Plugins to add whole sets of features
