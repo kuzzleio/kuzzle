@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  Notify | Protocol Methods | Write protocols | Guide
+title: Notify | Protocol Methods | Write protocols | Guide
 meta:
   - name: description
     content: Asks the protocol to send data to a specific connection, on some of its channels.

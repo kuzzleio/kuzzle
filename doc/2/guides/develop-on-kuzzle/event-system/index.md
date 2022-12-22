@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 300
-title:  Event System | Develop on Kuzzle | Guide | Core
+title: Event System | Develop on Kuzzle | Guide | Core
 meta:
   - name: description
     content: Interact with Internal Events

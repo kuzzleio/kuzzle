@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 600
-title:  Write an Application | Kuzzle Getting Started | Guide | Core
+title: Write an Application | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Discover the framework capabilities

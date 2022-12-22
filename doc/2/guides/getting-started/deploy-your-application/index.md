@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 900
-title:  Deploy your Application | Kuzzle Getting Started | Guide | Core
+title: Deploy your Application | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Deploy your Kuzzle application on a remote server

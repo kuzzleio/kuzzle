@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 200
-title:  Data Storage | Main Concepts | Guide | Core
+title: Data Storage | Main Concepts | Guide | Core
 meta:
   - name: description
     content: Understand how works the underlying document storage engine

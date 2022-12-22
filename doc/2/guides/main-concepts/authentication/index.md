@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 500
-title:  Authentication | Main Concepts | Guide | Core
+title: Authentication | Main Concepts | Guide | Core
 meta:
   - name: description
     content: Authenticate your users through the multi-strategy system

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  broadcast | Write protocols | Guide
+title: broadcast | Write protocols | Guide
 meta:
   - name: description
     content: Asks the protocol to emit a payload to channels.

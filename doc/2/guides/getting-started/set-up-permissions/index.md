@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 300
-title:  Set up Permissions | Kuzzle Getting Started | Guide | Core
+title: Set up Permissions | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Define kuzzle user rights and permissions 

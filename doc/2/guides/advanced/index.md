@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 500
-title:  Kuzzle Advanced | Guide | Core
+title: Kuzzle Advanced | Guide | Core
 meta:
   - name: description
     content: Kuzzle API advanced features and concepts

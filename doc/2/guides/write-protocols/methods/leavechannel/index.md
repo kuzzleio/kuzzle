@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  leaveChannel | Write protocols | Guide
+title: leaveChannel | Write protocols | Guide
 meta:
   - name: description
     content: Informs the protocol that one of its connected users left a channel.

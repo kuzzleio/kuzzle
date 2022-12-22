@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title:  init | Write protocols | Guide 
+title: init | Write protocols | Guide 
 meta:
   - name: description
     content: Initializes the protocol.

@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 100
-title:  Start Writing a protocol | Write protocols | Guide
+title: Start Writing a protocol | Write protocols | Guide
 meta:
   - name: description
     content: Setup environment for protocol development

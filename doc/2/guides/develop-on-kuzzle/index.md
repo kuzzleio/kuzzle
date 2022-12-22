@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 400
-title:  Develop on Kuzzle | Guide | Core
+title: Develop on Kuzzle | Guide | Core
 meta:
   - name: description
     content: Write custom backend code for Kuzzle

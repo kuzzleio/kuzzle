@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 100
-title:  Run Kuzzle | Kuzzle Getting Started | Guide | Core
+title: Run Kuzzle | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Run your first Kuzzle application

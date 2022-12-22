@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 200
-title:  Write protocols | Guide
+title: Write protocols | Guide
 meta:
   - name: description
     content: Setup environment for protocol development
