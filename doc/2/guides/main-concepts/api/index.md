@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 100
-title:  Kuzzle API | Main Concepts | Guide | Core
+title: Kuzzle API | Main Concepts | Guide | Core
 meta:
   - name: description
     content: Discover Kuzzle API usage and formats
