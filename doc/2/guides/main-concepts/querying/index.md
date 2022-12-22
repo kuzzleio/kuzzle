@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Querying
-description: Learn how to search for your data with Elasticsearch Query Language
 order: 300
+title: Querying | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content:  Learn how to search for your data with Elasticsearch Query Language
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Querying
 ---
-
 # Querying
 
 Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way.

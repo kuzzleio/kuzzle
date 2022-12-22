@@ -4,3 +4,4 @@ title: Inflector
 description: Inflector class definition
 code: true
 ---
+<RedirectToFirstChild />

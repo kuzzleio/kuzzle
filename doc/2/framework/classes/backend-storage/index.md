@@ -4,3 +4,4 @@ title: BackendStorage
 description: BackendStorage class definition
 code: true
 ---
+<RedirectToFirstChild />

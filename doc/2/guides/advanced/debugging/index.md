@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Debugging
-description: Debug Kuzzle
 order: 800
+title: Debugging kuzzle | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content:  Debug Kuzzle
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, Debugging
 ---
-
 ## Introduction
 
 Kuzzle gives the possibility to debug a Kuzzle instance using the [Debug Controller](/core/2/api/controllers/debug) actions.

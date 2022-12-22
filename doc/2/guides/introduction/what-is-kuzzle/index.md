@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: What is Kuzzle
-description: Why are we spending so much time developing our backend?
 order: 100
+title: What is Kuzzle | Kuzzle Introduction | Guide | Core
+meta:
+  - name: description
+    content: Why are we spending so much time developing our backend?
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, What is kuzzle
 ---
-
 # What is Kuzzle
 
 If you're on this page it's probably because **you need a backend** for your mobile, web or IoT application.
@@ -47,42 +50,42 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
 <div class="IconTable">
   <div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-data-storage.svg"/>
+      <img src="./feature-data-storage.svg" alt="database illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/main-concepts/data-storage">Data storage and access</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-acl.svg"/>
+      <img src="./feature-acl.svg" alt="Advanced permission system illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/main-concepts/permissions">Advanced permission system</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-auth.svg"/>
+      <img src="./feature-auth.svg" alt="authentification illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/main-concepts/authentication">Multi authentication</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-api.svg"/>
+      <img src="./feature-api.svg" alt="api illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/main-concepts/api">Multi protocol API (Http, WebSocket, MQTT)</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-realtime.svg"/>
+      <img src="./feature-realtime.svg" alt="realtime engine illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/main-concepts/realtime-engine">Realtime engine</a>
     </div>
   </div><div class="IconTable-item">
     <div class="IconTable-item-icon">
-      <img src="./feature-cluster.svg"/>
+      <img src="./feature-cluster.svg" alt="cluster interconnected illustration"/>
     </div>
     <div class="IconTable-item-text">
       <a target="_blank" href="/core/2/guides/advanced/cluster-scalability">Integrated cluster mode</a>
@@ -131,7 +134,7 @@ It is used to manage its data and the user permissions system.
 
 As it is a single-page application (SPA), no data related to your Kuzzle application will pass through our servers, so you can use the online version available at [http://next-console.kuzzle.io](http://next-console.kuzzle.io).
 
-![admin console](./ecosystem-admin-console.png)
+![Screenshot of the admin console interface](./ecosystem-admin-console.png)
 
 ### SDKs
 
@@ -143,7 +146,7 @@ These SDKs are available for the most common languages and the majority of front
  - [Csharp](/sdk/csharp/2) : Xamarin, [.NET](/sdk/csharp/2/getting-started/standalone)
  - [Java / Kotlin](/sdk/jvm/1) : Android, JVM
 
-![sdks and platforms](./ecosystem-sdk-platforms.png)
+![List of sdk (js java, c#, kotln dart, go) and platforms (react / react native, android studio, flutter, xamarin, angular, node, vuejs, microsoft.net)](./ecosystem-sdk-platforms.png)
 
 ### Kourou
 
@@ -161,7 +164,7 @@ These plugins allow you to use the functionalities of other services such as [Am
 
 The community is also able to develop and distribute its own plugins to enrich the ecosystem.
 
-![business plugins](./ecosystem-business-plugins.png)
+![List of business plugins](./ecosystem-business-plugins.png)
 
 
 ### Expert Professional Support

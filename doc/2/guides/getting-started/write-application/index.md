@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Write an Application
-description: Discover the framework capabilities
 order: 600
+title: Write an Application | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Discover the framework capabilities
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource
 ---
 
 # Write an Application

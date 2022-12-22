@@ -4,3 +4,4 @@ title: BackendController
 description: BackendController class definition
 code: true
 ---
+<RedirectToFirstChild />

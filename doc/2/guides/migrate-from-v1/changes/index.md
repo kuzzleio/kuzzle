@@ -1,10 +1,14 @@
 ---
 code: false
 type: branch
-title: Breaking changes
 order: 100
+title: Breaking changes | Migrate from Kuzzle 1.x | Guide | Core
+meta:
+  - name: description
+    content: Here's the list of breaking changes for kuzzle
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, Breaking changes
 ---
-
 
 # Breaking changes
 

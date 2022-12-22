@@ -4,3 +4,4 @@ title: InternalLogger
 description: InternalLogger class definition
 code: true
 ---
+<RedirectToFirstChild />
