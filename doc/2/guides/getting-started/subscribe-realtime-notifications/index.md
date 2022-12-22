@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 500
-title:  Subscribe to Realtime Notifications | Kuzzle Getting Started | Guide | Core
+title: Subscribe to Realtime Notifications | Kuzzle Getting Started | Guide | Core
 meta:
   - name: description
     content: Use the Realtime Engine to subscribe to database change
