@@ -2,7 +2,7 @@
 code: false
 type: root
 order: 0
-title:  What is kuzzle | Guides | Core
+title: What is kuzzle | Guides | Core
 meta:
   - name: description
     content: Kuzzle v2.x Guides
