@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 200
-title:  Protocol Framework | Write protocols | Guides | Core
+title: Protocol Framework | Write protocols | Guides | Core
 meta:
   - name: description
     content: Protocol Framework Reference
