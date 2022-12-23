@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: stats
+title: stats | API | Core
 ---
 
 # stats

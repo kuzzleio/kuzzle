@@ -1,6 +1,7 @@
 ---
 type: branch
-title: ExternalServiceError
+title: ExternalServiceError | Framework | Core
+
 description: ExternalServiceError class
 code: true
 ---

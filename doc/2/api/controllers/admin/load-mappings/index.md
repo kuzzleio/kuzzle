@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: loadMappings
+title: loadMappings | API | Core
 ---
 
 # loadMappings

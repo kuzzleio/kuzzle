@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateUserMapping
+title: updateUserMapping | API | Core
 ---
 
 # updateUserMapping

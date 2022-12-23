@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Request
+title: Request | API | Core
 description: Request payload reference  
 order: 100
 ---

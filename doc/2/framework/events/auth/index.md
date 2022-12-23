@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Auth
+title: Auth | Framework | Core
+
 description: Auth events list
 order: 100
 ---

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: post
+title: post | API | Core
 ---
 
 # post

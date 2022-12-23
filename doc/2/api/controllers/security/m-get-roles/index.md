@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mGetRoles
+title: mGetRoles | API | Core
 ---
 
 # mGetRoles

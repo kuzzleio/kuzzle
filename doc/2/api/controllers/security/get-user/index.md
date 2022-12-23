@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getUser
+title: getUser | API | Core
 ---
 
 # getUser

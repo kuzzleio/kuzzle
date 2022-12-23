@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hmget
+title: hmget | API | Core
 ---
 
 # hmget

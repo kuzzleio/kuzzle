@@ -1,6 +1,7 @@
 ---
 type: branch
-title: ForbiddenError
+title: ForbiddenError | Framework | Core
+
 description: ForbiddenError class
 code: true
 ---

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: smembers
+title: smembers | API | Core
 ---
 
 # smembers

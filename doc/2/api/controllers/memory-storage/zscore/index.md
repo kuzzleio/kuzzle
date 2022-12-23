@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zscore
+title: zscore | API | Core
 ---
 
 # zscore

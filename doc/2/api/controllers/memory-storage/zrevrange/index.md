@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zrevrange
+title: zrevrange | API | Core
 ---
 
 # zrevrange

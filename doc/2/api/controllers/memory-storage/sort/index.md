@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sort
+title: sort | API | Core
 ---
 
 # sort

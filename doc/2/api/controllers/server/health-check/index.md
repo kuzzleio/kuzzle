@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: healthCheck
+title: healthCheck | API | Core
 ---
 
 # healthCheck

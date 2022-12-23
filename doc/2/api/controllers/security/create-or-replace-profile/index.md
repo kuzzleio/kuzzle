@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createOrReplaceProfile
+title: createOrReplaceProfile | API | Core
 ---
 
 # createOrReplaceProfile

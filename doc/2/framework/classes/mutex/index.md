@@ -1,6 +1,7 @@
 ---
 type: branch
-title: Mutex
+title: Mutex | Framework | Core
+
 description: Mutex class definition
 code: true
 ---

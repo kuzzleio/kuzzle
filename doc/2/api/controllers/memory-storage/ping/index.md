@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: ping
+title: ping | API | Core
 ---
 
 # ping

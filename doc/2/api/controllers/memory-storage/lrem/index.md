@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: lrem
+title: lrem | API | Core
 ---
 
 # lrem

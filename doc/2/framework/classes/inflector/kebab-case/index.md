@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: kebabCase
+title: kebabCase | Framework | Core
+
 description: Inflector class kebabCase() method
 ---
 

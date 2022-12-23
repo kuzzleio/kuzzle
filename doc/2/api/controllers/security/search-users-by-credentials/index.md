@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchUsersByCredentials
+title: searchUsersByCredentials | API | Core
 ---
 
 # searchUsersByCredentials

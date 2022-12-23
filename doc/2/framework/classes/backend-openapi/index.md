@@ -1,6 +1,7 @@
 ---
 type: branch
-title: BackendOpenApi
+title: BackendOpenApi | Framework | Core
+
 description: BackendOpenApi class definition
 code: true
 ---

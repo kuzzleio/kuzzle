@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: HTTP
+title: HTTP | API | Core
 description: HTTP protocol usage and configuration
 order: 100
 ---

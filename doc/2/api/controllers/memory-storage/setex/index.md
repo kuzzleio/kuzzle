@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: setex
+title: setex | API | Core
 ---
 
 # setex

@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: Constructor
+title: Constructor | Framework | Core
+
 description: Backend class constructor
 ---
 

@@ -1,6 +1,7 @@
 ---
 type: branch
-title: NotFoundError
+title: NotFoundError | Framework | Core
+
 description: NotFoundError class
 code: true
 ---

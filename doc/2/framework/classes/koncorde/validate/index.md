@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: validate
+title: validate | Framework | Core
+
 description: Koncorde.validate method
 ---
 

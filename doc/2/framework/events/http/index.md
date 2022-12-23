@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: HTTP
+title: HTTP | Framework | Core
+
 description: HTTP events list
 order: 100
 ---

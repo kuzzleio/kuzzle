@@ -1,5 +1,5 @@
 ---
 type: branch
 code: true
-title: collection
+title: collection | API | Core
 ---

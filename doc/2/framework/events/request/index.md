@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Request
+title: Request | Framework | Core
+
 description: KuzzleRequest events list
 order: 100
 ---

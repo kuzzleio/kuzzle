@@ -1,6 +1,7 @@
 ---
 type: branch
-title: EmbeddedSDK
+title: EmbeddedSDK | Framework | Core
+
 description: EmbeddedSDK class definition
 code: true
 ---

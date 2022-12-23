@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hdel
+title: hdel | API | Core
 ---
 
 # hdel

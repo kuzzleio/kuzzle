@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteUser
+title: deleteUser | API | Core
 ---
 
 # deleteUser

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: mappings
+title: mappings | Framework | Core
+
 description: BackendImport.mappings method
 ---
 

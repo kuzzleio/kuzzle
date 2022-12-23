@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getFrom
+title: getFrom | Framework | Core
+
 description: BackendErrors getFrom method
 ---
 

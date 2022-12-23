@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: truncate
+title: truncate | API | Core
 ---
 
 # truncate

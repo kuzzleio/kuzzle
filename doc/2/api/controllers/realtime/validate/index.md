@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: validate
+title: validate | API | Core
 ---
 
 # validate

@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Notifications
+title: Notifications | API | Core
 description: Notifications payloads reference
 order: 300
 ---

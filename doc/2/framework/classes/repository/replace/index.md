@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: replace
+title: replace | Framework | Core
+
 description: Repository.replace method
 ---
 

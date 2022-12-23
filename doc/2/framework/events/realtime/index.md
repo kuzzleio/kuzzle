@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Realtime
+title: Realtime | Framework | Core
+
 description: Realtime events list
 order: 100
 ---

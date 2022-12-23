@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: bitpos
+title: bitpos | API | Core
 ---
 
 # bitpos

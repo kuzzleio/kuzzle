@@ -1,6 +1,7 @@
 ---
 type: branch
-title: BackendPipe
+title: BackendPipe | Framework | Core
+
 description: BackendPipe class definition
 code: true
 ---

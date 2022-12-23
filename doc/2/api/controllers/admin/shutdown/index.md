@@ -2,7 +2,7 @@
 type: page
 
 code: true
-title: shutdown
+title: shutdown | API | Core
 ---
 
 # shutdown
