@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x08: cluster | API | Core "
+title: "0x08: cluster | API | Core " 
 description: Error codes definitions
 ---
 
