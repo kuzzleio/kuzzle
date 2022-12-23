@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: StrategyDefinition
+title: StrategyDefinition | Framework | Core
+
 description: StrategyDefinition type definition
 ---
 

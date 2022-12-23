@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: bitcount
+title: bitcount | API | Core
 ---
 
 # bitcount

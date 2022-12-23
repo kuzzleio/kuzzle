@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getLangParam
+title: getLangParam | Framework | Core
+
 description: KuzzleRequest class getLangParam() method
 ---
 

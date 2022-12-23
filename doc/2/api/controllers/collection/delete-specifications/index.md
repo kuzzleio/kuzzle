@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteSpecifications
+title: deleteSpecifications | API | Core
 ---
 
 # deleteSpecifications

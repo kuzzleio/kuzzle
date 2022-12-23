@@ -1,6 +1,7 @@
 ---
 type: branch
-title: PluginStrategy
+title: PluginStrategy | Framework | Core
+
 description: PluginStrategy class definition
 code: true
 ---

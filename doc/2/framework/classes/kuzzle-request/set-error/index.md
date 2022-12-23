@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: setError
+title: setError | Framework | Core
+
 description: KuzzleRequest class setError() method
 ---
 

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getNumber
+title: getNumber | Framework | Core
+
 description: KuzzleRequest class getNumber() method
 ---
 

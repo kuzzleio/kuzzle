@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchApiKeys
+title: searchApiKeys | API | Core
 ---
 
 # searchApiKeys

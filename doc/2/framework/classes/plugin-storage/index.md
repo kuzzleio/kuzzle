@@ -1,6 +1,7 @@
 ---
 type: branch
-title: PluginStorage
+title: PluginStorage | Framework | Core
+
 description: PluginStorage class definition
 code: true
 ---

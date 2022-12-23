@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getRefresh
+title: getRefresh | Framework | Core
+
 description: KuzzleRequest class getRefresh() method
 ---
 

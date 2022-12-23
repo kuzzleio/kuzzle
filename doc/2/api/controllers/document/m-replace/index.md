@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mReplace
+title: mReplace | API | Core
 ---
 
 # mReplace

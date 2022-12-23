@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: expireat
+title: expireat | API | Core
 ---
 
 # expireat

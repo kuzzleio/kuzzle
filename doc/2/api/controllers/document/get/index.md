@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: get
+title: get | API | Core
 ---
 
 # get

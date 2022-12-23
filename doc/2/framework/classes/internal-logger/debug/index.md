@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: debug
+title: debug | Framework | Core
+
 description: InternalLogger.debug method
 ---
 

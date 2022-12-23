@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: Properties
+title: Properties | Framework | Core
+
 description: BackendOpenApi class properties
 ---
 
@@ -30,7 +31,8 @@ app.openApi.definition
 {
   swagger: '2.0',
   info: {
-    title: `${application.name} API`,
+    title: `${application.name} API`, | Framework | Core
+
     description: `${application.name} HTTP API definition`,
     contact: {
       name: 'Kuzzle team',

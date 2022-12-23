@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: bitop
+title: bitop | API | Core
 ---
 
 # bitop

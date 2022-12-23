@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getStats
+title: getStats | API | Core
 ---
 
 # getStats

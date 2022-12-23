@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: metrics
+title: metrics | API | Core
 ---
 
 # metrics

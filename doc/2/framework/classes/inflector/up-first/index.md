@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: upFirst
+title: upFirst | Framework | Core
+
 description: Inflector class upFirst() method
 ---
 

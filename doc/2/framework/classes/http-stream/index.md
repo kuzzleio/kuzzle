@@ -1,6 +1,7 @@
 ---
 type: branch
-title: HttpStream
+title: HttpStream | Framework | Core
+
 description: HttpStream class definition
 code: true
 ---

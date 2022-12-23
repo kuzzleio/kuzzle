@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sdiffstore
+title: sdiffstore | API | Core
 ---
 
 # sdiffstore

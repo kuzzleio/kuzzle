@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: replaceUser
+title: replaceUser | API | Core
 ---
 
 # replaceUser

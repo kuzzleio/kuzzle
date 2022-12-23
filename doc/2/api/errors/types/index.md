@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Error Types
+title: Error Types | API | Core
 description: API errors types reference
 order: 100
 ---

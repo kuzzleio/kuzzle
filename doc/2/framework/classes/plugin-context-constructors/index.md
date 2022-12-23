@@ -1,6 +1,7 @@
 ---
 type: branch
-title: PluginContextConstructors
+title: PluginContextConstructors | Framework | Core
+
 description: PluginContextConstructors class definition
 code: true
 ---

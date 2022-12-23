@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getProfileMapping
+title: getProfileMapping | API | Core
 ---
 
 # getProfileMapping

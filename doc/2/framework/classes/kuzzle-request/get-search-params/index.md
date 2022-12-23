@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getSearchParams
+title: getSearchParams | Framework | Core
+
 description: KuzzleRequest class getSearchParams() method
 ---
 

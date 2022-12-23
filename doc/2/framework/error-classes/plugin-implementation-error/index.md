@@ -1,6 +1,7 @@
 ---
 type: branch
-title: PluginImplementationError
+title: PluginImplementationError | Framework | Core
+
 description: PluginImplementationError class
 code: true
 ---

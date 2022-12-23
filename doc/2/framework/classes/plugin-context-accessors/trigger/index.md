@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: trigger
+title: trigger | Framework | Core
+
 description: PluginContextAccessors class trigger() method
 ---
 

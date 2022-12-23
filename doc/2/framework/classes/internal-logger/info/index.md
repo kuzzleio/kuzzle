@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: info
+title: info | Framework | Core
+
 description: InternalLogger.info method
 ---
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchRoles
+title: searchRoles | API | Core
 ---
 
 # searchRoles

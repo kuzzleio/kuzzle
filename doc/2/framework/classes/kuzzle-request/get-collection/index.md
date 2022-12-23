@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getCollection
+title: getCollection | Framework | Core
+
 description: KuzzleRequest class getCollection() method
 ---
 

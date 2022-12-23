@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: ControllerDefinition
+title: ControllerDefinition | Framework | Core
+
 description: ControllerDefinition type definition
 ---
 

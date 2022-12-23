@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Core
+title: Core | Framework | Core
+
 description: Core events list
 order: 100
 ---

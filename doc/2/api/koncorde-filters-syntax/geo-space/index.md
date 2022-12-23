@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Geo-Space
+title: Geo-Space | API | Core
 description: List of accepted formats for geolocation values
 order: 300
 ---

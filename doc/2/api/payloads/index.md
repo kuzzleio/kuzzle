@@ -2,7 +2,7 @@
 code: false
 type: branch
 order: 100
-title: Payloads
+title: Payloads | API | Core
 description: API Payloads reference
 ---
 

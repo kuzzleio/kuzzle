@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hgetall
+title: hgetall | API | Core
 ---
 
 # hgetall

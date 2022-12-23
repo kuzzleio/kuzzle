@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: renamenx
+title: renamenx | API | Core
 ---
 
 # renamenx

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createRestrictedUser
+title: createRestrictedUser | API | Core
 ---
 
 # createRestrictedUser

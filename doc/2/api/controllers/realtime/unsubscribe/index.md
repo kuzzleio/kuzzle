@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: unsubscribe
+title: unsubscribe | API | Core
 ---
 
 # unsubscribe

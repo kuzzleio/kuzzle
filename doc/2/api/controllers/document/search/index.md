@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: search
+title: search | API | Core
 ---
 
 # search

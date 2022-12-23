@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: revokeTokens
+title: revokeTokens | API | Core
 ---
 
 # revokeTokens

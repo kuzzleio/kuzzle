@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zrem
+title: zrem | API | Core
 ---
 
 # zrem

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: geopos
+title: geopos | API | Core
 ---
 
 # geopos

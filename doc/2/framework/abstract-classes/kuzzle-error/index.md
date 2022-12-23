@@ -1,6 +1,7 @@
 ---
 type: branch
-title: KuzzleError
+title: KuzzleError | Framework | Core
+
 description: KuzzleError abstract class
 code: true
 ---

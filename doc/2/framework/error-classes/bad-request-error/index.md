@@ -1,6 +1,7 @@
 ---
 type: branch
-title: BadRequestError
+title: BadRequestError | Framework | Core
+
 description: BadRequestError class
 code: true
 ---

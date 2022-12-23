@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zremrangebylex
+title: zremrangebylex | API | Core
 ---
 
 # zremrangebylex

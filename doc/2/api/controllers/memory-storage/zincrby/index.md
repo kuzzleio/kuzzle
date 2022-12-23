@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zincrby
+title: zincrby | API | Core
 ---
 
 # zincrby
