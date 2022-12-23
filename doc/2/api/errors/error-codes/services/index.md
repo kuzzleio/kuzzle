@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x01: services" | API | Core
+title: "0x01: services | API | Core "
 description: Error codes definitions
 ---
 

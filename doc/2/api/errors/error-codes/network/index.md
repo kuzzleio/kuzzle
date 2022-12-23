@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x03: network" | API | Core
+title: "0x03: network | API | Core"
 description: Error codes definitions
 ---
 
