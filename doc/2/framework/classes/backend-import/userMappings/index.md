@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: userMappings
+title: userMappings | Framework | Core
+
 description: BackendImport.userMappings method
 ---
 

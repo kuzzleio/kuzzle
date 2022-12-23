@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: setResult
+title: setResult | Framework | Core
+
 description: KuzzleRequest class setResult() method
 ---
 

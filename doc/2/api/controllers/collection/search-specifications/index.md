@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchSpecifications
+title: searchSpecifications | API | Core
 ---
 
 # searchSpecifications

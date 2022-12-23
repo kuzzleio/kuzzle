@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: configure
+title: configure | Framework | Core
+
 description: RequestResponse class configure() method
 ---
 

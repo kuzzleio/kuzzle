@@ -1,6 +1,7 @@
 ---
 type: branch
-title: PluginContextAccessors
+title: PluginContextAccessors | Framework | Core
+
 description: PluginContextAccessors class definition
 code: true
 ---

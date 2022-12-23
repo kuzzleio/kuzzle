@@ -1,6 +1,7 @@
 ---
 type: branch
-title: Controller
+title: Controller | Framework | Core
+
 description: Controller abstract class definition
 code: true
 ---

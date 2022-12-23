@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x06: protocol"
+title: "0x06: protocol" | API | Core
 description: Error codes definitions
 ---
 

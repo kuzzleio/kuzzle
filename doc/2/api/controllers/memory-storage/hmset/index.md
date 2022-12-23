@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hmset
+title: hmset | API | Core
 ---
 
 # hmset

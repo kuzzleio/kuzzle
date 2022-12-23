@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getRole
+title: getRole | API | Core
 ---
 
 # getRole

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: broadcast
+title: broadcast | Framework | Core
+
 description: BackendCluster.broadcast method
 ---
 

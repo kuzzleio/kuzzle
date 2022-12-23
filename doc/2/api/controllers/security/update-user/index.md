@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateUser
+title: updateUser | API | Core
 ---
 
 # updateUser

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: scard
+title: scard | API | Core
 ---
 
 # scard

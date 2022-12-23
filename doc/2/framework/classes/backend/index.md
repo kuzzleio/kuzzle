@@ -1,6 +1,7 @@
 ---
 type: branch
-title: Backend
+title: Backend | Framework | Core
+
 description: Backend class definition
 code: true
 ---

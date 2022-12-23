@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteApiKey
+title: deleteApiKey | API | Core
 ---
 
 # deleteApiKey

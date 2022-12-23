@@ -1,6 +1,7 @@
 ---
 type: branch
-title: BackendHook
+title: BackendHook | Framework | Core
+
 description: BackendHook class definition
 code: true
 ---

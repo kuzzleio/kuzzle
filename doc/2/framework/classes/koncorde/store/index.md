@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: store
+title: store | Framework | Core
+
 description: Koncorde.store method
 ---
 

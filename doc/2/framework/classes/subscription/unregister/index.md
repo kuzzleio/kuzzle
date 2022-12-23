@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: unregister
+title: unregister | Framework | Core
+
 description: Subscription class unregister() method
 ---
 

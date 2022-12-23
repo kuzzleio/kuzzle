@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: set
+title: set | Framework | Core
+
 description: BackendConfig.set method
 ---
 

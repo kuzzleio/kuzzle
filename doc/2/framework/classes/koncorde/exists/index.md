@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: exists
+title: exists | Framework | Core
+
 description: Koncorde.exists method
 ---
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: spop
+title: spop | API | Core
 ---
 
 # spop

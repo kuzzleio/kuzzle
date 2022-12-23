@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: PluginManifest
+title: PluginManifest | Framework | Core
+
 description: PluginManifest type definition
 ---
 

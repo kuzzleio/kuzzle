@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: login
+title: login | API | Core
 ---
 
 # login

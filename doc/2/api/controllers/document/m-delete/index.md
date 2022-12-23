@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mDelete
+title: mDelete | API | Core
 ---
 
 # mDelete

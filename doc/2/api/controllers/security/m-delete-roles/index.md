@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mDeleteRoles
+title: mDeleteRoles | API | Core
 ---
 
 # mDeleteRoles

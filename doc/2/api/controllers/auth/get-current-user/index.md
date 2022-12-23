@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getCurrentUser
+title: getCurrentUser | API | Core
 ---
 
 # getCurrentUser

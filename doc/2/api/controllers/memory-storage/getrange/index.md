@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getrange
+title: getrange | API | Core
 ---
 
 # getrange

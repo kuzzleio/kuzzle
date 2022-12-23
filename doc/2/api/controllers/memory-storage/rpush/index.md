@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: rpush
+title: rpush | API | Core
 ---
 
 # rpush

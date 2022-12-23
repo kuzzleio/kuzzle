@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: use
+title: use | Framework | Core
+
 description: InternalLogger.error method
 ---
 

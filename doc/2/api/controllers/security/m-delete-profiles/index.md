@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mDeleteProfiles
+title: mDeleteProfiles | API | Core
 ---
 
 # mDeleteProfiles

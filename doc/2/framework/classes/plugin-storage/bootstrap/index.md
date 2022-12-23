@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: bootstrap
+title: bootstrap | Framework | Core
+
 description: PluginStorage class bootstrap() method
 ---
 

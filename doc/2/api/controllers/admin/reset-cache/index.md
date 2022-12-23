@@ -2,7 +2,7 @@
 type: page
 
 code: true
-title: resetCache
+title: resetCache | API | Core
 ---
 
 # resetCache

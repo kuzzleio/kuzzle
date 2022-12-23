@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: incrby
+title: incrby | API | Core
 ---
 
 # incrby

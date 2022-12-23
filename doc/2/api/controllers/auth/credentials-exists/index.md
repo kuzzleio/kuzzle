@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: credentialsExist
+title: credentialsExist | API | Core
 ---
 
 # credentialsExist

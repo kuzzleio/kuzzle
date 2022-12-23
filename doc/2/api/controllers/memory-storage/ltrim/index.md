@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: ltrim
+title: ltrim | API | Core
 ---
 
 # ltrim

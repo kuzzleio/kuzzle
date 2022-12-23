@@ -1,6 +1,7 @@
 ---
 type: branch
-title: NameGenerator
+title: NameGenerator | Framework | Core
+
 description: NameGenerator class definition
 code: true
 ---

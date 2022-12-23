@@ -1,6 +1,7 @@
 ---
 type: branch
-title: Repository
+title: Repository | Framework | Core
+
 description: Repository class definition
 code: true
 ---

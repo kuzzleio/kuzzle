@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Operators
+title: Operators | API | Core
 description: Koncorde operators list
 order: 200
 ---

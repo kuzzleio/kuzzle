@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getUserRights
+title: getUserRights | API | Core
 ---
 
 # getUserRights

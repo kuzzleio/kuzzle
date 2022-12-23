@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: lock
+title: lock | Framework | Core
+
 description: Mutex class lock() method
 ---
 

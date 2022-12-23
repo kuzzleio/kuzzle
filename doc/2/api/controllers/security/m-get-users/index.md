@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mGetUsers
+title: mGetUsers | API | Core
 ---
 
 # mGetUsers

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zinterstore
+title: zinterstore | API | Core
 ---
 
 # zinterstore
