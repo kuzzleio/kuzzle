@@ -8,7 +8,6 @@ meta:
     content: Securely store your application secrets
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, d-shrinkwrap This version of npm is compatible with lockfileVersion@1, but package-lock.json was generated for lockfileVersion@2. I'll try to do my best with it!
-npm WARN deprecated docsearch.js@2.6.3: This package has been deprecated and is no lonSecrets Vault
 ---
 # Secrets Vault
 
