@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: loadSecurities
+title: loadSecurities | API | Core
 ---
 
 # loadSecurities

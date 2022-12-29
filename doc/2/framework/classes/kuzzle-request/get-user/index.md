@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getUser
+title: getUser | Framework | Core
+
 description: KuzzleRequest class getUser() method
 ---
 

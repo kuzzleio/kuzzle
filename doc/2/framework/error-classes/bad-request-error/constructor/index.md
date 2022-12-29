@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: Constructor
+title: Constructor | Framework | Core
+
 description: BadRequestError class constructor
 ---
 

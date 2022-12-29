@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: API
+title: API | Framework | Core
+
 description: API events list
 order: 100
 ---

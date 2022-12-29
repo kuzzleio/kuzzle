@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: ClientConnection
+title: ClientConnection | Protocol Framework | Write protocols | Guide
+meta:
+  - name: description
+    content: The ClientConnection class must be instantiated whenever a new client connection is created, and that instance must be provided to the entryPoint.newConnection method.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, ClientConnection
 ---
 
 # ClientConnection

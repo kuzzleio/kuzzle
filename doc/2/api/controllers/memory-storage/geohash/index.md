@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: geohash
+title: geohash | API | Core
 ---
 
 # geohash

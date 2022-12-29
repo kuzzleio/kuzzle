@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: init
+title: init | Framework | Core
+
 description: Plugin class init() abstract method
 ---
 

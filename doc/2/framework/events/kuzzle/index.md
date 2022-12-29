@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Kuzzle
+title: Kuzzle | Framework | Core
+
 description: Kuzzle events list
 order: 100
 ---

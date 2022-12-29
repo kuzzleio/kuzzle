@@ -1,6 +1,9 @@
 ---
 type: branch
-title: UnauthorizedError
+title: UnauthorizedError | Framework | Core
+
 description: UnauthorizedError class
 code: true
 ---
+
+<RedirectToFirstChild />

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: list
+title: list | Framework | Core
+
 description: BackendPlugin.list method
 ---
 

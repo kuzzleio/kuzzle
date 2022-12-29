@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: addType
+title: addType | Framework | Core
+
 description: DataValidation class addType() method
 ---
 

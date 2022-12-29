@@ -1,6 +1,8 @@
 ---
 type: branch
-title: PartialError
+title: PartialError | Framework | Core
+
 description: PartialError class
 code: true
 ---
+<RedirectToFirstChild />

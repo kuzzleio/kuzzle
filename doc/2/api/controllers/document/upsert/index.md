@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: upsert
+title: upsert | API | Core
 ---
 
 # upsert

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: object
+title: object | API | Core
 ---
 
 # object

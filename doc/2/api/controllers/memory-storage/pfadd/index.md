@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: pfadd
+title: pfadd | API | Core
 ---
 
 # pfadd

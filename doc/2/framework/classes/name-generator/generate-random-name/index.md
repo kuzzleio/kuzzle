@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: generateRandomName
+title: generateRandomName | Framework | Core
+
 description: NameGenerator class generateRandomName() method
 ---
 

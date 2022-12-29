@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sinter
+title: sinter | API | Core
 ---
 
 # sinter

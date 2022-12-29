@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: disable
+title: disable | API | Core
 ---
 
 # disable

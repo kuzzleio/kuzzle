@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mGetProfiles
+title: mGetProfiles | API | Core
 ---
 
 # mGetProfiles

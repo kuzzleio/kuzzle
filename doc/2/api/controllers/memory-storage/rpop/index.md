@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: rpop
+title: rpop | API | Core
 ---
 
 # rpop

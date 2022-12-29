@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getObject
+title: getObject | Framework | Core
+
 description: KuzzleRequest class getObject() method
 ---
 

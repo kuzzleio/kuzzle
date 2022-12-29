@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: contructor
+title: contructor | Framework | Core
+
 description: Repository constructor method
 ---
 

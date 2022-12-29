@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: capabilities
+title: capabilities | API | Core
 ---
 
 <SinceBadge version="2.17.0"/>

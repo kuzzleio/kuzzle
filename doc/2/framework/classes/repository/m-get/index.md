@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: mGet
+title: mGet | Framework | Core
+
 description: Repository.mGet method
 ---
 

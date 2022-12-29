@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: validateSpecifications
+title: validateSpecifications | API | Core
 ---
 
 # validateSpecifications

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: linsert
+title: linsert | API | Core
 ---
 
 # linsert

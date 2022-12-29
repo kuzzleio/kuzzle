@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: Deprecation
+title: Deprecation | Framework | Core
+
 description: Deprecation type definition
 ---
 

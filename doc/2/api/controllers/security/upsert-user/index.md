@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: upsertUser
+title: upsertUser | API | Core
 ---
 
 # upsertUser

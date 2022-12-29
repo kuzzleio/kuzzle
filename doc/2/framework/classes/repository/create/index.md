@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: create
+title: create | Framework | Core
+
 description: Repository.create method
 ---
 

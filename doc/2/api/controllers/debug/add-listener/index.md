@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: addListener
+title: addListener | API | Core
 ---
 
 # addListener

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: addDeprecation
+title: addDeprecation | Framework | Core
+
 description: KuzzleRequest class addDeprecation() method
 ---
 

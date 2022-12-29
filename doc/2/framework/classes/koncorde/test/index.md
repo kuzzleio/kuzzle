@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: test
+title: test | Framework | Core
+
 description: Koncorde.test method
 ---
 

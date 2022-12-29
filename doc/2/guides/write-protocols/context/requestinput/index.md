@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: RequestInput
+title: RequestInput | Protocol Framework | Write protocols | Guide
+meta:
+  - name: description
+    content: This is the class used to build the input property of any KuzzleRequest object.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, RequestInput
 ---
 
 # RequestInput

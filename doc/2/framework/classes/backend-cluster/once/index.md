@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: once
+title: once | Framework | Core
+
 description: BackendCluster.once method
 ---
 

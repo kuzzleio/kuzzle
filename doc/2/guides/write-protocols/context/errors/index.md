@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: errors
+title: errors | Protocol Framework | Write protocols | Guide
+meta:
+  - name: description
+    content: The context.errors object regroups all error objects, used in request responses, or to be used by the protocol if needs be.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, errors
 ---
 
 # errors

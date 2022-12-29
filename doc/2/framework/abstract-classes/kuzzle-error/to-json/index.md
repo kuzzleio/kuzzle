@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: toJSON
+title: toJSON | Framework | Core
+
 description: KuzzleError class toJSON() abstract method
 ---
 

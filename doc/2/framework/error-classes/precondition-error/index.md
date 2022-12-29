@@ -1,6 +1,8 @@
 ---
 type: branch
-title: PreconditionError
+title: PreconditionError | Framework | Core
+
 description: PreconditionError class
 code: true
 ---
+<RedirectToFirstChild />

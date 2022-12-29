@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: adminExists
+title: adminExists | API | Core
 ---
 
 # adminExists

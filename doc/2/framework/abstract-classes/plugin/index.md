@@ -1,6 +1,8 @@
 ---
 type: branch
-title: Plugin
+title: Plugin | Framework | Core
+
 description: Plugin abstract class
 code: true
 ---
+<RedirectToFirstChild />

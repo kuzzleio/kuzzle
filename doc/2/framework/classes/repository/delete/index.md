@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: delete
+title: delete | Framework | Core
+
 description: Repository.delete method
 ---
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: geoadd
+title: geoadd | API | Core
 ---
 
 # geoadd

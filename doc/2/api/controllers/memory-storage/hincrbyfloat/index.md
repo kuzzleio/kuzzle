@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hincrbyfloat
+title: hincrbyfloat | API | Core
 ---
 
 # hincrbyfloat

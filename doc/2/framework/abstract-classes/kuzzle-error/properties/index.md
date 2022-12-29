@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: Properties
+title: Properties | Framework | Core
+
 description: KuzzleError abstract class properties
 ---
 

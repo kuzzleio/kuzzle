@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: smove
+title: smove | API | Core
 ---
 
 # smove

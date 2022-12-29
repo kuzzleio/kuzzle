@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: remove
+title: remove | Framework | Core
+
 description: Koncorde.remove method
 ---
 

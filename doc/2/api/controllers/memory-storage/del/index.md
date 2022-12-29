@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: del
+title: del | API | Core
 ---
 
 # del

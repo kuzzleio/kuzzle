@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: unlock
+title: unlock | Framework | Core
+
 description: Mutex class unlock() method
 ---
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getset
+title: getset | API | Core
 ---
 
 # getset

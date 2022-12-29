@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: start
+title: start | Framework | Core
+
 description: Backend class start() method
 ---
 

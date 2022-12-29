@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: constructor
+title: constructor | Framework | Core
+
 description: HttpStream class constructor() method
 ---
 

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: add
+title: add | Framework | Core
+
 description: PluginStrategy class add() method
 ---
 

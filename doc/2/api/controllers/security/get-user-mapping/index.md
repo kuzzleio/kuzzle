@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getUserMapping
+title: getUserMapping | API | Core
 ---
 
 # getUserMapping

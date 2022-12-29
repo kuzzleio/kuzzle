@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getString
+title: getString | Framework | Core
+
 description: KuzzleRequest class getString() method
 ---
 

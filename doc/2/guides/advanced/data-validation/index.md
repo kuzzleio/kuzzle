@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Data Validation
-description: Ensure data quality rules
 order: 600
+title: Data Validation | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Ensure data quality rules
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource,  Data Validation
 ---
 
 # Data Validation

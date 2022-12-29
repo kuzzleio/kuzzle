@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sunionstore
+title: sunionstore | API | Core
 ---
 
 # sunionstore

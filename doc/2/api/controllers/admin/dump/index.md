@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: dump
+title: dump | API | Core
 ---
 
 # dump

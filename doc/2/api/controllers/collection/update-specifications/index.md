@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateSpecifications
+title: updateSpecifications | API | Core
 ---
 
 # updateSpecifications

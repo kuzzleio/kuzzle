@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateByQuery
+title: updateByQuery | API | Core
 ---
 
 # updateByQuery

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createUser
+title: createUser | API | Core
 ---
 
 # createUser

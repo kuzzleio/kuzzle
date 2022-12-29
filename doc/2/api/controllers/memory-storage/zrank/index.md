@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zrank
+title: zrank | API | Core
 ---
 
 # zrank

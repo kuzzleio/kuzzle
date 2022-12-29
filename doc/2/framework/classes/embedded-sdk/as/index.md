@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: as
+title: as | Framework | Core
+
 description: EmbeddedSDK class as() method
 ---
 

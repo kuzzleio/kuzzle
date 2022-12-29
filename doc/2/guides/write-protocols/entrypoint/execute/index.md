@@ -1,9 +1,13 @@
 ---
 code: true
 type: page
-title: execute
+title: execute | Protocol Entrypoint | Write protocols | Guide
+meta:
+  - name: description
+    content: The execute function main usage is to forward users API requests to Kuzzle.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol entrypoint, execute
 ---
-
 # execute
 
 

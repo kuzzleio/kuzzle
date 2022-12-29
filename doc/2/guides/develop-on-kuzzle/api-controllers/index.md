@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: API Controllers
-description: Extend Kuzzle API with controllers and actions
 order: 300
+title: API Controllers | Develop on Kuzzle | Guide | Core
+meta:
+  - name: description
+    content: Extend Kuzzle API with controllers and actions
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
-
 # API Controllers
 
 Kuzzle allows to extend its existing API using Controllers. Controllers are **logical containers of actions**.

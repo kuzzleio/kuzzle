@@ -1,6 +1,8 @@
 ---
 type: branch
-title: BackendVault
+title: BackendVault | Framework | Core
+
 description: BackendVault class definition
 code: true
 ---
+<RedirectToFirstChild />

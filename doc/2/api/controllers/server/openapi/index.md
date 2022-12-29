@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: openapi
+title: openapi | API | Core
 ---
 
 # openapi
@@ -46,7 +46,7 @@ Returns the OpenAPI v3 specifications JSON (by default) or YAML formatted.
 {
   "openapi": "3.0.1",
   "info": {
-    "title":"Kuzzle API",
+    "title":"Kuzzle API", | API | Core
     "description":"The Kuzzle HTTP API",
     "contact": {
       "name":"Kuzzle team",
@@ -67,7 +67,7 @@ Returns the OpenAPI v3 specifications JSON (by default) or YAML formatted.
 ```yaml
 openapi: 3.0.1
 info:
-  title: Kuzzle API
+  title: Kuzzle API | API | Core
   description: The Kuzzle HTTP API
   contact:
     name: Kuzzle team

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: delete
+title: delete | API | Core
 ---
 
 # delete

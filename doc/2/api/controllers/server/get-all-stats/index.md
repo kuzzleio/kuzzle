@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getAllStats
+title: getAllStats | API | Core
 ---
 
 # getAllStats

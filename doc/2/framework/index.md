@@ -2,7 +2,8 @@
 code: false
 type: root
 order: 20
-title: Framework
+title: Framework | Core
+
 description: Kuzzle v2.x Framework reference
 ---
 

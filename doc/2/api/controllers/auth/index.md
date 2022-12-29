@@ -1,5 +1,5 @@
 ---
 type: branch
 code: true
-title: auth
+title: auth | API | Core
 ---

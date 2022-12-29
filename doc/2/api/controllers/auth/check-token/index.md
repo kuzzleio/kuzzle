@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: checkToken
+title: checkToken | API | Core
 ---
 
 # checkToken

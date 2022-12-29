@@ -1,6 +1,8 @@
 ---
 type: branch
-title: InternalLogger
+title: InternalLogger | Framework | Core
+
 description: InternalLogger class definition
 code: true
 ---
+<RedirectToFirstChild />

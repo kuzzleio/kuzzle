@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: enable
+title: enable | API | Core
 ---
 
 # enable

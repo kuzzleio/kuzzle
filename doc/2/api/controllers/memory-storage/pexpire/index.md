@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: pexpire
+title: pexpire | API | Core
 ---
 
 # pexpire
