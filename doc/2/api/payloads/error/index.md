@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Error
+title: Error | API | Core
 description: Error payload reference
 order: 400
 ---

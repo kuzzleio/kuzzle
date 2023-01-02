@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hsetnx
+title: hsetnx | API | Core
 ---
 
 # hsetnx

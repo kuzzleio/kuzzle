@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: Constructor
+title: Constructor | Framework | Core
+
 description: GatewayTimeoutError class constructor
 ---
 

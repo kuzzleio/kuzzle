@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: srandmember
+title: srandmember | API | Core
 ---
 
 # srandmember

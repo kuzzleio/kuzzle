@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Run Kuzzle
-description: Run your first Kuzzle application
 order: 100
+title: Run Kuzzle | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Run your first Kuzzle application
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, run kuzzle
 ---
 
 # Run Kuzzle

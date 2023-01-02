@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createOrReplaceRole
+title: createOrReplaceRole | API | Core
 ---
 
 # createOrReplaceRole

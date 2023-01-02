@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getBodyInteger
+title: getBodyInteger | Framework | Core
+
 description: KuzzleRequest class getBodyInteger() method
 ---
 

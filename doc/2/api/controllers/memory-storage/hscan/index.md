@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hscan
+title: hscan | API | Core
 ---
 
 # hscan

@@ -1,8 +1,13 @@
 ---
 code: false
 type: page
-title: Controllers
 order: 400
+title: Controllers | Old Guides | Write plugins | Guide 
+meta:
+  - name: description
+    content: Kuzzle's API is divided into controllers, each exposing executable actions (see API reference).
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, old guides, Controllers
 ---
 
 <DeprecatedBadge version="2.8.0" />

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getRandomAdjective
+title: getRandomAdjective | Framework | Core
+
 description: NameGenerator class getRandomAdjective() method
 ---
 

@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: RequestPayload
+title: RequestPayload | Framework | Core
+
 description: RequestPayload type definition
 ---
 

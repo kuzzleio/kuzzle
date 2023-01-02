@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteByQuery
+title: deleteByQuery | API | Core
 ---
 
 # deleteByQuery

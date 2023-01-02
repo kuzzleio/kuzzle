@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mGet
+title: mGet | API | Core
 ---
 
 # mGet

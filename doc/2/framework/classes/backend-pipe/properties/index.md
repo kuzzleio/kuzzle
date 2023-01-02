@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: Properties
+title: Properties | Framework | Core
+
 description: BackendPipe class properties
 ---
 

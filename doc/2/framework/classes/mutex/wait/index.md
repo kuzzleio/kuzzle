@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: wait
+title: wait | Framework | Core
+
 description: Mutex class wait() method
 ---
 

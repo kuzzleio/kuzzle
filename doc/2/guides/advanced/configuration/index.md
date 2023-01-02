@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Configuration
-description: Configure Kuzzle
 order: 100
+title: Configuration | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Configure Kuzzle
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource,  Configuration 
 ---
 
 # Configuring Kuzzle

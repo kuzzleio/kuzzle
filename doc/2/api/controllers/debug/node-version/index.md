@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: nodeVersion
+title: nodeVersion | API | Core
 ---
 
 # nodeVersion

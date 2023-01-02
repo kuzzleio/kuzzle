@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: API
-description: Discover Kuzzle API usage and formats
 order: 100
+title: Kuzzle API | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content: Discover Kuzzle API usage and formats
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Authentication
 ---
 
 # API

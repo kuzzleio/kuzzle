@@ -45,7 +45,7 @@ export type ProfileDefinition = {
       /**
        * Collection names.
        */
-      collections: string[];
+      collections?: string[];
     }>;
   }>;
 };

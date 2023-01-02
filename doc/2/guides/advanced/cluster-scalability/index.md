@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Cluster and Scalability
-description: Understand how a Kuzzle cluster works
 order: 700
+title: Cluster and Scalability | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Understand how a Kuzzle cluster works
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource,  Cluster and Scalability 
 ---
-
 :::info
 This documentation page applies to Kuzzle versions 2.11 and above.  
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteRole
+title: deleteRole | API | Core
 ---
 
 # deleteRole

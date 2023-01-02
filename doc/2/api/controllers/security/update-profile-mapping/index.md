@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateProfileMapping
+title: updateProfileMapping | API | Core
 ---
 
 # updateProfileMapping

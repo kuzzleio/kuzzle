@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getMyCredentials
+title: getMyCredentials | API | Core
 ---
 
 # getMyCredentials

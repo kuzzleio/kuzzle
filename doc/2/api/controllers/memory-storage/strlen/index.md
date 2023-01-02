@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: strlen
+title: strlen | API | Core
 ---
 
 # strlen

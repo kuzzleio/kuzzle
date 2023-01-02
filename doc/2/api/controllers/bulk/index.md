@@ -1,5 +1,5 @@
 ---
 type: branch
 code: true
-title: bulk
+title: bulk | API | Core
 ---

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: clearError
+title: clearError | Framework | Core
+
 description: KuzzleRequest class clearError() method
 ---
 

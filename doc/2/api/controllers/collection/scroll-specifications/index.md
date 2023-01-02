@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: scrollSpecifications
+title: scrollSpecifications | API | Core
 ---
 
 # scrollSpecifications

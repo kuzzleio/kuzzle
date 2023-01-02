@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getInteger
+title: getInteger | Framework | Core
+
 description: KuzzleRequest class getInteger() method
 ---
 

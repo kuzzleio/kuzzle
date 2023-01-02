@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: scan
+title: scan | API | Core
 ---
 
 # scan

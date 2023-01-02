@@ -1,6 +1,8 @@
 ---
 type: branch
-title: BackendImport
+title: BackendImport | Framework | Core
+
 description: BackendImport class definition
 code: true
 ---
+<RedirectToFirstChild />

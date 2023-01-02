@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zremrangebyrank
+title: zremrangebyrank | API | Core
 ---
 
 # zremrangebyrank

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hexists
+title: hexists | API | Core
 ---
 
 # hexists

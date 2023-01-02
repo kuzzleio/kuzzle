@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: WebSocket
+title: WebSocket | API | Core
 description: WebSocket protocol usage and configuration  
 order: 200
 ---

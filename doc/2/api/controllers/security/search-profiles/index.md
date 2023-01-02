@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchProfiles
+title: searchProfiles | API | Core
 ---
 
 # searchProfiles

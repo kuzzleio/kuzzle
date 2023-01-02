@@ -1,6 +1,8 @@
 ---
 type: branch
-title: RequestInput
+title: RequestInput | Framework | Core
+
 description: RequestInput class definition
 code: true
 ---
+<RedirectToFirstChild />

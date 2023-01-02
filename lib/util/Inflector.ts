@@ -63,4 +63,16 @@ export class Inflector {
   static camelCase(string) {
     return _.camelCase(string);
   }
+
+  /**
+   * Converts a string to snake_case
+   * https://stackoverflow.com/a/52964182
+   */
+  static snakeCase(str: string) {
+    return str
+      .replace(/\W+/g, " ")
+      .split(/ |\B(?=[A-Z])/)
+      .map((word) => word.toLowerCase())
+      .join("_");
+  }
 }

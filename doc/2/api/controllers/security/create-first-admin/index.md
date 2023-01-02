@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createFirstAdmin
+title: createFirstAdmin | API | Core
 ---
 
 # createFirstAdmin

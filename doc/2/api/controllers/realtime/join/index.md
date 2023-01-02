@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: join
+title: join | API | Core
 ---
 
 # join

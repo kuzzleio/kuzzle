@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: setnx
+title: setnx | API | Core
 ---
 
 # setnx

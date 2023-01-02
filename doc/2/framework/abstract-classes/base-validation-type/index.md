@@ -1,7 +1,8 @@
 ---
 type: branch
-title: BaseValidationType
+title: BaseValidationType | Framework | Core
+
 description: BaseValidationType abstract class
 code: true
 ---
- 
+ <RedirectToFirstChild />

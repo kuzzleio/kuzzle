@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Internal Logger
-description: Internal Logger usage and configuration
 order: 500
+title: Internal Logger | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Internal Logger usage and configuration
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, Internal Logger
 ---
-
 # Internal Logger
 
 Kuzzle uses [Winston](https://github.com/winstonjs/winston) to log messages.  

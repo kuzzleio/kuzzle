@@ -1,10 +1,14 @@
 ---
 code: false
 type: page
-title: Pipes
 order: 300
+title: Pipes | Old Guides | Write plugins | Guide 
+meta:
+  - name: description
+    content: Pipes are functions plugged to events, called synchronously by Kuzzle, and receiving information regarding that event.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, old guides, pipes
 ---
-
 <DeprecatedBadge version="2.8.0" />
 
 ::: warning

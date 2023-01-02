@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: refreshToken
+title: refreshToken | API | Core
 ---
 
 # refreshToken

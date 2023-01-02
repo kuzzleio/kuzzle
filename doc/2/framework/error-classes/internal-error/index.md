@@ -1,6 +1,8 @@
 ---
 type: branch
-title: InternalError
+title: InternalError | Framework | Core
+
 description: InternalError class
 code: true
 ---
+<RedirectToFirstChild />

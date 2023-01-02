@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: psetex
+title: psetex | API | Core
 ---
 
 # psetex

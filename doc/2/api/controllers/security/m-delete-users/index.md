@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mDeleteUsers
+title: mDeleteUsers | API | Core
 ---
 
 # mDeleteUsers

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: loadFixtures
+title: loadFixtures | API | Core
 ---
 
 # loadFixtures

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hlen
+title: hlen | API | Core
 ---
 
 # hlen

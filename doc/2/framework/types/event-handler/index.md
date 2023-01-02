@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: EventHandler
+title: EventHandler | Framework | Core
+
 description: EventHandler type definition
 ---
 

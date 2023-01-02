@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: register
+title: register | Framework | Core
+
 description: BackendPipe.register method
 ---
 

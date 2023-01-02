@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: exists
+title: exists | API | Core
 ---
 
 # exists

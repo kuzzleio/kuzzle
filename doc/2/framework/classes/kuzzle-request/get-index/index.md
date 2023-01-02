@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getIndex
+title: getIndex | Framework | Core
+
 description: KuzzleRequest class getIndex() method
 ---
 

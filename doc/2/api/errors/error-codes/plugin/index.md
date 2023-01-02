@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x04: plugin"
+title: "0x04: plugin | API | Core " 
 description: Error codes definitions
 ---
 

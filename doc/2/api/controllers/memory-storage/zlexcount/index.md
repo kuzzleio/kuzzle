@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zlexcount
+title: zlexcount | API | Core
 ---
 
 # zlexcount

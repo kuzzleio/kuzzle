@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: API Keys
-description: Manage API keys 
 order: 200
+title: API Keys | Kuzzle Advanced | Guide | Core
+meta:
+  - name: description
+    content: Manage kuzzle API keys 
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, API Keys 
 ---
-
 # API Keys
 
 Kuzzle allows to create API keys to **authenticate users without using an authentication strategy** and the [auth:login](/core/2/api/controllers/auth/login) action.
