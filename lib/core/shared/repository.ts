@@ -19,28 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import cacheDbEnum from "../cache/cacheDbEnum";
+import * as kerror from "../../kerror";
+import { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
+export class Repository<TObject extends { _id: string }> {
+  protected ttl: number;
+  protected index: string;
+  protected collection: string;
+  protected ObjectConstructor: any;
+  protected store: any;
+  protected cacheDb: any;
 
-const cacheDbEnum = require("../cache/cacheDbEnum");
-const kerror = require("../../kerror");
-
-/**
- * @class Repository
- * @property {Kuzzle} kuzzle
- * @property {string} index
- * @property {number} ttl
- * @property {?string} collection
- * @property {function} ObjectConstructor
- * @property {cacheDbEnum} cacheDb
- * @property {Store} store
- */
-class Repository {
-  /**
-   * @param {{cache: cacheDbEnum, store: Store}} [options]
-   * @constructor
-   */
   constructor({ cache = cacheDbEnum.INTERNAL, store = null } = {}) {
     this.ttl = global.kuzzle.config.repositories.common.cacheTTL;
     this.collection = null;
@@ -50,11 +40,7 @@ class Repository {
     this.cacheDb = cache;
   }
 
-  /**
-   * @param {string} id
-   * @returns {Promise} resolves on a new ObjectConstructor()
-   */
-  async loadOneFromDatabase(id) {
+  async loadOneFromDatabase(id: string): Promise<TObject> {
     let response;
 
     try {
@@ -82,21 +68,25 @@ class Repository {
     return null;
   }
 
-  /**
-   *
-   * @param {string[]|object[]} _ids
-   * @returns {Promise<object>}
-   */
-  async loadMultiFromDatabase(ids) {
+  async loadMultiFromDatabase(ids: string[]): Promise<TObject[]> {
     const { items } = await this.store.mGet(this.collection, ids);
 
     if (items.length === 0) {
       return [];
     }
 
-    return Bluebird.map(items, (doc) =>
-      this.fromDTO(Object.assign({}, doc._source, { _id: doc._id }))
-    );
+    const promises = [];
+
+    for (const item of items) {
+      promises.push(this.fromDTO({
+        ...item._source,
+        _id: item._id
+      }));
+    }
+
+    const objects = await Promise.all(promises);
+
+    return objects;
   }
 
   /**
@@ -113,18 +103,16 @@ class Repository {
       options
     );
 
-    return this._formatSearchResults(response);
+    return this.formatSearchResults(response);
   }
 
   /**
    * Scroll over a paginated search request
-   * @param {string} scrollId
-   * @param {string} [ttl]
    */
-  async scroll(scrollId, ttl) {
+  async scroll(scrollId: string, ttl?: string) {
     const response = await this.store.scroll(scrollId, ttl);
 
-    return this._formatSearchResults(response);
+    return this.formatSearchResults(response);
   }
 
   /**
@@ -135,11 +123,13 @@ class Repository {
    * the cache key to fetch.
    * In case the key is not provided, it defaults to repos/<index>/<collection>/<id>, i.e.: repos/%kuzzle/users/12
    *
-   * @param {string} id - The id of the object to get
-   * @param {object} [options] - Optional options.
-   * @returns {Promise}
+   * @param id - The id of the object to get
+   * @param options.key - Cache key.
    */
-  async loadFromCache(id, options = {}) {
+  async loadFromCache(
+    id: string,
+    options: { key?: string } = {}
+  ): Promise<TObject> {
     const key = options.key || this.getCacheKey(id);
     let response;
 
@@ -169,11 +159,10 @@ class Repository {
    * In case the key is not provided, it defaults to <collection>/id
    * (e.g. users/12)
    *
-   * @param {string} id - The id of the object to get
-   * @param {object} [options] - Optional options.
-   * @returns {Promise}
+   * @param id - The id of the object to get
+   * @param options.key - Optional cache key
    */
-  async load(id, options = {}) {
+  async load(id: string, options: { key?: string } = {}): Promise<TObject> {
     if (this.cacheDb === cacheDbEnum.NONE) {
       return this.loadOneFromDatabase(id);
     }
@@ -202,11 +191,14 @@ class Repository {
   /**
    * Persists the given object in the collection that is attached to the repository.
    *
-   * @param {Profile|Role|User} object - The object to persist
-   * @param {object} [options] - The persistence options
+   * @param object - The object to persist
+   * @param options.method -
    * @returns {Promise}
    */
-  persistToDatabase(object, options = {}) {
+  persistToDatabase(
+    object: TObject,
+    options: { method?: string } = {},
+  ) {
     const method = options.method || "createOrReplace";
 
     if (method === "create") {
@@ -228,13 +220,10 @@ class Repository {
   /**
    * Given an object with an id, delete it from the configured storage engines
    *
-   * @param {object} object - The object to delete
-   * The options optional parameters currently accepts only 1 option:
-   *   key: if provided, removes the given key instead of the default one (<collection>/<id>)
-   * @param {object} [options] - optional options for the current operation
-   * @returns {Promise}
+   * @param object - The object to delete
+   * @param options.key - if provided, removes the given key instead of the default one (<collection>/<id>)
    */
-  delete(object, options = {}) {
+  async delete(object: TObject, options: { key?: string } = {}): Promise<void> {
     const promises = [];
 
     if (this.cacheDb !== cacheDbEnum.NONE) {
@@ -245,32 +234,27 @@ class Repository {
       promises.push(this.deleteFromDatabase(object._id, options));
     }
 
-    return Bluebird.all(promises);
+    await Promise.all(promises);
   }
 
   /**
    * Delete repository from database according to its id
-   *
-   * @param {string} id
-   * @param {object} [options]
    */
-  deleteFromDatabase(id, options = {}) {
+  deleteFromDatabase(id: string, options: JSONObject = {}) {
     return this.store.delete(this.collection, id, options);
   }
 
   /**
    * Persists the given ObjectConstructor object in cache.
-   * The opts optional parameters currently accept 2 options:
-   *   key: if provided, stores the object to the given key instead of the
-   *        default one (<collection>/<id>)
-   *   ttl: if provided, overrides the default ttl set on the repository for
-   *        the current operation.
    *
-   * @param {object} object - The object to persist
-   * @param {object} [options] - Optional options for the current operation
-   * @returns {Promise}
+   * @param object - The object to persist
+   * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
+   * @param options.ttl - if provided, overrides the default ttl set on the repository for the current operation
    */
-  async persistToCache(object, options = {}) {
+  async persistToCache(
+    object: TObject,
+    options: { key?: string, ttl?: number } = {},
+  ): Promise<TObject> {
     const key = options.key || this.getCacheKey(object._id);
     const value = JSON.stringify(this.serializeToCache(object));
     const ttl = options.ttl !== undefined ? options.ttl : this.ttl;
@@ -284,25 +268,25 @@ class Repository {
 
   /**
    * Removes the object from the Cache Engine
-   * The opts optional parameters currently accepts only 1 option:
-   *   key: if provided, removes the given key instead of the default one (<collection>/<id>)
    *
-   * @param {string} id
-   * @param {object} [options] - optional options for the current operation
-   * @returns {Promise}
+   * @param id
+   * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
    */
-  deleteFromCache(id, options = {}) {
+  async deleteFromCache(id: string, options: { key?: string } = {}) {
     const key = options.key || this.getCacheKey(id);
 
-    return global.kuzzle.ask(`core:cache:${this.cacheDb}:del`, key);
+    await global.kuzzle.ask(`core:cache:${this.cacheDb}:del`, key);
   }
 
   /**
-   * @param {object} object
-   * @param {object} [options] - optional options for the current operation
-   * @returns {Promise}
+   * @param object
+   * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
+   * @param options.ttl - if provided, overrides the default ttl set on the repository for the current operation
    */
-  refreshCacheTTL(object, options = {}) {
+  refreshCacheTTL(
+    object: JSONObject,
+    options: { key?: string, ttl?: number } = {},
+  ) {
     const key = options.key || this.getCacheKey(object._id);
     let ttl;
 
@@ -324,32 +308,30 @@ class Repository {
   }
 
   /**
-   * @param {object} object
-   * @param {object} [options] - optional options for the current operation
-   * @returns {*}
+   * @param object
+   * @param options.key - if provided, stores the object to the given key instead of the default one (<collection>/<id>)
    */
-  expireFromCache(object, options = {}) {
+  async expireFromCache(object: TObject, options: { key?: string } = {}) {
     const key = options.key || this.getCacheKey(object._id);
-    return global.kuzzle.ask(`core:cache:${this.cacheDb}:expire`, key, -1);
+
+    await global.kuzzle.ask(`core:cache:${this.cacheDb}:expire`, key, -1);
   }
 
   /**
    * Serializes the object before being persisted to cache.
    *
-   * @param {object} object - The object to serialize
-   * @returns {object}
+   * @param object - The object to serialize
    */
-  serializeToCache(object) {
+  serializeToCache(object: TObject) {
     return this.toDTO(object);
   }
 
   /**
    * Serializes the object before being persisted to the database.
    *
-   * @param {object} object - The object to serialize
-   * @returns {object}
+   * @param object - The object to serialize
    */
-  serializeToDatabase(object) {
+  serializeToDatabase(object: TObject) {
     const dto = this.toDTO(object);
     delete dto._id;
     return dto;
@@ -358,7 +340,7 @@ class Repository {
   /**
    * @param {string} id
    */
-  getCacheKey(id) {
+  getCacheKey(id: string): string {
     return `repos/${this.index}/${this.collection}/${id}`;
   }
 
@@ -366,7 +348,7 @@ class Repository {
    * @param {object} dto
    * @returns {Promise<ObjectConstructor>}
    */
-  async fromDTO(dto) {
+  async fromDTO(dto: JSONObject): Promise<TObject> {
     const o = new this.ObjectConstructor();
     Object.assign(o, dto);
 
@@ -377,7 +359,7 @@ class Repository {
    * @param {ObjectConstructor} o
    * @returns {object}
    */
-  toDTO(o) {
+  toDTO(o: TObject) {
     return Object.assign({}, o);
   }
 
@@ -395,15 +377,14 @@ class Repository {
 
   /**
    * Do not override this: this function calls itself.
-   * @private
    */
-  async _truncate(options, part = null) {
+  private async _truncate(options, part = null) {
     if (part === null) {
       const objects = await this.search(
         {},
         { refresh: options.refresh, scroll: "5s", size: 100 }
       );
-      const deleted = await this._truncatePart(objects, options);
+      const deleted = await this.truncatePart(objects, options);
 
       if (objects.hits.length < objects.total) {
         const total = await this._truncate(options, {
@@ -419,7 +400,7 @@ class Repository {
     }
 
     const objects = await this.scroll(part.scrollId, "5s");
-    const deleted = await this._truncatePart(objects, options);
+    const deleted = await this.truncatePart(objects, options);
 
     part.fetched += objects.hits.length;
 
@@ -437,10 +418,11 @@ class Repository {
    * @param {Array} objects
    * @param {object} options
    * @returns {Promise<integer>} count of deleted objects
-   * @private
    */
-  async _truncatePart(objects, options) {
-    return Bluebird.map(objects.hits, async (object) => {
+  private async truncatePart(objects, options) {
+    const promises = [];
+
+    const processObject = async (object) => {
       // profile and role repositories have protected objects, we can't delete
       // them
       const protectedObjects =
@@ -456,7 +438,15 @@ class Repository {
       await this.delete(loaded, options);
 
       return 1;
-    }).reduce((total, deleted) => total + deleted, 0);
+    };
+
+    for (const hit of objects.hits) {
+      promises.push(processObject(hit));
+    }
+
+    const results = await Promise.all(promises);
+
+    return results.reduce((total, deleted) => total + deleted, 0);
   }
 
   /**
@@ -465,7 +455,7 @@ class Repository {
    * @returns {Promise<object>}
    * @private
    */
-  async _formatSearchResults(raw) {
+  private async formatSearchResults(raw) {
     const result = {
       aggregations: raw.aggregations,
       hits: [],
@@ -474,13 +464,18 @@ class Repository {
     };
 
     if (raw.hits && raw.hits.length > 0) {
-      result.hits = await Bluebird.map(raw.hits, (doc) => {
-        return this.fromDTO(Object.assign({}, doc._source, { _id: doc._id }));
-      });
+      const promises = [];
+
+      for (const hit of raw.hits) {
+        promises.push(this.fromDTO({
+          ...hit._source,
+          _id: hit._id
+        }))
+      }
+
+      result.hits = await Promise.all(promises);
     }
 
     return result;
   }
 }
-
-module.exports = Repository;

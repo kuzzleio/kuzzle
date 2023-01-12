@@ -19,22 +19,22 @@
  * limitations under the License.
  */
 
-"use strict";
+import _ from "lodash";
+import jwt from "jsonwebtoken";
+import ms from "ms";
+import { JSONObject } from "kuzzle-sdk";
 
-const _ = require("lodash");
-const jwt = require("jsonwebtoken");
-const ms = require("ms");
-const Bluebird = require("bluebird");
-
-const ApiKey = require("../../model/storage/apiKey");
-const { UnauthorizedError } = require("../../kerror/errors");
-const { Token } = require("../../model/security/token");
-const Repository = require("../shared/repository");
-const kerror = require("../../kerror");
-const debug = require("../../util/debug")("kuzzle:bootstrap:tokens");
-const { Mutex } = require("../../util/mutex");
+import ApiKey from "../../model/storage/apiKey";
+import { UnauthorizedError } from "../../kerror/errors";
+import { Token } from "../../model/security/token";
+import * as kerror from "../../kerror";
+import debugFactory from "../../util/debug";
+import { Mutex } from "../../util/mutex";
+import { Repository } from "../shared/repository";
+import { User } from "../../model/security/user";
 
 const securityError = kerror.wrap("security", "token");
+const debug = debugFactory("kuzzle:bootstrap:tokens");
 
 const BOOTSTRAP_DONE_KEY = "token/bootstrap";
 
@@ -44,11 +44,17 @@ const BOOTSTRAP_DONE_KEY = "token/bootstrap";
  * @param {Kuzzle} kuzzle
  * @param {object} [opts]
  */
-class TokenRepository extends Repository {
-  constructor(opts = {}) {
+class TokenRepository extends Repository<Token> {
+  private tokenGracePeriod: number;
+  private anonymousToken: Token;
+
+  constructor(opts: JSONObject = {}) {
     super();
+
     this.collection = "token";
+
     this.ObjectConstructor = Token;
+
     if (opts.ttl !== undefined) {
       this.ttl = opts.ttl;
     }
@@ -56,11 +62,12 @@ class TokenRepository extends Repository {
     this.tokenGracePeriod = Math.floor(
       global.kuzzle.config.security.jwt.gracePeriod
     );
+
     this.anonymousToken = new Token({ userId: "-1" });
   }
 
   async init() {
-    await this._loadApiKeys();
+    await this.loadApiKeys();
 
     /**
      * Assign an existing token to a user. Stores the token in Kuzzle's cache.
@@ -139,10 +146,8 @@ class TokenRepository extends Repository {
 
   /**
    * Expires the given token immediately
-   * @param {Token} requestToken
-   * @returns {Promise}
    */
-  async expire(token) {
+  async expire(token: Token) {
     await super.expireFromCache(token);
     await global.kuzzle.tokenManager.expire(token);
   }
@@ -152,12 +157,11 @@ class TokenRepository extends Repository {
    * queued requests to execute, but we mark the token as "refreshed" to forbid
    * any refreshes on that token, to prevent token bombing
    *
-   * @param {User} user
-   * @param {Token} requestToken
-   * @param {String} expiresIn - new token expiration delay
-   * @returns {Promise<Token>}
+   * @param user
+   * @param requestToken
+   * @param expiresIn - new token expiration delay
    */
-  async refresh(user, token, expiresIn) {
+  async refresh(user: User, token: Token, expiresIn: string): Promise<Token> {
     // do not refresh a token marked as already
     if (token.refreshed) {
       throw securityError.get("invalid");
@@ -183,20 +187,25 @@ class TokenRepository extends Repository {
   }
 
   /**
-   * @param {User} user
-   * @param {Object} options - { algorithm, expiresIn, bypassMaxTTL (false), type (authToken) }
+   * @param user
+   * @param options - { algorithm, expiresIn, bypassMaxTTL (false), type (authToken) }
    *
    * @returns {Promise.<Object>} { _id, jwt, userId, ttl, expiresAt }
    */
   async generateToken(
-    user,
+    user: User,
     {
       algorithm = global.kuzzle.config.security.jwt.algorithm,
       expiresIn = global.kuzzle.config.security.jwt.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
+    }: {
+      algorithm?: string;
+      expiresIn?: string;
+      bypassMaxTTL?: boolean;
+      type?: string;
     } = {}
-  ) {
+  ): Promise<Token> {
     if (!user || user._id === null) {
       throw securityError.get("unknown_user");
     }
@@ -216,7 +225,7 @@ class TokenRepository extends Repository {
       throw securityError.get("ttl_exceeded");
     }
 
-    const signOptions = { algorithm };
+    const signOptions: JSONObject = { algorithm };
 
     if (parsedExpiresIn === 0) {
       throw kerror.get(
@@ -256,13 +265,15 @@ class TokenRepository extends Repository {
   /**
    * Persists a token in the cache
    *
-   * @param {String} encodedToken - Encoded token
-   * @param {String} userId - User ID
-   * @param {Number} ttl - TTL in ms (-1 for infinite duration)
-   *
-   * @returns {Promise}
+   * @param encodedToken - Encoded token
+   * @param userId - User ID
+   * @param ttl - TTL in ms (-1 for infinite duration)
    */
-  async persistForUser(encodedToken, userId, ttl) {
+  async persistForUser(
+    encodedToken: string,
+    userId: string,
+    ttl: number,
+  ): Promise<Token> {
     const redisTTL = ttl === -1 ? 0 : ttl;
     const expiresAt = ttl === -1 ? -1 : Date.now() + ttl;
     const token = new Token({
@@ -286,7 +297,7 @@ class TokenRepository extends Repository {
     }
   }
 
-  async verifyToken(token) {
+  async verifyToken(token: string): Promise<Token> {
     if (token === null) {
       return this.anonymousToken;
     }
@@ -331,13 +342,13 @@ class TokenRepository extends Repository {
     return userToken;
   }
 
-  removeTokenPrefix(token) {
+  removeTokenPrefix(token: string) {
     return token
       .replace(Token.AUTH_PREFIX, "")
       .replace(Token.APIKEY_PREFIX, "");
   }
 
-  loadForUser(userId, encodedToken) {
+  loadForUser(userId: string, encodedToken: string): Promise<Token> {
     return this.load(`${userId}#${encodedToken}`);
   }
 
@@ -361,11 +372,8 @@ class TokenRepository extends Repository {
 
   /**
    * Deletes tokens affiliated to the provided user identifier
-   *
-   * @param {string} kuid
-   * @returns {Promise}
    */
-  async deleteByKuid(kuid, { keepApiKeys = true } = {}) {
+  async deleteByKuid(kuid: string, { keepApiKeys = true } = {}) {
     const emptyKeyLength = super.getCacheKey("").length;
     const userKey = super.getCacheKey(`${kuid}#*`);
 
@@ -397,7 +405,7 @@ class TokenRepository extends Repository {
       })
       .filter((key) => key !== null);
 
-    await Bluebird.map(ids, async (token) => {
+    const expireToken = async (token) => {
       const cacheToken = await this.load(token);
 
       if (cacheToken !== null) {
@@ -407,15 +415,21 @@ class TokenRepository extends Repository {
 
         await this.expire(cacheToken);
       }
-    });
+    };
+
+    const promises = [];
+
+    for (const id of ids) {
+      promises.push(expireToken(id));
+    }
+
+    await Promise.all(promises);
   }
 
   /**
    * Loads authentication token from API key into Redis
-   *
-   * @returns {Promise}
    */
-  async _loadApiKeys() {
+  private async loadApiKeys() {
     const mutex = new Mutex("ApiKeysBootstrap", {
       timeout: -1,
       ttl: 30000,
@@ -446,7 +460,7 @@ class TokenRepository extends Repository {
         }
       });
 
-      await Bluebird.all(promises);
+      await Promise.all(promises);
 
       await global.kuzzle.ask(
         "core:cache:internal:store",
@@ -482,8 +496,6 @@ class TokenRepository extends Repository {
     // Around the world, around the world.
   }
 }
-
-module.exports = TokenRepository;
 
 /**
  * Returns a duration in milliseconds

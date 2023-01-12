@@ -19,17 +19,19 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const Bluebird = require("bluebird");
-
-const kerror = require("../../kerror");
-const { get } = require("../../util/safeObject");
+import { JSONObject } from "kuzzle-sdk";
+import * as kerror from "../../kerror";
+import { get } from "../../util/safeObject";
+import { KuzzleRequest } from "../request";
 
 const assertionError = kerror.wrap("api", "assert");
 
-// Base class for all controllers
+/**
+ * Base class for all controllers
+ */
 class BaseController {
+  protected __actions: Set<string>;
+
   constructor() {
     this.__actions = new Set();
   }
@@ -48,15 +50,17 @@ class BaseController {
    * This check's purpose is to prevent actions leak by making actions exposure
    * explicit.
    *
-   * @param  {string} name
-   * @returns {boolean}
+   * @param name
    */
-  _isAction(name) {
+  _isAction(name: string) {
     return this.__actions.has(name);
   }
 }
 
-class NativeController extends BaseController {
+export class NativeController extends BaseController {
+  protected ask: (event: string, ...args: any[]) => Promise<any>;
+  protected pipe: (event: string, ...args: any[]) => Promise<any>;
+
   constructor(actions = []) {
     super();
 
@@ -69,14 +73,11 @@ class NativeController extends BaseController {
    * Controller optional initialization method.
    * Used to perform asynchronous initialization safely: the funnel will wait
    * for all controllers to be initialized before accepting requests.
-   *
-   * @returns {Promise}
    */
-  init() {
-    return Bluebird.resolve();
+  async init() {
   }
 
-  async translateKoncorde(koncordeFilters) {
+  async translateKoncorde(koncordeFilters: JSONObject) {
     if (Object.keys(koncordeFilters).length === 0) {
       return {};
     }
@@ -103,10 +104,10 @@ class NativeController extends BaseController {
   /**
    * Throws if the body contain one of the specified attribute
    *
-   * @param {Request} request
-   * @param  {...any} paths
+   * @param request
+   * @param paths
    */
-  assertBodyHasNotAttributes(request, ...paths) {
+  assertBodyHasNotAttributes(request: KuzzleRequest, ...paths: string[]) {
     if (request.input.body !== null) {
       for (const path of paths) {
         if (get(request.input.body, path)) {
@@ -120,9 +121,8 @@ class NativeController extends BaseController {
    * Throws if the strategy does not exists
    *
    * @todo move this method in some kind of "Security" class
-   * @param {String} strategy
    */
-  assertIsStrategyRegistered(strategy) {
+  assertIsStrategyRegistered(strategy: string) {
     if (!global.kuzzle.pluginsManager.listStrategies().includes(strategy)) {
       throw kerror.get("security", "credentials", "unknown_strategy", strategy);
     }
@@ -134,10 +134,13 @@ class NativeController extends BaseController {
    * - invalid types
    * - unauthorized values
    *
-   * @param {Array<{index:string, collections?: string[]}>} targets Array of targets
-   * @param {*} options
+   * @param Array of targets
+   * @param options.allowEmptyCollections
    */
-  assertTargetsAreValid(targets, { allowEmptyCollections } = {}) {
+  assertTargetsAreValid(
+    targets: Array<{ index: string, collections?: string[] }>,
+    { allowEmptyCollections=false } = { }
+  ) {
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
 
@@ -220,17 +223,17 @@ class NativeController extends BaseController {
     }
   }
 
-  _hasMultiTargets(str) {
+  _hasMultiTargets(str: string) {
     return [",", "*", "+"].some((chr) => str.includes(chr)) || str === "_all";
   }
 
   /**
    * Throws if page size exceeed Kuzzle limits
    *
-   * @param {Number} asked
+   * @param asked
    * @throws
    */
-  assertNotExceedMaxFetch(asked) {
+  assertNotExceedMaxFetch(asked: number) {
     const limit = global.kuzzle.config.limits.documentsFetchCount;
 
     if (asked > limit) {
@@ -241,10 +244,10 @@ class NativeController extends BaseController {
   /**
    * Throws if number of documents exceeed Kuzzle limits
    *
-   * @param {Number} asked
+   * @param asked
    * @throws
    */
-  assertNotExceedMaxWrite(asked) {
+  assertNotExceedMaxWrite(asked: number) {
     const limit = global.kuzzle.config.limits.documentsWriteCount;
 
     if (asked > limit) {
@@ -252,5 +255,3 @@ class NativeController extends BaseController {
     }
   }
 }
-
-module.exports = { BaseController, NativeController };

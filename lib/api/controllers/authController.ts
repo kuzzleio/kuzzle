@@ -18,29 +18,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { IncomingMessage } from "http";
+import Cookie from "cookie";
 
-"use strict";
+import Bluebird from "bluebird";
+import { isEmpty } from "lodash";
 
-const { IncomingMessage } = require("http");
-const Cookie = require("cookie");
+import { KuzzleError } from "../../kerror/errors";
+import { KuzzleRequest } from "../request";
+import * as kerror from "../../kerror";
+import { has } from "../../util/safeObject";
+import { NativeController } from "./baseController";
+import formatProcessing from "../../core/auth/formatProcessing";
+import { User } from "../../model/security/user";
+import ApiKey from "../../model/storage/apiKey";
+import SecurityController from "./securityController";
+import { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
-const { isEmpty } = require("lodash");
+export class AuthController extends NativeController {
+  private anonymousId: string;
 
-const { KuzzleError } = require("../../kerror/errors");
-const { KuzzleRequest } = require("../request");
-const kerror = require("../../kerror");
-const { has } = require("../../util/safeObject");
-const { NativeController } = require("./baseController");
-const formatProcessing = require("../../core/auth/formatProcessing");
-const { User } = require("../../model/security/user");
-const ApiKey = require("../../model/storage/apiKey");
-const SecurityController = require("./securityController");
-
-/**
- * @class AuthController
- */
-class AuthController extends NativeController {
   /**
    * @param {Kuzzle} kuzzle
    * @constructor
@@ -51,6 +48,7 @@ class AuthController extends NativeController {
       "checkToken",
       "createApiKey",
       "createMyCredentials",
+      "createToken",
       "credentialsExist",
       "deleteApiKey",
       "deleteMyCredentials",
@@ -81,6 +79,13 @@ class AuthController extends NativeController {
       "core:security:user:anonymous:get"
     );
     this.anonymousId = anonymous._id;
+  }
+
+  async createToken(request: KuzzleRequest) {
+    const type = request.getString('type');
+    const ttl = request.getBodyString('ttl');
+
+
   }
 
   /**
@@ -285,7 +290,7 @@ class AuthController extends NativeController {
    */
   async login(request) {
     const strategy = request.getString("strategy");
-    const passportRequest = new IncomingMessage();
+    const passportRequest: any = new IncomingMessage(null);
 
     // Even in http, the url and the method are not pushed back to the request object
     // set some arbitrary values to get a pseudo-valid object.
@@ -330,7 +335,7 @@ class AuthController extends NativeController {
       return authResponse.content;
     }
 
-    const options = {};
+    const options: JSONObject = {};
     if (request.input.args.expiresIn) {
       options.expiresIn = request.input.args.expiresIn;
     }
