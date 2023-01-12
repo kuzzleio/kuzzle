@@ -34,6 +34,7 @@ import { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
 import SecurityController from "./securityController";
 import { JSONObject } from "kuzzle-sdk";
+import { Token } from "../../model/security/token";
 
 export class AuthController extends NativeController {
   private anonymousId: string;
@@ -82,10 +83,23 @@ export class AuthController extends NativeController {
   }
 
   async createToken(request: KuzzleRequest) {
-    const type = request.getString('type');
-    const ttl = request.getBodyString('ttl');
+    const unique = request.getBoolean('unique');
 
+    const token: Token = await this.ask(
+      "core:security:token:create",
+      request.getUser(),
+      {
+        expiresIn: request.input.args.expiresIn,
+        unique,
+      }
+    );
 
+    return {
+      token: token.jwt,
+      ttl: token.ttl,
+      expiresAt: token.expiresAt,
+      unique: token.unique,
+    };
   }
 
   /**

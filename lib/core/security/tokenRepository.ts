@@ -77,7 +77,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:assign", (hash, userId, ttl) =>
-      this.persistForUser(hash, userId, ttl)
+      this.persistForUser(hash, userId, { ttl, unique: false })
     );
 
     /**
@@ -199,16 +199,19 @@ export class TokenRepository extends Repository<Token> {
       expiresIn = global.kuzzle.config.security.jwt.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
+      unique = false,
     }: {
       algorithm?: string;
       expiresIn?: string;
       bypassMaxTTL?: boolean;
       type?: string;
+      unique?: boolean;
     } = {}
   ): Promise<Token> {
     if (!user || user._id === null) {
       throw securityError.get("unknown_user");
     }
+    console.log({a:2, unique})
 
     const parsedExpiresIn = parseTimespan(expiresIn);
 
@@ -259,7 +262,10 @@ export class TokenRepository extends Repository<Token> {
       encodedToken = Token.AUTH_PREFIX + encodedToken;
     }
 
-    return this.persistForUser(encodedToken, user._id, parsedExpiresIn);
+    return this.persistForUser(encodedToken, user._id, {
+      ttl: parsedExpiresIn,
+      unique,
+    });
   }
 
   /**
@@ -272,7 +278,13 @@ export class TokenRepository extends Repository<Token> {
   async persistForUser(
     encodedToken: string,
     userId: string,
-    ttl: number,
+    {
+      ttl,
+      unique
+    }: {
+      ttl: number,
+      unique: boolean
+    }
   ): Promise<Token> {
     const redisTTL = ttl === -1 ? 0 : ttl;
     const expiresAt = ttl === -1 ? -1 : Date.now() + ttl;
@@ -282,6 +294,7 @@ export class TokenRepository extends Repository<Token> {
       jwt: encodedToken,
       ttl,
       userId,
+      unique,
     });
 
     try {
@@ -323,7 +336,7 @@ export class TokenRepository extends Repository<Token> {
       throw securityError.getFrom(err, "verification_error", err.message);
     }
 
-    let userToken;
+    let userToken: Token;
 
     try {
       userToken = await this.loadForUser(decoded._id, token);
@@ -337,6 +350,10 @@ export class TokenRepository extends Repository<Token> {
 
     if (userToken === null) {
       throw securityError.get("invalid");
+    }
+
+    if (userToken.unique) {
+      await this.expire(userToken);
     }
 
     return userToken;
@@ -455,7 +472,10 @@ export class TokenRepository extends Repository<Token> {
       await ApiKey.batchExecute({ match_all: {} }, (documents) => {
         for (const { _source } of documents) {
           promises.push(
-            this.persistForUser(_source.token, _source.userId, _source.ttl)
+            this.persistForUser(_source.token, _source.userId, {
+              ttl: _source.ttl,
+              unique: false
+            })
           );
         }
       });
@@ -501,11 +521,8 @@ export class TokenRepository extends Repository<Token> {
  * Returns a duration in milliseconds
  *  - returns 0 if the duration is invalid
  *  - -1 mean infinite
- *
- * @param {String|Number} time
- * @return {Number}
  */
-function parseTimespan(time) {
+function parseTimespan(time: string | number): number {
   if (typeof time === "string") {
     const milliseconds = ms(time);
 

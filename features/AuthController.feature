@@ -2,19 +2,19 @@ Feature: Auth Controller
 
   # auth:createToken ===========================================================
 
-  # @security @login
-  # Scenario: Create a unique token
-  #   Given I successfully execute the action "auth":"login" with args:
-  #     | strategy | "local"                                              |
-  #     | body     | { "username": "test-admin", "password": "password" } |
-  #   When I successfully execute the action "auth":"createToken" with args:
-  #     | type     | "unique" |
-  #     | body.ttl | "30s"    |
-  #   Then I should receive a result matching:
-  #     | token     | "_STRING_" |
-  #     | ttl       | 1800       |
-  #     | expiresAt | "_NUMBER_" |
-  #   Then I can use the unique token from the result to authenticate
+  @security @login
+  Scenario: Create a unique token
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I successfully execute the action "auth":"createToken" with args:
+      | unique | true |
+    Then I should receive a result matching:
+      | token     | "_STRING_" |
+      | ttl       | 3600000    |
+      | expiresAt | "_NUMBER_" |
+      | unique    | true       |
+    Then I can use the unique token from the result to authenticate once
 
   # auth:checkToken ===========================================================
 

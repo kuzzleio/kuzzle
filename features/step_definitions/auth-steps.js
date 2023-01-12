@@ -45,7 +45,7 @@ Given("I save the created API key", function () {
 });
 
 Given(
-  "I can use the unique token from the result to authenticate",
+  "I can use the unique token from the result to authenticate once",
   async function () {
     const token = this.props.result.token;
 
@@ -65,7 +65,8 @@ Given(
       throw new Error("Token should not be valid");
     }
     catch (error) {
-      console.log(error);
-      console.log(error.id);
+      if (error.id !== 'security.token.invalid') {
+        throw error;
+      }
     }
   });
