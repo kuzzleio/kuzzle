@@ -109,7 +109,7 @@ export class Repository<TObject extends { _id: string }> {
   /**
    * Scroll over a paginated search request
    */
-  async scroll(scrollId: string, ttl?: string) {
+  async scroll(scrollId: string, ttl?: string | number) {
     const response = await this.store.scroll(scrollId, ttl);
 
     return this.formatSearchResults(response);
@@ -197,7 +197,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   persistToDatabase(
     object: TObject,
-    options: { method?: string } = {},
+    options: any = {},
   ) {
     const method = options.method || "createOrReplace";
 
@@ -223,7 +223,7 @@ export class Repository<TObject extends { _id: string }> {
    * @param object - The object to delete
    * @param options.key - if provided, removes the given key instead of the default one (<collection>/<id>)
    */
-  async delete(object: TObject, options: { key?: string } = {}): Promise<void> {
+  async delete(object: TObject, options: any = {}): Promise<void> {
     const promises = [];
 
     if (this.cacheDb !== cacheDbEnum.NONE) {
@@ -331,7 +331,7 @@ export class Repository<TObject extends { _id: string }> {
    *
    * @param object - The object to serialize
    */
-  serializeToDatabase(object: TObject) {
+  serializeToDatabase(object: TObject): Omit<TObject, "_id"> {
     const dto = this.toDTO(object);
     delete dto._id;
     return dto;
@@ -359,7 +359,7 @@ export class Repository<TObject extends { _id: string }> {
    * @param {ObjectConstructor} o
    * @returns {object}
    */
-  toDTO(o: TObject) {
+  toDTO(o: TObject): any {
     return Object.assign({}, o);
   }
 

@@ -29,7 +29,7 @@ const assertionError = kerror.wrap("api", "assert");
 /**
  * Base class for all controllers
  */
-class BaseController {
+export class BaseController {
   protected __actions: Set<string>;
 
   constructor() {
