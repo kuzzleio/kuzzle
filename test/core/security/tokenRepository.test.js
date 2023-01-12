@@ -13,26 +13,20 @@ const {
   UnauthorizedError,
 } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
-const MutexMock = require("../../mocks/mutex.mock");
 
 const { Token } = require("../../../lib/model/security/token");
 const { User } = require("../../../lib/model/security/user");
-const Repository = require("../../../lib/core/shared/repository");
+const { Repository } = require("../../../lib/core/shared/repository");
 const ApiKey = require("../../../lib/model/storage/apiKey");
+const { TokenRepository } = require("../../../lib/core/security/tokenRepository");
 
 describe("Test: security/tokenRepository", () => {
   let kuzzle;
-  let TokenRepository;
   let tokenRepository;
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
     kuzzle.secret = "test-secret";
-
-    mockrequire("../../../lib/util/mutex", { Mutex: MutexMock });
-    TokenRepository = mockrequire.reRequire(
-      "../../../lib/core/security/tokenRepository"
-    );
 
     tokenRepository = new TokenRepository();
     sinon.stub(tokenRepository, "_loadApiKeys");
@@ -43,7 +37,6 @@ describe("Test: security/tokenRepository", () => {
 
   afterEach(() => {
     ApiKey.batchExecute.restore();
-    mockrequire.stopAll();
   });
 
   describe("#constructor", () => {

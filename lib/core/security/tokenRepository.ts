@@ -44,7 +44,7 @@ const BOOTSTRAP_DONE_KEY = "token/bootstrap";
  * @param {Kuzzle} kuzzle
  * @param {object} [opts]
  */
-class TokenRepository extends Repository<Token> {
+export class TokenRepository extends Repository<Token> {
   private tokenGracePeriod: number;
   private anonymousToken: Token;
 
