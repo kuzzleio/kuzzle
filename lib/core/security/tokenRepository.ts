@@ -71,7 +71,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:assign", (hash, userId, ttl) =>
-      this.persistForUser(hash, userId, { singleUse: false, ttl, })
+      this.persistForUser(hash, userId, { singleUse: false, ttl })
     );
 
     /**
