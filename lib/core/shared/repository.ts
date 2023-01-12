@@ -78,10 +78,12 @@ export class Repository<TObject extends { _id: string }> {
     const promises = [];
 
     for (const item of items) {
-      promises.push(this.fromDTO({
-        ...item._source,
-        _id: item._id
-      }));
+      promises.push(
+        this.fromDTO({
+          ...item._source,
+          _id: item._id,
+        })
+      );
     }
 
     const objects = await Promise.all(promises);
@@ -195,10 +197,7 @@ export class Repository<TObject extends { _id: string }> {
    * @param options.method -
    * @returns {Promise}
    */
-  persistToDatabase(
-    object: TObject,
-    options: any = {},
-  ) {
+  persistToDatabase(object: TObject, options: any = {}) {
     const method = options.method || "createOrReplace";
 
     if (method === "create") {
@@ -253,7 +252,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   async persistToCache(
     object: TObject,
-    options: { key?: string, ttl?: number } = {},
+    options: { key?: string; ttl?: number } = {}
   ): Promise<TObject> {
     const key = options.key || this.getCacheKey(object._id);
     const value = JSON.stringify(this.serializeToCache(object));
@@ -285,7 +284,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   refreshCacheTTL(
     object: JSONObject,
-    options: { key?: string, ttl?: number } = {},
+    options: { key?: string; ttl?: number } = {}
   ) {
     const key = options.key || this.getCacheKey(object._id);
     let ttl;
@@ -467,10 +466,12 @@ export class Repository<TObject extends { _id: string }> {
       const promises = [];
 
       for (const hit of raw.hits) {
-        promises.push(this.fromDTO({
-          ...hit._source,
-          _id: hit._id
-        }))
+        promises.push(
+          this.fromDTO({
+            ...hit._source,
+            _id: hit._id,
+          })
+        );
       }
 
       result.hits = await Promise.all(promises);

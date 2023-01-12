@@ -211,7 +211,6 @@ export class TokenRepository extends Repository<Token> {
     if (!user || user._id === null) {
       throw securityError.get("unknown_user");
     }
-    console.log({a:2, unique})
 
     const parsedExpiresIn = parseTimespan(expiresIn);
 
@@ -280,10 +279,10 @@ export class TokenRepository extends Repository<Token> {
     userId: string,
     {
       ttl,
-      unique
+      unique,
     }: {
-      ttl: number,
-      unique: boolean
+      ttl: number;
+      unique: boolean;
     }
   ): Promise<Token> {
     const redisTTL = ttl === -1 ? 0 : ttl;
@@ -474,7 +473,7 @@ export class TokenRepository extends Repository<Token> {
           promises.push(
             this.persistForUser(_source.token, _source.userId, {
               ttl: _source.ttl,
-              unique: false
+              unique: false,
             })
           );
         }

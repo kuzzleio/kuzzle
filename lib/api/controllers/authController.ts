@@ -83,7 +83,17 @@ export class AuthController extends NativeController {
   }
 
   async createToken(request: KuzzleRequest) {
-    const unique = request.getBoolean('unique');
+    const unique = request.getBoolean("unique");
+
+    if (`${request.input.args.expiresIn}` === "-1") {
+      throw kerror.get(
+        "security",
+        "token",
+        "invalid_expiration",
+        "expiresIn",
+        "cannot be infinite"
+      );
+    }
 
     const token: Token = await this.ask(
       "core:security:token:create",

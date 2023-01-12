@@ -16,6 +16,17 @@ Feature: Auth Controller
       | unique    | true       |
     Then I can use the unique token from the result to authenticate once
 
+  @security @login
+  Scenario: Cannot create a token who does not expire
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I execute the action "auth":"createToken" with args:
+      | unique    | true |
+      | expiresIn | -1   |
+    Then I should receive an error matching:
+      | id | "security.token.invalid_expiration" |
+
   # auth:checkToken ===========================================================
 
   @security @login

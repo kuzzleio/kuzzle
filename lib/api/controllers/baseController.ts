@@ -74,8 +74,7 @@ export class NativeController extends BaseController {
    * Used to perform asynchronous initialization safely: the funnel will wait
    * for all controllers to be initialized before accepting requests.
    */
-  async init() {
-  }
+  async init() {}
 
   async translateKoncorde(koncordeFilters: JSONObject) {
     if (Object.keys(koncordeFilters).length === 0) {
@@ -138,8 +137,8 @@ export class NativeController extends BaseController {
    * @param options.allowEmptyCollections
    */
   assertTargetsAreValid(
-    targets: Array<{ index: string, collections?: string[] }>,
-    { allowEmptyCollections=false } = { }
+    targets: Array<{ index: string; collections?: string[] }>,
+    { allowEmptyCollections = false } = {}
   ) {
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];

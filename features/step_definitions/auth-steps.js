@@ -63,10 +63,10 @@ Given(
       await this.sdk.server.now();
 
       throw new Error("Token should not be valid");
-    }
-    catch (error) {
-      if (error.id !== 'security.token.invalid') {
+    } catch (error) {
+      if (error.id !== "security.token.invalid") {
         throw error;
       }
     }
-  });
+  }
+);
