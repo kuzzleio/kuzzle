@@ -105,10 +105,10 @@ export class AuthController extends NativeController {
     );
 
     return {
-      token: token.jwt,
-      ttl: token.ttl,
       expiresAt: token.expiresAt,
       singleUse: token.singleUse,
+      token: token.jwt,
+      ttl: token.ttl,
     };
   }
 

@@ -38,12 +38,6 @@ const debug = debugFactory("kuzzle:bootstrap:tokens");
 
 const BOOTSTRAP_DONE_KEY = "token/bootstrap";
 
-/**
- * @class TokenRepository
- * @extends Repository
- * @param {Kuzzle} kuzzle
- * @param {object} [opts]
- */
 export class TokenRepository extends Repository<Token> {
   private tokenGracePeriod: number;
   private anonymousToken: Token;
@@ -77,7 +71,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:assign", (hash, userId, ttl) =>
-      this.persistForUser(hash, userId, { ttl, singleUse: false })
+      this.persistForUser(hash, userId, { singleUse: false, ttl, })
     );
 
     /**
@@ -262,8 +256,8 @@ export class TokenRepository extends Repository<Token> {
     }
 
     return this.persistForUser(encodedToken, user._id, {
-      ttl: parsedExpiresIn,
       singleUse,
+      ttl: parsedExpiresIn,
     });
   }
 
@@ -291,9 +285,9 @@ export class TokenRepository extends Repository<Token> {
       _id: `${userId}#${encodedToken}`,
       expiresAt,
       jwt: encodedToken,
+      singleUse,
       ttl,
       userId,
-      singleUse,
     });
 
     try {
@@ -472,8 +466,8 @@ export class TokenRepository extends Repository<Token> {
         for (const { _source } of documents) {
           promises.push(
             this.persistForUser(_source.token, _source.userId, {
-              ttl: _source.ttl,
               singleUse: false,
+              ttl: _source.ttl,
             })
           );
         }
