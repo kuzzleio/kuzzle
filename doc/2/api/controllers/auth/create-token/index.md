@@ -20,7 +20,7 @@ For this you should use [auth:createApiKey](/core/2/api/controllers/auth/create-
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_createToken[&expiresIn=900][&unique]
+URL: http://kuzzle:7512/_createToken[&expiresIn=900][&singleUse]
 Method: POST
 Body:
 ```
@@ -39,7 +39,7 @@ Body:
 
 
   // optional arguments
-  "unique": true,
+  "singleUse": true,
   "expiresIn": 900
 }
 ```
@@ -53,7 +53,7 @@ Body:
 - `expiresIn`: set the expiration duration (`-1` by default)
   - if a raw number is provided (not enclosed between quotes), then the expiration delay is in milliseconds. Example: `86400000`
   - if this value is a string, then its content is parsed by the [ms](https://www.npmjs.com/package/ms) library. Examples: `"6d"`, `"10h"`
-- `unique`: if set to `true`, then the token can be used only once
+- `singleUse`: if set to `true`, then the token can be used only once
 
 ---
 
@@ -68,7 +68,7 @@ Returns an object containing the token:
 - `expiresAt`: expiration date in UNIX micro-timestamp format
 - `ttl`: original ttl
 - `token`: authentication token associated with this API key
-- `unique`: single use token
+- `singleUse`: `true` if single use token
 
 ```js
 {
@@ -81,7 +81,7 @@ Returns an object containing the token:
     "expiresAt": -1,
     "ttl": -1,
     "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJNeSIsImlhdCI6MTU3MzE4NTkzNSwiZXhwIjoxNTczMTg1OTM0fQ.08qAnSD03V0N1OcviGVUAZEjjv4DxULTgoQQwojn1PA",
-    "unique": true,
+    "singleUse": true,
   }
 }
 ```

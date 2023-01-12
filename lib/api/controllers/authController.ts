@@ -83,7 +83,7 @@ export class AuthController extends NativeController {
   }
 
   async createToken(request: KuzzleRequest) {
-    const unique = request.getBoolean("unique");
+    const singleUse = request.getBoolean("singleUse");
 
     if (`${request.input.args.expiresIn}` === "-1") {
       throw kerror.get(
@@ -100,7 +100,7 @@ export class AuthController extends NativeController {
       request.getUser(),
       {
         expiresIn: request.input.args.expiresIn,
-        unique,
+        singleUse,
       }
     );
 
@@ -108,7 +108,7 @@ export class AuthController extends NativeController {
       token: token.jwt,
       ttl: token.ttl,
       expiresAt: token.expiresAt,
-      unique: token.unique,
+      singleUse: token.singleUse,
     };
   }
 

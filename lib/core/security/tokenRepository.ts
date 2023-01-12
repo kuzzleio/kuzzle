@@ -77,7 +77,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:assign", (hash, userId, ttl) =>
-      this.persistForUser(hash, userId, { ttl, unique: false })
+      this.persistForUser(hash, userId, { ttl, singleUse: false })
     );
 
     /**
@@ -199,13 +199,13 @@ export class TokenRepository extends Repository<Token> {
       expiresIn = global.kuzzle.config.security.jwt.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
-      unique = false,
+      singleUse = false,
     }: {
       algorithm?: string;
       expiresIn?: string;
       bypassMaxTTL?: boolean;
       type?: string;
-      unique?: boolean;
+      singleUse?: boolean;
     } = {}
   ): Promise<Token> {
     if (!user || user._id === null) {
@@ -263,7 +263,7 @@ export class TokenRepository extends Repository<Token> {
 
     return this.persistForUser(encodedToken, user._id, {
       ttl: parsedExpiresIn,
-      unique,
+      singleUse,
     });
   }
 
@@ -279,10 +279,10 @@ export class TokenRepository extends Repository<Token> {
     userId: string,
     {
       ttl,
-      unique,
+      singleUse,
     }: {
       ttl: number;
-      unique: boolean;
+      singleUse: boolean;
     }
   ): Promise<Token> {
     const redisTTL = ttl === -1 ? 0 : ttl;
@@ -293,7 +293,7 @@ export class TokenRepository extends Repository<Token> {
       jwt: encodedToken,
       ttl,
       userId,
-      unique,
+      singleUse,
     });
 
     try {
@@ -351,7 +351,7 @@ export class TokenRepository extends Repository<Token> {
       throw securityError.get("invalid");
     }
 
-    if (userToken.unique) {
+    if (userToken.singleUse) {
       await this.expire(userToken);
     }
 
@@ -473,7 +473,7 @@ export class TokenRepository extends Repository<Token> {
           promises.push(
             this.persistForUser(_source.token, _source.userId, {
               ttl: _source.ttl,
-              unique: false,
+              singleUse: false,
             })
           );
         }

@@ -45,7 +45,7 @@ Given("I save the created API key", function () {
 });
 
 Given(
-  "I can use the unique token from the result to authenticate once",
+  "I can use the single use token from the result to authenticate once",
   async function () {
     const token = this.props.result.token;
 
