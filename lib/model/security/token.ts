@@ -32,6 +32,7 @@ export interface TokenContent {
   connectionIds?: string[];
   jwt?: string;
   refreshed?: boolean;
+  singleUse?: boolean;
 }
 
 /**
@@ -44,6 +45,7 @@ export class Token implements TokenContent {
   userId: string;
   jwt: string;
   refreshed: boolean;
+  singleUse: boolean;
 
   constructor(data: TokenContent = {}) {
     this._id = data._id || null;
@@ -52,6 +54,7 @@ export class Token implements TokenContent {
     this.userId = data.userId || null;
     this.jwt = data.jwt || null;
     this.refreshed = Boolean(data.refreshed);
+    this.singleUse = Boolean(data.singleUse);
   }
 
   get type(): "apiKey" | "authToken" {

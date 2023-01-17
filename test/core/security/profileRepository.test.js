@@ -16,7 +16,7 @@ const { Profile } = require("../../../lib/model/security/profile");
 const {
   ProfileRepository,
 } = require("../../../lib/core/security/profileRepository");
-const Repository = require("../../../lib/core/shared/repository");
+const { Repository } = require("../../../lib/core/shared/repository");
 
 describe("Test: security/profileRepository", () => {
   let kuzzle;

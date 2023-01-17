@@ -43,3 +43,30 @@ Given(
 Given("I save the created API key", function () {
   this.props.token = this.props.result._source.token;
 });
+
+Given(
+  "I can use the single use token from the result to authenticate once",
+  async function () {
+    const token = this.props.result.token;
+
+    should(token).not.be.undefined();
+
+    this.sdk.jwt = token;
+
+    const user = await this.sdk.auth.getCurrentUser();
+
+    should(user._id).be.eql("test-admin");
+
+    // Unique token is not valid anymore
+
+    try {
+      await this.sdk.server.now();
+
+      throw new Error("Token should not be valid");
+    } catch (error) {
+      if (error.id !== "security.token.invalid") {
+        throw error;
+      }
+    }
+  }
+);
