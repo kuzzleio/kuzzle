@@ -21,6 +21,10 @@ The `scroll` parameter represents the maximum time needed for the client to down
 You should try with smaller pages of results if you experienced download problems.
 :::
 
+::: info
+If you want to expose the exported documents in HTTP, you will need to create a `<a>` element and add a [single use token](/core/2/api/controllers/create-token) in the link `jwt` argument.
+:::
+
 ::: warning
 Koncorde `bool` operator and `regexp` clause are not supported for search queries.
 :::
