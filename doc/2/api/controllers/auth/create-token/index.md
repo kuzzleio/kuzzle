@@ -6,6 +6,8 @@ title: createToken | API | Core
 
 # createToken
 
+<SinceBadge version="auto-version"/>
+
 Creates a token for the currently loggued user.
 
 ::: info
