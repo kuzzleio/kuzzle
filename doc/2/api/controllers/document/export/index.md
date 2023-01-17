@@ -17,7 +17,7 @@ This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filter
 Koncorde filters will be translated into an Elasticsearch query.
 
 ::: info
-The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.  
+The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.
 You should try with smaller pages of results if you experienced download problems.
 :::
 
@@ -37,7 +37,7 @@ This method only supports the HTTP Protocol
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_export[?format=<export format>][&size=<int>][&scroll=<time to live>][&lang=<query language>]
-Method: GET
+Method: POST
 Body:
 ```
 

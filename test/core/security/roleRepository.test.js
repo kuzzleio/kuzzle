@@ -12,7 +12,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 
 const { Role } = require("../../../lib/model/security/role");
 const RoleRepository = require("../../../lib/core/security/roleRepository");
-const Repository = require("../../../lib/core/shared/repository");
+const { Repository } = require("../../../lib/core/shared/repository");
 const kuzzleStateEnum = require("../../../lib/kuzzle/kuzzleStateEnum");
 
 describe("Test: security/roleRepository", () => {
