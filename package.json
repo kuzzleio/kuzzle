@@ -26,6 +26,7 @@
     "test:functional:legacy:http": "npx cucumber-js --format progress-bar --profile http ./features-legacy",
     "test:functional:legacy:websocket": "npx cucumber-js --format progress-bar --profile websocket ./features-legacy",
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt ./features-legacy",
+    "test:functional:jest": "npm run test:jest",
     "cucumber": "cucumber.js --fail-fast",
     "codecov": "codecov",
     "prettier": "npx prettier ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin --write",
