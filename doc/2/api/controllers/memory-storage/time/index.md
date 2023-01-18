@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: time
+title: time | API | Core
 ---
 
 # time

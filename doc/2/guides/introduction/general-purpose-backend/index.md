@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: General Purpose Backend
-description: Kuzzle main concepts and features overview
 order: 200
+title: General Purpose Backend | Kuzzle Introduction | Guide | Core
+meta:
+  - name: description
+    content: Kuzzle main concepts and features overview
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend
 ---
 
 # General Purpose Backend
@@ -87,7 +91,7 @@ Kuzzle fits perfectly in a **context of SSO and centralization of authentication
 
 Kuzzle has a **standard system with 3 dimensions**. Roles control access to API actions, profiles are a composition of roles and finally users are a composition of profiles.
 
-[Users, Profiles and Roles](./profiles-roles.png)
+[Users, Profiles and Roles diagram](./profiles-roles.png)
 
 This system allows to manage the majority of access control rights situations. For the most advanced cases, Kuzzle **allows to dynamically restrict access rights** via its event system and its pipe mechanism.
 

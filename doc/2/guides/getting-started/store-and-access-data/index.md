@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Store and Access Data
-description: Create and retrieve documents
 order: 200
+title: Store and Access Data | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Create and retrieve documents
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Store and Access Data
 ---
 
 # Store and Access Data
@@ -101,7 +105,7 @@ Finally, we are going to use the [Admin Console](http://next-console.kuzzle.io) 
 
 Select the `nyc-open-data` index and then the `yellow-taxi` collection. You should see one document in this collection.
 
-![admin console show document](./admin-console-show-document.gif)
+![admin console show document gif](./admin-console-show-document.gif)
 
 ### Search for documents
 

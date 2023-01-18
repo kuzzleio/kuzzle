@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: pfcount
+title: pfcount | API | Core
 ---
 
 # pfcount

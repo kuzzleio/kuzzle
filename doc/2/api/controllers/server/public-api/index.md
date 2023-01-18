@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: publicApi
+title: publicApi | API | Core
 ---
 
 # publicApi

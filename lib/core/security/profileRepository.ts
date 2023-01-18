@@ -23,7 +23,7 @@ import { omit } from "lodash";
 import Bluebird from "bluebird";
 
 import { Profile } from "../../model/security/profile";
-import Repository from "../shared/repository";
+import { Repository } from "../shared/repository";
 import * as kerror from "../../kerror";
 import cacheDbEnum from "../cache/cacheDbEnum";
 import { JSONObject } from "kuzzle-sdk";
@@ -57,7 +57,7 @@ type UpdateOptions = {
  * @class ProfileRepository
  * @extends Repository
  */
-export class ProfileRepository extends Repository {
+export class ProfileRepository extends Repository<Profile> {
   private module: any;
   private profiles: Map<string, Profile>;
 
@@ -523,8 +523,8 @@ export class ProfileRepository extends Repository {
       profile.policies = [{ roleId: "default" }];
     }
 
-    if (profile.constructor._hash("") === false) {
-      profile.constructor._hash = (obj) => global.kuzzle.hash(obj);
+    if ((profile.constructor as any)._hash("") === false) {
+      (profile.constructor as any)._hash = (obj) => global.kuzzle.hash(obj);
     }
 
     const policiesRoles = profile.policies.map((p) => p.roleId);

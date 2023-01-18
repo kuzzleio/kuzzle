@@ -2,7 +2,8 @@
 code: false
 type: branch
 order: 300
-title: Types
+title: Types | Framework | Core
+
 description: Framework types reference
 ---
 

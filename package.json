@@ -1,10 +1,11 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.19.12",
+  "version": "2.20.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
+    "docker": "docker-compose run kuzzle_node_1 ",
     "file": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json",
     "start:dev": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json --script-args=--enable-plugins functional-test-plugin",
     "prepublishOnly": "npm run build",
@@ -69,7 +70,7 @@
     "ms": "^2.1.3",
     "murmurhash-native": "^3.5.0",
     "ndjson": "^2.0.0",
-    "node-segfault-handler": "^1.1.0",
+    "node-segfault-handler": "^1.4.2",
     "passport": "^0.6.0",
     "protobufjs": "~7.1.2",
     "rc": "1.2.8",

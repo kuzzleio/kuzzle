@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: removeListener
+title: removeListener | API | Core
 ---
 
 # removeListener

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: search
+title: search | Framework | Core
+
 description: Repository.search method
 ---
 

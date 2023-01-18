@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: pttl
+title: pttl | API | Core
 ---
 
 # pttl

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: geodist
+title: geodist | API | Core
 ---
 
 # geodist

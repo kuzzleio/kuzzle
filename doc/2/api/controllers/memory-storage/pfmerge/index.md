@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: pfmerge
+title: pfmerge | API | Core
 ---
 
 # pfmerge

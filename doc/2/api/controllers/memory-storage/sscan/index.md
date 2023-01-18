@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sscan
+title: sscan | API | Core
 ---
 
 # sscan

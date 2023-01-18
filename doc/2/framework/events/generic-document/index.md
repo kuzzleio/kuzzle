@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Generic Document
+title: Generic Document | Framework | Core
+
 description: Generic document events list
 order: 100
 ---

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateSelf
+title: updateSelf | API | Core
 ---
 
 # updateSelf

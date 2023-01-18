@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: createCollection
+title: createCollection | Framework | Core
+
 description: PluginStorage class createCollection() method
 ---
 

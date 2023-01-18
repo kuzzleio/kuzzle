@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Services
+title: Services | Framework | Core
+
 description: Services events list
 ---
 

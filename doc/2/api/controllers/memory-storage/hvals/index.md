@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hvals
+title: hvals | API | Core
 ---
 
 # hvals

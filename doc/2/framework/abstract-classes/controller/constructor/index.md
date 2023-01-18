@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: constructor
+title: constructor | Framework | Core
+
 description: Controller abstract class constructor
 ---
 

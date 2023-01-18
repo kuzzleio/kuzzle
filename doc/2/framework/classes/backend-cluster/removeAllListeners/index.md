@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: removeAllListeners
+title: removeAllListeners | Framework | Core
+
 description: BackendCluster.removeAllListeners method
 ---
 

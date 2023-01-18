@@ -61,7 +61,7 @@ export class KuzzleRequest {
    */
   public id: string;
 
-  constructor(data: any, options: any) {
+  constructor(data: any, options?: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);

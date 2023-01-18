@@ -2,7 +2,7 @@
 type: page
 
 code: true
-title: resetSecurity
+title: resetSecurity | API | Core
 ---
 
 # resetSecurity

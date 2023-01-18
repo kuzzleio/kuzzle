@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: subscribe
+title: subscribe | API | Core
 ---
 
 # subscribe

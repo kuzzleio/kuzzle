@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Inflector } from "../../util/inflector";
+import { Inflector } from "../../util/Inflector";
 import * as kerror from "../../kerror";
 import { JSONObject } from "../../../index";
 import { Plugin } from "../../types";

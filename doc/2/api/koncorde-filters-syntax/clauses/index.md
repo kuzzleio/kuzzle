@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: Clauses
+title: Clauses | API | Core
 description: Koncorde clauses list
 order: 100
 ---

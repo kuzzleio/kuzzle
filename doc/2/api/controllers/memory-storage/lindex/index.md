@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: lindex
+title: lindex | API | Core
 ---
 
 # lindex

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: get
+title: get | Framework | Core
+
 description: BackendPlugin.get method
 ---
 

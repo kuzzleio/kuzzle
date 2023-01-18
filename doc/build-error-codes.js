@@ -64,7 +64,7 @@ function getHeader (title) {
   return `---
 code: true
 type: page
-title: "${title}"
+title: "${title} | API | Core " 
 description: Error codes definitions
 ---
 

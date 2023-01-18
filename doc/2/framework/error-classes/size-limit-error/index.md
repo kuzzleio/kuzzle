@@ -1,6 +1,8 @@
 ---
 type: branch
-title: SizeLimitError
+title: SizeLimitError | Framework | Core
+
 description: SizeLimitError class
 code: true
 ---
+<RedirectToFirstChild />

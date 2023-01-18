@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: count
+title: count | API | Core
 ---
 
 # count

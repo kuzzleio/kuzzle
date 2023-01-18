@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sismember
+title: sismember | API | Core
 ---
 
 # sismember

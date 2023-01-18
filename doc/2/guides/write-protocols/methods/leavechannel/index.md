@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: leaveChannel
+title: leaveChannel | Write protocols | Guide
+meta:
+  - name: description
+    content: Informs the protocol that one of its connected users left a channel.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, leaveChannel
 ---
 
 # leaveChannel

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getArray
+title: getArray | Framework | Core
+
 description: KuzzleRequest class getArray() method
 ---
 

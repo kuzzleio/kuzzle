@@ -1,6 +1,8 @@
 ---
 type: branch
-title: KuzzleRequest
+title: KuzzleRequest | Framework | Core
+
 description: KuzzleRequest class definition
 code: true
 ---
+<RedirectToFirstChild />

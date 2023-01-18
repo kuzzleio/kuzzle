@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mWrite
+title: mWrite | API | Core
 ---
 
 # mWrite

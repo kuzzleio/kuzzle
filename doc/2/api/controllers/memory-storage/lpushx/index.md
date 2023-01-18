@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: lpushx
+title: lpushx | API | Core
 ---
 
 # lpushx

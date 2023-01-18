@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getMapping
+title: getMapping | API | Core
 ---
 
 # getMapping

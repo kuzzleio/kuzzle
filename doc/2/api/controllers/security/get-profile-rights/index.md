@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getProfileRights
+title: getProfileRights | API | Core
 ---
 
 # getProfileRights

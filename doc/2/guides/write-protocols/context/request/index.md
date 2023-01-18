@@ -1,9 +1,13 @@
 ---
 code: true
 type: page
-title: KuzzleRequest
+title: Response headers | Protocol Framework | Write protocols | Guide
+meta:
+  - name: description
+    content: Network protocol specific headers can be added to the response. If the protocol supports it, these headers are forwarded in the response sent to the client.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, Response headers
 ---
-
 # KuzzleRequest
 
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: import
+title: import | API | Core
 ---
 
 # import

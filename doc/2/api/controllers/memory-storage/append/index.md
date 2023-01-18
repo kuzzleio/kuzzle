@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: append
+title: append | API | Core
 ---
 
 # append

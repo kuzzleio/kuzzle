@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: serialize
+title: serialize | Framework | Core
+
 description: KuzzleRequest class serialize() method
 ---
 

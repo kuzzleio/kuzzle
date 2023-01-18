@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: searchUsers
+title: searchUsers | API | Core
 ---
 
 # searchUsers

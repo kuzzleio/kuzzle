@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getSpecifications
+title: getSpecifications | API | Core
 ---
 
 # getSpecifications

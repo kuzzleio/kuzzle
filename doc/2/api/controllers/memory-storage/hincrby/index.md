@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hincrby
+title: hincrby | API | Core
 ---
 
 # hincrby

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: decr
+title: decr | API | Core
 ---
 
 # decr

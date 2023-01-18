@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: External Plugins
-description: Use External Plugins to add whole sets of features
 order: 500
+title: External Plugins | Develop on Kuzzle | Guide | Core
+meta:
+  - name: description
+    content: Use External Plugins to add whole sets of features
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource, External Plugins 
 ---
-
 # External Plugins
 
 You can **extend Kuzzle's features** via plugins.

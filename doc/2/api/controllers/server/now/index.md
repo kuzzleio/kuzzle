@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: now
+title: now | API | Core
 ---
 
 # now

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: export
+title: export | API | Core
 ---
 
 # export
@@ -17,8 +17,12 @@ This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filter
 Koncorde filters will be translated into an Elasticsearch query.
 
 ::: info
-The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.  
+The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.
 You should try with smaller pages of results if you experienced download problems.
+:::
+
+::: info
+If you want to expose the exported documents in HTTP, you will need to create a `<a>` element and add a [single use token](/core/2/api/controllers/create-token) in the link `jwt` argument.
 :::
 
 ::: warning
@@ -37,7 +41,7 @@ This method only supports the HTTP Protocol
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_export[?format=<export format>][&size=<int>][&scroll=<time to live>][&lang=<query language>]
-Method: GET
+Method: POST
 Body:
 ```
 

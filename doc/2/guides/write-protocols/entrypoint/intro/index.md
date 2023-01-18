@@ -1,8 +1,13 @@
 ---
 type: page
 code: false
-title: Properties
 order: 0
+title: Properties | Protocol Entrypoint | Write protocols | Guide
+meta:
+  - name: description
+    content: An instance of the EntryPoint class is provided as an argument to the protocol's required init function.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol entrypoint, properties
 ---
 
 # Properties

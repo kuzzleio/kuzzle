@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zrangebyscore
+title: zrangebyscore | API | Core
 ---
 
 # zrangebyscore

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: list
+title: list | API | Core
 ---
 
 # list

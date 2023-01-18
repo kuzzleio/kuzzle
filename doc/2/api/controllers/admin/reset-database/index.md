@@ -2,7 +2,7 @@
 type: page
 
 code: true
-title: resetDatabase
+title: resetDatabase | API | Core
 ---
 
 # resetDatabase

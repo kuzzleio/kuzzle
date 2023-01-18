@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateProfile
+title: updateProfile | API | Core
 ---
 
 # updateProfile

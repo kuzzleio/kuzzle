@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: rename
+title: rename | API | Core
 ---
 
 # rename

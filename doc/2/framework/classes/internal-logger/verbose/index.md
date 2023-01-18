@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: verbose
+title: verbose | Framework | Core
+
 description: InternalLogger.verbose method
 ---
 

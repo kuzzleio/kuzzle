@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Wildcard
+title: Wildcard | Framework | Core
+
 description: Wildcard events mechanism
 order: 100
 ---

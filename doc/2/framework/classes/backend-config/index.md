@@ -1,6 +1,8 @@
 ---
 type: branch
-title: BackendConfig
+title: BackendConfig | Framework | Core
+
 description: BackendConfig class definition
 code: true
 ---
+<RedirectToFirstChild />

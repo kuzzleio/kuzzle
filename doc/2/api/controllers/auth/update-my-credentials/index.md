@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateMyCredentials
+title: updateMyCredentials | API | Core
 ---
 
 # updateMyCredentials

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createProfile
+title: createProfile | API | Core
 ---
 
 # createProfile

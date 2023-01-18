@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Embedded SDK
-description: Execute API action from backend code
 order: 200
+title: Embedded SDK | Develop on Kuzzle | Guide | Core
+meta:
+  - name: description
+    content:  Execute API action from backend code
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  Embedded SDK
 ---
-
 # Embedded SDK
 
 ::: info

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteFields
+title: deleteFields | API | Core
 description: Deletes fields of an existing document.
 ---
 
