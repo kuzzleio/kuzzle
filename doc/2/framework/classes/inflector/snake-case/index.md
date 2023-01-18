@@ -7,7 +7,7 @@ description: Inflector class snakeCase() method
 
 # snakeCase
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.20.0" />
 
 Converts a string to snake_case.
 
