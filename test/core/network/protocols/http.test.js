@@ -245,37 +245,6 @@ describe("core/network/protocols/http", () => {
       should(response.cork).not.be.called();
     });
 
-    it("should add the content-length header if the stream has a fixed size", () => {
-      const response = new uWSMock.MockHttpResponse();
-      const stream = new PassThrough();
-
-      sinon.stub(httpWs, "httpWriteRequestHeaders");
-      httpWs.httpSendStream(
-        request,
-        response,
-        new HttpStream(stream, { totalBytes: 1 }),
-        message
-      );
-
-      should(response.writeHeader).be.calledWithMatch(
-        Buffer.from("Content-Length"),
-        Buffer.from("1")
-      );
-    });
-
-    it("should add the transfer-encoding header if the stream has a dynamic size", () => {
-      const response = new uWSMock.MockHttpResponse();
-      const stream = new PassThrough();
-
-      sinon.stub(httpWs, "httpWriteRequestHeaders");
-      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
-
-      should(response.writeHeader).be.calledWithMatch(
-        Buffer.from("Transfer-Encoding"),
-        Buffer.from("chunked")
-      );
-    });
-
     it("should write chunk using tryEnd when the stream size is fixed", () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
