@@ -8,7 +8,7 @@ runs:
       shell: bash
     - run: npm run build
       shell: bash
-    - run: npm run test:unit:coverage
+    - run: npm run test:unit
       shell: bash
     - run: npm run codecov
       shell: bash
