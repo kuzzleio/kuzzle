@@ -295,15 +295,65 @@ Then(
 );
 
 Then(
-  "I export the collection {string}:{string} in the format {string}:",
+  "I export the collection {string}:{string} in the format {string} with GET:",
   async function (index, collection, format, dataTable) {
     const options = this.parseObject(dataTable);
+    let path = `/${index}/${collection}/_export?format=${format}&size=1`;
+
+    if (options.query) {
+      path = `${path}&query=${JSON.stringify(options.query)}`;
+    }
+
+    if (options.fields) {
+      path = `${path}&fields=${JSON.stringify(options.fields)}`;
+    }
+
+    if (options.fieldsName) {
+      path = `${path}&fieldsName=${JSON.stringify(options.fieldsName)}`;
+    }
+
     this.props.result = await new Promise((resolve, reject) => {
       const req = http.request(
         {
           hostname: this.host,
           port: this.port,
-          path: `/${index}/${collection}/_export?format=${format}&size=1`,
+          path,
+          method: "GET",
+        },
+        (response) => {
+          let data = [];
+
+          response.on("data", (chunk) => {
+            data.push(chunk.toString());
+          });
+
+          response.on("end", () => {
+            resolve(data.join(""));
+          });
+
+          response.on("error", (error) => {
+            reject(error);
+          });
+        }
+      );
+
+      req.end();
+    });
+  }
+);
+
+Then(
+  "I export the collection {string}:{string} in the format {string} with POST:",
+  async function (index, collection, format, dataTable) {
+    const options = this.parseObject(dataTable);
+    let path = `/${index}/${collection}/_export?format=${format}&size=1`;
+
+    this.props.result = await new Promise((resolve, reject) => {
+      const req = http.request(
+        {
+          hostname: this.host,
+          port: this.port,
+          path,
           method: "POST",
         },
         (response) => {
