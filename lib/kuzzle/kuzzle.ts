@@ -272,16 +272,18 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.entryPoint.init();
 
       this.pluginsManager.application = application;
-      await this.pluginsManager.init(options.plugins);
+      const pluginImports = await this.pluginsManager.init(options.plugins);
       this.log.info(
         `[✔] Successfully loaded ${
           this.pluginsManager.loadedPlugins.length
         } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
       );
 
+      const imports = _.merge({}, pluginImports, options.import);
+
       // Authentification plugins must be loaded before users import to avoid
       // credentials related error which would prevent Kuzzle from starting
-      await this.loadInitialState(options.import, options.support);
+      await this.loadInitialState(imports, options.support);
 
       await this.ask("core:security:verify");
 
