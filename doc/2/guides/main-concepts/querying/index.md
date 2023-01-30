@@ -444,7 +444,7 @@ while (result != null) {
 
 ::: tab Kotlin
 
-Using the Javascript SDK [SearchResult.next](/sdk/jvm/1/core-classes/search-result/next) method:
+Using the Java SDK [SearchResult.next](/sdk/jvm/1/core-classes/search-result/next) method:
 
 ```kotlin
 val term: ConcurrentHashMap<String, Any?> =
