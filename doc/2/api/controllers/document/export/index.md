@@ -22,7 +22,7 @@ You should try with smaller pages of results if you experienced download problem
 :::
 
 ::: info
-If you want to expose the exported documents in HTTP, you will need to create a `<a>` element and add a [single use token](/core/2/api/controllers/create-token) in the link `jwt` argument.
+If you want to expose the exported documents in HTTP, you will need to create a `<a>` element and add a [single use token](/core/2/api/controllers/auth/create-token) in the link `jwt` argument.
 :::
 
 ::: warning
