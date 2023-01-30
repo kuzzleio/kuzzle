@@ -50,13 +50,11 @@ First, we will initialize a new application using Kourou:
 ```bash
 kourou app:scaffold playground
 
-  🚀 Kourou - Scaffolds a new Kuzzle application
+ 🚀 Kourou - Scaffolds a new Kuzzle application
 
-  ✔ Creating "playground/" directory
   ✔ Creating and rendering application files
-  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
 
- [✔] Scaffolding complete! Use "npm run docker:dev" to run your application
+ [✔] Scaffolding complete! Use cd playground && npm run docker npm install install dependencies and then npm run docker:dev to run your application!
 
 ```
 
