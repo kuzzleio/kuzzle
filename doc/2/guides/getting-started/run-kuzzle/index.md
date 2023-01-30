@@ -56,7 +56,7 @@ kourou app:scaffold playground
   ✔ Creating and rendering application files
   ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
 
- [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
+ [✔] Scaffolding complete! Use "npm run docker:dev" to run your application
 
 ```
 
