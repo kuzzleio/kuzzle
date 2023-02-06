@@ -27,6 +27,7 @@ import { PipeEventHandler, HookEventHandler } from "./EventHandler";
 import { JSONObject } from "../../index";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
+import { ImportConfig } from "./Kuzzle";
 
 /**
  * Allows to define plugins controllers and actions
@@ -136,6 +137,11 @@ export abstract class Plugin {
    * @see https://docs.kuzzle.io/core/2/plugins/guides/strategies/overview
    */
   public strategies?: StrategyDefinition;
+
+  /**
+   * Define default imports
+   */
+  public imports?: ImportConfig;
 
   /**
    * Plugin initialization method.
