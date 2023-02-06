@@ -76,3 +76,16 @@ class MyPlugin extends Plugin {
   }
 }
 ```
+
+## Default imports
+
+Plugins can declare defaults documents to be loaded before Kuzzle open it's API.
+
+The following imports are available:
+ - `users`
+ - `roles`
+ - `profiles`
+ - `mappings` (indexes and collections)
+ - `usersMappings`
+
+See also [Backend.import](/core/2/framework/classes/backend-import).
