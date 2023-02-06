@@ -7,6 +7,10 @@ describe("Default loading of plugin's imports", () => {
     await sdk.connect();
   });
 
+  afterAll(async () => {
+    sdk.disconnect();
+  });
+
   it("shoud load roles and collections", async () => {
     const role = await sdk.security.getRole('imported-role');
 
