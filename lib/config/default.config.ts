@@ -429,6 +429,7 @@ const defaultConfig: KuzzleConfiguration = {
         onUpdateConflictRetries: 0,
         scrollTTL: "15s",
       },
+      generateMissingAliases: true,
     },
   },
 
