@@ -91,7 +91,9 @@ describe("#core/storage/ClientAdapter", () => {
     beforeEach(() => {
       uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
 
-      sinon.stub(uninitializedAdapter.client, 'generateMissingAliases').resolves();
+      sinon
+        .stub(uninitializedAdapter.client, "generateMissingAliases")
+        .resolves();
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
