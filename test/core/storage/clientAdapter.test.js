@@ -43,8 +43,8 @@ describe("#core/storage/ClientAdapter", () => {
     publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
     privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
 
-    sinon.stub(publicAdapter, 'populateCache').resolves()
-    sinon.stub(privateAdapter, 'populateCache').resolves()
+    sinon.stub(publicAdapter, "populateCache").resolves();
+    sinon.stub(privateAdapter, "populateCache").resolves();
 
     return Promise.all(
       [publicAdapter, privateAdapter].map((adapter) => {
