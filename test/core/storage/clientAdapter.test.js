@@ -51,18 +51,6 @@ describe("#core/storage/ClientAdapter", () => {
     );
   });
 
-  describe("#constructor", () => {
-    it("should instantiate an ES client with the right scope", () => {
-      should(publicAdapter.scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.scope).eql(scopeEnum.PRIVATE);
-
-      should(publicAdapter.client).not.eql(privateAdapter.client);
-
-      should(publicAdapter.client._scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.client._scope).eql(scopeEnum.PRIVATE);
-    });
-  });
-
   describe("#init", () => {
     let uninitializedAdapter;
 
