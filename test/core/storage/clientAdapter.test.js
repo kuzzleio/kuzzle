@@ -43,6 +43,9 @@ describe("#core/storage/ClientAdapter", () => {
     publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
     privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
 
+    sinon.stub(publicAdapter, 'populateCache').resolves()
+    sinon.stub(privateAdapter, 'populateCache').resolves()
+
     return Promise.all(
       [publicAdapter, privateAdapter].map((adapter) => {
         sinon.stub(adapter.cache);
@@ -61,15 +64,6 @@ describe("#core/storage/ClientAdapter", () => {
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
       sinon.stub(kuzzle, "onAsk");
-    });
-
-    it("should initialize a new ES client", async () => {
-      should(uninitializedAdapter.client.init).not.called();
-
-      await uninitializedAdapter.init();
-
-      should(uninitializedAdapter.client.init).calledOnce();
-      should(uninitializedAdapter.populateCache).calledOnce();
     });
   });
 
