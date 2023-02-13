@@ -491,7 +491,12 @@ describe("DocumentController", () => {
         index,
         collection,
         content,
-        { id: "foobar", injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
+        {
+          id: "foobar",
+          injectKuzzleMeta: false,
+          userId: "aschen",
+          refresh: "wait_for",
+        }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1145,7 +1150,12 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for", retryOnConflict: 42 }
+        {
+          injectKuzzleMeta: false,
+          userId: "aschen",
+          refresh: "wait_for",
+          retryOnConflict: 42,
+        }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1177,7 +1187,12 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: null, refresh: "false", retryOnConflict: undefined }
+        {
+          injectKuzzleMeta: false,
+          userId: null,
+          refresh: "false",
+          retryOnConflict: undefined,
+        }
       );
     });
 
