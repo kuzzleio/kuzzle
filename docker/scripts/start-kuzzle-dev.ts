@@ -39,7 +39,7 @@ async function loadAdditionalPlugins() {
   }
 }
 
-if (!process.env.TRAVIS) {
+if (!process.env.CI) {
   // Easier debug
   app.hook.register('request:onError', async (request: KuzzleRequest) => {
     app.log.error(request.error);

@@ -486,12 +486,12 @@ describe("DocumentController", () => {
 
       const response = await documentController.create(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:create",
         index,
         collection,
         content,
-        { id: "foobar", userId: "aschen", refresh: "wait_for" }
+        { id: "foobar", injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -513,12 +513,12 @@ describe("DocumentController", () => {
     it("should have default value for refresh, userId and id", async () => {
       await documentController.create(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:create",
         index,
         collection,
         content,
-        { id: null, userId: null, refresh: "false" }
+        { id: null, injectKuzzleMeta: false, userId: null, refresh: "false" }
       );
     });
   });
@@ -1060,13 +1060,13 @@ describe("DocumentController", () => {
 
       const response = await documentController.createOrReplace(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:createOrReplace",
         index,
         collection,
         "foobar",
         content,
-        { userId: "aschen", refresh: "wait_for" }
+        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1089,13 +1089,13 @@ describe("DocumentController", () => {
     it("should have default value for refresh and userId", async () => {
       await documentController.createOrReplace(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:createOrReplace",
         index,
         collection,
         "foobar",
         content,
-        { userId: null, refresh: "false" }
+        { injectKuzzleMeta: false, userId: null, refresh: "false" }
       );
     });
   });
@@ -1139,13 +1139,13 @@ describe("DocumentController", () => {
 
       const response = await documentController.update(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:update",
         index,
         collection,
         "foobar",
         content,
-        { userId: "aschen", refresh: "wait_for", retryOnConflict: 42 }
+        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for", retryOnConflict: 42 }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1171,13 +1171,13 @@ describe("DocumentController", () => {
     it("should have default value for refresh, userId and retryOnConflict", async () => {
       await documentController.update(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:update",
         index,
         collection,
         "foobar",
         content,
-        { userId: null, refresh: "false", retryOnConflict: undefined }
+        { injectKuzzleMeta: false, userId: null, refresh: "false", retryOnConflict: undefined }
       );
     });
 
@@ -1232,7 +1232,7 @@ describe("DocumentController", () => {
 
       const response = await documentController.upsert(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:upsert",
         index,
         collection,
@@ -1240,6 +1240,7 @@ describe("DocumentController", () => {
         changes,
         {
           defaultValues,
+          injectKuzzleMeta: false,
           refresh: "wait_for",
           retryOnConflict: 42,
           userId: "aschen",
@@ -1278,7 +1279,7 @@ describe("DocumentController", () => {
 
       const response = await documentController.upsert(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:upsert",
         index,
         collection,
@@ -1286,6 +1287,7 @@ describe("DocumentController", () => {
         changes,
         {
           defaultValues,
+          injectKuzzleMeta: false,
           refresh: "wait_for",
           retryOnConflict: 42,
           userId: "aschen",
@@ -1311,7 +1313,7 @@ describe("DocumentController", () => {
 
       await documentController.upsert(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:upsert",
         index,
         collection,
@@ -1319,6 +1321,7 @@ describe("DocumentController", () => {
         changes,
         {
           defaultValues: {},
+          injectKuzzleMeta: false,
           refresh: "false",
           retryOnConflict: undefined,
           userId: null,
@@ -1562,13 +1565,13 @@ describe("DocumentController", () => {
 
       const response = await documentController.replace(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:replace",
         index,
         collection,
         "foobar",
         content,
-        { userId: "aschen", refresh: "wait_for" }
+        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1590,13 +1593,13 @@ describe("DocumentController", () => {
     it("should have default value for refresh and userId", async () => {
       await documentController.replace(request);
 
-      should(kuzzle.ask).be.calledWith(
+      should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:replace",
         index,
         collection,
         "foobar",
         content,
-        { userId: null, refresh: "false" }
+        { injectKuzzleMeta: false, userId: null, refresh: "false" }
       );
     });
   });
