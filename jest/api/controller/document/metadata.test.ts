@@ -26,6 +26,10 @@ describe("document:create", () => {
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toBeDefined();
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.not.objectContaining({
+      customMetadata: 'customized',
+    }));
   });
 
   test('It should not let user add their own metadata when creating a document', async () => {
@@ -51,6 +55,20 @@ describe("document:create", () => {
       updater: null,
     }));
   });
+
+  test('It should add custom metadata using the pipe', async () => {
+    const response = await kuzzle.document.create(
+      index,
+      collection,
+      { foo: 'bar', addCustomMetadata: true },
+      undefined,
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.objectContaining({
+      customMetadata: 'customized',
+    }));
+  });
 });
 
 describe("document:createOrReplace", () => {
@@ -64,6 +82,10 @@ describe("document:createOrReplace", () => {
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toBeDefined();
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.not.objectContaining({
+      customMetadata: 'customized',
+    }));
   });
 
   test('It should not let user add their own metadata when creating or replacing a document', async () => {
@@ -89,6 +111,20 @@ describe("document:createOrReplace", () => {
       updater: null,
     }));
   });
+
+  test('It should add custom metadata using the pipe', async () => {
+    const response = await kuzzle.document.createOrReplace(
+      index,
+      collection,
+      'test',
+      { foo: 'bar', addCustomMetadata: true },
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.objectContaining({
+      customMetadata: 'customized',
+    }));
+  });
 });
 
 describe("document:update", () => {
@@ -105,7 +141,7 @@ describe("document:update", () => {
       collection,
       'test',
       { foo: 'bar' },
-      { refresh: 'wait_for' });
+      { refresh: 'wait_for', source: true });
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toBeDefined();
@@ -132,13 +168,39 @@ describe("document:update", () => {
           updater: null,
         }
       },
-      { refresh: 'wait_for' });
+      { refresh: 'wait_for', source: true });
 
     expect(response._source._kuzzle_info).toEqual(expect.not.objectContaining({
       author: 'foo',
       createdAt: 42,
       updatedAt: null,
       updater: null,
+    }));
+  });
+
+  test('It should add custom metadata using the pipe', async () => {
+    const createResponse = await kuzzle.document.createOrReplace(
+      index,
+      collection,
+      'test',
+      { foo: 'bar' },
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(createResponse._source._kuzzle_info).toEqual(expect.not.objectContaining({
+      customMetadata: 'customized',
+    }));
+
+    const response = await kuzzle.document.update(
+      index,
+      collection,
+      'test',
+      { foo: 'bar', addCustomMetadata: true },
+      { refresh: 'wait_for', source: true });
+
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.objectContaining({
+      customMetadata: 'customized',
     }));
   });
 });
@@ -192,6 +254,32 @@ describe("document:replace", () => {
       createdAt: 42,
       updatedAt: null,
       updater: null,
+    }));
+  });
+
+  test('It should add custom metadata using the pipe', async () => {
+    const createResponse = await kuzzle.document.createOrReplace(
+      index,
+      collection,
+      'test',
+      { foo: 'bar' },
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(createResponse._source._kuzzle_info).toEqual(expect.not.objectContaining({
+      customMetadata: 'customized',
+    }));
+
+    const response = await kuzzle.document.replace(
+      index,
+      collection,
+      'test',
+      { foo: 'bar', addCustomMetadata: true },
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.objectContaining({
+      customMetadata: 'customized',
     }));
   });
 });
@@ -371,6 +459,32 @@ describe("document:upsert", () => {
       createdAt: 42,
       updatedAt: null,
       updater: null,
+    }));
+  });
+
+  test('It should add custom metadata using the pipe', async () => {
+    const createResponse = await kuzzle.document.createOrReplace(
+      index,
+      collection,
+      'test',
+      { foo: 'bar' },
+      { refresh: 'wait_for' });
+
+    // @ts-ignore
+    expect(createResponse._source._kuzzle_info).toEqual(expect.not.objectContaining({
+      customMetadata: 'customized',
+    }));
+
+    const response = await kuzzle.document.upsert(
+      index,
+      collection,
+      'test',
+      { foo: 'bar', addCustomMetadata: true },
+      { refresh: 'wait_for', source: true });
+
+    // @ts-ignore
+    expect(response._source._kuzzle_info).toEqual(expect.objectContaining({
+      customMetadata: 'customized',
     }));
   });
 });

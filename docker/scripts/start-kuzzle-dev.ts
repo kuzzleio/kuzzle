@@ -10,14 +10,15 @@ import { Backend, KDocument, KDocumentContent, EventGenericDocumentBeforeUpdate,
 import { FunctionalTestsController } from './functional-tests-controller';
 import functionalFixtures from '../../features/fixtures/imports.json';
 import { PassThrough } from 'stream';
+import { EventGenericDocumentInjectMetadata } from '../../lib/types/events/EventGenericDocument';
 
 const app = new Backend('functional-tests-app');
 
 async function loadAdditionalPlugins() {
   const additionalPluginsIndex = process.argv.indexOf('--enable-plugins');
   const additionalPlugins = additionalPluginsIndex > -1
-      ? process.argv[additionalPluginsIndex + 1].split(',')
-      : [];
+    ? process.argv[additionalPluginsIndex + 1].split(',')
+    : [];
 
   for (const name of additionalPlugins) {
     const path = `../../plugins/available/${name}`;
@@ -38,7 +39,7 @@ async function loadAdditionalPlugins() {
   }
 }
 
-if (! process.env.TRAVIS) {
+if (!process.env.TRAVIS) {
   // Easier debug
   app.hook.register('request:onError', async (request: KuzzleRequest) => {
     app.log.error(request.error);
@@ -48,6 +49,28 @@ if (! process.env.TRAVIS) {
     app.log.error(request.error);
   });
 }
+
+app.pipe.register<EventGenericDocumentInjectMetadata>('generic:document:injectMetadata', async (event) => {
+  const metadata = {
+    ...event.metadata,
+  };
+
+  if (event.request.getBody().addCustomMetadata) {
+    metadata.customMetadata = 'customized';
+  } else if (
+    event.request.getController() === 'document' &&
+    event.request.getAction() === 'upsert' &&
+    event.request.getBodyObject("changes", {}).addCustomMetadata
+  ) {
+    metadata.customMetadata = 'customized';
+  }
+
+  return {
+    request: event.request,
+    metadata: metadata,
+    defaultMetadata: event.defaultMetadata,
+  }
+});
 
 // Controller class usage
 app.controller.use(new FunctionalTestsController(app));
@@ -90,7 +113,7 @@ app.controller.register('pipes', {
 /**
  * This function is never call but simply ensure the correctness of types definition
  */
-function ensureEventDefinitionTypes () {
+function ensureEventDefinitionTypes() {
   type EventFoobar = {
     name: 'event:foobar';
 
@@ -125,7 +148,7 @@ function ensureEventDefinitionTypes () {
 /**
  * This function is never call but simply ensure the correctness of types definition
  */
-async function ensureQueryDefinitionTypes () {
+async function ensureQueryDefinitionTypes() {
   type Req = {
     controller: 'engine';
     action: 'create';
@@ -141,7 +164,7 @@ async function ensureQueryDefinitionTypes () {
 
   const response = await app.sdk.query<Req, Res>({
     controller: 'engine',
-    action : 'create',
+    action: 'create',
     engineId: 'test',
     body: {
       name: 'test'

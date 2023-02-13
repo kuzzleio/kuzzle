@@ -21,7 +21,7 @@ As with other API events, generic ones are triggered before and after documents 
 * generic "before" events (`generic:document:before*`) are triggered **before** the regular `document:before*` events
 * generic "after" events (`generic:document:after*`) are triggered **after** the regular `document:after*` events
 
-All generic events share the same payload signature, and pipes plugged to them must resolve to the updated (or not) array of documents received in their parameters.
+All generic events cited before share the same payload signature, and pipes plugged to them must resolve to the updated (or not) array of documents received in their parameters.
 
 ::: info
 
@@ -29,14 +29,22 @@ All generic events share the same payload signature, and pipes plugged to them m
 
 :::
 
+There are generic event that does not obey to the rules cited before:
+* `generic:document:injectMetadata` is called before metadata (\_kuzzle\_info) are about to be inject in a document.
+
+
+::: info
+
+:::
+
 ---
 
 ## generic:document:afterDelete
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                    |
+| ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing document `_id`) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                     |
 
 Triggered after documents have been deleted.
 
@@ -77,10 +85,10 @@ class PipePlugin {
 
 ## generic:document:afterGet
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing documents `_id` and `_source`) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                                   |
+| ----------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing documents `_id` and `_source`) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                    |
 
 Triggered after documents are fetched.
 
@@ -121,10 +129,10 @@ class PipePlugin {
 
 ## generic:document:afterUpdate
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                                           |
+| ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing a document `_id` and `_source` fields) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                            |
 
 Triggered after partial updates are applied to documents.
 
@@ -166,10 +174,10 @@ class PipePlugin {
 
 ## generic:document:afterWrite
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                                           |
+| ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing a document `_id` and `_source` fields) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                            |
 
 Triggered after documents have been created or replaced.
 
@@ -213,10 +221,10 @@ class PipePlugin {
 
 ## generic:document:beforeDelete
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                    |
+| ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing document `_id`) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                     |
 
 Triggered before documents are deleted.
 
@@ -261,10 +269,10 @@ class PipePlugin {
 
 ## generic:document:beforeGet
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing document `_id`) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                    |
+| ----------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing document `_id`) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                     |
 
 Triggered before documents are fetched.
 
@@ -307,10 +315,10 @@ class PipePlugin {
 
 ## generic:document:beforeUpdate
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing a document `_id` and `_source` fields) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                                           |
+| ----------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing a document `_id` and `_source` fields) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                            |
 
 Triggered before partial updates are applied to documents.
 
@@ -351,10 +359,10 @@ class PipePlugin {
 
 ## generic:document:beforeWrite
 
-| Arguments | Type                                                           | Description                |
-| --------- | -------------------------------------------------------------- | -------------------------- |
-| `documents` | <pre>Array</pre> | Array of documents (containing a document's `_id` and `_source` fields) |
-| `request` | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request |
+| Arguments   | Type                                                                                     | Description                                                             |
+| ----------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| `documents` | <pre>Array</pre>                                                                         | Array of documents (containing a document's `_id` and `_source` fields) |
+| `request`   | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                              |
 
 
 Triggered before documents are created or replaced.
@@ -392,3 +400,51 @@ class PipePlugin {
 - [document:mCreateOrReplace](/core/2/api/controllers/document/m-create-or-replace)
 - [document:mReplace](/core/2/api/controllers/document/m-replace)
 - [document:replace](/core/2/api/controllers/document/replace)
+
+## generic:document:injectMetadata
+
+This event is called with an object containing the following properties:
+
+| Fields          | Type                                                                                     | Description                                                                                                                        |
+| --------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `request`       | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                                                                                         |
+| `metadata`      | <pre>JSONObject</pre>                                                                    | An object representing the metadata that will be injected in the document                                                          |
+| `defaultMedata` | <pre>JSONObject</pre>                                                                    | An object representing the default metadata that will be injected in the document when created. (`only used with document:upsert`) |
+
+
+Triggered before documents are created, replaced, updated or upserted.
+
+### Example
+
+```javascript
+class PipePlugin {
+  init(customConfig, context) {
+    this.pipes = {
+      'generic:document:injectMetadata': async (event) => {
+        // The "event" argument contains:
+        // - The request that triggered the pipe
+        // - The metadata to inject in the document
+        // - The defaultMetadata to inject (only for document:upsert)
+        //
+        // You can change / add new field to the metadata that are going to be injected
+        // in the document.
+        return {
+          request: event.request,
+          metadata: {
+            ...event.metadata,
+            customMetadata: 'foo'
+          }
+        };
+      }
+    };
+  }
+}
+```
+
+### Triggered by
+
+- [document:create](/core/2/api/controllers/document/create)
+- [document:createOrReplace](/core/2/api/controllers/document/create-or-replace)
+- [document:replace](/core/2/api/controllers/document/replace)
+- [document:update](/core/2/api/controllers/document/update)
+- [document:upsert](/core/2/api/controllers/document/upsert)
