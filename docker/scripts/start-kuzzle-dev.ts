@@ -55,12 +55,11 @@ app.pipe.register<EventGenericDocumentInjectMetadata>('generic:document:injectMe
     ...event.metadata,
   };
 
-  if (event.request.getBody().addCustomMetadata) {
-    metadata.customMetadata = 'customized';
-  } else if (
-    event.request.getController() === 'document' &&
-    event.request.getAction() === 'upsert' &&
-    event.request.getBodyObject("changes", {}).addCustomMetadata
+  if (
+    event.request.getBody().addCustomMetadata ||
+    (event.request.getController() === 'document' &&
+      event.request.getAction() === 'upsert' &&
+      event.request.getBodyObject("changes", {}).addCustomMetadata)
   ) {
     metadata.customMetadata = 'customized';
   }

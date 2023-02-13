@@ -1199,4 +1199,4 @@ export class KuzzleRequest {
   }
 }
 
-export class Request extends KuzzleRequest { }
+export class Request extends KuzzleRequest {}
