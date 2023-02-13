@@ -5022,17 +5022,10 @@ describe("Test: ElasticSearch service", () => {
           { alias: "@&istanbul._kuzzle_keep" },
         ],
       });
-      sinon.stub(elasticsearch, "_ensureAliasConsistency").resolves();
-    });
-
-    afterEach(() => {
-      elasticsearch._ensureAliasConsistency.restore();
     });
 
     it("should returns the DB schema without hidden collections", async () => {
       const schema = await elasticsearch.getSchema();
-
-      should(elasticsearch._ensureAliasConsistency).be.called();
       should(schema).be.eql({
         nepali: ["mehry"],
         istanbul: [],
@@ -5518,7 +5511,7 @@ describe("Test: ElasticSearch service", () => {
       });
     });
 
-    describe("#_ensureAliasConsistency", () => {
+    describe("#generateMissingAliases", () => {
       const indicesBody = {
         body: [
           { index: "&nepali.liia", status: "open" },
@@ -5553,8 +5546,8 @@ describe("Test: ElasticSearch service", () => {
       });
 
       it("Find indices without associated aliases and create some accordingly", async () => {
-        await publicES._ensureAliasConsistency();
-        await internalES._ensureAliasConsistency();
+        await publicES.generateMissingAliases();
+        await internalES.generateMissingAliases();
 
         should(publicES._client.indices.updateAliases).be.calledWith({
           body: {
@@ -5604,8 +5597,8 @@ describe("Test: ElasticSearch service", () => {
         publicES.listAliases.resolves(aliasesList);
         internalES.listAliases.resolves(aliasesList);
 
-        await publicES._ensureAliasConsistency();
-        await internalES._ensureAliasConsistency();
+        await publicES.generateMissingAliases();
+        await internalES.generateMissingAliases();
 
         should(publicES._client.indices.updateAliases).not.be.called();
         should(internalES._client.indices.updateAliases).not.be.called();

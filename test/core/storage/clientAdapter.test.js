@@ -43,24 +43,15 @@ describe("#core/storage/ClientAdapter", () => {
     publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
     privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
 
+    sinon.stub(publicAdapter, "populateCache").resolves();
+    sinon.stub(privateAdapter, "populateCache").resolves();
+
     return Promise.all(
       [publicAdapter, privateAdapter].map((adapter) => {
         sinon.stub(adapter.cache);
         return adapter.init();
       })
     );
-  });
-
-  describe("#constructor", () => {
-    it("should instantiate an ES client with the right scope", () => {
-      should(publicAdapter.scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.scope).eql(scopeEnum.PRIVATE);
-
-      should(publicAdapter.client).not.eql(privateAdapter.client);
-
-      should(publicAdapter.client._scope).eql(scopeEnum.PUBLIC);
-      should(privateAdapter.client._scope).eql(scopeEnum.PRIVATE);
-    });
   });
 
   describe("#init", () => {
@@ -74,15 +65,6 @@ describe("#core/storage/ClientAdapter", () => {
       kuzzle.onAsk.restore();
       sinon.stub(kuzzle, "onAsk");
     });
-
-    it("should initialize a new ES client", async () => {
-      should(uninitializedAdapter.client.init).not.called();
-
-      await uninitializedAdapter.init();
-
-      should(uninitializedAdapter.client.init).calledOnce();
-      should(uninitializedAdapter.populateCache).calledOnce();
-    });
   });
 
   describe("#populateCache", () => {
@@ -90,6 +72,10 @@ describe("#core/storage/ClientAdapter", () => {
 
     beforeEach(() => {
       uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+
+      sinon
+        .stub(uninitializedAdapter.client, "generateMissingAliases")
+        .resolves();
 
       // prevents event conflicts with the already initialized adapters above
       kuzzle.onAsk.restore();
@@ -106,6 +92,7 @@ describe("#core/storage/ClientAdapter", () => {
 
       await uninitializedAdapter.init();
 
+      should(uninitializedAdapter.client.generateMissingAliases).calledOnce();
       should(uninitializedAdapter.cache.addCollection).calledWith(
         "foo",
         "foo1"
