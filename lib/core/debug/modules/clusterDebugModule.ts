@@ -14,19 +14,12 @@ export class ClusterDebugModule extends DebugModule {
     // Nothing to do (eslint complains if this method is not implemented)
   }
 
-  async preventNodeEviction(params: {
-    evictionPrevented?: boolean;
-  }): Promise<void> {
-    if (params.evictionPrevented === undefined) {
-      throw kerror.get(
-        "api",
-        "assert",
-        "missing_argument",
-        "evictionPrevented"
-      );
+  async preventNodeEviction(params: { enable?: boolean }): Promise<void> {
+    if (params.enable === undefined) {
+      throw kerror.get("api", "assert", "missing_argument", "enable");
     }
 
-    global.kuzzle.ask("cluster:node:preventEviction", params.evictionPrevented);
+    global.kuzzle.ask("cluster:node:preventEviction", params.enable);
   }
 
   async cleanup(): Promise<void> {
