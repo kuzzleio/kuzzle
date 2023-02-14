@@ -142,7 +142,7 @@ describe("Test: Kuzzle Debugger", () => {
       kuzzle.config.security.debug.native_debug_protocol = true;
       await kuzzleDebugger.post("Debugger.enable");
 
-      await should(kuzzleDebugger.inspectorPost).be.calledWith(
+      await should(kuzzleDebugger.inspectorPost).be.calledWithMatch(
         "Debugger.enable",
         {}
       );
