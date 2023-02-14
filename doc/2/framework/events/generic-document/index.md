@@ -30,7 +30,7 @@ All generic events cited before share the same payload signature, and pipes plug
 :::
 
 There are generic event that does not obey to the rules cited before:
-* `generic:document:injectMetadata` is called before metadata (\_kuzzle\_info) are about to be inject in a document.
+* `generic:document:injectMetadata` is called before metadata (\_kuzzle\_info) are about to be injected in a document.
 
 
 ::: info
