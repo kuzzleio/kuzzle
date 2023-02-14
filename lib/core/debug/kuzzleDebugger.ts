@@ -83,7 +83,7 @@ export class KuzzleDebugger {
 
     this.inspector.connect();
     this.debuggerStatus = true;
-    global.kuzzle.ask("cluster:node:preventEviction", true);
+    await global.kuzzle.ask("cluster:node:preventEviction", true);
   }
 
   /**
@@ -96,7 +96,7 @@ export class KuzzleDebugger {
 
     this.inspector.disconnect();
     this.debuggerStatus = false;
-    global.kuzzle.ask("cluster:node:preventEviction", false);
+    await global.kuzzle.ask("cluster:node:preventEviction", false);
     this.events.clear();
   }
 

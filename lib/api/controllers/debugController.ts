@@ -49,14 +49,14 @@ export class DebugController extends NativeController {
    * Connect the debugger
    */
   async enable() {
-    global.kuzzle.ask("core:debugger:enable");
+    await global.kuzzle.ask("core:debugger:enable");
   }
 
   /**
    * Disconnect the debugger and clears all the events listeners
    */
   async disable() {
-    global.kuzzle.ask("core:debugger:disable");
+    await global.kuzzle.ask("core:debugger:disable");
   }
 
   /**
@@ -87,7 +87,7 @@ export class DebugController extends NativeController {
 
     const event = request.getBodyString("event");
 
-    global.kuzzle.ask(
+    await global.kuzzle.ask(
       "core:debugger:addListener",
       event,
       request.context.connection.id
@@ -110,7 +110,7 @@ export class DebugController extends NativeController {
 
     const event = request.getBodyString("event");
 
-    global.kuzzle.ask(
+    await global.kuzzle.ask(
       "core:debugger:removeListener",
       event,
       request.context.connection.id
