@@ -162,13 +162,10 @@ describe("Test: Kuzzle Debugger", () => {
     });
 
     it("should add the connectionId to the list of listener for the requested event", async () => {
-      await kuzzleDebugger.addListener(
-        "EventMock.event_foo",
-        "foobar"
+      await kuzzleDebugger.addListener("EventMock.event_foo", "foobar");
+      should(kuzzleDebugger.events.get("EventMock.event_foo")).be.eql(
+        new Set(["foobar"])
       );
-      should(
-        kuzzleDebugger.events.get("EventMock.event_foo")
-      ).be.eql(new Set(["foobar"]));
     });
   });
 
@@ -180,10 +177,7 @@ describe("Test: Kuzzle Debugger", () => {
     it("should throw if the debugger is not enabled", async () => {
       kuzzleDebugger.debuggerStatus = false;
       await should(
-        kuzzleDebugger.removeListener(
-          "EventMock.event_foo",
-          "foobar"
-        )
+        kuzzleDebugger.removeListener("EventMock.event_foo", "foobar")
       ).be.rejectedWith(PreconditionError, { id: "core.debugger.not_enabled" });
     });
 
@@ -191,13 +185,10 @@ describe("Test: Kuzzle Debugger", () => {
       kuzzleDebugger.events = new Map([
         ["EventMock.event_foo", new Set(["foobar"])],
       ]);
-      await kuzzleDebugger.removeListener(
-        "EventMock.event_foo",
-        "foobar"
+      await kuzzleDebugger.removeListener("EventMock.event_foo", "foobar");
+      should(kuzzleDebugger.events.get("EventMock.event_foo")).be.eql(
+        new Set([])
       );
-      should(
-        kuzzleDebugger.events.get("EventMock.event_foo")
-      ).be.eql(new Set([]));
     });
   });
 
