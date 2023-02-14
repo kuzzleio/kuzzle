@@ -122,6 +122,7 @@ export class KuzzleDebugger {
     // as the Kuzzle Process and reportProgress forces the inspector to send events
     // to the main thread, while it is being inspected by the HeapProfiler, which causes javascript code
     // to be executed as the HeapProfiler is running, which causes a segfault.
+    // See: https://github.com/nodejs/node/issues/44634
     params.reportProgress = false;
 
     return this.inspectorPost(method, params);
