@@ -69,14 +69,14 @@ describe("Test: debug controller", () => {
 
     it("should ask 'core:debugger:addListener' with the event and connectionId", async () => {
       request.input.body = {
-        event: "Kuzzle.DebugModuleMock.event_foo",
+        event: "EventMock.event_foo",
       };
       request.context.connection.id = "foobar";
 
       await debugController.addListener(request);
       await should(kuzzle.ask).be.calledWith(
         "core:debugger:addListener",
-        "Kuzzle.DebugModuleMock.event_foo",
+        "EventMock.event_foo",
         "foobar"
       );
     });
@@ -99,14 +99,14 @@ describe("Test: debug controller", () => {
 
     it("should ask 'core:debugger:removeListener' with the event and connectionId", async () => {
       request.input.body = {
-        event: "Kuzzle.DebugModuleMock.event_foo",
+        event: "EventMock.event_foo",
       };
       request.context.connection.id = "foobar";
 
       await debugController.removeListener(request);
       await should(kuzzle.ask).be.calledWith(
         "core:debugger:removeListener",
-        "Kuzzle.DebugModuleMock.event_foo",
+        "EventMock.event_foo",
         "foobar"
       );
     });
