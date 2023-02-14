@@ -32,11 +32,6 @@ All generic events cited before share the same payload signature, and pipes plug
 There are generic event that does not obey to the rules cited before:
 * `generic:document:injectMetadata` is called before metadata (\_kuzzle\_info) are about to be injected in a document.
 
-
-::: info
-
-:::
-
 ---
 
 ## generic:document:afterDelete
@@ -405,10 +400,10 @@ class PipePlugin {
 
 This event is called with an object containing the following properties:
 
-| Fields          | Type                                                                                     | Description                                                                                                                        |
-| --------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| `request`       | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                                                                                         |
-| `metadata`      | <pre>JSONObject</pre>                                                                    | An object representing the metadata that will be injected in the document                                                          |
+| Fields            | Type                                                                                     | Description                                                                                                                        |
+| ----------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `request`         | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                                                                                         |
+| `metadata`        | <pre>JSONObject</pre>                                                                    | An object representing the metadata that will be injected in the document                                                          |
 | `defaultMetadata` | <pre>JSONObject</pre>                                                                    | An object representing the default metadata that will be injected in the document when created. (only used with `document:upsert`) |
 
 
@@ -416,29 +411,27 @@ Triggered before documents are created, replaced, updated or upserted.
 
 ### Example
 
-```javascript
-class PipePlugin {
-  init(customConfig, context) {
-    this.pipes = {
-      'generic:document:injectMetadata': async (event) => {
-        // The "event" argument contains:
-        // - The request that triggered the pipe
-        // - The metadata to inject in the document
-        // - The defaultMetadata to inject (only for document:upsert)
-        //
-        // You can change / add new field to the metadata that are going to be injected
-        // in the document.
-        return {
-          request: event.request,
-          metadata: {
-            ...event.metadata,
-            customMetadata: 'foo'
-          }
-        };
-      }
-    };
-  }
-}
+```typescript
+app.pipe.register<EventGenericDocumentInjectMetadata>("generic:document:injectMetadata", async (event) => {
+  // The "event" argument contains:
+  // - The request that triggered the pipe
+  // - The metadata to inject in the document, this field contains by the default the metadata with correct values that Kuzzle wants to inject in the document:
+  //    - author
+  //    - createdAt
+  //    - updater
+  //    - updatedAt
+  // - The defaultMetadata to inject (only for document:upsert)
+  //
+  // You can change / add new field to the metadata that are going to be injected
+  // in the document.
+  return {
+    request: event.request,
+    metadata: {
+      ...event.metadata,
+      customMetadata: 'foo'
+    }
+  };
+});
 ```
 
 ### Triggered by
