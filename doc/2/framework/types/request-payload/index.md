@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: RequestPayload
+title: RequestPayload | Framework | Core
+
 description: RequestPayload type definition
 ---
 
@@ -14,8 +15,6 @@ The `RequestPayload` type represents an API request sent to Kuzzle in JSON forma
 This type is meant to be used with the SDK [query](/sdk/js/7/core-classes/kuzzle/query) method.
 
 See the [API KuzzleRequest Format](/core/2/guides/main-concepts/api#other-protocols) documentation.
-
-<<< ./../../../../../lib/types/RequestPayload.ts
 
 **Example:**
 

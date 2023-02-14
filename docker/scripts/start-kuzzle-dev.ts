@@ -6,9 +6,10 @@
 import should from 'should/as-function';
 import { omit } from 'lodash';
 
-import { Backend, KDocument, KDocumentContent, EventGenericDocumentBeforeUpdate, KuzzleRequest, Mutex } from '../../index';
+import { Backend, KDocument, KDocumentContent, EventGenericDocumentBeforeUpdate, KuzzleRequest, Mutex, HttpStream } from '../../index';
 import { FunctionalTestsController } from './functional-tests-controller';
 import functionalFixtures from '../../features/fixtures/imports.json';
+import { PassThrough } from 'stream';
 
 const app = new Backend('functional-tests-app');
 
@@ -121,6 +122,35 @@ function ensureEventDefinitionTypes () {
     });
 }
 
+/**
+ * This function is never call but simply ensure the correctness of types definition
+ */
+async function ensureQueryDefinitionTypes () {
+  type Req = {
+    controller: 'engine';
+    action: 'create';
+    engineId: string;
+    body: {
+      name: string;
+    }
+  }
+
+  type Res = {
+    age: number;
+  }
+
+  const response = await app.sdk.query<Req, Res>({
+    controller: 'engine',
+    action : 'create',
+    engineId: 'test',
+    body: {
+      name: 'test'
+    }
+  });
+
+  const age = response.result.age;
+}
+
 // Pipe registration
 app.pipe.register('server:afterNow', async (request) => {
   const pipe = JSON.parse(await app.sdk.ms.get('app:pipes:server:afterNow'));
@@ -186,6 +216,43 @@ app.controller.register('openapi-test', {
               }
             }
           }
+        }
+      ]
+    }
+  }
+});
+
+app.controller.register('stream-test', {
+  actions: {
+    downloadChunked: {
+      handler: async () => {
+        const stream = new PassThrough();
+        stream.write('Hello');
+        stream.write('World');
+        stream.end();
+
+        return new HttpStream(stream);
+      },
+      http: [
+        {
+          verb: 'get',
+          path: '/stream-test/download-chunked',
+        }
+      ]
+    },
+    downloadFixed: {
+      handler: async () => {
+        const stream = new PassThrough();
+        stream.write('Hello');
+        stream.write('World');
+        stream.end();
+
+        return new HttpStream(stream, { totalBytes: 10 });
+      },
+      http: [
+        {
+          verb: 'get',
+          path: '/stream-test/download-fixed',
         }
       ]
     }

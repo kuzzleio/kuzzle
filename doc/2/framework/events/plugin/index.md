@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Plugin
+title: Plugin | Framework | Core
+
 description: Plugin events list
 order: 100
 ---

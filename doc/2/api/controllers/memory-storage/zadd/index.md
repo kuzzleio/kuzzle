@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zadd
+title: zadd | API | Core
 ---
 
 # zadd

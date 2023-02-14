@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: hkeys
+title: hkeys | API | Core
 ---
 
 # hkeys

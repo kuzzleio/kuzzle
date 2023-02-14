@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getBoolean
+title: getBoolean | Framework | Core
+
 description: KuzzleRequest class getBoolean() method
 ---
 

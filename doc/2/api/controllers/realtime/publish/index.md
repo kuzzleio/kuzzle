@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: publish
+title: publish | API | Core
 ---
 
 # publish

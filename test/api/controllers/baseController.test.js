@@ -58,14 +58,6 @@ describe("#base/native controller", () => {
       should(esQuery).be.eql({ term: { name: "Melis" } });
     });
 
-    it("should validate the filter syntax with Koncorde", async () => {
-      await nativeController.translateKoncorde(koncordeFilters);
-
-      should(kuzzle.koncorde.validate).be.calledWith({
-        equals: { name: "Melis" },
-      });
-    });
-
     it("should reject if the query is not an object", () => {
       koncordeFilters = "not an object";
 

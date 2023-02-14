@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: newConnection
+title: newConnection | Protocol Entrypoint | Write protocols | Guide
+meta:
+  - name: description
+    content: Declares a new client connection to Kuzzle.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol entrypoint, newConnection 
 ---
 
 # newConnection

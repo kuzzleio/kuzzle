@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: georadiusbymember
+title: georadiusbymember | API | Core
 ---
 
 # georadiusbymember

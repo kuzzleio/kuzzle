@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x07: security"
+title: "0x07: security | API | Core " 
 description: Error codes definitions
 ---
 
@@ -24,6 +24,7 @@ description: Error codes definitions
 | security.token.expired<br/><pre>0x07010006</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | Token expired | The provided authentication token has expired |
 | security.token.verification_error<br/><pre>0x07010007</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Error verifying token: %s | An unexpected error occured while verifying an authentication token |
 | security.token.refresh_forbidden<br/><pre>0x07010008</pre>  | [UnauthorizedError](/core/2/api/errors/error-codes#unauthorizederror) <pre>(401)</pre> | %s cannot be refreshed. | The provided token cannot be refreshed |
+| security.token.invalid_expiration<br/><pre>0x07010009</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | Token can not be created with this expiration time: %s | The specified expiration time is invalid |
 
 ---
 

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: install
+title: install | Framework | Core
+
 description: Backend class install() method
 ---
 

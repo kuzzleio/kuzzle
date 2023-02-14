@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Hook
+title: Hook | Framework | Core
+
 description: Hook events list
 order: 100
 ---

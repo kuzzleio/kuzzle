@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: updateRoleMapping
+title: updateRoleMapping | API | Core
 ---
 
 # updateRoleMapping

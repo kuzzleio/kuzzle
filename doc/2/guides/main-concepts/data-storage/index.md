@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Data Storage
-description: Understand how works the underlying document storage engine
 order: 200
+title: Data Storage | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content: Understand how works the underlying document storage engine
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Permissions
 ---
 
 # Data Storage

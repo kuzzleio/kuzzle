@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: createApiKey
+title: createApiKey | API | Core
 ---
 
 # createApiKey

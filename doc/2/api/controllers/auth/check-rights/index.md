@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: checkRights
+title: checkRights | API | Core
 ---
 
 # checkRights

@@ -1,7 +1,8 @@
 ---
 type: page
 code: false
-title: Connection
+title: Connection | Framework | Core
+
 description: Connection events list
 order: 100
 ---

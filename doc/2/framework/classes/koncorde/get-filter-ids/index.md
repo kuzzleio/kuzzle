@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getFilterIds
+title: getFilterIds | Framework | Core
+
 description: Koncorde.getFilterIds method
 ---
 

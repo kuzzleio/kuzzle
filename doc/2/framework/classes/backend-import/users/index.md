@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: users
+title: users | Framework | Core
+
 description: BackendImport.users method
 ---
 

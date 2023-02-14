@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: deleteMyCredentials
+title: deleteMyCredentials | API | Core
 ---
 
 # deleteMyCredentials

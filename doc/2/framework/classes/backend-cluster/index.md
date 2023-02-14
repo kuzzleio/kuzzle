@@ -1,6 +1,8 @@
 ---
 type: branch
-title: BackendCluster
+title: BackendCluster | Framework | Core
+
 description: BackendCluster class definition
 code: true
 ---
+<RedirectToFirstChild />

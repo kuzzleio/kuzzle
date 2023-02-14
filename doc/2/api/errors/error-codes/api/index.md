@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x02: api"
+title: "0x02: api | API | Core " 
 description: Error codes definitions
 ---
 

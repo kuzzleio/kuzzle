@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: replace
+title: replace | API | Core
 ---
 
 # replace

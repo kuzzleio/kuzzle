@@ -104,6 +104,26 @@ export type StorageEngineElasticsearch = {
     };
   };
 
+  /**
+   * Global settings to apply by default (if not overridden by user request ones)
+   * @default
+   * {
+   *   number_of_shards: 1,
+   *   number_of_replicas: 1
+   * }
+   */
+  defaultSettings: {
+    /**
+     * @default 1
+     */
+    number_of_shards: number;
+
+    /**
+     * @default 1
+     */
+    number_of_replicas: number;
+  };
+
   internalIndex: {
     /**
      * @default "kuzzle"
@@ -299,9 +319,22 @@ export type StorageEngineElasticsearch = {
       };
     };
   };
-  maxScrollDuration: "1m";
+  maxScrollDuration: string;
   defaults: {
-    onUpdateConflictRetries: 0;
-    scrollTTL: "15s";
+    onUpdateConflictRetries: number;
+    scrollTTL: string;
   };
+
+  /**
+   * If true, Kuzzle will generate aliases for collections that don't have one.
+   *
+   * Typically, if an indice named `&platform.devices` does not have an alias
+   * named `@&platform.devices` and pointing on the indice then it will be generated
+   * even if another alias already exists on the indice.
+   *
+   * This option should be true only for retro-compatibility with Kuzzle < 2.14.0
+   *
+   * Also see https://github.com/kuzzleio/kuzzle/pull/2117
+   */
+  generateMissingAliases: boolean;
 };

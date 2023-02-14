@@ -1,5 +1,32 @@
 Feature: Auth Controller
 
+  # auth:createToken ===========================================================
+
+  @security @login
+  Scenario: Create a single use token
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I successfully execute the action "auth":"createToken" with args:
+      | singleUse | true |
+    Then I should receive a result matching:
+      | token     | "_STRING_" |
+      | ttl       | 3600000    |
+      | expiresAt | "_NUMBER_" |
+      | singleUse | true       |
+    Then I can use the single use token from the result to authenticate once
+
+  @security @login
+  Scenario: Cannot create a token who does not expire
+    Given I successfully execute the action "auth":"login" with args:
+      | strategy | "local"                                              |
+      | body     | { "username": "test-admin", "password": "password" } |
+    When I execute the action "auth":"createToken" with args:
+      | singleUse | true |
+      | expiresIn | -1   |
+    Then I should receive an error matching:
+      | id | "security.token.invalid_expiration" |
+
   # auth:checkToken ===========================================================
 
   @security @login
@@ -98,14 +125,14 @@ Feature: Auth Controller
       | token       | "_STRING_"       |
     And The result should contain a property "_id" of type "string"
     When I successfully execute the action "auth":"createApiKey" with args:
-      | expiresIn | -1                                  |
-      | refresh   | "wait_for"                          |
-      | body      | { "description": "LoRa API key" }   |
+      | expiresIn | -1                                |
+      | refresh   | "wait_for"                        |
+      | body      | { "description": "LoRa API key" } |
     Then The property "_source" of the result should match:
-      | expiresAt   | -1               |
-      | ttl         | -1               |
-      | description | "LoRa API key"   |
-      | token       | "_STRING_"       |
+      | expiresAt   | -1             |
+      | ttl         | -1             |
+      | description | "LoRa API key" |
+      | token       | "_STRING_"     |
     And The result should contain a property "_id" of type "string"
     And I successfully execute the action "auth":"searchApiKeys"
     Then I should receive a "hits" array of objects matching:

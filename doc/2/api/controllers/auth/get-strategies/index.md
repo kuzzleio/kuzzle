@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getStrategies
+title: getStrategies | API | Core
 ---
 
 # getStrategies

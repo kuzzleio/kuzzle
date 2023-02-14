@@ -12,6 +12,31 @@ class FunctionalTestPlugin {
     this.pipes = {};
     this.hooks = {};
 
+    this.imports = {
+      mappings: {
+        "imported-index": {
+          "imported-collection": {
+            mappings: {
+              properties: {
+                name: { type: "keyword" },
+              },
+            },
+          },
+        },
+      },
+      roles: {
+        "imported-role": {
+          controllers: {
+            auth: {
+              actions: {
+                login: true,
+              },
+            },
+          },
+        },
+      },
+    };
+
     // context.constructor.ESClient related declarations =======================
 
     this.controllers.constructors = { ESClient: "testConstructorsESClient" };

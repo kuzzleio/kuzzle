@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getId
+title: getId | Framework | Core
+
 description: KuzzleRequest class getId() method
 ---
 

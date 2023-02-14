@@ -1,7 +1,12 @@
 ---
 code: true
 type: page
-title: log
+title: log | Protocol Framework | Write protocols | Guide
+meta:
+  - name: description
+    content: The context.log object exposes functions used to send messages to Kuzzle's logging system.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, protocol framework, log
 ---
 
 # log

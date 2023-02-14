@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getBodyString
+title: getBodyString | Framework | Core
+
 description: KuzzleRequest class getBodyString() method
 ---
 

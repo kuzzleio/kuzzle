@@ -199,7 +199,7 @@ lib/util/array.js
 lib/util/bufferedPassThrough.js
 lib/util/crypto.js
 lib/util/dump-collection.js
-lib/util/inflector.js
+lib/util/Inflector.js
 lib/util/interfaces.js
 lib/util/koncordeCompat.js
 lib/util/mutex.js
@@ -210,3 +210,6 @@ lib/api/openapi/components/security/index.js
 lib/config/documentEventAliases.js
 lib/types/DebugModule.js
 lib/util/time.js
+lib/util/async.js
+lib/util/esRequest.js
+lib/types/events/EventGenericDocument.js

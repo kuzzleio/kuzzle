@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: normalize
+title: normalize | Framework | Core
+
 description: Koncorde.normalize method
 ---
 

@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Permissions
-description: Configure fine-grained permissions to your data and features
 order: 400
+title: Permissions | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content:  Configure fine-grained permissions to your data and features
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Permissions
 ---
-
 # Permissions
 
 Kuzzle provides a full set of functionalities to configure fine-grained permissions to your data and features.
@@ -18,7 +21,7 @@ The **profiles** themselves are made of **different groups of permissions**, the
 A profile is linked to a set of roles, and each role defines a set of permissions.  
 For example, in the diagram below, the `editor` profile has all permissions, the `contributor` has fewer permissions, and the `default` profile has only default permissions:
 
-![Users, Profiles and Roles](./profiles-roles.png)
+![Users, Profiles and Roles image diagram](./profiles-roles.png)
 
 Roles, profiles and users can be edited in the [Admin Console](http://console.kuzzle.io).
 

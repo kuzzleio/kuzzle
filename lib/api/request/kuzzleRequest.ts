@@ -61,7 +61,7 @@ export class KuzzleRequest {
    */
   public id: string;
 
-  constructor(data: any, options: any) {
+  constructor(data: any, options?: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
     this[_input] = new RequestInput(data);
@@ -849,6 +849,48 @@ export class KuzzleRequest {
     }
 
     return this.getObject("searchBody", {});
+  }
+
+  getObjectFromBodyOrArgs(name: string, def?: JSONObject): JSONObject {
+    if (
+      this.context.connection.protocol !== "http" ||
+      this.context.connection.misc.verb !== "GET"
+    ) {
+      return this.getBodyObject(name, def);
+    }
+
+    const rawObject = this.getString(name, JSON.stringify(def));
+
+    try {
+      return JSON.parse(rawObject);
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw assertionError.get("invalid_type", name, "JSON string");
+      }
+
+      throw error;
+    }
+  }
+
+  getArrayFromBodyOrArgs(name: string, def?: any): JSONObject {
+    if (
+      this.context.connection.protocol !== "http" ||
+      this.context.connection.misc.verb !== "GET"
+    ) {
+      return this.getBodyArray(name, def);
+    }
+
+    const rawObject = this.getString(name, JSON.stringify(def));
+
+    try {
+      return JSON.parse(rawObject);
+    } catch (error) {
+      if (error instanceof SyntaxError) {
+        throw assertionError.get("invalid_type", name, "JSON string");
+      }
+
+      throw error;
+    }
   }
 
   /**

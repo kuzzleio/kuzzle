@@ -1,6 +1,8 @@
 ---
 type: branch
-title: ServiceUnavailableError
+title: ServiceUnavailableError | Framework | Core
+
 description: ServiceUnavailableError class
 code: true
 ---
+<RedirectToFirstChild />

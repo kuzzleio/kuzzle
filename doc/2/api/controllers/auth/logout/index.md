@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: logout
+title: logout | API | Core
 ---
 
 # logout

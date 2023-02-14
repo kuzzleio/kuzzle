@@ -1,7 +1,8 @@
 ---
 code: false
 type: page
-title: ResponsePayload
+title: ResponsePayload | Framework | Core
+
 description: ResponsePayload type definition
 ---
 
@@ -12,8 +13,6 @@ The `ResponsePayload` type represents an API response sent by Kuzzle in JSON for
 This type is returned by the SDK [query](/sdk/js/7/core-classes/kuzzle/query) method.
 
 See the [API Response Format](/core/2/guides/main-concepts/api#response-format) documentation.
-
-<<< ./../../../../../lib/types/ResponsePayload.ts
 
 **Example:**
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: validateCredentials
+title: validateCredentials | API | Core
 ---
 
 # validateCredentials

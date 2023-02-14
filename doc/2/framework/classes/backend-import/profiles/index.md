@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: profiles
+title: profiles | Framework | Core
+
 description: BackendImport.profiles method
 ---
 

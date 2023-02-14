@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: mUpdate
+title: mUpdate | API | Core
 ---
 
 # mUpdate

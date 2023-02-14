@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Run Kuzzle
-description: Run your first Kuzzle application
 order: 100
+title: Run Kuzzle | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Run your first Kuzzle application
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, run kuzzle
 ---
 
 # Run Kuzzle
@@ -46,13 +50,11 @@ First, we will initialize a new application using Kourou:
 ```bash
 kourou app:scaffold playground
 
-  🚀 Kourou - Scaffolds a new Kuzzle application
+ 🚀 Kourou - Scaffolds a new Kuzzle application
 
-  ✔ Creating "playground/" directory
   ✔ Creating and rendering application files
-  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
 
- [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
+ [✔] Scaffolding complete! Use cd playground && npm run docker npm install install dependencies and then npm run docker:dev to run your application!
 
 ```
 

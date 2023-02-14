@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: getBodyArray
+title: getBodyArray | Framework | Core
+
 description: KuzzleRequest class getBodyArray() method
 ---
 

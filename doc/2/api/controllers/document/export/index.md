@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: export
+title: export | API | Core
 ---
 
 # export
@@ -17,8 +17,12 @@ This method also supports the [Koncorde Filters DSL](/core/2/api/koncorde-filter
 Koncorde filters will be translated into an Elasticsearch query.
 
 ::: info
-The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.  
+The `scroll` parameter represents the maximum time needed for the client to download a page of `size` results.
 You should try with smaller pages of results if you experienced download problems.
+:::
+
+::: info
+If you want to expose the exported documents in HTTP, you will need to create a `<a>` element and add a [single use token](/core/2/api/controllers/auth/create-token) in the link `jwt` argument.
 :::
 
 ::: warning
@@ -37,7 +41,7 @@ This method only supports the HTTP Protocol
 
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/_export[?format=<export format>][&size=<int>][&scroll=<time to live>][&lang=<query language>]
-Method: GET
+Method: POST
 Body:
 ```
 
@@ -53,17 +57,25 @@ Body:
     // ...
   ],
   "fields": [
-    // ...
-  ]
+    // ["name", "age"]
+  ],
+  "fieldsName": {
+    // "name": "Customer Name"
+  }
 }
 ```
 
 You can also access this route with the `GET` verb:
 
 ```http
-URL: http://kuzzle:7512/<index>/<collection>/_export[?format=<export format>][&size=<int>][&scroll=<time to live>][&lang=<query language>]
+URL: http://kuzzle:7512/<index>/<collection>/_export[?format=<export format>][&size=<int>][&scroll=<time to live>][&lang=<query language>][&searchBody=<query, sort>][&fields=<fields to export>][&fieldsName=<header of each exported field>]
 Method: GET
 ```
+
+::: info
+It's possible to pass arguments that are usually in the body into the query string in JSON format.
+Following arguments are available: `query`, `fields` and `fieldsName`.
+:::
 
 ### Other protocols
 
@@ -84,7 +96,7 @@ Method: GET
       // ...
     ],
     "fields": [
-    // ...
+      // ["name", "age"]
     ]
   },
 
@@ -94,7 +106,7 @@ Method: GET
   "lang": "<query language>",
   "format": "<export format>",
   "fieldsName": {
-    "<field path>": "<field name>"
+    "name": "Customer Name"
   }
 }
 ```
@@ -109,6 +121,7 @@ Method: GET
 ### Optional:
 
 - `separator`: This option is only supported for the `CSV` format, it defines which character sequence will be used to format the CSV documents
+- `fields`: This option is only supported for the `CSV` format, it defines which fields should be exported
 - `fieldsName`: This option is only supported for the `CSV` format, it defines how fields path should be renamed, if not present the field path will be used.
 - `scroll`: This option must be set with a [time duration](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/common-options.html#time-units), at the end of which the cursor is destroyed.
 - `size`: set the maximum number of documents returned per result page. By default it's `10`.

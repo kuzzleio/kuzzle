@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Deploy your Application
-description: Deploy your Kuzzle application on a remote server
 order: 900
+title: Deploy your Application | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Deploy your Kuzzle application on a remote server
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Deploy your application
 ---
 
 # Deploy your Application

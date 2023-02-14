@@ -1,10 +1,15 @@
 ---
 code: false
 type: page
-title: Set up Permissions
-description: Define user rights
 order: 300
+title: Set up Permissions | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Define kuzzle user rights and permissions 
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Set up Permissions
 ---
+
 
 # Set up Permissions
 
@@ -15,7 +20,7 @@ The permissions system is designed following a standard model and is structured 
  - **profile**: combination of one or more roles
  - **user**: combination of one or more profiles
 
-![roles, profiles and users](./role-profile-user.png)
+![roles, profiles and users diagram image](./role-profile-user.png)
 
 ## Role
 
@@ -42,7 +47,7 @@ kourou security:createRole '{
 
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
 
-![Admin Console roles display](./admin-console-roles.png)
+![Admin Console roles display screenshot](./admin-console-roles.png)
 
 ## Profile
 
@@ -60,7 +65,7 @@ Now we have a `dummy` profile which gives access to the API actions allowed by t
 
 You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://next-console.kuzzle.io)
 
-![Admin Console profiles display](./admin-console-profiles.png)
+![Admin Console profiles display screenshot](./admin-console-profiles.png)
 
 ## User
 
@@ -85,7 +90,7 @@ kourou security:createUser '{
 
 You should see your newly created role in the `Security > Users` section of the [Admin Console](http://next-console.kuzzle.io)
 
-![Admin Console users display](./admin-console-users.png)
+![Admin Console users display screenshot](./admin-console-users.png)
 
 ## Creating an administrator account, and restricting anonymous user rights
 

@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Authentication Strategy
-description: Learn how to integrate new authentication strategy
 order: 300
+title: Authentication Strategy | Write plugins | Guide | Core
+meta:
+  - name: description
+    content: Learn how to integrate new authentication strategy
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, Authentication Strategy 
 ---
 
 # Authentication Strategy

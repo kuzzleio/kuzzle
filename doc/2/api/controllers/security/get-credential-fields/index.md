@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getCredentialFields
+title: getCredentialFields | API | Core
 ---
 
 # getCredentialFields

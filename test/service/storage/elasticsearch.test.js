@@ -2178,6 +2178,7 @@ describe("Test: ElasticSearch service", () => {
       sinon.stub(elasticsearch, "_hasHiddenCollection").resolves(false);
       sinon.stub(elasticsearch, "deleteCollection").resolves();
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -2452,6 +2453,73 @@ describe("Test: ElasticSearch service", () => {
         BadRequestError,
         { id: "services.storage.invalid_collection_name" }
       );
+    });
+
+    it("should use defaultSettings if none are provided", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(elasticsearch.config.defaultSettings);
+    });
+
+    it("should use provided settings if provided", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+        number_of_shards: 2,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+      should(esReq.body.settings).eql(settings);
+    });
+
+    it("should use partially provided settings", async () => {
+      elasticsearch.config.defaultSettings = {
+        number_of_replicas: 42,
+        number_of_shards: 66,
+      };
+
+      const settings = {
+        number_of_replicas: 1,
+      };
+
+      await elasticsearch.createCollection(index, collection, { settings });
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.body.settings).eql({
+        number_of_replicas: 1,
+        number_of_shards: 66,
+      });
+    });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for one shard to being active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch.createCollection(index, collection);
+
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql(1);
     });
   });
 
@@ -2922,6 +2990,7 @@ describe("Test: ElasticSearch service", () => {
         },
       });
       sinon.stub(elasticsearch, "_getIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").resolves(1);
     });
 
     afterEach(() => {
@@ -2974,6 +3043,24 @@ describe("Test: ElasticSearch service", () => {
             esClientError
           );
         });
+    });
+
+    it("should wait for all shards to be active when using an Elasticsearch cluster", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("all");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("all");
+    });
+
+    it("should only wait for the primary shard to be active when using a single node", async () => {
+      elasticsearch._getWaitForActiveShards = sinon.stub().resolves("1");
+
+      await elasticsearch.truncateCollection(index, collection);
+      const esReq = elasticsearch._client.indices.create.firstCall.args[0];
+
+      should(esReq.wait_for_active_shards).eql("1");
     });
   });
 
@@ -3415,6 +3502,7 @@ describe("Test: ElasticSearch service", () => {
     beforeEach(() => {
       sinon.stub(elasticsearch, "_createHiddenCollection").resolves();
       sinon.stub(elasticsearch, "_getIndice").resolves(indice);
+      sinon.stub(elasticsearch, "_checkIfAliasExists").resolves(undefined);
     });
 
     afterEach(() => {
@@ -3437,6 +3525,15 @@ describe("Test: ElasticSearch service", () => {
       await elasticsearch.deleteCollection(index, collection);
 
       should(elasticsearch._createHiddenCollection).be.called();
+    });
+
+    it("should delete the remaining alias if it still exists", async () => {
+      elasticsearch._checkIfAliasExists.resolves(["myalias"]);
+      elasticsearch._client.indices.deleteAlias = sinon.stub().resolves();
+
+      await elasticsearch.deleteCollection(index, collection);
+
+      should(elasticsearch._client.indices.deleteAlias).be.called();
     });
   });
 
@@ -4925,17 +5022,10 @@ describe("Test: ElasticSearch service", () => {
           { alias: "@&istanbul._kuzzle_keep" },
         ],
       });
-      sinon.stub(elasticsearch, "_ensureAliasConsistency").resolves();
-    });
-
-    afterEach(() => {
-      elasticsearch._ensureAliasConsistency.restore();
     });
 
     it("should returns the DB schema without hidden collections", async () => {
       const schema = await elasticsearch.getSchema();
-
-      should(elasticsearch._ensureAliasConsistency).be.called();
       should(schema).be.eql({
         nepali: ["mehry"],
         istanbul: [],
@@ -4953,6 +5043,7 @@ describe("Test: ElasticSearch service", () => {
       });
 
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(hiddenIndice);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
     });
 
     afterEach(() => {
@@ -4986,6 +5077,65 @@ describe("Test: ElasticSearch service", () => {
       await elasticsearch._createHiddenCollection("nisantasi");
 
       should(elasticsearch._client.indices.create).not.be.called();
+    });
+
+    it("does create hidden collection based on global settings", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch.config.defaultSettings = {
+        number_of_shards: 42,
+        number_of_replicas: 42,
+      };
+
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 42,
+            number_of_replicas: 42,
+          },
+        },
+      });
+      should(Mutex.prototype.lock).be.called();
+      should(Mutex.prototype.unlock).be.called();
+    });
+
+    it("should wait for all shards to being active when using an Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("all");
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: "all",
+      });
+    });
+
+    it("should wait for only one shard to being active when using a single node Elasticsearch cluster", async () => {
+      elasticsearch._client.indices.create.resolves({});
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      await elasticsearch._createHiddenCollection("nisantasi");
+
+      should(elasticsearch._client.indices.create).be.calledWithMatch({
+        index: hiddenIndice,
+        body: {
+          aliases: { [hiddenAlias]: {} },
+          settings: {
+            number_of_shards: 1,
+            number_of_replicas: 1,
+          },
+        },
+        wait_for_active_shards: 1,
+      });
     });
   });
 
@@ -5337,7 +5487,31 @@ describe("Test: ElasticSearch service", () => {
       });
     });
 
-    describe("#_ensureAliasConsistency", () => {
+    describe("#_getWaitForActiveShards", () => {
+      it("should return all if an Elasticsearch cluster is used", async () => {
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1", "node2"] });
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql("all");
+      });
+
+      it("should return 1 if a single node Elasticsearch cluster is used", async () => {
+        elasticsearch._client.cat.nodes = sinon
+          .stub()
+          .resolves({ body: ["node1"] });
+
+        const waitForActiveShards =
+          await elasticsearch._getWaitForActiveShards();
+
+        should(waitForActiveShards).be.eql(1);
+      });
+    });
+
+    describe("#generateMissingAliases", () => {
       const indicesBody = {
         body: [
           { index: "&nepali.liia", status: "open" },
@@ -5372,8 +5546,8 @@ describe("Test: ElasticSearch service", () => {
       });
 
       it("Find indices without associated aliases and create some accordingly", async () => {
-        await publicES._ensureAliasConsistency();
-        await internalES._ensureAliasConsistency();
+        await publicES.generateMissingAliases();
+        await internalES.generateMissingAliases();
 
         should(publicES._client.indices.updateAliases).be.calledWith({
           body: {
@@ -5423,8 +5597,8 @@ describe("Test: ElasticSearch service", () => {
         publicES.listAliases.resolves(aliasesList);
         internalES.listAliases.resolves(aliasesList);
 
-        await publicES._ensureAliasConsistency();
-        await internalES._ensureAliasConsistency();
+        await publicES.generateMissingAliases();
+        await internalES.generateMissingAliases();
 
         should(publicES._client.indices.updateAliases).not.be.called();
         should(internalES._client.indices.updateAliases).not.be.called();

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zscan
+title: zscan | API | Core
 ---
 
 # zscan

@@ -82,6 +82,35 @@ describe("core/network/protocols/http", () => {
     });
   });
 
+  describe("#httpWriteRequestHeaders", () => {
+    let connection;
+
+    beforeEach(async () => {
+      await httpWs.init(entryPoint);
+
+      connection = new ClientConnection("http", ["1.2.3.4"], "foo");
+    });
+
+    it("should write one set-cookie header per cookie configured", () => {
+      const req = new uWSMock.MockHttpRequest("", "", "", {
+        origin: "foo",
+        "Content-Length": 42,
+      });
+      const message = new HttpMessage(connection, req);
+      const response = new uWSMock.MockHttpResponse();
+
+      const request = new KuzzleRequest({});
+      request.response.configure({ headers: { "set-cookie": "foo=bar" } });
+      request.response.configure({ headers: { "set-cookie": "bar=baz" } });
+
+      httpWs.httpWriteRequestHeaders(request, response, message);
+
+      should(response.writeHeader)
+        .be.calledWith(Buffer.from("Set-Cookie"), Buffer.from("foo=bar"))
+        .and.be.calledWith(Buffer.from("Set-Cookie"), Buffer.from("bar=baz"));
+    });
+  });
+
   describe("http errors (not request ones)", () => {
     let connection;
     let message;
@@ -216,37 +245,6 @@ describe("core/network/protocols/http", () => {
       should(response.cork).not.be.called();
     });
 
-    it("should add the content-length header if the stream has a fixed size", () => {
-      const response = new uWSMock.MockHttpResponse();
-      const stream = new PassThrough();
-
-      sinon.stub(httpWs, "httpWriteRequestHeaders");
-      httpWs.httpSendStream(
-        request,
-        response,
-        new HttpStream(stream, { totalBytes: 1 }),
-        message
-      );
-
-      should(response.writeHeader).be.calledWithMatch(
-        Buffer.from("Content-Length"),
-        Buffer.from("1")
-      );
-    });
-
-    it("should add the transfer-encoding header if the stream has a dynamic size", () => {
-      const response = new uWSMock.MockHttpResponse();
-      const stream = new PassThrough();
-
-      sinon.stub(httpWs, "httpWriteRequestHeaders");
-      httpWs.httpSendStream(request, response, new HttpStream(stream), message);
-
-      should(response.writeHeader).be.calledWithMatch(
-        Buffer.from("Transfer-Encoding"),
-        Buffer.from("chunked")
-      );
-    });
-
     it("should write chunk using tryEnd when the stream size is fixed", () => {
       const response = new uWSMock.MockHttpResponse();
       const stream = new PassThrough();
@@ -370,13 +368,13 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should reject huge requests lying about their content-length", () => {
+    it("should reject huge requests lying about their content-length", async () => {
       httpWs.maxRequestSize = 8;
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-length": 7,
       });
 
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from('{"ahah":"i am a h4ck3r"}')
       );
 
@@ -389,12 +387,12 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should reject requests with too many encoding layers", () => {
+    it("should reject requests with too many encoding layers", async () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-encoding": "gzip,gzip,gzip,gzip,gzip,gzip,gzip",
       });
 
-      httpWs.server._httpResponse._onData(Buffer.from("foobar"), true);
+      await httpWs.server._httpResponse._onData(Buffer.from("foobar"), true);
 
       should(entryPoint.newConnection).not.called();
       should(global.kuzzle.router.http.route).not.called();
@@ -405,12 +403,12 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should reject requests with an unhandled content encoding", () => {
+    it("should reject requests with an unhandled content encoding", async () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-encoding": "lol",
       });
 
-      httpWs.server._httpResponse._onData(Buffer.from("foobar"), true);
+      await httpWs.server._httpResponse._onData(Buffer.from("foobar"), true);
 
       should(entryPoint.newConnection).not.called();
       should(global.kuzzle.router.http.route).not.called();
@@ -463,15 +461,15 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpResponse._onData(payload, true);
     });
 
-    it("should be able to handle data submitted in chunks", () => {
+    it("should be able to handle data submitted in chunks", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
       httpWs.server._httpOnMessage("get", "/", "", {});
 
-      httpWs.server._httpResponse._onData(Buffer.from('{"fo'), false);
-      httpWs.server._httpResponse._onData(Buffer.from('o":'), false);
-      httpWs.server._httpResponse._onData(Buffer.from('"ba'), false);
-      httpWs.server._httpResponse._onData(Buffer.from('r"}'), true);
+      await httpWs.server._httpResponse._onData(Buffer.from('{"fo'), false);
+      await httpWs.server._httpResponse._onData(Buffer.from('o":'), false);
+      await httpWs.server._httpResponse._onData(Buffer.from('"ba'), false);
+      await httpWs.server._httpResponse._onData(Buffer.from('r"}'), true);
 
       should(httpWs.httpProcessRequest)
         .calledOnce()
@@ -480,22 +478,22 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should be able to handle requests without a payload", () => {
+    it("should be able to handle requests without a payload", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
       httpWs.server._httpOnMessage("get", "/", "", {});
 
-      httpWs.server._httpResponse._onData(Buffer.from(""), true);
+      await httpWs.server._httpResponse._onData(Buffer.from(""), true);
 
       should(httpWs.httpProcessRequest)
         .calledOnce()
         .calledWithMatch(httpWs.server._httpResponse, { content: null });
     });
 
-    it("should reject malformed JSON content", () => {
+    it("should reject malformed JSON content", async () => {
       httpWs.server._httpOnMessage("get", "/", "", {});
 
-      httpWs.server._httpResponse._onData(Buffer.from("{lol}"), true);
+      await httpWs.server._httpResponse._onData(Buffer.from("{lol}"), true);
 
       should(entryPoint.newConnection).not.called();
       should(global.kuzzle.router.http.route).not.called();
@@ -506,14 +504,14 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should be able to handle multipart/form-data requests", () => {
+    it("should be able to handle multipart/form-data requests", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "multipart/form-data; boundary=foo",
       });
 
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from(
           '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'
         ),
@@ -534,14 +532,14 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should be able to handle multipart/form-data requests when the form data is empty", () => {
+    it("should be able to handle multipart/form-data requests when the form data is empty", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "multipart/form-data; boundary=foo",
       });
 
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from("--foo\r\nContent-Disposition: form-data; --foo--"),
         true
       );
@@ -553,14 +551,14 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should reject multipart/form-data requests with too large files", () => {
+    it("should reject multipart/form-data requests with too large files", async () => {
       httpWs.maxFormFileSize = 2;
 
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "multipart/form-data; boundary=foo",
       });
 
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from(
           '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'
         ),
@@ -574,14 +572,17 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should be able to handle application/x-www-form-urlencoded requests", () => {
+    it("should be able to handle application/x-www-form-urlencoded requests", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "application/x-www-form-urlencoded",
       });
 
-      httpWs.server._httpResponse._onData(Buffer.from("foo=bar&baz=qux"), true);
+      await httpWs.server._httpResponse._onData(
+        Buffer.from("foo=bar&baz=qux"),
+        true
+      );
 
       should(httpWs.httpProcessRequest)
         .calledOnce()
@@ -593,13 +594,13 @@ describe("core/network/protocols/http", () => {
         });
     });
 
-    it("should forward a well-formed request to the router", () => {
+    it("should forward a well-formed request to the router", async () => {
       const result = new KuzzleRequest({});
       result.setResult("yo");
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foo" });
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
         true
       );
@@ -652,7 +653,7 @@ describe("core/network/protocols/http", () => {
       should(entryPoint.removeConnection).calledOnce();
     });
 
-    it("should not duplicate headers if a header with the same name as one of the default headers is present", () => {
+    it("should not duplicate headers if a header with the same name as one of the default headers is present", async () => {
       const result = new KuzzleRequest({});
       result.setResult("yo", {
         headers: {
@@ -665,7 +666,7 @@ describe("core/network/protocols/http", () => {
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foobar" });
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
         true
       );
@@ -738,7 +739,7 @@ describe("core/network/protocols/http", () => {
       should(entryPoint.removeConnection).calledOnce();
     });
 
-    it("should allow custom X-Kuzzle-Request-Id header", () => {
+    it("should allow custom X-Kuzzle-Request-Id header", async () => {
       const result = new KuzzleRequest({});
       result.setResult("yo", {
         headers: {
@@ -748,7 +749,7 @@ describe("core/network/protocols/http", () => {
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foobar" });
-      httpWs.server._httpResponse._onData(
+      await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
         true
       );
@@ -776,7 +777,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "accept-encoding": "gzip",
       });
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
 
@@ -811,7 +812,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "accept-encoding": "deflate",
       });
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
 
@@ -846,7 +847,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "accept-encoding": "deflate, deflate, deflate, identity, gzip, deflate",
       });
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
 
@@ -881,7 +882,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "accept-encoding": "deflate;q=0.8, gzip;q=0.25, *=0",
       });
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
 
@@ -916,7 +917,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "accept-encoding": "br;q=0.8, compress;q=0.25",
       });
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
 
@@ -1038,13 +1039,13 @@ describe("core/network/protocols/http", () => {
       }
     });
 
-    it("should not wrap a raw response to a standard Kuzzle Response object", () => {
+    it("should not wrap a raw response to a standard Kuzzle Response object", async () => {
       const result = new KuzzleRequest({});
       result.setResult("yo", { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();
@@ -1052,13 +1053,13 @@ describe("core/network/protocols/http", () => {
       should(response.tryEnd.firstCall.args[0].toString()).eql("yo");
     });
 
-    it("should be able to handle empty raw responses", () => {
+    it("should be able to handle empty raw responses", async () => {
       const result = new KuzzleRequest({});
       result.setResult(null, { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();
@@ -1066,13 +1067,13 @@ describe("core/network/protocols/http", () => {
       should(response.tryEnd.firstCall.args[0].toString()).eql("");
     });
 
-    it("should be able to handle JSON objects as raw responses", () => {
+    it("should be able to handle JSON objects as raw responses", async () => {
       const result = new KuzzleRequest({});
       result.setResult({ foo: "bar" }, { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();
@@ -1080,13 +1081,13 @@ describe("core/network/protocols/http", () => {
       should(response.tryEnd.firstCall.args[0].toString()).eql('{"foo":"bar"}');
     });
 
-    it("should be able to handle Buffer objects as raw responses", () => {
+    it("should be able to handle Buffer objects as raw responses", async () => {
       const result = new KuzzleRequest({});
       result.setResult(Buffer.from("foobar"), { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();
@@ -1094,13 +1095,13 @@ describe("core/network/protocols/http", () => {
       should(response.tryEnd.firstCall.args[0].toString()).eql("foobar");
     });
 
-    it("should be able to handle stringified Buffer objects as raw responses", () => {
+    it("should be able to handle stringified Buffer objects as raw responses", async () => {
       const result = new KuzzleRequest({});
       result.setResult(JSON.stringify(Buffer.from("foobar")), { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();
@@ -1110,13 +1111,13 @@ describe("core/network/protocols/http", () => {
       );
     });
 
-    it("should be able to handle scalars as raw responses", () => {
+    it("should be able to handle scalars as raw responses", async () => {
       const result = new KuzzleRequest({});
       result.setResult(123.45, { raw: true });
       kuzzle.router.http.route.yields(result);
 
       httpWs.server._httpOnMessage("get", "/", "", {});
-      httpWs.server._httpResponse._onData("", true);
+      await httpWs.server._httpResponse._onData("", true);
 
       const response = httpWs.server._httpResponse;
       should(response.tryEnd).calledOnce();

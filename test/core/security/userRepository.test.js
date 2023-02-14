@@ -11,7 +11,7 @@ const {
 } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const Repository = require("../../../lib/core/shared/repository");
+const { Repository } = require("../../../lib/core/shared/repository");
 const { User } = require("../../../lib/model/security/user");
 const ApiKey = require("../../../lib/model/storage/apiKey");
 const UserRepository = require("../../../lib/core/security/userRepository");

@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: update
+title: update | Framework | Core
+
 description: Repository.update method
 ---
 

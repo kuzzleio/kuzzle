@@ -1,9 +1,13 @@
 ---
 code: true
 type: page
-title: disconnect
+title: disconnect | Write protocols | Guide
+meta:
+  - name: description
+    content: Asks the protocol to force-close a connection.
+  - name: keywords
+    content: Kuzzle, Documentation, write protocols, start, HTTP, MQTT, disconnect
 ---
-
 # disconnect
 
 Asks the protocol to force-close a connection.

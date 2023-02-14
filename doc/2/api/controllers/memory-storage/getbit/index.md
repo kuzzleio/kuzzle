@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getbit
+title: getbit | API | Core
 ---
 
 # getbit

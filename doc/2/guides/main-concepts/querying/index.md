@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Querying
-description: Learn how to search for your data with Elasticsearch Query Language
 order: 300
+title: Querying | Main Concepts | Guide | Core
+meta:
+  - name: description
+    content:  Learn how to search for your data with Elasticsearch Query Language
+  - name: keywords
+    content: Kuzzle, Documentation, Kuzzle API main concepts, Querying
 ---
-
 # Querying
 
 Kuzzle directly exposes [Elasticsearch's query language](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/query-dsl.html) in a secure way.
@@ -312,7 +315,7 @@ To use a Koncorde filter instead of an Elasticsearch query, you have to pass the
 These filters will be translated into Elasticsearch queries.
 :::
 
-All [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators) are available except the [regex](/core/2/api/koncorde-filters-syntax/clauses#regex) clause and the [bool](/core/2/api/koncorde-filters-syntax/operators#bool) operator.
+All [clauses](/core/2/api/koncorde-filters-syntax/clauses) and [operators](/core/2/api/koncorde-filters-syntax/operators) are available the [bool](/core/2/api/koncorde-filters-syntax/operators#bool) operator.
 
 **Example:** _Combining clauses to create an "AND"-like search query_
 ```bash
@@ -320,6 +323,31 @@ kourou document:search ktm-open-data thamel-taxi '{
   and: [
     { equals: { city: "Tirana" } },
     { range: { age: { gte: 32 } } }
+  ]
+}'
+```
+
+<SinceBadge version="auto"/>
+
+Also, native Elasticsearch clause can be used, they will just not be translated and added as-is in the search query.
+
+**Example:** _Using Koncorde clause and native ES clause_
+
+```bash
+kourou document:search ktm-open-data thamel-taxi '{
+  "and": [
+    {
+      "equals": {
+        "city": "Istanbul"
+      }
+    },
+    {
+      "wildcard": {
+        "name": {
+          "value": "*e*"
+        }
+      }
+    }
   ]
 }'
 ```
@@ -416,7 +444,7 @@ while (result != null) {
 
 ::: tab Kotlin
 
-Using the Javascript SDK [SearchResult.next](/sdk/jvm/1/core-classes/search-result/next) method:
+Using the Java SDK [SearchResult.next](/sdk/jvm/1/core-classes/search-result/next) method:
 
 ```kotlin
 val term: ConcurrentHashMap<String, Any?> =

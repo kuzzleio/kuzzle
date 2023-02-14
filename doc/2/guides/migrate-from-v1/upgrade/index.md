@@ -1,8 +1,13 @@
 ---
 code: false
 type: branch
-title: Upgrading Kuzzle
 order: 100
+title: Upgrading Kuzzle | Migrate from Kuzzle 1.x | Guide | Core
+meta:
+  - name: description
+    content: Kuzzle can either be made in place, or by importing data from a Kuzzle v1 instance into a fresh v2 infrastucture.
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, Upgrading kuzzle
 ---
 
 # Upgrading Kuzzle

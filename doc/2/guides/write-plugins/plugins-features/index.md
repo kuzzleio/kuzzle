@@ -1,11 +1,14 @@
 ---
 code: false
 type: page
-title: Plugins Features
-description: Available features in plugins development
 order: 200
+title: Plugins Features | Write plugins | Guide | Core
+meta:
+  - name: description
+    content: Available features in plugins development
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, Plugins Features
 ---
-
 # Plugins Features
 
 ## Embedded SDK
@@ -73,3 +76,16 @@ class MyPlugin extends Plugin {
   }
 }
 ```
+
+## Default imports
+
+Plugins can declare defaults documents to be loaded before Kuzzle open it's API.
+
+The following imports are available:
+ - `users`
+ - `roles`
+ - `profiles`
+ - `mappings` (indexes and collections)
+ - `usersMappings`
+
+See also [Backend.import](/core/2/framework/classes/backend-import).

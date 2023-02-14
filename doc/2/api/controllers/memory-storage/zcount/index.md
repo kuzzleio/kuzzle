@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: zcount
+title: zcount | API | Core
 ---
 
 # zcount

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: getRoleMapping
+title: getRoleMapping | API | Core
 ---
 
 # getRoleMapping

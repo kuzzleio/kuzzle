@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: execute
+title: execute | Framework | Core
+
 description: PluginContextAccessors class execute() method
 ---
 

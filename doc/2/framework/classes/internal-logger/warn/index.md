@@ -1,7 +1,8 @@
 ---
 code: true
 type: page
-title: warn
+title: warn | Framework | Core
+
 description: InternalLogger.warn method
 ---
 

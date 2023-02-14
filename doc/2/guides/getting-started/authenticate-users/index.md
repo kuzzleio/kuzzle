@@ -1,9 +1,13 @@
 ---
 code: false
 type: page
-title: Authenticate Users
-description: Use the multi-authentication system
 order: 400
+title: Authenticate Users | Kuzzle Getting Started | Guide | Core
+meta:
+  - name: description
+    content: Use the multi-authentication system
+  - name: keywords
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, Write an Application, iot, backend, opensource, realtime, Authenticate Users
 ---
 
 # Authenticate Users

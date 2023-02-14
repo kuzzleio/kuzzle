@@ -1,7 +1,7 @@
 ---
 code: false
 type: page
-title: MQTT
+title: MQTT | API | Core
 description: MQTT protocol usage and configuration  
 order: 300
 ---

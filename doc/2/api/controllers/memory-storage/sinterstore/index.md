@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: sinterstore
+title: sinterstore | API | Core
 ---
 
 # sinterstore

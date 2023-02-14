@@ -37,9 +37,9 @@ Learn how Kuzzle will accelerate your developments :point_right: https://docs.ku
 
 ## Kuzzle in production
 
-Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/). 
+Kuzzle is production-proof, and can be [deployed anywhere](https://kuzzle.io/products/by-features/on-premises/).
 
-With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performances.  
+With Kuzzle, it is possible to deploy applications that can serve tens of thousands of users with very good performances.
 
 Check out our [support plans](https://kuzzle.io/pricing/).
 
@@ -51,7 +51,7 @@ The easiest way to start a Kuzzle application is to use [Kourou](https://github.
 npx kourou app:scaffold playground
 
  🚀 Kourou - Scaffolds a new Kuzzle application
- 
+
   ✔ Creating playground/ directory
   ✔ Creating and rendering application files
   ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
@@ -78,7 +78,7 @@ const app = new Backend('playground');
 app.controller.register('greeting', {
   actions: {
     sayHello: {
-      handler: async request => `Hello, ${request.input.args.name}` 
+      handler: async request => `Hello, ${request.input.args.name}`
     }
   }
 });
@@ -110,13 +110,13 @@ Learn how to [Write an Application](https://docs.kuzzle.io/core/2/guides/getting
 
 ## Get trained by the creators of Kuzzle :zap:
 
-Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.  
-Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.  
+Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.
+Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.
 :point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
 
 ## Public Roadmap
 
-You can consult the public roadmap on Trello. Come and vote for the features you need!  
+You can consult the public roadmap on Trello. Come and vote for the features you need!
 :point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
 
 ## Contributing to Kuzzle
@@ -149,3 +149,4 @@ npm run docker:install
 ```
 
 finally run the command `docker-compose up` to launch your kuzzle stack.
+
