@@ -117,6 +117,13 @@ export class KuzzleDebugger {
       );
     }
 
+    // Always disable report progress because this params causes a segfault.
+    // The reason this happens is because the inspector is running inside the same thread
+    // as the Kuzzle Process and reportProgress forces the inspector to send events
+    // to the main thread, while it is being inspected by the HeapProfiler, which causes javascript code
+    // to be executed as the HeapProfiler is running, which causes a segfault.
+    params.reportProgress = false;
+
     return this.inspectorPost(method, params);
   }
 
