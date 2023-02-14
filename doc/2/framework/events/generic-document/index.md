@@ -409,7 +409,7 @@ This event is called with an object containing the following properties:
 | --------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
 | `request`       | <pre><a href=/core/2/framework/classes/kuzzle-request/properties>KuzzleRequest</a></pre> | The underlying API request                                                                                                         |
 | `metadata`      | <pre>JSONObject</pre>                                                                    | An object representing the metadata that will be injected in the document                                                          |
-| `defaultMedata` | <pre>JSONObject</pre>                                                                    | An object representing the default metadata that will be injected in the document when created. (`only used with document:upsert`) |
+| `defaultMetadata` | <pre>JSONObject</pre>                                                                    | An object representing the default metadata that will be injected in the document when created. (only used with `document:upsert`) |
 
 
 Triggered before documents are created, replaced, updated or upserted.
