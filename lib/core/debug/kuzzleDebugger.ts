@@ -1,13 +1,9 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
-import { DebugModule } from "../../types/DebugModule";
 import { JSONObject } from "kuzzle-sdk";
 import get from "lodash/get";
-import { ClusterDebugModule } from "./modules/clusterDebugModule";
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
-
-type DebugModuleMethod = (params: JSONObject) => any;
 
 export class KuzzleDebugger {
   private inspector: Inspector.Session;
@@ -18,17 +14,6 @@ export class KuzzleDebugger {
    * Map<eventName, Set<connectionId>>
    */
   private events = new Map<string, Set<string>>();
-
-  /**
-   * Map of functions from the DebugModules
-   */
-  private kuzzlePostMethods = new Map<string, DebugModuleMethod>();
-
-  /**
-   * List of DebugModule for DebugController
-   * Used to add new methods and events to the protocol
-   */
-  private modules: DebugModule[] = [new ClusterDebugModule()];
 
   async init() {
     this.inspector = new Inspector.Session();
@@ -98,51 +83,7 @@ export class KuzzleDebugger {
 
     this.inspector.connect();
     this.debuggerStatus = true;
-
-    for (const module of this.modules) {
-      await module.init(this.inspector);
-
-      for (const methodName of module.methods) {
-        if (!module[methodName]) {
-          throw new Error(
-            `Missing implementation of method "${methodName}" inside DebugModule "${module.name}"`
-          );
-        }
-        this.kuzzlePostMethods.set(
-          `Kuzzle.${module.name}.${methodName}`,
-          module[methodName].bind(module)
-        );
-      }
-
-      for (const eventName of module.events) {
-        module.on(eventName, async (payload) => {
-          if (!this.debuggerStatus) {
-            return;
-          }
-
-          const event = `Kuzzle.${module.name}.${eventName}`;
-          await this.notifyGlobalListeners(event, payload);
-
-          const listeners = this.events.get(event);
-          if (!listeners) {
-            return;
-          }
-
-          const promises = [];
-          for (const connectionId of listeners) {
-            promises.push(
-              this.notifyConnection(connectionId, DEBUGGER_EVENT, {
-                event,
-                result: payload,
-              })
-            );
-          }
-
-          // No need to catch, notify is already try-catched
-          await Promise.all(promises);
-        });
-      }
-    }
+    global.kuzzle.ask("cluster:node:preventEviction", true);
   }
 
   /**
@@ -153,17 +94,10 @@ export class KuzzleDebugger {
       return;
     }
 
-    for (const module of this.modules) {
-      for (const eventName of module.events) {
-        module.removeAllListeners(eventName);
-      }
-      await module.cleanup();
-    }
-
     this.inspector.disconnect();
     this.debuggerStatus = false;
+    global.kuzzle.ask("cluster:node:preventEviction", false);
     this.events.clear();
-    this.kuzzlePostMethods.clear();
   }
 
   /**
@@ -173,15 +107,6 @@ export class KuzzleDebugger {
   async post(method: string, params: JSONObject = {}) {
     if (!this.debuggerStatus) {
       throw kerror.get("core", "debugger", "not_enabled");
-    }
-
-    if (method.startsWith("Kuzzle.")) {
-      const debugModuleMethod = this.kuzzlePostMethods.get(method);
-
-      if (debugModuleMethod) {
-        return debugModuleMethod(params);
-      }
-      throw kerror.get("core", "debugger", "method_not_found", method);
     }
 
     if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {

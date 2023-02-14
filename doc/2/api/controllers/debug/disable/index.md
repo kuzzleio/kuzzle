@@ -7,7 +7,7 @@ title: disable | API | Core
 # disable
 
 Disable the debugger and prevent calls to `debug:post`, `debug:addListener`, `debug:removeListener`.
-
+While ending the debugging session it allows the node to be evicted again.
 ---
 
 ## Query Syntax
