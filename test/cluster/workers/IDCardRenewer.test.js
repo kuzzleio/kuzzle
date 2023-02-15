@@ -10,13 +10,10 @@ describe("ClusterIDCardRenewer", () => {
     let idCardRenewer;
 
     beforeEach(() => {
+      process.send = sinon.stub();
       idCardRenewer = new IDCardRenewer();
       idCardRenewer.initRedis = sinon.stub().resolves();
       idCardRenewer.renewIDCard = sinon.stub().resolves();
-
-      idCardRenewer.parentPort = {
-        postMessage: sinon.stub(),
-      };
     });
 
     it("should initialize the redis client", async () => {
@@ -88,7 +85,7 @@ describe("ClusterIDCardRenewer", () => {
         refreshDelay: 1,
       });
 
-      should(idCardRenewer.parentPort.postMessage).be.calledWith({
+      should(process.send).be.calledWith({
         initialized: true,
       });
     });
@@ -109,9 +106,7 @@ describe("ClusterIDCardRenewer", () => {
         };
       };
 
-      idCardRenewer.parentPort = {
-        postMessage: sinon.stub(),
-      };
+      process.send = sinon.stub();
 
       sinon.stub(idCardRenewer, "dispose").resolves();
 
@@ -133,9 +128,7 @@ describe("ClusterIDCardRenewer", () => {
         .and.be.calledWith("foo", 400);
 
       should(idCardRenewer.dispose).not.be.called();
-      should(idCardRenewer.parentPort.postMessage)
-        .be.calledOnce()
-        .be.calledWith({ initialized: true });
+      should(process.send).be.calledOnce().be.calledWith({ initialized: true });
     });
 
     it("should call the dispose method and notify the main thread that the node was too slow to refresh the ID Card", async () => {
@@ -145,7 +138,7 @@ describe("ClusterIDCardRenewer", () => {
       should(idCardRenewer.redis.commands.pexpire).be.called();
 
       should(idCardRenewer.dispose).be.called();
-      should(idCardRenewer.parentPort.postMessage)
+      should(process.send)
         .be.called()
         .and.be.calledWith({ error: "Node too slow: ID card expired" });
     });
@@ -157,9 +150,7 @@ describe("ClusterIDCardRenewer", () => {
 
       should(idCardRenewer.redis.commands.pexpire).not.be.called();
       should(idCardRenewer.dispose).not.be.called();
-      should(idCardRenewer.parentPort.postMessage)
-        .be.calledOnce()
-        .be.calledWith({ initialized: true });
+      should(process.send).be.calledOnce().be.calledWith({ initialized: true });
     });
   });
 
