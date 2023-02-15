@@ -6,15 +6,14 @@ title: post | API | Core
 
 # post
 
-Allows you to execute methods from the Debugger using the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) or method from the DebugModules.
+Allows you to execute methods from the Debugger using the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8).
 
 ---
 
 :::warning
 To use the methods from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you must enable it in the KuzzleRC at `security.debug.native_debug_protocol`.
-
-Otherwise you will only be able to use the methods from the DebugModules.
 :::
+
 
 ## Query Syntax
 

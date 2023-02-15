@@ -8,7 +8,7 @@ describe("Default loading of plugin's imports", () => {
   });
 
   afterAll(async () => {
-    sdk.disconnect();
+    await sdk.disconnect();
   });
 
   it("shoud load roles and collections", async () => {

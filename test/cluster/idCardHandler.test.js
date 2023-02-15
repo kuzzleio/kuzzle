@@ -9,7 +9,7 @@ const {
   ClusterIdCardHandler,
   IdCard,
 } = require("../../lib/cluster/idCardHandler");
-const WorkerMock = require("../mocks/worker.mock");
+const ChildProcessMock = require("../mocks/child_process.mock");
 
 describe("ClusterIdCardHandler", () => {
   let kuzzle;
@@ -36,7 +36,7 @@ describe("ClusterIdCardHandler", () => {
 
       sinon.stub(idCardHandler, "save").resolves();
 
-      idCardHandler.refreshWorker = new WorkerMock("some/path");
+      idCardHandler.refreshWorker = new ChildProcessMock("some/path");
     });
 
     it("should start a timer to refresh the ID Card", (done) => {
@@ -64,7 +64,7 @@ describe("ClusterIdCardHandler", () => {
       kuzzle.ask.withArgs("core:cache:internal:pexpire").resolves(1);
 
       idCardHandler.constructWorker = (path) => {
-        return new WorkerMock(path);
+        return new ChildProcessMock(path);
       };
 
       sinon.stub(idCardHandler, "startTemporaryRefresh");
@@ -134,10 +134,14 @@ describe("ClusterIdCardHandler", () => {
   });
 
   describe("#dispose", () => {
-    it("should clear set disposed to true and notify the refresh worker that it should be disposed", async () => {
+    it("should set disposed to true and notify the refresh worker that it should be disposed", async () => {
       const stub = sinon.stub();
+      idCardHandler.disposed = false;
       idCardHandler.refreshWorker = {
-        postMessage: stub,
+        send: stub,
+        connected: true,
+        killed: false,
+        channel: {},
       };
 
       await idCardHandler.dispose();

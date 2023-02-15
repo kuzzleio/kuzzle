@@ -369,6 +369,20 @@ export class KuzzleRequest {
   }
 
   /**
+   * Return the requested controller
+   */
+  getController(): string {
+    return this[_input].controller;
+  }
+
+  /**
+   * Returns the requested controller's action
+   */
+  getAction(): string {
+    return this[_input].action;
+  }
+
+  /**
    * Returns the `lang` param of the request.
    *
    * It can only be 'elasticsearch' or 'koncorde'

@@ -20,10 +20,11 @@
  */
 
 import { NameGenerator } from "../util/name-generator";
-import { Worker as WorkerThread } from "worker_threads";
+import { ChildProcess as ChildProcess, fork } from "child_process";
 import Bluebird from "bluebird";
 
 import "../types";
+import { JSONObject } from "kuzzle-sdk";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";
@@ -117,7 +118,7 @@ export class ClusterIdCardHandler {
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
    */
-  private refreshWorker: WorkerThread = null;
+  private refreshWorker: ChildProcess = null;
 
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
@@ -173,16 +174,19 @@ export class ClusterIdCardHandler {
     this.refreshWorker = this.constructWorker(
       `${__dirname}/workers/IDCardRenewer.js`
     );
-    this.refreshWorker.unref();
 
-    this.refreshWorker.on("message", async (message) => {
+    this.refreshWorker.on("message", async (message: JSONObject) => {
       if (message.error) {
         await this.node.evictSelf(message.error);
       }
     });
 
+    this.refreshWorker.on("close", () => {
+      this.disposed = true;
+    });
+
     // Transfer informations to the worker
-    this.refreshWorker.postMessage({
+    this.refreshWorker.send({
       action: "start", // start the worker
       kuzzle: {
         config: global.kuzzle.config,
@@ -204,8 +208,8 @@ export class ClusterIdCardHandler {
   /**
    * Helper method to mock worker instantiation in unit tests
    */
-  private constructWorker(path: string) {
-    return new WorkerThread(path);
+  private constructWorker(path: string): ChildProcess {
+    return fork(path);
   }
 
   /**
@@ -225,19 +229,35 @@ export class ClusterIdCardHandler {
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on("message", ({ initialized }) => {
-      if (initialized) {
-        clearInterval(this.refreshTimer);
-        this.refreshTimer = null;
+    this.refreshWorker.on(
+      "message",
+      ({ initialized }: { initialized: JSONObject }) => {
+        if (initialized) {
+          clearInterval(this.refreshTimer);
+          this.refreshTimer = null;
+        }
       }
-    });
+    );
   }
 
   async dispose(): Promise<void> {
+    if (this.disposed) {
+      return;
+    }
+
     this.disposed = true;
 
-    if (this.refreshWorker) {
-      this.refreshWorker.postMessage({ action: "dispose" });
+    if (
+      this.refreshWorker &&
+      this.refreshWorker.connected &&
+      !this.refreshWorker.killed &&
+      this.refreshWorker.channel
+    ) {
+      try {
+        this.refreshWorker.send({ action: "dispose" });
+      } catch (e) {
+        // It could happens that the worker has been killed before the dispose causing send to fail
+      }
     }
   }
 

@@ -13,7 +13,7 @@ meta:
 
 Kuzzle gives the possibility to debug a Kuzzle instance using the [Debug Controller](/core/2/api/controllers/debug) actions.
 
-The Debug Controller gives you the ability to execute methods and listen to events produced by the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) or [Debug Modules](#debug-modules).
+The Debug Controller gives you the ability to execute methods and listen to events produced by the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8).
 
 It's easier and safer to use the [Debug Controller](/core/2/api/controllers/debug) to debug Kuzzle remotely than exposing the debugger port using `node --inspect` since the [Debug Controller](/core/2/api/controllers/debug) is limited by the authentication mechanism of Kuzzle making it impossible to use if you don't have the proper rights to use it.
 Whereas when launching Kuzzle with `node --inspect` you need to setup some Port Forwarding from your host machine to your local machine to be able to debug Kuzzle remotely, and you need to be sure that no one can access your instance using the Debug Port exposed.
@@ -21,15 +21,7 @@ Whereas when launching Kuzzle with `node --inspect` you need to setup some Port 
 :::warning
 By default access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) through the [Debug Controller](/core/2/api/controllers/debug) is disabled, to use the methods of the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) you need to enable it in the [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/debug-controller/.kuzzlerc.sample#L229)
 by setting `security.debug.native_debug_protocol` to `true` and rebooting your instance.
-
-[Debug Modules](#debug-modules) are still accessible when `security.debug.native_debug_protocol` is disabled.
 :::
-
-## Debug Modules
-
-Debug Modules are modules of Kuzzle that are exposed through the [Debug Controller](/core/2/api/controllers/debug) actions and allows you to better understand what is happening on your running application and helps you to debug it.
-
-Debug Modules are not related to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) and perfectly safe to use. They do not expose the debugger directly, whereas the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) could be used to execute code remotely which is why access to the [Chrome Devtools Protocol](https://chromedevtools.github.io/devtools-protocol/v8) is disabled by default. It should only be enabled when you need to take memory snapshot, use breakpoint, the cpu profiler, etc...
 
 ## Debug Kuzzle remotely using the Debug Controller and the Chrome Inspector
 

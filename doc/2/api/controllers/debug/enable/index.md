@@ -7,7 +7,7 @@ title: enable | API | Core
 # enable
 
 Enables the debugger and allows `debug:post`, `debug:addListener` and `debug:removeListener` to be called.
-
+Also prevent the node from being evicted while debugging.
 ---
 
 ## Query Syntax

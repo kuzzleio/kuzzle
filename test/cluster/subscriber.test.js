@@ -88,6 +88,7 @@ describe("ClusterSubscriber", () => {
         NewAuthStrategy: subscriber.handleNewAuthStrategy,
         NewRealtimeRoom: subscriber.handleNewRealtimeRoom,
         NodeEvicted: subscriber.handleNodeEviction,
+        NodePreventEviction: subscriber.handleNodePreventEviction,
         NodeShutdown: subscriber.handleNodeShutdown,
         RefreshIndexCache: subscriber.handleRefreshIndexCache,
         RefreshValidators: subscriber.handleRefreshValidators,

@@ -6,13 +6,14 @@ title: addListener | API | Core
 
 # addListener
 
-Allows you to listen specific events from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8) and Debug Modules. You'll receive a notification when an event is emitted.
+Allows you to listen specific events from the [Chrome Devtool Protocol](https://chromedevtools.github.io/devtools-protocol/v8). You'll receive a notification when an event is emitted.
 
 ---
 
 :::warning
 This only works using a Websocket connection since notification can only be sent on a persistent connection.
 :::
+
 
 ## Query Syntax
 
