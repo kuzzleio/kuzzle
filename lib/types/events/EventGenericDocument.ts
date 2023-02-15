@@ -1,4 +1,9 @@
-import { KuzzleRequest, KDocument, JSONObject } from "../../../";
+import {
+  KuzzleRequest,
+  KDocument,
+  JSONObject,
+  PipeEventHandler,
+} from "../../../";
 
 /**
  * Events with documents only having the `_id`
@@ -41,3 +46,25 @@ export type EventGenericDocumentAfterUpdate<KDocumentContent = JSONObject> =
 
 export type EventGenericDocumentAfterGet<KDocumentContent = JSONObject> =
   EventGenericDocument<"afterGet", KDocumentContent>;
+
+export type EventGenericDocumentInjectMetadata = {
+  name: `generic:document:injectMetadata`;
+
+  args: [
+    {
+      /**
+       * Kuzzle Request that triggered the event
+       */
+      request: KuzzleRequest;
+      /**
+       * Metadata of the document
+       */
+      metadata: JSONObject;
+      /**
+       * Default metadata of the document.
+       * Only used when calling document:upsert.
+       */
+      defaultMetadata?: JSONObject;
+    }
+  ];
+} & PipeEventHandler;
