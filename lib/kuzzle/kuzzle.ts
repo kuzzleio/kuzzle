@@ -249,7 +249,6 @@ class Kuzzle extends KuzzleEventEmitter {
         seed: this.config.internal.hash.seed,
       });
 
-      await this.debugger.init();
       await new CacheEngine().init();
       await new StorageEngine().init();
       await new RealtimeModule().init();
@@ -279,11 +278,12 @@ class Kuzzle extends KuzzleEventEmitter {
       // before opening connections to external users
       await this.entryPoint.init();
 
+      await this.debugger.init();
+
       this.pluginsManager.application = application;
       const pluginImports = await this.pluginsManager.init(options.plugins);
       this.log.info(
-        `[✔] Successfully loaded ${
-          this.pluginsManager.loadedPlugins.length
+        `[✔] Successfully loaded ${this.pluginsManager.loadedPlugins.length
         } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
       );
 

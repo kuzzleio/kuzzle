@@ -2,6 +2,7 @@ import Inspector from "inspector";
 import * as kerror from "../../kerror";
 import { JSONObject } from "kuzzle-sdk";
 import get from "lodash/get";
+import HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
 
@@ -15,7 +16,11 @@ export class KuzzleDebugger {
    */
   private events = new Map<string, Set<string>>();
 
+  private httpWsProtocol?: HttpWsProtocol;
+
   async init() {
+    this.httpWsProtocol = global.kuzzle.entryPoint.protocols.get('websocket');
+
     this.inspector = new Inspector.Session();
 
     // Remove connection id from the list of listeners for each event
@@ -123,6 +128,19 @@ export class KuzzleDebugger {
     // to the main thread, while it is being inspected by the HeapProfiler, which causes javascript code
     // to be executed as the HeapProfiler is running, which causes a segfault.
     // See: https://github.com/nodejs/node/issues/44634
+    if (params.reportProgress) {
+      // We need to send a fake HeapProfiler.reportHeapSnapshotProgress event
+      // to the inspector to make Chrome think that the HeapProfiler is done
+      // Otherwise, even though the Chrome Inspector did receive the whole snapshot, it will not be parsed
+      this.inspector.emit('inspectorNotification', {
+        method: 'HeapProfiler.reportHeapSnapshotProgress',
+        params: {
+          done: 0,
+          total: 0,
+          finished: true,
+        },
+      });
+    }
     params.reportProgress = false;
 
     return this.inspectorPost(method, params);
@@ -135,6 +153,18 @@ export class KuzzleDebugger {
   async addListener(event: string, connectionId: string) {
     if (!this.debuggerStatus) {
       throw kerror.get("core", "debugger", "not_enabled");
+    }
+
+    if (this.httpWsProtocol) {
+      const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
+      if (socket) {
+        /**
+         * Mark the socket as a debugging socket
+         * this will bypass some limitations like the max pressure buffer size,
+         * which could end the connection when the debugger is sending a lot of data.
+         */
+        socket.debugSession = true;
+      }
     }
 
     let listeners = this.events.get(event);
@@ -158,6 +188,29 @@ export class KuzzleDebugger {
 
     if (listeners) {
       listeners.delete(connectionId);
+    }
+
+    if (this.httpWsProtocol) {
+      const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
+      if (socket) {
+
+        let removeDebugSessionMarker = true;
+        /**
+         * If the connection doesn't listen to any other events
+         * we can remove the debugSession marker
+         */
+        for (const event of this.events.keys()) {
+          const listeners = this.events.get(event);
+          if (listeners && listeners.has(connectionId)) {
+            removeDebugSessionMarker = false;
+            break;
+          }
+        }
+
+        if (removeDebugSessionMarker) {
+          socket.debugSession = false;
+        }
+      }
     }
   }
 
