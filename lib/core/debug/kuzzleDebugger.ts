@@ -1,7 +1,6 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
 import { JSONObject } from "kuzzle-sdk";
-import get from "lodash/get";
 import HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
@@ -128,14 +127,6 @@ export class KuzzleDebugger {
       throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
-      throw kerror.get(
-        "core",
-        "debugger",
-        "native_debug_protocol_usage_denied"
-      );
-    }
-
     // Always disable report progress because this parameter causes a segfault.
     // The reason this happens is because the inspector is running inside the same thread
     // as the Kuzzle Process and reportProgress forces the inspector to call function in the JS Heap
@@ -233,7 +224,9 @@ export class KuzzleDebugger {
       }
     }
 
-    socket.internal.debugSession = !removeDebugSessionMarker;
+    if (removeDebugSessionMarker) {
+      socket.internal.debugSession = false;
+    }
   }
 
   /**
