@@ -13,11 +13,11 @@ x-kuzzle-config: &kuzzle-config
     nofile: 65536
   sysctls:
     - net.core.somaxconn=8192
-  # depends_on:
-  #   redis:
-  #     condition: service_healthy
-  #   elasticsearch:
-  #     condition: service_healthy
+  depends_on:
+    redis:
+      condition: service_healthy
+    elasticsearch:
+      condition: service_healthy
   environment:
     - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
     - kuzzle_services__storageEngine__commonMapping__dynamic=true
@@ -62,11 +62,11 @@ services:
       - '17510:7512' # Kuzzle API port
       - '1883:1883' # Kuzzle MQTT port
       - '9229:9229' # Debug port
-    # healthcheck:
-    #   test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
-    #   timeout: 1s
-    #   interval: 2s
-    #   retries: 10
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
   kuzzle_node_2:
     <<: *kuzzle-config
@@ -75,11 +75,11 @@ services:
       - '17511:7512' # Kuzzle API port
       - '11883:1883' # Kuzzle MQTT port
       - '9230:9229' # Debug port
-    # healthcheck:
-    #   test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
-    #   timeout: 1s
-    #   interval: 2s
-    #   retries: 10
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
   kuzzle_node_3:
     <<: *kuzzle-config
@@ -88,32 +88,32 @@ services:
       - '17512:7512' # Kuzzle API port
       - '11884:1883' # Kuzzle MQTT port
       - '9231:9229' # Debug port
-    # healthcheck:
-    #   test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
-    #   timeout: 1s
-    #   interval: 2s
-    #   retries: 10
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
   redis:
     image: redis:6
     container_name: kuzzle_redis
     ports:
       - '6379:6379'
-    # healthcheck:
-    #   test: ['CMD', 'redis-cli', 'ping']
-    #   interval: 1s
-    #   timeout: 3s
-    #   retries: 30
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
     container_name: kuzzle_elasticsearch
     ports:
       - '9200:9200'
-    # healthcheck:
-    #   test: ['CMD', 'curl', '-f', 'http://localhost:9200']
-    #   interval: 2s
-    #   timeout: 2s
-    #   retries: 10
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9200']
+      interval: 2s
+      timeout: 2s
+      retries: 10
     ulimits:
       nofile: 65536
