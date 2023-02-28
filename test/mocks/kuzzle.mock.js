@@ -95,6 +95,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       startListening: sinon.spy(),
       joinChannel: sinon.spy(),
       leaveChannel: sinon.spy(),
+      protocols: new Map(),
     };
 
     this.funnel = {

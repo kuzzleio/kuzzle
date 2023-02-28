@@ -12,6 +12,8 @@ class MockSocket {
     this.cork = sinon.stub().yields();
     this.getBufferedAmount = sinon.stub().returns(0);
     this.send = sinon.stub();
+    this.headers = {};
+    this.internal = {};
   }
 }
 
