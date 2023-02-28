@@ -19,7 +19,7 @@ export class KuzzleDebugger {
   private httpWsProtocol?: HttpWsProtocol;
 
   async init() {
-    this.httpWsProtocol = global.kuzzle.entryPoint.protocols.get('websocket');
+    this.httpWsProtocol = global.kuzzle.entryPoint.protocols.get("websocket");
 
     this.inspector = new Inspector.Session();
 
@@ -139,12 +139,12 @@ export class KuzzleDebugger {
       // before the HeapProfiler.addHeapSnapshotChunk event.
       // So this will have no impact and when receiving the HeapProfiler.addHeapSnapshotChunk event, Chrome will wait to receive
       // a complete snapshot before parsing it if it has received the HeapProfiler.reportHeapSnapshotProgress event with the finished property set to true before.
-      this.inspector.emit('inspectorNotification', {
-        method: 'HeapProfiler.reportHeapSnapshotProgress',
+      this.inspector.emit("inspectorNotification", {
+        method: "HeapProfiler.reportHeapSnapshotProgress",
         params: {
           done: 0,
-          total: 0,
           finished: true,
+          total: 0,
         },
       });
       params.reportProgress = false;
@@ -170,7 +170,7 @@ export class KuzzleDebugger {
          * this will bypass some limitations like the max pressure buffer size,
          * which could end the connection when the debugger is sending a lot of data.
          */
-        socket.debugSession = true;
+        socket.internal.debugSession = true;
       }
     }
 
@@ -200,22 +200,21 @@ export class KuzzleDebugger {
     if (this.httpWsProtocol) {
       const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
       if (socket) {
-
         let removeDebugSessionMarker = true;
         /**
          * If the connection doesn't listen to any other events
          * we can remove the debugSession marker
          */
-        for (const event of this.events.keys()) {
-          const listeners = this.events.get(event);
-          if (listeners && listeners.has(connectionId)) {
+        for (const eventName of this.events.keys()) {
+          const eventListener = this.events.get(eventName);
+          if (eventListener && eventListener.has(connectionId)) {
             removeDebugSessionMarker = false;
             break;
           }
         }
 
         if (removeDebugSessionMarker) {
-          socket.debugSession = false;
+          socket.internal.debugSession = false;
         }
       }
     }

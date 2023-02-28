@@ -283,7 +283,8 @@ class Kuzzle extends KuzzleEventEmitter {
       this.pluginsManager.application = application;
       const pluginImports = await this.pluginsManager.init(options.plugins);
       this.log.info(
-        `[✔] Successfully loaded ${this.pluginsManager.loadedPlugins.length
+        `[✔] Successfully loaded ${
+          this.pluginsManager.loadedPlugins.length
         } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
       );
 
