@@ -102,6 +102,20 @@ export class KuzzleDebugger {
     this.inspector.disconnect();
     this.debuggerStatus = false;
     await global.kuzzle.ask("cluster:node:preventEviction", false);
+
+    // Disable debug mode for all connected sockets that still have listeners
+    if (this.httpWsProtocol) {
+      for (const eventName of this.events.keys()) {
+        for (const connectionId of this.events.get(eventName)) {
+          const socket =
+            this.httpWsProtocol.socketByConnectionId.get(connectionId);
+          if (socket) {
+            socket.internal.debugSession = false;
+          }
+        }
+      }
+    }
+
     this.events.clear();
   }
 
@@ -197,27 +211,29 @@ export class KuzzleDebugger {
       listeners.delete(connectionId);
     }
 
-    if (this.httpWsProtocol) {
-      const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
-      if (socket) {
-        let removeDebugSessionMarker = true;
-        /**
-         * If the connection doesn't listen to any other events
-         * we can remove the debugSession marker
-         */
-        for (const eventName of this.events.keys()) {
-          const eventListener = this.events.get(eventName);
-          if (eventListener && eventListener.has(connectionId)) {
-            removeDebugSessionMarker = false;
-            break;
-          }
-        }
+    if (!this.httpWsProtocol) {
+      return;
+    }
 
-        if (removeDebugSessionMarker) {
-          socket.internal.debugSession = false;
-        }
+    const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
+    if (!socket) {
+      return;
+    }
+
+    let removeDebugSessionMarker = true;
+    /**
+     * If the connection doesn't listen to any other events
+     * we can remove the debugSession marker
+     */
+    for (const eventName of this.events.keys()) {
+      const eventListener = this.events.get(eventName);
+      if (eventListener && eventListener.has(connectionId)) {
+        removeDebugSessionMarker = false;
+        break;
       }
     }
+
+    socket.internal.debugSession = !removeDebugSessionMarker;
   }
 
   /**
