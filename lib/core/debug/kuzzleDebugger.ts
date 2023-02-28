@@ -122,16 +122,23 @@ export class KuzzleDebugger {
       );
     }
 
-    // Always disable report progress because this params causes a segfault.
+    // Always disable report progress because this parameter causes a segfault.
     // The reason this happens is because the inspector is running inside the same thread
-    // as the Kuzzle Process and reportProgress forces the inspector to send events
-    // to the main thread, while it is being inspected by the HeapProfiler, which causes javascript code
-    // to be executed as the HeapProfiler is running, which causes a segfault.
+    // as the Kuzzle Process and reportProgress forces the inspector to call function in the JS Heap
+    // while it is being inspected by the HeapProfiler, which causes a segfault.
     // See: https://github.com/nodejs/node/issues/44634
     if (params.reportProgress) {
       // We need to send a fake HeapProfiler.reportHeapSnapshotProgress event
       // to the inspector to make Chrome think that the HeapProfiler is done
-      // Otherwise, even though the Chrome Inspector did receive the whole snapshot, it will not be parsed
+      // otherwise, even though the Chrome Inspector did receive the whole snapshot, it will not be parsed.
+      //
+      // Chrome inspector is waiting for a HeapProfiler.reportHeapSnapshotProgress event with the finished property set to true
+      // The `done` and `total` properties are only used to show a progress bar, so there are not important.
+      // Sending this event before the HeapProfiler.addHeapSnapshotChunk event will not cause any problem,
+      // in fact, Chrome always do that when taking a snapshot, it receives the HeapProfiler.reportHeapSnapshotProgress event
+      // before the HeapProfiler.addHeapSnapshotChunk event.
+      // So this will have no impact and when receiving the HeapProfiler.addHeapSnapshotChunk event, Chrome will wait to receive
+      // a complete snapshot before parsing it if it has received the HeapProfiler.reportHeapSnapshotProgress event with the finished property set to true before.
       this.inspector.emit('inspectorNotification', {
         method: 'HeapProfiler.reportHeapSnapshotProgress',
         params: {
@@ -140,8 +147,8 @@ export class KuzzleDebugger {
           finished: true,
         },
       });
+      params.reportProgress = false;
     }
-    params.reportProgress = false;
 
     return this.inspectorPost(method, params);
   }
