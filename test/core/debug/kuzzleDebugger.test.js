@@ -130,13 +130,6 @@ describe("Test: Kuzzle Debugger", () => {
       );
     });
 
-    it('should throw if trying to call a method from the CDP when "security.debug.native_debug_protocol" is not enabled', async () => {
-      await should(kuzzleDebugger.post("Debugger.enable")).be.rejectedWith(
-        PreconditionError,
-        { id: "core.debugger.native_debug_protocol_usage_denied" }
-      );
-    });
-
     it("should call the method from the CDP", async () => {
       kuzzleDebugger.inspectorPost = sinon.stub();
       kuzzle.config.security.debug.native_debug_protocol = true;

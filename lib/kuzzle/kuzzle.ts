@@ -249,7 +249,6 @@ class Kuzzle extends KuzzleEventEmitter {
         seed: this.config.internal.hash.seed,
       });
 
-      await this.debugger.init();
       await new CacheEngine().init();
       await new StorageEngine().init();
       await new RealtimeModule().init();
@@ -278,6 +277,8 @@ class Kuzzle extends KuzzleEventEmitter {
       // must be initialized before plugins to allow API requests from plugins
       // before opening connections to external users
       await this.entryPoint.init();
+
+      await this.debugger.init();
 
       this.pluginsManager.application = application;
       const pluginImports = await this.pluginsManager.init(options.plugins);

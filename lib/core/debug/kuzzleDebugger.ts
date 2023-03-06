@@ -1,7 +1,7 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
 import { JSONObject } from "kuzzle-sdk";
-import get from "lodash/get";
+import HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
 
@@ -15,7 +15,11 @@ export class KuzzleDebugger {
    */
   private events = new Map<string, Set<string>>();
 
+  private httpWsProtocol?: HttpWsProtocol;
+
   async init() {
+    this.httpWsProtocol = global.kuzzle.entryPoint.protocols.get("websocket");
+
     this.inspector = new Inspector.Session();
 
     // Remove connection id from the list of listeners for each event
@@ -97,6 +101,20 @@ export class KuzzleDebugger {
     this.inspector.disconnect();
     this.debuggerStatus = false;
     await global.kuzzle.ask("cluster:node:preventEviction", false);
+
+    // Disable debug mode for all connected sockets that still have listeners
+    if (this.httpWsProtocol) {
+      for (const eventName of this.events.keys()) {
+        for (const connectionId of this.events.get(eventName)) {
+          const socket =
+            this.httpWsProtocol.socketByConnectionId.get(connectionId);
+          if (socket) {
+            socket.internal.debugSession = false;
+          }
+        }
+      }
+    }
+
     this.events.clear();
   }
 
@@ -109,21 +127,33 @@ export class KuzzleDebugger {
       throw kerror.get("core", "debugger", "not_enabled");
     }
 
-    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
-      throw kerror.get(
-        "core",
-        "debugger",
-        "native_debug_protocol_usage_denied"
-      );
-    }
-
-    // Always disable report progress because this params causes a segfault.
+    // Always disable report progress because this parameter causes a segfault.
     // The reason this happens is because the inspector is running inside the same thread
-    // as the Kuzzle Process and reportProgress forces the inspector to send events
-    // to the main thread, while it is being inspected by the HeapProfiler, which causes javascript code
-    // to be executed as the HeapProfiler is running, which causes a segfault.
+    // as the Kuzzle Process and reportProgress forces the inspector to call function in the JS Heap
+    // while it is being inspected by the HeapProfiler, which causes a segfault.
     // See: https://github.com/nodejs/node/issues/44634
-    params.reportProgress = false;
+    if (params.reportProgress) {
+      // We need to send a fake HeapProfiler.reportHeapSnapshotProgress event
+      // to the inspector to make Chrome think that the HeapProfiler is done
+      // otherwise, even though the Chrome Inspector did receive the whole snapshot, it will not be parsed.
+      //
+      // Chrome inspector is waiting for a HeapProfiler.reportHeapSnapshotProgress event with the finished property set to true
+      // The `done` and `total` properties are only used to show a progress bar, so there are not important.
+      // Sending this event before the HeapProfiler.addHeapSnapshotChunk event will not cause any problem,
+      // in fact, Chrome always do that when taking a snapshot, it receives the HeapProfiler.reportHeapSnapshotProgress event
+      // before the HeapProfiler.addHeapSnapshotChunk event.
+      // So this will have no impact and when receiving the HeapProfiler.addHeapSnapshotChunk event, Chrome will wait to receive
+      // a complete snapshot before parsing it if it has received the HeapProfiler.reportHeapSnapshotProgress event with the finished property set to true before.
+      this.inspector.emit("inspectorNotification", {
+        method: "HeapProfiler.reportHeapSnapshotProgress",
+        params: {
+          done: 0,
+          finished: true,
+          total: 0,
+        },
+      });
+      params.reportProgress = false;
+    }
 
     return this.inspectorPost(method, params);
   }
@@ -135,6 +165,18 @@ export class KuzzleDebugger {
   async addListener(event: string, connectionId: string) {
     if (!this.debuggerStatus) {
       throw kerror.get("core", "debugger", "not_enabled");
+    }
+
+    if (this.httpWsProtocol) {
+      const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
+      if (socket) {
+        /**
+         * Mark the socket as a debugging socket
+         * this will bypass some limitations like the max pressure buffer size,
+         * which could end the connection when the debugger is sending a lot of data.
+         */
+        socket.internal.debugSession = true;
+      }
     }
 
     let listeners = this.events.get(event);
@@ -158,6 +200,32 @@ export class KuzzleDebugger {
 
     if (listeners) {
       listeners.delete(connectionId);
+    }
+
+    if (!this.httpWsProtocol) {
+      return;
+    }
+
+    const socket = this.httpWsProtocol.socketByConnectionId.get(connectionId);
+    if (!socket) {
+      return;
+    }
+
+    let removeDebugSessionMarker = true;
+    /**
+     * If the connection doesn't listen to any other events
+     * we can remove the debugSession marker
+     */
+    for (const eventName of this.events.keys()) {
+      const eventListener = this.events.get(eventName);
+      if (eventListener && eventListener.has(connectionId)) {
+        removeDebugSessionMarker = false;
+        break;
+      }
+    }
+
+    if (removeDebugSessionMarker) {
+      socket.internal.debugSession = false;
     }
   }
 
