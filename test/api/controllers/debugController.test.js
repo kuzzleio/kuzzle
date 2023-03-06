@@ -5,6 +5,7 @@ const should = require("should");
 const { Request, InternalError } = require("../../../index");
 const { DebugController } = require("../../../lib/api/controllers");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
+const set = require("lodash/set");
 
 describe("Test: debug controller", () => {
   let debugController;
@@ -13,6 +14,7 @@ describe("Test: debug controller", () => {
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
     debugController = new DebugController();
+    set(kuzzle, "config.security.debug.native_debug_protocol", true);
 
     await debugController.init();
   });

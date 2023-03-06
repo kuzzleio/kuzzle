@@ -22,6 +22,7 @@
 import { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 import * as kerror from "../../kerror";
+import get from "lodash/get";
 
 /**
  * @class DebugController
@@ -49,6 +50,14 @@ export class DebugController extends NativeController {
    * Connect the debugger
    */
   async enable() {
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
+    }
+
     await global.kuzzle.ask("core:debugger:enable");
   }
 
@@ -56,6 +65,14 @@ export class DebugController extends NativeController {
    * Disconnect the debugger and clears all the events listeners
    */
   async disable() {
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
+    }
+
     await global.kuzzle.ask("core:debugger:disable");
   }
 
@@ -64,6 +81,14 @@ export class DebugController extends NativeController {
    * See: https://chromedevtools.github.io/devtools-protocol/v8/
    */
   async post(request: KuzzleRequest) {
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
+    }
+
     const method = request.getBodyString("method");
     const params = request.getBodyObject("params", {});
 
@@ -75,6 +100,14 @@ export class DebugController extends NativeController {
    * See events from: https://chromedevtools.github.io/devtools-protocol/v8/
    */
   async addListener(request: KuzzleRequest) {
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
+    }
+
     if (request.context.connection.protocol !== "websocket") {
       throw kerror.get(
         "api",
@@ -98,6 +131,14 @@ export class DebugController extends NativeController {
    * Remove the websocket connection from the events' listeners
    */
   async removeListener(request: KuzzleRequest) {
+    if (!get(global.kuzzle.config, "security.debug.native_debug_protocol")) {
+      throw kerror.get(
+        "core",
+        "debugger",
+        "native_debug_protocol_usage_denied"
+      );
+    }
+
     if (request.context.connection.protocol !== "websocket") {
       throw kerror.get(
         "api",

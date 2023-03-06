@@ -23,6 +23,9 @@ jobs:
           echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+      docker_platforms: ${{ env.DOCKER_PLATFORMS }}
 
   danger-js:
     name: Danger JS
@@ -199,6 +202,10 @@ jobs:
 
   deploy-workflow:
     name: Deployment Workflow
-    needs: [cluster-monkey-tests]
+    needs: [cluster-monkey-tests, prepare-matrix]
     uses: ./.github/workflows/workflow-deployments.yaml
     secrets: inherit
+    with:
+      node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
+      node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
+      docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
