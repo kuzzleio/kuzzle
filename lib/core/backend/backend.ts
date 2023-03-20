@@ -24,7 +24,11 @@ import fs from "fs";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { EventDefinition, JSONObject } from "../../../index";
+import {
+  BackendSubscription,
+  EventDefinition,
+  JSONObject,
+} from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -207,6 +211,8 @@ export class Backend {
    */
   public errors: BackendErrors;
 
+  public subscription: BackendSubscription;
+
   /**
    * @deprecated
    *
@@ -276,6 +282,7 @@ export class Backend {
     this.cluster = new BackendCluster();
     this.openApi = new BackendOpenApi(this);
     this.errors = new BackendErrors(this);
+    this.subscription = new BackendSubscription(this);
 
     this.kerror = kerror;
 

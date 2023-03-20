@@ -25,3 +25,5 @@ export * from "./backendOpenApi";
 export * from "./internalLogger";
 
 export * from "./backendErrors";
+
+export * from "./backendSubscription";
