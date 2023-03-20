@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: register | Framework | Core
+title: add | Framework | Core
 
 description: BackendSubscription.add method
 ---

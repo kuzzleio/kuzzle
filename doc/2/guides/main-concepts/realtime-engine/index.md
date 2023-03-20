@@ -523,9 +523,22 @@ async customSubscribe (request: Kuzzle Request) {
     }
   );
 
-  return { roomId };
+  return { roomId, channel };
 }
 
 ```
 
 Then, the specified connection will start to receive realtime notifications about the subscription. In the SDKs, those messages need to be listened.
+
+For example, with the Javascript SDK:
+
+```js
+const { result } = await sdk.query({
+  controller: "custom",
+  action: "subscribe",
+});
+
+sdk.protocol.on(result.channel, (notification) => {
+  console.log(notification);
+});
+```
