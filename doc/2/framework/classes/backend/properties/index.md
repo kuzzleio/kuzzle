@@ -18,7 +18,6 @@ This property is an instance of the [BackendCluster](/core/2/framework/classes/b
 | ---------------------------------------------------------------------- | ----------------------- |
 | <pre>[BackendCluster](/core/2/framework/classes/backend-cluster)</pre> | BackendCluster instance |
 
-
 ## `commit`
 
 | Type              | Description                       |
@@ -147,6 +146,16 @@ This property is an instance of the [BackendStorage](/core/2/framework/classes/b
 | <pre>[BackendStorage](/core/2/framework/classes/backend-storage)</pre> | BackendStorage instance |
 
 See also the [Data Storage](/core/2/guides/main-concepts/data-storage#integrated-elasticsearch-client) guide.
+
+## `subscription`
+
+This property is an instance of the [BackendSubscription](/core/2/framework/classes/backend-subscription) class that allows to manage subscriptions to the realtime engine for a specific connection.
+
+| Type                                                                             | Description                  |
+| -------------------------------------------------------------------------------- | ---------------------------- |
+| <pre>[BackendSubscription](/core/2/framework/classes/backend-subscription)</pre> | BackendSubscription instance |
+
+See also the [Realtime Engine](/core/2/guides/main-concepts/realtime-engine) guide.
 
 ## `vault`
 
