@@ -9,6 +9,7 @@ meta:
   - name: keywords
     content: Kuzzle, Documentation, Kuzzle API main concepts, Realtime Engine
 ---
+
 # Realtime Engine
 
 Kuzzle is shipped with its own **high-performance Realtime Engine** for sending notifications to clients connected through the API.
@@ -16,24 +17,27 @@ Kuzzle is shipped with its own **high-performance Realtime Engine** for sending 
 Realtime capabilities require the use of a **persistent communication protocol** such as WebSocket or MQTT.
 
 Kuzzle offers 2 different ways of doing realtime:
- - Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-real-time-applications))
- - Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-real-time-engine))
+
+- Volatile Pub/Sub System (see example on [Kuzzle tech blog](https://blog.kuzzle.io/pub-sub-for-real-time-applications))
+- Realtime Database Notifications (see example on [Kuzzle tech blog](https://blog.kuzzle.io/develop-a-new-generation-of-apps-with-kuzzle-real-time-engine))
 
 ## Pub/Sub
 
 Kuzzle's Realtime Engine allows you to do **Pub/Sub in dedicated communication channels called rooms**.
 
 The process is as follows:
- - A first client subscribes to a particular room,
- - A second client posts a message in that room,
- - The first client receives a notification.
+
+- A first client subscribes to a particular room,
+- A second client posts a message in that room,
+- The first client receives a notification.
 
 ![kuzzle-pub-sub image description ](./pub-sub.png)
 
 Subscription to a room is done via the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) method. It takes 3 parameters, used to **describe a specific room**:
- - Name of an index,
- - Name of a collection,
- - Subscription filters contained in the `body` of the request.
+
+- Name of an index,
+- Name of a collection,
+- Subscription filters contained in the `body` of the request.
 
 ::: info
 In order to use Kuzzle in Pub/Sub mode only, the index and collection do not need to physically exist in the database (e.g. created in Kuzzle via the [index:create](/core/2/api/controllers/index/create) and [collection:create](/core/2/api/controllers/collection/create) methods of the API).
@@ -71,7 +75,8 @@ kourou realtime:subscribe nyc-open-data yellow-taxi
 
 Then clients wishing to post messages in this room must use the [realtime:publish](/core/2/api/controllers/realtime/publish) method by specifying the same index and collection names:
 
-Then you can also use Kourou in another terminal to publish a message:  
+Then you can also use Kourou in another terminal to publish a message:
+
 ```bash
 kourou realtime:publish nyc-open-data yellow-taxi '{
   name: "Manwë",
@@ -142,9 +147,10 @@ You can bypass notifications from being triggered by using actions from the [bul
 :::
 
 Subscription to a database changes is done via the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) method, taking 3 parameters:
- - Name of the index,
- - Name of the collection you want to watch,
- - Subscription filters contained in the `body` of the request.
+
+- Name of the index,
+- Name of the collection you want to watch,
+- Subscription filters contained in the `body` of the request.
 
 ::: info
 The specified index and collection **must exist in the database** to receive database notifications.
@@ -170,8 +176,8 @@ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 
 Creating a document with the [document:create](/core/2/api/controllers/document/create) method corresponds to a change in the database, so **clients subscribing to notifications in this collection will be notified**.
 
-
 Create a document with Kourou to trigger a Database Notification:
+
 ```bash
 kourou document:create nyc-open-data yellow-taxi '{
   controller: "document",
@@ -243,6 +249,7 @@ They are sent in the body of the request [realtime:subscribe](/core/2/api/contro
 A filter is composed of [clauses](core/2/api/koncorde-filters-syntax/clauses) that can be composed with [operators](/core/2/api/koncorde-filters-syntax/operators).
 
 For example if I want to receive only drivers with the `B` license:
+
 ```json
 {
   "controller": "realtime",
@@ -331,11 +338,13 @@ In addition to filters, it is possible to **specify options** to the [realtime:s
 The [scope](/core/2/api/controllers/realtime/subscribe#arguments) option allows you to specify whether you want to receive notifications regarding **documents entering or leaving the scope only**.
 
 This parameter can take 3 values:
- - `in`: receive only notifications about documents entering the scope
- - `out`: receive only notifications about documents exiting the scope
- - `all`: (default) receive everything
+
+- `in`: receive only notifications about documents entering the scope
+- `out`: receive only notifications about documents exiting the scope
+- `all`: (default) receive everything
 
 For example, to be informed of taxis arriving at central park:
+
 ```json
 {
   "controller": "realtime",
@@ -359,24 +368,25 @@ For example, to be informed of taxis arriving at central park:
 The [users](/core/2/api/controllers/realtime/subscribe#arguments) option allows you to receive additional notifications when **another client joins or leaves the same room**.
 
 This parameter can take 4 values:
- - `in`: only receive notifications when a client joins the room
- - `out`: only receive notifications when a client leaves the room
- - `all`: receive everything
- - `none`: (default) receive nothing
+
+- `in`: only receive notifications when a client joins the room
+- `out`: only receive notifications when a client leaves the room
+- `all`: receive everything
+- `none`: (default) receive nothing
 
 ```json
- {
-   "controller": "realtime",
-   "action": "subscribe",
-   "index": "nyc-open-data",
-   "collection": "yellow-taxi",
-   "body": {
-   },
-   "user": "all" 
- }
+{
+  "controller": "realtime",
+  "action": "subscribe",
+  "index": "nyc-open-data",
+  "collection": "yellow-taxi",
+  "body": {},
+  "user": "all"
+}
 ```
 
 Payload to send with wscat:
+
 ```bash
 # Use the "users" option to receive notification when a user enters or exits the room
 npx wscat -c ws://localhost:7512 --wait 300 --execute '{
@@ -385,7 +395,7 @@ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "index": "nyc-open-data",
   "collection": "yellow-taxi",
   "body": {},
-  "users": "all" 
+  "users": "all"
 }'
 ```
 
@@ -421,6 +431,7 @@ More information about the [User Notification format](/core/2/api/payloads/notif
 When a request containing volatile data triggers a realtime notification, these **volatile data are included in the notification that will be sent** to the subscribing clients.
 
 First, subscribe to realtime notifications:
+
 ```bash
 npx wscat -c ws://localhost:7512 --wait 300 --execute '{
   "controller": "realtime",
@@ -432,6 +443,7 @@ npx wscat -c ws://localhost:7512 --wait 300 --execute '{
 ```
 
 Then, in another terminal you can publish a message in the room specifying volatile data:
+
 ```bash
 npx wscat -c ws://localhost:7512 --wait 300 --execute ' {
    "controller": "realtime",
@@ -486,3 +498,47 @@ Each client subscribing to the room will receive the following notification:
 ::: info
 SDKs and Kourou use volatile data to send additional information like the client name or version.
 :::
+
+## Subscribe a connection from the backend
+
+Realtime subscription can be added on a connection directly from the backend. This allows to restrict the usage of the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) and to add realtime subscription from a custom API action.
+
+The [Backend.subscription.add](/core/2/framework/classes/backend-subscription/add) method takes the same arguments as the [realtime:subscribe](/core/2/api/controllers/realtime/subscribe) API action but allows to register the subscription on any connection.
+
+**Example: _Subscribe to a room from a custom API action_**
+
+```js
+async customSubscribe (request: Kuzzle Request) {
+  const { roomId, channel } = await app.subscription.add(
+    request.context.connection,
+    "lamaral",
+    "windsurf",
+    {
+      range: { wind: { gte: 20 } },
+    },
+    {
+      users: "all",
+      scope: "in",
+      volatile: { name: "Aschen" },
+    }
+  );
+
+  return { roomId, channel };
+}
+
+```
+
+Then, the specified connection will start to receive realtime notifications about the subscription. In the SDKs, those messages need to be listened.
+
+For example, with the Javascript SDK:
+
+```js
+const { result } = await sdk.query({
+  controller: "custom",
+  action: "subscribe",
+});
+
+sdk.protocol.on(result.channel, (notification) => {
+  console.log(notification);
+});
+```
