@@ -184,10 +184,9 @@ export class ClusterIdCardHandler {
     this.refreshWorker.on("close", async () => {
       if (!this.disposed) {
         this.disposed = true;
-        await this.node.evictSelf('ID Card renewer worker closed unexpectedly');
+        await this.node.evictSelf("ID Card renewer worker closed unexpectedly");
       }
     });
-
 
     // Transfer informations to the worker
     this.refreshWorker.send({
