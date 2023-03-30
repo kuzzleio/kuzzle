@@ -219,6 +219,7 @@ export class ClusterIdCardHandler {
       if (!childProcess.killed || childProcess.connected) {
         childProcess.kill();
       }
+      process.exit();
     };
 
     process.on("exit", exitHandler);
