@@ -8,7 +8,7 @@ description: BackendSubscription class properties
 
 # BackendSubscription
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.22.0" />
 
 The `BackendSubscription` class handles subscriptions to the realtime engine for a specific connection.
 

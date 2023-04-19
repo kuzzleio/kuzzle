@@ -8,7 +8,7 @@ description: BackendSubscription.add method
 
 # `add()`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.22.0" />
 
 Registers a new realtime subscription on the specified connection.
 
