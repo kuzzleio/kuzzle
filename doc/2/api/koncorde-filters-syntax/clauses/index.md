@@ -176,6 +176,247 @@ And this filter validates the second document:
 }
 ```
 
+
+## `select`
+
+<SinceBadge version="auto-version"/>
+
+Executes a Koncorde query on a particular index of an array
+
+Negative value for the index are allowed, and will be interpreted as an offset from the end of the array, -1 being the last element.
+
+The query is executed on an object that has a single property `value` which correspond to the element in the array at the given index.
+
+### Syntax
+
+```
+select: {
+  field: <field name>,
+  index: <array index>
+  query: <koncorde query>
+}
+```
+
+### Example
+
+Given the following documents:
+
+```js
+{
+  firstName: 'Grace',
+  lastName: 'Hopper',
+  city: 'NYC',
+  hobby: ['compiler', 'COBOL'],
+  alive: false
+},
+{
+  firstName: 'Ada',
+  lastName: 'Lovelace',
+  city: 'London',
+  hobby: ['programming', 'algorithm']
+}
+```
+
+The following filter validates the first document:
+
+```js
+{
+  select: {
+    field: 'hobby',
+    index: 0,
+    query: {
+      equals: {
+        value: 'compiler'
+      }
+    }
+  }
+}
+```
+
+And this filter validates the second document:
+
+```js
+{
+  select: {
+    field: 'hobby',
+    index: -1,
+    query: {
+      equals: {
+        value: 'algorithm'
+      }
+    }
+  }
+}
+```
+
+## `match`
+
+<SinceBadge version="auto-version"/>
+
+Test if properties of the filter is matching with the properties of the document.
+
+If the filter and subject both are Scalars, checks that they're equal.
+If the filter and subject both are Objects, checks that every property of the filter is matching a property of subject.
+If the filter and subject both are Arrays, checks that every values of the filter is also matching a value in the subject.
+
+This process is recursive, meaning that nested objects and arrays are expected to match each other on the same principle.
+
+:::warning
+Matching Arrays is O(n * m) with n being the number of elements in the filter and m the numbers of elements in the subject.
+
+Matching Objects is O(n) with n being the number of properties in the filter.
+
+Matching Scalars is O(1).
+
+Keep in mind that since this process is recursive on nested objects and arrays, the complexity can increase.
+:::
+
+### Syntax
+
+```
+match: {
+  <field name>: <value>,
+  <field name>: <value>
+  ...
+}
+```
+
+### Example
+
+#### Array Matching
+Given the following filter:
+
+```js
+{
+  "match": {
+    "foo": [1, 2, 3]
+  }
+}
+```
+
+It will match this document, because all values from the filter `foo` property are contained in the document `foo` property.
+
+```js
+{
+  "foo": [0, 1, 4, 2, 3]
+}
+```
+
+But will not match this document, because the `foo` array is missing the value `3` from the filter.
+
+```js
+{
+  "foo": [0, 0, 1, 2]
+}
+```
+
+#### Object Matching
+
+Given the following filter:
+
+```js
+{
+  "match": {
+    "foo": { "a": 5 }
+  }
+}
+
+```
+
+It will match this document, because all properties from the `foo` object of the filter can be matched with corresponding properties in the `foo` object of the document.
+
+```js
+{
+  "foo": {
+    "a": 5,
+    "b": 8,
+    "c": "something"
+  }
+}
+```
+
+But will not match this document, because the `foo` object of the document is missing some properties or they have not the same values as the properties from the `foo` object of the filter.
+
+```js
+{
+  "foo": {
+    "b": 8,
+    "c": "something"
+  }
+}
+```
+
+#### Combined Object and Array Matching
+
+Given the following filter:
+
+```js
+{
+  "match": {
+    "delivery": [
+      {
+        "state": "IN PROGRESS",
+        "itemIDs": [ 42 ]
+      }
+    ]
+  }
+}
+
+```
+
+It will match this document.
+
+```js
+{
+ "delivery": [
+    { 
+      "city": "London",
+      "state": "DELIVERED",
+      "itemIDs": [ 21 ]
+    },
+    {
+      "city": "New York",
+      "state": "IN PROGRESS",
+      "itemIDs": [ 42, 84 ]
+    },
+    {
+      "city": "Paris",
+      "state": "DELIVERED",
+      "itemIDs": [ 168 ]
+    }
+  ]
+}
+```
+
+But will not match this document.
+
+```js
+{
+ "delivery": [
+    { 
+      "city": "London",
+      "state": "DELIVERED",
+      "itemIDs": [ 21 ]
+    },
+    {
+      "city": "New York",
+      "state": "DELIVERED",
+      "itemIDs": [ 42, 84 ]
+    },
+    {
+      "city": "New York",
+      "state": "IN PROGRESS",
+      "itemIDs": [ 84 ]
+    },
+    {
+      "city": "Paris",
+      "state": "DELIVERED",
+      "itemIDs": [ 168 ]
+    }
+  ]
+}
+```
+
 ## `geoBoundingBox`
 
 Filter documents containing a geographical point confined within a bounding box:
