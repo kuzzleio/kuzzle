@@ -181,8 +181,11 @@ export class ClusterIdCardHandler {
       }
     });
 
-    this.refreshWorker.on("close", () => {
-      this.disposed = true;
+    this.refreshWorker.on("close", async () => {
+      if (!this.disposed) {
+        this.disposed = true;
+        await this.node.evictSelf("ID Card renewer worker closed unexpectedly");
+      }
     });
 
     // Transfer informations to the worker
@@ -209,7 +212,19 @@ export class ClusterIdCardHandler {
    * Helper method to mock worker instantiation in unit tests
    */
   private constructWorker(path: string): ChildProcess {
-    return fork(path);
+    const childProcess = fork(path);
+
+    const exitHandler = () => {
+      if (!childProcess.killed || childProcess.connected) {
+        childProcess.kill();
+      }
+      process.exit();
+    };
+
+    process.on("exit", exitHandler);
+    process.on("SIGINT", exitHandler);
+    process.on("SIGTERM", exitHandler);
+    return childProcess;
   }
 
   /**
