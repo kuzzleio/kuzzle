@@ -176,7 +176,10 @@ And this filter validates the second document:
 }
 ```
 
-## select
+
+## `select`
+
+<SinceBadge version="auto-version"/>
 
 Executes a Koncorde query on a particular index of an array
 
@@ -246,7 +249,9 @@ And this filter validates the second document:
 }
 ```
 
-## match
+## `match`
+
+<SinceBadge version="auto-version"/>
 
 Test if properties of the filter is matching with the properties of the document.
 
