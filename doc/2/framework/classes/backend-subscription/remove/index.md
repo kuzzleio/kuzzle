@@ -8,7 +8,7 @@ description: BackendSubscription.remove method
 
 # `remove()`
 
-<SinceBadge version="auto-version" />
+<SinceBadge version="2.22.0" />
 
 Removes a realtime subscription on the specified connection.
 

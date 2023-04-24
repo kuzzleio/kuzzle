@@ -1,7 +1,7 @@
 ################################################################################
 # Plugin development build image
 ################################################################################
-FROM node:12-bullseye-slim as builder
+FROM node:14-bullseye-slim as builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \

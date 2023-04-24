@@ -52,15 +52,14 @@ npx kourou app:scaffold playground
 
  🚀 Kourou - Scaffolds a new Kuzzle application
 
-  ✔ Creating playground/ directory
   ✔ Creating and rendering application files
-  ✔ Installing latest Kuzzle version via NPM and Docker (this can take some time)
- [✔] Scaffolding complete! Use "npm run dev:docker" to run your application
+
+ [✔] Scaffolding complete! Use cd playground && npm run docker npm install install dependencies and then npm run docker:dev to run your application!
 ```
 
 Then you need to run Kuzzle services, Elasticsearch and Redis: `kourou app:start-services`
 
-Finally you can run your application inside Docker with `npm run dev:docker`
+Finally you can run your application inside Docker with `npm run docker:dev`
 
 Kuzzle is now listening for requests on the port `7512`!
 

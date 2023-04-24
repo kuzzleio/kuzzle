@@ -20,7 +20,7 @@ In this guide we will use Docker and Docker Compose to run those services.
 
 ### Prerequisites
 
-- [Node.js >= 12](https://nodejs.org/en/download/)
+- [Node.js <= 16](https://nodejs.org/en/download/)
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Kourou](https://github.com/kuzzleio/kourou)
@@ -91,10 +91,10 @@ app
   .catch(console.error);
 ```
 
-We can now run our first application with `npm run dev:docker`
+We can now run our first application with `npm run docker:dev`
 
 ::: info
-Under the hood, the command `npm run dev:docker` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
+Under the hood, the command `npm run docker:dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
 :::
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.

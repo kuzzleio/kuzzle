@@ -179,7 +179,7 @@ And this filter validates the second document:
 
 ## `select`
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.23.0"/>
 
 Executes a Koncorde query on a particular index of an array
 
@@ -251,7 +251,7 @@ And this filter validates the second document:
 
 ## `match`
 
-<SinceBadge version="auto-version"/>
+<SinceBadge version="2.23.0"/>
 
 Test if properties of the filter is matching with the properties of the document.
 
