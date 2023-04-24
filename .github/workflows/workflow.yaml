@@ -10,7 +10,7 @@ on:
 env:
   NODE_LTS_MAINTENANCE_VERSION: "14"
   NODE_LTS_ACTIVE_VERSION: "16"
-  # NODE_LTS_CURRENT_VERSION: "18"  # Stand for the latest LTS version
+  NODE_LTS_CURRENT_VERSION: "18"  # Stand for the latest LTS version
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
@@ -20,7 +20,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
