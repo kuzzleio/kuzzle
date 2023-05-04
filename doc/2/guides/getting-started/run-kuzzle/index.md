@@ -116,7 +116,7 @@ Click on `Create Connection`, then select your connection on the dropdown menu.
 
 When asked for credentials, just choose `Login as Anonymous`.
 
-You are now connected to your local Kuzzle application using the Admin Console! Right now you can see that it is devoid of any data or configuration, but we are going to configure that later in this guide. 
+You are now connected to your local Kuzzle application using the Admin Console! Right now you can see that it is devoid of any data or configuration, but we are going to change that in the next section of this guide. 
 
 ![Admin Console home page](./admin-console-home-page.png)
 
