@@ -111,12 +111,8 @@ Learn how to [Write an Application](https://docs.kuzzle.io/core/2/guides/getting
 
 Train yourself and your teams to use Kuzzle to maximize its potential and accelerate the development of your projects.
 Our teams will be able to meet your needs in terms of expertise and multi-technology support for IoT, mobile/web, backend/frontend, devops.
-:point_right: [Get a quote](https://hubs.ly/H0jkfJ_0)
+:point_right: [Get a quote](https://kuzzle.io/pricing/)
 
-## Public Roadmap
-
-You can consult the public roadmap on Trello. Come and vote for the features you need!
-:point_right: [Kuzzle Public Roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap)
 
 ## Contributing to Kuzzle
 
@@ -132,7 +128,6 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [Discord](http://join.discord.kuzzle.io)
 * Ask technical questions on [stack overflow](https://stackoverflow.com/search?q=kuzzle)
-* Check out our [public roadmap](https://trello.com/b/za9vOgRh/kuzzle-public-roadmap) and vote for the upcoming features
 
 ## License
 
