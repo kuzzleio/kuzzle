@@ -20,7 +20,7 @@ In this guide we will use Docker and Docker Compose to run those services.
 
 ### Prerequisites
 
-- [Node.js <= 16](https://nodejs.org/en/download/)
+- [Node.js <= 18](https://nodejs.org/en/download/)
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Kourou](https://github.com/kuzzleio/kourou)
