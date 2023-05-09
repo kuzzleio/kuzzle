@@ -21,10 +21,10 @@ Rather than developing the same standard features over and over again every time
 The majority of Kuzzle's features are available via its [API](/core/2/guides/main-concepts/api) for various external clients.
 
 This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**:
- - [HTTP](/core/2/api/protocols/http/)
- - [WebSocket](/core/2/api/protocols/websocket/)
- - [MQTT](/core/2/api/protocols/mqtt/)
- - Or [any IP protocol](https://docs.kuzzle.io/core/2/guides/write-protocols/start-writing-protocols/)
+ - [HTTP](/core/2/api/protocols/http)
+ - [WebSocket](/core/2/api/protocols/websocket)
+ - [MQTT](/core/2/api/protocols/mqtt)
+ - Or [any IP protocol](/core/2/guides/write-protocols/start-writing-protocols)
 
 Whether it is the creation and modification of the database or the management of users and rights, **everything is available through the different controllers of the API**.
 
@@ -146,7 +146,7 @@ Kuzzle exposes [interfaces written in Typescript](/core/2/framework/classes) for
 
 This support is available for writing backend applications as well as frontend applications.
 
-Whether in the backend or in the frontend, **developers use the same interface to interact with Kuzzle**: [Kuzzle Javascript SDK](/sdk/js/7/)
+Whether in the backend or in the frontend, **developers use the same interface to interact with Kuzzle**: [Kuzzle Javascript SDK](/sdk/js/7/getting-started/node-js)
 
 The Javascript SDK is of course used by frontend applications but also in the backend, so developers can capitalize on their experience to **allow isomorphic backend / frontend development**.
 
