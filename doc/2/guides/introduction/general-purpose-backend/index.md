@@ -14,7 +14,7 @@ meta:
 
 Kuzzle is a generic backend offering **the basic building blocks common to every application**.
 
-Rather than developing the same standard features over and over again each time you create a new application, Kuzzle proposes them off the shelf, allowing you to focus on building **high-level, high-value business functionalities**.
+Rather than developing the same standard features over and over again every time you create a new application, Kuzzle provides them all off the shelf, allowing you to focus on building **high-level, high-value business functionalities**.
 
 ## API First
 
@@ -28,9 +28,9 @@ This **multi-protocol API** allows clients to communicate with Kuzzle and use th
 
 Whether it is the creation and modification of the database or the management of users and rights, **everything is available through the different controllers of the API**.
 
-The API provides a **standard communication format** for requests and responses so that every client has the same experience.
+The API provides a **standard communication format** for requests and responses so that every client has an identical experience with the API.
 
-Access to each action is thus **centralized within the rights management system** for a better understanding and maintenance.
+Access to every action is **centralized within the rights management system** for a better understanding and maintenance.
 
 ## Ready-to-use Database
 
@@ -38,9 +38,9 @@ Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concep
 
 With Kuzzle, customers **can directly access data stored in the database** as long as they have the rights to do so.
 
-It's **no longer needed to create a new controller every time new data need to be displayed**, and it's no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client's side**.
-
 Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/querying) in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
+
+It is then **no longer needed to create a new controller every time new data needs to be displayed**, and it is no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client side**.
 
 ```js
 // Retrieve documents matching the Elasticsearch query
@@ -56,7 +56,7 @@ let result = await sdk.document.search('iot', 'sensors', {
 });
 ```
 
-In the same way, creating collections or the writing of documents is also done directly from the frontend into the database collections:
+In the same way, creating collections or writing documents is also done directly from the frontend into the database collections:
 
 ```js
 // First create an index and a collection to handle our data
@@ -77,23 +77,24 @@ let result = await sdk.document.create('iot', 'sensors', {
 
 ## Authentication
 
-Kuzzle features a [multi-authentication system](/core/2/guides/main-concepts/authentication) for users.
+Kuzzle features a [multi-authentication system](/core/2/guides/main-concepts/authentication) for all users and fits perfectly in a **context of SSO and centralization of authentication** within an information system.
 
-Rather than using a single authentication system, Kuzzle embeds [Passport.js](http://www.passportjs.org/) and **makes available the use of its 500+ authentication strategies** by writing an authentication plugin.
+Rather than using a single authentication system, Kuzzle embeds [Passport.js](http://www.passportjs.org/) and **makes its 500+ authentication strategies available to you** by writing an authentication plugin.
 
-So your users can choose to authenticate themselves with a classic **login / password** but also from an **OAuth** provider such as Facebook or Google, an **LDAP directory**, via **SAML**, etc.
+Your users can then choose to authenticate themselves with a classic **login / password** but also from an **OAuth** provider such as Facebook or Google, a **LDAP directory**, via **SAML**, or many other methods.
 
-Kuzzle fits perfectly in a **context of SSO and centralization of authentication** within an information system.
+## Rights Management
 
-## Right Management
+[Rights Management](/core/2/guides/main-concepts/permissions) is also integrated in the backend functionalities. The **rights can be configured through the Kuzzle API** or through our Admin Console.
 
-[Rights Management](/core/2/guides/main-concepts/permissions) is already integrated in the backend functionalities. The **rights can be configured through the Kuzzle API** or through our Admin Console.
+Kuzzle has a **standard system with 3 levels of depth**:
+- Roles control access to API actions,
+- Profiles are a composition of multiple roles,
+- Finally, users are a composition of multple profiles.
 
-Kuzzle has a **standard system with 3 dimensions**. Roles control access to API actions, profiles are a composition of roles and finally users are a composition of profiles.
+![Users, Profiles and Roles diagram](./profiles-roles.png)
 
-[Users, Profiles and Roles diagram](./profiles-roles.png)
-
-This system allows to manage the majority of access control rights situations. For the most advanced cases, Kuzzle **allows to dynamically restrict access rights** via its event system and its pipe mechanism.
+This system allows management of the majority of access control rights situations. For the most advanced cases, Kuzzle **allows to dynamically restrict access rights** via its event system and its pipe mechanism.
 
 ```ts
 // Restrict document reading to their creator only
@@ -139,7 +140,7 @@ Kuzzle offers different mechanisms to **develop the business functionalities** o
 
 Everything you will build upon your application will **benefit from the advantages of Kuzzle API** such as multi-authentication, rights management, standard request and response format, cluster scalability, anti-DoS protection, etc.
 
-## Embrace Typescript
+## Typescript support
 
 Kuzzle exposes [interfaces written in Typescript](/core/2/framework/classes) for a **faster learning curve** and a **better application maintainability**.
 
@@ -153,7 +154,7 @@ The Javascript SDK is of course used by frontend applications but also in the ba
 
 Kuzzle has its own [high-performance realtime engine](/core/2/guides/main-concepts/realtime-engine).  
 
-This engine allows you to use pub/sub communications in a conventional way, but it's also capable of triggering [realtime database notification](/core/2/guides/main-concepts/realtime-engine#database-notifications).  
+This engine allows you to use pub/sub communications in a conventional way, but it's also capable of triggering [realtime database notification](/core/2/guides/main-concepts/realtime-engine#database-notifications).
 
 Every **change occuring on the database can generate realtime notifications**. Clients can listen to database changes and **synchronize frontends or other backend applications** accordingly.
 
@@ -178,11 +179,11 @@ The entire realtime engine is used exclusively from a client (frontend or backen
 
 Kuzzle is a backend designed to **scale horizontally to millions of users**.  
 
-With its integrated [masterless cluster mode](/core/2/guides/advanced/cluster-scalability), it allows hot-starting new application instances to handle the load.
+With its integrated [masterless cluster mode](/core/2/guides/advanced/cluster-scalability), it allows hot-starting new application instances to handle any additionnal load.
 
 In addition to allowing scalability, the cluster mode **offers high availability to reach 99.99% uptime** for your application.
 
-So it is possible to start your application by deploying it on a single server and then deploy the same code on several servers on the day when there is a need to handle a higher load.
+It is also possible to start your application by deploying it on a single server and then deploy the same code on several servers whenever there is a need to handle a heavier load.
 
 ## Get Started !
 
