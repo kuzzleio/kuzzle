@@ -11,38 +11,31 @@ meta:
 ---
 # What is Kuzzle
 
-If you're on this page it's probably because **you need a backend** for your mobile, web or IoT application.
+If you reached this page, it probably is because **you are looking for a backend** for your mobile, web or IoT application.
 
-Once again you had been **preparing to develop a backend from scratch**... Well, maybe not entirely from scratch, because you probably planned to use some kind of framework (and there are a lot of them!) to make it easier for you.  
-Those frameworks allow you to develop faster by providing a predefined structure, classes and configurations.
+You were surely thinking about **developing another backend from scratch**, or maybe using some kind of framework to code it faster.
 
-However, you will still have to develop the majority of the basic features:
+Using a framework is handy because having predefined structures, classes and configurations will indeed make the whole process easier, however you will still have to develop the majority of the basic features you truly need like:
  - Storing and searching data
- - Permission management
+ - Rights management
  - User authentication
- - Access to data and functionalities through an API
+ - Access to data and functionalities via API
 
-Each of **these features will take time**. Time to develop but also time to:
- - Debug
- - Test 
- - Maintain
- - Secure
+Developing **these features can be a huge timesink**, not only to write them but also to debug, test, secure and maintain them as well.
 
-In short, you were going to spend a lot of time on **code that doesn't bring any value to your users** but is nevertheless essential.
-
-This time could have been used for many other things:
+In short, you were going to spend a consequential amount of time on code that **does not bring value to your users**, time that could have been used for many other things like:
  - Development of business functionalities
  - UI / UX of frontend applications
  - 100% coverage by automated tests
- - Implementation of devops best practices
- - Marketing of your product
+ - Implementation of DevOps best practices
+ - Product marketing
  - ...
 
-It is on the basis of this failure to optimize development time that we decided to start developing Kuzzle 5 years ago and that we have been devoting all our efforts to it ever since.
+To optimize our own development times and help developers around the world to get their backends running in no time, we started developing Kuzzle, **our ready-to-use backend platform**.
 
 ## How it works
 
-Kuzzle is a **backend with ready-to-use features** that can be extended in the same way as any framework.
+Kuzzle is a **backend with ready-to-use features** that can be extended in the same way as any other framework.
 
 When you start Kuzzle, you automatically have access to an API exposing a wide range of features:
 
@@ -94,7 +87,7 @@ When you start Kuzzle, you automatically have access to an API exposing a wide r
 </div>
 
 
-Then you can develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/event-system#pipe).
+You can also develop your custom business and high level features by [extending Kuzzle API](/core/2/guides/develop-on-kuzzle/api-controllers) or [modifying API methods behavior](/core/2/guides/develop-on-kuzzle/event-system#pipe).
 
 **Example:** Basic Kuzzle application
 ```js
@@ -124,7 +117,7 @@ app.start()
 
 In addition to Kuzzle, we are developing many other projects to facilitate the use of our backend.   
 
-All these projects are also available under the Apache-2 license on [Github](https://github.com/kuzzleio).
+These projects are available under the Apache-2 license on [Github](https://github.com/kuzzleio).
 
 ### Admin Console
 
@@ -138,7 +131,7 @@ As it is a single-page application (SPA), no data related to your Kuzzle applica
 
 ### SDKs
 
-We develop many SDKs to facilitate the use of Kuzzle in applications.  
+We provide many SDKs to facilitate the use of Kuzzle in applications.  
 
 These SDKs are available for the most common languages and the majority of frontend development platforms:
  - [Javascript / Typescript](/sdk/js/7) : [Node](/sdk/js/7/getting-started/node-js), [React](/sdk/js/7/getting-started/react/standalone), [React Native](/sdk/js/7/getting-started/react-native), [Vue.js](/sdk/js/7/getting-started/vuejs/standalone), Angular, etc
@@ -150,9 +143,9 @@ These SDKs are available for the most common languages and the majority of front
 
 ### Kourou
 
-Kourou is a command line interface that facilitates development with Kuzzle.
+Kourou is a command line interface that speeds up development with Kuzzle.
 
-It can be used in particular to execute any API action or even code snippets directly.
+It can be used to execute any API action or even code snippets directly.
 
 [See Kourou on Gitub](https://github.com/kuzzleio/kourou)
 
@@ -162,7 +155,7 @@ We also develop and distribute plugins for Kuzzle.
 
 These plugins allow you to use the functionalities of other services such as [Amazon S3](https://docs.kuzzle.io/official-plugins/s3/2) or [Prometheus](https://github.com/kuzzleio/kuzzle-plugin-prometheus).
 
-The community is also able to develop and distribute its own plugins to enrich the ecosystem.
+The community is also able and encouraged to develop and distribute its own plugins to enrich the ecosystem.
 
 ![List of business plugins](./ecosystem-business-plugins.png)
 
