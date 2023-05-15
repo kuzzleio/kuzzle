@@ -111,6 +111,30 @@ describe("DocumentController", () => {
       );
     });
 
+    it("should reject if no index is provided and there is no target", async () => {
+      request.input.args.index = undefined;
+      request.input.args.collection = 'foo';
+      request.input.args.targets = undefined;
+      request.input.action = "search";
+
+      await should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: "api.assert.missing_argument", message: 'Missing argument "index".' }
+      );
+    });
+
+    it("should reject if no collection is provided and there is no target", async () => {
+      request.input.args.index = "foo";
+      request.input.args.collection = undefined;
+      request.input.args.targets = undefined;
+      request.input.action = "search";
+
+      await should(documentController.search(request)).rejectedWith(
+        BadRequestError,
+        { id: "api.assert.missing_argument", message: 'Missing argument "collection".' }
+      );
+    });
+
     it("should verify that targets are valid", async () => {
       request.input.args.index = null;
       request.input.args.collection = null;
