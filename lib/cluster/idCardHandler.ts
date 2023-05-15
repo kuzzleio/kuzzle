@@ -216,7 +216,11 @@ export class ClusterIdCardHandler {
 
     const exitHandler = () => {
       if (!childProcess.killed || childProcess.connected) {
-        childProcess.kill();
+        try {
+          childProcess.disconnect();
+        } catch (e) {
+          // It could happens that the worker has been killed before the dispose causing disconnect to fail
+        }
       }
       process.exit();
     };
