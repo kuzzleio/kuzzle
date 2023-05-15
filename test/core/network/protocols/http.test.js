@@ -44,6 +44,7 @@ describe("core/network/protocols/http", () => {
       },
       protocols: {
         http: {
+          additionalContentTypes: [],
           allowCompression: true,
           enabled: true,
           maxEncodingLayers: 3,

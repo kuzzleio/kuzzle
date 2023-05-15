@@ -75,6 +75,19 @@ export type ServerConfiguration = {
   protocols: {
     http: {
       /**
+       * Allows additional Content-Types to be accepted by Kuzzle.
+       * The default content types are:
+       *   * application/json
+       *   * application/x-www-form-urlencoded
+       *   * multipart/form-data
+       * Note: This relies on the implementation of a
+       * "protocol:http:beforeParsingPayload" pipe that implements
+       * the formatting of the additional content types to JSON.
+       * @default []
+       */
+      additionalContentTypes: string[];
+
+      /**
        * Enable support for compressed requests, using the Content-Encoding header
        * Currently supported compression algorithms:  gzip, deflate, identity
        * Note: "identity" is always an accepted value, even if compression support is disabled
