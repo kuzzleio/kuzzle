@@ -58,14 +58,14 @@ The listening port can be modified under the `server.port` section of the [confi
         // compression support is disabled
         "allowCompression": true,
 
-        // Allows additional Content-Types to be accepted by Kuzzle.
+        // Enables Kuzzle to accept additional Content-Types.
+        // Note: This relies on the implementation of a
+        // "protocol:http:beforeParsingPayload" pipe that implements
+        // the formatting of the additional content types to JSON.
         // The default content types are:
         //  * application/json
         //  * application/x-www-form-urlencoded
         //  * multipart/form-data
-        // Note: This relies on the implementation of a
-        // "protocol:http:beforeParsingPayload" pipe that implements
-        // the formatting of the additional content types to JSON.
         "additionalContentTypes": [],
       },
   }
