@@ -1866,7 +1866,7 @@ describe("DocumentController", () => {
 
     it('should not notify with "silent" argument', async () => {
       request.input.args.silent = true;
-      request.input.body = { query: { } };
+      request.input.body = { query: {} };
 
       await documentController.deleteByQuery(request);
 
