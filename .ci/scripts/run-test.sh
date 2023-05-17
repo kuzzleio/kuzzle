@@ -22,9 +22,9 @@ tar xf kuzzle-*.tgz
 echo "[$(date)] - Starting Kuzzle..."
 
 # Use the built package for functional tests
-sed -i 's/require("..\/..\/index")/require("..\/..\/package\/index")/g' docker/scripts/start-kuzzle-dev.js
+sed -i 's/require("..\/..\/index")/require("..\/..\/package\/index")/g' docker/scripts/start-kuzzle-test.js
 
-node -r ts-node/register docker/scripts/start-kuzzle-dev.js --enable-plugins functional-test-plugin &
+node -r ts-node/register docker/scripts/start-kuzzle-test.js --enable-plugins functional-test-plugin &
 
 ./bin/wait-kuzzle
 

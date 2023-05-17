@@ -2,10 +2,11 @@ version: '3.4'
 
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
-  command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
+  command: sh -c 'chmod 755 /run-test.sh && /run-test.sh'
   volumes:
     - '.:/var/app'
-    - './docker/scripts/run-dev.sh:/run-dev.sh'
+    - './docker/scripts/run-test.sh:/run-test.sh'
+    - './docker/fixtures:/fixtures'
   cap_add:
     - SYS_PTRACE
   ulimits:
