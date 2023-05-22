@@ -3,22 +3,24 @@
 // Starts a Kuzzle Backend application tailored for development
 // This loads a special plugin dedicated to functional tests
 
-import should from "should/as-function";
 import { omit } from "lodash";
+import should from "should/as-function";
 
+import { PassThrough } from "stream";
+import YAML from "yaml";
+import functionalFixtures from "../../features/fixtures/imports.json";
 import {
   Backend,
+  EventGenericDocumentBeforeUpdate,
+  HttpStream,
   KDocument,
   KDocumentContent,
-  EventGenericDocumentBeforeUpdate,
   KuzzleRequest,
   Mutex,
-  HttpStream,
 } from "../../index";
-import { FunctionalTestsController } from "./functional-tests-controller";
-import functionalFixtures from "../../features/fixtures/imports.json";
-import { PassThrough } from "stream";
+import { HttpMessage } from "../../lib/types/HttpMessage";
 import { EventGenericDocumentInjectMetadata } from "../../lib/types/events/EventGenericDocument";
+import { FunctionalTestsController } from "./functional-tests-controller";
 
 const app = new Backend("functional-tests-app");
 
@@ -234,6 +236,22 @@ app.pipe.register("server:afterNow", async (request) => {
   }
 
   return request;
+});
+
+app.pipe.register("protocol:http:beforeParsingPayload", async ({
+  message,
+  payload,
+}: {
+  message: HttpMessage;
+  payload: Buffer;
+}) => {
+  if (message.headers["content-type"] !== "application/x-yaml") {
+    return { payload };
+  }
+
+  const convertedPayload = YAML.parse(payload.toString());
+
+  return { payload: JSON.stringify(convertedPayload) };
 });
 
 // Hook registration and embedded SDK realtime publish

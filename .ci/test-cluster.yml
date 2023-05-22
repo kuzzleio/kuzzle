@@ -26,6 +26,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_server__protocols__mqtt__developmentMode=false
     - kuzzle_http__accessControlAllowOrigin=localhost
     - kuzzle_limits__loginsPerSecond=50
+    - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
     - NODE_ENV=development
     - NODE_VERSION=${NODE_VERSION:-}
     - DEBUG=none
