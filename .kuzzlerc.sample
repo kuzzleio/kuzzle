@@ -404,6 +404,15 @@
     // protocols can be extended and configured in this section.
     "protocols": {
       "http": {
+        // * additionalContentTypes:
+        //    Enables Kuzzle to accept additional Content-Types.
+        //    Note: This relies on the implementation of a
+        //    "protocol:http:beforeParsingPayload" pipe that implements
+        //    the formatting of the additional content types to JSON.
+        //    The default content types are:
+        //      * application/json
+        //      * application/x-www-form-urlencoded
+        //      * multipart/form-data
         // * allowCompression:
         //    Enable support for compressed requests, using the
         //    Content-Encoding header
@@ -421,6 +430,7 @@
         //    allocate as many decoders to handle the incoming request.
         // * maxFormFileSize:
         //    Maximum size of requests sent via http forms
+        "additionalContentTypes": [],
         "allowCompression": true,
         "enabled": true,
         "maxEncodingLayers": 3,

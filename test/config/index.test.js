@@ -3,7 +3,7 @@
 const mockRequire = require("mock-require");
 const should = require("should");
 const sinon = require("sinon");
-const { merge } = require("lodash");
+const { mergeWith } = require("lodash");
 
 const { InternalError: KuzzleInternalError } = require("../../index");
 const defaultConfig = require("../../lib/config/default.config");
@@ -11,7 +11,11 @@ const defaultConfig = require("../../lib/config/default.config");
 function getcfg(cfg) {
   const defaults = JSON.parse(JSON.stringify(defaultConfig));
 
-  return merge(defaults.default, cfg);
+  return mergeWith(defaults.default, cfg, (objValue, srcValue) => {
+    if (Array.isArray(objValue)) {
+      return srcValue;
+    }
+  });
 }
 
 describe("lib/config/index.js", () => {
@@ -351,6 +355,25 @@ describe("lib/config/index.js", () => {
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
           `[http] "maxFormFileSize" parameter: cannot parse "${bad}"`
+        );
+      }
+    });
+
+    it('should throw if "additionalContentTypes" is not an array of strings', async () => {
+      for (const bad of [null, 123, true, {}, "foobar"]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              http: {
+                additionalContentTypes: bad,
+              },
+            },
+          },
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.loadConfig()).throw(
+          `[http] "additionalContentTypes" parameter: invalid value "${bad}" (array of strings expected)`
         );
       }
     });
