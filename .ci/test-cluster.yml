@@ -4,7 +4,7 @@ x-kuzzle-config: &kuzzle-config
   image: kuzzleio/kuzzle-runner:${NODE_VERSION:-16}
   command: > 
     bash -c "
-      node ./docker/scripts/start-kuzzle-dev.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
+      node ./docker/scripts/start-kuzzle-test.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
     "
   volumes:
     - "..:/var/app"
@@ -26,6 +26,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_server__protocols__mqtt__developmentMode=false
     - kuzzle_http__accessControlAllowOrigin=localhost
     - kuzzle_limits__loginsPerSecond=50
+    - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
     - NODE_ENV=development
     - NODE_VERSION=${NODE_VERSION:-}
     - DEBUG=none

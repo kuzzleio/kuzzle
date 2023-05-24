@@ -87,3 +87,12 @@ description: Error codes definitions
 | services.statistics.not_available<br/><pre>0x01040001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | Statistics module is not available. | The statistics module is not enabled. See "config.stats.enabled". |
 
 ---
+
+
+### Subdomain: 0x0105: koncorde
+
+| id / code | class / status | message | description |
+| --------- | -------------- | --------| ----------- |
+| services.koncorde.elastic_translation_error<br/><pre>0x01050001</pre>  | [BadRequestError](/core/2/api/errors/error-codes#badrequesterror) <pre>(400)</pre> | An error occured while translating a Koncorde filter to an Elasticsearch query: %s | An error occured while translating a Koncorde filter to an Elasticsearch query |
+
+---

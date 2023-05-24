@@ -23,5 +23,16 @@ fi
 
 echo "[$(date)] - Starting Kuzzle..."
 
-npx ergol docker/scripts/start-kuzzle-dev.ts \
-  -c ./config/ergol.config.json
+if [ -n "$KUZZLE_PLUGINS" ];
+then
+  ENABLED_PLUGINS="$KUZZLE_PLUGINS,functional-test-plugin"
+else
+  ENABLED_PLUGINS=functional-test-plugin
+fi
+
+npx ergol docker/scripts/start-kuzzle-test.ts \
+  -c ./config/ergol.config.json \
+  --script-args=--mappings /fixtures/mappings.json \
+  --script-args=--fixtures /fixtures/fixtures.json \
+  --script-args=--securities /fixtures/securities.json \
+  --script-args=--enable-plugins $ENABLED_PLUGINS

@@ -56,10 +56,21 @@ The listening port can be modified under the `server.port` section of the [confi
         //   gzip, deflate, identity
         // Note: "identity" is always an accepted value, even if
         // compression support is disabled
-        "allowCompression": true
+        "allowCompression": true,
+
+        // Enables Kuzzle to accept additional Content-Types.
+        // Note: This relies on the implementation of a
+        // "protocol:http:beforeParsingPayload" pipe that implements
+        // the formatting of the additional content types to JSON.
+        // The default content types are:
+        //  * application/json
+        //  * application/x-www-form-urlencoded
+        //  * multipart/form-data
+        "additionalContentTypes": [],
       },
   }
 ```
+
 ::: warning
 HTTP and WebSocket protocols share the same underlying server instance.
 Modifying the listening port will impact these two protocols.

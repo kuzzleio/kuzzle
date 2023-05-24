@@ -88,6 +88,20 @@ The body of the request will be processed by Kuzzle as a standard request.
 This endpoint does not allow to benefit from the advantages of the cache system integrated to HTTP via URLs.
 :::
 
+#### Healthcheck endpoint
+
+Kuzzle exposes a healthcheck endpoint.
+
+This endpoint is accessible with the route `GET /_healthcheck`.
+
+```bash
+curl "http://localhost:7512/_healthcheck"
+```
+
+This route does not require any authentication. It returns a `200` status code if the server is up and running.
+
+This is useful when kuzzle is deployed inside a Kubernetes cluster and you want to configure probes to check the server.
+
 ---
 
 ### Other Protocols

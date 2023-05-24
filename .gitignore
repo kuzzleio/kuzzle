@@ -82,6 +82,7 @@ kuzzle-*.tgz
 /index.js
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
+docker/scripts/start-kuzzle-test.js
 features-sdk/support/application/functional-tests-app.js
 lib/api/openApiGenerator.js
 lib/api/openapi/OpenApiManager.js

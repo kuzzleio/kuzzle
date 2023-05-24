@@ -335,6 +335,17 @@
           "class": "InternalError"
         }
       }
+    },
+    "koncorde": {
+      "code": 5,
+      "errors": {
+        "elastic_translation_error": {
+          "description": "An error occured while translating a Koncorde filter to an Elasticsearch query",
+          "code": 1,
+          "message": "An error occured while translating a Koncorde filter to an Elasticsearch query: %s",
+          "class": "BadRequestError"
+        }
+      }
     }
   }
 }

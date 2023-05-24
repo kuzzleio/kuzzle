@@ -40,6 +40,7 @@ describe("core/network/protocols/websocket", () => {
       port: 7512,
       protocols: {
         http: {
+          additionalContentTypes: [],
           allowCompression: true,
           enabled: true,
           maxEncodingLayers: 3,
