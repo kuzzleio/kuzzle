@@ -48,7 +48,7 @@ Body:
 {
   "index": "<index>",
   "collection": "<collection>",
-  "controller": "document",
+  "controller": "bulk",
   "action": "updateByQuery",
   "refresh": "wait_for",
   "body": {
@@ -65,7 +65,7 @@ Body:
 ### Kourou
 
 ```bash
-kourou document:updateByQuery <index> <collection> <body>
+kourou bulk:updateByQuery <index> <collection> <body>
 ```
 
 ---
@@ -103,7 +103,7 @@ Returns the number of updated documents.
   "error": null,
   "index": "<index>",
   "collection": "<collection>",
-  "controller": "document",
+  "controller": "bulk",
   "action": "updateByQuery",
   "requestId": "<unique request identifier>",
   "result": {
