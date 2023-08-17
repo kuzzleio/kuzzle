@@ -191,7 +191,11 @@ Returns a paginated search result set, with the following properties:
 - `aggregations`: provides aggregation information. Present only if an `aggregations` object has been provided in the search body
 - `hits`: array of found documents. Each document has the following properties:
   - `_id`: document unique identifier
+<<<<<<< HEAD
   - `index`: index name <SinceBadge version="2.17.0">
+=======
+  - `index`: index name <SinceBadge version="2.17.0" />
+>>>>>>> 2-dev
   - `collection`: collection name <SinceBadge version="2.17.0" />
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
