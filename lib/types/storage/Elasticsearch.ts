@@ -31,3 +31,12 @@ export type KImportError = {
     type: string;
   };
 };
+
+export type KRequestParams = {
+  refresh?: string;
+  timeout?: number;
+  userId?: string;
+  injectKuzzleMeta?: boolean;
+  limits?: boolean;
+  source?: boolean;
+};

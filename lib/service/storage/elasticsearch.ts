@@ -31,6 +31,7 @@ import {
   KRequestBody,
   JSONObject,
   KImportError,
+  KRequestParams,
 } from "../../types/storage/Elasticsearch";
 import { Index } from "@elastic/elasticsearch/api/requestParams";
 
@@ -2526,14 +2527,7 @@ export class ElasticSearch extends Service {
       injectKuzzleMeta = true,
       limits = true,
       source = true,
-    }: {
-      refresh?: string;
-      timeout?: number;
-      userId?: string;
-      injectKuzzleMeta?: boolean;
-      limits?: boolean;
-      source?: boolean;
-    } = {}
+    }: KRequestParams = {}
   ) {
     let kuzzleMeta = {};
 
@@ -2994,7 +2988,7 @@ export class ElasticSearch extends Service {
       limits &&
       documents.length > global.kuzzle.config.limits.documentsWriteCount
     ) {
-      return kerror.reject("write_limit_exceeded");
+      return kerror.reject("services", "storage", "write_limit_exceeded");
     }
 
     let response = { body: { items: [] } };
