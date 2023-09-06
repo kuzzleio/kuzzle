@@ -47,6 +47,8 @@ services:
     container_name: kuzzle_nginx
     depends_on:
       - kuzzle_node_1
+      - kuzzle_node_2
+      - kuzzle_node_3
     ports:
       - '7512:7512'
     volumes:
@@ -65,31 +67,31 @@ services:
       interval: 2s
       retries: 10
 
-  # kuzzle_node_2:
-  #   <<: *kuzzle-config
-  #   container_name: kuzzle_node_2
-  #   ports:
-  #     - '17511:7512' # Kuzzle API port
-  #     - '11883:1883' # Kuzzle MQTT port
-  #     - '9230:9229' # Debug port
-  #   healthcheck:
-  #     test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
-  #     timeout: 1s
-  #     interval: 2s
-  #     retries: 10
+  kuzzle_node_2:
+    <<: *kuzzle-config
+    container_name: kuzzle_node_2
+    ports:
+      - '17511:7512' # Kuzzle API port
+      - '11883:1883' # Kuzzle MQTT port
+      - '9230:9229' # Debug port
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
-  # kuzzle_node_3:
-  #   <<: *kuzzle-config
-  #   container_name: kuzzle_node_3
-  #   ports:
-  #     - '17512:7512' # Kuzzle API port
-  #     - '11884:1883' # Kuzzle MQTT port
-  #     - '9231:9229' # Debug port
-  #   healthcheck:
-  #     test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
-  #     timeout: 1s
-  #     interval: 2s
-  #     retries: 10
+  kuzzle_node_3:
+    <<: *kuzzle-config
+    container_name: kuzzle_node_3
+    ports:
+      - '17512:7512' # Kuzzle API port
+      - '11884:1883' # Kuzzle MQTT port
+      - '9231:9229' # Debug port
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
   redis:
     image: redis:6
