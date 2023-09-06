@@ -41,19 +41,21 @@ import assert from "assert";
 import ms from "ms";
 import Bluebird from "bluebird";
 import semver from "semver";
+import debug from "../../util/debug";
 
-const debug = require("../../util/debug")("kuzzle:services:elasticsearch");
 import ESWrapper from "./esWrapper";
 import QueryTranslator from "./queryTranslator";
 import didYouMean from "../../util/didYouMean";
 import Service from "../service";
+import * as kerror from "../../kerror";
 import { assertIsObject } from "../../util/requestAssertions";
-const kerror = require("../../kerror").wrap("services", "storage");
 import { isPlainObject } from "../../util/safeObject";
 import scopeEnum from "../../core/storage/storeScopeEnum";
 import extractFields from "../../util/extractFields";
 import { Mutex } from "../../util/mutex";
 import { randomNumber } from "../../util/name-generator";
+
+debug("kuzzle:services:elasticsearch");
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
 
@@ -213,7 +215,12 @@ export class ElasticSearch extends Service {
       version &&
       !semver.satisfies(semver.coerce(version.number), ">= 7.0.0")
     ) {
-      throw kerror.get("version_mismatch", version.number);
+      throw kerror.get(
+        "services",
+        "storage",
+        "version_mismatch",
+        version.number
+      );
     }
 
     this._esVersion = version;
@@ -347,7 +354,12 @@ export class ElasticSearch extends Service {
       const scrollDuration = ms(_scrollTTL);
 
       if (scrollDuration > this.maxScrollDuration) {
-        throw kerror.get("scroll_duration_too_great", _scrollTTL);
+        throw kerror.get(
+          "services",
+          "storage",
+          "scroll_duration_too_great",
+          _scrollTTL
+        );
       }
     }
 
@@ -357,7 +369,7 @@ export class ElasticSearch extends Service {
     );
 
     if (!stringifiedScrollInfo) {
-      throw kerror.get("unknown_scroll_id");
+      throw kerror.get("services", "storage", "unknown_scroll_id");
     }
 
     const scrollInfo = JSON.parse(stringifiedScrollInfo);
@@ -452,7 +464,12 @@ export class ElasticSearch extends Service {
       const scrollDuration = ms(scroll);
 
       if (scrollDuration > this.maxScrollDuration) {
-        throw kerror.get("scroll_duration_too_great", scroll);
+        throw kerror.get(
+          "services",
+          "storage",
+          "scroll_duration_too_great",
+          scroll
+        );
       }
     }
 
@@ -615,7 +632,7 @@ export class ElasticSearch extends Service {
     // Without this test we return something weird: a result.hits.hits with all
     // document without filter because the body is empty in HTTP by default
     if (esRequest.id === "_search") {
-      return kerror.reject("search_as_an_id");
+      return kerror.reject("services", "storage", "search_as_an_id");
     }
 
     debug("Get document: %o", esRequest);
@@ -1032,7 +1049,14 @@ export class ElasticSearch extends Service {
       const { body: exists } = await this._client.exists({ id, index: alias });
 
       if (!exists) {
-        throw kerror.get("not_found", id, index, collection);
+        throw kerror.get(
+          "services",
+          "storage",
+          "not_found",
+          id,
+          index,
+          collection
+        );
       }
 
       debug("Replace document: %o", esRequest);
@@ -1125,7 +1149,7 @@ export class ElasticSearch extends Service {
     };
 
     if (!isPlainObject(query)) {
-      throw kerror.get("missing_argument", "body.query");
+      throw kerror.get("services", "storage", "missing_argument", "body.query");
     }
 
     try {
@@ -1343,7 +1367,13 @@ export class ElasticSearch extends Service {
         shardId,
       }));
 
-      throw kerror.get("incomplete_update", response.body.updated, errors);
+      throw kerror.get(
+        "services",
+        "storage",
+        "incomplete_update",
+        response.body.updated,
+        errors
+      );
     }
 
     return {
@@ -1367,7 +1397,7 @@ export class ElasticSearch extends Service {
     index: string,
     collection: string,
     query: JSONObject,
-    callback: Function,
+    callback: any,
     {
       size = 10,
       scrollTTl = "5s",
@@ -1385,7 +1415,7 @@ export class ElasticSearch extends Service {
     };
 
     if (!isPlainObject(query)) {
-      throw kerror.get("missing_argument", "body.query");
+      throw kerror.get("services", "storage", "missing_argument", "body.query");
     }
 
     const client = this._client;
@@ -1468,7 +1498,13 @@ export class ElasticSearch extends Service {
             ? "private"
             : "public";
 
-        throw kerror.get("index_already_exists", indexType, index);
+        throw kerror.get(
+          "services",
+          "storage",
+          "index_already_exists",
+          indexType,
+          index
+        );
       }
     }
 
@@ -1498,7 +1534,12 @@ export class ElasticSearch extends Service {
     this._assertValidIndexAndCollection(index, collection);
 
     if (collection === HIDDEN_COLLECTION) {
-      throw kerror.get("collection_reserved", HIDDEN_COLLECTION);
+      throw kerror.get(
+        "services",
+        "storage",
+        "collection_reserved",
+        HIDDEN_COLLECTION
+      );
     }
 
     const mutex = new Mutex(`hiddenCollection/create/${index}`);
@@ -1761,8 +1802,8 @@ export class ElasticSearch extends Service {
     mappings: TypeMapping = {}
   ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
     const esRequest: RequestParams.IndicesPutMapping<Record<string, any>> = {
-      index: this._getAlias(index, collection),
       body: {},
+      index: this._getAlias(index, collection),
     };
 
     this._checkDynamicProperty(mappings);
@@ -2142,8 +2183,8 @@ export class ElasticSearch extends Service {
 
       if (await this._checkIfAliasExists(alias)) {
         await this._client.indices.deleteAlias({
-          name: alias,
           index: indice,
+          name: alias,
         });
       }
 
@@ -2859,7 +2900,6 @@ export class ElasticSearch extends Service {
     ids: string[],
     {
       refresh,
-      timeout,
     }: {
       refresh?: boolean | "wait_for";
       timeout?: number;
@@ -3132,6 +3172,8 @@ export class ElasticSearch extends Service {
         const currentPath = [...path, property].join(".");
 
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           currentPath,
           didYouMean(property, mappingProperties)
@@ -3189,9 +3231,11 @@ export class ElasticSearch extends Service {
     });
 
     if (body.length < 1) {
-      throw kerror.get("unknown_index_collection");
+      throw kerror.get("services", "storage", "unknown_index_collection");
     } else if (body.length > 1) {
       throw kerror.get(
+        "services",
+        "storage",
         "multiple_indice_alias",
         `"alias" starting with "${ALIAS_PREFIX}"`,
         '"indices"'
@@ -3274,7 +3318,7 @@ export class ElasticSearch extends Service {
     );
 
     if (aliases.length < 1) {
-      throw kerror.get("unknown_index_collection");
+      throw kerror.get("services", "storage", "unknown_index_collection");
     }
 
     return aliases;
@@ -3322,11 +3366,16 @@ export class ElasticSearch extends Service {
    */
   _assertValidIndexAndCollection(index, collection = null) {
     if (!this.isIndexNameValid(index)) {
-      throw kerror.get("invalid_index_name", index);
+      throw kerror.get("services", "storage", "invalid_index_name", index);
     }
 
     if (collection !== null && !this.isCollectionNameValid(collection)) {
-      throw kerror.get("invalid_collection_name", collection);
+      throw kerror.get(
+        "services",
+        "storage",
+        "invalid_collection_name",
+        collection
+      );
     }
   }
 
@@ -3366,7 +3415,6 @@ export class ElasticSearch extends Service {
    * @returns {Object.<String, String[]>} Indexes as key and an array of their collections as value
    */
   _extractSchema(aliases, { includeHidden = false } = {}) {
-    console.log("ALIAS", aliases);
     const schema = {};
 
     for (const alias of aliases) {
@@ -3464,7 +3512,7 @@ export class ElasticSearch extends Service {
     } = await this._client.search(esRequest);
 
     if (hits.total.value > global.kuzzle.config.limits.documentsWriteCount) {
-      throw kerror.get("write_limit_exceeded");
+      throw kerror.get("services", "storage", "write_limit_exceeded");
     }
 
     let documents = hits.hits.map((h) => ({ _id: h._id, _source: h._source }));
@@ -3500,7 +3548,7 @@ export class ElasticSearch extends Service {
     // Only allow a whitelist of top level properties
     for (const key of Object.keys(searchBody)) {
       if (searchBody[key] !== undefined && !this.searchBodyKeys.includes(key)) {
-        throw kerror.get("invalid_search_query", key);
+        throw kerror.get("services", "storage", "invalid_search_query", key);
       }
     }
 
@@ -3528,7 +3576,12 @@ export class ElasticSearch extends Service {
       if (this.scriptKeys.includes(key)) {
         for (const scriptArg of Object.keys(value)) {
           if (!this.scriptAllowedArgs.includes(scriptArg)) {
-            throw kerror.get("invalid_query_keyword", `${key}.${scriptArg}`);
+            throw kerror.get(
+              "services",
+              "storage",
+              "invalid_query_keyword",
+              `${key}.${scriptArg}`
+            );
           }
         }
       }
@@ -3663,6 +3716,8 @@ export class ElasticSearch extends Service {
         _.set(mappings, path, value.toString());
       } else if (typeof value !== "string") {
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           path,
           "Dynamic property value should be a string."
@@ -3671,6 +3726,8 @@ export class ElasticSearch extends Service {
 
       if (!DYNAMIC_PROPERTY_VALUES.includes(value.toString())) {
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           path,
           `Incorrect dynamic property value (${value}). Should be one of "${DYNAMIC_PROPERTY_VALUES.join(
@@ -3715,7 +3772,7 @@ function findDynamic(mappings, path = [], results = {}) {
  */
 function assertNoRouting(esRequest) {
   if (esRequest.body._routing) {
-    throw kerror.get("no_routing");
+    throw kerror.get("services", "storage", "no_routing");
   }
 }
 
@@ -3727,7 +3784,13 @@ function assertNoRouting(esRequest) {
  */
 function assertWellFormedRefresh(esRequest) {
   if (!["wait_for", "false", false, undefined].includes(esRequest.refresh)) {
-    throw kerror.get("invalid_argument", "refresh", '"wait_for", false');
+    throw kerror.get(
+      "services",
+      "storage",
+      "invalid_argument",
+      "refresh",
+      '"wait_for", false'
+    );
   }
 }
 

@@ -29,5 +29,5 @@ export type KImportError = {
   error?: {
     reason: string;
     type: string;
-  }
+  };
 };
