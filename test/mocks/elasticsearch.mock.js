@@ -1,9 +1,9 @@
 "use strict";
 
 const sinon = require("sinon");
-const Elasticsearch = require("../../lib/service/storage/elasticsearch");
+const { ElasticSearch } = require("../../lib/service/storage/elasticsearch");
 
-class ElasticsearchMock extends Elasticsearch {
+class ElasticsearchMock extends ElasticSearch {
   constructor(kuzzle, config, scope) {
     super(kuzzle, config, scope);
 

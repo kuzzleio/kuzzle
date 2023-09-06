@@ -21,7 +21,7 @@
 
 import { Client } from "@elastic/elasticsearch";
 
-import Elasticsearch from "../../service/storage/elasticsearch";
+import { ElasticSearch } from "../../service/storage/elasticsearch";
 import { JSONObject } from "../../../index";
 import { ApplicationManager, Backend } from "./index";
 
@@ -44,7 +44,7 @@ export class BackendStorage extends ApplicationManager {
       const kuzzle = this._kuzzle;
 
       this._Client = function ESClient(clientConfig: JSONObject = {}) {
-        return Elasticsearch.buildClient({
+        return ElasticSearch.buildClient({
           ...kuzzle.config.services.storageEngine.client,
           ...clientConfig,
         });
@@ -60,7 +60,7 @@ export class BackendStorage extends ApplicationManager {
    */
   get storageClient(): Client {
     if (!this._client) {
-      this._client = Elasticsearch.buildClient(
+      this._client = ElasticSearch.buildClient(
         this._kuzzle.config.services.storageEngine.client
       );
     }
