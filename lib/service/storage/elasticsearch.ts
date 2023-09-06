@@ -36,23 +36,24 @@ import { Index } from "@elastic/elasticsearch/api/requestParams";
 
 import { TypeMapping } from "@elastic/elasticsearch/api/types";
 
-const assert = require("assert");
-const ms = require("ms");
-const Bluebird = require("bluebird");
-const semver = require("semver");
+import assert from "assert";
+
+import ms from "ms";
+import Bluebird from "bluebird";
+import semver from "semver";
 
 const debug = require("../../util/debug")("kuzzle:services:elasticsearch");
-const ESWrapper = require("./esWrapper");
-const QueryTranslator = require("./queryTranslator");
-const didYouMean = require("../../util/didYouMean");
-const Service = require("../service");
-const { assertIsObject } = require("../../util/requestAssertions");
+import ESWrapper from "./esWrapper";
+import QueryTranslator from "./queryTranslator";
+import didYouMean from "../../util/didYouMean";
+import Service from "../service";
+import { assertIsObject } from "../../util/requestAssertions";
 const kerror = require("../../kerror").wrap("services", "storage");
-const { isPlainObject } = require("../../util/safeObject");
-const scopeEnum = require("../../core/storage/storeScopeEnum");
-const extractFields = require("../../util/extractFields");
-const { Mutex } = require("../../util/mutex");
-const { randomNumber } = require("../../util/name-generator");
+import { isPlainObject } from "../../util/safeObject";
+import scopeEnum from "../../core/storage/storeScopeEnum";
+import extractFields from "../../util/extractFields";
+import { Mutex } from "../../util/mutex";
+import { randomNumber } from "../../util/name-generator";
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
 
@@ -92,6 +93,17 @@ let esState = esStateEnum.NONE;
  */
 export class ElasticSearch extends Service {
   public _client: StorageClient;
+  public _scope: scopeEnum;
+  public _indexPrefix: string;
+  public _esWrapper: ESWrapper;
+  public _esVersion: any;
+  public _translator: QueryTranslator;
+  public searchBodyKeys: string[];
+  public scriptKeys: string[];
+  public scriptAllowedArgs: string[];
+  public maxScrollDuration: number;
+  public scrollTTL: number;
+  public _config: any;
 
   /**
    * Returns a new elasticsearch client instance
@@ -1534,11 +1546,11 @@ export class ElasticSearch extends Service {
 
     esRequest.body.settings.number_of_replicas =
       esRequest.body.settings.number_of_replicas ||
-      this.config.defaultSettings.number_of_replicas;
+      this._config.defaultSettings.number_of_replicas;
 
     esRequest.body.settings.number_of_shards =
       esRequest.body.settings.number_of_shards ||
-      this.config.defaultSettings.number_of_shards;
+      this._config.defaultSettings.number_of_shards;
 
     try {
       await this._client.indices.create(esRequest);
@@ -3401,8 +3413,8 @@ export class ElasticSearch extends Service {
             [this._getAlias(index, HIDDEN_COLLECTION)]: {},
           },
           settings: {
-            number_of_replicas: this.config.defaultSettings.number_of_replicas,
-            number_of_shards: this.config.defaultSettings.number_of_shards,
+            number_of_replicas: this._config.defaultSettings.number_of_replicas,
+            number_of_shards: this._config.defaultSettings.number_of_shards,
           },
         },
         index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
