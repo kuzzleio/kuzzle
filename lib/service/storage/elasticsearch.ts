@@ -33,7 +33,7 @@ import {
   KImportError,
   KRequestParams,
 } from "../../types/storage/Elasticsearch";
-import { Index } from "@elastic/elasticsearch/api/requestParams";
+import { Index, IndicesCreate } from "@elastic/elasticsearch/api/requestParams";
 
 import { TypeMapping } from "@elastic/elasticsearch/api/types";
 
@@ -94,7 +94,7 @@ let esState = esStateEnum.NONE;
  * @param {storeScopeEnum} scope
  * @constructor
  */
-export class ElasticSearch extends Service {
+export default class ElasticSearch extends Service {
   public _client: StorageClient;
   public _scope: scopeEnum;
   public _indexPrefix: string;
@@ -339,15 +339,15 @@ export class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ scrollId, hits, aggregations, total }>}
    */
-  async scroll(scrollId, { scrollTTL }) {
+  async scroll(scrollId: string, { scrollTTL }: { scrollTTL?: string } = {}) {
     const _scrollTTL = scrollTTL || this._config.defaults.scrollTTL;
-    const esRequest = {
+    const esRequest: RequestParams.Scroll<Record<string, any>> = {
       scroll: _scrollTTL,
-      scrollId,
+      scroll_id: scrollId,
     };
 
     const cacheKey =
-      SCROLL_CACHE_PREFIX + global.kuzzle.hash(esRequest.scrollId);
+      SCROLL_CACHE_PREFIX + global.kuzzle.hash(esRequest.scroll_id);
 
     debug("Scroll: %o", esRequest);
 
@@ -608,7 +608,7 @@ export class ElasticSearch extends Service {
       aggregations: body.aggregations,
       hits,
       remaining: body.remaining,
-      scrollId: body._scroll_id,
+      scroll_id: body._scroll_id,
       suggest: body.suggest,
       total: body.hits.total.value,
     };
@@ -1131,7 +1131,7 @@ export class ElasticSearch extends Service {
   async deleteByQuery(
     index: string,
     collection: string,
-    query: string,
+    query: JSONObject,
     {
       refresh,
       size = 1000,
@@ -1262,7 +1262,7 @@ export class ElasticSearch extends Service {
   async updateByQuery(
     index: string,
     collection: string,
-    query: string,
+    query: JSONObject,
     changes: JSONObject,
     {
       refresh,
@@ -1449,8 +1449,8 @@ export class ElasticSearch extends Service {
               client.scroll(
                 {
                   scroll: esRequest.scroll,
-                  scrollId: _scroll_id,
-                } as RequestParams.Scroll,
+                  scroll_id: _scroll_id,
+                },
                 getMoreUntilDone
               );
             } else {
@@ -2591,15 +2591,15 @@ export class ElasticSearch extends Service {
    * @returns {Promise.<Object>} { items, errors }
    */
   async mUpdate(
-    index,
-    collection,
-    documents,
+    index: string,
+    collection: string,
+    documents: JSONObject[],
     {
       refresh = undefined,
       retryOnConflict = 0,
       timeout = undefined,
       userId = null,
-    }
+    } = {}
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2952,14 +2952,9 @@ export class ElasticSearch extends Service {
 
     // @todo duplicated query to get documents body, mGet here and search in
     // deleteByQuery
-    const { documents } = await this.deleteByQuery(
-      index,
-      collection,
-      JSON.stringify(query),
-      {
-        refresh,
-      }
-    );
+    const { documents } = await this.deleteByQuery(index, collection, query, {
+      refresh,
+    });
 
     return { documents, errors: partialErrors };
   }
@@ -3449,7 +3444,7 @@ export class ElasticSearch extends Service {
         return;
       }
 
-      const esRequest = {
+      const esRequest: IndicesCreate<KRequestBody<JSONObject>> = {
         body: {
           aliases: {
             [this._getAlias(index, HIDDEN_COLLECTION)]: {},
@@ -3479,7 +3474,7 @@ export class ElasticSearch extends Service {
    * To find the best value for this setting, we need to take into account
    * the number of nodes in the cluster and the number of shards per index.
    */
-  async _getWaitForActiveShards() {
+  async _getWaitForActiveShards(): Promise<string> {
     const { body } = await this._client.cat.nodes({ format: "json" });
 
     const numberOfNodes = body.length;
@@ -3500,7 +3495,9 @@ export class ElasticSearch extends Service {
    *
    * @returns {Promise.<Array>} resolve to an array of documents
    */
-  async _getAllDocumentsFromQuery(esRequest) {
+  async _getAllDocumentsFromQuery(
+    esRequest: RequestParams.Search<Record<string, any>>
+  ) {
     let {
       body: { hits, _scroll_id },
     } = await this._client.search(esRequest);
@@ -3509,18 +3506,21 @@ export class ElasticSearch extends Service {
       throw kerror.get("services", "storage", "write_limit_exceeded");
     }
 
-    let documents = hits.hits.map((h) => ({ _id: h._id, _source: h._source }));
+    let documents = hits.hits.map((h: JSONObject) => ({
+      _id: h._id,
+      _source: h._source,
+    }));
 
     while (hits.total.value !== documents.length) {
       ({
         body: { hits, _scroll_id },
       } = await this._client.scroll({
         scroll: esRequest.scroll,
-        scrollId: _scroll_id,
-      } as RequestParams.Scroll));
+        scroll_id: _scroll_id,
+      }));
 
       documents = documents.concat(
-        hits.hits.map((h) => ({
+        hits.hits.map((h: JSONObject) => ({
           _id: h._id,
           _source: h._source,
         }))
@@ -3609,7 +3609,7 @@ export class ElasticSearch extends Service {
    * @param  {[type]} id [description]
    * @returns {[type]}    [description]
    */
-  async clearScroll(id: string) {
+  async clearScroll(id?: string) {
     if (id) {
       debug("clearing scroll: %s", id);
       await this._client.clearScroll({ scroll_id: id });
@@ -3836,3 +3836,7 @@ function _isObjectNameValid(name: string): boolean {
 
   return valid;
 }
+
+// TODO: Remove this function when we move to Jest
+// This is kept because we use an old ReRequire that use require() instead of import
+module.exports = ElasticSearch;

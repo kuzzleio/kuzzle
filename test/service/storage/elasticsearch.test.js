@@ -242,7 +242,7 @@ describe("Test: ElasticSearch service", () => {
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scroll: "10s",
-        scrollId: "i-am-scroll-id",
+        scroll_id: "i-am-scroll-id",
       });
 
       should(result).be.match({
@@ -262,7 +262,7 @@ describe("Test: ElasticSearch service", () => {
           },
         ],
         remaining: 997,
-        scrollId: "azerty",
+        scroll_id: "azerty",
         total: 1000,
       });
     });
@@ -318,11 +318,11 @@ describe("Test: ElasticSearch service", () => {
 
       should(elasticsearch._client.clearScroll)
         .calledOnce()
-        .calledWithMatch({ scrollId: "azerty" });
+        .calledWithMatch({ scroll_id: "azerty" });
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
         scroll: "10s",
-        scrollId: "i-am-scroll-id",
+        scroll_id: "i-am-scroll-id",
       });
 
       should(result).be.match({
@@ -342,7 +342,7 @@ describe("Test: ElasticSearch service", () => {
           },
         ],
         remaining: 0,
-        scrollId: "azerty",
+        scroll_id: "azerty",
         total: 1000,
       });
     });
@@ -410,8 +410,8 @@ describe("Test: ElasticSearch service", () => {
       );
 
       should(elasticsearch._client.scroll.firstCall.args[0]).be.deepEqual({
-        scrollId: "scroll-id",
         scroll: elasticsearch.config.defaults.scrollTTL,
+        scroll_id: "scroll-id",
       });
     });
   });
@@ -541,7 +541,7 @@ describe("Test: ElasticSearch service", () => {
         ],
         remaining: 0,
         suggest: { some: "suggest" },
-        scrollId: "i-am-scroll-id",
+        scroll_id: "i-am-scroll-id",
         total: 1,
       });
     });
@@ -1067,7 +1067,7 @@ describe("Test: ElasticSearch service", () => {
           },
           id: "liia",
           refresh: "wait_for",
-          _source: true,
+          _source: "true",
           retry_on_conflict: 42,
         });
 
@@ -1119,7 +1119,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: true,
+        _source: "true",
         retry_on_conflict:
           elasticsearch.config.defaults.onUpdateConflictRetries,
       });
@@ -1307,7 +1307,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: true,
+        _source: "true",
         retry_on_conflict: 42,
       });
 
@@ -1361,7 +1361,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: true,
+        _source: "true",
         retry_on_conflict:
           elasticsearch.config.defaults.onUpdateConflictRetries,
       });
@@ -1691,7 +1691,7 @@ describe("Test: ElasticSearch service", () => {
           },
         },
         index: alias,
-        refresh: "false",
+        refresh: false,
       };
 
       elasticsearch._client.updateByQuery.resolves({
@@ -2178,7 +2178,7 @@ describe("Test: ElasticSearch service", () => {
       sinon.stub(elasticsearch, "_hasHiddenCollection").resolves(false);
       sinon.stub(elasticsearch, "deleteCollection").resolves();
       sinon.stub(elasticsearch, "_getAvailableIndice").resolves(indice);
-      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns(1);
+      sinon.stub(elasticsearch, "_getWaitForActiveShards").returns("1");
     });
 
     afterEach(() => {
@@ -2514,12 +2514,12 @@ describe("Test: ElasticSearch service", () => {
     });
 
     it("should only wait for one shard to being active when using a single node", async () => {
-      elasticsearch._getWaitForActiveShards = sinon.stub().returns(1);
+      elasticsearch._getWaitForActiveShards = sinon.stub().returns("1");
       await elasticsearch.createCollection(index, collection);
 
       const esReq = elasticsearch._client.indices.create.firstCall.args[0];
 
-      should(esReq.wait_for_active_shards).eql(1);
+      should(esReq.wait_for_active_shards).eql("1");
     });
   });
 
@@ -2956,7 +2956,7 @@ describe("Test: ElasticSearch service", () => {
         conflicts: "proceed",
         index: alias,
         refresh: true,
-        waitForCompletion: false,
+        wait_for_completion: false,
       });
     });
   });
@@ -5507,7 +5507,7 @@ describe("Test: ElasticSearch service", () => {
         const waitForActiveShards =
           await elasticsearch._getWaitForActiveShards();
 
-        should(waitForActiveShards).be.eql(1);
+        should(waitForActiveShards).be.eql("1");
       });
     });
 

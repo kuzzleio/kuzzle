@@ -21,7 +21,7 @@
 
 import { Client } from "@elastic/elasticsearch";
 
-import { ElasticSearch } from "../../service/storage/elasticsearch";
+import ElasticSearch from "../../service/storage/elasticsearch";
 import { JSONObject } from "../../../index";
 import { ApplicationManager, Backend } from "./index";
 
