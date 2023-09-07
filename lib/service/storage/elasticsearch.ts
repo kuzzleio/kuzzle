@@ -608,7 +608,7 @@ export default class ElasticSearch extends Service {
       aggregations: body.aggregations,
       hits,
       remaining: body.remaining,
-      scroll_id: body._scroll_id,
+      scrollId: body._scroll_id,
       suggest: body.suggest,
       total: body.hits.total.value,
     };

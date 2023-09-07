@@ -262,7 +262,7 @@ describe("Test: ElasticSearch service", () => {
           },
         ],
         remaining: 997,
-        scroll_id: "azerty",
+        scrollId: "azerty",
         total: 1000,
       });
     });
@@ -342,7 +342,7 @@ describe("Test: ElasticSearch service", () => {
           },
         ],
         remaining: 0,
-        scroll_id: "azerty",
+        scrollId: "azerty",
         total: 1000,
       });
     });
@@ -541,7 +541,7 @@ describe("Test: ElasticSearch service", () => {
         ],
         remaining: 0,
         suggest: { some: "suggest" },
-        scroll_id: "i-am-scroll-id",
+        scrollId: "i-am-scroll-id",
         total: 1,
       });
     });
