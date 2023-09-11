@@ -35,7 +35,15 @@ Kourou is now waiting for realtime notifications about changes in our collection
 
 We are going to create a new document in the Admin Console to trigger one!
 
-Open the [Admin Console](http://next-console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document. 
+Open the [Admin Console](http://next-console.kuzzle.io/#/data/nyc-open-data/yellow-taxi) and then create a new document : 
+
+```bash
+{
+  "name": "Nerwin",
+  "city": "Montreal",
+  "age": 26
+}
+```
 
 Then you should receive a notification about the created document in your terminal:
 
@@ -77,7 +85,10 @@ This filter must be written using [Koncorde Filter Syntax](/core/2/api/koncorde-
 Koncorde is part of the Realtime Engine and handles subscription filters.
 :::
 
-Now we can subscribe again with a filter:
+We can now subscribe with a filter. 
+
+If you still have the previous subscription active in a terminal, cancel it and subscribe again.
+
 
 ```bash
 kourou realtime:subscribe nyc-open-data yellow-taxi '{
