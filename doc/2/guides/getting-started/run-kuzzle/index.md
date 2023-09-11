@@ -20,15 +20,16 @@ In this guide we will use Docker and Docker Compose to run those services.
 
 ### Prerequisites
 
+::: info
+It is recommended to use Node Version Manager to avoid rights problems when using Node.js and dependencies.
+You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
+:::
+
 - [Node.js <= 18](https://nodejs.org/en/download/)
 - [Docker](https://docs.docker.com/engine/install/)
 - [Docker Compose](https://docs.docker.com/compose/install/)
 - [Kourou](https://github.com/kuzzleio/kourou)
 
-::: info
-It is recommended to use Node Version Manager to avoid rights problems when using Node.js and dependencies.
-You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
-:::
 
 Throughout this guide, we will need to use [Kourou](https://github.com/kuzzleio/kourou), the Kuzzle CLI.
 
@@ -91,11 +92,12 @@ app
   .catch(console.error);
 ```
 
-We can now run our first application with: `npm run docker:dev`
-
 ::: info
-Under the hood, the command `npm run docker:dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
+You can now run `cd playground && npm run docker npm install install dependencies` to install dependencies. After this has run successfully, run our first application with: `npm run docker:dev`.
 :::
+
+
+Under the hood, the command `npm run docker:dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
 
