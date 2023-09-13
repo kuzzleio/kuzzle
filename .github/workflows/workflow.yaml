@@ -20,7 +20,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}"
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
