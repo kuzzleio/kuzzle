@@ -34,7 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
