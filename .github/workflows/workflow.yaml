@@ -15,7 +15,7 @@ env:
 jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - id: set-matrix
         run: |
@@ -28,7 +28,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache@v2
@@ -41,7 +41,7 @@ jobs:
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     needs: [prepare-matrix]
     strategy:
       matrix:
@@ -63,9 +63,10 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -84,13 +85,14 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
     name: Build and Run ${{ matrix.kuzzle-image }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -117,9 +119,10 @@ jobs:
             "legacy:websocket",
           ]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-packages
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
@@ -137,12 +140,13 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-packages
       - name: Cloning Monkey Tester
         uses: actions/checkout@v3
         with:
@@ -163,6 +167,7 @@ jobs:
 
   deploy-workflow:
     name: Deployment Workflow
+    - uses: ./.github/actions/install-packages
     needs: [cluster-monkey-tests, prepare-matrix]
     uses: ./.github/workflows/workflow-deployments.yaml
     secrets: inherit
