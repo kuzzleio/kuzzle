@@ -34,9 +34,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm install
       - name: Test error codes
@@ -55,9 +52,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/es-lint
 
@@ -74,9 +68,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/unit-tests
         env:
@@ -100,9 +91,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
@@ -130,9 +118,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/functional-tests
         with:
@@ -159,9 +144,6 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v3
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/monkey-tests
         with:
