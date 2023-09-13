@@ -108,7 +108,7 @@ Search using `index` & `collection` parameters
 }
 ```
 
-Search using `targets` parameter <SinceBadge version="2.17.0">
+Search using `targets` parameter <SinceBadge version="2.17.0" />
 
 ```js
 {
@@ -191,8 +191,8 @@ Returns a paginated search result set, with the following properties:
 - `aggregations`: provides aggregation information. Present only if an `aggregations` object has been provided in the search body
 - `hits`: array of found documents. Each document has the following properties:
   - `_id`: document unique identifier
-  - `index`: index name <SinceBadge version="2.17.0">
-  - `collection`: collection name <SinceBadge version="2.17.0">
+  - `index`: index name <SinceBadge version="2.17.0" />
+  - `collection`: collection name <SinceBadge version="2.17.0" />
   - `_score`: [relevance score](https://www.elastic.co/guide/en/elasticsearch/guide/current/relevance-intro.html)
   - `_source`: new document content
   - `highlight`: optional result from [highlight API](https://www.elastic.co/guide/en/elasticsearch/reference/7.4/search-request-body.html#request-body-search-highlighting)

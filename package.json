@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.25.0",
+  "version": "2.26.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
@@ -53,7 +53,6 @@
     "denque": "^2.1.0",
     "didyoumean": "^1.2.2",
     "dumpme": "^1.0.3",
-    "eslint-plugin-kuzzle": "^0.0.6",
     "eventemitter3": "^4.0.7",
     "inquirer": "^9.1.4",
     "ioredis": "^5.3.0",
@@ -79,7 +78,7 @@
     "semver": "^7.3.8",
     "sorted-array": "^2.0.4",
     "uuid": "^9.0.0",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.7.0.tar.gz",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.23.0.tar.gz",
     "validator": "^13.9.0",
     "winston": "^3.8.2",
     "winston-elasticsearch": "0.17.1",
@@ -102,6 +101,7 @@
     "codecov": "^3.8.3",
     "cucumber": "^6.0.5",
     "ergol": "^1.0.2",
+    "eslint-plugin-kuzzle": "^0.0.6",
     "jest": "^29.4.1",
     "mocha": "^10.2.0",
     "mock-require": "^3.0.3",

@@ -65,7 +65,7 @@ Modifying the listening port will impact these two protocols.
 :::
 
 
-<SinceBadge version="2.10.0">
+<SinceBadge version="2.10.0" />
 
 ### Ping / Pong keep-alive
 

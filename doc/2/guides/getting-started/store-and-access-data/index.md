@@ -20,6 +20,8 @@ Kuzzle organizes the data storage in 4 levels:
   - Documents
   - Fields
 
+![file hierarchy description](./data-storage-organization.8a731985.png)
+
 An index brings together several collections, which in turn contain several documents, each of which is composed of several fields.
 
 The **collections have mappings** that define the way Elasticsearch will index the data for searches.

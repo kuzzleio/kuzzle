@@ -38,6 +38,9 @@ x-kuzzle-config: &kuzzle-config
     # Variables used by the development scripts
     - NODE_12_VERSION=12.20.0
     - NODE_14_VERSION=14.17.0
+    - NODE_16_VERSION=16.19.1
+    - NODE_18_VERSION=18.17.0
+    - NODE_20_VERSION=20.0.0
     - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
     - REBUILD # Force a rebuild of npm modules
 
