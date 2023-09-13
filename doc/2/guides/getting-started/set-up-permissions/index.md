@@ -42,7 +42,7 @@ kourou security:createRole '{
       }
     }
   }
-}' --id dummy
+}' --id dummyRole
 ```
 
 You should see your newly created role in the `Security > Roles` section of the [Admin Console](http://next-console.kuzzle.io)
@@ -56,12 +56,12 @@ Then, we are going to create a profile which uses our newly created role. For th
 ```bash
 kourou security:createProfile '{
   policies: [
-    { roleId: "dummy" }
+    { roleId: "dummyRole" }
   ]
-}' --id dummy
+}' --id dummyProfile
 ```
 
-Now we have a `dummy` profile which gives access to the API actions allowed by the `dummy` role.
+Now we have a `dummyProfile` profile which gives access to the API actions allowed by the `dummyRole` role.
 
 You should see your newly created profile in the `Security > Profiles` section of the [Admin Console](http://next-console.kuzzle.io)
 
@@ -69,7 +69,7 @@ You should see your newly created profile in the `Security > Profiles` section o
 
 ## User
 
-Finally, we need a user attached to the `dummy` profile. The API action to create a user is [security:createUser](/core/2/api/controllers/security/create-user).
+Finally, we need a user attached to the `dummyProfile` profile. The API action to create a user is [security:createUser](/core/2/api/controllers/security/create-user).
 
 Users need to have at least one assigned profile. We also will have to give our user some credentials to be able to log in with it.
 
@@ -77,7 +77,7 @@ For this we will use the [security:createUser](/core/2/api/controllers/security/
 ```bash
 kourou security:createUser '{
   content: {
-    profileIds: ["dummy"]
+    profileIds: ["dummyProfile"]
   },
   credentials: {
     local: {
