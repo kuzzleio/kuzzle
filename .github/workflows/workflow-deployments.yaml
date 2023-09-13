@@ -3,15 +3,20 @@ name: Workflow Deployments
 on:
   workflow_call:
     inputs:
+      node_lts_maintenance_version:
+        description: "Current Node LTS Version"
+        required: true
+        default: "16"
+        type: string
       node_lts_current_version:
         description: "Current Node LTS Version"
         required: true
-        default: "18"
+        default: "20"
         type: string
       node_lts_active_version:
         description: "Active Node LTS Version"
         required: true
-        default: "16"
+        default: "18"
         type: string
       docker_platforms:
         description: "Docker platforms"
@@ -35,15 +40,20 @@ on:
         required: true
         default: true
         type: boolean
+      node_lts_maintenance_version:
+        description: "Current Node LTS Version"
+        required: true
+        default: "16"
+        type: string
       node_lts_current_version:
         description: "Current Node LTS Version"
         required: true
-        default: "18"
+        default: "20"
         type: string
       node_lts_active_version:
         description: "Active Node LTS Version"
         required: true
-        default: "16"
+        default: "18"
         type: string
       docker_platforms:
         description: "Docker platforms"
@@ -60,7 +70,7 @@ jobs:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master' || github.ref_name == '2-dev') }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Extract references from context
@@ -83,12 +93,12 @@ jobs:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ inputs.node_lts_current_version }}
-      - uses: actions/cache@v2
+          node-version: ${{ inputs.node_lts_maintenance_version }}
+      - uses: actions/cache@v3
         with:
           path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
@@ -126,11 +136,11 @@ jobs:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
-          node-version: ${{ inputs.node_lts_active_version }}
+          node-version: ${{ inputs.node_lts_maintenance_version }}
           registry-url: "https://registry.npmjs.org"
       - run: npm install
       - run: npm publish
