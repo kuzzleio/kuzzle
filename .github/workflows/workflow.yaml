@@ -168,12 +168,9 @@ jobs:
   deploy-workflow:
     name: Deployment Workflow
     needs: [cluster-monkey-tests, prepare-matrix]
-    - uses: ./.github/actions/install-packages
-
-    - name: Deployment documentation a docker images
-      uses: ./.github/workflows/workflow-deployments.yaml
-      secrets: inherit
-      with:
-        node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
-        node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
-        docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
+    uses: ./.github/workflows/workflow-deployments.yaml
+    secrets: inherit
+    with:
+      node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
+      node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
+      docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
