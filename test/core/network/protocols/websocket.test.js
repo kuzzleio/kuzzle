@@ -83,7 +83,7 @@ describe("core/network/protocols/websocket", () => {
         await httpWs.init(entryPoint);
 
         should(httpWs.server.ws).calledWithMatch("/*", {
-          idleTimeout: 60000,
+          idleTimeout: 60,
         });
 
         should(kuzzle.log.warn).calledWith(
