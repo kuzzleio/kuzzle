@@ -60,7 +60,7 @@
     "json-stable-stringify": "^1.0.2",
     "json2yaml": "^1.1.0",
     "jsonwebtoken": "^8.5.1",
-    "koncorde": "4.3.0-beta.2",
+    "koncorde": "4.3.0",
     "kuzzle-plugin-auth-passport-local": "6.4.0",
     "kuzzle-plugin-logger": "^3.0.3",
     "kuzzle-sdk": "7.11.0",
