@@ -1,7 +1,0 @@
-checks:
-  branch-merge-check:
-    branches:
-      master:
-        - /.*-dev/
-  changelog-tag-check:
-  pr-body-check:

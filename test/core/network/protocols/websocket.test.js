@@ -83,7 +83,7 @@ describe("core/network/protocols/websocket", () => {
         await httpWs.init(entryPoint);
 
         should(httpWs.server.ws).calledWithMatch("/*", {
-          idleTimeout: 60000,
+          idleTimeout: 60,
         });
 
         should(kuzzle.log.warn).calledWith(
@@ -126,7 +126,7 @@ describe("core/network/protocols/websocket", () => {
 
       should(httpWs.server.ws).calledWithMatch("/*", {
         compression: uWS.SHARED_COMPRESSOR,
-        idleTimeout: 12345,
+        idleTimeout: 12,
         maxBackPressure: sinon.match.number,
         maxPayloadLength: 1024,
         upgrade: sinon.match.func,

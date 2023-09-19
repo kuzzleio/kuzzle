@@ -8,9 +8,9 @@ on:
   pull_request: # This syntax stand for all PRs events
 
 env:
-  NODE_LTS_MAINTENANCE_VERSION: "14"
-  NODE_LTS_ACTIVE_VERSION: "16"
-  NODE_LTS_CURRENT_VERSION: "18"  # Stand for the latest LTS version
+  NODE_LTS_MAINTENANCE_VERSION: "16"
+  NODE_LTS_ACTIVE_VERSION: "18"
+  NODE_LTS_CURRENT_VERSION: "20" # Stand for the latest LTS version
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
@@ -20,66 +20,23 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}"
+          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}"
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
       docker_platforms: ${{ env.DOCKER_PLATFORMS }}
-
-  danger-js:
-    name: Danger JS
-    uses: kuzzleio/ci-tooling/.github/workflows/danger.yaml@master
-    secrets: inherit
-    with:
-      DANGER_CONFIG: "./.ci/danger.config.yaml"
-
-  # -----------------------------------------------------------------------------
-  # Documentation checks: error codes and dead links
-  # -----------------------------------------------------------------------------
-
-#  doc-dead-links:
-#    name: Documentation - Check Dead Links
-#    if: github.event_name == 'pull_request'
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#        with:
-#          fetch-depth: 0
-#      - uses: ./.github/actions/install-packages
-#      - name: Extract references from context
-#        shell: bash
-#        id: extract-refs
-#        run: |
-#          echo "::set-output name=version::$(git describe --abbrev=0 --tags | cut -d. -f 1)"
-#          echo "::set-output name=repo::$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)"
-#          echo "::set-output name=fw-branch::$(if [ $BASE_BRANCH == master ]; then echo master; else echo develop; fi)"
-#      - uses: convictional/trigger-workflow-and-wait@v1.3.0
-#        with:
-#          owner: kuzzleio
-#          repo: documentation
-#          github_token: ${{ secrets.ACCESS_TOKEN_CI }}
-#          workflow_file_name: dead_links.workflow.yml
-#          ref: ${{ steps.extract-refs.outputs.fw-branch }}
-#          inputs: '{"repo_name": "${{ steps.extract-refs.outputs.repo }}", "branch": "${{ github.head_ref }}", "version": "${{ steps.extract-refs.outputs.version }}"}'
 
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
-          key: ${{ runner.os }}-${{ env.NODE_LTS_CURRENT_VERSION }}-${{ hashFiles('**/package-lock.json') }}
       - run: npm install
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
-
-  # -----------------------------------------------------------------------------
-  # Unit Test and Linting
-  # -----------------------------------------------------------------------------
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
@@ -89,14 +46,11 @@ jobs:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/es-lint
 
@@ -108,14 +62,11 @@ jobs:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/unit-tests
         env:
@@ -134,14 +85,11 @@ jobs:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/build-and-run-kuzzle
         with:
@@ -153,17 +101,22 @@ jobs:
     strategy:
       matrix:
         test_set:
-          [jest, http, websocket, "legacy:mqtt", "legacy:http", "legacy:websocket"]
+          [
+            jest,
+            http,
+            websocket,
+            "legacy:mqtt",
+            "legacy:http",
+            "legacy:websocket",
+          ]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/install-packages
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/functional-tests
         with:
@@ -180,19 +133,16 @@ jobs:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
       - name: Cloning Monkey Tester
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
-      - uses: actions/setup-node@v2
+      - uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - uses: actions/cache@v2
-        with:
-          path: "**/node_modules"
           key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
       - uses: ./.github/actions/monkey-tests
         with:
@@ -206,6 +156,7 @@ jobs:
     uses: ./.github/workflows/workflow-deployments.yaml
     secrets: inherit
     with:
+      node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
       node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
       node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
       docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
