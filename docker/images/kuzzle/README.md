@@ -10,7 +10,7 @@ You should use this image as a base build your own application:
 
 ```dockerfile
 # Build image
-FROM node:12.18.1-alpine3.11 as builder
+FROM node:18-bullseye-slim as builder
 
 ADD . /your-plugin-name
 

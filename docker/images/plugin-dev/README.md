@@ -18,6 +18,7 @@ version: '3'
 services:
   kuzzle:
     image: kuzzleio/plugin-dev:2
+    container_name: kuzzle_node
     volumes:
       - ".:/var/app/plugins/enabled/your-plugin-name"
     cap_add:
@@ -40,12 +41,33 @@ services:
       - DEBUG=kuzzle:plugins
       # Customize here
       - KUZZLE_PLUGIN_NAME=your-plugin-name
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
+      timeout: 1s
+      interval: 2s
+      retries: 10
 
   redis:
     image: redis:6
+    container_name: kuzzle_redis
+    ports:
+      - '6379:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 1s
+      timeout: 3s
+      retries: 30
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
+    container_name: kuzzle_elasticsearch
+    ports:
+      - '9200:9200'
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:9200']
+      interval: 2s
+      timeout: 2s
+      retries: 10
     ulimits:
       nofile: 65536
 ```

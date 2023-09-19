@@ -34,7 +34,7 @@ services:
     sysctls:
       - net.core.somaxconn=8192
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7512/_healthCheck"]
+      test: ["CMD", "curl", "-f", "http://localhost:7512/_healthcheck"]
       timeout: 1s
       interval: 2s
       retries: 30
@@ -47,7 +47,7 @@ services:
       - "traefik.enable=true"
       # Kuzzle HTTP/WS
       - "traefik.http.services.kuzzle_http.loadbalancer.server.port=7512"
-      - "traefik.http.services.kuzzle_http.loadbalancer.healthCheck.path=/_healthCheck"
+      - "traefik.http.services.kuzzle_http.loadbalancer.healthCheck.path=/_healthcheck"
       - "traefik.http.services.kuzzle_http.loadbalancer.healthCheck.interval=5s"
       - "traefik.http.routers.kuzzle.entrypoints=kuzzle_http"
       - "traefik.http.routers.kuzzle.rule=Host(`localhost`)"
