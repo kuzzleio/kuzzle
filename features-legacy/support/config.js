@@ -1,16 +1,17 @@
-'use strict';
+"use strict";
 
-const rc = require('rc');
+const rc = require("rc");
 
-const kuzzleConfig = require('../../lib/config');
+const kuzzleConfig = require("../../lib/config");
 
-module.exports = rc('kuzzle', {
-  scheme: 'http',
-  host: 'localhost',
+module.exports = rc("kuzzle", {
+  scheme: "http",
+  host: "localhost",
   port: 7512,
   services: {
     storageEngine: {
-      commonMapping: kuzzleConfig.loadConfig().services.storageEngine.commonMapping
-    }
-  }
+      commonMapping:
+        kuzzleConfig.loadConfig().services.storageEngine.commonMapping,
+    },
+  },
 });

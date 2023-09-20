@@ -352,15 +352,17 @@ Given(/^A scrolled search on profiles$/, function () {
   this.scrollId = null;
 
   return this.api.searchProfiles([], { scroll: "2s" }).then((response) => {
+    console.log("response", response);
+
     if (response.error) {
       throw new Error(response.error.message);
     }
 
-    if (!response.result.scroll_id) {
+    if (!response.result.scrollId) {
       throw new Error("No scrollId returned by the searchProfile query");
     }
 
-    this.scrollId = response.result.scroll_id;
+    this.scrollId = response.result.scrollId;
   });
 });
 

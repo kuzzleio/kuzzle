@@ -1,61 +1,60 @@
-'use strict';
+"use strict";
 
-const zlib = require('zlib');
+const zlib = require("zlib");
 
-const _ = require('lodash');
-const rp = require('request-promise');
+const _ = require("lodash");
+const rp = require("request-promise");
 
-const routes = require('../../../lib/api/httpRoutes');
+const routes = require("../../../lib/api/httpRoutes");
 
-function checkAlgorithm (algorithm) {
-  const
-    supported = ['identity', 'gzip', 'deflate'],
-    list = algorithm.split(',').map(a => a.trim().toLowerCase());
+function checkAlgorithm(algorithm) {
+  const supported = ["identity", "gzip", "deflate"],
+    list = algorithm.split(",").map((a) => a.trim().toLowerCase());
 
   for (const l of list) {
-    if (! supported.some(a => a === l)) {
+    if (!supported.some((a) => a === l)) {
       throw new Error(`Unsupported compression algorithm: ${l}`);
     }
   }
 }
 
 class HttpApi {
-  constructor (world) {
+  constructor(world) {
     this.world = world;
 
     this.baseUri = `http://${world.config.host}:${world.config.port}`;
 
     this.util = {
-      getIndex: index => typeof index !== 'string' ? this.world.fakeIndex : index,
-      getCollection: collection => typeof collection !== 'string' ? this.world.fakeCollection : collection
+      getIndex: (index) =>
+        typeof index !== "string" ? this.world.fakeIndex : index,
+      getCollection: (collection) =>
+        typeof collection !== "string" ? this.world.fakeCollection : collection,
     };
 
     this.isRealtimeCapable = false;
 
-    this.encoding = 'identity';
-    this.expectedEncoding = 'identity';
+    this.encoding = "identity";
+    this.expectedEncoding = "identity";
   }
 
-  _getRequest (index, collection, controller, action, args) {
-    let
-      url = '',
+  _getRequest(index, collection, controller, action, args) {
+    let url = "",
       queryString = [],
-      verb = 'GET',
+      verb = "GET",
       result;
 
-    if (! args) {
+    if (!args) {
       args = {};
     }
-    if (! args.body) {
+    if (!args.body) {
       if (args.args) {
         args.body = args.args;
-      }
-      else {
+      } else {
         args.body = {};
       }
     }
 
-    routes.some(route => {
+    routes.some((route) => {
       const hits = [];
 
       // Try / Catch mechanism avoids to match routes that have not all
@@ -64,67 +63,65 @@ class HttpApi {
         if (route.controller === controller && route.action === action) {
           verb = route.verb.toUpperCase();
 
-          url = route.url.replace(/(:[^/]+)/g, function (match) {
-            hits.push(match.substring(1));
+          url = route.url
+            .replace(/(:[^/]+)/g, function (match) {
+              hits.push(match.substring(1));
 
-            if (match === ':index') {
-              if (! index) {
-                throw new Error('No index provided');
+              if (match === ":index") {
+                if (!index) {
+                  throw new Error("No index provided");
+                }
+                return index;
               }
-              return index;
-            }
-            if (match === ':collection') {
-              if (! collection) {
-                throw new Error('No collection provided');
+              if (match === ":collection") {
+                if (!collection) {
+                  throw new Error("No collection provided");
+                }
+                return collection;
               }
-              return collection;
-            }
 
-            if (match === ':_id') {
-              if (args._id) {
-                return args._id;
+              if (match === ":_id") {
+                if (args._id) {
+                  return args._id;
+                }
+                if (args.body._id) {
+                  return args.body._id;
+                }
+                throw new Error("No _id provided");
               }
-              if (args.body._id) {
-                return args.body._id;
+
+              if (args.body[match.substring(1)] !== undefined) {
+                return args.body[match.substring(1)];
               }
-              throw new Error('No _id provided');
-            }
 
-            if (args.body[match.substring(1)] !== undefined) {
-              return args.body[match.substring(1)];
-            }
-
-            return '';
-          }).substring(1);
+              return "";
+            })
+            .substring(1);
 
           // add extra aguments in the query string
-          if (verb === 'GET') {
-            _.difference(Object.keys(args.body), hits).forEach(key => {
+          if (verb === "GET") {
+            _.difference(Object.keys(args.body), hits).forEach((key) => {
               const value = args.body[key];
 
               if (value !== undefined) {
                 if (Array.isArray(value)) {
-                  queryString.push(...value.map(v => `${key}=${v}`));
-                }
-                else {
+                  queryString.push(...value.map((v) => `${key}=${v}`));
+                } else {
                   queryString.push(`${key}=${value}`);
                 }
               }
             });
 
             if (queryString.length) {
-              url += '?' + queryString.join('&');
+              url += "?" + queryString.join("&");
             }
           }
 
-          url = url
-            .replace(/\/\//g, '/')
-            .replace(/\/$/, '');
+          url = url.replace(/\/\//g, "/").replace(/\/$/, "");
 
           return true;
         }
-      }
-      catch (error) {
+      } catch (error) {
         return false;
       }
 
@@ -133,66 +130,75 @@ class HttpApi {
 
     result = {
       url: this.apiPath(url),
-      method: verb
+      method: verb,
     };
 
-    if (verb !== 'GET') {
+    if (verb !== "GET") {
       result.body = args.body;
     }
 
     return result;
   }
 
-  apiBasePath (path) {
+  apiBasePath(path) {
     return this.apiPath(path);
   }
 
-  apiPath (path) {
-    return path.startsWith('/')
+  apiPath(path) {
+    return path.startsWith("/")
       ? encodeURI(`${this.baseUri}${path}`)
       : encodeURI(`${this.baseUri}/${path}`);
   }
 
-  adminResetDatabase () {
+  adminResetDatabase() {
     const options = {
-      url: this.apiPath('/admin/_resetDatabase/'),
-      method: 'POST'
+      url: this.apiPath("/admin/_resetDatabase/"),
+      method: "POST",
     };
 
     return this.callApi(options);
   }
 
-  serverPublicApi () {
+  serverPublicApi() {
     const options = {
-      url: this.apiPath('/_publicApi'),
-      method: 'GET'
+      url: this.apiPath("/_publicApi"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  bulkImport (bulk, index) {
+  bulkImport(bulk, index) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_bulk'),
-      method: 'POST',
-      body: { bulkData: bulk }
+      url: this.apiPath(
+        this.util.getIndex(index) + "/" + this.world.fakeCollection + "/_bulk"
+      ),
+      method: "POST",
+      body: { bulkData: bulk },
     };
 
     return this.callApi(options);
   }
 
-  bulkMWrite (index, collection, body) {
+  bulkMWrite(index, collection, body) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mWrite'),
-      method: 'POST',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mWrite"
+      ),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  bulkWrite (index, collection, body, _id = null) {
-    let url = `${this.util.getIndex(index)}/${this.util.getCollection(collection)}/_write`;
+  bulkWrite(index, collection, body, _id = null) {
+    let url = `${this.util.getIndex(index)}/${this.util.getCollection(
+      collection
+    )}/_write`;
 
     if (_id) {
       url += `?_id=${_id}`;
@@ -200,8 +206,8 @@ class HttpApi {
 
     const options = {
       url: this.apiPath(url),
-      method: 'POST',
-      body
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
@@ -211,8 +217,8 @@ class HttpApi {
    * @param options
    * @returns {Promise.<IncomingMessage>}
    */
-  async callApi (options) {
-    if (! options.headers) {
+  async callApi(options) {
+    if (!options.headers) {
       options.headers = {};
     }
 
@@ -222,27 +228,27 @@ class HttpApi {
       });
     }
 
-    if (options.body && this.encoding !== 'identity') {
+    if (options.body && this.encoding !== "identity") {
       options.body = JSON.stringify(options.body);
-      options.headers['content-encoding'] = this.encoding;
+      options.headers["content-encoding"] = this.encoding;
 
-      const algorithms = this.encoding.split(',').map(a => a.trim().toLowerCase());
+      const algorithms = this.encoding
+        .split(",")
+        .map((a) => a.trim().toLowerCase());
 
       for (const algorithm of algorithms) {
-        if (algorithm === 'gzip') {
+        if (algorithm === "gzip") {
           options.body = zlib.gzipSync(options.body);
-        }
-        else if (algorithm === 'deflate') {
+        } else if (algorithm === "deflate") {
           options.body = zlib.deflateSync(options.body);
         }
       }
-    }
-    else {
+    } else {
       options.json = true;
     }
 
-    if (this.expectedEncoding !== 'identity') {
-      options.headers['accept-encoding'] = this.expectedEncoding;
+    if (this.expectedEncoding !== "identity") {
+      options.headers["accept-encoding"] = this.expectedEncoding;
 
       // despite the name, that options asks "request" to handle
       // both gzip or deflate compressed responses
@@ -255,23 +261,23 @@ class HttpApi {
 
     // we need to manually parse the stringified json if
     // we sent a compressed buffer through the request module
-    if (options.body && this.encoding !== 'identity') {
+    if (options.body && this.encoding !== "identity") {
       return JSON.parse(response);
     }
 
     return response;
   }
 
-  callMemoryStorage (command, args) {
-    return this.callApi(this._getRequest(null, null, 'ms', command, args));
+  callMemoryStorage(command, args) {
+    return this.callApi(this._getRequest(null, null, "ms", command, args));
   }
 
-  checkToken (token) {
+  checkToken(token) {
     let _token = null;
     const request = {
-      url: this.apiPath('_checkToken'),
-      method: 'POST',
-      body: { token }
+      url: this.apiPath("_checkToken"),
+      method: "POST",
+      body: { token },
     };
 
     if (this.world.currentUser && this.world.currentUser.token) {
@@ -280,14 +286,14 @@ class HttpApi {
     }
 
     return this.callApi(request)
-      .then(response => {
+      .then((response) => {
         if (_token !== null) {
           this.world.currentUser.token = _token;
         }
 
         return response;
       })
-      .catch(error => {
+      .catch((error) => {
         if (_token !== null) {
           this.world.currentUser.token = _token;
         }
@@ -296,78 +302,98 @@ class HttpApi {
       });
   }
 
-  collectionExists (index, collection) {
-    return this.callApi(this._getRequest(index, collection, 'collection', 'exists'));
+  collectionExists(index, collection) {
+    return this.callApi(
+      this._getRequest(index, collection, "collection", "exists")
+    );
   }
 
-  count (query, index, collection) {
+  count(query, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_count'),
-      method: 'POST',
-      body: query
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_count"
+      ),
+      method: "POST",
+      body: query,
     };
 
     return this.callApi(options);
   }
 
-  create (body, index, collection, jwtToken, id) {
-    const
-      url = id
-        ? this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + id + '/_create')
-        : this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_create'),
+  create(body, index, collection, jwtToken, id) {
+    const url = id
+        ? this.apiPath(
+            this.util.getIndex(index) +
+              "/" +
+              this.util.getCollection(collection) +
+              "/" +
+              id +
+              "/_create"
+          )
+        : this.apiPath(
+            this.util.getIndex(index) +
+              "/" +
+              this.util.getCollection(collection) +
+              "/_create"
+          ),
       options = {
         url: url,
-        method: 'POST',
-        body
+        method: "POST",
+        body,
       };
 
     if (jwtToken) {
       options.headers = {
-        authorization: 'Bearer ' + jwtToken
+        authorization: "Bearer " + jwtToken,
       };
     }
 
     return this.callApi(options);
   }
 
-  createCollection (index, collection, mappings) {
+  createCollection(index, collection, mappings) {
     index = index || this.world.fakeIndex;
 
     const options = {
       url: this.apiPath(`${index}/${collection}`),
-      method: 'PUT',
-      body: mappings
+      method: "PUT",
+      body: mappings,
     };
 
     return this.callApi(options);
   }
 
-  getCollectionMapping (index, collection, includeKuzzleMeta = false) {
-    const url = `${index}/${collection}/_mapping${includeKuzzleMeta ? '?includeKuzzleMeta' : ''}`;
+  getCollectionMapping(index, collection, includeKuzzleMeta = false) {
+    const url = `${index}/${collection}/_mapping${
+      includeKuzzleMeta ? "?includeKuzzleMeta" : ""
+    }`;
 
     const options = {
       url: this.apiPath(url),
-      method: 'GET'
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  createCredentials (strategy, userId, body) {
+  createCredentials(strategy, userId, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_create'),
-      method: 'POST',
-      body
+      url: this.apiPath("credentials/" + strategy + "/" + userId + "/_create"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  createFirstAdmin (body, id, reset) {
+  createFirstAdmin(body, id, reset) {
     const options = {
-      url: this.apiPath('_createFirstAdmin'),
-      method: 'POST',
-      body
+      url: this.apiPath("_createFirstAdmin"),
+      method: "POST",
+      body,
     };
 
     if (id !== undefined) {
@@ -375,36 +401,42 @@ class HttpApi {
     }
 
     if (reset) {
-      options.url += '?reset=1';
+      options.url += "?reset=1";
     }
 
     return this.callApi(options);
   }
 
-  createIndex (index) {
+  createIndex(index) {
     const options = {
-      url: this.apiPath(index + '/_create'),
-      method: 'POST'
+      url: this.apiPath(index + "/_create"),
+      method: "POST",
     };
 
     return this.callApi(options);
   }
 
-  createMyCredentials (strategy, body) {
+  createMyCredentials(strategy, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me/_create'),
-      method: 'POST',
-      body
+      url: this.apiPath("credentials/" + strategy + "/_me/_create"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  createOrReplace (body, index, collection) {
+  createOrReplace(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id),
-      method: 'PUT',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/" +
+          body._id
+      ),
+      method: "PUT",
+      body,
     };
 
     delete body._id;
@@ -412,543 +444,610 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  createOrReplaceProfile (id, body) {
+  createOrReplaceProfile(id, body) {
     const options = {
-      url: this.apiPath('profiles/' + id),
-      method: 'PUT',
-      body
+      url: this.apiPath("profiles/" + id),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  createOrReplaceRole (id, body) {
+  createOrReplaceRole(id, body) {
     const options = {
-      url: this.apiPath('roles/' + id),
-      method: 'PUT',
-      body
+      url: this.apiPath("roles/" + id),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  createRestrictedUser (body, id) {
+  createRestrictedUser(body, id) {
     const options = {
-      url: this.apiPath('users/' + id + '/_createRestricted'),
-      method: 'POST',
-      body
+      url: this.apiPath("users/" + id + "/_createRestricted"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  createUser (body, id) {
+  createUser(body, id) {
     const options = {
-      url: this.apiPath('users/' + id + '/_create' + '?refresh=wait_for'),
-      method: 'POST',
-      body
+      url: this.apiPath("users/" + id + "/_create" + "?refresh=wait_for"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  credentialsExist (strategy) {
+  credentialsExist(strategy) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me/_exists'),
-      method: 'GET'
+      url: this.apiPath("credentials/" + strategy + "/_me/_exists"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  deleteById (id, index) {
+  deleteById(id, index) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
-      method: 'DELETE'
+      url: this.apiPath(
+        this.util.getIndex(index) + "/" + this.world.fakeCollection + "/" + id
+      ),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteByQuery (query, index, collection) {
+  deleteByQuery(query, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_query'),
-      method: 'DELETE',
-      body: query
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_query"
+      ),
+      method: "DELETE",
+      body: query,
     };
 
     return this.callApi(options);
   }
 
-  deleteCredentials (strategy, userId) {
+  deleteCredentials(strategy, userId) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId),
-      method: 'DELETE'
+      url: this.apiPath("credentials/" + strategy + "/" + userId),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteIndex (index) {
+  deleteIndex(index) {
     const options = {
       url: this.apiPath(index),
-      method: 'DELETE'
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteIndexes () {
+  deleteIndexes() {
     const options = {
-      url: this.apiPath('_mDelete'),
-      method: 'DELETE'
+      url: this.apiPath("_mDelete"),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteMyCredentials (strategy) {
+  deleteMyCredentials(strategy) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me'),
-      method: 'DELETE'
+      url: this.apiPath("credentials/" + strategy + "/_me"),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteProfile (id, waitFor = false) {
+  deleteProfile(id, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('profiles/' + id + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'DELETE'
+      url: this.apiPath(
+        "profiles/" + id + (waitFor ? "?refresh=wait_for" : "")
+      ),
+      method: "DELETE",
     });
   }
 
-  deleteProfiles (ids, waitFor = false) {
+  deleteProfiles(ids, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('profiles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'POST',
+      url: this.apiPath(
+        "profiles/_mDelete" + (waitFor ? "?refresh=wait_for" : "")
+      ),
+      method: "POST",
       body: {
-        ids
-      }
+        ids,
+      },
     });
   }
 
-  deleteRole (id, waitFor = false) {
+  deleteRole(id, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('roles/' + id + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'DELETE'
+      url: this.apiPath("roles/" + id + (waitFor ? "?refresh=wait_for" : "")),
+      method: "DELETE",
     });
   }
 
-  deleteRoles (ids, waitFor = false) {
+  deleteRoles(ids, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('roles/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'POST',
+      url: this.apiPath(
+        "roles/_mDelete" + (waitFor ? "?refresh=wait_for" : "")
+      ),
+      method: "POST",
       body: {
-        ids
-      }
+        ids,
+      },
     });
   }
 
-  deleteSpecifications (index, collection) {
+  deleteSpecifications(index, collection) {
     const options = {
-      url: this.apiPath(index + '/' + collection + '/_specifications'),
-      method: 'DELETE'
+      url: this.apiPath(index + "/" + collection + "/_specifications"),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  deleteUser (id, waitFor = false) {
+  deleteUser(id, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('users/' + id + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'DELETE'
+      url: this.apiPath("users/" + id + (waitFor ? "?refresh=wait_for" : "")),
+      method: "DELETE",
     });
   }
 
-  deleteUsers (ids, waitFor = false) {
+  deleteUsers(ids, waitFor = false) {
     return this.callApi({
-      url: this.apiPath('users/_mDelete' + (waitFor ? '?refresh=wait_for' : '')),
-      method: 'POST',
+      url: this.apiPath(
+        "users/_mDelete" + (waitFor ? "?refresh=wait_for" : "")
+      ),
+      method: "POST",
       body: {
-        ids
-      }
+        ids,
+      },
     });
   }
 
-  disconnect () {}
+  disconnect() {}
 
-  exists (id, index) {
+  exists(id, index) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id + '/_exists'),
-      method: 'GET'
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.world.fakeCollection +
+          "/" +
+          id +
+          "/_exists"
+      ),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  get (id, index) {
+  get(id, index) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/' + id),
-      method: 'GET'
+      url: this.apiPath(
+        this.util.getIndex(index) + "/" + this.world.fakeCollection + "/" + id
+      ),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getAllStats () {
+  getAllStats() {
     const options = {
-      url: this.apiPath('_getAllStats'),
-      method: 'GET'
+      url: this.apiPath("_getAllStats"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getAuthenticationStrategies () {
+  getAuthenticationStrategies() {
     const options = {
-      url: this.apiPath('strategies'),
-      method: 'GET'
+      url: this.apiPath("strategies"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getCredentials (strategy, userId) {
+  getCredentials(strategy, userId) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId),
-      method: 'GET'
+      url: this.apiPath("credentials/" + strategy + "/" + userId),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getCredentialsById (strategy, userId) {
+  getCredentialsById(strategy, userId) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_byId'),
-      method: 'GET'
+      url: this.apiPath("credentials/" + strategy + "/" + userId + "/_byId"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getCurrentUser () {
+  getCurrentUser() {
     return this.callApi({
-      url: this.apiPath('users/_me'),
-      method: 'GET'
+      url: this.apiPath("users/_me"),
+      method: "GET",
     });
   }
 
-  getLastStats () {
+  getLastStats() {
     const options = {
-      url: this.apiPath('_getLastStats'),
-      method: 'GET'
+      url: this.apiPath("_getLastStats"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getMyCredentials (strategy) {
+  getMyCredentials(strategy) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me'),
-      method: 'GET'
+      url: this.apiPath("credentials/" + strategy + "/_me"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getMyRights () {
+  getMyRights() {
     const options = {
-      url: this.apiPath('users/_me/_rights'),
-      method: 'GET'
+      url: this.apiPath("users/_me/_rights"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getProfile (id) {
+  getProfile(id) {
     const options = {
-      url: this.apiPath('profiles/' + id),
-      method: 'GET'
+      url: this.apiPath("profiles/" + id),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getProfileMapping () {
+  getProfileMapping() {
     const options = {
-      url: this.apiPath('/profiles/_mapping'),
-      method: 'GET'
+      url: this.apiPath("/profiles/_mapping"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getProfileRights (id) {
+  getProfileRights(id) {
     const options = {
-      url: this.apiPath('profiles/' + id + '/_rights'),
-      method: 'GET'
+      url: this.apiPath("profiles/" + id + "/_rights"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getRole (id) {
+  getRole(id) {
     const options = {
-      url: this.apiPath('roles/' + id),
-      method: 'GET'
+      url: this.apiPath("roles/" + id),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getRoleMapping () {
+  getRoleMapping() {
     const options = {
-      url: this.apiPath('/roles/_mapping'),
-      method: 'GET'
+      url: this.apiPath("/roles/_mapping"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getSpecifications (index, collection) {
+  getSpecifications(index, collection) {
     const options = {
-      url: this.apiPath(index + '/' + collection + '/_specifications'),
-      method: 'GET'
+      url: this.apiPath(index + "/" + collection + "/_specifications"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getStats (dates) {
-    return this.callApi(this._getRequest(null, null, 'server', 'getStats', { body: dates }));
+  getStats(dates) {
+    return this.callApi(
+      this._getRequest(null, null, "server", "getStats", { body: dates })
+    );
   }
 
-  getUser (id) {
+  getUser(id) {
     const options = {
-      url: this.apiPath('users/' + id),
-      method: 'GET'
+      url: this.apiPath("users/" + id),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getUserMapping () {
+  getUserMapping() {
     const options = {
-      url: this.apiPath('/users/_mapping'),
-      method: 'GET'
+      url: this.apiPath("/users/_mapping"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  getUserRights (id) {
+  getUserRights(id) {
     const options = {
-      url: this.apiPath('users/' + id + '/_rights'),
-      method: 'GET'
+      url: this.apiPath("users/" + id + "/_rights"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  hasCredentials (strategy, userId) {
+  hasCredentials(strategy, userId) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_exists'),
-      method: 'GET'
+      url: this.apiPath("credentials/" + strategy + "/" + userId + "/_exists"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  indexExists (index) {
-    return this.callApi(this._getRequest(index, null, 'index', 'exists'));
+  indexExists(index) {
+    return this.callApi(this._getRequest(index, null, "index", "exists"));
   }
 
-  refreshCollection (index, collection) {
-    const
-      _index = index || this.world.fakeIndex,
+  refreshCollection(index, collection) {
+    const _index = index || this.world.fakeIndex,
       _collection = collection || this.world.fakeCollection,
       options = {
         url: this.apiPath(`${_index}/${_collection}/_refresh`),
-        method: 'POST'
+        method: "POST",
       };
 
     return this.callApi(options);
   }
 
-  listCollections (index, type) {
+  listCollections(index, type) {
     const options = {
       url: this.apiPath(`${index || this.world.fakeIndex}/_list`),
-      method: 'GET'
+      method: "GET",
     };
     if (type) {
-      options.url += '?type=' + type;
+      options.url += "?type=" + type;
     }
 
     return this.callApi(options);
   }
 
-  listIndexes () {
+  listIndexes() {
     const options = {
-      url: this.apiPath('_list'),
-      method: 'GET'
+      url: this.apiPath("_list"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  login (strategy, credentials) {
+  login(strategy, credentials) {
     const options = {
       url: this.apiPath(`_login/${strategy}`),
-      method: 'POST',
+      method: "POST",
       body: {
         username: credentials.username,
-        password: credentials.password
-      }
+        password: credentials.password,
+      },
     };
 
     return this.callApi(options);
   }
 
-  logout (jwtToken) {
+  logout(jwtToken) {
     const options = {
-      url: this.apiPath('_logout'),
-      method: 'POST',
+      url: this.apiPath("_logout"),
+      method: "POST",
       headers: {
-        authorization: 'Bearer ' + jwtToken
-      }
+        authorization: "Bearer " + jwtToken,
+      },
     };
 
     return this.callApi(options);
   }
 
-  mCreate (body, index, collection, jwtToken) {
+  mCreate(body, index, collection, jwtToken) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreate'),
-      method: 'POST',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mCreate"
+      ),
+      method: "POST",
+      body,
     };
 
     if (jwtToken) {
       options.headers = {
-        authorization: 'Bearer ' + jwtToken
+        authorization: "Bearer " + jwtToken,
       };
     }
 
     return this.callApi(options);
   }
 
-  mCreateOrReplace (body, index, collection) {
+  mCreateOrReplace(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mCreateOrReplace'),
-      method: 'PUT',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mCreateOrReplace"
+      ),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mDelete (body, index, collection) {
+  mDelete(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mDelete'),
-      method: 'DELETE',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mDelete"
+      ),
+      method: "DELETE",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mGet (body, index, collection) {
+  mGet(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mGet'),
-      method: 'POST',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mGet"
+      ),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mGetProfiles (body) {
+  mGetProfiles(body) {
     const options = {
-      url: this.apiPath('profiles/_mGet'),
-      method: 'POST',
-      body
+      url: this.apiPath("profiles/_mGet"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mGetRoles (body) {
+  mGetRoles(body) {
     const options = {
-      url: this.apiPath('roles/_mGet'),
-      method: 'POST',
-      body
+      url: this.apiPath("roles/_mGet"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mReplace (body, index, collection) {
+  mReplace(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mReplace'),
-      method: 'PUT',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mReplace"
+      ),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  mUpdate (body, index, collection) {
+  mUpdate(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_mUpdate'),
-      method: 'PUT',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_mUpdate"
+      ),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  now () {
+  now() {
     const options = {
-      url: this.apiPath('_now'),
-      method: 'GET'
+      url: this.apiPath("_now"),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  postDocument (index, collection, document) {
+  postDocument(index, collection, document) {
     const options = {
-      url: this.apiPath(index + '/' + collection + '/_create'),
-      method: 'POST',
-      body: document
+      url: this.apiPath(index + "/" + collection + "/_create"),
+      method: "POST",
+      body: document,
     };
 
     return this.callApi(options);
   }
 
-  publish (body, index) {
+  publish(body, index) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.world.fakeCollection + '/_publish'),
-      method: 'POST',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.world.fakeCollection +
+          "/_publish"
+      ),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  refreshToken () {
+  refreshToken() {
     return this.callApi({
-      url: this.apiPath('_refreshToken'),
-      method: 'POST'
+      url: this.apiPath("_refreshToken"),
+      method: "POST",
     });
   }
 
-  replace (body, index, collection) {
+  replace(body, index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/' + body._id + '/_replace'),
-      method: 'PUT',
-      body
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/" +
+          body._id +
+          "/_replace"
+      ),
+      method: "PUT",
+      body,
     };
 
     delete body._id;
@@ -956,102 +1055,106 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  replaceUser (id, body) {
+  replaceUser(id, body) {
     return this.callApi({
-      url: this.apiPath('users/' + id + '/_replace'),
-      method: 'PUT',
-      body
+      url: this.apiPath("users/" + id + "/_replace"),
+      method: "PUT",
+      body,
     });
   }
 
-  revokeTokens (id) {
+  revokeTokens(id) {
     return this.callApi({
       url: this.apiPath(`users/${id}/tokens`),
-      method: 'DELETE'
+      method: "DELETE",
     });
   }
 
-  scroll (scrollId, scroll) {
+  scroll(scrollId, scroll) {
     const options = {
       url: this.apiPath(`_scroll/${scrollId}`),
-      method: 'GET'
+      method: "GET",
     };
 
     if (scroll) {
-      options.url += '?scroll=' + scroll;
+      options.url += "?scroll=" + scroll;
     }
 
     return this.callApi(options);
   }
 
-  scrollProfiles (scrollId) {
+  scrollProfiles(scrollId) {
     const options = {
-      url: this.apiPath('profiles/_scroll/' + scrollId),
-      method: 'GET'
+      url: this.apiPath("profiles/_scroll/" + scrollId),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  scrollSpecifications (scrollId) {
+  scrollSpecifications(scrollId) {
     const options = {
-      url: this.apiPath('validations/_scroll/' + scrollId),
-      method: 'GET'
+      url: this.apiPath("validations/_scroll/" + scrollId),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  scrollUsers (scrollId) {
+  scrollUsers(scrollId) {
     const options = {
-      url: this.apiPath('users/_scroll/' + scrollId),
-      method: 'GET'
+      url: this.apiPath("users/_scroll/" + scrollId),
+      method: "GET",
     };
 
     return this.callApi(options);
   }
 
-  search (query, index, collection, args) {
-    const
-      options = {
-        url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_search'),
-        method: 'POST',
-        body: query
-      };
+  search(query, index, collection, args) {
+    const options = {
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_search"
+      ),
+      method: "POST",
+      body: query,
+    };
 
     if (args) {
       let qs = [];
-      options.url += '?';
+      options.url += "?";
 
       if (args.scroll) {
-        qs.push('scroll=' + args.scroll);
+        qs.push("scroll=" + args.scroll);
       }
       if (args.from) {
-        qs.push('from=' + args.from);
+        qs.push("from=" + args.from);
       }
       if (args.size) {
-        qs.push('size=' + args.size);
+        qs.push("size=" + args.size);
       }
 
-      options.url += qs.join('&');
+      options.url += qs.join("&");
     }
 
     return this.callApi(options);
   }
 
-  searchProfiles (roles, args) {
+  searchProfiles(roles, args) {
     const options = {
-      url: this.apiPath('profiles/_search'),
-      method: 'POST',
+      url: this.apiPath("profiles/_search"),
+      method: "POST",
       body: {
-        roles
-      }
+        roles,
+      },
     };
 
     if (args) {
       let first = true;
-      Object.keys(args).forEach(arg => {
-        options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      Object.keys(args).forEach((arg) => {
+        options.url += (first ? "?" : "&") + `${arg}=${args[arg]}`;
         first = false;
       });
     }
@@ -1059,41 +1162,41 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  searchRoles (body, args) {
+  searchRoles(body, args) {
     const options = {
-      url: this.apiPath('roles/_search'),
-      method: 'POST',
-      body
+      url: this.apiPath("roles/_search"),
+      method: "POST",
+      body,
     };
 
     if (args) {
       let qs = [];
-      options.url += '?';
+      options.url += "?";
 
       if (args.from) {
-        qs.push('from=' + args.from);
+        qs.push("from=" + args.from);
       }
       if (args.size) {
-        qs.push('size=' + args.size);
+        qs.push("size=" + args.size);
       }
 
-      options.url += qs.join('&');
+      options.url += qs.join("&");
     }
 
     return this.callApi(options);
   }
 
-  searchSpecifications (body, args) {
+  searchSpecifications(body, args) {
     const options = {
-      url: this.apiPath('validations/_search'),
-      method: 'POST',
-      body
+      url: this.apiPath("validations/_search"),
+      method: "POST",
+      body,
     };
 
     if (args) {
       let first = true;
-      Object.keys(args).forEach(arg => {
-        options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      Object.keys(args).forEach((arg) => {
+        options.url += (first ? "?" : "&") + `${arg}=${args[arg]}`;
         first = false;
       });
     }
@@ -1101,19 +1204,19 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  searchUsers (query, args) {
+  searchUsers(query, args) {
     const options = {
-      url: this.apiPath('users/_search'),
-      method: 'POST',
+      url: this.apiPath("users/_search"),
+      method: "POST",
       body: {
-        query
-      }
+        query,
+      },
     };
 
     if (args) {
       let first = true;
-      Object.keys(args).forEach(arg => {
-        options.url += (first ? '?' : '&') + `${arg}=${args[arg]}`;
+      Object.keys(args).forEach((arg) => {
+        options.url += (first ? "?" : "&") + `${arg}=${args[arg]}`;
         first = false;
       });
     }
@@ -1121,22 +1224,28 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  truncateCollection (index, collection) {
+  truncateCollection(index, collection) {
     const options = {
-      url: this.apiPath(this.util.getIndex(index) + '/' + this.util.getCollection(collection) + '/_truncate'),
-      method: 'DELETE'
+      url: this.apiPath(
+        this.util.getIndex(index) +
+          "/" +
+          this.util.getCollection(collection) +
+          "/_truncate"
+      ),
+      method: "DELETE",
     };
 
     return this.callApi(options);
   }
 
-  update (id, body, index, collection) {
-    const
-      _collection = collection || this.world.fakeCollection,
+  update(id, body, index, collection) {
+    const _collection = collection || this.world.fakeCollection,
       options = {
-        url: this.apiPath(`${this.util.getIndex(index)}/${_collection}/${id}/_update`),
-        method: 'PUT',
-        body
+        url: this.apiPath(
+          `${this.util.getIndex(index)}/${_collection}/${id}/_update`
+        ),
+        method: "PUT",
+        body,
       };
 
     delete body._id;
@@ -1144,218 +1253,230 @@ class HttpApi {
     return this.callApi(options);
   }
 
-  updateCredentials (strategy, userId, body) {
+  updateCredentials(strategy, userId, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_update'),
-      method: 'PUT',
-      body
+      url: this.apiPath("credentials/" + strategy + "/" + userId + "/_update"),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  updateProfileMapping () {
+  updateProfileMapping() {
     const options = {
-      url: this.apiPath('/profiles/_mapping'),
-      method: 'PUT',
-      body: this.world.securitymapping
+      url: this.apiPath("/profiles/_mapping"),
+      method: "PUT",
+      body: this.world.securitymapping,
     };
 
     return this.callApi(options);
   }
 
-  updateMapping (index, collection, mapping) {
+  updateMapping(index, collection, mapping) {
     const options = {
-      url: `${this.apiPath(this.util.getIndex(index))}/${collection || this.world.fakeCollection}/_mapping`,
-      method: 'PUT',
-      body: mapping || this.world.mapping
+      url: `${this.apiPath(this.util.getIndex(index))}/${
+        collection || this.world.fakeCollection
+      }/_mapping`,
+      method: "PUT",
+      body: mapping || this.world.mapping,
     };
 
     return this.callApi(options);
   }
 
-  updateMyCredentials (strategy, body) {
+  updateMyCredentials(strategy, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me/_update'),
-      method: 'PUT',
-      body
+      url: this.apiPath("credentials/" + strategy + "/_me/_update"),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  updateRoleMapping () {
+  updateRoleMapping() {
     const options = {
-      url: this.apiPath('/roles/_mapping'),
-      method: 'PUT',
-      body: this.world.securitymapping
+      url: this.apiPath("/roles/_mapping"),
+      method: "PUT",
+      body: this.world.securitymapping,
     };
 
     return this.callApi(options);
   }
 
-  updateSelf (body) {
+  updateSelf(body) {
     const options = {
-      url: this.apiPath('_updateSelf'),
-      method: 'PUT',
-      body
+      url: this.apiPath("_updateSelf"),
+      method: "PUT",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  updateSpecifications (index, collection, specifications) {
+  updateSpecifications(index, collection, specifications) {
     const options = {
       url: this.apiPath(`${index}/${collection}/_specifications`),
-      method: 'PUT',
-      body: specifications
+      method: "PUT",
+      body: specifications,
     };
 
     return this.callApi(options);
   }
 
-  updateUserMapping () {
+  updateUserMapping() {
     const options = {
-      url: this.apiPath('/users/_mapping'),
-      method: 'PUT',
-      body: this.world.securitymapping
+      url: this.apiPath("/users/_mapping"),
+      method: "PUT",
+      body: this.world.securitymapping,
     };
 
     return this.callApi(options);
   }
 
-  validateCredentials (strategy, userId, body) {
+  validateCredentials(strategy, userId, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/' + userId + '/_validate'),
-      method: 'POST',
-      body
+      url: this.apiPath(
+        "credentials/" + strategy + "/" + userId + "/_validate"
+      ),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  validateDocument (index, collection, document) {
+  validateDocument(index, collection, document) {
     const options = {
-      url: this.apiPath(index + '/' + collection + '/_validate'),
-      method: 'POST',
-      body: document
+      url: this.apiPath(index + "/" + collection + "/_validate"),
+      method: "POST",
+      body: document,
     };
 
     return this.callApi(options);
   }
 
-  validateMyCredentials (strategy, body) {
+  validateMyCredentials(strategy, body) {
     const options = {
-      url: this.apiPath('credentials/' + strategy + '/_me/_validate'),
-      method: 'POST',
-      body
+      url: this.apiPath("credentials/" + strategy + "/_me/_validate"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  validateSpecifications (index, collection, specifications) {
+  validateSpecifications(index, collection, specifications) {
     const options = {
-      url: this.apiPath(index ? `${index}/${collection}/_validateSpecifications` : '_validateSpecifications'),
-      method: 'POST',
-      body: specifications
+      url: this.apiPath(
+        index
+          ? `${index}/${collection}/_validateSpecifications`
+          : "_validateSpecifications"
+      ),
+      method: "POST",
+      body: specifications,
     };
 
     return this.callApi(options);
   }
 
-  resetCache (database) {
+  resetCache(database) {
     const options = {
       url: this.apiPath(`admin/_resetCache/${database}`),
-      method: 'POST'
+      method: "POST",
     };
 
     return this.callApi(options);
   }
 
-  resetKuzzleData () {
+  resetKuzzleData() {
     const options = {
-      url: this.apiPath('admin/_resetKuzzleData'),
-      method: 'POST'
+      url: this.apiPath("admin/_resetKuzzleData"),
+      method: "POST",
     };
 
     return this.callApi(options);
   }
 
-  resetSecurity () {
+  resetSecurity() {
     const options = {
-      url: this.apiPath('admin/_resetSecurity'),
-      method: 'POST',
+      url: this.apiPath("admin/_resetSecurity"),
+      method: "POST",
       body: {
-        refresh: 'wait_for'
-      }
+        refresh: "wait_for",
+      },
     };
 
     return this.callApi(options);
   }
 
-  resetDatabase () {
+  resetDatabase() {
     const options = {
-      url: this.apiPath('admin/_resetDatabase'),
-      method: 'POST'
+      url: this.apiPath("admin/_resetDatabase"),
+      method: "POST",
     };
 
     return this.callApi(options);
   }
 
-  loadMappings (body) {
+  loadMappings(body) {
     const options = {
-      url: this.apiPath('admin/_loadMappings?refresh=wait_for'),
-      method: 'POST',
-      body
+      url: this.apiPath("admin/_loadMappings?refresh=wait_for"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  loadFixtures (body) {
+  loadFixtures(body) {
     const options = {
-      url: this.apiPath('admin/_loadFixtures?refresh=wait_for'),
-      method: 'POST',
-      body
+      url: this.apiPath("admin/_loadFixtures?refresh=wait_for"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  loadSecurities (body) {
+  loadSecurities(body) {
     const options = {
-      url: this.apiPath('admin/_loadSecurities?refresh=wait_for'),
-      method: 'POST',
-      body
+      url: this.apiPath("admin/_loadSecurities?refresh=wait_for"),
+      method: "POST",
+      body,
     };
 
     return this.callApi(options);
   }
 
-  encode (algorithm) {
+  encode(algorithm) {
     checkAlgorithm(algorithm);
     this.encoding = algorithm;
   }
 
-  decode (algorithm) {
+  decode(algorithm) {
     checkAlgorithm(algorithm);
     this.expectedEncoding = algorithm;
   }
 
-  urlEncodedCreate (form) {
+  urlEncodedCreate(form) {
     return this.callApi({
       form,
-      method: 'POST',
-      url: this.apiPath(`${this.world.fakeIndex}/${this.world.fakeCollection}/_create`),
+      method: "POST",
+      url: this.apiPath(
+        `${this.world.fakeIndex}/${this.world.fakeCollection}/_create`
+      ),
     });
   }
 
-  multipartCreate (formData) {
+  multipartCreate(formData) {
     return this.callApi({
       formData,
-      method: 'POST',
-      url: this.apiPath(`${this.world.fakeIndex}/${this.world.fakeCollection}/_create`),
+      method: "POST",
+      url: this.apiPath(
+        `${this.world.fakeIndex}/${this.world.fakeCollection}/_create`
+      ),
     });
   }
 }
