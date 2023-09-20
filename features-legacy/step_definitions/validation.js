@@ -240,7 +240,7 @@ Then(
               );
             }
 
-            this.scrollId = response.result.scroll_id;
+            this.scrollId = response.result.scrollId;
             callbackAsync();
           })
           .catch((err) => callbackAsync(err));

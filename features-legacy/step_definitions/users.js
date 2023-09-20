@@ -277,7 +277,7 @@ Given(/^A scrolled search on users$/, function () {
       throw new Error("No scrollId returned by the searchProfile query");
     }
 
-    this.scrollId = response.result.scroll_id;
+    this.scrollId = response.result.scrollId;
   });
 });
 
