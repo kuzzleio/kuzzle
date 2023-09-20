@@ -1,7 +1,7 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:16-bullseye-slim as builder
+FROM node:18-bullseye-slim as builder
 
 RUN  set -x \
  && apt-get update \
@@ -45,7 +45,7 @@ RUN  set -x \
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:16-bullseye-slim as minifier
+FROM node:18-bullseye-slim as minifier
 
 ENV NODE_ENV=production
 
