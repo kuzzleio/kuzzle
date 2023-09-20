@@ -37,8 +37,9 @@ x-kuzzle-config: &kuzzle-config
     - KUZZLE_VAULT_KEY=${KUZZLE_VAULT_KEY:-secret-password}
     - KUZZLE_SECRETS_FILE=${KUZZLE_SECRETS_FILE:-/var/app/features/fixtures/secrets.enc.json}
     # Variables used by the development scripts
-    - NODE_12_VERSION=12.20.0
-    - NODE_14_VERSION=14.17.0
+    - NODE_16_VERSION=16.19.1
+    - NODE_18_VERSION=18.17.0
+    - NODE_20_VERSION=20.0.0
     - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
     - REBUILD # Force a rebuild of npm modules
 
@@ -63,7 +64,7 @@ services:
       - '1883:1883' # Kuzzle MQTT port
       - '9229:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
@@ -76,7 +77,7 @@ services:
       - '11883:1883' # Kuzzle MQTT port
       - '9230:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
@@ -89,7 +90,7 @@ services:
       - '11884:1883' # Kuzzle MQTT port
       - '9231:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthCheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
