@@ -17,7 +17,7 @@ Returns the status of Kuzzle and it's internal services.
 ### HTTP
 
 ```http
-URL: http://kuzzle:7512/_healthCheck[?services]
+URL: http://kuzzle:7512/_healthcheck[?services]
 Method: GET
 ```
 
