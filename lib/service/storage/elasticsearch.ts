@@ -289,8 +289,8 @@ export default class ElasticSearch extends Service {
       const infos = indiceInfo as any;
       // Ignore non-Kuzzle indices
       if (
-        indice[INDEX_PREFIX_POSITION_IN_INDICE] !== PRIVATE_PREFIX &&
-        indice[INDEX_PREFIX_POSITION_IN_INDICE] !== PUBLIC_PREFIX
+        !indice.startsWith(PRIVATE_PREFIX) &&
+        !indice.startsWith(PUBLIC_PREFIX)
       ) {
         continue;
       }
@@ -662,7 +662,7 @@ export default class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ items: Array<{ _id, _source, _version }>, errors }>}
    */
-  async mGet(index, collection, ids) {
+  async mGet(index: string, collection: string, ids: string[]) {
     if (ids.length === 0) {
       return { errors: [], item: [] };
     }
@@ -689,9 +689,7 @@ export default class ElasticSearch extends Service {
     const errors = [];
     const items = [];
 
-    for (let i = 0; i < body.docs.length; i++) {
-      const doc = body.docs[i];
-
+    for (const doc of body.docs) {
       if (doc.found) {
         items.push({
           _id: doc._id,
@@ -715,7 +713,7 @@ export default class ElasticSearch extends Service {
    *
    * @returns {Promise.<Number>} count
    */
-  async count(index, collection, searchBody = {}) {
+  async count(index: string, collection: string, searchBody = {}) {
     const esRequest = {
       body: this._sanitizeSearchBody(searchBody),
       index: this._getAlias(index, collection),
@@ -1284,9 +1282,7 @@ export default class ElasticSearch extends Service {
 
       const documents = await this._getAllDocumentsFromQuery(esRequest);
 
-      for (let i = 0; i < documents.length; i++) {
-        const document = documents[i];
-
+      for (const document of documents) {
         document._source = undefined;
         document.body = changes;
       }
@@ -1406,7 +1402,7 @@ export default class ElasticSearch extends Service {
       size?: number;
       scrollTTl?: string;
     } = {}
-  ) {
+  ): Promise<any> {
     const esRequest: RequestParams.Search = {
       body: this._sanitizeSearchBody({ query }),
       from: 0,
@@ -1938,7 +1934,6 @@ export default class ElasticSearch extends Service {
     } = {}
   ) {
     const alias = this._getAlias(index, collection);
-    const actionNames = ["index", "create", "update", "delete"];
     const dateNow = Date.now();
     const esRequest = {
       body: documents,
@@ -1961,37 +1956,7 @@ export default class ElasticSearch extends Service {
     assertWellFormedRefresh(esRequest);
     this._scriptCheck(documents);
 
-    let lastAction; // NOSONAR
-
-    /**
-     * @warning Critical code section
-     *
-     * bulk body can contain more than 10K elements
-     */
-    for (let i = 0; i < esRequest.body.length; i++) {
-      const item = esRequest.body[i];
-      const action = Object.keys(item)[0];
-
-      if (actionNames.indexOf(action) !== -1) {
-        lastAction = action;
-
-        item[action]._index = alias;
-
-        if (item[action]._type) {
-          item[action]._type = undefined;
-        }
-      } else if (lastAction === "index" || lastAction === "create") {
-        item._kuzzle_info = kuzzleMeta.created;
-      } else if (lastAction === "update") {
-        // we can only update metadata on a partial update, or on an upsert
-        for (const prop of ["doc", "upsert"]) {
-          if (isPlainObject(item[prop])) {
-            item[prop]._kuzzle_info = kuzzleMeta.updated;
-          }
-        }
-      }
-    }
-    /* end critical code section */
+    this._setLastActionToKuzzleMeta(esRequest, alias, kuzzleMeta);
 
     let response: Record<string, any>;
 
@@ -2423,12 +2388,16 @@ export default class ElasticSearch extends Service {
   async mCreate(
     index: string,
     collection: string,
-    documents: string[],
+    documents: JSON[],
     {
       refresh,
       timeout,
       userId = null,
-    }: { refresh?: string; timeout?: number; userId?: string } = {}
+    }: {
+      refresh?: boolean | "wait_for";
+      timeout?: string;
+      userId?: string;
+    } = {}
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2696,9 +2665,9 @@ export default class ElasticSearch extends Service {
       timeout,
       userId = null,
     }: {
-      refresh?: string;
+      refresh?: boolean | "wait_for";
       retryOnConflict?: number;
-      timeout?: number;
+      timeout?: string;
       userId?: string;
     } = {}
   ) {
@@ -2804,8 +2773,8 @@ export default class ElasticSearch extends Service {
       timeout,
       userId = null,
     }: {
-      refresh?: string;
-      timeout?: number;
+      refresh?: boolean | "wait_for";
+      timeout?: string;
       userId?: string;
     } = {}
   ) {
@@ -2850,7 +2819,7 @@ export default class ElasticSearch extends Service {
       const document = extractedDocuments[i];
 
       // Documents are retrieved in the same order than we got them from user
-      if (existingDocuments[i] && existingDocuments[i].found) {
+      if (existingDocuments[i]?.found) {
         esRequest.body.push({
           index: {
             _id: document._id,
@@ -2972,19 +2941,13 @@ export default class ElasticSearch extends Service {
    * @returns {Promise.<Object[]>} results
    */
   async _mExecute(
-    esRequest,
-    documents,
-    partialErrors,
+    esRequest: RequestParams.Bulk,
+    documents: JSONObject[],
+    partialErrors: JSONObject[] = [],
     { limits = true, source = true } = {}
   ) {
     assertWellFormedRefresh(esRequest);
-
-    if (
-      limits &&
-      documents.length > global.kuzzle.config.limits.documentsWriteCount
-    ) {
-      return kerror.reject("services", "storage", "write_limit_exceeded");
-    }
+    assertLimitNotExceeded(limits, documents);
 
     let response = { body: { items: [] } };
 
@@ -3058,8 +3021,8 @@ export default class ElasticSearch extends Service {
    * @returns {Object} { rejected, extractedDocuments, documentsToGet }
    */
   _extractMDocuments(
-    documents,
-    metadata,
+    documents: JSONObject[],
+    metadata: JSONObject,
     { prepareMGet = false, requireId = false, prepareMUpsert = false } = {}
   ) {
     const rejected = [];
@@ -3072,7 +3035,7 @@ export default class ElasticSearch extends Service {
      * request can contain more than 10K elements
      */
     for (let i = 0; i < documents.length; i++) {
-      const document = documents[i];
+      const document = documents[i].length;
 
       if (!isPlainObject(document.body) && !prepareMUpsert) {
         rejected.push({
@@ -3103,44 +3066,62 @@ export default class ElasticSearch extends Service {
           status: 400,
         });
       } else {
-        let extractedDocument;
-        if (prepareMUpsert) {
-          extractedDocument = {
-            _source: {
-              // Do not use destructuring, it's 10x slower
-              changes: Object.assign({}, metadata.doc, document.changes),
-              default: Object.assign(
-                {},
-                metadata.upsert,
-                document.changes,
-                document.default
-              ),
-            },
-          };
-        } else {
-          extractedDocument = {
-            // Do not use destructuring, it's 10x slower
-            _source: Object.assign({}, metadata, document.body),
-          };
-        }
-
-        if (document._id) {
-          extractedDocument._id = document._id;
-        }
-
-        extractedDocuments.push(extractedDocument);
-
-        if (prepareMGet && typeof document._id === "string") {
-          documentsToGet.push({
-            _id: document._id,
-            _source: false,
-          });
-        }
+        this._processExtract(
+          prepareMUpsert,
+          prepareMGet,
+          metadata,
+          document,
+          extractedDocuments,
+          documentsToGet
+        );
       }
     }
     /* end critical code section */
 
     return { documentsToGet, extractedDocuments, rejected };
+  }
+  private _processExtract(
+    prepareMUpsert: boolean,
+    prepareMGet: boolean,
+    metadata: JSONObject,
+    document: JSONObject,
+    extractedDocuments: JSONObject[],
+    documentsToGet: JSONObject[]
+  ) {
+    let extractedDocument;
+
+    if (prepareMUpsert) {
+      extractedDocument = {
+        _source: {
+          // Do not use destructuring, it's 10x slower
+          changes: Object.assign({}, metadata.doc, document.changes),
+          default: Object.assign(
+            {},
+            metadata.upsert,
+            document.changes,
+            document.default
+          ),
+        },
+      };
+    } else {
+      extractedDocument = {
+        // Do not use destructuring, it's 10x slower
+        _source: Object.assign({}, metadata, document.body),
+      };
+    }
+
+    if (document._id) {
+      extractedDocument._id = document._id;
+    }
+
+    extractedDocuments.push(extractedDocument);
+
+    if (prepareMGet && typeof document._id === "string") {
+      documentsToGet.push({
+        _id: document._id,
+        _source: false,
+      });
+    }
   }
 
   /**
@@ -3149,7 +3130,7 @@ export default class ElasticSearch extends Service {
    * @param {Object} mapping
    * @throws
    */
-  _checkMappings(mapping, path = [], check = true) {
+  _checkMappings(mapping: JSONObject, path = [], check = true) {
     const properties = Object.keys(mapping);
     const mappingProperties =
       path.length === 0
@@ -3172,7 +3153,7 @@ export default class ElasticSearch extends Service {
       if (property === "properties") {
         // type definition level, we don't check
         this._checkMappings(mapping[property], [...path, "properties"], false);
-      } else if (mapping[property] && mapping[property].properties) {
+      } else if (mapping[property]?.properties) {
         // root properties level, check for "properties", "dynamic" and "_meta"
         this._checkMappings(mapping[property], [...path, property], true);
       }
@@ -3731,6 +3712,48 @@ export default class ElasticSearch extends Service {
       }
     }
   }
+
+  _setLastActionToKuzzleMeta(
+    esRequest: JSONObject,
+    alias: string,
+    kuzzleMeta: JSONObject
+  ) {
+    /**
+     * @warning Critical code section
+     *
+     * bulk body can contain more than 10K elements
+     */
+    let lastAction = "";
+    const actionNames = ["index", "create", "update", "delete"];
+
+    for (let i = 0; i < esRequest.body.length; i++) {
+      const item = esRequest.body[i];
+      const action = Object.keys(item)[0];
+
+      if (actionNames.indexOf(action) !== -1) {
+        lastAction = action;
+
+        item[action]._index = alias;
+
+        if (item[action]?._type) {
+          item[action]._type = undefined;
+        }
+      } else if (lastAction === "index" || lastAction === "create") {
+        item._kuzzle_info = kuzzleMeta.created;
+      } else if (lastAction === "update") {
+        this._setLastActionToKuzzleMetaUpdate(item, kuzzleMeta);
+      }
+    }
+    /* end critical code section */
+  }
+
+  _setLastActionToKuzzleMetaUpdate(item: JSONObject, kuzzleMeta: JSONObject) {
+    for (const prop of ["doc", "upsert"]) {
+      if (isPlainObject(item[prop])) {
+        item[prop]._kuzzle_info = kuzzleMeta.updated;
+      }
+    }
+  }
 }
 
 /**
@@ -3785,6 +3808,15 @@ function assertWellFormedRefresh(esRequest) {
       "refresh",
       '"wait_for", false'
     );
+  }
+}
+
+function assertLimitNotExceeded(limits: boolean, documents: JSONObject[]) {
+  if (
+    limits &&
+    documents.length > global.kuzzle.config.limits.documentsWriteCount
+  ) {
+    throw kerror.reject("services", "storage", "write_limit_exceeded");
   }
 }
 

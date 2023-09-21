@@ -33,8 +33,8 @@ export type KImportError = {
 };
 
 export type KRequestParams = {
-  refresh?: string;
-  timeout?: number;
+  refresh?: boolean | "wait_for";
+  timeout?: string;
   userId?: string;
   injectKuzzleMeta?: boolean;
   limits?: boolean;
