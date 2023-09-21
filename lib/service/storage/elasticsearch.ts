@@ -2947,7 +2947,10 @@ export default class ElasticSearch extends Service {
     { limits = true, source = true } = {}
   ) {
     assertWellFormedRefresh(esRequest);
-    assertLimitNotExceeded(limits, documents);
+
+    if (this._hasExceededLimit(limits, documents)) {
+      return kerror.reject("services", "storage", "write_limit_exceeded");
+    }
 
     let response = { body: { items: [] } };
 
@@ -3035,7 +3038,7 @@ export default class ElasticSearch extends Service {
      * request can contain more than 10K elements
      */
     for (let i = 0; i < documents.length; i++) {
-      const document = documents[i].length;
+      const document = documents[i];
 
       if (!isPlainObject(document.body) && !prepareMUpsert) {
         rejected.push({
@@ -3080,6 +3083,14 @@ export default class ElasticSearch extends Service {
 
     return { documentsToGet, extractedDocuments, rejected };
   }
+
+  private _hasExceededLimit(limits: boolean, documents: JSONObject[]) {
+    return (
+      limits &&
+      documents.length > global.kuzzle.config.limits.documentsWriteCount
+    );
+  }
+
   private _processExtract(
     prepareMUpsert: boolean,
     prepareMGet: boolean,
@@ -3808,15 +3819,6 @@ function assertWellFormedRefresh(esRequest) {
       "refresh",
       '"wait_for", false'
     );
-  }
-}
-
-function assertLimitNotExceeded(limits: boolean, documents: JSONObject[]) {
-  if (
-    limits &&
-    documents.length > global.kuzzle.config.limits.documentsWriteCount
-  ) {
-    throw kerror.reject("services", "storage", "write_limit_exceeded");
   }
 }
 
