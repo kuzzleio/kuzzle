@@ -19,7 +19,7 @@ export type KRequestBody<T> = T & {
 };
 
 export interface JSONObject {
-  [key: string]: JSONObject | any;
+  [key: string]: any;
 }
 
 export type KImportError = {
