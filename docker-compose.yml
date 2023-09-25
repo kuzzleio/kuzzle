@@ -48,8 +48,8 @@ services:
     container_name: kuzzle_nginx
     depends_on:
       - kuzzle_node_1
-      # - kuzzle_node_2
-      # - kuzzle_node_3
+      - kuzzle_node_2
+      - kuzzle_node_3
     ports:
       - '7512:7512'
     volumes:
