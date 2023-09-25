@@ -1980,7 +1980,7 @@ export default class ElasticSearch extends Service {
      *
      * bulk body can contain more than 10K elements
      */
-    for (let i = 0; i < body.items.length; i++) {
+    for (let i = 0; i < body.items.length; i++) { //NOSONAR
       const row = body.items[i];
       const action = Object.keys(row)[0];
       const item = row[action];
@@ -2318,7 +2318,7 @@ export default class ElasticSearch extends Service {
     const errors = [];
     const items = [];
 
-    for (let i = 0; i < body.docs.length; i++) {
+    for (let i = 0; i < body.docs.length; i++) { //NOSONAR
       const doc = body.docs[i];
 
       if (doc.found) {
@@ -2530,7 +2530,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
+    for (let i = 0; i < extractedDocuments.length; i++) { //NOSONAR
       esRequest.body.push({
         index: {
           _id: extractedDocuments[i]._id,
@@ -2594,7 +2594,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
+    for (let i = 0; i < extractedDocuments.length; i++) { //NOSONAR
       const extractedDocument = extractedDocuments[i];
 
       if (typeof extractedDocument._id === "string") {
@@ -2709,7 +2709,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < extractedDocuments.length; i++) {
+    for (let i = 0; i < extractedDocuments.length; i++) { //NOSONAR
       esRequest.body.push(
         {
           update: {
@@ -2877,7 +2877,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < ids.length; i++) {
+    for (let i = 0; i < ids.length; i++) { //NOSONAR
       const _id = ids[i];
 
       if (typeof _id === "string") {
@@ -2902,7 +2902,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < validIds.length; i++) {
+    for (let i = 0; i < validIds.length; i++) { //NOSONAR
       const validId = validIds[i];
       const item = items[idx];
 
@@ -3037,7 +3037,7 @@ export default class ElasticSearch extends Service {
      *
      * request can contain more than 10K elements
      */
-    for (let i = 0; i < documents.length; i++) {
+    for (let i = 0; i < documents.length; i++) { //NOSONAR
       const document = documents[i];
 
       if (!isPlainObject(document.body) && !prepareMUpsert) {
@@ -3105,8 +3105,8 @@ export default class ElasticSearch extends Service {
       extractedDocument = {
         _source: {
           // Do not use destructuring, it's 10x slower
-          changes: Object.assign({}, metadata.doc, document.changes),
-          default: Object.assign(
+          changes: Object.assign({}, metadata.doc, document.changes), //NOSONAR
+          default: Object.assign( //NOSONAR
             {},
             metadata.upsert,
             document.changes,
@@ -3117,7 +3117,7 @@ export default class ElasticSearch extends Service {
     } else {
       extractedDocument = {
         // Do not use destructuring, it's 10x slower
-        _source: Object.assign({}, metadata, document.body),
+        _source: Object.assign({}, metadata, document.body), //NOSONAR
       };
     }
 
@@ -3253,7 +3253,7 @@ export default class ElasticSearch extends Service {
     index: string,
     collection: string
   ): Promise<string> {
-    let indice = this._getAlias(index, collection).substr(
+    let indice = this._getAlias(index, collection).substring(
       INDEX_PREFIX_POSITION_IN_ALIAS
     );
 
@@ -3270,7 +3270,7 @@ export default class ElasticSearch extends Service {
       if (overflow > 0) {
         const indiceBuffer = Buffer.from(indice);
         indice = indiceBuffer
-          .slice(0, indiceBuffer.length - overflow)
+          .subarray(0, indiceBuffer.length - overflow)
           .toString();
       }
 
@@ -3737,7 +3737,7 @@ export default class ElasticSearch extends Service {
     let lastAction = "";
     const actionNames = ["index", "create", "update", "delete"];
 
-    for (let i = 0; i < esRequest.body.length; i++) {
+    for (let i = 0; i < esRequest.body.length; i++) { //NOSONAR
       const item = esRequest.body[i];
       const action = Object.keys(item)[0];
 
