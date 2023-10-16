@@ -22,6 +22,7 @@ Elasticsearch supports many keywords in a search query root level. For security 
   - `aggs`
   - `collapse`
   - `explain`
+  - `fields`
   - `from`
   - `highlight`
   - `query`
