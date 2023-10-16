@@ -5,10 +5,11 @@ order: 200
 title: API Keys | Kuzzle Advanced | Guide | Core
 meta:
   - name: description
-    content: Manage kuzzle API keys 
+    content: Manage kuzzle API keys
   - name: keywords
-    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, API Keys 
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, API Keys
 ---
+
 # API Keys
 
 Kuzzle allows to create API keys to **authenticate users without using an authentication strategy** and the [auth:login](/core/2/api/controllers/auth/login) action.
@@ -28,95 +29,50 @@ By default, **API keys do not expire**. But it is possible to specify the durati
 ::: info
 It is also possible to set a maximum validity period for an API key under the key `security.apiKey.maxTTL` in the Kuzzle configuration.
 This limit will only apply to API key created with the `auth` controller.
-Possible values: 
-  - `<= -1`: disable the use of maxTTL
-  - `>= 0`: enable maxTTL with setted value (`0` will invalid all your API keys at their creation)
-:::
+Possible values:
+
+- `<= -1`: disable the use of maxTTL
+- `>= 0`: enable maxTTL with setted value (`0` will invalid all your API keys at their creation)
+  :::
 
 It is also necessary to **provide a description** of the API key.
 
-**Example: _Create an API key for the user "melis" and valid for 30 days_**
+**Example: _Create an API key for the user "ricky" and valid for 30 days_**
+
 ```bash
-kourou security:createApiKey '{ description: "Cron API key" }' \
-  -a expiresIn=30d \
-  -a userId=melis
+kourou api-key:create ricky --description "Cron API key" --expire "30d"
 ```
 
-<details><summary>API response</summary>
+![api-key](../../../screenshots/api-key-create.png)
 
-```js
-{
-  "description": "Cron API key",
-  "expiresAt": 1608466769443,
-  "fingerprint": "b9aeb4703bf1f4bf3bf05dd39d0546763a375f38d9220aa8b803251e58927b5a",
-  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiItMSIsImlhdCI6MTYwNTg3NDc2OSwiZXhwIjoxNjA4NDY2NzY5fQ.8O6Nq6qTRcQCiU1YcOiXnGrsZj-kDIMi0awtX3kofio",
-  "ttl": 2592000000,
-  "userId": "melis",
-  "_kuzzle_info": {
-    "author": "melis",
-    "createdAt": 1605874769445,
-    "updatedAt": null,
-    "updater": null
-  }
-}
-```
-
-</details>
-
-
-Kuzzle returns a response containing the token authentication linked to the API key in the `token` property.
+Kourou returns a response containing the token authentication linked to the API key.
 
 ### API Key properties
 
 ::: warning
-The authentication token provided in the `token` property will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
+The authentication token property will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
 :::
 
-| Property      | Description                                                                       |
-|---------------|-----------------------------------------------------------------------------------|
-| `description` | Description                                                                       |
-| `expiresAt`   | expiration date in UNIX micro-timestamp format (`-1` if the token never expires)  |
-| `fingerprint` | SHA256 hash of the authentication token                                           |
-| `token`       | Authentication token associated with this API key                                 |
-| `ttl`         | Original TTL                                                                      |
-| `userId`      | User [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier) |
+| Property      | Description                                                                      |
+| ------------- | -------------------------------------------------------------------------------- |
+| `description` | Description                                                                      |
+| `expiresAt`   | expiration date in UNIX micro-timestamp format (`-1` if the token never expires) |
+| `fingerprint` | SHA256 hash of the authentication token                                          |
+| `token`       | Authentication token associated with this API key                                |
+| `ttl`         | Original TTL                                                                     |
+| `userId`      | User [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier)  |
 
 ## Search for API Keys
 
 It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/controllers/auth/search-api-keys)) or in those of all users ([security:searchApiKeys](/core/2/api/controllers/security/search-api-keys)).
 
-
-In order to know to which API key an authentication token corresponds, it is possible to use the `fingerprint` property which is a SHA256 hash of the token.
+In order to search an API key for a user, you can use kourou `api-key:search` command.
 
 ```bash
-# use sha256sum to compute the fingerprint of the authentication token
-echo -n "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiItMSIsImlhdCI6MTYwNTg3NDc2OSwiZXhwIjoxNjA4NDY2NzY5fQ.8O6Nq6qTRcQCiU1YcOiXnGrsZj-kDIMi0awtX3kofi
-o" | sha256sum
-# b9aeb4703bf1f4bf3bf05dd39d0546763a375f38d9220aa8b803251e58927b5a
-
-kourou security:searchApiKeys -a userId=melis '{ term: { fingerprint: "b9aeb4703bf1f4bf3bf05dd39d0546763a375f38d9220aa8b803251e58927b5a" } }'
-```
-<details><summary>API response</summary>
-
-```js
-{
-  "hits": [
-    {
-      "_id": "PLuY5XUBTiOVkQBqXikm",
-      "_source": {
-        "description": "Cron API key",
-        "expiresAt": 1608466769443,
-        "fingerprint": "b9aeb4703bf1f4bf3bf05dd39d0546763a375f38d9220aa8b803251e58927b5a",
-        "ttl": 2592000000,
-        "userId": "melis"
-      }
-    }
-  ],
-  "total": 1
-}
+kourou api-key:search ricky
 ```
 
-</details>
+![api-key](../../../screenshots/api-key-search.png)
 
 ::: info
 The associated authentication token is not returned by Kuzzle.
@@ -129,5 +85,18 @@ It is possible to use the [auth:deleteApiKey](/core/2/api/controllers/auth/delet
 Once an API key is deleted, the **associated authentication token will be revoked** and cannot be used anymore.
 
 ```bash
-kourou security:deleteApiKey -userId=melis --id PLuY5XUBTiOVkQBqXikm
+kourou api-key:delete ricky 7ef0022d-a5e2-429b-ab8f-5b6065d345e7
 ```
+
+![api-key](../../../screenshots/api-key-delete.png)
+
+
+## Check API Key
+
+It is possible to check the validity of an API Key by running
+
+```bash
+kourou api-key:check kapikey-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJyaWNreSIsImlhdCI6MTY5NzQ2OTU5NCwiZXhwIjoxNzAwMDYxNTk0fQ.pTuBOPaRoV9VpxuWI6HufxdbSDAbcPK5PNTmHHS2dos
+```
+
+![api-key](../../../screenshots/api-key-check.png)
