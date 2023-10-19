@@ -68,6 +68,7 @@ It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/c
 
 In order to search an API key of a user, you can use the Kourou `api-key:search` command.
 
+**Example: _Search every API keys of the user "ricky"_**
 ```bash
 kourou api-key:search ricky
 ```
