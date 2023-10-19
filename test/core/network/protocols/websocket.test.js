@@ -119,6 +119,8 @@ describe("core/network/protocols/websocket", () => {
         idleTimeout: 12345,
         compression: true,
         rateLimit: 123,
+        resetIdleTimeoutOnSend: false,
+        sendPingsAutomatically: false,
       };
       entryPoint.config.maxRequestSize = "1kb";
 
