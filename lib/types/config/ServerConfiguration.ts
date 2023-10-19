@@ -222,11 +222,15 @@ export type ServerConfiguration = {
 
       /**
        * Whether or not we should automatically send pings to uphold a stable connection given whatever idleTimeout.
+       * 
+       * @default false
        */
       sendPingsAutomatically: boolean;
 
       /**
        * Whether or not we should reset the idle timeout on every message received.
+       * 
+       * @default false
        */
       resetIdleTimeoutOnSend: boolean;
     };

@@ -1,12 +1,10 @@
 {
-
   // -------------------------------------------------------------------------
   // Kuzzle configuration sample file
   //
   // You can copy this file to a valid rc file location to customize Kuzzle
   // configuration (see https://github.com/dominictarr/rc)
   // -------------------------------------------------------------------------
-
   // The HTTP section lets you configure how Kuzzle should handle HTTP requests
   "http": {
     // * accessControlAllowOrigin:
@@ -32,7 +30,6 @@
     "accessControlAllowHeaders": "Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With, Content-Encoding, Content-Length, X-Kuzzle-Volatile",
     "cookieAuthentication": true
   },
-
   // Kuzzle configured limits
   "limits": {
     // * concurrentRequests:
@@ -94,13 +91,11 @@
     "subscriptionRooms": 1000000,
     "subscriptionDocumentTTL": 259200000 // 72 * 60 * 60 * 1000
   },
-
   // The application section lets you configure your application
   // (see https://docs.kuzzle.io/core/2/guides/advanced/configuration)
   "application": {
     // any key/value..
   },
-
   // The plugins section lets you define plugins behaviors
   // (see https://docs.kuzzle.io/core/2/guides/write-plugins)
   "plugins": {
@@ -147,7 +142,6 @@
         "kuzzle-plugin-auth-passport-local"
       ]
     },
-
     // plugin logger configuration.
     // see https://github.com/kuzzleio/kuzzle-plugin-logger
     "kuzzle-plugin-logger": {
@@ -157,7 +151,6 @@
         }
       }
     },
-
     // [Kuzzle Plugin Auth Passport Local]
     //   * algorithm
     //      one of the supported encryption algorithms
@@ -194,7 +187,6 @@
       "resetPasswordExpiresIn": -1,
       "passwordPolicies": []
     }
-
     // Custom plugin configurations must be described here.
     // Example:
     //
@@ -202,7 +194,6 @@
     //   "<configuration property name>": "<value>"
     // }
   },
-
   // The repositories are used internally by Kuzzle to store its data (users,
   // permissions, configuration etc.)
   "repositories": {
@@ -216,7 +207,6 @@
       "cacheTTL": 1440000
     }
   },
-
   // The security section contains the configuration for Kuzzle permissions
   // mechanism
   "security": {
@@ -231,7 +221,9 @@
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"
-    "restrictedProfileIds": ["default"],
+    "restrictedProfileIds": [
+      "default"
+    ],
     // [jwt]
     // configuration for the npm package jsonwebtoken
     // (see https://github.com/auth0/node-jsonwebtoken)
@@ -341,20 +333,31 @@
       "profiles": {
         "admin": {
           "rateLimit": 0,
-          "policies": [ {"roleId": "admin"} ]
+          "policies": [
+            {
+              "roleId": "admin"
+            }
+          ]
         },
         "default": {
           "rateLimit": 10,
-          "policies": [ {"roleId": "default"} ]
+          "policies": [
+            {
+              "roleId": "default"
+            }
+          ]
         },
         "anonymous": {
           "rateLimit": 200,
-          "policies": [ {"roleId": "anonymous"} ]
+          "policies": [
+            {
+              "roleId": "anonymous"
+            }
+          ]
         }
       }
     }
   },
-
   // Kuzzle server is the entry point for incoming requests
   "server": {
     // General network configuration:
@@ -494,13 +497,12 @@
         "enabled": true,
         "idleTimeout": 60000,
         "rateLimit": 0,
-        "realtimeNotifications": true
+        "realtimeNotifications": true,
         "sendPingsAutomatically": false,
-        "resetIdleTimeoutOnSend": false,
+        "resetIdleTimeoutOnSend": false
       }
     }
   },
-
   // Services are the external components Kuzzle relies on.
   "services": {
     // [common]
@@ -514,7 +516,6 @@
       "defaultInitTimeout": 120000,
       "retryInterval": 1000
     },
-
     // [internalIndex]
     // The database engine used for Kuzzle internal index
     //   * bootstrapLockTimeout:
@@ -523,7 +524,6 @@
     "internalIndex": {
       "bootstrapLockTimeout": 60000
     },
-
     // [internalCache]
     // The cache service relies on Redis sample settings for Redis service
     // (see also https://github.com/luin/ioredis)
@@ -641,7 +641,6 @@
     //    "enableReadyCheck": true
     //  }
     //},
-
     // [memoryStorage]
     // The Redis memoryStorage Engine
     // (see "internalCache" above for sample settings)
@@ -753,7 +752,6 @@
     //    "enableReadyCheck": true
     //  }
     //},
-
     // [storageEngine]
     // The default storage layer is Elasticsearch and it is
     // currently the only storage layer we support.
@@ -776,7 +774,9 @@
     //       See https://www.elastic.co/guide/en/elasticsearch/reference/7.4/dynamic-mapping.html
     "storageEngine": {
       "backend": "elasticsearch",
-      "aliases": ["storageEngine"],
+      "aliases": [
+        "storageEngine"
+      ],
       "client": {
         "node": "http://localhost:9200"
       },
@@ -786,10 +786,18 @@
         "properties": {
           "_kuzzle_info": {
             "properties": {
-              "author":     { "type": "keyword" },
-              "createdAt":  { "type": "date" },
-              "updatedAt":  { "type": "date" },
-              "updater":    { "type": "keyword" }
+              "author": {
+                "type": "keyword"
+              },
+              "createdAt": {
+                "type": "date"
+              },
+              "updatedAt": {
+                "type": "date"
+              },
+              "updater": {
+                "type": "keyword"
+              }
             }
           }
         }
@@ -816,7 +824,9 @@
             "mappings": {
               "dynamic": "false",
               "properties": {
-                "profileIds": { "type": "keyword" }
+                "profileIds": {
+                  "type": "keyword"
+                }
               }
             }
           },
@@ -829,8 +839,10 @@
               "dynamic": "false",
               "properties": {
                 "policies": {
-                  "properties":  {
-                    "roleId": { "type": "keyword" }
+                  "properties": {
+                    "roleId": {
+                      "type": "keyword"
+                    }
                   }
                 }
               }
@@ -858,8 +870,12 @@
             },
             "mappings": {
               "properties": {
-                "index": { "type": "keyword" },
-                "collection": { "type": "keyword" },
+                "index": {
+                  "type": "keyword"
+                },
+                "collection": {
+                  "type": "keyword"
+                },
                 "validations": {
                   "dynamic": "false",
                   "properties": {}
@@ -885,12 +901,24 @@
             "mappings": {
               "dynamic": "false",
               "properties": {
-                "userId": { "type": "keyword" },
-                "hash": { "type": "keyword" },
-                "expiresAt": { "type": "long" },
-                "ttl": { "type": "keyword" },
-                "description": { "type": "text" },
-                "token": { "type": "keyword" }
+                "userId": {
+                  "type": "keyword"
+                },
+                "hash": {
+                  "type": "keyword"
+                },
+                "expiresAt": {
+                  "type": "long"
+                },
+                "ttl": {
+                  "type": "keyword"
+                },
+                "description": {
+                  "type": "text"
+                },
+                "token": {
+                  "type": "keyword"
+                }
               }
             }
           }
@@ -917,7 +945,6 @@
       "generateMissingAliases": true
     }
   },
-
   // Configuration of the Kuzzle's internal statistics module
   //   * enabled:
   //      Enable or disable the stats module
@@ -930,16 +957,13 @@
     "ttl": 3600,
     "statsInterval": 10
   },
-
   // [validation]
   // Defines the specifications used to validate data.
   // Please refer to the guide for more information.
   // (https://docs.kuzzle.io/guide/1/datavalidation)
   //
   // /!\ No syntax check will be performed here /!\
-  "validation": {
-  },
-
+  "validation": {},
   // [dump]
   // Kuzzle provides diagnostic tools, enabling analysis, support
   // and debugging on unexpected events (errors, crashes)
@@ -990,7 +1014,6 @@
       ]
     }
   },
-
   // [realtime]
   // Realtime engine options
   //   * pcreSupport (DEPRECATED):
@@ -1009,7 +1032,6 @@
   "realtime": {
     "pcreSupport": false
   },
-
   // [cluster]
   // Kuzzle Cluster configuration
   //   * activityHistory:
