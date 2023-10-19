@@ -32,7 +32,7 @@ This limit will only apply to API key created with the `auth` controller.
 Possible values:
 
 - `<= -1`: disable the use of maxTTL
-- `>= 0`: enable maxTTL with setted value (`0` will invalid all your API keys at their creation)
+- `>= 0`: enable maxTTL with a set value (`0` will immediately invalidate an API key when created)
   :::
 
 It is also necessary to **provide a description** of the API key.
