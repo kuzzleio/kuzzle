@@ -37,13 +37,13 @@ The listening port can be modified under the `server.port` section of the [confi
         // Set to true to enable WebSocket support
         "enabled": true,
 
-        //    The maximum time (in milliseconds) without sending or receiving a
-        //    message from a client. Once reached, the client's socket is
-        //    forcibly closed.
-        //    If a client socket is inactive for too long, the server will send
-        //    a PING request before closing the socket.
-        //    Minimum value: 1000 (but it's strongly advised to not set a value
-        //    this low to forcibly close idle client sockets)
+        // The maximum time (in milliseconds) without sending or receiving a
+        // message from a client. Once reached, the client's socket is
+        // forcibly closed.
+        // If a client socket is inactive for too long, the server will send
+        // a PING request before closing the socket.
+        // Minimum value: 1000 (but it's strongly advised to not set a value
+        // this low to forcibly close idle client sockets)
         "idleTimeout": 0,
 
         // @Deprecated
