@@ -66,7 +66,7 @@ The authentication token is only sent by Kuzzle **once**. If you lose it, you'll
 
 It is possible to search in its own API keys ([auth:searchApiKeys](/core/2/api/controllers/auth/search-api-keys)) or in those of all users ([security:searchApiKeys](/core/2/api/controllers/security/search-api-keys)).
 
-In order to search an API key for a user, you can use kourou `api-key:search` command.
+In order to search an API key of a user, you can use the Kourou `api-key:search` command.
 
 ```bash
 kourou api-key:search ricky
