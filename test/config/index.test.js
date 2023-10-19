@@ -432,7 +432,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "compression" parameter: invalid value "${bad}" (boolean value expected)`
+          `[websocket] "compression" parameter: invalid value "${bad}" (boolean expected)`
         );
       }
     });
