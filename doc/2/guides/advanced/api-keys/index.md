@@ -5,7 +5,7 @@ order: 200
 title: API Keys | Kuzzle Advanced | Guide | Core
 meta:
   - name: description
-    content: Manage kuzzle API keys
+    content: Manage Kuzzle API keys
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource, API Keys
 ---
