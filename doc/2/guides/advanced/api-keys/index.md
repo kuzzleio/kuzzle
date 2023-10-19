@@ -56,7 +56,7 @@ The authentication token is only sent by Kuzzle **once**. If you lose it, you'll
 | Property      | Description                                                                      |
 | ------------- | -------------------------------------------------------------------------------- |
 | `description` | Description                                                                      |
-| `expiresAt`   | expiration date in UNIX micro-timestamp format (`-1` if the token never expires) |
+| `expiresAt`   | Expiration date in UNIX micro-timestamp format (`-1` if the token never expires) |
 | `fingerprint` | SHA256 hash of the authentication token                                          |
 | `token`       | Authentication token associated with this API key                                |
 | `ttl`         | Original TTL                                                                     |
