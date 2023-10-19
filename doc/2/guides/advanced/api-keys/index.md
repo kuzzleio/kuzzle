@@ -45,7 +45,7 @@ kourou api-key:create ricky --description "Cron API key" --expire "30d"
 
 ![api-key](../../../screenshots/api-key-create.png)
 
-Kourou returns a response containing the token authentication linked to the API key.
+Kourou returns the authentication token linked to the API key.
 
 ### API Key properties
 
