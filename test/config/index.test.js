@@ -470,7 +470,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "sendPingsAutomatically" parameter: invalid value "${bad}" (boolean expected)`
         );
       }
     });
@@ -489,7 +489,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "resetIdleTimeoutOnSend" parameter: invalid value "${bad}" (boolean expected)`
         );
       }
     });
