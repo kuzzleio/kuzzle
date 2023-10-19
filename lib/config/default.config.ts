@@ -8,7 +8,7 @@ import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
  *
  * To customize your Kuzzle installation, create a
  * ".kuzzlerc" file and put your overrides there.
- * Please check the ".kuzzlerc.sample" file to get
+ * Please check the ".kuzzlerc.sample.jsonc" file to get
  * started.
  *
  * @class KuzzleConfiguration
@@ -242,6 +242,8 @@ const defaultConfig: KuzzleConfiguration = {
         compression: false,
         rateLimit: 0,
         realtimeNotifications: true,
+        resetIdleTimeoutOnSend: false,
+        sendPingsAutomatically: false,
       },
     },
     strictSdkVersion: true,

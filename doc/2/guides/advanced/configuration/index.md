@@ -12,11 +12,11 @@ meta:
 
 # Configuring Kuzzle
 
-The Kuzzle **configuration** is stored in a [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample) found in the root folder of your Kuzzle installation.
+The Kuzzle **configuration** is stored in a [kuzzlerc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc) found in the root folder of your Kuzzle installation.
 
 Kuzzle uses [rc](https://github.com/dominictarr/rc) to **override** its default configuration by either:
 
-- loading parameters from a `.kuzzlerc` file ([sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)) ;
+- loading parameters from a `.kuzzlerc` file ([sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc)) ;
 - loading parameters from environment variables with a `kuzzle_` prefix.
 
 ## Use .kuzzlerc file
@@ -89,7 +89,7 @@ services:
 ```
 
 :::info
-For an exhaustive list of configuration parameters, please refer to the [kuzzlerc sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample).
+For an exhaustive list of configuration parameters, please refer to the [kuzzlerc sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
 :::
 
 ## Use Backend.config property
@@ -104,7 +104,7 @@ The configuration of Kuzzle is also accessible through the [Backend.config](/cor
 
 It is possible to **read or edit values of the configuration**.
 
-The set of keys that can be configured is available in the file [.kuzzlerc.sample](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample)
+The set of keys that can be configured is available in the file [.kuzzlerc.sample.jsonc](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc)
 
 ::: info
 See the [Configuration](/core/2/guides/advanced/configuration) guide for more information on how to configure Kuzzle.

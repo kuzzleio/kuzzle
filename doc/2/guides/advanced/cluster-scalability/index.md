@@ -101,7 +101,7 @@ If you want to quickly create a Kuzzle cluster on a single machine, you can use 
 
 Kuzzle's RC file features a `cluster` section, allowing to fine-tune its behavior.
 
-See the `cluster` section of our [.kuzzlerc.sample file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample) for a complete documentation.
+See the `cluster` section of our [.kuzzlerc.sample.jsonc file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc) for a complete documentation.
 
 ---
 
