@@ -84,6 +84,7 @@ It is possible to use the [auth:deleteApiKey](/core/2/api/controllers/auth/delet
 
 Once an API key is deleted, the **associated authentication token will be revoked** and cannot be used anymore.
 
+**Example: _Delete the API key with the ID `7ef0022d-a5e2-429b-ab8f-5b6065d345e7` of the user "ricky"_**
 ```bash
 kourou api-key:delete ricky 7ef0022d-a5e2-429b-ab8f-5b6065d345e7
 ```
