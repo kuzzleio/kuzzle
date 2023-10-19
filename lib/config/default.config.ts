@@ -242,6 +242,8 @@ const defaultConfig: KuzzleConfiguration = {
         compression: false,
         rateLimit: 0,
         realtimeNotifications: true,
+        resetIdleTimeoutOnSend: false,
+        sendPingsAutomatically: false,
       },
     },
     strictSdkVersion: true,

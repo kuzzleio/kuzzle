@@ -455,6 +455,44 @@ describe("lib/config/index.js", () => {
         );
       }
     });
+
+    it('should throw if "sendPingsAutomatically" is not a boolean', async () => {
+      for (const bad of [null, "foo", 123, 0, [], {}]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                sendPingsAutomatically: bad,
+              },
+            },
+          },
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.loadConfig()).throw(
+          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+        );
+      }
+    });
+
+    it('should throw if "resetIdleTimeoutOnSend" is not a boolean', async () => {
+      for (const bad of [null, "foo", 123, 0, [], {}]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                resetIdleTimeoutOnSend: bad,
+              },
+            },
+          },
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.loadConfig()).throw(
+          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+        );
+      }
+    });
   });
 
   describe("#preprocessHttpOptions", async () => {

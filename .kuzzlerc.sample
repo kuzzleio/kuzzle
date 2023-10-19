@@ -486,11 +486,17 @@
         //    Disabled if set to 0.
         // * realtimeNotifications:
         //    Set to "true" to enable realtime notifications like "TokenExpired" notifications
+        // * sendPingsAutomatically:
+        //    Whether or not we should automatically send pings to uphold a stable connection given whatever idleTimeout.
+        // * resetIdleTimeoutOnSend:
+        //    This one depends on kernel timeouts and is a bad default
         "compression": false,
         "enabled": true,
         "idleTimeout": 60000,
         "rateLimit": 0,
         "realtimeNotifications": true
+        "sendPingsAutomatically": false,
+        "resetIdleTimeoutOnSend": false,
       }
     }
   },
