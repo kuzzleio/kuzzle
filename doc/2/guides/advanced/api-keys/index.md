@@ -50,7 +50,7 @@ Kourou returns the authentication token linked to the API key.
 ### API Key properties
 
 ::: warning
-The authentication token property will never be returned by Kuzzle again. If you lose it, you'll have to delete the API key and recreate a new one.
+The authentication token is only sent by Kuzzle **once**. If you lose it, you'll have to delete the API key and recreate a new one.
 :::
 
 | Property      | Description                                                                      |
