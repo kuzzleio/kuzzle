@@ -95,6 +95,7 @@ kourou api-key:delete ricky 7ef0022d-a5e2-429b-ab8f-5b6065d345e7
 
 It is possible to check the validity of an API Key by running
 
+**Example: _Check the validity of the API key `kapikey-eyJ...2dos`_**
 ```bash
 kourou api-key:check kapikey-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJfaWQiOiJyaWNreSIsImlhdCI6MTY5NzQ2OTU5NCwiZXhwIjoxNzAwMDYxNTk0fQ.pTuBOPaRoV9VpxuWI6HufxdbSDAbcPK5PNTmHHS2dos
 ```
