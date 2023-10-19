@@ -432,7 +432,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "compression" parameter: invalid value "${bad}" (boolean value expected)`
+          `[websocket] "compression" parameter: invalid value "${bad}" (boolean expected)`
         );
       }
     });
@@ -452,6 +452,44 @@ describe("lib/config/index.js", () => {
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
           `[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`
+        );
+      }
+    });
+
+    it('should throw if "sendPingsAutomatically" is not a boolean', async () => {
+      for (const bad of [null, "foo", 123, 0, [], {}]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                sendPingsAutomatically: bad,
+              },
+            },
+          },
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.loadConfig()).throw(
+          `[websocket] "sendPingsAutomatically" parameter: invalid value "${bad}" (boolean expected)`
+        );
+      }
+    });
+
+    it('should throw if "resetIdleTimeoutOnSend" is not a boolean', async () => {
+      for (const bad of [null, "foo", 123, 0, [], {}]) {
+        mockedConfigContent = getcfg({
+          server: {
+            protocols: {
+              websocket: {
+                resetIdleTimeoutOnSend: bad,
+              },
+            },
+          },
+        });
+
+        // eslint-disable-next-line no-loop-func
+        should(() => config.loadConfig()).throw(
+          `[websocket] "resetIdleTimeoutOnSend" parameter: invalid value "${bad}" (boolean expected)`
         );
       }
     });

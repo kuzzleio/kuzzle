@@ -18,7 +18,6 @@ When using a cursor with the `scroll` option, Elasticsearch has to duplicate the
 It can lead to memory leaks if a scroll duration too large is provided, or if too many scroll sessions are open simultaneously.
 :::
 
-
 ::: info
 <SinceBadge version="2.2.0"/>
 You can restrict the scroll session maximum duration under the `services.storage.maxScrollDuration` configuration key.
@@ -179,7 +178,7 @@ or
 An empty body matches all documents in the queried collection.
 
 ::: info
-Only the following fields are available in the top level of the search body: `aggregations`, `aggs`, `collapse`, `explain`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`
+Only the following fields are available in the top level of the search body: `aggregations`, `aggs`, `collapse`, `explain`, `fields`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`
 :::
 
 ---
