@@ -37,7 +37,7 @@ Possible values:
 
 It is also necessary to **provide a description** of the API key.
 
-**Example: _Create an API key for the user "ricky" and valid for 30 days_**
+**Example: _Create an API key for the user "ricky", valid for 30 days_**
 
 ```bash
 kourou api-key:create ricky --description "Cron API key" --expire "30d"
