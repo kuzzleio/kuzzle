@@ -357,6 +357,20 @@ describe("core/network/protocols/http", () => {
         });
     });
 
+    it("should reject requests with supported content types with extraneous characters", () => {
+      httpWs.server._httpOnMessage("get", "/", "", {
+        "content-type": "canard application/jsoncheval",
+      });
+
+      should(entryPoint.newConnection).not.called();
+      should(global.kuzzle.router.http.route).not.called();
+      should(httpWs.httpSendError)
+        .calledOnce()
+        .calledWithMatch(sinon.match.object, httpWs.server._httpResponse, {
+          id: "network.http.unsupported_content",
+        });
+    });
+
     it("should reject requests with unhandled charsets", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "application/json; charset=utf-82",
