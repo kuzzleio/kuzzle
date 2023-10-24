@@ -149,6 +149,7 @@ export default class ElasticSearch extends Service {
       "aggs",
       "collapse",
       "explain",
+      "fields",
       "from",
       "highlight",
       "query",
@@ -2450,8 +2451,6 @@ export default class ElasticSearch extends Service {
             reason: "document already exists",
             status: 400,
           });
-
-          idx++;
         } else {
           esRequest.body.push({
             index: {
@@ -2463,6 +2462,7 @@ export default class ElasticSearch extends Service {
 
           toImport.push(document);
         }
+        idx++;
       } else {
         esRequest.body.push({ index: { _index: alias } });
         esRequest.body.push(document._source);

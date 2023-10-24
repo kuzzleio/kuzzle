@@ -55,6 +55,8 @@ describe("core/network/protocols/http", () => {
           idleTimeout: 60000,
           compression: false,
           rateLimit: 0,
+          sendPingsAutomatically: false,
+          resetIdleTimeoutOnSend: false,
         },
       },
     });

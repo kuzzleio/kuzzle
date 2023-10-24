@@ -119,6 +119,8 @@ describe("core/network/protocols/websocket", () => {
         idleTimeout: 12345,
         compression: true,
         rateLimit: 123,
+        resetIdleTimeoutOnSend: false,
+        sendPingsAutomatically: false,
       };
       entryPoint.config.maxRequestSize = "1kb";
 
@@ -127,6 +129,8 @@ describe("core/network/protocols/websocket", () => {
       should(httpWs.server.ws).calledWithMatch("/*", {
         compression: uWS.SHARED_COMPRESSOR,
         idleTimeout: 12,
+        resetIdleTimeoutOnSend: false,
+        sendPingsAutomatically: false,
         maxBackPressure: sinon.match.number,
         maxPayloadLength: 1024,
         upgrade: sinon.match.func,

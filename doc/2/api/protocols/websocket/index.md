@@ -40,13 +40,13 @@ The listening port can be modified under the `server.port` section of the [confi
         // The maximum time (in milliseconds) without sending or receiving a
         // message from a client. Once reached, the client's socket is
         // forcibly closed.
-        // Contrary to heartbeats (see below), this is a passive check,
-        // forcing all clients to actively send either PINGs or messages to
-        // maintain their connection active.
-        // Set the value to 0 to disable this feature (should only be
-        // activated if heartbeat is disabled)
+        // If a client socket is inactive for too long, the server will send
+        // a PING request before closing the socket.
+        // Minimum value: 1000 (but it's strongly advised to not set a value
+        // this low to forcibly close idle client sockets)
         "idleTimeout": 0,
 
+        // @Deprecated
         // The time, in milliseconds, between the server's PING requests to
         // clients, to make sure they are still active.
         // Setting this value to 0 disables PING requests from the server
@@ -54,7 +54,27 @@ The listening port can be modified under the `server.port` section of the [confi
         // If heartbeat is deactivated, then setting a non-zero value to
         // idleTimeout is strongly recommended to detect and remove
         // dead sockets.
-        "heartbeat": 60000
+        "heartbeat": 60000,
+
+        // Enable/Disable per message compression
+        "compression": false,
+
+        // The maximum number of messages per second a single socket can
+        // submit to the server.
+        // Requests exceeding that rate limit are rejected.
+        // Disabled if set to 0.
+        "rateLimit": 0,
+
+        // Set to "true" to enable realtime notifications like "TokenExpired" 
+        // notifications
+        "realtimeNotifications": true,
+
+        // Whether or not we should automatically send pings to uphold a stable 
+        // connection given whatever idleTimeout.
+        "sendPingsAutomatically": false,
+
+        // This one depends on kernel timeouts and is a bad default
+        "resetIdleTimeoutOnSend": false,
       }
   }
 ```
