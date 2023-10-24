@@ -359,7 +359,7 @@ describe("core/network/protocols/http", () => {
 
     it("should reject requests with supported content types with extraneous characters", () => {
       httpWs.server._httpOnMessage("get", "/", "", {
-        "content-type": "canard application/jsoncheval",
+        "content-type": "serge application/jsoncheval",
       });
 
       should(entryPoint.newConnection).not.called();
