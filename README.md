@@ -123,7 +123,7 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 
 ## Join our community
 
-* Follow us on [twitter](https://twitter.com/kuzzleio) to get latest news
+* Follow us on [𝕏 (Twitter)](https://twitter.com/kuzzleio) to get latest news
 * Register to our monthly [newsletter](http://eepurl.com/bxRxpr) to get highlighed news
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [Discord](http://join.discord.kuzzle.io)
