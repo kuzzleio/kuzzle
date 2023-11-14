@@ -83,7 +83,7 @@
           "class": "BadRequestError"
         },
         "unknown_index_collection": {
-          "description": "The provided index and/or collection doesn't exist",
+          "description": "The provided index and/or collection doesn't exist: \"%s\"",
           "code": 16,
           "message": "The provided index and/or collection doesn't exist.",
           "class": "PreconditionError"
