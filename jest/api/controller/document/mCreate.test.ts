@@ -1,8 +1,8 @@
-import { Kuzzle, WebSocket } from 'kuzzle-sdk';
+import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
-const kuzzle = new Kuzzle(new WebSocket('localhost'));
-const index = 'nyc-open-data';
-const collection = 'yellow-taxi';
+const kuzzle = new Kuzzle(new WebSocket("localhost"));
+const index = "nyc-open-data";
+const collection = "yellow-taxi";
 
 beforeAll(async () => {
   await kuzzle.connect();
@@ -11,17 +11,17 @@ beforeAll(async () => {
     mappings: {
       properties: {
         value: {
-          type: 'keyword'
+          type: "keyword",
         },
         field: {
           properties: {
             path: {
-              type: 'keyword'
-            }
-          }
-        }
-      }
-    }
+              type: "keyword",
+            },
+          },
+        },
+      },
+    },
   });
 });
 
@@ -30,130 +30,155 @@ afterAll(async () => {
   await kuzzle.disconnect();
 });
 
-describe('mCreate', () => {
-  afterEach(async () => {
-    await kuzzle.collection.truncate(index, collection);
+afterEach(async () => {
+  await kuzzle.collection.truncate(index, collection);
+});
+
+describe("mCreate", () => {
+  it("It should create document if not exists", async () => {
+    const mCreateResult = await kuzzle.document.mCreate(
+      index,
+      collection,
+      [
+        {
+          _id: "A",
+          body: {
+            value: "A",
+          },
+        },
+      ],
+      {
+        refresh: "wait_for",
+      }
+    );
+
+    expect(mCreateResult.successes.length).toEqual(1);
+
+    const result = await kuzzle.document.mGet(index, collection, ["A"]);
+
+    expect(result.successes.length).toEqual(1);
+    expect(result.successes[0]._source).toMatchObject({
+      value: "A",
+    });
   });
 
-
-    it('It should create document if not exists', async () => {
-      const mCreateResult = await kuzzle.document.mCreate(index, collection, [
+  it("It should not replace the document if not exists", async () => {
+    let mCreateResult = await kuzzle.document.mCreate(
+      index,
+      collection,
+      [
         {
-          _id: 'A',
+          _id: "A",
           body: {
-            value: 'A'
-          }
-        }
-      ], {
-        refresh: 'wait_for'
-      });
+            value: "A",
+          },
+        },
+      ],
+      {
+        refresh: "wait_for",
+      }
+    );
 
-      expect(mCreateResult.successes.length).toEqual(1);
+    expect(mCreateResult.successes.length).toEqual(1);
 
-      const result = await kuzzle.document.mGet(index, collection, ['A']);
+    mCreateResult = await kuzzle.document.mCreate(
+      index,
+      collection,
+      [
+        {
+          _id: "A",
+          body: {
+            value: "FOO",
+          },
+        },
+      ],
+      {
+        refresh: "wait_for",
+      }
+    );
 
-      expect(result.successes.length).toEqual(1);
-      expect(result.successes[0]._source).toMatchObject({
-        value: 'A'
-      });
+    expect(mCreateResult.successes.length).toEqual(0);
+    expect(mCreateResult.errors.length).toEqual(1);
+
+    const result = await kuzzle.document.mGet(index, collection, ["A"]);
+
+    expect(result.successes.length).toEqual(1);
+    expect(result.successes[0]._source).toMatchObject({
+      value: "A",
     });
+  });
 
-    it('It should not replace the document if not exists', async () => {
-      let mCreateResult = await kuzzle.document.mCreate(index, collection, [
+  it("It should not replace the document even if the previous document did not exist", async () => {
+    let mCreateResult = await kuzzle.document.mCreate(
+      index,
+      collection,
+      [
         {
-          _id: 'A',
+          _id: "A",
           body: {
-            value: 'A'
-          }
-        }
-      ], {
-        refresh: 'wait_for'
-      });
-
-      expect(mCreateResult.successes.length).toEqual(1);
-
-      mCreateResult = await kuzzle.document.mCreate(index, collection, [
-        {
-          _id: 'A',
-          body: {
-            value: 'FOO'
-          }
-        }
-      ], {
-        refresh: 'wait_for'
-      });
-
-      expect(mCreateResult.successes.length).toEqual(0);
-      expect(mCreateResult.errors.length).toEqual(1);
-
-      const result = await kuzzle.document.mGet(index, collection, ['A']);
-
-      expect(result.successes.length).toEqual(1);
-      expect(result.successes[0]._source).toMatchObject({
-        value: 'A'
-      });
-    });
-
-
-    it('It should not replace the document even if the previous document did not exist', async () => {
-      let mCreateResult = await kuzzle.document.mCreate(index, collection, [
-        {
-          _id: 'A',
-          body: {
-            value: 'A'
-          }
+            value: "A",
+          },
         },
         {
-          _id: 'C',
+          _id: "C",
           body: {
-            value: 'C'
-          }
-        }
-      ], {
-        refresh: 'wait_for'
-      });
+            value: "C",
+          },
+        },
+      ],
+      {
+        refresh: "wait_for",
+      }
+    );
 
-      expect(mCreateResult.successes.length).toEqual(2);
+    expect(mCreateResult.successes.length).toEqual(2);
 
-      mCreateResult = await kuzzle.document.mCreate(index, collection, [
+    mCreateResult = await kuzzle.document.mCreate(
+      index,
+      collection,
+      [
         {
-          _id: 'A',
+          _id: "A",
           body: {
-            value: 'FOO'
-          }
+            value: "FOO",
+          },
         },
         {
-          _id: 'B',
+          _id: "B",
           body: {
-            value: 'B'
-          }
+            value: "B",
+          },
         },
         {
-          _id: 'C',
+          _id: "C",
           body: {
-            value: 'FOO'
-          }
-        }
-      ], {
-        refresh: 'wait_for'
-      });
+            value: "FOO",
+          },
+        },
+      ],
+      {
+        refresh: "wait_for",
+      }
+    );
 
-      expect(mCreateResult.successes.length).toEqual(1);
-      expect(mCreateResult.errors.length).toEqual(2);
+    expect(mCreateResult.successes.length).toEqual(1);
+    expect(mCreateResult.errors.length).toEqual(2);
 
-      const result = await kuzzle.document.mGet(index, collection, ['A', 'B', 'C']);
+    const result = await kuzzle.document.mGet(index, collection, [
+      "A",
+      "B",
+      "C",
+    ]);
 
-      expect(result.successes.length).toEqual(3);
-      expect(result.successes[0]._source).toMatchObject({
-        value: 'A'
-      });
-      expect(result.successes[1]._source).toMatchObject({
-        value: 'B'
-      });
-      expect(result.successes[2]._source).toMatchObject({
-        value: 'C'
-      });
+    expect(result.successes.length).toEqual(3);
+    expect(result.successes[0]._source).toMatchObject({
+      value: "A",
     });
-
-   
+    expect(result.successes[1]._source).toMatchObject({
+      value: "B",
+    });
+    expect(result.successes[2]._source).toMatchObject({
+      value: "C",
+    });
+  });
 });

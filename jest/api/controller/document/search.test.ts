@@ -1,8 +1,8 @@
-import { Kuzzle, WebSocket } from 'kuzzle-sdk';
+import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
-const kuzzle = new Kuzzle(new WebSocket('localhost'));
-const index = 'nyc-open-data';
-const collection = 'yellow-taxi';
+const kuzzle = new Kuzzle(new WebSocket("localhost"));
+const index = "nyc-open-data";
+const collection = "yellow-taxi";
 
 beforeAll(async () => {
   await kuzzle.connect();
@@ -11,17 +11,17 @@ beforeAll(async () => {
     mappings: {
       properties: {
         foo: {
-          type: 'keyword'
+          type: "keyword",
         },
         field: {
           properties: {
             path: {
-              type: 'keyword'
-            }
-          }
-        }
-      }
-    }
+              type: "keyword",
+            },
+          },
+        },
+      },
+    },
   });
 });
 
@@ -30,88 +30,108 @@ afterAll(async () => {
   await kuzzle.disconnect();
 });
 
-describe('koncorde query', () => {
-  afterEach(async () => {
-    await kuzzle.collection.truncate(index, collection);
-  });
+afterEach(async () => {
+  await kuzzle.collection.truncate(index, collection);
+});
 
-  describe('exists', () => {
-    it('should return true if the field exists', async () => {
-      const document = { foo: 'bar' };
+describe("koncorde query", () => {
+  describe("exists", () => {
+    it("should return true if the field exists", async () => {
+      const document = { foo: "bar" };
 
       await kuzzle.document.create(index, collection, document, undefined, {
-        refresh: 'wait_for'
+        refresh: "wait_for",
       });
 
-      const result = await kuzzle.document.search(index, collection, {
-        query: {
-          exists: {
-            field: 'foo'
-          }
+      const result = await kuzzle.document.search(
+        index,
+        collection,
+        {
+          query: {
+            exists: {
+              field: "foo",
+            },
+          },
         },
-      }, {
-        lang: 'koncorde'
-      });
+        {
+          lang: "koncorde",
+        }
+      );
 
       expect(result.hits.length).toEqual(1);
     });
 
-    it('should return false if the field does not exists', async () => {
-      const document = { foo: 'bar' };
+    it("should return false if the field does not exists", async () => {
+      const document = { foo: "bar" };
 
       await kuzzle.document.create(index, collection, document, undefined, {
-        refresh: 'wait_for'
+        refresh: "wait_for",
       });
 
-      const result = await kuzzle.document.search(index, collection, {
-        query: {
-          exists: {
-            field: 'name'
-          }
+      const result = await kuzzle.document.search(
+        index,
+        collection,
+        {
+          query: {
+            exists: {
+              field: "name",
+            },
+          },
+        },
+        {
+          lang: "koncorde",
         }
-      }, {
-        lang: 'koncorde'
-      });
+      );
 
       expect(result.hits.length).toEqual(0);
     });
 
     it('should support the syntax "field.path[value]" and return document if matching', async () => {
-      const document = { field: { path: ['ALPHA','BETA'] } };
+      const document = { field: { path: ["ALPHA", "BETA"] } };
 
       await kuzzle.document.create(index, collection, document, undefined, {
-        refresh: 'wait_for'
+        refresh: "wait_for",
       });
 
-      const result = await kuzzle.document.search(index, collection, {
-        query: {
-          exists: {
-            field: 'field.path["BETA"]'
-          }
+      const result = await kuzzle.document.search(
+        index,
+        collection,
+        {
+          query: {
+            exists: {
+              field: 'field.path["BETA"]',
+            },
+          },
+        },
+        {
+          lang: "koncorde",
         }
-      }, {
-        lang: 'koncorde'
-      });
+      );
 
       expect(result.hits.length).toEqual(1);
     });
 
     it('should support the syntax "field.path[value]" and return nothing if not matching', async () => {
-      const document = { field: { path: ['ALPHA','BETA'] } };
+      const document = { field: { path: ["ALPHA", "BETA"] } };
 
       await kuzzle.document.create(index, collection, document, undefined, {
-        refresh: 'wait_for'
+        refresh: "wait_for",
       });
 
-      const result = await kuzzle.document.search(index, collection, {
-        query: {
-          exists: {
-            field: 'field.path["GAMMA"]'
-          }
+      const result = await kuzzle.document.search(
+        index,
+        collection,
+        {
+          query: {
+            exists: {
+              field: 'field.path["GAMMA"]',
+            },
+          },
+        },
+        {
+          lang: "koncorde",
         }
-      }, {
-        lang: 'koncorde'
-      });
+      );
 
       expect(result.hits.length).toEqual(0);
     });
