@@ -25,7 +25,7 @@ We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-
 
 ## Tools
 
-For development only, we built a specific docker- ompose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
+For development only, we built a specific Docker Compose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
 Check the logs at the start of Kuzzle using the development docker image to get the appropriate debug URL.
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
