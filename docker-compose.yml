@@ -47,9 +47,12 @@ services:
     image: nginx:1.19-alpine
     container_name: kuzzle_nginx
     depends_on:
-      - kuzzle_node_1
-      - kuzzle_node_2
-      - kuzzle_node_3
+      kuzzle_node_1:
+        condition: service_healthy
+      kuzzle_node_2:
+        condition: service_healthy
+      kuzzle_node_3:
+        condition: service_healthy
     ports:
       - '7512:7512'
     volumes:
@@ -63,10 +66,11 @@ services:
       - '1883:1883' # Kuzzle MQTT port
       - '9229:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_1:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
+      start_period: 1m
 
   kuzzle_node_2:
     <<: *kuzzle-config
@@ -76,10 +80,11 @@ services:
       - '11883:1883' # Kuzzle MQTT port
       - '9230:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_2:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
+      start_period: 1m
 
   kuzzle_node_3:
     <<: *kuzzle-config
@@ -89,10 +94,11 @@ services:
       - '11884:1883' # Kuzzle MQTT port
       - '9231:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle:7512/_healthcheck']
+      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_3:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
+      start_period: 1m
 
   redis:
     image: redis:6
