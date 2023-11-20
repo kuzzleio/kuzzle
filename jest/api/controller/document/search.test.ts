@@ -1,11 +1,16 @@
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));
-const index = "nyc-open-data";
-const collection = "yellow-taxi";
+const index = "cellular";
+const collection = "iphone";
 
 beforeAll(async () => {
   await kuzzle.connect();
+
+  if (await kuzzle.index.exists(index)) {
+    await kuzzle.index.delete(index);
+  }
+
   await kuzzle.index.create(index);
   await kuzzle.collection.create(index, collection, {
     mappings: {
@@ -27,7 +32,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await kuzzle.index.delete(index);
-  await kuzzle.disconnect();
+  kuzzle.disconnect();
 });
 
 afterEach(async () => {

@@ -1,11 +1,16 @@
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));
-const index = "nyc-open-data";
-const collection = "yellow-taxi";
+const index = "food";
+const collection = "fruits";
 
 beforeAll(async () => {
   await kuzzle.connect();
+
+  if (await kuzzle.index.exists(index)) {
+    await kuzzle.index.delete(index);
+  }
+
   await kuzzle.index.create(index);
   await kuzzle.collection.create(index, collection, {
     mappings: {
@@ -23,11 +28,15 @@ beforeAll(async () => {
       },
     },
   });
+  console.log("End beforeAll");
 });
 
 afterAll(async () => {
-  await kuzzle.index.delete(index);
-  await kuzzle.disconnect();
+  if (await kuzzle.index.exists(index)) {
+    await kuzzle.index.delete(index);
+  }
+
+  kuzzle.disconnect();
 });
 
 afterEach(async () => {
