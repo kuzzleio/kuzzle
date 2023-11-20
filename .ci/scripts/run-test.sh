@@ -11,7 +11,7 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 n $NODE_VERSION
 
-npm install --silent --unsafe-perm
+npm ci --silent --unsafe-perm
 
 npm run build
 

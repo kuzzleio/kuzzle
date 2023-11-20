@@ -4,11 +4,14 @@ description: Run Node.js unit tests
 runs:
   using: "composite"
   steps:
-    - run: npm install
+    - run: npm ci
       shell: bash
+
     - run: npm run build
       shell: bash
+
     - run: npm run test:unit
       shell: bash
+
     - run: npm run codecov
       shell: bash

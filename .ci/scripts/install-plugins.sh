@@ -8,7 +8,6 @@ protocols_dir="protocols/enabled"
 
 cd "$working_dir"
 
-# npm install plugins
 for target in ${plugins_dir}/* ${protocols_dir}/* ; do
   if [ -d "$target" ]; then
     echo 'Installing dependencies for ' $(basename "$target")

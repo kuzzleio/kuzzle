@@ -34,7 +34,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: ./.github/actions/install-packages
-      - run: npm install
+      - run: npm ci
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 

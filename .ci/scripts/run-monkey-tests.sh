@@ -11,7 +11,7 @@ fi
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
 echo "Installing dependencies..."
-npm install --unsafe-perm
+npm ci --unsafe-perm
 
 if [ "$REBUILD" == "true" ];
 then
