@@ -31,6 +31,8 @@ x-kuzzle-config: &kuzzle-config
     - NODE_VERSION=${NODE_VERSION:-}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
+    # cluster
+    - kuzzle_plugins__cluster__privileged=true
     - kuzzle_plugins__cluster__minimumNodes=3
 
 services:
