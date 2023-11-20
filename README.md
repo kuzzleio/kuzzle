@@ -148,5 +148,5 @@ Run the following command to install all the dependencies in your container:
 npm run docker:install
 ```
 
-finally run the command `docker compose up` to launch your kuzzle stack.
+Finally, run the command `docker compose up` to start your Kuzzle stack.
 
