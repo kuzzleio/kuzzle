@@ -120,8 +120,8 @@ jobs:
           echo "::set-output name=major-version::$(jq -r .version package.json | cut -d. -f 1)"
       - name: Build TS files
         run: |
-          npm install
-          npm run build-ts
+          npm ci
+          npm run build
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
@@ -142,7 +142,7 @@ jobs:
         with:
           node-version: ${{ inputs.node_lts_maintenance_version }}
           registry-url: "https://registry.npmjs.org"
-      - run: npm install
+      - run: npm ci
       - run: npm publish
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

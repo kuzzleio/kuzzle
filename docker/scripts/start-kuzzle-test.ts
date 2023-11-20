@@ -238,21 +238,18 @@ app.pipe.register("server:afterNow", async (request) => {
   return request;
 });
 
-app.pipe.register("protocol:http:beforeParsingPayload", async ({
-  message,
-  payload,
-}: {
-  message: HttpMessage;
-  payload: Buffer;
-}) => {
-  if (message.headers["content-type"] !== "application/x-yaml") {
-    return { payload };
+app.pipe.register(
+  "protocol:http:beforeParsingPayload",
+  async ({ message, payload }: { message: HttpMessage; payload: Buffer }) => {
+    if (message.headers["content-type"] !== "application/x-yaml") {
+      return { payload };
+    }
+
+    const convertedPayload = YAML.parse(payload.toString());
+
+    return { payload: JSON.stringify(convertedPayload) };
   }
-
-  const convertedPayload = YAML.parse(payload.toString());
-
-  return { payload: JSON.stringify(convertedPayload) };
-});
+);
 
 // Hook registration and embedded SDK realtime publish
 app.hook.register("custom:event", async (name) => {
