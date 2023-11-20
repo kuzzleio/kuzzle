@@ -18,7 +18,7 @@ runs:
     - name: Create JS from TS files
       run: |
         npm ci
-        npm run build-ts
+        npm run build
       shell: bash
 
     - name: Build and deploy Docker images
