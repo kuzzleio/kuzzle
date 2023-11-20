@@ -150,7 +150,7 @@ $ ssh <user>@<server-ip>
 
 [...]
 
-$ docker-compose -f deployment/docker-compose.yml up -d
+$ docker compose -f deployment/docker-compose.yml up -d
 ```
 
 Your Kuzzle application is now up and running on port 7512!

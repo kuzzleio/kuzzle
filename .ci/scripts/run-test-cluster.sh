@@ -16,16 +16,16 @@ npm install
 
 if [ "$REBUILD" == "true" ];
 then
-  docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
+  docker compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
 fi
 
 npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
-trap 'docker-compose -f ./.ci/test-cluster.yml logs' err
+trap 'docker compose -f ./.ci/test-cluster.yml logs' err
 
-docker-compose -f ./.ci/test-cluster.yml up -d
+docker compose -f ./.ci/test-cluster.yml up -d
 
 # don't wait on 7512: nginx will accept connections far before Kuzzle does
 KUZZLE_PORT=17510 ./bin/wait-kuzzle

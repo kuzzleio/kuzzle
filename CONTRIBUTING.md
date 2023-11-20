@@ -25,7 +25,7 @@ We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-
 
 ## Tools
 
-For development only, we built a specific docker-compose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
+For development only, we built a specific docker- ompose file: `docker-compose.yml`. You can use it to profile, debug, test a variable on the fly, add breakpoints and so on, thanks to [chrome-devtools](https://developer.chrome.com/devtools).  
 Check the logs at the start of Kuzzle using the development docker image to get the appropriate debug URL.
 
 How to run the development stack (needs Docker 1.10+ and Docker Compose 1.8+):
@@ -36,7 +36,7 @@ git clone git@github.com:kuzzleio/kuzzle.git
 cd kuzzle
 
 # Start a kuzzle cluster with development tools enabled
-docker-compose up
+docker compose up
 ```
 
 ### ENOSPC error
@@ -98,7 +98,7 @@ See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 ### Using docker, with Kuzzle running in Docker
 
 ```bash
-$ docker-compose up -d
+$ docker compose up -d
 
 # Wait for Kuzzle stack to be up, and start the entire test suite (long)
 $ npm run test
