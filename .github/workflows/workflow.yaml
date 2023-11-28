@@ -38,10 +38,10 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ env.NODE_LTS_CURRENT_VERSION }}
+      - name: Setup Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           cache: "npm"
 
       - name: Install depedencies
