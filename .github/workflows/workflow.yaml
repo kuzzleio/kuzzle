@@ -38,7 +38,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
@@ -64,7 +64,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ matrix.node-version }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -87,7 +87,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ matrix.node-version }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -117,7 +117,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ matrix.node-version }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
@@ -151,13 +151,16 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ matrix.node-version }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
+      
+      - name: Build kuzzle
+        run: npm run build
 
-      - name: Run functional test suit ${{ matrix.test_set }}
+      - name: test suit ${{ matrix.test_set }}
         uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
@@ -185,7 +188,7 @@ jobs:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
 
-      - name: Setup Node version ${{ matrix.node-version }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}

@@ -110,7 +110,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Setup Node version ${{ inputs.node_lts_active_version }}
+      - name: Node version ${{ inputs.node_lts_active_version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_lts_active_version }}
@@ -161,7 +161,7 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
       
-      - name: Setup Node version ${{ inputs.node_lts_active_version }}
+      - name: Node version ${{ inputs.node_lts_active_version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_lts_active_version }}
