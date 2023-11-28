@@ -104,7 +104,7 @@ jobs:
 
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
-    name: Build and Run ${{ matrix.kuzzle-image }}
+    name: Build and Run
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -129,7 +129,7 @@ jobs:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   functional-tests:
-    name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
@@ -156,6 +156,9 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
+      
+      - name: Install depedencies
+        run: npm ci
       
       - name: Build kuzzle
         run: npm run build
