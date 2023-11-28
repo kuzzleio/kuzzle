@@ -284,9 +284,12 @@ describe("core/network/protocols/websocket", () => {
 
       const parsed = JSON.parse(payload.toString());
       should(parsed.error.id).eql("network.websocket.unexpected_error");
-      should(parsed.error.message).match(
-        /Caught an unexpected WebSocket error: Expected property name or '}'/
-      );
+
+      should(
+        parsed.error.message.includes(
+          "Caught an unexpected WebSocket error: Expected property name or '}'"
+        ) || parsed.error.message.includes("Unexpected token o in JSON")
+      ).be.true();
 
       should(entryPoint.execute).not.be.called();
     });
