@@ -71,7 +71,7 @@
     "ndjson": "2.0.0",
     "node-segfault-handler": "1.4.2",
     "passport": "0.6.0",
-    "protobufjs": "~7.2.1",
+    "protobufjs": "7.2.1",
     "rc": "1.2.8",
     "semver": "7.3.8",
     "sorted-array": "2.0.4",
