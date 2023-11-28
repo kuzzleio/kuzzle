@@ -1,0 +1,38 @@
+name: kuzzleio/core-dev
+
+on:
+  push:
+    branches:
+      - master
+
+env:
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+
+jobs:
+  build-and-push:
+    name: Build and push core-dev image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v2
+        with:
+          context: ./core-dev
+          file: ./core-dev/Dockerfile
+          push: true
+          platforms: ${{ env.DOCKER_PLATFORMS }}
+          tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest
