@@ -72,7 +72,7 @@ export class Profile {
       async ({ restrictedTo, roleId }) => {
         const role = await global.kuzzle.ask("core:security:role:get", roleId);
         return { restrictedTo, role };
-      }
+      },
     );
   }
 
@@ -81,7 +81,7 @@ export class Profile {
    * @returns {Promise}
    */
   async getAllowedPolicies(
-    request: KuzzleRequest
+    request: KuzzleRequest,
   ): Promise<InternalProfilePolicy[]> {
     if (
       this.optimizedPolicies === undefined ||
@@ -113,8 +113,8 @@ export class Profile {
       policy.role.checkRestrictions(
         request.input.args.index,
         request.input.args.collection,
-        policy.restrictedTo
-      )
+        policy.restrictedTo,
+      ),
     );
   }
 
@@ -137,7 +137,7 @@ export class Profile {
       throw assertionError.get(
         "invalid_type",
         `${this._id}.policies`,
-        "object[]"
+        "object[]",
       );
     }
 
@@ -150,7 +150,7 @@ export class Profile {
       if (!policy.roleId) {
         throw assertionError.get(
           "missing_argument",
-          `${this._id}.policies[${i}].roleId`
+          `${this._id}.policies[${i}].roleId`,
         );
       }
 
@@ -159,7 +159,7 @@ export class Profile {
           throw assertionError.get(
             "unexpected_argument",
             `${this._id}.policies[${i}].${member}`,
-            '"roleId", "restrictedTo"'
+            '"roleId", "restrictedTo"',
           );
         }
       }
@@ -169,7 +169,7 @@ export class Profile {
           throw assertionError.get(
             "invalid_type",
             `${this._id}.policies[${i}].restrictedTo`,
-            "object[]"
+            "object[]",
           );
         }
 
@@ -179,21 +179,21 @@ export class Profile {
             throw assertionError.get(
               "invalid_type",
               `${this._id}.policies[${i}].restrictedTo[${restriction}]`,
-              "object"
+              "object",
             );
           }
 
           if (restriction.index === null || restriction.index === undefined) {
             throw assertionError.get(
               "missing_argument",
-              `${this._id}.policies[${i}].restrictedTo[${j}].index`
+              `${this._id}.policies[${i}].restrictedTo[${j}].index`,
             );
           }
 
           if (strict) {
             const indexExists = await global.kuzzle.ask(
               "core:storage:public:index:exist",
-              restriction.index
+              restriction.index,
             );
 
             if (!indexExists) {
@@ -201,7 +201,7 @@ export class Profile {
                 "services",
                 "storage",
                 "unknown_index",
-                restriction.index
+                restriction.index,
               );
             }
           }
@@ -214,7 +214,7 @@ export class Profile {
               throw assertionError.get(
                 "invalid_type",
                 `${this._id}.policies[${i}].restrictedTo[${j}].collections`,
-                "string[]"
+                "string[]",
               );
             }
 
@@ -224,7 +224,7 @@ export class Profile {
                 const isValid = await global.kuzzle.ask(
                   "core:storage:public:collection:exist",
                   restriction.index,
-                  collection
+                  collection,
                 );
 
                 if (!isValid) {
@@ -238,7 +238,7 @@ export class Profile {
                   "storage",
                   "unknown_collection",
                   restriction.index,
-                  invalidCollections
+                  invalidCollections,
                 );
               }
             }
@@ -249,7 +249,7 @@ export class Profile {
               throw assertionError.get(
                 "unexpected_argument",
                 `${this._id}.policies[${i}].restrictedTo[${j}].${member}`,
-                '"index", "collections"'
+                '"index", "collections"',
               );
             }
           }
@@ -340,7 +340,7 @@ export class Profile {
       throw assertionError.get(
         "invalid_argument",
         "rateLimit",
-        "positive integer, or zero"
+        "positive integer, or zero",
       );
     }
   }

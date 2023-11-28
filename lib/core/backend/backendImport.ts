@@ -68,7 +68,7 @@ export class BackendImport extends ApplicationManager {
       this._application._import.mappings[index] = Object.assign(
         {},
         this._application._import.mappings[index],
-        mappings[index]
+        mappings[index],
       );
     }
   }
@@ -96,7 +96,7 @@ export class BackendImport extends ApplicationManager {
     this._application._import.profiles = Object.assign(
       {},
       this._application._import.profiles,
-      profiles
+      profiles,
     );
   }
 
@@ -123,7 +123,7 @@ export class BackendImport extends ApplicationManager {
     this._application._import.roles = Object.assign(
       {},
       this._application._import.roles,
-      roles
+      roles,
     );
   }
 
@@ -165,7 +165,7 @@ export class BackendImport extends ApplicationManager {
    */
   users(
     users: JSONObject,
-    options: { onExistingUsers?: "overwrite" | "skip" } = {}
+    options: { onExistingUsers?: "overwrite" | "skip" } = {},
   ): void {
     if (this._application.started) {
       throw runtimeError.get("already_started", "import");
@@ -190,7 +190,7 @@ export class BackendImport extends ApplicationManager {
     this._application._import.users = Object.assign(
       {},
       this._application._import.users,
-      users
+      users,
     );
   }
 }

@@ -65,7 +65,7 @@ export class BufferedPassThrough extends stream.Duplex {
     data: ChunkData,
     start: number,
     end: number,
-    encoding: Encoding
+    encoding: Encoding,
   ): number {
     if (encoding === "buffer") {
       return (data as Buffer).copy(this.buffer, this.offset, start, end);
@@ -75,14 +75,14 @@ export class BufferedPassThrough extends stream.Duplex {
         data as string,
         this.offset,
         end - start,
-        encoding
+        encoding,
       );
     }
     return this.buffer.write(
       (data as string).slice(start, end),
       this.offset,
       end - start,
-      encoding
+      encoding,
     );
   }
 
@@ -100,7 +100,7 @@ export class BufferedPassThrough extends stream.Duplex {
    */
   private async writeChunkData(
     chunk: ChunkData,
-    encoding: Encoding
+    encoding: Encoding,
   ): Promise<void> {
     let chunkOffset = 0;
 
@@ -115,7 +115,7 @@ export class BufferedPassThrough extends stream.Duplex {
           chunk,
           chunkOffset,
           chunkOffset + remainingBufferSize,
-          encoding
+          encoding,
         );
 
         // Sends the whole buffer to the stream since it is full
@@ -132,7 +132,7 @@ export class BufferedPassThrough extends stream.Duplex {
           chunk,
           chunkOffset,
           chunk.length,
-          encoding
+          encoding,
         );
         // Increase the internal buffer offset
         this.offset += size;

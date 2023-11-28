@@ -65,6 +65,6 @@ export type EventGenericDocumentInjectMetadata = {
        * Only used when calling document:upsert.
        */
       defaultMetadata?: JSONObject;
-    }
+    },
   ];
 } & PipeEventHandler;

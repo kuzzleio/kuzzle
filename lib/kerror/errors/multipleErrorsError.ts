@@ -29,7 +29,7 @@ export class MultipleErrorsError extends KuzzleError {
     message: string,
     errors: KuzzleError[] = [],
     id?: string,
-    code?: number
+    code?: number,
   ) {
     super(message, 400, id, code);
 

@@ -61,7 +61,7 @@ export class BackendStorage extends ApplicationManager {
   get storageClient(): Client {
     if (!this._client) {
       this._client = Elasticsearch.buildClient(
-        this._kuzzle.config.services.storageEngine.client
+        this._kuzzle.config.services.storageEngine.client,
       );
     }
 

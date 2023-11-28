@@ -21,8 +21,8 @@
     "test:functional:legacy": "npm run test:functional:legacy:http && npm run test:functional:legacy:websocket && npm run test:functional:legacy:mqtt",
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket",
     "test:functional": "npm run test:functional:http && npm run test:functional:websocket && npm run test:functional:jest",
-    "test:lint:js": "eslint --max-warnings=0 ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin",
-    "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintc-ts.json",
+    "test:lint:js": "eslint ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin",
+    "test:lint:ts": "eslint ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
     "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit:coverage && npm run test:functional"

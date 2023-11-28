@@ -52,7 +52,7 @@ export class BackendErrors extends ApplicationManager {
     domain: string,
     subDomain: string,
     name: string,
-    definition: CustomErrorDefinition
+    definition: CustomErrorDefinition,
   ) {
     if (!this.domains[domain]) {
       this.domains[domain] = {
@@ -98,7 +98,7 @@ export class BackendErrors extends ApplicationManager {
       domain,
       subDomain,
       name,
-      ...placeholders
+      ...placeholders,
     );
   }
 
@@ -126,7 +126,7 @@ export class BackendErrors extends ApplicationManager {
       domain,
       subDomain,
       name,
-      ...placeholders
+      ...placeholders,
     );
   }
 
