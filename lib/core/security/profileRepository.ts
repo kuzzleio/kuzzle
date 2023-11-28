@@ -73,8 +73,8 @@ export class ProfileRepository extends Repository<Profile> {
     this.module = securityModule;
     this.profiles = new Map();
 
-    super.collection = "profiles";
-    super.ObjectConstructor = Profile;
+    this.collection = "profiles";
+    this.ObjectConstructor = Profile;
   }
 
   init() {
