@@ -156,13 +156,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout project
-      - uses: actions/checkout@v3
+        uses: actions/checkout@v3
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
       
       - name: Setup Node version ${{ inputs.node_lts_active_version }}
-      - uses: actions/setup-node@v4
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_lts_active_version }}
           registry-url: "https://registry.npmjs.org"
