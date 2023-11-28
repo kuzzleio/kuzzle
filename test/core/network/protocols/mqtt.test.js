@@ -393,7 +393,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           "network",
           "mqtt",
           "unexpected_error",
-          "Unexpected token i in JSON at position 0"
+          "Unexpected token 'i', \"invalid\" is not valid JSON"
         );
 
         should(protocol._respond)
