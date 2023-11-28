@@ -40,7 +40,7 @@ async function getRedisClient(context) {
 
   context.log.notice("Current Redis configuration:");
   context.log.print(
-    formatWithOptions({ colors: false, depth: null }, currentConfiguration)
+    formatWithOptions({ colors: false, depth: null }, currentConfiguration),
   );
 
   const current = await context.inquire.direct({

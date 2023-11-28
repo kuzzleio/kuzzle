@@ -40,7 +40,7 @@ describe("Plugin Context", () => {
   beforeEach(() => {
     mockrequire("../../../../lib/util/mutex", { Mutex: MutexMock });
     ({ PluginContext } = mockrequire.reRequire(
-      `${root}/lib/core/plugin/pluginContext`
+      `${root}/lib/core/plugin/pluginContext`,
     ));
     kuzzle = new KuzzleMock();
     context = new PluginContext("pluginName");
@@ -72,7 +72,7 @@ describe("Plugin Context", () => {
 
       should(new context.constructors.Koncorde()).be.instanceOf(Koncorde);
       should(
-        new context.constructors.Request(new Request({}), {})
+        new context.constructors.Request(new Request({}), {}),
       ).be.instanceOf(KuzzleRequest);
       should(new context.constructors.Mutex()).be.instanceOf(Mutex);
 
@@ -110,7 +110,7 @@ describe("Plugin Context", () => {
         const storageClient = new context.constructors.ESClient();
 
         should(storageClient.connectionPool.connections[0].url.origin).be.eql(
-          kuzzle.config.services.storageEngine.client.node
+          kuzzle.config.services.storageEngine.client.node,
         );
       });
     });
@@ -142,13 +142,13 @@ describe("Plugin Context", () => {
             {
               protocol: "protocol",
               connectionId: "connectionId",
-            }
+            },
           ),
           pluginRequest = new context.constructors.Request(request, {});
 
         should(pluginRequest.context.protocol).be.eql(request.context.protocol);
         should(pluginRequest.context.connectionId).be.eql(
-          request.context.connectionId
+          request.context.connectionId,
         );
         should(pluginRequest.result).be.null();
         should(pluginRequest.error).be.null();
@@ -157,12 +157,12 @@ describe("Plugin Context", () => {
         should(pluginRequest.input.controller).be.null();
         should(pluginRequest.input.jwt).be.eql(request.input.jwt);
         should(pluginRequest.input.args.foobar).be.eql(
-          request.input.args.foobar
+          request.input.args.foobar,
         );
         should(pluginRequest.input.args._id).be.eql(request.input.args._id);
         should(pluginRequest.input.args.index).be.eql(request.input.args.index);
         should(pluginRequest.input.args.collection).be.eql(
-          request.input.args.collection
+          request.input.args.collection,
         );
         should(pluginRequest.input.volatile).match({ foo: "bar" });
       });
@@ -186,7 +186,7 @@ describe("Plugin Context", () => {
             {
               protocol: "protocol",
               connectionId: "connectionId",
-            }
+            },
           ),
           pluginRequest = new context.constructors.Request(request, {
             action: "pluginAction",
@@ -301,10 +301,10 @@ describe("Plugin Context", () => {
       const validation = context.accessors.validation;
 
       should(validation.addType).be.eql(
-        kuzzle.validation.addType.bind(kuzzle.validation)
+        kuzzle.validation.addType.bind(kuzzle.validation),
       );
       should(validation.validate).be.eql(
-        kuzzle.validation.validate.bind(kuzzle.validation)
+        kuzzle.validation.validate.bind(kuzzle.validation),
       );
     });
 
@@ -367,14 +367,14 @@ describe("Plugin Context", () => {
           },
           {
             connectionId: "superid",
-          }
+          },
         );
 
         await context.accessors.subscription.register(
           customRequest.context.connection.id,
           customRequest.input.index,
           customRequest.input.collection,
-          customRequest.input.body
+          customRequest.input.body,
         );
 
         should(kuzzle.ask).be.calledWith(
@@ -390,7 +390,7 @@ describe("Plugin Context", () => {
               collection: customRequest.input.collection,
               index: customRequest.input.index,
             },
-          })
+          }),
         );
       });
 
@@ -398,14 +398,14 @@ describe("Plugin Context", () => {
         await context.accessors.subscription.unregister(
           "connectionId",
           "roomId",
-          false
+          false,
         );
 
         should(kuzzle.ask).be.calledWithExactly(
           "core:realtime:unsubscribe",
           "connectionId",
           "roomId",
-          false
+          false,
         );
       });
     });
@@ -428,7 +428,7 @@ describe("Plugin Context", () => {
         should(result).be.eql("pipe chain result");
         should(kuzzle.pipe).be.calledWithExactly(
           `plugin-pluginName:${eventName}`,
-          payload
+          payload,
         );
       });
     });
@@ -437,7 +437,7 @@ describe("Plugin Context", () => {
       it("should call the callback with a result if everything went well", (done) => {
         const request = new Request(
             { requestId: "request" },
-            { connectionId: "connectionid" }
+            { connectionId: "connectionid" },
           ),
           result = { foo: "bar" },
           callback = sinon.spy((err, res) => {
@@ -461,7 +461,7 @@ describe("Plugin Context", () => {
       it("should resolve a Promise with a result if everything went well", () => {
         const request = new Request(
             { requestId: "request" },
-            { connectionId: "connectionid" }
+            { connectionId: "connectionid" },
           ),
           result = { foo: "bar" };
 
@@ -481,7 +481,7 @@ describe("Plugin Context", () => {
       it("should call the callback with an error if something went wrong", (done) => {
         const request = new Request(
             { body: { some: "request" } },
-            { connectionId: "connectionid" }
+            { connectionId: "connectionid" },
           ),
           error = new Error("error"),
           callback = sinon.spy((err, res) => {
@@ -504,7 +504,7 @@ describe("Plugin Context", () => {
       it("should reject a Promise with an error if something went wrong", () => {
         const request = new Request(
             { body: { some: "request" } },
-            { connectionId: "connectionid" }
+            { connectionId: "connectionid" },
           ),
           error = new Error("error");
 
@@ -523,7 +523,7 @@ describe("Plugin Context", () => {
             should(callback).be.calledOnce();
             should(err).be.instanceOf(PluginImplementationError);
             should(err.message).startWith(
-              "Invalid argument: a Request object must be supplied"
+              "Invalid argument: a Request object must be supplied",
             );
             should(res).be.undefined();
             done();
@@ -537,13 +537,13 @@ describe("Plugin Context", () => {
 
       it("should reject if no Request object is provided", () => {
         return should(context.accessors.execute({})).be.rejectedWith(
-          /Invalid argument: a Request object must be supplied/
+          /Invalid argument: a Request object must be supplied/,
         );
       });
 
       it("should reject if callback argument is not a function", () => {
         return should(
-          context.accessors.execute({ requestId: "request" }, "foo")
+          context.accessors.execute({ requestId: "request" }, "foo"),
         ).be.rejectedWith({
           message:
             /^Invalid argument: Expected callback to be a function, received "string"/,
@@ -558,8 +558,8 @@ describe("Plugin Context", () => {
                 new Request({
                   controller: "realtime",
                   action: "subscribe",
-                })
-              )
+                }),
+              ),
             ).be.rejectedWith(PluginImplementationError, {
               id: "plugin.context.unavailable_realtime",
             });
@@ -570,8 +570,8 @@ describe("Plugin Context", () => {
                 new Request({
                   controller: "realtime",
                   action: "unsubscribe",
-                })
-              )
+                }),
+              ),
             ).be.rejectedWith(PluginImplementationError, {
               id: "plugin.context.unavailable_realtime",
             });
@@ -594,7 +594,7 @@ describe("Plugin Context", () => {
           should(kuzzle.pluginsManager.registerStrategy).calledWith(
             "pluginName",
             "foo",
-            mockedStrategy
+            mockedStrategy,
           );
           should(kuzzle.pipe).calledWith("core:auth:strategyAdded", {
             pluginName: "pluginName",
@@ -621,7 +621,7 @@ describe("Plugin Context", () => {
 
       it("should throw if no authenticator is provided", () => {
         return should(
-          context.accessors.strategies.add("foo", null)
+          context.accessors.strategies.add("foo", null),
         ).rejectedWith(PluginImplementationError, {
           message:
             '[pluginName] Strategy foo: dynamic strategy registration can only be done using an "authenticator" option (see https://tinyurl.com/y7boozbk).\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.',
@@ -636,7 +636,7 @@ describe("Plugin Context", () => {
         return result.then(() => {
           should(kuzzle.pluginsManager.unregisterStrategy).calledWith(
             "pluginName",
-            "foo"
+            "foo",
           );
           should(kuzzle.pipe).calledWith("core:auth:strategyRemoved", {
             pluginName: "pluginName",

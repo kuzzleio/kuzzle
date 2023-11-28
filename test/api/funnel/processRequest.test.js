@@ -31,7 +31,7 @@ describe("funnel.processRequest", () => {
     mockrequire.reRequire("../../../lib/core/plugin/pluginContext");
     mockrequire.reRequire("../../../lib/core/plugin/privilegedContext");
     const PluginsManager = mockrequire.reRequire(
-      "../../../lib/core/plugin/pluginsManager"
+      "../../../lib/core/plugin/pluginsManager",
     );
 
     kuzzle = new KuzzleMock();
@@ -46,7 +46,7 @@ describe("funnel.processRequest", () => {
     funnel.controllers.set("document", new DocumentController());
     pluginsManager.controllers.set(
       "fakePlugin/controller",
-      new MockBaseController()
+      new MockBaseController(),
     );
   });
 
@@ -91,7 +91,7 @@ describe("funnel.processRequest", () => {
         should(kuzzle.pipe).not.calledWith("request:onError", request);
         should(kuzzle.pipe).not.calledWith(
           "fakeController:errorCreate",
-          request
+          request,
         );
         should(kuzzle.statistics.startRequest).not.be.called();
       });
@@ -108,7 +108,7 @@ describe("funnel.processRequest", () => {
         should(kuzzle.pipe).not.calledWith("request:onError", request);
         should(kuzzle.pipe).not.calledWith(
           "fakePlugin/controller:errorCreate",
-          request
+          request,
         );
         should(kuzzle.statistics.startRequest).not.be.called();
       });
@@ -180,7 +180,7 @@ describe("funnel.processRequest", () => {
       should(kuzzle.pipe).not.calledWith("request:onError", request);
       should(kuzzle.pipe).not.calledWith(
         "fakeController:errorSucceed",
-        request
+        request,
       );
       should(kuzzle.statistics.startRequest).be.called();
       should(kuzzle.statistics.completedRequest).be.called();
@@ -229,7 +229,7 @@ describe("funnel.processRequest", () => {
       {
         id: "plugin.runtime.unexpected_error",
         message: /Caught an unexpected plugin error: foobar.*/,
-      }
+      },
     );
 
     should(kuzzle.pipe).calledWith(`${controller}:beforeFail`);
@@ -309,7 +309,7 @@ describe("funnel.processRequest", () => {
 
       should(() => funnel._checkSdkVersion(request)).not.throw(
         BadRequestError,
-        { id: "api.process.incompatible_sdk_version" }
+        { id: "api.process.incompatible_sdk_version" },
       );
     });
 

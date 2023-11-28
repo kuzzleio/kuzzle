@@ -33,11 +33,11 @@ const assert = require("assert").strict,
 inquirer.direct = async function direct(prompt) {
   assert(
     _.isPlainObject(prompt),
-    "Invalid argument: expected a non-empty object"
+    "Invalid argument: expected a non-empty object",
   );
   assert(
     typeof prompt.name === "undefined",
-    'Unexpected "name" argument: if you need to set a name, use inquirer.prompt'
+    'Unexpected "name" argument: if you need to set a name, use inquirer.prompt',
   );
 
   const p = _.cloneDeep(prompt);

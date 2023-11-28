@@ -8,11 +8,11 @@ describe("util/extractFields", () => {
 
   beforeEach(() => {
     document = {
-      foo: "valueFoo",
       bar: {
         a: "valueBarA",
         b: "valueBarB",
       },
+      foo: "valueFoo",
     };
   });
 

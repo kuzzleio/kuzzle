@@ -73,7 +73,7 @@ describe("CacheEngine", () => {
         "core:cache:internal:script:define",
         "name",
         "keys",
-        "script"
+        "script",
       );
       should(cacheEngine.internal.client.defineCommand).calledWith("name", {
         lua: "script",
@@ -85,7 +85,7 @@ describe("CacheEngine", () => {
         "core:cache:internal:script:execute",
         "name",
         "foo",
-        "bar"
+        "bar",
       );
       should(cacheEngine.internal.client.name).calledWith("foo", "bar");
     });

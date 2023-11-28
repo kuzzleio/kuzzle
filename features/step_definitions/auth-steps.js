@@ -11,7 +11,7 @@ Given(
       username,
       password,
     });
-  }
+  },
 );
 
 Given("I'm logged as the anonymous user", function () {
@@ -37,7 +37,7 @@ Given(
     } else {
       should(valid).be.true("Provided token is invalid");
     }
-  }
+  },
 );
 
 Given("I save the created API key", function () {
@@ -68,5 +68,5 @@ Given(
         throw error;
       }
     }
-  }
+  },
 );

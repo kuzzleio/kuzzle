@@ -40,24 +40,24 @@ describe("Test: validation/types/date", () => {
       };
 
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(
-        typeOptions
+        typeOptions,
       );
     });
 
     it('should throw if an invalid "formats" options is provided', () => {
       should(() => dateType.validateFieldSpecification({ formats: [] })).throw(
         PreconditionError,
-        { id: "validation.assert.invalid_type" }
+        { id: "validation.assert.invalid_type" },
       );
 
       should(() =>
-        dateType.validateFieldSpecification({ formats: null })
+        dateType.validateFieldSpecification({ formats: null }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
     });
 
     it('should throw if the "formats" option contains an unknown format', () => {
       should(() =>
-        dateType.validateFieldSpecification({ formats: ["foobar"] })
+        dateType.validateFieldSpecification({ formats: ["foobar"] }),
       ).throw(PreconditionError, {
         id: "validation.types.invalid_date_format",
         message: "The following date types are invalid: foobar.",
@@ -66,7 +66,7 @@ describe("Test: validation/types/date", () => {
       should(() =>
         dateType.validateFieldSpecification({
           formats: ["foo", "epoch_millis", "bar"],
-        })
+        }),
       ).throw(PreconditionError, {
         id: "validation.types.invalid_date_format",
         message: "The following date types are invalid: foo, bar.",
@@ -80,7 +80,7 @@ describe("Test: validation/types/date", () => {
           id: "validation.assert.unexpected_properties",
           message:
             'The object "range" contains unexpected properties (allowed: min, max).',
-        }
+        },
       );
 
       should(() => dateType.validateFieldSpecification({ range: [] })).throw(
@@ -89,11 +89,11 @@ describe("Test: validation/types/date", () => {
           id: "validation.assert.unexpected_properties",
           message:
             'The object "range" contains unexpected properties (allowed: min, max).',
-        }
+        },
       );
 
       should(() =>
-        dateType.validateFieldSpecification({ range: { unknown: null } })
+        dateType.validateFieldSpecification({ range: { unknown: null } }),
       ).throw(PreconditionError, {
         id: "validation.assert.unexpected_properties",
         message:
@@ -105,7 +105,7 @@ describe("Test: validation/types/date", () => {
       const typeOptions = { range: { min: "NOW" } };
 
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(
-        typeOptions
+        typeOptions,
       );
     });
 
@@ -113,27 +113,27 @@ describe("Test: validation/types/date", () => {
       const typeOptions = { range: { max: "NOW" } };
 
       should(dateType.validateFieldSpecification(typeOptions)).be.deepEqual(
-        typeOptions
+        typeOptions,
       );
     });
 
     it('should throw if "min" is not a valid date', () => {
       should(() =>
-        dateType.validateFieldSpecification({ range: { min: "foobar" } })
+        dateType.validateFieldSpecification({ range: { min: "foobar" } }),
       ).throw(PreconditionError, { id: "validation.types.invalid_date" });
 
       should(() =>
-        dateType.validateFieldSpecification({ range: { min: null } })
+        dateType.validateFieldSpecification({ range: { min: null } }),
       ).throw(PreconditionError, { id: "validation.types.invalid_date" });
     });
 
     it('should throw if "max" is not a valid date', () => {
       should(() =>
-        dateType.validateFieldSpecification({ range: { max: "foobar" } })
+        dateType.validateFieldSpecification({ range: { max: "foobar" } }),
       ).throw(PreconditionError, { id: "validation.types.invalid_date" });
 
       should(() =>
-        dateType.validateFieldSpecification({ range: { max: null } })
+        dateType.validateFieldSpecification({ range: { max: null } }),
       ).throw(PreconditionError, { id: "validation.types.invalid_date" });
     });
 
@@ -145,7 +145,7 @@ describe("Test: validation/types/date", () => {
 
       should(() => dateType.validateFieldSpecification(typeOptions)).throw(
         PreconditionError,
-        { id: "validation.assert.invalid_range" }
+        { id: "validation.assert.invalid_range" },
       );
     });
 
@@ -181,7 +181,7 @@ describe("Test: validation/types/date", () => {
         });
 
       should(
-        dateType.validate(typeOptions, "foobar", errorMessages)
+        dateType.validate(typeOptions, "foobar", errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual(["The date format is invalid."]);
     });
@@ -203,7 +203,7 @@ describe("Test: validation/types/date", () => {
         });
 
       should(
-        dateType.validate(typeOptions, Date.now() - 10000, errorMessages)
+        dateType.validate(typeOptions, Date.now() - 10000, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "The provided date is before the defined minimum.",
@@ -223,7 +223,7 @@ describe("Test: validation/types/date", () => {
         try {
           should(dateType.validate(typeOptions, Date.now() + 10, [])).be.true();
           should(
-            dateType.validate(typeOptions, Date.now() - 10, [])
+            dateType.validate(typeOptions, Date.now() - 10, []),
           ).be.false();
           done();
         } catch (e) {
@@ -253,7 +253,7 @@ describe("Test: validation/types/date", () => {
         });
 
       should(
-        dateType.validate(typeOptions, Date.now() + 1000, errorMessages)
+        dateType.validate(typeOptions, Date.now() + 1000, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "The provided date is after the defined maximum.",
@@ -272,7 +272,7 @@ describe("Test: validation/types/date", () => {
       setTimeout(() => {
         try {
           should(
-            dateType.validate(typeOptions, Date.now() + 10, [])
+            dateType.validate(typeOptions, Date.now() + 10, []),
           ).be.false();
           should(dateType.validate(typeOptions, Date.now() - 10, [])).be.true();
           done();
@@ -413,7 +413,7 @@ describe("Test: validation/types/date", () => {
     before(() => {
       mockrequire("moment", momentMock);
       DateWithMockedMoment = mockrequire.reRequire(
-        "../../../../lib/core/validation/types/date"
+        "../../../../lib/core/validation/types/date",
       );
     });
 
@@ -445,7 +445,7 @@ describe("Test: validation/types/date", () => {
 
         should(errors).be.an.Array().and.be.empty();
         should(momentMock.unix.callCount).be.eql(
-          format === "epoch_second" ? 1 : 0
+          format === "epoch_second" ? 1 : 0,
         );
         should(momentMock.utc).calledWith(now);
 

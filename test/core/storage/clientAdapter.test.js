@@ -25,10 +25,10 @@ describe("#core/storage/ClientAdapter", () => {
     mockRequire("../../../lib/util/mutex", { Mutex: MutexMock });
     mockRequire(
       "../../../lib/service/storage/elasticsearch",
-      ElasticsearchMock
+      ElasticsearchMock,
     );
     ClientAdapter = mockRequire.reRequire(
-      "../../../lib/core/storage/clientAdapter"
+      "../../../lib/core/storage/clientAdapter",
     );
   });
 
@@ -50,7 +50,7 @@ describe("#core/storage/ClientAdapter", () => {
       [publicAdapter, privateAdapter].map((adapter) => {
         sinon.stub(adapter.cache);
         return adapter.init();
-      })
+      }),
     );
   });
 
@@ -95,19 +95,19 @@ describe("#core/storage/ClientAdapter", () => {
       should(uninitializedAdapter.client.generateMissingAliases).calledOnce();
       should(uninitializedAdapter.cache.addCollection).calledWith(
         "foo",
-        "foo1"
+        "foo1",
       );
       should(uninitializedAdapter.cache.addCollection).calledWith(
         "foo",
-        "foo2"
+        "foo2",
       );
       should(uninitializedAdapter.cache.addCollection).calledWith(
         "bar",
-        "bar1"
+        "bar1",
       );
       should(uninitializedAdapter.cache.addCollection).calledWith(
         "bar",
-        "bar2"
+        "bar2",
       );
     });
   });
@@ -143,7 +143,7 @@ describe("#core/storage/ClientAdapter", () => {
           PreconditionError,
           {
             id: "services.storage.index_already_exists",
-          }
+          },
         );
       });
 
@@ -152,13 +152,13 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:index:create`,
             "foo",
-            { propagate: false }
+            { propagate: false },
           );
 
           should(adapter.client.createIndex).calledWith("foo");
           should(adapter.cache.addIndex).calledWith("foo");
           should(kuzzle.emit).not.be.calledWith(
-            "core:storage:index:create:after"
+            "core:storage:index:create:after",
           );
         }
       });
@@ -168,7 +168,7 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:index:create`,
             "foo",
-            { indexCacheOnly: true }
+            { indexCacheOnly: true },
           );
 
           should(adapter.client.createIndex).not.be.called();
@@ -208,7 +208,7 @@ describe("#core/storage/ClientAdapter", () => {
 
         const res = await kuzzle.ask(
           `core:storage:${adapter.scope}:index:exist`,
-          "foo"
+          "foo",
         );
 
         should(res).eql("bar");
@@ -221,7 +221,7 @@ describe("#core/storage/ClientAdapter", () => {
         adapter.cache.listIndexes.resolves("bar");
 
         const res = await kuzzle.ask(
-          `core:storage:${adapter.scope}:index:list`
+          `core:storage:${adapter.scope}:index:list`,
         );
 
         should(res).eql("bar");
@@ -234,7 +234,7 @@ describe("#core/storage/ClientAdapter", () => {
         adapter.client.stats.resolves("bar");
 
         const res = await kuzzle.ask(
-          `core:storage:${adapter.scope}:index:stats`
+          `core:storage:${adapter.scope}:index:stats`,
         );
 
         should(res).eql("bar");
@@ -251,7 +251,7 @@ describe("#core/storage/ClientAdapter", () => {
 
           const deleted = await kuzzle.ask(
             `core:storage:${adapter.scope}:index:mDelete`,
-            indexes
+            indexes,
           );
 
           should(publicAdapter.client.deleteIndexes).calledWith(indexes);
@@ -267,7 +267,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.cache.assertIndexExists.withArgs("bar").throws(err);
 
         await should(
-          publicAdapter.deleteIndexes(["foo", "bar", "baz"])
+          publicAdapter.deleteIndexes(["foo", "bar", "baz"]),
         ).rejectedWith(err);
 
         should(publicAdapter.client.deleteIndexes).not.called();
@@ -284,7 +284,7 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:collection:create`,
             "foo",
             "bar",
-            "opts"
+            "opts",
           );
 
           should(publicAdapter.client.createCollection)
@@ -298,7 +298,7 @@ describe("#core/storage/ClientAdapter", () => {
               collection: "bar",
               index: "foo",
               scope: adapter.scope,
-            }
+            },
           );
         }
       });
@@ -310,7 +310,7 @@ describe("#core/storage/ClientAdapter", () => {
             "foo",
             "bar",
             "opts",
-            { propagate: false }
+            { propagate: false },
           );
 
           should(publicAdapter.client.createCollection)
@@ -319,7 +319,7 @@ describe("#core/storage/ClientAdapter", () => {
 
           should(publicAdapter.cache.addCollection).calledWith("foo", "bar");
           should(kuzzle.emit).not.be.calledWith(
-            "core:storage:collection:create:after"
+            "core:storage:collection:create:after",
           );
         }
       });
@@ -331,7 +331,7 @@ describe("#core/storage/ClientAdapter", () => {
             "foo",
             "bar",
             "opts",
-            { indexCacheOnly: true }
+            { indexCacheOnly: true },
           );
 
           should(publicAdapter.client.createCollection).not.be.called();
@@ -343,7 +343,7 @@ describe("#core/storage/ClientAdapter", () => {
               collection: "bar",
               index: "foo",
               scope: adapter.scope,
-            }
+            },
           );
         }
       });
@@ -355,12 +355,12 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:collection:delete`,
             "foo",
-            "bar"
+            "bar",
           );
 
           should(publicAdapter.client.deleteCollection).calledWith(
             "foo",
-            "bar"
+            "bar",
           );
           should(publicAdapter.cache.removeCollection).calledWith("foo", "bar");
         }
@@ -372,7 +372,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         await should(publicAdapter.deleteCollection("foo", "bar")).rejectedWith(
-          err
+          err,
         );
 
         should(publicAdapter.client.deleteCollection).not.called();
@@ -385,7 +385,7 @@ describe("#core/storage/ClientAdapter", () => {
         await kuzzle.ask(
           `core:storage:${adapter.scope}:collection:exist`,
           "foo",
-          "bar"
+          "bar",
         );
 
         should(adapter.cache.hasCollection)
@@ -398,7 +398,7 @@ describe("#core/storage/ClientAdapter", () => {
       for (const adapter of [publicAdapter, privateAdapter]) {
         await kuzzle.ask(
           `core:storage:${adapter.scope}:collection:list`,
-          "foo"
+          "foo",
         );
 
         should(adapter.cache.listCollections).calledOnce().calledWith("foo");
@@ -411,7 +411,7 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:collection:refresh`,
             "foo",
-            "bar"
+            "bar",
           );
 
           should(adapter.client.refreshCollection)
@@ -427,7 +427,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         await should(
-          kuzzle.ask("core:storage:public:collection:refresh", "foo", "bar")
+          kuzzle.ask("core:storage:public:collection:refresh", "foo", "bar"),
         ).rejectedWith(err);
 
         should(publicAdapter.client.refreshCollection).not.called();
@@ -440,7 +440,7 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:collection:truncate`,
             "foo",
-            "bar"
+            "bar",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith("foo", "bar");
@@ -457,7 +457,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.cache.assertCollectionExists.throws(err);
 
         await should(
-          kuzzle.ask("core:storage:public:collection:truncate", "foo", "bar")
+          kuzzle.ask("core:storage:public:collection:truncate", "foo", "bar"),
         ).rejectedWith(err);
 
         should(publicAdapter.client.truncateCollection).not.called();
@@ -471,7 +471,7 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:collection:update`,
             "foo",
             "bar",
-            "changes"
+            "changes",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith("foo", "bar");
@@ -491,7 +491,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:collection:update",
           "foo",
           "bar",
-          "changes"
+          "changes",
         );
 
         await should(promise).rejectedWith(err);
@@ -509,7 +509,7 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:mappings:get`,
             "foo",
             "bar",
-            "opts"
+            "opts",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith("foo", "bar");
@@ -529,7 +529,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:mappings:get",
           "foo",
           "bar",
-          "opts"
+          "opts",
         );
 
         await should(promise).rejectedWith(err);
@@ -564,14 +564,14 @@ describe("#core/storage/ClientAdapter", () => {
             {
               propagate: true,
               indexCacheOnly: false,
-            }
+            },
           );
 
           should(adapter.client.createIndex).calledWith("index");
           should(adapter.client.createCollection).calledWith(
             "index",
             "collection",
-            mappings.index.collection
+            mappings.index.collection,
           );
 
           should(adapter.cache.addIndex).calledWith("index");
@@ -599,13 +599,13 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:mappings:import`,
             rawMappings,
-            { rawMappings: true }
+            { rawMappings: true },
           );
 
           should(adapter.client.createCollection).calledWith(
             "index",
             "collection",
-            mappings.index.collection
+            mappings.index.collection,
           );
         }
       });
@@ -626,7 +626,7 @@ describe("#core/storage/ClientAdapter", () => {
 
           const result = kuzzle.ask(
             "core:storage:public:mappings:import",
-            mappings
+            mappings,
           );
 
           await should(result).rejectedWith(BadRequestError, {
@@ -641,7 +641,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.client.createIndex.rejects(err);
 
         return should(
-          kuzzle.ask("core:storage:public:mappings:import", mappings)
+          kuzzle.ask("core:storage:public:mappings:import", mappings),
         ).rejectedWith(err);
       });
 
@@ -654,7 +654,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.client.createIndex.onFirstCall().rejects(err);
 
         await should(
-          kuzzle.ask("core:storage:public:mappings:import", mappings)
+          kuzzle.ask("core:storage:public:mappings:import", mappings),
         ).fulfilled();
 
         should(publicAdapter.client.createIndex).calledWith("index");
@@ -669,18 +669,18 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:mappings:update`,
             "index",
             "collection",
-            "mappings"
+            "mappings",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.updateMapping).calledWith(
             "index",
             "collection",
-            "mappings"
+            "mappings",
           );
         }
       });
@@ -694,7 +694,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:mappings:update",
           "index",
           "collection",
-          "mappings"
+          "mappings",
         );
 
         await should(result).rejectedWith(err);
@@ -713,19 +713,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.import).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -740,7 +740,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -756,18 +756,18 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:document:count`,
             "index",
             "collection",
-            "filters"
+            "filters",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.count).calledWith(
             "index",
             "collection",
-            "filters"
+            "filters",
           );
         }
       });
@@ -781,7 +781,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:document:count",
           "index",
           "collection",
-          "filters"
+          "filters",
         );
 
         await should(result).rejectedWith(err);
@@ -798,19 +798,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "content",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.create).calledWith(
             "index",
             "collection",
             "content",
-            "options"
+            "options",
           );
         }
       });
@@ -825,7 +825,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "content",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -843,12 +843,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.createOrReplace).calledWith(
@@ -856,7 +856,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
         }
       });
@@ -872,7 +872,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "id",
           "content",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -889,19 +889,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "id",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.delete).calledWith(
             "index",
             "collection",
             "id",
-            "options"
+            "options",
           );
         }
       });
@@ -916,7 +916,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "id",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -933,19 +933,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "query",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.deleteByQuery).calledWith(
             "index",
             "collection",
             "query",
-            "options"
+            "options",
           );
         }
       });
@@ -960,7 +960,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "query",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -977,19 +977,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             ["query"],
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.deleteFields).calledWith(
             "index",
             "collection",
             ["query"],
-            "options"
+            "options",
           );
         }
       });
@@ -1004,7 +1004,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "query",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1020,12 +1020,12 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:document:exist`,
             "index",
             "collection",
-            "id"
+            "id",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.exists).calledWith("index", "collection", "id");
@@ -1041,7 +1041,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:document:exist",
           "index",
           "collection",
-          "id"
+          "id",
         );
 
         await should(result).rejectedWith(err);
@@ -1057,12 +1057,12 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:document:get`,
             "index",
             "collection",
-            "id"
+            "id",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.get).calledWith("index", "collection", "id");
@@ -1078,7 +1078,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:document:get",
           "index",
           "collection",
-          "id"
+          "id",
         );
 
         await should(result).rejectedWith(err);
@@ -1104,13 +1104,13 @@ describe("#core/storage/ClientAdapter", () => {
 
           await kuzzle.ask(
             `core:storage:${adapter.scope}:document:import`,
-            fixtures
+            fixtures,
           );
 
           should(adapter.client.import).calledWith(
             "index",
             "collection",
-            fixtures.index.collection
+            fixtures.index.collection,
           );
         }
       });
@@ -1131,7 +1131,7 @@ describe("#core/storage/ClientAdapter", () => {
 
           const result = kuzzle.ask(
             "core:storage:public:document:import",
-            fixtures
+            fixtures,
           );
 
           await should(result).rejectedWith(BadRequestError, {
@@ -1144,7 +1144,7 @@ describe("#core/storage/ClientAdapter", () => {
         publicAdapter.client.import.resolves({ errors: ["oh", "noes"] });
 
         await should(
-          kuzzle.ask("core:storage:public:document:import", fixtures)
+          kuzzle.ask("core:storage:public:document:import", fixtures),
         ).rejectedWith(PartialError, { id: "services.storage.import_failed" });
       });
     });
@@ -1157,19 +1157,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mCreate).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -1184,7 +1184,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1201,19 +1201,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mCreateOrReplace).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -1228,7 +1228,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1245,19 +1245,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "ids",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mDelete).calledWith(
             "index",
             "collection",
             "ids",
-            "options"
+            "options",
           );
         }
       });
@@ -1272,7 +1272,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "ids",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1289,19 +1289,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mReplace).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -1316,7 +1316,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1333,19 +1333,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mUpdate).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -1360,7 +1360,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1377,19 +1377,19 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mUpsert).calledWith(
             "index",
             "collection",
             "documents",
-            "options"
+            "options",
           );
         }
       });
@@ -1404,7 +1404,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "documents",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1422,12 +1422,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "callback",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mExecute).calledWith(
@@ -1435,7 +1435,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "callback",
-            "options"
+            "options",
           );
         }
       });
@@ -1451,7 +1451,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "query",
           "callback",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1467,12 +1467,12 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:document:mGet`,
             "index",
             "collection",
-            "ids"
+            "ids",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.mGet).calledWith("index", "collection", "ids");
@@ -1489,7 +1489,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "ids",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1507,12 +1507,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.replace).calledWith(
@@ -1520,7 +1520,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
         }
       });
@@ -1536,7 +1536,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "id",
           "content",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1551,7 +1551,7 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:document:scroll`,
             "id",
-            "options"
+            "options",
           );
 
           should(adapter.client.scroll).calledWith("id", "options");
@@ -1567,12 +1567,12 @@ describe("#core/storage/ClientAdapter", () => {
             "index",
             "collection",
             "query",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.search).calledWith(
@@ -1581,7 +1581,7 @@ describe("#core/storage/ClientAdapter", () => {
               collection: "collection",
               searchBody: "query",
             },
-            "options"
+            "options",
           );
         }
       });
@@ -1596,7 +1596,7 @@ describe("#core/storage/ClientAdapter", () => {
           "index",
           "collection",
           "query",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1612,7 +1612,7 @@ describe("#core/storage/ClientAdapter", () => {
             `core:storage:${adapter.scope}:document:multiSearch`,
             [{ index: "index1", collections: ["collection1", "collection2"] }],
             "query",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists)
@@ -1629,7 +1629,7 @@ describe("#core/storage/ClientAdapter", () => {
               ],
               searchBody: "query",
             },
-            "options"
+            "options",
           );
         }
       });
@@ -1643,7 +1643,7 @@ describe("#core/storage/ClientAdapter", () => {
           "core:storage:public:document:multiSearch",
           [{ index: "index1", collections: ["collection1", "collection2"] }],
           "query",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1661,12 +1661,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.update).calledWith(
@@ -1674,7 +1674,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "content",
-            "options"
+            "options",
           );
         }
       });
@@ -1690,7 +1690,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "id",
           "content",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1708,12 +1708,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "changes",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.updateByQuery).calledWith(
@@ -1721,7 +1721,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "changes",
-            "options"
+            "options",
           );
         }
       });
@@ -1737,7 +1737,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "query",
           "changes",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1755,12 +1755,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "changes",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.bulkUpdateByQuery).calledWith(
@@ -1768,7 +1768,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "query",
             "changes",
-            "options"
+            "options",
           );
         }
       });
@@ -1784,7 +1784,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "query",
           "changes",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1802,12 +1802,12 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "changes",
-            "options"
+            "options",
           );
 
           should(adapter.cache.assertCollectionExists).calledWith(
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.client.upsert).calledWith(
@@ -1815,7 +1815,7 @@ describe("#core/storage/ClientAdapter", () => {
             "collection",
             "id",
             "changes",
-            "options"
+            "options",
           );
         }
       });
@@ -1831,7 +1831,7 @@ describe("#core/storage/ClientAdapter", () => {
           "collection",
           "id",
           "changes",
-          "options"
+          "options",
         );
 
         await should(result).rejectedWith(err);
@@ -1847,7 +1847,7 @@ describe("#core/storage/ClientAdapter", () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:cache:addIndex`,
-            "index"
+            "index",
           );
 
           should(adapter.cache.addIndex).calledWith("index");
@@ -1860,7 +1860,7 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:cache:addCollection`,
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.cache.addCollection).calledWith("index", "collection");
@@ -1873,7 +1873,7 @@ describe("#core/storage/ClientAdapter", () => {
         for (const adapter of [publicAdapter, privateAdapter]) {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:cache:removeIndexes`,
-            ["index1", "index2", "index3"]
+            ["index1", "index2", "index3"],
           );
 
           should(adapter.cache.removeIndex).calledWith("index1");
@@ -1887,13 +1887,13 @@ describe("#core/storage/ClientAdapter", () => {
           await kuzzle.ask(
             `core:storage:${adapter.scope}:cache:removeCollection`,
             "index",
-            "collection"
+            "collection",
           );
 
           should(adapter.cache.removeIndex).not.called();
           should(adapter.cache.removeCollection).calledWith(
             "index",
-            "collection"
+            "collection",
           );
         }
       });

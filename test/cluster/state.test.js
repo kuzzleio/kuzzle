@@ -35,14 +35,14 @@ describe("#Cluster Full State", () => {
       state.addRealtimeRoom("roomid", "index", "collection", filters, node);
 
       should(kuzzle.koncorde.store).calledWithMatch(
-        new NormalizedFilter(filters, "roomid", "index/collection")
+        new NormalizedFilter(filters, "roomid", "index/collection"),
       );
       kuzzle.koncorde.store.resetHistory();
 
       state.addRealtimeRoom("roomid2", "index", "collection", filters, node);
 
       should(kuzzle.koncorde.store).calledWithMatch(
-        new NormalizedFilter(filters, "roomid2", "index/collection")
+        new NormalizedFilter(filters, "roomid2", "index/collection"),
       );
 
       kuzzle.koncorde.store.resetHistory();
@@ -57,7 +57,7 @@ describe("#Cluster Full State", () => {
       state.addRealtimeRoom("roomid3", "index", "collection", filters, node);
 
       should(kuzzle.koncorde.store).calledWithMatch(
-        new NormalizedFilter(filters, "roomid3", "index/collection")
+        new NormalizedFilter(filters, "roomid3", "index/collection"),
       );
 
       should(state.serialize().rooms).match([
@@ -99,7 +99,7 @@ describe("#Cluster Full State", () => {
       state.addRealtimeRoom("roomid", "index", "collection", filters, node);
 
       should(() =>
-        state.addRealtimeRoom("roomid", "index", "collection", filters, node)
+        state.addRealtimeRoom("roomid", "index", "collection", filters, node),
       ).throw({
         id: "cluster.fatal.desync",
         message: /duplicate node/,
@@ -116,7 +116,7 @@ describe("#Cluster Full State", () => {
           messageId: 456,
           nodeId: "nodeid",
           subscribers: 123,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -128,7 +128,7 @@ describe("#Cluster Full State", () => {
           messageId: 456,
           nodeId: "nodeid2",
           subscribers: 123,
-        }
+        },
       );
 
       state.removeRealtimeRoom("roomid", "nodeid");
@@ -152,7 +152,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -164,7 +164,7 @@ describe("#Cluster Full State", () => {
           messageId: 45,
           nodeId: "nodeid2",
           subscribers: 56,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -176,7 +176,7 @@ describe("#Cluster Full State", () => {
           messageId: 67,
           nodeId: "nodeid3",
           subscribers: 78,
-        }
+        },
       );
 
       state.removeRealtimeRoom("roomid", "nodeid2");
@@ -205,7 +205,7 @@ describe("#Cluster Full State", () => {
       });
 
       should(state.getNormalizedFilters("roomid")).match(
-        new NormalizedFilter(filters, "roomid", "index/collection")
+        new NormalizedFilter(filters, "roomid", "index/collection"),
       );
 
       should(state.getNormalizedFilters("ohnoes")).be.null();
@@ -221,7 +221,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -233,7 +233,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid2",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -245,7 +245,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid2",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -257,7 +257,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid3",
           subscribers: 23,
-        }
+        },
       );
 
       should(state.countRealtimeSubscriptions("roomid")).be.eql(3 * 23);
@@ -275,7 +275,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -287,7 +287,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid2",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -299,7 +299,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid2",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -311,7 +311,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid3",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -323,7 +323,7 @@ describe("#Cluster Full State", () => {
           messageId: 12,
           nodeId: "nodeid3",
           subscribers: 23,
-        }
+        },
       );
 
       should(state.listRealtimeRooms()).match({
@@ -351,7 +351,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       const newMessageId = Long.fromInt(14, true);
@@ -372,7 +372,7 @@ describe("#Cluster Full State", () => {
 
     it("should throw when attempting to add a new subscription to a non-existing room", () => {
       should(() =>
-        state.addRealtimeSubscription("roomid", "nodeid", Long.fromInt(1))
+        state.addRealtimeSubscription("roomid", "nodeid", Long.fromInt(1)),
       ).throw(InternalError, {
         id: "cluster.fatal.desync",
         message: /room doesn't exist/,
@@ -389,11 +389,11 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       should(() =>
-        state.addRealtimeSubscription("roomid", "ohnoes", Long.fromInt(1))
+        state.addRealtimeSubscription("roomid", "ohnoes", Long.fromInt(1)),
       ).throw(InternalError, {
         id: "cluster.fatal.desync",
         message: /unknown node ohnoes/,
@@ -412,7 +412,7 @@ describe("#Cluster Full State", () => {
           messageId: messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeSubscription("roomid", "nodeid", Long.fromInt(11, true));
@@ -438,7 +438,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -450,7 +450,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid2",
           subscribers: 42,
-        }
+        },
       );
 
       const newMessageId = Long.fromInt(14, true);
@@ -478,7 +478,7 @@ describe("#Cluster Full State", () => {
       const newMessageId = Long.fromInt(14, true);
 
       should(() =>
-        state.removeRealtimeSubscription("roomid", "nodeid", newMessageId)
+        state.removeRealtimeSubscription("roomid", "nodeid", newMessageId),
       ).throw(InternalError, {
         id: "cluster.fatal.desync",
         message: /room doesn't exist/,
@@ -495,7 +495,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 1,
-        }
+        },
       );
 
       let newMessageId = Long.fromInt(14, true);
@@ -516,7 +516,7 @@ describe("#Cluster Full State", () => {
       newMessageId = newMessageId.add(1);
 
       should(() =>
-        state.removeRealtimeSubscription("roomid", "nodeid", newMessageId)
+        state.removeRealtimeSubscription("roomid", "nodeid", newMessageId),
       ).throw(InternalError, {
         id: "cluster.fatal.desync",
         message: /negative subscribers count/,
@@ -533,13 +533,13 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 1,
-        }
+        },
       );
 
       const newMessageId = Long.fromInt(14, true);
 
       should(() =>
-        state.removeRealtimeSubscription("roomid", "ohnoes", newMessageId)
+        state.removeRealtimeSubscription("roomid", "ohnoes", newMessageId),
       ).throw(InternalError, {
         id: "cluster.fatal.desync",
         message: /unknown node ohnoes/,
@@ -558,13 +558,13 @@ describe("#Cluster Full State", () => {
           messageId: messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.removeRealtimeSubscription(
         "roomid",
         "nodeid",
-        Long.fromInt(11, true)
+        Long.fromInt(11, true),
       );
 
       should(state.serialize().rooms).match([
@@ -590,7 +590,7 @@ describe("#Cluster Full State", () => {
           messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -602,7 +602,7 @@ describe("#Cluster Full State", () => {
           messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -614,7 +614,7 @@ describe("#Cluster Full State", () => {
           messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -626,7 +626,7 @@ describe("#Cluster Full State", () => {
           messageId,
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.removeNode("nodeid");
@@ -676,7 +676,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -688,7 +688,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -700,7 +700,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addRealtimeRoom(
@@ -712,7 +712,7 @@ describe("#Cluster Full State", () => {
           messageId: Long.fromInt(12, true),
           nodeId: "nodeid",
           subscribers: 23,
-        }
+        },
       );
 
       state.addAuthStrategy({ strategyName: "foo", foo: "bar" });

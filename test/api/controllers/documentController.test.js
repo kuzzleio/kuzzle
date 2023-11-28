@@ -66,7 +66,7 @@ describe("DocumentController", () => {
         index,
         collection,
         { query: { bar: "bar " } },
-        { from: 1, size: 3, scroll: "10s" }
+        { from: 1, size: 3, scroll: "10s" },
       );
 
       should(response).match({
@@ -84,7 +84,7 @@ describe("DocumentController", () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: "services.storage.invalid_multi_index_collection_usage" }
+        { id: "services.storage.invalid_multi_index_collection_usage" },
       );
     });
 
@@ -95,7 +95,7 @@ describe("DocumentController", () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: "services.storage.invalid_multi_index_collection_usage" }
+        { id: "services.storage.invalid_multi_index_collection_usage" },
       );
     });
 
@@ -107,7 +107,7 @@ describe("DocumentController", () => {
 
       await should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -122,7 +122,7 @@ describe("DocumentController", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "index".',
-        }
+        },
       );
     });
 
@@ -137,7 +137,7 @@ describe("DocumentController", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "collection".',
-        }
+        },
       );
     });
 
@@ -177,7 +177,7 @@ describe("DocumentController", () => {
       await documentController.search(request);
       return should(kuzzle.ask).be.calledWith(
         "core:storage:public:document:multiSearch",
-        [{ index: "foo", collections: ["bar"] }]
+        [{ index: "foo", collections: ["bar"] }],
       );
     });
 
@@ -188,7 +188,7 @@ describe("DocumentController", () => {
 
       return should(documentController.search(request)).rejectedWith(
         SizeLimitError,
-        { id: "services.storage.get_limit_exceeded" }
+        { id: "services.storage.get_limit_exceeded" },
       );
     });
 
@@ -205,7 +205,7 @@ describe("DocumentController", () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -215,7 +215,7 @@ describe("DocumentController", () => {
 
       return should(documentController.search(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -250,7 +250,7 @@ describe("DocumentController", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:document:scroll",
         "SomeScrollIdentifier",
-        { scrollTTL: "1m" }
+        { scrollTTL: "1m" },
       );
 
       should(response).match({
@@ -270,7 +270,7 @@ describe("DocumentController", () => {
         .rejects(new Error("foobar"));
 
       return should(documentController.scroll(request)).be.rejectedWith(
-        "foobar"
+        "foobar",
       );
     });
   });
@@ -286,7 +286,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:exist",
         index,
         collection,
-        "foo"
+        "foo",
       );
 
       should(response).be.True();
@@ -315,7 +315,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:mExists",
         index,
         collection,
-        ["id", "id2"]
+        ["id", "id2"],
       );
 
       should(response).match({
@@ -332,7 +332,7 @@ describe("DocumentController", () => {
 
       should(documentController.mExists(request)).be.rejectedWith(
         SizeLimitError,
-        { id: "services.storage.get_limit_exceeded" }
+        { id: "services.storage.get_limit_exceeded" },
       );
     });
 
@@ -360,7 +360,7 @@ describe("DocumentController", () => {
 
       return should(documentController.mExists(request)).be.rejectedWith(
         MultipleErrorsError,
-        { id: "api.process.incomplete_multiple_request" }
+        { id: "api.process.incomplete_multiple_request" },
       );
     });
   });
@@ -382,7 +382,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:get",
         index,
         collection,
-        "foo"
+        "foo",
       );
 
       should(response).be.eql({
@@ -415,7 +415,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:mGet",
         index,
         collection,
-        ["id", "id2"]
+        ["id", "id2"],
       );
 
       should(response).match({
@@ -459,7 +459,7 @@ describe("DocumentController", () => {
 
       return should(documentController.mGet(request)).be.rejectedWith(
         MultipleErrorsError,
-        { id: "api.process.incomplete_multiple_request" }
+        { id: "api.process.incomplete_multiple_request" },
       );
     });
   });
@@ -475,7 +475,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:count",
         index,
         collection,
-        { query: {} }
+        { query: {} },
       );
 
       should(response).be.eql({ count: 42 });
@@ -505,7 +505,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -526,7 +526,7 @@ describe("DocumentController", () => {
           injectKuzzleMeta: false,
           userId: "aschen",
           refresh: "wait_for",
-        }
+        },
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -535,7 +535,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
 
       should(response).match({
@@ -553,7 +553,7 @@ describe("DocumentController", () => {
         index,
         collection,
         content,
-        { id: null, injectKuzzleMeta: false, userId: null, refresh: "false" }
+        { id: null, injectKuzzleMeta: false, userId: null, refresh: "false" },
       );
     });
   });
@@ -620,7 +620,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -631,7 +631,7 @@ describe("DocumentController", () => {
       const response = await documentController._mChanges(
         request,
         "mCreate",
-        actionEnum.CREATE
+        actionEnum.CREATE,
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -644,14 +644,14 @@ describe("DocumentController", () => {
           userId: "aschen",
           refresh: "wait_for",
           retryOnConflict: undefined,
-        }
+        },
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:realtime:document:mNotify",
         request,
         actionEnum.CREATE,
-        items
+        items,
       );
 
       should(response).match({
@@ -673,7 +673,7 @@ describe("DocumentController", () => {
           userId: null,
           refresh: "false",
           retryOnConflict: undefined,
-        }
+        },
       );
     });
 
@@ -692,7 +692,7 @@ describe("DocumentController", () => {
       const response = await documentController._mChanges(
         request,
         "mCreate",
-        actionEnum.CREATE
+        actionEnum.CREATE,
       );
 
       should(response).match({
@@ -714,7 +714,7 @@ describe("DocumentController", () => {
       ];
 
       return should(
-        documentController._mChanges(request, "mCreate", actionEnum.CREATE)
+        documentController._mChanges(request, "mCreate", actionEnum.CREATE),
       ).be.rejectedWith({ id: "api.assert.unexpected_argument" });
     });
 
@@ -722,7 +722,7 @@ describe("DocumentController", () => {
       kuzzle.config.limits.documentsWriteCount = 1;
 
       return should(
-        documentController._mChanges(request, "foobar", actionEnum.CREATE)
+        documentController._mChanges(request, "foobar", actionEnum.CREATE),
       ).rejectedWith(SizeLimitError, {
         id: "services.storage.write_limit_exceeded",
       });
@@ -734,7 +734,7 @@ describe("DocumentController", () => {
       const response = await documentController._mChanges(
         request,
         "mCreate",
-        actionEnum.CREATE
+        actionEnum.CREATE,
       );
 
       should(response).match({
@@ -743,10 +743,10 @@ describe("DocumentController", () => {
       });
 
       should(
-        kuzzle.ask.withArgs("core:storage:public:document:mCreate")
+        kuzzle.ask.withArgs("core:storage:public:document:mCreate"),
       ).not.called();
       should(
-        kuzzle.ask.withArgs("core:realtime:document:mNotify")
+        kuzzle.ask.withArgs("core:realtime:document:mNotify"),
       ).not.called();
     });
 
@@ -765,7 +765,7 @@ describe("DocumentController", () => {
       });
 
       return should(
-        documentController._mChanges(request, "mCreate", actionEnum.CREATE)
+        documentController._mChanges(request, "mCreate", actionEnum.CREATE),
       ).rejectedWith(MultipleErrorsError, {
         id: "api.process.incomplete_multiple_request",
       });
@@ -781,7 +781,7 @@ describe("DocumentController", () => {
         index,
         collection,
         documents,
-        { source: true, userId: null, refresh: "false", retryOnConflict: 2 }
+        { source: true, userId: null, refresh: "false", retryOnConflict: 2 },
       );
     });
 
@@ -795,7 +795,7 @@ describe("DocumentController", () => {
         index,
         collection,
         documents,
-        { source: true, userId: null, refresh: "false", retryOnConflict: 2 }
+        { source: true, userId: null, refresh: "false", retryOnConflict: 2 },
       );
     });
 
@@ -814,7 +814,7 @@ describe("DocumentController", () => {
           userId: null,
           refresh: "false",
           retryOnConflict: undefined,
-        }
+        },
       );
     });
 
@@ -833,7 +833,7 @@ describe("DocumentController", () => {
         "core:realtime:document:mNotify",
         request,
         actionEnum.UPDATE,
-        items
+        items,
       );
     });
 
@@ -896,7 +896,7 @@ describe("DocumentController", () => {
         "core:realtime:document:mNotify",
         request,
         actionEnum.UPSERT,
-        updatedItems
+        updatedItems,
       );
     });
   });
@@ -949,7 +949,7 @@ describe("DocumentController", () => {
             refresh: "false",
             retryOnConflict: undefined,
             userId: null,
-          }
+          },
         )
         .resolves({
           items,
@@ -967,7 +967,7 @@ describe("DocumentController", () => {
             refresh: "false",
             retryOnConflict: undefined,
             userId: null,
-          }
+          },
         )
         .resolves({
           items: items.map((item) => {
@@ -984,7 +984,7 @@ describe("DocumentController", () => {
       await documentController._mChanges(
         request,
         "mCreateOrReplace",
-        actionEnum.WRITE
+        actionEnum.WRITE,
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -997,7 +997,7 @@ describe("DocumentController", () => {
           refresh: "false",
           retryOnConflict: undefined,
           userId: null,
-        }
+        },
       );
     });
 
@@ -1008,7 +1008,7 @@ describe("DocumentController", () => {
       const response = await documentController._mChanges(
         request,
         "mCreateOrReplace",
-        actionEnum.WRITE
+        actionEnum.WRITE,
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -1021,7 +1021,7 @@ describe("DocumentController", () => {
           refresh: "false",
           retryOnConflict: undefined,
           userId: null,
-        }
+        },
       );
 
       for (const item of response.successes) {
@@ -1036,7 +1036,7 @@ describe("DocumentController", () => {
       await documentController._mChanges(
         request,
         "mCreateOrReplace",
-        actionEnum.WRITE
+        actionEnum.WRITE,
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -1049,7 +1049,7 @@ describe("DocumentController", () => {
           refresh: "false",
           retryOnConflict: undefined,
           userId: null,
-        }
+        },
       );
     });
   });
@@ -1085,7 +1085,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1101,7 +1101,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
+        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" },
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1110,7 +1110,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.WRITE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
 
       should(response).match({
@@ -1130,7 +1130,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: null, refresh: "false" }
+        { injectKuzzleMeta: false, userId: null, refresh: "false" },
       );
     });
   });
@@ -1163,7 +1163,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1185,7 +1185,7 @@ describe("DocumentController", () => {
           userId: "aschen",
           refresh: "wait_for",
           retryOnConflict: 42,
-        }
+        },
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1198,7 +1198,7 @@ describe("DocumentController", () => {
           _id: "_id",
           _source: content,
           _updatedFields: ["foo"],
-        }
+        },
       );
 
       should(response).match({
@@ -1222,7 +1222,7 @@ describe("DocumentController", () => {
           userId: null,
           refresh: "false",
           retryOnConflict: undefined,
-        }
+        },
       );
     });
 
@@ -1266,7 +1266,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1289,7 +1289,7 @@ describe("DocumentController", () => {
           refresh: "wait_for",
           retryOnConflict: 42,
           userId: "aschen",
-        }
+        },
       );
 
       should(kuzzle.ask).be.calledWithMatch(
@@ -1300,7 +1300,7 @@ describe("DocumentController", () => {
           _id: "_id",
           _source: { ...changes, name: "gordon" },
           _updatedFields: ["foo"],
-        }
+        },
       );
 
       should(response).match({
@@ -1336,14 +1336,14 @@ describe("DocumentController", () => {
           refresh: "wait_for",
           retryOnConflict: 42,
           userId: "aschen",
-        }
+        },
       );
 
       should(kuzzle.ask).be.calledWithMatch(
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { ...defaultValues, ...changes, name: "gordon" }
+        { ...defaultValues, ...changes, name: "gordon" },
       );
 
       should(response).match({
@@ -1370,7 +1370,7 @@ describe("DocumentController", () => {
           refresh: "false",
           retryOnConflict: undefined,
           userId: null,
-        }
+        },
       );
     });
 
@@ -1422,7 +1422,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1447,7 +1447,7 @@ describe("DocumentController", () => {
         collection,
         { match: { foo: "bar" } },
         { bar: "foo" },
-        { refresh: "wait_for", userId: "aschen" }
+        { refresh: "wait_for", userId: "aschen" },
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -1458,7 +1458,7 @@ describe("DocumentController", () => {
           _id: doc._id,
           _source: doc._source,
           _updatedFields: ["bar"],
-        }))
+        })),
       );
 
       should(response).be.eql(esResponse);
@@ -1484,7 +1484,7 @@ describe("DocumentController", () => {
         collection,
         { match: { foo: "bar" } },
         { bar: "foo" },
-        { refresh: "wait_for", userId: null }
+        { refresh: "wait_for", userId: null },
       );
 
       should(kuzzle.ask).calledWith(
@@ -1495,7 +1495,7 @@ describe("DocumentController", () => {
           _id: doc._id,
           _source: { foo: "bar", bar: "foo" },
           _updatedFields: ["bar"],
-        }))
+        })),
       );
 
       should(response).be.eql(esResponse);
@@ -1518,7 +1518,7 @@ describe("DocumentController", () => {
         {
           id: "api.assert.missing_argument",
           message: /^Missing argument "body.query"/,
-        }
+        },
       );
     });
 
@@ -1539,7 +1539,7 @@ describe("DocumentController", () => {
         {
           id: "api.assert.missing_argument",
           message: /^Missing argument "body.changes"/,
-        }
+        },
       );
     });
 
@@ -1552,7 +1552,7 @@ describe("DocumentController", () => {
 
       return should(documentController.updateByQuery(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -1600,7 +1600,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1616,7 +1616,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" }
+        { injectKuzzleMeta: false, userId: "aschen", refresh: "wait_for" },
       );
 
       should(kuzzle.validation.validate).be.calledWith(request, false);
@@ -1625,7 +1625,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.REPLACE,
-        { _id: request.input.args._id, _source: content }
+        { _id: request.input.args._id, _source: content },
       );
 
       should(response).match({
@@ -1644,7 +1644,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content,
-        { injectKuzzleMeta: false, userId: null, refresh: "false" }
+        { injectKuzzleMeta: false, userId: null, refresh: "false" },
       );
     });
   });
@@ -1668,7 +1668,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1682,14 +1682,14 @@ describe("DocumentController", () => {
         index,
         collection,
         "foobar",
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:realtime:document:notify",
         request,
         actionEnum.DELETE,
-        { _id: "foobar", _source: "_source" }
+        { _id: "foobar", _source: "_source" },
       );
 
       should(response).be.eql({ _id: "foobar" });
@@ -1704,14 +1704,14 @@ describe("DocumentController", () => {
         "core:storage:public:document:delete",
         index,
         collection,
-        "foobar"
+        "foobar",
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:realtime:document:notify",
         request,
         actionEnum.DELETE,
-        { _id: "foobar", _source: "_source" }
+        { _id: "foobar", _source: "_source" },
       );
 
       should(response).be.eql({ _id: "foobar", _source: "_source" });
@@ -1748,7 +1748,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1764,7 +1764,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content.fields,
-        { userId: "aschen", refresh: "wait_for" }
+        { userId: "aschen", refresh: "wait_for" },
       );
 
       should(kuzzle.ask).be.calledWithMatch(
@@ -1774,7 +1774,7 @@ describe("DocumentController", () => {
         {
           _id: "_id",
           _source: { foo: "bar" },
-        }
+        },
       );
 
       should(response).match({
@@ -1792,7 +1792,7 @@ describe("DocumentController", () => {
         collection,
         "foobar",
         content.fields,
-        { userId: null, refresh: "false" }
+        { userId: null, refresh: "false" },
       );
     });
 
@@ -1838,7 +1838,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1852,14 +1852,14 @@ describe("DocumentController", () => {
         index,
         collection,
         ids,
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:realtime:document:mNotify",
         request,
         actionEnum.DELETE,
-        documents
+        documents,
       );
 
       should(response).match({
@@ -1892,7 +1892,7 @@ describe("DocumentController", () => {
 
       should(documentController.mDelete(request)).be.rejectedWith(
         MultipleErrorsError,
-        { id: "api.process.incomplete_multiple_request" }
+        { id: "api.process.incomplete_multiple_request" },
       );
     });
   });
@@ -1921,7 +1921,7 @@ describe("DocumentController", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.CREATE,
-        { _id: "_id", _source: "_source" }
+        { _id: "_id", _source: "_source" },
       );
     });
 
@@ -1936,7 +1936,7 @@ describe("DocumentController", () => {
         index,
         collection,
         { foo: "bar" },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -1946,7 +1946,7 @@ describe("DocumentController", () => {
         [
           { _id: "id1", _source: undefined },
           { _id: "id2", _source: undefined },
-        ]
+        ],
       );
 
       should(response).match({
@@ -1969,7 +1969,7 @@ describe("DocumentController", () => {
         index,
         collection,
         { foo: "bar" },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -1979,7 +1979,7 @@ describe("DocumentController", () => {
         [
           { _id: "id1", _source: "_source1" },
           { _id: "id2", _source: "_source2" },
-        ]
+        ],
       );
 
       should(response).match({
@@ -1996,7 +1996,7 @@ describe("DocumentController", () => {
 
       return should(documentController.deleteByQuery(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 

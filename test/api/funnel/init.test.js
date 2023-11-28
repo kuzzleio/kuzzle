@@ -40,22 +40,22 @@ describe("funnel.init", () => {
     should(funnel.controllers.get("bulk")).be.instanceOf(BulkController);
     should(funnel.controllers.get("cluster")).be.instanceOf(ClusterController);
     should(funnel.controllers.get("collection")).be.instanceOf(
-      CollectionController
+      CollectionController,
     );
     should(funnel.controllers.get("debug")).be.instanceOf(DebugController);
     should(funnel.controllers.get("document")).be.instanceOf(
-      DocumentController
+      DocumentController,
     );
     should(funnel.controllers.get("index")).be.instanceOf(IndexController);
     should(funnel.controllers.get("memoryStorage")).be.instanceOf(
-      MemoryStorageController
+      MemoryStorageController,
     );
     should(funnel.controllers.get("ms")).be.instanceOf(MemoryStorageController);
     should(funnel.controllers.get("realtime")).be.instanceOf(
-      RealtimeController
+      RealtimeController,
     );
     should(funnel.controllers.get("security")).be.instanceOf(
-      SecurityController
+      SecurityController,
     );
     should(funnel.controllers.get("server")).be.instanceOf(ServerController);
     should(funnel.controllers.get("admin")).be.instanceOf(AdminController);

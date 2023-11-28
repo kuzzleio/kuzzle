@@ -79,7 +79,7 @@ class UpgradeContext {
       this.log.error(`Cannot load configuration files: ${e.message}`);
       if (this.config === null) {
         this.log.error(
-          "Check your configuration files, and restart the upgrade script."
+          "Check your configuration files, and restart the upgrade script.",
         );
         process.exit(1);
       }
@@ -120,7 +120,7 @@ class UpgradeContext {
       .filter((entry) => entry.isDirectory() && entry.name.match(/^v\d+$/))
       .map((entry) => entry.name)
       .sort(
-        (a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1))
+        (a, b) => parseInt(a[0].substring(1)) - parseInt(b[0].substring(1)),
       );
 
     if (version.list.length === 1) {

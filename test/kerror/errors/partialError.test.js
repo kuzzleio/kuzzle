@@ -27,7 +27,7 @@ describe("#PartialError", () => {
 
   it("should serialize correctly", () => {
     let err = JSON.parse(
-      JSON.stringify(new PartialError("foobar", ["foo", "bar"]))
+      JSON.stringify(new PartialError("foobar", ["foo", "bar"])),
     );
 
     should(err.message).be.eql("foobar");

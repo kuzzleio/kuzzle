@@ -18,7 +18,7 @@ describe("Test: model/security/role", () => {
       controller: "controller",
       action: "action",
     },
-    context
+    context,
   );
 
   before(() => {
@@ -117,7 +117,7 @@ describe("Test: model/security/role", () => {
             controller: "controller",
             action: "action",
           },
-          context
+          context,
         );
 
       role.controllers = {
@@ -177,14 +177,14 @@ describe("Test: model/security/role", () => {
             controller: "controller",
             action: "action",
           },
-          context
+          context,
         ),
         restrictions = new Map(
           Object.entries({
             index1: [],
             index2: ["collection1"],
             index3: ["collection1", "collection2"],
-          })
+          }),
         );
 
       role.controllers = {
@@ -198,31 +198,31 @@ describe("Test: model/security/role", () => {
       should(role.checkRestrictions(req, restrictions)).be.true();
 
       should(
-        role.checkRestrictions("index", undefined, restrictions)
+        role.checkRestrictions("index", undefined, restrictions),
       ).be.false();
 
       should(
-        role.checkRestrictions("index1", undefined, restrictions)
+        role.checkRestrictions("index1", undefined, restrictions),
       ).be.true();
 
       should(
-        role.checkRestrictions("index2", undefined, restrictions)
+        role.checkRestrictions("index2", undefined, restrictions),
       ).be.true();
 
       should(
-        role.checkRestrictions("index2", "collection", restrictions)
+        role.checkRestrictions("index2", "collection", restrictions),
       ).be.false();
 
       should(
-        role.checkRestrictions("index2", "collection1", restrictions)
+        role.checkRestrictions("index2", "collection1", restrictions),
       ).be.true();
 
       should(
-        role.checkRestrictions("index2", "collection2", restrictions)
+        role.checkRestrictions("index2", "collection2", restrictions),
       ).be.false();
 
       should(
-        role.checkRestrictions("index3", "collection2", restrictions)
+        role.checkRestrictions("index3", "collection2", restrictions),
       ).be.true();
     });
   });
@@ -234,7 +234,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -244,7 +244,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
     });
 
@@ -256,7 +256,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -268,7 +268,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
     });
 
@@ -282,7 +282,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -296,7 +296,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -310,7 +310,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
     });
 
@@ -326,7 +326,7 @@ describe("Test: model/security/role", () => {
 
       return should(role.validateDefinition(context)).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 

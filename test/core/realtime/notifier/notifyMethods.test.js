@@ -40,7 +40,7 @@ describe("notify methods", () => {
         controller: "controller",
         action: "action",
       },
-      { protocol: "protocol" }
+      { protocol: "protocol" },
     );
 
     hotelClerk.rooms.set(
@@ -98,8 +98,8 @@ describe("notify methods", () => {
               propagate: true,
             }),
           ],
-        ])
-      )
+        ]),
+      ),
     );
 
     hotelClerk.rooms.set(
@@ -113,8 +113,8 @@ describe("notify methods", () => {
             "foobar",
             new Channel("nonMatching", { scope: "none", propagate: true }),
           ],
-        ])
-      )
+        ]),
+      ),
     );
 
     hotelClerk.rooms.set(
@@ -140,8 +140,8 @@ describe("notify methods", () => {
               propagate: false,
             }),
           ],
-        ])
-      )
+        ]),
+      ),
     );
 
     hotelClerk.rooms.set(
@@ -155,8 +155,8 @@ describe("notify methods", () => {
             "always",
             new Channel("alwaysMatching", { scope: "all", propagate: true }),
           ],
-        ])
-      )
+        ]),
+      ),
     );
 
     return notifier.init();
@@ -189,13 +189,13 @@ describe("notify methods", () => {
         request,
         "out",
         "update",
-        content
+        content,
       );
 
       should(notifier._notifyDocument).be.calledWith(
         rooms,
         expectedNotification,
-        { fromCluster: false }
+        { fromCluster: false },
       );
 
       should(kuzzle.emit.callCount).be.eql(1);
@@ -218,7 +218,7 @@ describe("notify methods", () => {
           "scope",
           "update",
           { some: "content" },
-          { fromCluster: false }
+          { fromCluster: false },
         );
 
         should(kuzzle.entryPoint.dispatch).not.be.called();
@@ -232,7 +232,7 @@ describe("notify methods", () => {
           request,
           "out",
           "update",
-          content
+          content,
         );
 
         await notifier._notifyDocument(
@@ -244,7 +244,7 @@ describe("notify methods", () => {
             "cluster",
           ],
           documentNotification,
-          { fromCluster: false }
+          { fromCluster: false },
         );
 
         const dispatch = kuzzle.entryPoint.dispatch;
@@ -261,7 +261,7 @@ describe("notify methods", () => {
         ]);
 
         should(dispatch.firstCall.args[1].payload).be.instanceof(
-          DocumentNotification
+          DocumentNotification,
         );
 
         const notification = dispatch.firstCall.args[1].payload;
@@ -319,7 +319,7 @@ describe("notify methods", () => {
           "not a scope",
           "create",
           content,
-          { fromCluster: false }
+          { fromCluster: false },
         );
 
         should(kuzzle.entryPoint.dispatch).not.be.called();
@@ -333,7 +333,7 @@ describe("notify methods", () => {
           request,
           "out",
           "create",
-          content
+          content,
         );
 
         await notifier._notifyDocument(
@@ -344,7 +344,7 @@ describe("notify methods", () => {
             "IAMERROR",
             "cluster",
           ],
-          documentNotification
+          documentNotification,
         );
 
         const dispatch = kuzzle.entryPoint.dispatch;
@@ -387,7 +387,7 @@ describe("notify methods", () => {
       ]);
 
       should(dispatch.firstCall.args[1].payload).be.instanceof(
-        UserNotification
+        UserNotification,
       );
 
       const notification = dispatch.firstCall.args[1].payload;
@@ -451,8 +451,8 @@ describe("notify methods", () => {
           new Map([
             ["nonMatching", null],
             ["alwaysMatching", null],
-          ])
-        )
+          ]),
+        ),
       );
 
       await notifier.notifyTokenExpired("foobar");
@@ -495,7 +495,7 @@ describe("notify methods", () => {
         "my-event",
         ["channel-foo"],
         { foo: "bar" },
-        "connectionId"
+        "connectionId",
       );
 
       should(kuzzle.entryPoint.dispatch)
@@ -545,14 +545,14 @@ describe("notify methods", () => {
               alpha: "beta",
             },
           };
-        }
+        },
       );
 
       await notifier._dispatch(
         "my-event",
         ["channel-foo"],
         { foo: "bar" },
-        "foobar"
+        "foobar",
       );
 
       await should(kuzzle.pipe)

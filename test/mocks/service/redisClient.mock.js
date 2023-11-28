@@ -23,11 +23,11 @@ class RedisClientMock extends EventEmitter {
     });
 
     this.select = sinon.spy((key, callback) =>
-      key > 16 ? callback(new Error("Unknown database")) : callback(null)
+      key > 16 ? callback(new Error("Unknown database")) : callback(null),
     );
 
     process.nextTick(() =>
-      err ? this.emit("error", err) : this.emit("ready")
+      err ? this.emit("error", err) : this.emit("ready"),
     );
   }
 

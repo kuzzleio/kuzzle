@@ -44,7 +44,7 @@ describe("Test: sdk/funnelProtocol", () => {
         try {
           should(kuzzle.on).be.calledOnce();
           should(kuzzle.on.getCall(0).args[0]).be.eql(
-            "core:network:internal:message"
+            "core:network:internal:message",
           );
 
           done();
@@ -105,11 +105,11 @@ describe("Test: sdk/funnelProtocol", () => {
         should(
           kuzzle.ask.withArgs(
             "core:security:user:get",
-            customUserRequest.__kuid__
-          )
+            customUserRequest.__kuid__,
+          ),
         ).be.calledOnce();
         should(response.result.context.user._id).be.eql(
-          customUserRequest.__kuid__
+          customUserRequest.__kuid__,
         );
       });
     });
@@ -134,7 +134,7 @@ describe("Test: sdk/funnelProtocol", () => {
         ForbiddenError,
         {
           id: "security.rights.forbidden",
-        }
+        },
       );
     });
 
@@ -151,7 +151,7 @@ describe("Test: sdk/funnelProtocol", () => {
         PluginImplementationError,
         {
           id: "plugin.context.invalid_user",
-        }
+        },
       );
     });
   });

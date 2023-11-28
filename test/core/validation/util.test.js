@@ -23,7 +23,7 @@ describe("Test: validation utilities", () => {
 
     it("should be false if one of the property is not allowed", () => {
       should(
-        checkAllowedProperties({ foo: "bar", baz: "bar" }, ["foo"])
+        checkAllowedProperties({ foo: "bar", baz: "bar" }, ["foo"]),
       ).be.false();
     });
   });
@@ -86,7 +86,7 @@ describe("Test: validation utilities", () => {
         };
 
       should(
-        curateStructuredFields(typeAllowChildren, fields, maxDepth)
+        curateStructuredFields(typeAllowChildren, fields, maxDepth),
       ).be.deepEqual(expectedStructuredFields);
     });
 
@@ -144,7 +144,7 @@ describe("Test: validation utilities", () => {
         fieldPath = ["foo"];
 
       should(getParent(structuredField, fieldPath)).be.deepEqual(
-        structuredField
+        structuredField,
       );
     });
 
@@ -165,7 +165,7 @@ describe("Test: validation utilities", () => {
         fieldPath = ["foo", "bar", "baz"];
 
       should(getParent(structuredField, fieldPath)).be.deepEqual(
-        structuredField.children.foo.children.bar
+        structuredField.children.foo.children.bar,
       );
     });
 
@@ -351,7 +351,7 @@ describe("Test: validation utilities", () => {
   describe("#getValidationConfiguration", () => {
     let kuzzle;
     const getValidationConfiguration = Validation.__get__(
-      "getValidationConfiguration"
+      "getValidationConfiguration",
     );
 
     beforeEach(() => {
@@ -371,7 +371,7 @@ describe("Test: validation utilities", () => {
       should(kuzzle.ask).calledWithMatch(
         "core:storage:private:document:search",
         kuzzle.internalIndex.index,
-        "validations"
+        "validations",
       );
     });
 
