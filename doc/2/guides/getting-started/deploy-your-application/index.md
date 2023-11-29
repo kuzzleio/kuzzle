@@ -112,7 +112,7 @@ Create the `deployment/kuzzle.dockerfile` file with the following content:
 
 ```dockerfile
 # builder image
-FROM node:12.18.1-stretch-slim as builder
+FROM node:18 as builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
@@ -126,10 +126,10 @@ ADD . /var/app
 
 WORKDIR /var/app
 
-RUN  npm install && npm run build && npm prune --production
+RUN  npm ci && npm run build && npm prune --production
 
 # run image
-FROM node:12.18.1-stretch-slim
+FROM node:18
 
 COPY --from=builder /var/app /var/app
 
@@ -150,7 +150,7 @@ $ ssh <user>@<server-ip>
 
 [...]
 
-$ docker-compose -f deployment/docker-compose.yml up -d
+$ docker compose -f deployment/docker-compose.yml up -d
 ```
 
 Your Kuzzle application is now up and running on port 7512!

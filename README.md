@@ -48,13 +48,19 @@ Check out our [support plans](https://kuzzle.io/pricing/).
 The easiest way to start a Kuzzle application is to use [Kourou](https://github.com/kuzzleio/kourou):
 
 ```bash
-npx kourou app:scaffold playground
+kourou app:scaffold playground
 
  🚀 Kourou - Scaffolds a new Kuzzle application
 
-  ✔ Creating and rendering application files
+generic
+  ✔ Checking destination
+  ✔ Prepare temporary folder
+  ✔ Cloning template repository
+  ✔ Copying template files
+  ✔ Cleaning up
 
- [✔] Scaffolding complete! Use cd playground && npm run docker npm install install dependencies and then npm run docker:dev to run your application!
+ [✔] Scaffolding complete!
+ [✔] Use cd playground && docker compose up -d to start your Kuzzle stack.
 ```
 
 Then you need to run Kuzzle services, Elasticsearch and Redis: `kourou app:start-services`
@@ -123,7 +129,7 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 
 ## Join our community
 
-* Follow us on [twitter](https://twitter.com/kuzzleio) to get latest news
+* Follow us on [𝕏 (Twitter)](https://twitter.com/kuzzleio) to get latest news
 * Register to our monthly [newsletter](http://eepurl.com/bxRxpr) to get highlighed news
 * Visit our [blog](https://blog.kuzzle.io/) to be informed about what we are doing
 * Come chat with us on [Discord](http://join.discord.kuzzle.io)
@@ -142,5 +148,5 @@ Run the following command to install all the dependencies in your container:
 npm run docker:install
 ```
 
-finally run the command `docker-compose up` to launch your kuzzle stack.
+Finally, run the command `docker compose up` to start your Kuzzle stack.
 

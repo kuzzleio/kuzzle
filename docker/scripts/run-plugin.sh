@@ -13,7 +13,7 @@ then
     echo "Installing dependencies for $KUZZLE_PLUGIN_NAME"
     cd "$plugins_dir/$KUZZLE_PLUGIN_NAME"
 
-    npm install --unsafe-perm --force
+    npm ci --unsafe-perm --force
 
     # This is dirty but we are in a development environment, who cares
     chmod 777 node_modules/
@@ -24,7 +24,7 @@ else
       echo 'Installing dependencies for ' $(basename "$target")
       cd "$target"
 
-      npm install --unsafe-perm --force
+      npm ci --unsafe-perm --force
 
       # This is dirty but we are in a development environment, who cares
       chmod 777 node_modules/

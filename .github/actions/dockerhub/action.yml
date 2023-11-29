@@ -17,9 +17,10 @@ runs:
   steps:
     - name: Create JS from TS files
       run: |
-        npm install
-        npm run build-ts
+        npm ci
+        npm run build
       shell: bash
+
     - name: Build and deploy Docker images
       run: |
         ./docker/build-docker-images.sh

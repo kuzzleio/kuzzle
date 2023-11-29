@@ -10,4 +10,4 @@
 
 echo "launching kuzzle"
 cd /vagrant
-docker-compose -p kuzzle up -d
+docker compose -p kuzzle up -d
