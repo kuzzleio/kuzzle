@@ -10,7 +10,7 @@ on:
 env:
   NODE_LTS_MAINTENANCE_VERSION: "16"
   NODE_LTS_ACTIVE_VERSION: "18"
-  NODE_LTS_CURRENT_VERSION: "20" # Stand for the latest LTS version
+  NODE_LTS_CURRENT_VERSION: "20"
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
@@ -20,9 +20,9 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo 'node-version=["$NODE_LTS_MAINTENANCE_VERSION", "$NODE_LTS_ACTIVE_VERSION"]' >> $GITHUB_OUTPUT
+          echo 'node_version=["$NODE_LTS_MAINTENANCE_VERSION", "$NODE_LTS_ACTIVE_VERSION"]' >> $GITHUB_OUTPUT
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      node_version: ${{ steps.set-matrix.outputs.node_version }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
@@ -41,7 +41,7 @@ jobs:
       - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           cache: "npm"
 
       - name: Install depedencies
@@ -56,7 +56,7 @@ jobs:
     needs: [prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -78,7 +78,7 @@ jobs:
     needs: [lint, prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -108,7 +108,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
@@ -142,7 +142,7 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -177,7 +177,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
