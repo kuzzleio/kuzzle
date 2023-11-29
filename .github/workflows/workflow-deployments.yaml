@@ -121,7 +121,7 @@ jobs:
       - name: Build TS files
         run: |
           npm install
-          npm run build
+          npm run build-ts
       - name: Build and push
         uses: docker/build-push-action@v2
         with:

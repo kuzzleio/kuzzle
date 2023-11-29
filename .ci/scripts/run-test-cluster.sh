@@ -19,7 +19,7 @@ then
   docker-compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
 fi
 
-npm run build
+npm run build-ts
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
