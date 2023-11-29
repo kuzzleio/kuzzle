@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
+        node-version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -63,7 +63,7 @@ jobs:
     needs: [lint]
     strategy:
       matrix:
-        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
+        node-version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -93,7 +93,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
+        node-version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
@@ -127,7 +127,7 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
+        node-version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -162,7 +162,7 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
+        node-version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
