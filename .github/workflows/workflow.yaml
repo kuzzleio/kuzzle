@@ -17,6 +17,9 @@ jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
     runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v3
     outputs:
       node_version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
