@@ -14,22 +14,6 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
-  prepare-matrix:
-    name: Forge Node LTS Matrix
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v3
-      
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-    outputs:
-      node_version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
-      node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
-      node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
-      node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
-      docker_platforms: ${{ env.DOCKER_PLATFORMS }}
-
   error-codes-check:
     name: Documentation - Error codes check
     runs-on: ubuntu-22.04
@@ -55,10 +39,9 @@ jobs:
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
     runs-on: ubuntu-22.04
-    needs: [prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
+        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -77,10 +60,10 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [lint, prepare-matrix]
+    needs: [lint]
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
+        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -105,12 +88,12 @@ jobs:
   # -----------------------------------------------------------------------------
 
   build-and-run-kuzzle:
-    needs: [unit-tests, prepare-matrix]
+    needs: [unit-tests]
     name: Build and Run
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
+        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
@@ -132,7 +115,7 @@ jobs:
 
   functional-tests:
     name: ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
-    needs: [unit-tests, prepare-matrix]
+    needs: [unit-tests]
     strategy:
       matrix:
         test_set:
@@ -144,7 +127,7 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
+        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -175,11 +158,11 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
+    needs: [functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ needs.prepare-matrix.outputs.node_version }}
+        node-version: [${{ env.NODE_LTS_MAINTENANCE_VERSION }}, ${{ env.NODE_LTS_ACTIVE_VERSION }}]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -208,11 +191,11 @@ jobs:
 
   deploy-workflow:
     name: Deployment Workflow
-    needs: [cluster-monkey-tests, prepare-matrix]
+    needs: [cluster-monkey-tests]
     uses: ./.github/workflows/workflow-deployments.yaml
     secrets: inherit
     with:
-      node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
-      node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
-      node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
-      docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
+      node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
+      node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+      docker_platforms: ${{ env.DOCKER_PLATFORMS }}
