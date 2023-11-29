@@ -41,7 +41,7 @@ jobs:
       - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           cache: "npm"
 
       - name: Install depedencies

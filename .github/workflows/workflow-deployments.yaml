@@ -86,7 +86,7 @@ jobs:
         shell: bash
         id: extract-refs
         run: |
-          echo "version=$(git describe --abbrev=0 --tags | cut -d. -f 1)" >> $GITHUB_OUTPUT
+          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> $GITHUB_OUTPUT
           echo "repo=$(echo $GITHUB_REPOSITORY | cut -d/ -f 2)" >> $GITHUB_OUTPUT
 
       - name: Trigger documentation workflow
@@ -97,7 +97,7 @@ jobs:
           github_token: ${{ secrets.ACCESS_TOKEN_CI }}
           workflow_file_name: child_repo.workflow.yml
           ref: ${{ github.ref_name == 'master' && 'master' || 'develop' }}
-          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.version }}"}'
+          client_payload: '{"repo_name":"${{ steps.extract-refs.outputs.repo }}","branch":"${{ github.head_ref }}","version":"${{ steps.extract-refs.outputs.major-version }}"}'
 
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
