@@ -22,7 +22,7 @@
     "prettier": "npx prettier ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin --write",
     "services": "npx kourou app:start-services",
     "start:dev": "npx ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json --script-args=--enable-plugins functional-test-plugin",
-    "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http",
+    "test:functional:http": "KUZZLE_PROTOCOL=http npx cucumber-js --profile http",
     "test:functional:jest": "npm run test:jest",
     "test:functional:legacy:http": "npx cucumber-js --format progress-bar --profile http ./features-legacy",
     "test:functional:legacy:mqtt": "npx cucumber-js --format progress-bar --profile mqtt ./features-legacy",
@@ -36,8 +36,8 @@
     "test:lint:ts:fix": "eslint --max-warnings=0 --fix ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint:ts": "eslint --max-warnings=0 ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
-    "test:unit:coverage": "DEBUG= npx nyc --reporter=text-summary --reporter=lcov mocha --exit",
-    "test:unit": "DEBUG= mocha --exit",
+    "test:unit:coverage": "DEBUG= nyc --reporter=text-summary --reporter=lcov mocha --exit",
+    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
     "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit:coverage && npm run test:functional"
   },
   "directories": {
