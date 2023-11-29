@@ -9,7 +9,7 @@ const {
   NativeController,
 } = require("../../../../lib/api/controllers/baseController");
 const SecurityController = rewire(
-  "../../../../lib/api/controllers/securityController"
+  "../../../../lib/api/controllers/securityController",
 );
 const {
   Request,
@@ -52,7 +52,7 @@ describe("/api/controllers/securityController", () => {
         should(kuzzle.ask).calledWith(
           "core:storage:private:collection:refresh",
           kuzzle.internalIndex.index,
-          collection
+          collection,
         );
       }
     });
@@ -65,7 +65,7 @@ describe("/api/controllers/securityController", () => {
       });
 
       should(
-        kuzzle.ask.withArgs("core:storage:private:collection:refresh")
+        kuzzle.ask.withArgs("core:storage:private:collection:refresh"),
       ).not.be.called();
     });
   });
@@ -85,7 +85,7 @@ describe("/api/controllers/securityController", () => {
 
       return should(securityController._mDelete("type", request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
@@ -94,7 +94,7 @@ describe("/api/controllers/securityController", () => {
 
       return should(securityController._mDelete("type", request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -103,7 +103,7 @@ describe("/api/controllers/securityController", () => {
 
       return should(securityController._mDelete("type", request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -114,7 +114,7 @@ describe("/api/controllers/securityController", () => {
         SizeLimitError,
         {
           id: "services.storage.write_limit_exceeded",
-        }
+        },
       );
     });
 
@@ -128,7 +128,7 @@ describe("/api/controllers/securityController", () => {
           should(deleteStub).calledWithMatch(
             `core:security:${type}:delete`,
             id,
-            { refresh: "wait_for" }
+            { refresh: "wait_for" },
           );
         }
       }
@@ -146,7 +146,7 @@ describe("/api/controllers/securityController", () => {
           should(deleteStub).calledWithMatch(
             `core:security:${type}:delete`,
             id,
-            { refresh: "false" }
+            { refresh: "false" },
           );
         }
       }

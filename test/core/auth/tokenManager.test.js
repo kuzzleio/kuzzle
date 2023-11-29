@@ -311,11 +311,11 @@ describe("Test: token manager core component", () => {
 
       tokenManager.link(
         new Token({ _id: "bar", expiresAt: now + 1000000 }),
-        "connectionId1"
+        "connectionId1",
       );
       tokenManager.link(
         new Token({ _id: "foo", expiresAt: now - 1000 }),
-        "connectionId2"
+        "connectionId2",
       );
 
       runTimerStub.resetHistory();
@@ -339,7 +339,7 @@ describe("Test: token manager core component", () => {
 
       tokenManager.link(
         new Token({ _id: "api-key-1", expiresAt: -1 }),
-        "connectionId1"
+        "connectionId1",
       );
 
       runTimerStub.resetHistory();
@@ -361,7 +361,7 @@ describe("Test: token manager core component", () => {
 
       tokenManager.link(
         new Token({ _id: "foo", expiresAt: now - 1000 }),
-        "connectionId2"
+        "connectionId2",
       );
 
       runTimerStub.resetHistory();
@@ -472,12 +472,12 @@ describe("Test: token manager core component", () => {
     it("should do nothing if the provided token is not linked", () => {
       tokenManager.refresh(
         new Token({ _id: "i am the beyonder" }),
-        new Token({ _id: "i am the mountain" })
+        new Token({ _id: "i am the mountain" }),
       );
 
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx).eql(
-        `${token.expiresAt};${token._id}`
+        `${token.expiresAt};${token._id}`,
       );
 
       should(tokenManager.tokensByConnection.get("foo")).match({
@@ -491,7 +491,7 @@ describe("Test: token manager core component", () => {
 
       should(tokenManager.tokens.array).have.length(1);
       should(tokenManager.tokens.array[0].idx).eql(
-        `${newT.expiresAt};${newT._id}`
+        `${newT.expiresAt};${newT._id}`,
       );
 
       should(tokenManager.tokensByConnection.get("foo")).match({

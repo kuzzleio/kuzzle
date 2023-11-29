@@ -107,11 +107,11 @@ export class KuzzleRequest {
         } else {
           const error = new KuzzleError(
             options.error.message,
-            options.error.status || 500
+            options.error.status || 500,
           );
 
           for (const prop of Object.keys(options.error).filter(
-            (key) => key !== "message" && key !== "status"
+            (key) => key !== "message" && key !== "status",
           )) {
             error[prop] = options.error[prop];
           }
@@ -205,7 +205,7 @@ export class KuzzleRequest {
   setError(error: Error) {
     if (!error || !(error instanceof Error)) {
       throw new InternalError(
-        "Cannot set non-error object as a request's error"
+        "Cannot set non-error object as a request's error",
       );
     }
 
@@ -248,7 +248,7 @@ export class KuzzleRequest {
        * Returns directly the result instead of wrapping it in a Kuzzle response
        */
       raw?: boolean;
-    } = {}
+    } = {},
   ) {
     if (result instanceof Error) {
       throw new InternalError("cannot set an error as a request's response");
@@ -396,7 +396,7 @@ export class KuzzleRequest {
         "assert",
         "invalid_argument",
         "lang",
-        '"elasticsearch" or "koncorde"'
+        '"elasticsearch" or "koncorde"',
       );
     }
 
@@ -538,7 +538,7 @@ export class KuzzleRequest {
    */
   getBodyObject(
     name: string,
-    def: JSONObject | undefined = undefined
+    def: JSONObject | undefined = undefined,
   ): JSONObject {
     const body = this.input.body;
 
@@ -804,7 +804,7 @@ export class KuzzleRequest {
     options: {
       ifMissing?: "error" | "generate" | "ignore";
       generator?: () => string;
-    } = { generator: uuid.v4, ifMissing: "error" }
+    } = { generator: uuid.v4, ifMissing: "error" },
   ): string {
     const id = this.input.args._id;
 
@@ -943,7 +943,7 @@ export class KuzzleRequest {
    * Gets the refresh value.
    */
   getRefresh(
-    defaultValue: "false" | "wait_for" = "false"
+    defaultValue: "false" | "wait_for" = "false",
   ): "false" | "wait_for" {
     if (this.input.args.refresh === undefined) {
       return defaultValue;
@@ -985,7 +985,7 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    querystring = false
+    querystring = false,
   ): boolean {
     let value = get(obj, name);
 
@@ -1019,7 +1019,7 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: number | undefined = undefined
+    def: number | undefined = undefined,
   ): number {
     let value = get(obj, name, def);
 
@@ -1048,7 +1048,7 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: number | undefined = undefined
+    def: number | undefined = undefined,
   ): number {
     let value = get(obj, name, def);
 
@@ -1077,7 +1077,7 @@ export class KuzzleRequest {
     obj: JSONObject,
     name: string,
     errorName: string,
-    def: string | undefined = undefined
+    def: string | undefined = undefined,
   ): string {
     const value = get(obj, name, def);
 
@@ -1105,7 +1105,7 @@ export class KuzzleRequest {
     name: string,
     errorName: string,
     def: [] | undefined = undefined,
-    querystring = false
+    querystring = false,
   ): any[] {
     const value = get(obj, name, def);
 
@@ -1154,7 +1154,7 @@ export class KuzzleRequest {
     name: string,
     errorName: string,
     def: JSONObject | undefined = undefined,
-    querystring = false
+    querystring = false,
   ): JSONObject {
     const value = get(obj, name, def);
 

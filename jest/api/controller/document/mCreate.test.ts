@@ -28,7 +28,6 @@ beforeAll(async () => {
       },
     },
   });
-  console.log("End beforeAll");
 });
 
 afterAll(async () => {

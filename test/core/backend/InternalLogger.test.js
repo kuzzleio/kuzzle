@@ -39,7 +39,7 @@ describe("Backend", () => {
         should(global.kuzzle.log.warn).be.calledWith(util.inspect("warn"));
         should(global.kuzzle.log.error).be.calledWith(util.inspect("error"));
         should(global.kuzzle.log.verbose).be.calledWith(
-          util.inspect({ info: "verbose" })
+          util.inspect({ info: "verbose" }),
         );
       });
     });

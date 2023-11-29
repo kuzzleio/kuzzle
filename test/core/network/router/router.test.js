@@ -139,10 +139,10 @@ describe("Test: router", () => {
     it("should return the metrics object", () => {
       // Fake connections
       router.newConnection(
-        new RequestContext({ connection: { id: "foo", protocol: "bar" } })
+        new RequestContext({ connection: { id: "foo", protocol: "bar" } }),
       );
       router.newConnection(
-        new RequestContext({ connection: { id: "foo2", protocol: "bar" } })
+        new RequestContext({ connection: { id: "foo2", protocol: "bar" } }),
       );
 
       should(router.metrics()).match({

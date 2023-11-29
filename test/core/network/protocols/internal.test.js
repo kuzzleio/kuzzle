@@ -34,7 +34,7 @@ describe("/lib/core/network/protocols/internalProtocol", () => {
 
       should(kuzzle.onAsk).be.calledOnce();
       should(kuzzle.onAsk.getCall(0).args[0]).be.eql(
-        "core:network:internal:connectionId:get"
+        "core:network:internal:connectionId:get",
       );
     });
   });

@@ -81,4 +81,4 @@ function fromMessage(domain, subdomain, id, message) {
   return fromError(error);
 }
 
-module.exports = { fromMessage, fromError };
+module.exports = { fromError, fromMessage };

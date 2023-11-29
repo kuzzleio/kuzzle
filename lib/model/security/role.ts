@@ -107,7 +107,7 @@ export class Role {
       throw assertionError.get(
         "invalid_type",
         `${this._id}.controllers`,
-        "object"
+        "object",
       );
     }
 
@@ -115,9 +115,9 @@ export class Role {
       throw assertionError.get("empty_argument", `${this._id}.controllers`);
     }
 
-    Object.entries(this.controllers).forEach((entry) =>
-      this.validateControllerRights(...entry)
-    );
+    for (const entry of Object.entries(this.controllers)) {
+      this.validateControllerRights(...entry);
+    }
   }
 
   /**
@@ -129,7 +129,7 @@ export class Role {
   checkRestrictions(
     index: string,
     collection: string,
-    restrictedTo: OptimizedPolicyRestrictions
+    restrictedTo: OptimizedPolicyRestrictions,
   ): boolean {
     // If no restrictions, we allow the action:
     if (!restrictedTo || restrictedTo.size === 0) {
@@ -200,7 +200,7 @@ export class Role {
         throw assertionError.get(
           "invalid_type",
           `${name}.actions.${actionName}`,
-          "boolean"
+          "boolean",
         );
       }
     }

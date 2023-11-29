@@ -80,7 +80,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     kuzzle = _mockKuzzle(Kuzzle);
     application = new Plugin(
       { init: sinon.stub() },
-      { name: "application", application: true, openApi: "openApi" }
+      { name: "application", application: true, openApi: "openApi" },
     );
   });
 
@@ -138,7 +138,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           kuzzle.pipe.withArgs("kuzzle:state:live"),
           kuzzle.entryPoint.startListening,
           kuzzle.pipe.withArgs("kuzzle:state:ready"),
-          kuzzle.emit.withArgs("core:kuzzleStart")
+          kuzzle.emit.withArgs("core:kuzzleStart"),
         );
 
         should(kuzzle.state).be.eql(kuzzleStateEnum.RUNNING);
@@ -166,7 +166,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         kuzzleWithPCRE.ask.withArgs("core:cache:internal:get").resolves(1);
 
         kuzzleWithPCRE.config = JSON.parse(
-          JSON.stringify(kuzzleWithPCRE.config)
+          JSON.stringify(kuzzleWithPCRE.config),
         );
 
         kuzzleWithPCRE.config.realtime.pcreSupport = true;
@@ -199,39 +199,39 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         return kuzzle.start(application);
       }).then(() => {
         should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly(
-          "unhandledRejection"
+          "unhandledRejection",
         );
         should(processOnSpy.getCall(0).args[0]).be.exactly(
-          "unhandledRejection"
+          "unhandledRejection",
         );
 
         should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly(
-          "uncaughtException"
+          "uncaughtException",
         );
         should(processOnSpy.getCall(1).args[0]).be.exactly("uncaughtException");
 
         should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly(
-          "SIGQUIT"
+          "SIGQUIT",
         );
         should(processOnSpy.getCall(2).args[0]).be.exactly("SIGQUIT");
 
         should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly(
-          "SIGABRT"
+          "SIGABRT",
         );
         should(processOnSpy.getCall(3).args[0]).be.exactly("SIGABRT");
 
         should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly(
-          "SIGTRAP"
+          "SIGTRAP",
         );
         should(processOnSpy.getCall(4).args[0]).be.exactly("SIGTRAP");
 
         should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly(
-          "SIGINT"
+          "SIGINT",
         );
         should(processOnSpy.getCall(5).args[0]).be.exactly("SIGINT");
 
         should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly(
-          "SIGTERM"
+          "SIGTERM",
         );
         should(processOnSpy.getCall(6).args[0]).be.exactly("SIGTERM");
       });
@@ -321,7 +321,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         "core:storage:private:document:exist",
         "kuzzle",
         "installations",
-        "id"
+        "id",
       );
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:document:create",
@@ -332,7 +332,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           handler: handler.toString(),
           installedAt: Date.now(),
         },
-        { id: "id" }
+        { id: "id" },
       );
       should(handler).be.calledOnce();
       should(kuzzle.log.info).be.calledOnce();
@@ -350,14 +350,14 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         "core:storage:private:document:exist",
         "kuzzle",
         "installations",
-        "id"
+        "id",
       );
       should(kuzzle.ask).be.neverCalledWith(
         "core:storage:private:document:create",
         "kuzzle",
         "installations",
         { handler: handler.toString(), installedAt: Date.now() },
-        { id: "id" }
+        { id: "id" },
       );
       should(handler).not.be.called();
       should(kuzzle.log.info).not.be.called();
@@ -428,7 +428,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:get",
-        "backend:init:import:mappings"
+        "backend:init:import:mappings",
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -438,13 +438,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           stringify({
             toImport: mappingsPayload.toImport,
             toSupport: {},
-          })
-        )
+          }),
+        ),
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:get",
-        "backend:init:import:permissions"
+        "backend:init:import:permissions",
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -454,13 +454,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           stringify({
             toImport: permissionsPayload.toImport,
             toSupport: {},
-          })
-        )
+          }),
+        ),
       );
 
       should(kuzzle.internalIndex.updateMapping).be.calledWith(
         "users",
-        toImport.userMappings
+        toImport.userMappings,
       );
       should(kuzzle.internalIndex.refreshCollection).be.calledWith("users");
       should(kuzzle.ask).calledWith(
@@ -470,7 +470,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           indexCacheOnly: false,
           propagate: false,
           refresh: true,
-        }
+        },
       );
       should(kuzzle.ask).calledWith(
         "core:security:load",
@@ -483,7 +483,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           onExistingUsers: toImport.onExistingUsers,
           onExistingUsersWarning: true,
           refresh: "wait_for",
-        }
+        },
       );
     });
 
@@ -493,7 +493,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:get",
-        "backend:init:import:mappings"
+        "backend:init:import:mappings",
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -503,13 +503,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           stringify({
             toSupport: mappingsPayload.toSupport,
             toImport: {},
-          })
-        )
+          }),
+        ),
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:get",
-        "backend:init:import:permissions"
+        "backend:init:import:permissions",
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -519,13 +519,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           stringify({
             toSupport: permissionsPayload.toSupport,
             toImport: {},
-          })
-        )
+          }),
+        ),
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:get",
-        "backend:init:import:fixtures"
+        "backend:init:import:fixtures",
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -534,8 +534,8 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         sha256(
           stringify({
             toSupport: fixturesPayload.toSupport,
-          })
-        )
+          }),
+        ),
       );
 
       should(kuzzle.ask).calledWith(
@@ -546,11 +546,11 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           propagate: false,
           rawMappings: true,
           refresh: true,
-        }
+        },
       );
       should(kuzzle.ask).calledWith(
         "core:storage:public:document:import",
-        toSupport.fixtures
+        toSupport.fixtures,
       );
       should(kuzzle.ask).calledWith(
         "core:security:load",
@@ -558,13 +558,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         {
           force: true,
           refresh: "wait_for",
-        }
+        },
       );
     });
 
     it("should prevent mappings to be loaded from import and support simultaneously", () => {
       return should(
-        kuzzle.loadInitialState(toImport, { mappings: { something: "here" } })
+        kuzzle.loadInitialState(toImport, { mappings: { something: "here" } }),
       ).be.rejectedWith({ id: "plugin.runtime.incompatible" });
     });
 
@@ -572,8 +572,8 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       return should(
         kuzzle.loadInitialState(
           { profiles: { something: "here" } },
-          { securities: { roles: { something: "here" } } }
-        )
+          { securities: { roles: { something: "here" } } },
+        ),
       ).be.rejectedWith({ id: "plugin.runtime.incompatible" });
     });
   });

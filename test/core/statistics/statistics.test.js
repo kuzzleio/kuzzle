@@ -410,7 +410,7 @@ describe("Test: statistics core component", () => {
       "core:cache:internal:store",
       "{stats/}" + stats.lastFrame,
       JSON.stringify(fakeStats),
-      { ttl: stats.ttl }
+      { ttl: stats.ttl },
     );
   });
 

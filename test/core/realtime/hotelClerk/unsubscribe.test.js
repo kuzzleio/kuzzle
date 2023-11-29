@@ -46,8 +46,8 @@ describe("Test: hotelClerk.unsubscribe", () => {
           ["ch1", new Channel(roomId, { cluster: true })],
           ["ch2", new Channel(roomId, { cluster: true })],
         ]),
-        new Set([connectionId])
-      )
+        new Set([connectionId]),
+      ),
     );
 
     hotelClerk.roomsCount = 1;
@@ -81,7 +81,7 @@ describe("Test: hotelClerk.unsubscribe", () => {
 
     await should(hotelClerk.unsubscribe(connectionId, roomId)).rejectedWith(
       PreconditionError,
-      { id: "core.realtime.not_subscribed" }
+      { id: "core.realtime.not_subscribed" },
     );
 
     should(hotelClerk.rooms).have.key(roomId);
@@ -92,7 +92,7 @@ describe("Test: hotelClerk.unsubscribe", () => {
   it("should reject if the room does not exist", () => {
     hotelClerk.subscriptions.set(
       connectionId,
-      new ConnectionRooms(new Map([["nowhere", null]]))
+      new ConnectionRooms(new Map([["nowhere", null]])),
     );
 
     return hotelClerk
@@ -106,7 +106,7 @@ describe("Test: hotelClerk.unsubscribe", () => {
     kuzzle.tokenManager.getKuidFromConnection.returns("Umraniye");
     hotelClerk.subscriptions.set(
       connectionId,
-      new ConnectionRooms(new Map([[roomId, null]]))
+      new ConnectionRooms(new Map([[roomId, null]])),
     );
 
     await hotelClerk.unsubscribe(connectionId, roomId);
@@ -130,7 +130,7 @@ describe("Test: hotelClerk.unsubscribe", () => {
         },
       },
       "out",
-      { count: 0 }
+      { count: 0 },
     );
     should(kuzzle.emit).be.calledWithMatch(
       "core:realtime:user:unsubscribe:after",
@@ -153,7 +153,7 @@ describe("Test: hotelClerk.unsubscribe", () => {
           connectionId,
           kuid: "Umraniye",
         },
-      }
+      },
     );
   });
 
@@ -164,8 +164,8 @@ describe("Test: hotelClerk.unsubscribe", () => {
         new Map([
           [roomId, null],
           ["anotherRoom", null],
-        ])
-      )
+        ]),
+      ),
     );
 
     hotelClerk.rooms.set("anotherRoom", {});
@@ -192,18 +192,18 @@ describe("Test: hotelClerk.unsubscribe", () => {
         },
       },
       "out",
-      { count: 0 }
+      { count: 0 },
     );
   });
 
   it("should remove a customer and notify other users in the room", async () => {
     hotelClerk.subscriptions.set(
       connectionId,
-      new ConnectionRooms(new Map([[roomId, null]]))
+      new ConnectionRooms(new Map([[roomId, null]])),
     );
     hotelClerk.subscriptions.set(
       "foobar",
-      new ConnectionRooms(new Map([[roomId, null]]))
+      new ConnectionRooms(new Map([[roomId, null]])),
     );
     hotelClerk.rooms.get(roomId).connections.add("foobar");
 
@@ -219,12 +219,12 @@ describe("Test: hotelClerk.unsubscribe", () => {
       roomId,
       sinon.match.instanceOf(Request),
       "out",
-      { count: 1 }
+      { count: 1 },
     );
 
     should(kuzzle.call).be.calledWithMatch(
       "core:realtime:unsubscribe:after",
-      roomId
+      roomId,
     );
   });
 });

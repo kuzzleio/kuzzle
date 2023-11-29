@@ -59,7 +59,9 @@ export class User {
 
     const rights = {};
 
-    results.forEach((right) => _.assignWith(rights, right, Rights.merge));
+    for (const right of results) {
+      _.assignWith(rights, right, Rights.merge);
+    }
 
     return rights;
   }
@@ -98,10 +100,10 @@ export class User {
   private async areTargetsAllowed(
     request: KuzzleRequest,
     profiles: Profile[],
-    targets: Target[]
+    targets: Target[],
   ) {
     const profilesPolicies = await Promise.all(
-      profiles.map((profile) => profile.getAllowedPolicies(request))
+      profiles.map((profile) => profile.getAllowedPolicies(request)),
     );
 
     // Every target must be allowed by at least one profile
@@ -127,9 +129,9 @@ export class User {
             policy.role.checkRestrictions(
               target.index,
               collection,
-              policy.restrictedTo
-            )
-          )
+              policy.restrictedTo,
+            ),
+          ),
         );
 
         if (!isTargetAllowed) {

@@ -76,13 +76,13 @@ describe("Test: security/profileRepository", () => {
           "core:storage:private:document:get",
           kuzzle.internalIndex.index,
           "profiles",
-          "idontexist"
+          "idontexist",
         )
         .rejects(new NotFoundError("Not found"));
 
       return should(profileRepository.load("idontexist")).rejectedWith(
         NotFoundError,
-        { id: "security.profile.not_found" }
+        { id: "security.profile.not_found" },
       );
     });
 
@@ -119,7 +119,7 @@ describe("Test: security/profileRepository", () => {
 
     it("should reject if profileIds is not an array of strings", () => {
       return should(
-        profileRepository.loadProfiles(["a string", { foo: "bar" }])
+        profileRepository.loadProfiles(["a string", { foo: "bar" }]),
       ).be.rejectedWith(BadRequestError, {
         id: "api.assert.invalid_type",
         message: 'Wrong type for argument "profileIds" (expected: string[])',
@@ -191,7 +191,7 @@ describe("Test: security/profileRepository", () => {
         InternalError,
         {
           id: "security.profile.cannot_hydrate",
-        }
+        },
       );
     });
 
@@ -227,12 +227,12 @@ describe("Test: security/profileRepository", () => {
       userRepositoryMock.search.resolves({ total: 1 });
 
       await should(
-        profileRepository.deleteById(testProfile._id)
+        profileRepository.deleteById(testProfile._id),
       ).be.rejectedWith(PreconditionError, { id: "security.profile.in_use" });
 
       should(userRepositoryMock.search).calledWithMatch(
         { query: { terms: { profileIds: [testProfile._id] } } },
-        { from: 0, size: 1 }
+        { from: 0, size: 1 },
       );
 
       should(kuzzle.emit).not.be.called();
@@ -248,7 +248,7 @@ describe("Test: security/profileRepository", () => {
           BadRequestError,
           {
             id: "security.profile.cannot_delete",
-          }
+          },
         );
 
         should(userRepositoryMock.search).not.called();
@@ -361,7 +361,7 @@ describe("Test: security/profileRepository", () => {
         .rejects(error);
 
       return should(
-        profileRepository.validateAndSaveProfile(invalidProfile)
+        profileRepository.validateAndSaveProfile(invalidProfile),
       ).be.rejectedWith(error);
     });
 
@@ -375,9 +375,8 @@ describe("Test: security/profileRepository", () => {
         .withArgs("core:storage:public:collection:exist")
         .resolves(true);
 
-      const result = await profileRepository.validateAndSaveProfile(
-        testProfile
-      );
+      const result =
+        await profileRepository.validateAndSaveProfile(testProfile);
 
       should(result).be.exactly(testProfile);
       should(profileRepository.profiles).have.value("foo", testProfile);
@@ -405,7 +404,7 @@ describe("Test: security/profileRepository", () => {
       profile.policies = [{ roleId: "test" }, { roleId: "another" }];
 
       return should(
-        profileRepository.validateAndSaveProfile(profile)
+        profileRepository.validateAndSaveProfile(profile),
       ).be.rejectedWith(BadRequestError, {
         id: "security.profile.missing_anonymous_role",
       });
@@ -437,7 +436,7 @@ describe("Test: security/profileRepository", () => {
       Repository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(profileRepository.loadOneFromDatabase("bar")).fulfilledWith(
-        "foo"
+        "foo",
       );
 
       should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
@@ -451,7 +450,7 @@ describe("Test: security/profileRepository", () => {
 
       return should(profileRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
-        { id: "security.profile.not_found" }
+        { id: "security.profile.not_found" },
       );
     });
 
@@ -461,7 +460,7 @@ describe("Test: security/profileRepository", () => {
       Repository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(profileRepository.loadOneFromDatabase("foo")).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -515,7 +514,7 @@ describe("Test: security/profileRepository", () => {
         {
           method: "create",
           refresh: "refresh",
-        }
+        },
       );
 
       const profile =
@@ -536,7 +535,7 @@ describe("Test: security/profileRepository", () => {
       profileRepository.validateAndSaveProfile.resolves("foobar");
 
       return should(profileRepository.create("foo", {}, {})).fulfilledWith(
-        "foobar"
+        "foobar",
       );
     });
   });
@@ -555,7 +554,7 @@ describe("Test: security/profileRepository", () => {
         "core:security:profile:createOrReplace",
         "foo",
         "bar",
-        "baz"
+        "baz",
       );
 
       should(profileRepository.createOrReplace).calledWith("foo", "bar", "baz");
@@ -579,7 +578,7 @@ describe("Test: security/profileRepository", () => {
         {
           method: "createOrReplace",
           refresh: "refresh",
-        }
+        },
       );
 
       const profile =
@@ -600,7 +599,7 @@ describe("Test: security/profileRepository", () => {
       profileRepository.validateAndSaveProfile.resolves("foobar");
 
       return should(
-        profileRepository.createOrReplace("foo", {}, {})
+        profileRepository.createOrReplace("foo", {}, {}),
       ).fulfilledWith("foobar");
     });
   });
@@ -626,7 +625,7 @@ describe("Test: security/profileRepository", () => {
       profileRepository.load.rejects(new Error("foo"));
 
       return should(profileRepository.update("foo", {}, {})).rejectedWith(
-        error
+        error,
       );
     });
 
@@ -648,7 +647,7 @@ describe("Test: security/profileRepository", () => {
         {
           method: "update",
           refresh: "refresh",
-        }
+        },
       );
 
       const profile =
@@ -667,7 +666,7 @@ describe("Test: security/profileRepository", () => {
       profileRepository.validateAndSaveProfile.resolves("foobar");
 
       return should(profileRepository.update("foo", {}, {})).fulfilledWith(
-        "foobar"
+        "foobar",
       );
     });
   });
@@ -748,7 +747,7 @@ describe("Test: security/profileRepository", () => {
         restrictedTo: new Map(
           Object.entries({
             foo: ["bar", "baz"],
-          })
+          }),
         ),
       });
     });
@@ -773,7 +772,7 @@ describe("Test: security/profileRepository", () => {
         restrictedTo: new Map(
           Object.entries({
             foo: ["bar", "baz", "qux"],
-          })
+          }),
         ),
       });
     });

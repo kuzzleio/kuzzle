@@ -104,7 +104,7 @@ export class Mutex {
    */
   constructor(
     resource: string,
-    { attemptDelay = 200, timeout = -1, ttl = 5000 }: MutexOptions = {}
+    { attemptDelay = 200, timeout = -1, ttl = 5000 }: MutexOptions = {},
   ) {
     this.resource = resource;
     this.mutexId = `${global.kuzzle.id}/${randomBytes(16).toString("hex")}`;
@@ -124,7 +124,7 @@ export class Mutex {
     if (this._locked) {
       throw fatal.get(
         "assertion_failed",
-        `resource "${this.resource}" already locked by this mutex (id: ${this.mutexId})`
+        `resource "${this.resource}" already locked by this mutex (id: ${this.mutexId})`,
       );
     }
 
@@ -135,7 +135,7 @@ export class Mutex {
         "core:cache:internal:store",
         this.resource,
         this.mutexId,
-        { onlyIfNew: true, ttl: this.ttl }
+        { onlyIfNew: true, ttl: this.ttl },
       );
 
       duration += this.attemptDelay;
@@ -167,7 +167,7 @@ export class Mutex {
     if (!this._locked) {
       throw fatal.get(
         "assertion_failed",
-        `tried to unlock the resource "${this.resource}", which is not locked (mutex id: ${this.mutexId})`
+        `tried to unlock the resource "${this.resource}", which is not locked (mutex id: ${this.mutexId})`,
       );
     }
 
@@ -176,7 +176,7 @@ export class Mutex {
         "core:cache:internal:script:define",
         "delIfValueEqual",
         1,
-        delIfValueEqualLua
+        delIfValueEqualLua,
       );
       delScriptRegistered = true;
     }
@@ -185,7 +185,7 @@ export class Mutex {
       "core:cache:internal:script:execute",
       "delIfValueEqual",
       this.resource,
-      this.mutexId
+      this.mutexId,
     );
 
     this._locked = false;
@@ -218,7 +218,7 @@ export class Mutex {
     do {
       isLocked = await global.kuzzle.ask(
         "core:cache:internal:get",
-        this.resource
+        this.resource,
       );
 
       duration += attemptDelay;

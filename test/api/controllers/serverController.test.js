@@ -459,13 +459,13 @@ describe("ServerController", () => {
 
       const apiDefinition = serverController._buildApiDefinition(
         controllers,
-        routes
+        routes,
       );
 
       const pluginApiDefinition = serverController._buildApiDefinition(
         pluginsControllers,
         pluginsRoutes,
-        "/"
+        "/",
       );
 
       should(apiDefinition).match({

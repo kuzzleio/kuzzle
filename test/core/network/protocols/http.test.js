@@ -26,7 +26,7 @@ describe("core/network/protocols/http", () => {
   before(() => {
     mockRequire("uWebSockets.js", uWSMock);
     HttpWs = mockRequire.reRequire(
-      "../../../../lib/core/network/protocols/httpwsProtocol"
+      "../../../../lib/core/network/protocols/httpwsProtocol",
     );
   });
 
@@ -80,7 +80,7 @@ describe("core/network/protocols/http", () => {
 
       should(httpWs.server.any).not.called();
       should(kuzzle.log.warn).calledWith(
-        "[http] no configuration found for http: disabling it"
+        "[http] no configuration found for http: disabling it",
       );
     });
   });
@@ -143,26 +143,26 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Headers"),
-        Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Methods"),
-        Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Origin"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Type"),
-        Buffer.from("application/json")
+        Buffer.from("application/json"),
       );
 
       should(response.writeHeader).not.be.calledWithMatch(
-        Buffer.from("Content-Length")
+        Buffer.from("Content-Length"),
       );
 
       should(response.writeHeader.calledBefore(response.end));
@@ -257,7 +257,7 @@ describe("core/network/protocols/http", () => {
         request,
         response,
         new HttpStream(stream, { totalBytes: 5 }),
-        message
+        message,
       );
 
       stream.write("Hello");
@@ -265,7 +265,7 @@ describe("core/network/protocols/http", () => {
       should(response.getWriteOffset).be.calledOnce();
       should(response.tryEnd).be.calledWithMatch(
         Buffer.from("Hello").buffer.slice(0, 5),
-        5
+        5,
       );
     });
 
@@ -280,7 +280,7 @@ describe("core/network/protocols/http", () => {
       stream.end();
       should(response.getWriteOffset).be.calledOnce();
       should(response.write).be.calledWithMatch(
-        Buffer.from("Hello").buffer.slice(0, 5)
+        Buffer.from("Hello").buffer.slice(0, 5),
       );
     });
 
@@ -296,7 +296,7 @@ describe("core/network/protocols/http", () => {
         request,
         response,
         new HttpStream(stream, { totalBytes: 5 }),
-        message
+        message,
       );
 
       stream.write("Hello");
@@ -392,7 +392,7 @@ describe("core/network/protocols/http", () => {
       });
 
       await httpWs.server._httpResponse._onData(
-        Buffer.from('{"ahah":"i am a h4ck3r"}')
+        Buffer.from('{"ahah":"i am a h4ck3r"}'),
       );
 
       should(entryPoint.newConnection).not.called();
@@ -530,9 +530,9 @@ describe("core/network/protocols/http", () => {
 
       await httpWs.server._httpResponse._onData(
         Buffer.from(
-          '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'
+          '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--',
         ),
-        true
+        true,
       );
 
       should(httpWs.httpProcessRequest)
@@ -558,7 +558,7 @@ describe("core/network/protocols/http", () => {
 
       await httpWs.server._httpResponse._onData(
         Buffer.from("--foo\r\nContent-Disposition: form-data; --foo--"),
-        true
+        true,
       );
 
       should(httpWs.httpProcessRequest)
@@ -577,9 +577,9 @@ describe("core/network/protocols/http", () => {
 
       await httpWs.server._httpResponse._onData(
         Buffer.from(
-          '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--'
+          '--foo\r\nContent-Disposition: form-data; name="t"\r\n\r\nvalue\r\n--foo\r\nContent-Disposition: form-data; name="f"; filename="filename"\r\nContent-Type: application/octet-stream\r\n\r\nfoobar\r\n--foo--',
         ),
-        true
+        true,
       );
 
       should(httpWs.httpSendError)
@@ -598,7 +598,7 @@ describe("core/network/protocols/http", () => {
 
       await httpWs.server._httpResponse._onData(
         Buffer.from("foo=bar&baz=qux"),
-        true
+        true,
       );
 
       should(httpWs.httpProcessRequest)
@@ -619,7 +619,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foo" });
       await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
-        true
+        true,
       );
 
       should(entryPoint.newConnection).calledOnce();
@@ -635,27 +635,27 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Headers"),
-        Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Methods"),
-        Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Access-Control-Allow-Origin"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Type"),
-        Buffer.from("application/json")
+        Buffer.from("application/json"),
       );
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("identity")
+        Buffer.from("identity"),
       );
 
       should(response.writeHeader.calledBefore(response.tryEnd));
@@ -685,7 +685,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foobar" });
       await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
-        true
+        true,
       );
 
       should(entryPoint.newConnection).calledOnce();
@@ -701,47 +701,47 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).not.be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Headers"),
-        Buffer.from(kuzzle.config.http.accessControlAllowHeaders)
+        Buffer.from(kuzzle.config.http.accessControlAllowHeaders),
       );
 
       should(response.writeHeader).be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Headers"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader).not.be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Methods"),
-        Buffer.from(kuzzle.config.http.accessControlAllowMethods)
+        Buffer.from(kuzzle.config.http.accessControlAllowMethods),
       );
 
       should(response.writeHeader).be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Methods"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader).not.be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Origin"),
-        Buffer.from("foobar")
+        Buffer.from("foobar"),
       );
 
       should(response.writeHeader).not.be.calledWithMatch(
         Buffer.from("Vary"),
-        Buffer.from("Origin")
+        Buffer.from("Origin"),
       );
 
       should(response.writeHeader).be.calledWithMatch(
         Buffer.from("Access-Control-Allow-Origin"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader).not.be.calledWithMatch(
         Buffer.from("Content-Type"),
-        Buffer.from("application/json")
+        Buffer.from("application/json"),
       );
 
       should(response.writeHeader).be.calledWithMatch(
         Buffer.from("Content-Type"),
-        Buffer.from("foo")
+        Buffer.from("foo"),
       );
 
       should(response.writeHeader.calledBefore(response.tryEnd));
@@ -768,7 +768,7 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpOnMessage("get", "/", "", { origin: "foobar" });
       await httpWs.server._httpResponse._onData(
         Buffer.from('{"controller":"foo","action":"bar"}'),
-        true
+        true,
       );
 
       const response = httpWs.server._httpResponse;
@@ -782,7 +782,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).be.calledWithMatch(
         Buffer.from("X-Kuzzle-Request-Id"),
-        Buffer.from("my-custom-id-42")
+        Buffer.from("my-custom-id-42"),
       );
     });
 
@@ -817,7 +817,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("gzip")
+        Buffer.from("gzip"),
       );
     });
 
@@ -852,7 +852,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("deflate")
+        Buffer.from("deflate"),
       );
     });
 
@@ -887,7 +887,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("gzip")
+        Buffer.from("gzip"),
       );
     });
 
@@ -922,7 +922,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("deflate")
+        Buffer.from("deflate"),
       );
     });
 
@@ -954,7 +954,7 @@ describe("core/network/protocols/http", () => {
 
       should(response.writeHeader).calledWithMatch(
         Buffer.from("Content-Encoding"),
-        Buffer.from("identity")
+        Buffer.from("identity"),
       );
     });
 
@@ -963,7 +963,7 @@ describe("core/network/protocols/http", () => {
         gzip: sinon.stub().yields(new Error("foo")),
       });
       HttpWs = mockRequire.reRequire(
-        "../../../../lib/core/network/protocols/httpwsProtocol"
+        "../../../../lib/core/network/protocols/httpwsProtocol",
       );
       const protocol = new HttpWs();
       await protocol.init(entryPoint);
@@ -996,12 +996,12 @@ describe("core/network/protocols/http", () => {
 
         should(response.writeHeader).calledWithMatch(
           Buffer.from("Content-Encoding"),
-          Buffer.from("identity")
+          Buffer.from("identity"),
         );
       } finally {
         mockRequire.stop("zlib");
         HttpWs = mockRequire.reRequire(
-          "../../../../lib/core/network/protocols/httpwsProtocol"
+          "../../../../lib/core/network/protocols/httpwsProtocol",
         );
         clearInterval(protocol.nowInterval);
       }
@@ -1012,7 +1012,7 @@ describe("core/network/protocols/http", () => {
         deflate: sinon.stub().yields(new Error("foo")),
       });
       HttpWs = mockRequire.reRequire(
-        "../../../../lib/core/network/protocols/httpwsProtocol"
+        "../../../../lib/core/network/protocols/httpwsProtocol",
       );
       const protocol = new HttpWs();
       await protocol.init(entryPoint);
@@ -1045,12 +1045,12 @@ describe("core/network/protocols/http", () => {
 
         should(response.writeHeader).calledWithMatch(
           Buffer.from("Content-Encoding"),
-          Buffer.from("identity")
+          Buffer.from("identity"),
         );
       } finally {
         mockRequire.stop("zlib");
         HttpWs = mockRequire.reRequire(
-          "../../../../lib/core/network/protocols/httpwsProtocol"
+          "../../../../lib/core/network/protocols/httpwsProtocol",
         );
         clearInterval(protocol.nowInterval);
       }
@@ -1124,7 +1124,7 @@ describe("core/network/protocols/http", () => {
       should(response.tryEnd).calledOnce();
 
       should(response.tryEnd.firstCall.args[0].toString()).eql(
-        JSON.stringify(Buffer.from("foobar"))
+        JSON.stringify(Buffer.from("foobar")),
       );
     });
 

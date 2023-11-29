@@ -51,7 +51,7 @@ export class FunnelProtocol extends KuzzleEventEmitter {
   async query(request: RequestPayload) {
     if (!this.connectionId) {
       this.connectionId = await global.kuzzle.ask(
-        "core:network:internal:connectionId:get"
+        "core:network:internal:connectionId:get",
       );
     }
 
@@ -71,7 +71,7 @@ export class FunnelProtocol extends KuzzleEventEmitter {
       // Get the user and store it in this context to prevent any possible race conditions
       requestOptions.user = await global.kuzzle.ask(
         "core:security:user:get",
-        request.__kuid__
+        request.__kuid__,
       );
     }
 
@@ -88,13 +88,12 @@ export class FunnelProtocol extends KuzzleEventEmitter {
         "forbidden",
         kuzzleRequest.input.controller,
         kuzzleRequest.input.action,
-        requestOptions.user._id
+        requestOptions.user._id,
       );
     }
 
-    const result = await global.kuzzle.funnel.executePluginRequest(
-      kuzzleRequest
-    );
+    const result =
+      await global.kuzzle.funnel.executePluginRequest(kuzzleRequest);
 
     return { result };
   }

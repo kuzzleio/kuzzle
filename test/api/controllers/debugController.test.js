@@ -49,7 +49,7 @@ describe("Test: debug controller", () => {
 
       await should(kuzzle.ask).be.calledWith(
         "core:debugger:post",
-        "Debugger.enable"
+        "Debugger.enable",
       );
     });
   });
@@ -65,7 +65,7 @@ describe("Test: debug controller", () => {
       request.context.connection.protocol = "http";
       await should(debugController.addListener(request)).be.rejectedWith(
         InternalError,
-        { id: "api.assert.unsupported_protocol" }
+        { id: "api.assert.unsupported_protocol" },
       );
     });
 
@@ -79,7 +79,7 @@ describe("Test: debug controller", () => {
       await should(kuzzle.ask).be.calledWith(
         "core:debugger:addListener",
         "EventMock.event_foo",
-        "foobar"
+        "foobar",
       );
     });
   });
@@ -95,7 +95,7 @@ describe("Test: debug controller", () => {
       request.context.connection.protocol = "http";
       await should(debugController.removeListener(request)).be.rejectedWith(
         InternalError,
-        { id: "api.assert.unsupported_protocol" }
+        { id: "api.assert.unsupported_protocol" },
       );
     });
 
@@ -109,7 +109,7 @@ describe("Test: debug controller", () => {
       await should(kuzzle.ask).be.calledWith(
         "core:debugger:removeListener",
         "EventMock.event_foo",
-        "foobar"
+        "foobar",
       );
     });
   });

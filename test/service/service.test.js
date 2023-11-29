@@ -25,7 +25,7 @@ describe("Service", () => {
       const service2 = new Service(name, { initTimeout: 1000 });
 
       should(service._initTimeout).be.eql(
-        kuzzle.config.services.common.defaultInitTimeout
+        kuzzle.config.services.common.defaultInitTimeout,
       );
       should(service2._initTimeout).be.eql(1000);
     });

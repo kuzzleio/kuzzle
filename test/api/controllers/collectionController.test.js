@@ -45,7 +45,7 @@ describe("Test: collection controller", () => {
     it("should throw a BadRequestError if the body is missing", () => {
       return should(collectionController.updateMapping(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
@@ -67,7 +67,7 @@ describe("Test: collection controller", () => {
         "core:storage:public:mappings:update",
         index,
         collection,
-        mappings
+        mappings,
       );
 
       should(response).match({
@@ -96,7 +96,7 @@ describe("Test: collection controller", () => {
         "core:storage:public:mappings:get",
         index,
         collection,
-        { includeKuzzleMeta: false }
+        { includeKuzzleMeta: false },
       );
 
       should(response).match(mappings);
@@ -120,7 +120,7 @@ describe("Test: collection controller", () => {
         "core:storage:public:mappings:get",
         index,
         collection,
-        { includeKuzzleMeta: true }
+        { includeKuzzleMeta: true },
       );
     });
   });
@@ -132,7 +132,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:collection:truncate",
         index,
-        collection
+        collection,
       );
 
       should(response).match({
@@ -155,7 +155,7 @@ describe("Test: collection controller", () => {
         "core:storage:private:document:get",
         kuzzle.internalIndex.index,
         "validations",
-        `${index}#${collection}`
+        `${index}#${collection}`,
       );
 
       should(response).match({
@@ -169,7 +169,7 @@ describe("Test: collection controller", () => {
         .rejects(new NotFoundError("not found"));
 
       return should(
-        collectionController.getSpecifications(request)
+        collectionController.getSpecifications(request),
       ).be.rejectedWith(NotFoundError, { id: "validation.assert.not_found" });
     });
   });
@@ -181,7 +181,7 @@ describe("Test: collection controller", () => {
       request.input.args.size = 20;
 
       return should(
-        collectionController.searchSpecifications(request)
+        collectionController.searchSpecifications(request),
       ).rejectedWith(SizeLimitError, {
         id: "services.storage.get_limit_exceeded",
       });
@@ -216,7 +216,7 @@ describe("Test: collection controller", () => {
           from: request.input.args.from,
           size: request.input.args.size,
           scroll: request.input.args.scroll,
-        }
+        },
       );
 
       should(response).match({
@@ -235,7 +235,7 @@ describe("Test: collection controller", () => {
       });
 
       return should(
-        collectionController.scrollSpecifications(request)
+        collectionController.scrollSpecifications(request),
       ).rejectedWith(BadRequestError, { id: "api.assert.missing_argument" });
     });
 
@@ -253,7 +253,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWithMatch(
         "core:storage:private:document:scroll",
         "foobar",
-        collectionController.defaultScrollTTL
+        collectionController.defaultScrollTTL,
       );
 
       should(response).match({
@@ -277,7 +277,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWithMatch(
         "core:storage:private:document:scroll",
         "foobar",
-        "qux"
+        "qux",
       );
 
       should(response).match({
@@ -308,7 +308,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:collection:refresh",
         kuzzle.internalIndex.index,
-        "validations"
+        "validations",
       );
 
       should(kuzzle.validation.curateSpecification).be.called();
@@ -322,7 +322,7 @@ describe("Test: collection controller", () => {
           index,
           collection,
           validation: request.input.body,
-        }
+        },
       );
 
       should(response).match(request.input.body);
@@ -345,7 +345,7 @@ describe("Test: collection controller", () => {
       });
 
       await should(
-        collectionController.updateSpecifications(request)
+        collectionController.updateSpecifications(request),
       ).be.rejectedWith(BadRequestError, {
         id: "validation.assert.invalid_specifications",
       });
@@ -372,15 +372,14 @@ describe("Test: collection controller", () => {
     it("should call the right functions and respond with the right response", async () => {
       kuzzle.validation.validateFormat.resolves({ isValid: true });
 
-      const response = await collectionController.validateSpecifications(
-        request
-      );
+      const response =
+        await collectionController.validateSpecifications(request);
 
       should(kuzzle.validation.validateFormat).be.calledWith(
         index,
         collection,
         request.input.body,
-        true
+        true,
       );
       should(response).match({
         valid: true,
@@ -393,9 +392,8 @@ describe("Test: collection controller", () => {
         errors: "errors",
       });
 
-      const response = await collectionController.validateSpecifications(
-        request
-      );
+      const response =
+        await collectionController.validateSpecifications(request);
 
       should(response).match({
         valid: false,
@@ -413,13 +411,13 @@ describe("Test: collection controller", () => {
         "core:storage:private:document:delete",
         kuzzle.internalIndex.index,
         "validations",
-        `${index}#${collection}`
+        `${index}#${collection}`,
       );
 
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:collection:refresh",
         kuzzle.internalIndex.index,
-        "validations"
+        "validations",
       );
 
       should(kuzzle.validation.curateSpecification).be.calledOnce();
@@ -448,12 +446,12 @@ describe("Test: collection controller", () => {
 
       should(kuzzle.ask).calledWith(
         "core:realtime:collections:get",
-        request.input.args.index
+        request.input.args.index,
       );
 
       should(kuzzle.ask).calledWith(
         "core:storage:public:collection:list",
-        index
+        index,
       );
 
       should(response.type).be.exactly("all");
@@ -471,7 +469,7 @@ describe("Test: collection controller", () => {
 
       return should(collectionController.list(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -496,11 +494,11 @@ describe("Test: collection controller", () => {
 
       should(realtimeListCollectionsStub).calledWith(
         "core:realtime:collections:get",
-        "index"
+        "index",
       );
 
       should(
-        kuzzle.ask.withArgs("core:storage:public:collection:list")
+        kuzzle.ask.withArgs("core:storage:public:collection:list"),
       ).not.be.called();
     });
 
@@ -530,7 +528,7 @@ describe("Test: collection controller", () => {
       should(response.type).be.exactly("all");
       should(realtimeListCollectionsStub).calledWith(
         "core:realtime:collections:get",
-        "index"
+        "index",
       );
       should(kuzzle.ask).calledWith("core:storage:public:collection:list");
     });
@@ -560,7 +558,7 @@ describe("Test: collection controller", () => {
       should(response).be.instanceof(Object);
       should(realtimeListCollectionsStub).calledWith(
         "core:realtime:collections:get",
-        "index"
+        "index",
       );
       should(kuzzle.ask).be.calledWith("core:storage:public:collection:list");
     });
@@ -590,7 +588,7 @@ describe("Test: collection controller", () => {
       should(response.type).be.exactly("all");
       should(realtimeListCollectionsStub).calledWithMatch(
         "core:realtime:collections:get",
-        "index"
+        "index",
       );
       should(kuzzle.ask).be.calledWith("core:storage:public:collection:list");
     });
@@ -626,7 +624,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).calledWith(
         "core:storage:public:collection:exist",
         request.input.args.index,
-        request.input.args.collection
+        request.input.args.collection,
       );
     });
   });
@@ -639,7 +637,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:collection:refresh",
         index,
-        collection
+        collection,
       );
     });
   });
@@ -651,7 +649,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:collection:create",
         index,
-        collection
+        collection,
       );
 
       should(response).be.instanceof(Object);
@@ -668,7 +666,7 @@ describe("Test: collection controller", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:collection:delete",
         index,
-        collection
+        collection,
       );
 
       should(response).be.null();

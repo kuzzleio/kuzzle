@@ -39,7 +39,7 @@ describe("#kerror", () => {
       "custom",
       "httpStatus",
       "conflict",
-      "placeHolder-1"
+      "placeHolder-1",
     );
 
     should(err).be.instanceOf(KuzzleError);
@@ -52,7 +52,7 @@ describe("#kerror", () => {
       "core",
       "fatal",
       "service_unavailable",
-      '{"status":"red"}'
+      '{"status":"red"}',
     );
     should(err).be.instanceOf(ExternalServiceError);
     should(err).match({
@@ -68,7 +68,7 @@ describe("#kerror", () => {
       "fatal",
       "service_unavailable",
       "Lambda Core",
-      { message: "Anomalous Materials" }
+      { message: "Anomalous Materials" },
     );
 
     should(err).be.instanceOf(ExternalServiceError);
@@ -96,7 +96,7 @@ describe("#kerror", () => {
       "not_found",
       "fake_id",
       "index",
-      "collection"
+      "collection",
     );
     should(err).be.instanceOf(NotFoundError);
     should(err).match({

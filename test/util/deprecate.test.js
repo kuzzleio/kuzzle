@@ -54,10 +54,10 @@ describe("Test: Deprecate util", () => {
       should(kuzzle.log.warn.callCount).be.eql(4);
       should(kuzzle.log.warn.getCall(0).args[0]).be.eql("DEPRECATION WARNING");
       should(kuzzle.log.warn.getCall(1).args[0]).be.eql(
-        "Use of 'foo' property is deprecated. Please, use 'FOO' instead."
+        "Use of 'foo' property is deprecated. Please, use 'FOO' instead.",
       );
       should(kuzzle.log.warn.getCall(3).args[0]).be.eql(
-        "Use of 'leet' property is deprecated."
+        "Use of 'leet' property is deprecated.",
       );
     });
 

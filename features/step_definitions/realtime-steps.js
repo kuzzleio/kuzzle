@@ -16,16 +16,16 @@ Then(
       {},
       (notification) => {
         this.props.subscriptions[`${index}:${collection}`].notifications.push(
-          notification
+          notification,
         );
-      }
+      },
     );
 
     this.props.subscriptions[`${index}:${collection}`] = {
       unsubscribe: () => this.sdk.realtime.unsubscribe(roomId),
       notifications: [],
     };
-  }
+  },
 );
 
 Then("I unsubscribe from the current room via the plugin", async function () {
@@ -51,10 +51,10 @@ Then(
       const expectedCount = parseInt(rawNumber, 10);
 
       should(
-        this.props.subscriptions[`${index}:${collection}`].notifications
+        this.props.subscriptions[`${index}:${collection}`].notifications,
       ).have.length(expectedCount);
     });
-  }
+  },
 );
 
 Then(
@@ -64,18 +64,18 @@ Then(
       const expectedNotifications = this.parseObjectArray(datatable);
 
       should(
-        this.props.subscriptions[`${index}:${collection}`]
+        this.props.subscriptions[`${index}:${collection}`],
       ).not.be.undefined();
 
       const subscription = this.props.subscriptions[`${index}:${collection}`];
 
       should(subscription.notifications).be.length(
-        expectedNotifications.length
+        expectedNotifications.length,
       );
 
       for (let i = 0; i < expectedNotifications.length; i++) {
         should(subscription.notifications[i]).matchObject(
-          expectedNotifications[i]
+          expectedNotifications[i],
         );
       }
     };
@@ -94,5 +94,5 @@ Then(
         }, 500);
       }
     }, 100);
-  }
+  },
 );

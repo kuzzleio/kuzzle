@@ -16,7 +16,7 @@ class ClientAdapterMock extends ClientAdapter {
 
       global.kuzzle.onAsk(
         `core:storage:${this.scope}:info:get`,
-        sinon.stub().resolves()
+        sinon.stub().resolves(),
       );
     });
 

@@ -78,19 +78,19 @@ describe("#notifier.notifyDocuments", () => {
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/foo`,
           JSON.stringify(rooms),
-          { ttl }
+          { ttl },
         )
         .calledWith(
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(rooms),
-          { ttl }
+          { ttl },
         )
         .calledWith(
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/baz`,
           JSON.stringify(rooms),
-          { ttl }
+          { ttl },
         );
     });
 
@@ -114,17 +114,17 @@ describe("#notifier.notifyDocuments", () => {
         .calledWith(
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/foo`,
-          JSON.stringify(rooms)
+          JSON.stringify(rooms),
         )
         .calledWith(
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
-          JSON.stringify(rooms)
+          JSON.stringify(rooms),
         )
         .calledWith(
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/baz`,
-          JSON.stringify(rooms)
+          JSON.stringify(rooms),
         );
     });
 
@@ -146,7 +146,7 @@ describe("#notifier.notifyDocuments", () => {
           "core:cache:internal:store",
           `{notif/${index}/${collection}}/bar`,
           JSON.stringify(["foo", "bar"]),
-          { ttl }
+          { ttl },
         );
 
       should(kuzzle.ask.withArgs("core:cache:internal:del"))
@@ -209,19 +209,19 @@ describe("#notifier.notifyDocuments", () => {
       should(notifier.notifyDocumentUpdate.firstCall).calledWith(
         request,
         { _id: "foo" },
-        cacheResult[0]
+        cacheResult[0],
       );
 
       should(notifier.notifyDocumentUpdate.secondCall).calledWith(
         request,
         { _id: "bar" },
-        cacheResult[1]
+        cacheResult[1],
       );
 
       should(notifier.notifyDocumentUpdate.thirdCall).calledWith(
         request,
         { _id: "baz" },
-        cacheResult[2]
+        cacheResult[2],
       );
 
       should(kuzzle.ask).calledWith("core:cache:internal:mget", [
@@ -249,19 +249,19 @@ describe("#notifier.notifyDocuments", () => {
       should(notifier.notifyDocumentReplace.firstCall).calledWith(
         request,
         { _id: "foo" },
-        cacheResult[0]
+        cacheResult[0],
       );
 
       should(notifier.notifyDocumentReplace.secondCall).calledWith(
         request,
         { _id: "bar" },
-        cacheResult[1]
+        cacheResult[1],
       );
 
       should(notifier.notifyDocumentReplace.thirdCall).calledWith(
         request,
         { _id: "baz" },
-        cacheResult[2]
+        cacheResult[2],
       );
 
       should(kuzzle.ask).calledWith("core:cache:internal:mget", [
@@ -301,7 +301,7 @@ describe("#notifier.notifyDocuments", () => {
       should(notifier.notifyDocumentReplace).calledWith(
         request,
         { _id: "bar", created: false },
-        cacheResult[1]
+        cacheResult[1],
       );
 
       should(kuzzle.ask).calledWith("core:cache:internal:mget", [
@@ -372,7 +372,7 @@ describe("#notifier.notifyDocuments", () => {
       should(notifier.notifyDocumentUpdate).calledWith(
         request,
         { _id: "bar", created: false, _updatedFields: ["toto"] },
-        cacheResult[1]
+        cacheResult[1],
       );
 
       should(kuzzle.ask).calledWith("core:cache:internal:mget", [
@@ -415,7 +415,7 @@ describe("#notifier.notifyDocuments", () => {
 
     it("should throw on an unknown action", () => {
       return should(
-        notifier.notifyDocuments(request, "ohnoes", [document])
+        notifier.notifyDocuments(request, "ohnoes", [document]),
       ).rejectedWith(KuzzleInternalError, {
         id: "core.fatal.assertion_failed",
       });

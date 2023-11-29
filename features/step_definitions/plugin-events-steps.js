@@ -17,7 +17,7 @@ Given(
     };
 
     await this.sdk.query(request);
-  }
+  },
 );
 
 Given(
@@ -32,5 +32,5 @@ Given(
       state,
       event,
     });
-  }
+  },
 );

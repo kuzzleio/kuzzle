@@ -34,42 +34,42 @@ describe("core/network/httpRouter", () => {
     it("should add a GET route when asked to", () => {
       router.get("/foo/bar", handler);
       should(router.routes.GET.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
     it("should add a POST route when asked to", () => {
       router.post("/foo/bar", handler);
       should(router.routes.POST.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
     it("should add a PUT route when asked to", () => {
       router.put("/foo/bar", handler);
       should(router.routes.PUT.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
     it("should add a PATCH route when asked to", () => {
       router.patch("/foo/bar", handler);
       should(router.routes.PATCH.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
     it("should add a DELETE route when asked to", () => {
       router.delete("/foo/bar", handler);
       should(router.routes.DELETE.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
     it("should add a HEAD route when asked to", () => {
       router.head("/foo/bar", handler);
       should(router.routes.HEAD.subparts.foo.subparts.bar.handler).be.eql(
-        handler
+        handler,
       );
     });
 
@@ -245,7 +245,7 @@ describe("core/network/httpRouter", () => {
           should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: "bar" });
           should(apiRequest.input.headers["content-type"]).eql(
-            "application/json"
+            "application/json",
           );
           done();
         } catch (e) {
@@ -272,7 +272,7 @@ describe("core/network/httpRouter", () => {
           should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: "bar" });
           should(apiRequest.input.headers["content-type"]).eql(
-            "application/json"
+            "application/json",
           );
           should(apiRequest.input.args.bar).eql("hello");
           should(apiRequest.input.args.baz).eql("world");
@@ -301,7 +301,7 @@ describe("core/network/httpRouter", () => {
           should(apiRequest.id).match(httpMessage.requestId);
           should(apiRequest.input.body).match({ foo: "bar" });
           should(apiRequest.input.headers["content-type"]).eql(
-            "application/json; charset=utf-8"
+            "application/json; charset=utf-8",
           );
           should(apiRequest.input.args.bar).eql("hello");
           should(apiRequest.input.args.baz).eql("%world");
@@ -349,7 +349,7 @@ describe("core/network/httpRouter", () => {
             .be.calledOnce()
             .be.calledWith("http:options", sinon.match.instanceOf(Request));
           should(kuzzleMock.pipe.firstCall.args[1].input.headers.foo).eql(
-            "bar"
+            "bar",
           );
 
           done();
@@ -519,15 +519,15 @@ describe("core/network/httpRouter", () => {
 
       mockrequire(
         "../../../../lib/core/network/httpRouter/routeHandler",
-        routeHandlerStub
+        routeHandlerStub,
       );
 
       mockrequire.reRequire(
-        "../../../../lib/core/network/httpRouter/routePart"
+        "../../../../lib/core/network/httpRouter/routePart",
       );
 
       const MockRouter = mockrequire.reRequire(
-        "../../../../lib/core/network/httpRouter"
+        "../../../../lib/core/network/httpRouter",
       );
 
       router = new MockRouter();

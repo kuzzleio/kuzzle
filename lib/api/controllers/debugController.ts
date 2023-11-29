@@ -54,7 +54,7 @@ export class DebugController extends NativeController {
       throw kerror.get(
         "core",
         "debugger",
-        "native_debug_protocol_usage_denied"
+        "native_debug_protocol_usage_denied",
       );
     }
 
@@ -69,7 +69,7 @@ export class DebugController extends NativeController {
       throw kerror.get(
         "core",
         "debugger",
-        "native_debug_protocol_usage_denied"
+        "native_debug_protocol_usage_denied",
       );
     }
 
@@ -85,7 +85,7 @@ export class DebugController extends NativeController {
       throw kerror.get(
         "core",
         "debugger",
-        "native_debug_protocol_usage_denied"
+        "native_debug_protocol_usage_denied",
       );
     }
 
@@ -104,7 +104,7 @@ export class DebugController extends NativeController {
       throw kerror.get(
         "core",
         "debugger",
-        "native_debug_protocol_usage_denied"
+        "native_debug_protocol_usage_denied",
       );
     }
 
@@ -114,7 +114,7 @@ export class DebugController extends NativeController {
         "assert",
         "unsupported_protocol",
         request.context.connection.protocol,
-        "debug:addListener"
+        "debug:addListener",
       );
     }
 
@@ -123,7 +123,7 @@ export class DebugController extends NativeController {
     await global.kuzzle.ask(
       "core:debugger:addListener",
       event,
-      request.context.connection.id
+      request.context.connection.id,
     );
   }
 
@@ -135,7 +135,7 @@ export class DebugController extends NativeController {
       throw kerror.get(
         "core",
         "debugger",
-        "native_debug_protocol_usage_denied"
+        "native_debug_protocol_usage_denied",
       );
     }
 
@@ -145,7 +145,7 @@ export class DebugController extends NativeController {
         "assert",
         "unsupported_protocol",
         request.context.connection.protocol,
-        "debug:removeListener"
+        "debug:removeListener",
       );
     }
 
@@ -154,7 +154,7 @@ export class DebugController extends NativeController {
     await global.kuzzle.ask(
       "core:debugger:removeListener",
       event,
-      request.context.connection.id
+      request.context.connection.id,
     );
   }
 }

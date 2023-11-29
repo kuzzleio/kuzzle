@@ -65,7 +65,7 @@ describe("Errors", () => {
     const error = new PluginImplementationError("message", "id.error", 4242);
 
     should(error.message).be.eql(
-      "message\nThis is probably not a Kuzzle error, but a problem with a plugin implementation."
+      "message\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.",
     );
     should(error.id).be.eql("id.error");
     should(error.code).be.eql(4242);

@@ -53,7 +53,7 @@ describe("ClusterPublisher", () => {
       should(messageId).be.eql(publisher.lastMessageId);
       should(publisher.bufferSend).be.calledWith(
         "DumpRequest",
-        Buffer.from("08011206737566666978", "hex")
+        Buffer.from("08011206737566666978", "hex"),
       );
       should(messageId > lastMessageId).be.true();
     });
@@ -96,7 +96,7 @@ describe("ClusterPublisher", () => {
         const normalized = new NormalizedFilter(
           ["filters"],
           "roomId",
-          "index/collection"
+          "index/collection",
         );
         const result = publisher.sendNewRealtimeRoom(normalized);
 
@@ -159,7 +159,7 @@ describe("ClusterPublisher", () => {
         };
         const result = publisher.sendDocumentNotification(
           ["rooms"],
-          notification
+          notification,
         );
 
         should(result).be.eql("response");
@@ -203,7 +203,7 @@ describe("ClusterPublisher", () => {
         const result = publisher.sendNewAuthStrategy(
           "strategyName",
           "pluginName",
-          "strategy"
+          "strategy",
         );
 
         should(result).be.eql("response");
@@ -219,7 +219,7 @@ describe("ClusterPublisher", () => {
       it("should send the appropriate command and payload", () => {
         const result = publisher.sendRemoveAuthStrategy(
           "strategyName",
-          "pluginName"
+          "pluginName",
         );
 
         should(result).be.eql("response");
@@ -258,7 +258,7 @@ describe("ClusterPublisher", () => {
         const result = publisher.sendAddCollection(
           "scope",
           "index",
-          "collection"
+          "collection",
         );
 
         should(result).be.eql("response");
@@ -287,7 +287,7 @@ describe("ClusterPublisher", () => {
         const result = publisher.sendRemoveCollection(
           "scope",
           "index",
-          "collection"
+          "collection",
         );
 
         should(result).be.eql("response");

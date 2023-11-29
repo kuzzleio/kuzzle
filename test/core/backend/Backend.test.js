@@ -112,10 +112,10 @@ describe("Backend", () => {
       should(options.vaultKey).be.eql(application._vaultKey);
       should(options.plugins).have.keys(
         "kuzzle-plugin-logger",
-        "kuzzle-plugin-auth-passport-local"
+        "kuzzle-plugin-auth-passport-local",
       );
       should(options.installations).be.eql(
-        application._installationsWaitingList
+        application._installationsWaitingList,
       );
       should(options.import).be.eql(application._import);
       should(options.support).be.eql(application._support);
@@ -125,7 +125,7 @@ describe("Backend", () => {
       application.config.content.plugins.common.include = ["foo"];
 
       await should(application.start()).rejectedWith(
-        /Cannot find module 'foo'.*/
+        /Cannot find module 'foo'.*/,
       );
 
       application.config.content.plugins.common.include = [
@@ -140,7 +140,7 @@ describe("Backend", () => {
 
       should(options.plugins).have.keys("kuzzle-plugin-logger");
       should(options.plugins).not.have.keys(
-        "kuzzle-plugin-auth-passport-local"
+        "kuzzle-plugin-auth-passport-local",
       );
     });
   });

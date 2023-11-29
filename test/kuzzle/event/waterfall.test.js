@@ -17,7 +17,7 @@ describe("waterfall", () => {
 
         this.done();
       },
-      context
+      context,
     );
   });
 
@@ -43,7 +43,7 @@ describe("waterfall", () => {
 
         this.done();
       },
-      context
+      context,
     );
   });
 
@@ -63,7 +63,7 @@ describe("waterfall", () => {
 
         this.done();
       },
-      context
+      context,
     );
   });
 });

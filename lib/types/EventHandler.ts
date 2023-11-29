@@ -41,7 +41,7 @@ export type EventDefinition = {
  * Handler for hook events
  */
 export type HookEventHandler<
-  TEventDefinition extends EventDefinition = EventDefinition
+  TEventDefinition extends EventDefinition = EventDefinition,
 > = (...args: TEventDefinition["args"]) => void;
 
 /**
@@ -50,14 +50,14 @@ export type HookEventHandler<
  * It should return a promise resolving the first received argument.
  */
 export type PipeEventHandler<
-  TEventDefinition extends EventDefinition = EventDefinition
+  TEventDefinition extends EventDefinition = EventDefinition,
 > = (...args: TEventDefinition["args"]) => Promise<TEventDefinition["args"][0]>;
 
 /**
  * Handler for cluster event.
  */
 export type ClusterEventHandler<
-  TEventDefinition extends EventDefinition = EventDefinition
+  TEventDefinition extends EventDefinition = EventDefinition,
 > = (...args: TEventDefinition["args"]) => any;
 
 /**

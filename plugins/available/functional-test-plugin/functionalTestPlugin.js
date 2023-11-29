@@ -125,7 +125,7 @@ class FunctionalTestPlugin {
       this.genericDocumentEvent("afterDelete", ...args);
 
     this.pipes["plugin-functional-test-plugin:testPipesReturn"] = async (
-      name
+      name,
     ) => `Hello, ${name}`;
 
     // Pipe declared with a function name ======================================
@@ -168,7 +168,7 @@ class FunctionalTestPlugin {
       await this.context.accessors.sdk.realtime.publish(
         "functional-test",
         "hooks",
-        { event: "server:afterNow" }
+        { event: "server:afterNow" },
       );
     };
   }
@@ -195,7 +195,7 @@ class FunctionalTestPlugin {
         equals: {
           name: "Luca",
         },
-      }
+      },
     );
 
     return {
@@ -213,7 +213,7 @@ class FunctionalTestPlugin {
     await this.context.accessors.subscription.unregister(
       connectionId,
       roomId,
-      false
+      false,
     );
 
     return {
@@ -258,7 +258,7 @@ class FunctionalTestPlugin {
       JSON.stringify({
         payload,
         state,
-      })
+      }),
     );
 
     return null;
@@ -278,7 +278,7 @@ class FunctionalTestPlugin {
 
   async genericDocumentEvent(event, documents) {
     const pipe = JSON.parse(
-      await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`)
+      await this.sdk.ms.get(`plugin:pipes:generic:document:${event}`),
     );
 
     if (!pipe || pipe.state === "off") {
@@ -296,7 +296,7 @@ class FunctionalTestPlugin {
 
   async afterNowPipe(request) {
     const pipe = JSON.parse(
-      await this.sdk.ms.get("plugin:pipes:server:afterNow")
+      await this.sdk.ms.get("plugin:pipes:server:afterNow"),
     );
 
     if (pipe && pipe.state !== "off") {
@@ -317,7 +317,7 @@ class FunctionalTestPlugin {
       async () => {
         await this.sdk.realtime.publish("test", "answer", {});
         await this.sdk.realtime.unsubscribe(roomId);
-      }
+      },
     );
   }
 
@@ -328,7 +328,7 @@ class FunctionalTestPlugin {
   async pipesTestReturn(request) {
     const helloName = await this.context.accessors.trigger(
       "testPipesReturn",
-      request.input.args.name
+      request.input.args.name,
     );
 
     return { result: helloName };
