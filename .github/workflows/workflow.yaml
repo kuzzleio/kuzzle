@@ -17,12 +17,8 @@ jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
     runs-on: ubuntu-22.04
-    steps:
-      - id: set-matrix
-        run: |
-          echo "node_version=[$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]" >> $GITHUB_OUTPUT
     outputs:
-      node_version: ${{ steps.set-matrix.outputs.node_version }}
+      node_version: [$NODE_LTS_MAINTENANCE_VERSION, $NODE_LTS_ACTIVE_VERSION]
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
@@ -41,7 +37,7 @@ jobs:
       - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
           cache: "npm"
 
       - name: Install depedencies
