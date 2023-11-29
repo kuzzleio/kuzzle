@@ -72,19 +72,19 @@ describe("#RequestContext", () => {
     for (const key of ["id", "protocol"]) {
       for (const val of [{}, [], 123, true, false]) {
         should(() => new RequestContext({ connection: { [key]: val } })).throw(
-          `Attribute connection.${key} must be of type "string"`
+          `Attribute connection.${key} must be of type "string"`,
         );
       }
     }
 
     // invalid IPs arrays
     should(() => new RequestContext({ connection: { ips: "foobar" } })).throw(
-      'Attribute connection.ips must be of type "array"'
+      'Attribute connection.ips must be of type "array"',
     );
     should(
-      () => new RequestContext({ connection: { ips: ["foo", 123, {}] } })
+      () => new RequestContext({ connection: { ips: ["foo", 123, {}] } }),
     ).throw(
-      'Attribute connection.ips must contain only values of type "string"'
+      'Attribute connection.ips must contain only values of type "string"',
     );
   });
 

@@ -23,7 +23,7 @@ describe("AdminController", () => {
   before(() => {
     mockRequire("../../../lib/util/mutex", { Mutex: MutexMock });
     AdminController = mockRequire.reRequire(
-      "../../../lib/api/controllers/adminController"
+      "../../../lib/api/controllers/adminController",
     );
   });
 
@@ -81,7 +81,7 @@ describe("AdminController", () => {
 
       return should(adminController.resetCache(request)).rejectedWith(
         NotFoundError,
-        { id: "services.cache.database_not_found" }
+        { id: "services.cache.database_not_found" },
       );
     });
   });
@@ -104,14 +104,14 @@ describe("AdminController", () => {
       should(kuzzle.internalIndex.createInitialSecurities).be.calledOnce();
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:del",
-        `${BACKEND_IMPORT_KEY}:permissions`
+        `${BACKEND_IMPORT_KEY}:permissions`,
       );
 
       sinon.assert.callOrder(
         userSpy,
         profileSpy,
         roleSpy,
-        kuzzle.internalIndex.createInitialSecurities
+        kuzzle.internalIndex.createInitialSecurities,
       );
 
       const mutex = MutexMock.__getLastMutex();
@@ -154,7 +154,7 @@ describe("AdminController", () => {
       try {
         await should(adminController.resetSecurity(request)).rejectedWith(
           PreconditionError,
-          { id: "api.process.action_locked" }
+          { id: "api.process.action_locked" },
         );
         should(MutexMock.__getLastMutex().resource).eql("resetSecurity");
       } finally {
@@ -186,7 +186,7 @@ describe("AdminController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:del",
-        `${BACKEND_IMPORT_KEY}:mappings`
+        `${BACKEND_IMPORT_KEY}:mappings`,
       );
 
       const mutex = MutexMock.__getLastMutex();
@@ -203,7 +203,7 @@ describe("AdminController", () => {
       try {
         await should(adminController.resetDatabase(request)).rejectedWith(
           PreconditionError,
-          { id: "api.process.action_locked" }
+          { id: "api.process.action_locked" },
         );
         should(MutexMock.__getLastMutex().resource).eql("resetDatabase");
       } finally {
@@ -235,7 +235,7 @@ describe("AdminController", () => {
 
       await should(adminController.shutdown(request)).rejectedWith(
         PreconditionError,
-        { id: "api.process.action_locked" }
+        { id: "api.process.action_locked" },
       );
     });
 
@@ -257,7 +257,7 @@ describe("AdminController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:mappings:import",
-        request.input.body
+        request.input.body,
       );
     });
   });
@@ -275,7 +275,7 @@ describe("AdminController", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:document:import",
         request.input.body,
-        { refresh: "false" }
+        { refresh: "false" },
       );
     });
   });
@@ -300,7 +300,7 @@ describe("AdminController", () => {
             refresh: "wait_for",
             user: null,
             force: false,
-          }
+          },
         );
     });
   });

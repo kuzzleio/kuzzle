@@ -48,7 +48,7 @@ export class BackendPlugin extends ApplicationManager {
       name?: string;
       manifest?: JSONObject;
       deprecationWarning?: boolean;
-    } = {}
+    } = {},
   ): void {
     if (this._application.started) {
       throw runtimeError.get("already_started", "plugin");
@@ -92,7 +92,7 @@ export class BackendPlugin extends ApplicationManager {
       throw assertionError.get(
         "plugin_not_found",
         name,
-        didYouMean(name, this.list())
+        didYouMean(name, this.list()),
       );
     }
 

@@ -10,7 +10,7 @@ const {
   NativeController,
 } = require("../../../lib/api/controllers/baseController");
 const MemoryStorageController = rewire(
-  "../../../lib/api/controllers/memoryStorageController.js"
+  "../../../lib/api/controllers/memoryStorageController.js",
 );
 
 describe("MemoryStorageController", () => {
@@ -64,24 +64,24 @@ describe("MemoryStorageController", () => {
     };
 
     extractArgumentsFromRequest = wrap(
-      MemoryStorageController.__get__("extractArgumentsFromRequest")
+      MemoryStorageController.__get__("extractArgumentsFromRequest"),
     );
     extractArgumentsFromRequestForSet = wrap(
-      MemoryStorageController.__get__("extractArgumentsFromRequestForSet")
+      MemoryStorageController.__get__("extractArgumentsFromRequestForSet"),
     );
     extractArgumentsFromRequestForSort = wrap(
-      MemoryStorageController.__get__("extractArgumentsFromRequestForSort")
+      MemoryStorageController.__get__("extractArgumentsFromRequestForSort"),
     );
     extractArgumentsFromRequestForZAdd = wrap(
-      MemoryStorageController.__get__("extractArgumentsFromRequestForZAdd")
+      MemoryStorageController.__get__("extractArgumentsFromRequestForZAdd"),
     );
     extractArgumentsFromRequestForZInterstore = wrap(
       MemoryStorageController.__get__(
-        "extractArgumentsFromRequestForZInterstore"
-      )
+        "extractArgumentsFromRequestForZInterstore",
+      ),
     );
     extractArgumentsFromRequestForMExecute = wrap(
-      MemoryStorageController.__get__("extractArgumentsFromRequestForMExecute")
+      MemoryStorageController.__get__("extractArgumentsFromRequestForMExecute"),
     );
 
     MemoryStorageController.__set__({
@@ -251,12 +251,12 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSet(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
       req.input.body.value = { foo: "bar" };
       should(() => extractArgumentsFromRequestForSet(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -272,7 +272,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSet(req)).throw(
         BadRequestError,
-        { id: "api.assert.mutually_exclusive" }
+        { id: "api.assert.mutually_exclusive" },
       );
     });
 
@@ -288,7 +288,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSet(req)).throw(
         BadRequestError,
-        { id: "api.assert.mutually_exclusive" }
+        { id: "api.assert.mutually_exclusive" },
       );
     });
   });
@@ -306,7 +306,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -365,31 +365,31 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.limit = [10];
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.limit = [10, "foo"];
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.limit = [null, 20];
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.limit = [10, [20]];
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -403,7 +403,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForSort(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
 
       req.input.body.direction = "asc";
@@ -462,7 +462,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -478,47 +478,47 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       req.input.body.elements = { score: 1, member: "m1" };
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.elements = [];
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
 
       req.input.body.elements = [{ score: 1 }];
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       req.input.body.elements = [{ member: "m1" }];
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.elements = [{ score: "foo", member: "m1" }];
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.elements = [{ score: 1.23, member: "m1" }];
       should(() => extractArgumentsFromRequestForZAdd(req)).not.throw(
-        BadRequestError
+        BadRequestError,
       );
 
       req.input.body.elements = [{ score: "1.23", member: "m1" }];
       should(() => extractArgumentsFromRequestForZAdd(req)).not.throw(
-        BadRequestError
+        BadRequestError,
       );
     });
 
@@ -534,7 +534,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.mutually_exclusive" }
+        { id: "api.assert.mutually_exclusive" },
       );
     });
 
@@ -552,7 +552,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZAdd(req)).throw(
         BadRequestError,
-        { id: "api.assert.too_many_arguments" }
+        { id: "api.assert.too_many_arguments" },
       );
     });
   });
@@ -615,19 +615,19 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       req.input.body.keys = [];
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
 
       delete req.input.body.keys;
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -640,7 +640,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -655,7 +655,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
 
       req.input.body.aggregate = "min";
@@ -679,7 +679,7 @@ describe("MemoryStorageController", () => {
 
       should(() => extractArgumentsFromRequestForZInterstore(req)).throw(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -721,13 +721,13 @@ describe("MemoryStorageController", () => {
       request.input.body.actions = [{ action: "set", args: {} }];
       should(() => extractArgumentsFromRequestForMExecute(request)).throw(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       request.input.body.actions = [{ action: "exec", args: {} }];
       should(() => extractArgumentsFromRequestForMExecute(request)).throw(
         BadRequestError,
-        { id: "api.assert.forbidden_argument" }
+        { id: "api.assert.forbidden_argument" },
       );
     });
   });
@@ -753,7 +753,7 @@ describe("MemoryStorageController", () => {
         "core:cache:public:execute",
         "set",
         "myKey",
-        "bar"
+        "bar",
       );
     });
 
@@ -865,7 +865,7 @@ describe("MemoryStorageController", () => {
         "palermo",
         "15.087269",
         "37.502669",
-        "catania"
+        "catania",
       );
     });
 
@@ -888,7 +888,7 @@ describe("MemoryStorageController", () => {
           "myKey",
           "foo",
           "bar",
-          "baz"
+          "baz",
         );
     });
 
@@ -921,7 +921,7 @@ describe("MemoryStorageController", () => {
           "WITHDIST",
           "COUNT",
           "25",
-          "ASC"
+          "ASC",
         );
     });
 
@@ -940,7 +940,7 @@ describe("MemoryStorageController", () => {
       await msController.georadiusbymember(req);
 
       should(
-        kuzzle.ask.withArgs("core:cache:public:execute", "georadiusbymember")
+        kuzzle.ask.withArgs("core:cache:public:execute", "georadiusbymember"),
       )
         .calledTwice()
         .alwaysCalledWith(
@@ -954,7 +954,7 @@ describe("MemoryStorageController", () => {
           "WITHDIST",
           "COUNT",
           "25",
-          "ASC"
+          "ASC",
         );
     });
 
@@ -973,7 +973,7 @@ describe("MemoryStorageController", () => {
           "myKey",
           "foo",
           "bar",
-          "baz"
+          "baz",
         );
       }
     });
@@ -1035,7 +1035,7 @@ describe("MemoryStorageController", () => {
         "foo",
         "bar",
         "baz",
-        "qux"
+        "qux",
       );
     });
 
@@ -1145,7 +1145,7 @@ describe("MemoryStorageController", () => {
         "MATCH",
         "foobar",
         "COUNT",
-        3
+        3,
       );
     });
 
@@ -1186,7 +1186,7 @@ describe("MemoryStorageController", () => {
         "MATCH",
         "foobar",
         "COUNT",
-        3
+        3,
       );
     });
 
@@ -1205,7 +1205,7 @@ describe("MemoryStorageController", () => {
           "key",
           "foo",
           "bar",
-          "baz"
+          "baz",
         );
       }
     });
@@ -1221,7 +1221,7 @@ describe("MemoryStorageController", () => {
           "sunion",
           "foo",
           "bar",
-          "baz"
+          "baz",
         );
       }
     });
@@ -1246,7 +1246,7 @@ describe("MemoryStorageController", () => {
           "myKey",
           "startVal",
           "stopVal",
-          "WITHSCORES"
+          "WITHSCORES",
         );
       }
     });
@@ -1263,7 +1263,7 @@ describe("MemoryStorageController", () => {
 
       return should(msController.zrangebylex(req)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -1287,7 +1287,7 @@ describe("MemoryStorageController", () => {
         "maxVal",
         "LIMIT",
         10,
-        20
+        20,
       );
     });
 
@@ -1303,7 +1303,7 @@ describe("MemoryStorageController", () => {
 
       return should(msController.zrevrangebylex(req)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -1327,7 +1327,7 @@ describe("MemoryStorageController", () => {
         "minVal",
         "LIMIT",
         "10",
-        "20"
+        "20",
       );
     });
 
@@ -1344,7 +1344,7 @@ describe("MemoryStorageController", () => {
 
       return should(msController.zrangebyscore(req)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -1370,7 +1370,7 @@ describe("MemoryStorageController", () => {
         "WITHSCORES",
         "LIMIT",
         10,
-        20
+        20,
       );
     });
 
@@ -1387,7 +1387,7 @@ describe("MemoryStorageController", () => {
 
       return should(msController.zrevrangebyscore(req)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -1413,7 +1413,7 @@ describe("MemoryStorageController", () => {
         "WITHSCORES",
         "LIMIT",
         10,
-        20
+        20,
       );
     });
   });

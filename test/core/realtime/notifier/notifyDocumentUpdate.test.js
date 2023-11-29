@@ -48,7 +48,7 @@ describe("Test: notifier.notifyDocumentUpdate", () => {
         _source: { foo: "bar" },
         _updatedFields: ["foo"],
       },
-      JSON.stringify(["foo", "bar"])
+      JSON.stringify(["foo", "bar"]),
     );
 
     should(kuzzle.koncorde.test)
@@ -65,7 +65,7 @@ describe("Test: notifier.notifyDocumentUpdate", () => {
         _id,
         _source: { foo: "bar" },
         _updatedFields: ["foo"],
-      }
+      },
     );
 
     should(notifier.notifyDocument.getCall(1)).calledWith(
@@ -77,7 +77,7 @@ describe("Test: notifier.notifyDocumentUpdate", () => {
         _id,
         _source: { foo: "bar" },
         _updatedFields: ["foo"],
-      }
+      },
     );
 
     should(rooms).match(["foo"]);
@@ -92,7 +92,7 @@ describe("Test: notifier.notifyDocumentUpdate", () => {
         _id: request.input.args._id,
         _source: { foo: "bar" },
       },
-      JSON.stringify(["foo", "bar"])
+      JSON.stringify(["foo", "bar"]),
     );
 
     should(rooms).be.an.Array().and.be.empty();

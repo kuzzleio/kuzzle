@@ -21,7 +21,7 @@ describe("Plugins manifest class", () => {
     new KuzzleMock();
     mockrequire(
       "../../../lib/core/shared/abstractManifest",
-      AbstractManifestStub
+      AbstractManifestStub,
     );
     Manifest = mockrequire.reRequire("../../../lib/core/plugin/pluginManifest");
     manifest = new Manifest(pluginPath);

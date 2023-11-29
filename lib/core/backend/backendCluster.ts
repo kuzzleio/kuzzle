@@ -31,7 +31,7 @@ export class BackendCluster {
    */
   async broadcast<TEventDefinition extends EventDefinition = EventDefinition>(
     event: TEventDefinition["name"],
-    payload: TEventDefinition["args"][0]
+    payload: TEventDefinition["args"][0],
   ): Promise<void> {
     await global.kuzzle.ask("cluster:event:broadcast", event, payload);
   }
@@ -45,7 +45,7 @@ export class BackendCluster {
    */
   async on<TEventDefinition extends EventDefinition = EventDefinition>(
     event: TEventDefinition["name"],
-    listener: ClusterEventHandler<TEventDefinition>
+    listener: ClusterEventHandler<TEventDefinition>,
   ): Promise<void> {
     await global.kuzzle.ask("cluster:event:on", event, listener);
   }
@@ -60,7 +60,7 @@ export class BackendCluster {
    */
   async once<TEventDefinition extends EventDefinition = EventDefinition>(
     event: TEventDefinition["name"],
-    listener: ClusterEventHandler<TEventDefinition>
+    listener: ClusterEventHandler<TEventDefinition>,
   ): Promise<void> {
     await global.kuzzle.ask("cluster:event:once", event, listener);
   }
@@ -76,7 +76,7 @@ export class BackendCluster {
    */
   async off<TEventDefinition extends EventDefinition = EventDefinition>(
     event: TEventDefinition["name"],
-    listener: ClusterEventHandler<TEventDefinition>
+    listener: ClusterEventHandler<TEventDefinition>,
   ): Promise<void> {
     await global.kuzzle.ask("cluster:event:off", event, listener);
   }

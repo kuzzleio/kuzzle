@@ -25,7 +25,7 @@ Then(
 
       this.props.error = error;
     }
-  }
+  },
 );
 
 Then(
@@ -45,7 +45,7 @@ Then(
 
       this.props.error = error;
     }
-  }
+  },
 );
 
 Then(
@@ -63,7 +63,7 @@ Then(
 
       this.props.error = error;
     }
-  }
+  },
 );
 
 Then(
@@ -76,7 +76,7 @@ Then(
 
     should(result.length).be.eql(
       expected.length,
-      `Array are not the same size: expected ${expected.length} got ${result.length}`
+      `Array are not the same size: expected ${expected.length} got ${result.length}`,
     );
 
     if (!objects) {
@@ -86,7 +86,7 @@ Then(
     for (let i = 0; i < expected.length; i++) {
       should(result[i]).matchObject(expected[i]);
     }
-  }
+  },
 );
 
 Then(
@@ -95,7 +95,7 @@ Then(
     const result = name ? this.props.result[name] : this.props.result;
 
     should(result).have.length(expectedCount);
-  }
+  },
 );
 
 Then("I should receive a result matching:", function (dataTable) {
@@ -128,7 +128,7 @@ Then(
     } else {
       should(property).match(expectedProperty);
     }
-  }
+  },
 );
 
 Then("The result should be {string}", function (rawValue) {
@@ -145,7 +145,7 @@ Then(
     should(property).not.be.undefined();
 
     should(typeof property).be.eql(type);
-  }
+  },
 );
 
 Then(
@@ -164,7 +164,7 @@ Then(
     should(this.props.result).not.be.undefined();
 
     should(this.props.result).eql(expectedResult);
-  }
+  },
 );
 
 Then("I should receive an empty result", function () {
@@ -196,12 +196,12 @@ Then("I should receive a empty {string} array", function (name) {
 Then("I got an error with id {string}", function (id) {
   assert(
     this.props.error !== null,
-    "Expected the previous step to return an error"
+    "Expected the previous step to return an error",
   );
 
   assert(
     this.props.error.id === id,
-    `Expected error to have id "${id}", but got "${this.props.error.id}"`
+    `Expected error to have id "${id}", but got "${this.props.error.id}"`,
   );
 });
 
@@ -210,7 +210,7 @@ Then(
   async function (dataTable) {
     const expectedResult = this.parseObject(dataTable);
     should(this.props.response.headers).deepEqual(expectedResult);
-  }
+  },
 );
 
 Then(
@@ -218,14 +218,14 @@ Then(
   async function (key, dataTable) {
     const array = this.parseObjectArray(dataTable);
     should(this.props.response[key]).deepEqual(array);
-  }
+  },
 );
 
 Then(
   "The response should contains a {string} equals to undefined",
   async function (key) {
     should(this.props.response[key]).equal(undefined);
-  }
+  },
 );
 
 Then("The raw response should match:", function (dataTable) {
@@ -268,7 +268,7 @@ Then(
         throw err;
       }
     }
-  }
+  },
 );
 
 Then("I wait {int} milliseconds", async function (ms) {

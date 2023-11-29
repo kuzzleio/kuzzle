@@ -49,7 +49,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
     mockrequire("aedes", { Server: AedesMock });
 
     MqttProtocol = mockrequire.reRequire(
-      "../../../../lib/core/network/protocols/mqttProtocol"
+      "../../../../lib/core/network/protocols/mqttProtocol",
     );
   });
 
@@ -310,7 +310,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           topic: protocol.config.requestTopic,
           payload: "payload",
         },
-        new FakeClient(null)
+        new FakeClient(null),
       );
 
       should(entrypoint.execute).have.callCount(0);
@@ -322,7 +322,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           topic: protocol.config.requestTopic,
           payload: "payload",
         },
-        fakeClient
+        fakeClient,
       );
 
       should(entrypoint.execute).have.callCount(0);
@@ -343,7 +343,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           payload: Buffer.from(JSON.stringify({ foo: "bar" })),
           topic: protocol.config.requestTopic,
         },
-        fakeClient
+        fakeClient,
       );
 
       should(entrypoint.execute).be.calledOnce();
@@ -386,7 +386,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
             payload: Buffer.from("invalid"),
             topic: protocol.config.requestTopic,
           },
-          client
+          client,
         );
 
         // NodeJS < 20
@@ -394,7 +394,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           "network",
           "mqtt",
           "unexpected_error",
-          "Unexpected token i in JSON at position 0"
+          "Unexpected token i in JSON at position 0",
         );
 
         // NodeJS >= 20
@@ -431,7 +431,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           payload: Buffer.from(JSON.stringify({ requestId: 42 })),
           topic: protocol.config.requestTopic,
         },
-        fakeClient
+        fakeClient,
       );
 
       should(protocol._respond).be.calledOnce().be.calledWith(fakeClient);

@@ -41,7 +41,7 @@ describe("Plugin", () => {
     mockrequire.reRequire("../../../lib/core/plugin/pluginContext");
     mockrequire.reRequire("../../../lib/core/plugin/privilegedContext");
     PluginsManager = mockrequire.reRequire(
-      "../../../lib/core/plugin/pluginsManager"
+      "../../../lib/core/plugin/pluginsManager",
     );
 
     pluginsManager = new PluginsManager();
@@ -118,7 +118,7 @@ describe("Plugin", () => {
         new Map([
           [loggerPlugin.name, loggerPlugin],
           [localPlugin.name, localPlugin],
-        ])
+        ]),
       );
       pluginsManager._plugins.set(plugin.name, plugin);
       pluginsManager.config.common.failsafeMode = true;
@@ -137,7 +137,7 @@ describe("Plugin", () => {
         new Map([
           [otherPlugin.name, otherPlugin],
           [application.name, application],
-        ])
+        ]),
       );
       pluginsManager._plugins.set(plugin.name, plugin);
 
@@ -177,7 +177,7 @@ describe("Plugin", () => {
       should(plugin.instance.init).be.calledWith(plugin.config, plugin.context);
       should(application.instance.init).be.calledWith(
         application.config,
-        application.context
+        application.context,
       );
       should(plugin.initCalled).be.true();
       should(application.initCalled).be.true();
@@ -386,10 +386,10 @@ describe("Plugin", () => {
       pluginsManager._initControllers(plugin);
 
       should(pluginsManager.controllers.get("test-plugin/foo")).be.instanceof(
-        BaseController
+        BaseController,
       );
       should(
-        pluginsManager.controllers.get("test-plugin/foo").actionName
+        pluginsManager.controllers.get("test-plugin/foo").actionName,
       ).be.eql(plugin.instance.functionName.bind(plugin.instance));
     });
 
@@ -407,10 +407,10 @@ describe("Plugin", () => {
       pluginsManager._initControllers(plugin);
 
       should(pluginsManager.controllers.get("test-plugin/foo")).be.instanceof(
-        BaseController
+        BaseController,
       );
       should(
-        pluginsManager.controllers.get("test-plugin/foo").actionName
+        pluginsManager.controllers.get("test-plugin/foo").actionName,
       ).be.eql(action);
     });
 
@@ -438,7 +438,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[0].verb).be.equal("get");
       should(pluginsManager.routes[0].path).be.equal(
-        "/_plugin/test-plugin/bar/:name"
+        "/_plugin/test-plugin/bar/:name",
       );
       should(pluginsManager.routes[0].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[0].action).be.equal("bar");
@@ -450,7 +450,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[2].verb).be.equal("head");
       should(pluginsManager.routes[2].path).be.equal(
-        "/_plugin/test-plugin/bar/:name"
+        "/_plugin/test-plugin/bar/:name",
       );
       should(pluginsManager.routes[2].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[2].action).be.equal("bar");
@@ -462,7 +462,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[4].verb).be.equal("post");
       should(pluginsManager.routes[4].path).be.equal(
-        "/_plugin/test-plugin/bar"
+        "/_plugin/test-plugin/bar",
       );
       should(pluginsManager.routes[4].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[4].action).be.equal("bar");
@@ -474,7 +474,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[6].verb).be.equal("put");
       should(pluginsManager.routes[6].path).be.equal(
-        "/_plugin/test-plugin/bar"
+        "/_plugin/test-plugin/bar",
       );
       should(pluginsManager.routes[6].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[6].action).be.equal("bar");
@@ -486,7 +486,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[8].verb).be.equal("delete");
       should(pluginsManager.routes[8].path).be.equal(
-        "/_plugin/test-plugin/bar"
+        "/_plugin/test-plugin/bar",
       );
       should(pluginsManager.routes[8].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[8].action).be.equal("bar");
@@ -498,7 +498,7 @@ describe("Plugin", () => {
 
       should(pluginsManager.routes[10].verb).be.equal("patch");
       should(pluginsManager.routes[10].path).be.equal(
-        "/_plugin/test-plugin/bar"
+        "/_plugin/test-plugin/bar",
       );
       should(pluginsManager.routes[10].controller).be.equal("test-plugin/foo");
       should(pluginsManager.routes[10].action).be.equal("bar");
@@ -694,13 +694,13 @@ describe("Plugin", () => {
     describe("#hasStrategyMethod", () => {
       it("should return true if a method exists", () => {
         should(
-          pluginsManager.hasStrategyMethod("someStrategy", "exists")
+          pluginsManager.hasStrategyMethod("someStrategy", "exists"),
         ).be.true();
       });
 
       it("should false true if a method does not exist", () => {
         should(
-          pluginsManager.hasStrategyMethod("someStrategy", "notExists")
+          pluginsManager.hasStrategyMethod("someStrategy", "notExists"),
         ).be.false();
       });
     });
@@ -708,7 +708,7 @@ describe("Plugin", () => {
     describe("#getStrategyMethod", () => {
       it("should return a method", () => {
         should(
-          pluginsManager.getStrategyMethod("someStrategy", "exists")
+          pluginsManager.getStrategyMethod("someStrategy", "exists"),
         ).be.a.Function();
       });
     });
@@ -719,7 +719,7 @@ describe("Plugin", () => {
           plugin.instance.authenticators = authenticators;
           should(() => pluginsManager._initAuthenticators(plugin)).throw(
             PluginImplementationError,
-            { id: "plugin.authenticators.not_an_object" }
+            { id: "plugin.authenticators.not_an_object" },
           );
         });
       });
@@ -729,7 +729,7 @@ describe("Plugin", () => {
           plugin.instance.authenticators.foo = ctor;
           should(() => pluginsManager._initAuthenticators(plugin)).throw(
             PluginImplementationError,
-            { id: "plugin.authenticators.invalid_authenticator" }
+            { id: "plugin.authenticators.invalid_authenticator" },
           );
         });
       });
@@ -753,35 +753,35 @@ describe("Plugin", () => {
         pluginsManager._initStrategies(plugin);
 
         should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(
-          plugin.instance.strategies.someStrategy
+          plugin.instance.strategies.someStrategy,
         );
         should(
-          pluginsManager.strategies.someStrategy.methods.afterRegister
+          pluginsManager.strategies.someStrategy.methods.afterRegister,
         ).be.Function();
         should(plugin.instance.afterRegisterFunction).be.calledOnce();
         should(
-          plugin.instance.afterRegisterFunction.firstCall.args[0]
+          plugin.instance.afterRegisterFunction.firstCall.args[0],
         ).be.instanceOf(plugin.instance.authenticators.SomeStrategy);
         should(
-          pluginsManager.strategies.someStrategy.methods.exists
+          pluginsManager.strategies.someStrategy.methods.exists,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.create
+          pluginsManager.strategies.someStrategy.methods.create,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.update
+          pluginsManager.strategies.someStrategy.methods.update,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.delete
+          pluginsManager.strategies.someStrategy.methods.delete,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.getById
+          pluginsManager.strategies.someStrategy.methods.getById,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.getInfo
+          pluginsManager.strategies.someStrategy.methods.getInfo,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.validate
+          pluginsManager.strategies.someStrategy.methods.validate,
         ).be.Function();
         should(plugin.instance.authenticators.SomeStrategy)
           .calledOnce()
@@ -816,7 +816,7 @@ describe("Plugin", () => {
 
         pluginsManager._initStrategies(plugin);
         should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(
-          plugin.instance.strategies.someStrategy
+          plugin.instance.strategies.someStrategy,
         );
         should(plugin.instance.afterRegisterFunction).be.calledOnce();
       });
@@ -828,29 +828,29 @@ describe("Plugin", () => {
 
         pluginsManager._initStrategies(plugin);
         should(pluginsManager.strategies.someStrategy.strategy).be.deepEqual(
-          plugin.instance.strategies.someStrategy
+          plugin.instance.strategies.someStrategy,
         );
         should(
-          pluginsManager.strategies.someStrategy.methods.exists
+          pluginsManager.strategies.someStrategy.methods.exists,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.create
+          pluginsManager.strategies.someStrategy.methods.create,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.update
+          pluginsManager.strategies.someStrategy.methods.update,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.delete
+          pluginsManager.strategies.someStrategy.methods.delete,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.getInfo
+          pluginsManager.strategies.someStrategy.methods.getInfo,
         ).be.Function();
         should(
-          pluginsManager.strategies.someStrategy.methods.validate
+          pluginsManager.strategies.someStrategy.methods.validate,
         ).be.Function();
 
         return should(
-          pluginsManager.strategies.someStrategy.methods.exists(foo)
+          pluginsManager.strategies.someStrategy.methods.exists(foo),
         ).be.rejectedWith(PluginImplementationError);
       });
 
@@ -862,7 +862,7 @@ describe("Plugin", () => {
           plugin.instance.strategies = strategies;
           should(() => pluginsManager._initStrategies(plugin)).throw(
             PluginImplementationError,
-            { message }
+            { message },
           );
         });
       });
@@ -874,7 +874,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_description",
-            }
+            },
           );
         });
       });
@@ -884,7 +884,7 @@ describe("Plugin", () => {
           plugin.instance.strategies.someStrategy.methods = methods;
           should(() => pluginsManager._initStrategies(plugin)).throw(
             PluginImplementationError,
-            { id: "plugin.strategy.invalid_methods" }
+            { id: "plugin.strategy.invalid_methods" },
           );
         });
       });
@@ -892,12 +892,12 @@ describe("Plugin", () => {
       it("should throw if config is not an object", () => {
         [[], null, undefined, "foobar", 123, true].forEach((config) => {
           const message = new RegExp(
-            `\\[test-plugin\\] Strategy someStrategy: expected a "config" property of type "object", got: ${config}`
+            `\\[test-plugin\\] Strategy someStrategy: expected a "config" property of type "object", got: ${config}`,
           );
           plugin.instance.strategies.someStrategy.config = config;
           should(() => pluginsManager._initStrategies(plugin)).throw(
             PluginImplementationError,
-            { message }
+            { message },
           );
         });
       });
@@ -909,7 +909,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_method_type",
-            }
+            },
           );
         });
       });
@@ -925,11 +925,11 @@ describe("Plugin", () => {
               PluginImplementationError,
               {
                 id: "plugin.strategy.missing_method_function",
-              }
+              },
             );
 
             plugin.instance[fnName] = sinon.stub();
-          }
+          },
         );
       });
 
@@ -946,7 +946,7 @@ describe("Plugin", () => {
               PluginImplementationError,
               {
                 id: "plugin.strategy.invalid_method_type",
-              }
+              },
             );
           }
         }
@@ -962,7 +962,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.missing_method_function",
-            }
+            },
           );
 
           plugin.instance[fnName] = sinon.stub();
@@ -978,7 +978,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_authenticator",
-            }
+            },
           );
         });
       });
@@ -989,7 +989,7 @@ describe("Plugin", () => {
           PluginImplementationError,
           {
             id: "plugin.strategy.unknown_authenticator",
-          }
+          },
         );
       });
 
@@ -1001,7 +1001,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_option",
-            }
+            },
           );
         });
       });
@@ -1015,7 +1015,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_option",
-            }
+            },
           );
         });
       });
@@ -1028,7 +1028,7 @@ describe("Plugin", () => {
             PluginImplementationError,
             {
               id: "plugin.strategy.invalid_fields",
-            }
+            },
           );
         });
       });
@@ -1195,7 +1195,7 @@ describe("Plugin", () => {
 
       it("should throw if the strategy does not exist", () => {
         should(() =>
-          pluginsManager.unregisterStrategy(plugin.name, "foobar")
+          pluginsManager.unregisterStrategy(plugin.name, "foobar"),
         ).throw(NotFoundError, { id: "plugin.strategy.strategy_not_found" });
       });
 
@@ -1203,8 +1203,8 @@ describe("Plugin", () => {
         should(() =>
           pluginsManager.unregisterStrategy(
             "Frank William Abagnale Jr.",
-            "someStrategy"
-          )
+            "someStrategy",
+          ),
         ).throw(PluginImplementationError, {
           id: "plugin.strategy.unauthorized_removal",
         });
@@ -1491,7 +1491,7 @@ describe("Plugin", () => {
 
       return should(kuzzle.pipe("foo:bar")).be.rejectedWith(
         PluginImplementationError,
-        { id: "plugin.runtime.unexpected_error" }
+        { id: "plugin.runtime.unexpected_error" },
       );
     });
 
@@ -1510,7 +1510,7 @@ describe("Plugin", () => {
 
       should(fooStub).be.calledOnce();
       should(kuzzle.log.warn).calledWithMatch(
-        /\[test-plugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/
+        /\[test-plugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/,
       );
     });
 

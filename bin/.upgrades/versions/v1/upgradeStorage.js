@@ -37,10 +37,10 @@ function transformProfile(profile) {
 
   for (const policy of profile.policies.filter((p) => p.restrictedTo)) {
     for (const restriction of policy.restrictedTo.filter(
-      (r) => r.collections
+      (r) => r.collections,
     )) {
       restriction.collections = restriction.collections.map((c) =>
-        c.toLowerCase()
+        c.toLowerCase(),
       );
     }
   }
@@ -59,7 +59,7 @@ function fixIndexName(context, index, collection, newIndex) {
   if (lowercased !== newIndex) {
     // uppercase letters were already forbidden in index names
     context.log.warn(
-      `Index "${index}": collection "${collection}" has been renamed to "${collection.toLowerCase()}"`
+      `Index "${index}": collection "${collection}" has been renamed to "${collection.toLowerCase()}"`,
     );
   }
 
@@ -79,7 +79,7 @@ async function moveData(context, index, collection, newIndex, transform) {
   const progressBar = new ProgressBar(
     context,
     `Importing: ${index}/${collection}`,
-    total
+    total,
   );
   let moved = 0;
 
@@ -166,7 +166,7 @@ async function upgrade(context, index, collection, newIndex) {
   await createNewIndex(context, fixedIndexName);
   await upgradeMappings(context, index, collection, fixedIndexName);
 
-  return await moveData(context, index, collection, fixedIndexName);
+  return moveData(context, index, collection, fixedIndexName);
 }
 
 async function upgradeInternalStorage(context) {
@@ -198,14 +198,14 @@ async function upgradeInternalStorage(context) {
         index,
         collection,
         newIndex,
-        collection === "profiles" && transformProfile
+        collection === "profiles" && transformProfile,
       );
     } else {
       total = await upgrade(context, index, collection, newIndex);
     }
 
     context.log.ok(
-      `... migrated internal data: ${collection} (${total} documents)`
+      `... migrated internal data: ${collection} (${total} documents)`,
     );
   }
 
@@ -242,7 +242,7 @@ async function upgradePluginsStorage(context) {
       const total = await upgrade(context, index, collection, newIndex);
 
       context.log.ok(
-        `... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`
+        `... migrated storage for plugin ${plugin}: ${collection} (${total} documents)`,
       );
     }
   }
@@ -302,7 +302,7 @@ async function upgradeDataStorage(context) {
     .filter((n) => !n.startsWith(INTERNAL_PREFIX));
 
   context.log.notice(
-    `There are ${indexes.length} data indexes that can be upgraded`
+    `There are ${indexes.length} data indexes that can be upgraded`,
   );
   const choices = {
     all: "upgrade all indexes",
@@ -355,7 +355,7 @@ async function upgradeDataStorage(context) {
 
       upgraded[index].targets.push(newIndex);
       context.log.ok(
-        `... migrated data index ${index}: ${collection} (${total} documents)`
+        `... migrated data index ${index}: ${collection} (${total} documents)`,
       );
     }
   }
@@ -384,10 +384,10 @@ async function destroyPreviousStructure(context, upgraded) {
   ];
 
   context.log.notice(
-    "Since this is an in-place migration, the previous structure can be removed."
+    "Since this is an in-place migration, the previous structure can be removed.",
   );
   context.log.notice(
-    "(only data indexes with ALL their collections upgraded can be deleted)"
+    "(only data indexes with ALL their collections upgraded can be deleted)",
   );
 
   const choices = {

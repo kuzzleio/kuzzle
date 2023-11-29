@@ -5,22 +5,22 @@ on:
     branches:
       - master
       - 2-dev
-  pull_request: # This syntax stand for all PRs events
+  pull_request:
 
 env:
   NODE_LTS_MAINTENANCE_VERSION: "16"
   NODE_LTS_ACTIVE_VERSION: "18"
-  NODE_LTS_CURRENT_VERSION: "20" # Stand for the latest LTS version
+  NODE_LTS_CURRENT_VERSION: "20"
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - id: set-matrix
         run: |
-          echo "::set-output name=matrix::{\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}"
+          echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
@@ -30,29 +30,48 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
-      - run: npm ci
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          cache: "npm"
+
+      - name: Install depedencies
+        run: npm ci
+
       - name: Test error codes
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [prepare-matrix]
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v3
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: ./.github/actions/es-lint
+          cache: "npm"
+
+      - name: Run ESlint
+        uses: ./.github/actions/es-lint
 
   unit-tests:
     name: Unit Tests
@@ -60,15 +79,22 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v3
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: ./.github/actions/unit-tests
+          cache: "npm"
+
+      - name: Run unit test using Node ${{ matrix.node-version }}
+        uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 
@@ -78,25 +104,32 @@ jobs:
 
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
-    name: Build and Run ${{ matrix.kuzzle-image }}
-    runs-on: ubuntu-latest
+    name: Build and Run
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v3
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: ./.github/actions/build-and-run-kuzzle
+          cache: "npm"
+
+      - name: Test to run Kuzzle image
+        uses: ./.github/actions/build-and-run-kuzzle
         with:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   functional-tests:
-    name: Functional Tests - ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
@@ -110,15 +143,28 @@ jobs:
             "legacy:websocket",
           ]
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
-      - uses: actions/setup-node@v3
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: ./.github/actions/functional-tests
+          cache: "npm"
+
+      - name: Install depedencies
+        run: npm ci
+
+      - name: Build kuzzle
+        run: npm run build
+
+      - name: test suit ${{ matrix.test_set }}
+        uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
           node-version: ${{ matrix.node-version }}
@@ -128,23 +174,31 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
-      - uses: actions/checkout@v3
-      - uses: ./.github/actions/install-packages
+      - name: Checkout project
+        uses: actions/checkout@v3
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
       - name: Cloning Monkey Tester
         uses: actions/checkout@v3
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
-      - uses: actions/setup-node@v3
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          key: ${{ runner.os }}-${{ matrix.node-version }}-${{ hashFiles('**/package-lock.json') }}
-      - uses: ./.github/actions/monkey-tests
+          cache: "npm"
+
+      - name: Run monkey testing tests suit
+        uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
         env:

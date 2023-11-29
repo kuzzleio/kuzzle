@@ -44,7 +44,7 @@ describe("NameGenerator", () => {
     });
 
     it("should return a random formatted name with a specified random number range", () => {
-      const postfixRandRange = { min: 100, max: 1001 };
+      const postfixRandRange = { max: 1001, min: 100 };
       const name = NameGenerator.generateRandomName({ postfixRandRange });
       const [minDigits, maxDigits] = [
         postfixRandRange.min.toString().length,
@@ -55,7 +55,7 @@ describe("NameGenerator", () => {
       should(name).not.be.empty();
 
       should(name).match(
-        new RegExp(`^[a-zA-Z]+-[a-zA-Z]+-[0-9]{${minDigits},${maxDigits}}$`)
+        new RegExp(`^[a-zA-Z]+-[a-zA-Z]+-[0-9]{${minDigits},${maxDigits}}$`),
       );
     });
 
@@ -67,7 +67,7 @@ describe("NameGenerator", () => {
       should(name).not.be.empty();
 
       should(name).match(
-        new RegExp(`^[a-zA-Z]+${separator}[a-zA-Z]+${separator}[0-9]+$`)
+        new RegExp(`^[a-zA-Z]+${separator}[a-zA-Z]+${separator}[0-9]+$`),
       );
     });
   });

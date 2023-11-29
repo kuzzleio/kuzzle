@@ -109,7 +109,7 @@ describe("IndexController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:index:create",
-        index
+        index,
       );
 
       should(response).be.undefined();
@@ -122,7 +122,7 @@ describe("IndexController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:index:delete",
-        index
+        index,
       );
 
       should(response).match({
@@ -155,7 +155,7 @@ describe("IndexController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:storage:public:index:exist",
-        index
+        index,
       );
 
       should(response).be.eql(true);

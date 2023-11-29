@@ -175,7 +175,7 @@ describe("lib/config/index.js", () => {
 
     it("should throw on negative limit values", () => {
       for (const limit of Object.keys(defaultConfig.default.limits).filter(
-        (l) => l !== "requestsRate"
+        (l) => l !== "requestsRate",
       )) {
         mockedConfigContent = getcfg({
           limits: {
@@ -197,7 +197,7 @@ describe("lib/config/index.js", () => {
       ];
 
       for (const limit of Object.keys(defaultConfig.default.limits).filter(
-        (l) => l !== "requestsRate"
+        (l) => l !== "requestsRate",
       )) {
         mockedConfigContent = getcfg({
           limits: {
@@ -278,7 +278,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "accessControlAllowOrigin" parameter: invalid value "${bad}" (array or string expected)`
+          `[http] "accessControlAllowOrigin" parameter: invalid value "${bad}" (array or string expected)`,
         );
       }
     });
@@ -297,7 +297,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+          `[http] "enabled" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });
@@ -316,7 +316,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "allowCompression" parameter: invalid value "${bad}" (boolean expected)`
+          `[http] "allowCompression" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });
@@ -335,7 +335,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "maxEncodingLayers" parameter: invalid value "${bad}" (integer >= 1 expected)`
+          `[http] "maxEncodingLayers" parameter: invalid value "${bad}" (integer >= 1 expected)`,
         );
       }
     });
@@ -354,7 +354,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "maxFormFileSize" parameter: cannot parse "${bad}"`
+          `[http] "maxFormFileSize" parameter: cannot parse "${bad}"`,
         );
       }
     });
@@ -373,7 +373,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[http] "additionalContentTypes" parameter: invalid value "${bad}" (array of strings expected)`
+          `[http] "additionalContentTypes" parameter: invalid value "${bad}" (array of strings expected)`,
         );
       }
     });
@@ -394,7 +394,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "enabled" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });
@@ -413,7 +413,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`
+          `[websocket] "idleTimeout" parameter: invalid value "${bad}" (integer >= 1000 expected)`,
         );
       }
     });
@@ -432,7 +432,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "compression" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "compression" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });
@@ -451,7 +451,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`
+          `[websocket] "rateLimit" parameter: invalid value "${bad}" (integer >= 0 expected)`,
         );
       }
     });
@@ -470,7 +470,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "sendPingsAutomatically" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "sendPingsAutomatically" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });
@@ -489,7 +489,7 @@ describe("lib/config/index.js", () => {
 
         // eslint-disable-next-line no-loop-func
         should(() => config.loadConfig()).throw(
-          `[websocket] "resetIdleTimeoutOnSend" parameter: invalid value "${bad}" (boolean expected)`
+          `[websocket] "resetIdleTimeoutOnSend" parameter: invalid value "${bad}" (boolean expected)`,
         );
       }
     });

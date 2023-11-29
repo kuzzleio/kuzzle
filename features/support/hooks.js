@@ -34,7 +34,7 @@ BeforeAll({ timeout: 10 * 1000 }, async function () {
   const world = new World({});
 
   console.log(
-    `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`
+    `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`,
   );
 
   await world.sdk.connect();
@@ -172,7 +172,7 @@ After({ tags: "@realtime" }, function () {
     return;
   }
   const promises = Object.values(this.props.subscriptions).map(
-    ({ unsubscribe }) => unsubscribe()
+    ({ unsubscribe }) => unsubscribe(),
   );
 
   return Promise.all(promises);

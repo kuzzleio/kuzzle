@@ -61,7 +61,7 @@ export class BackendVault extends ApplicationManager {
     if (!this._application.started && !this.decrypted) {
       const kuzzleVault = vault.load(
         this._application._vaultKey,
-        this._application._secretsFile
+        this._application._secretsFile,
       );
       this._secrets = kuzzleVault.secrets;
     }

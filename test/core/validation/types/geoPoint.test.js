@@ -28,7 +28,7 @@ describe("Test: validation/types/geoPoint", () => {
       const errorMessages = [];
 
       should(
-        geoPointType.validate({}, { not: "a geopoint" }, errorMessages)
+        geoPointType.validate({}, { not: "a geopoint" }, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual(["Invalid GeoPoint format"]);
     });

@@ -70,7 +70,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
     should(fsStub.mkdirSync.getCall(0).args[0]).be.exactly(baseDumpPath);
 
     should(fsStub.writeFileSync.getCall(0).args[0]).be.exactly(
-      baseDumpPath.concat("/kuzzle.json")
+      baseDumpPath.concat("/kuzzle.json"),
     );
     should(fsStub.writeFileSync.getCall(0).args[1]).be.exactly(
       JSON.stringify(
@@ -79,19 +79,19 @@ describe("Test: kuzzle/dumpGenerator", () => {
           version: require("../../package.json").version,
         },
         null,
-        " "
-      ).concat("\n")
+        " ",
+      ).concat("\n"),
     );
 
     should(fsStub.writeFileSync.getCall(1).args[0]).be.exactly(
-      baseDumpPath.concat("/plugins.json")
+      baseDumpPath.concat("/plugins.json"),
     );
     should(fsStub.writeFileSync.getCall(1).args[1]).be.exactly(
-      JSON.stringify(kuzzle.pluginsManager.plugins, null, " ").concat("\n")
+      JSON.stringify(kuzzle.pluginsManager.plugins, null, " ").concat("\n"),
     );
 
     should(fsStub.writeFileSync.getCall(2).args[0]).be.exactly(
-      baseDumpPath.concat("/nodejs.json")
+      baseDumpPath.concat("/nodejs.json"),
     );
     const processDump = JSON.parse(fsStub.writeFileSync.getCall(2).args[1]);
     should(processDump).have.keys(
@@ -100,11 +100,11 @@ describe("Test: kuzzle/dumpGenerator", () => {
       "argv",
       "versions",
       "release",
-      "moduleLoadList"
+      "moduleLoadList",
     );
 
     should(fsStub.writeFileSync.getCall(3).args[0]).be.exactly(
-      baseDumpPath.concat("/os.json")
+      baseDumpPath.concat("/os.json"),
     );
     const osDump = JSON.parse(fsStub.writeFileSync.getCall(3).args[1]);
     should(osDump).have.keys(
@@ -113,30 +113,30 @@ describe("Test: kuzzle/dumpGenerator", () => {
       "uptime",
       "cpus",
       "mem",
-      "networkInterfaces"
+      "networkInterfaces",
     );
     should(osDump.mem).have.keys("total", "free");
 
     should(fsStub.writeFileSync.getCall(4).args[0]).be.exactly(
-      baseDumpPath.concat("/statistics.json")
+      baseDumpPath.concat("/statistics.json"),
     );
     should(fsStub.writeFileSync.getCall(4).args[1]).be.exactly(
-      JSON.stringify([{ stats: 42 }], null, " ").concat("\n")
+      JSON.stringify([{ stats: 42 }], null, " ").concat("\n"),
     );
 
     should(
-      coreStub.firstCall.calledWith("gcore", baseDumpPath.concat("/core"))
+      coreStub.firstCall.calledWith("gcore", baseDumpPath.concat("/core")),
     ).be.true();
 
     should(fsStub.createReadStream.getCall(0).args[0]).be.exactly(
-      `/tmp/${new Date().getFullYear()}-dump-me-master/core`
+      `/tmp/${new Date().getFullYear()}-dump-me-master/core`,
     );
     should(fsStub.createWriteStream).be.calledOnce();
     should(fsStub.createReadStream().pipe).be.called(2);
 
     should(fsStub.copyFileSync.getCall(0).args[0]).be.exactly(process.argv[0]);
     should(fsStub.copyFileSync.getCall(0).args[1]).be.exactly(
-      baseDumpPath.concat("/node")
+      baseDumpPath.concat("/node"),
     );
   });
 
@@ -216,7 +216,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
     for (let i = 1; i < 8; i++) {
       should(dumpGenerator._listFilesMatching).be.calledWith(
         `/tmp/${i}`,
-        "core"
+        "core",
       );
       should(fsStub.unlinkSync).be.calledWith(`/tmp/${i}/core.gz`);
     }
@@ -224,7 +224,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
     for (let i = 9; i < 11; i++) {
       should(dumpGenerator._listFilesMatching).not.be.calledWith(
         `/tmp/${i}/`,
-        "core"
+        "core",
       );
     }
   });

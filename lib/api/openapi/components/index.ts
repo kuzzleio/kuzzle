@@ -5,5 +5,5 @@ export * from "./security";
 
 // Document definitions (reusable object for KuzzleRequest and KuzzleResponse)
 export const OpenApiPayloadsDefinitions = readYamlFile(
-  __dirname + "/payloads.yaml"
+  __dirname + "/payloads.yaml",
 ).definitions;

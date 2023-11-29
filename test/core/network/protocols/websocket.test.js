@@ -25,7 +25,7 @@ describe("core/network/protocols/websocket", () => {
   before(() => {
     mockRequire("uWebSockets.js", uWSMock);
     HttpWs = mockRequire.reRequire(
-      "../../../../lib/core/network/protocols/httpwsProtocol"
+      "../../../../lib/core/network/protocols/httpwsProtocol",
     );
   });
 
@@ -71,7 +71,7 @@ describe("core/network/protocols/websocket", () => {
 
       should(httpWs.server.ws).not.called();
       should(kuzzle.log.warn).calledWith(
-        "[websocket] no configuration found for websocket: disabling it"
+        "[websocket] no configuration found for websocket: disabling it",
       );
     });
 
@@ -87,7 +87,7 @@ describe("core/network/protocols/websocket", () => {
         });
 
         should(kuzzle.log.warn).calledWith(
-          '[websocket] The "idleTimeout" parameter can neither be deactivated or be set with a value lower than 1000. Defaulted to 60000.'
+          '[websocket] The "idleTimeout" parameter can neither be deactivated or be set with a value lower than 1000. Defaulted to 60000.',
         );
       }
     });
@@ -102,7 +102,7 @@ describe("core/network/protocols/websocket", () => {
       await httpWs.init(entryPoint);
 
       should(kuzzle.log.warn).calledWith(
-        '[websocket] The "heartbeat" parameter has been deprecated and is now ignored. The "idleTimeout" parameter should now be configured instead.'
+        '[websocket] The "heartbeat" parameter has been deprecated and is now ignored. The "idleTimeout" parameter should now be configured instead.',
       );
     });
 
@@ -178,7 +178,7 @@ describe("core/network/protocols/websocket", () => {
         "websocket-key",
         "websocket-protocol",
         "websocket-extension",
-        context
+        context,
       );
     });
   });
@@ -202,12 +202,12 @@ describe("core/network/protocols/websocket", () => {
 
       should(httpWs.connectionBySocket).have.value(
         httpWs.server._wsSocket,
-        clientConnection
+        clientConnection,
       );
 
       should(httpWs.socketByConnectionId).have.value(
         clientConnection.id,
-        httpWs.server._wsSocket
+        httpWs.server._wsSocket,
       );
 
       should(httpWs.backpressureBuffer).have.value(httpWs.server._wsSocket, []);
@@ -236,20 +236,20 @@ describe("core/network/protocols/websocket", () => {
 
       should(httpWs.connectionBySocket).have.value(
         openedSocket,
-        openedClientConnection
+        openedClientConnection,
       );
       should(httpWs.connectionBySocket).not.have.value(
         closedSocket,
-        closedClientConnection
+        closedClientConnection,
       );
 
       should(httpWs.socketByConnectionId).have.value(
         openedClientConnection.id,
-        openedSocket
+        openedSocket,
       );
       should(httpWs.socketByConnectionId).not.have.value(
         closedClientConnection.id,
-        closedSocket
+        closedSocket,
       );
 
       should(httpWs.backpressureBuffer).have.value(openedSocket, []);
@@ -382,7 +382,7 @@ describe("core/network/protocols/websocket", () => {
       should(payload.toString()).eql('{"p":2}');
 
       await httpWs.server._wsOnMessage(
-        '{"p":1, "controller": "foo", "action":"bar"}'
+        '{"p":1, "controller": "foo", "action":"bar"}',
       );
       should(entryPoint.execute).calledOnce();
 
@@ -449,7 +449,7 @@ describe("core/network/protocols/websocket", () => {
         .calledOnce()
         .calledWithMatch(
           1011,
-          Buffer.from("too much backpressure: client is too slow")
+          Buffer.from("too much backpressure: client is too slow"),
         );
     });
 
@@ -490,7 +490,7 @@ describe("core/network/protocols/websocket", () => {
 
       should(socket.end).calledWithMatch(
         1011,
-        Buffer.from("Connection closed by remote host")
+        Buffer.from("Connection closed by remote host"),
       );
     });
 
@@ -568,7 +568,7 @@ describe("core/network/protocols/websocket", () => {
 
       for (const channel of channels) {
         should(socket.send).calledWithMatch(
-          Buffer.from(JSON.stringify({ foo: "bar", room: channel }))
+          Buffer.from(JSON.stringify({ foo: "bar", room: channel })),
         );
       }
     });
@@ -593,7 +593,7 @@ describe("core/network/protocols/websocket", () => {
       for (const channel of channels) {
         should(httpWs.server.publish).calledWithMatch(
           `realtime/${channel}`,
-          Buffer.from(JSON.stringify({ foo: "bar", room: channel }))
+          Buffer.from(JSON.stringify({ foo: "bar", room: channel })),
         );
       }
     });

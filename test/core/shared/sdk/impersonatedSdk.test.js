@@ -66,7 +66,7 @@ describe("ImpersonatedSDK", () => {
 
       mockrequire.reRequire("../../../../lib/core/shared/sdk/impersonatedSdk");
       ImpersonatedSdk = rewire(
-        "../../../../lib/core/shared/sdk/impersonatedSdk"
+        "../../../../lib/core/shared/sdk/impersonatedSdk",
       );
 
       impersonatedSdk = new ImpersonatedSdk(impersonatedUserId);

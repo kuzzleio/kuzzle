@@ -61,7 +61,7 @@ describe("#pipeRunner", () => {
     it("should throw if an invalid number of max concurrent request is provided", () => {
       for (const invalid of [-1, [], {}, 0, null, undefined, "URGH"]) {
         should(() => new PipeRunner(invalid, 123)).throw(
-          "Cannot instantiate pipes executor: invalid maxConcurrentPipes parameter value"
+          "Cannot instantiate pipes executor: invalid maxConcurrentPipes parameter value",
         );
       }
     });
@@ -69,7 +69,7 @@ describe("#pipeRunner", () => {
     it("should throw if an invalid buffer size is provided", () => {
       for (const invalid of [-1, [], {}, 0, null, undefined, "URGH"]) {
         should(() => new PipeRunner(123, invalid)).throw(
-          "Cannot instantiate pipes executor: invalid pipesBufferSize parameter value"
+          "Cannot instantiate pipes executor: invalid pipesBufferSize parameter value",
         );
       }
     });

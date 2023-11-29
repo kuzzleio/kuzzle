@@ -73,7 +73,7 @@ describe("Backend", () => {
 
       should(application._controllers.greeting).not.be.undefined();
       should(application._controllers.greeting.actions.sayHello).be.eql(
-        definition.actions.sayHello
+        definition.actions.sayHello,
       );
     });
 
@@ -120,7 +120,7 @@ describe("Backend", () => {
 
       should(application._controllers.greeting).not.be.undefined();
       should(
-        application._controllers.greeting.actions.sayHello.handler.name
+        application._controllers.greeting.actions.sayHello.handler.name,
       ).be.eql("bound sayHello");
     });
 

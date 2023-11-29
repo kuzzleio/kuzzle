@@ -81,7 +81,7 @@ describe("ClusterIdCardHandler", () => {
 
       should(idCardHandler.nodeId).be.String();
       should(idCardHandler.nodeIdKey).be.eql(
-        `{cluster/node}/${idCardHandler.nodeId}`
+        `{cluster/node}/${idCardHandler.nodeId}`,
       );
       should(idCardHandler.idCard.id).be.eql(idCardHandler.nodeId);
       should(idCardHandler.idCard.ip).be.eql("192.168.42.42");
@@ -93,13 +93,13 @@ describe("ClusterIdCardHandler", () => {
         {
           onlyIfNew: true,
           ttl: refreshDelay * 2,
-        }
+        },
       );
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:execute",
         "sadd",
         "{cluster/node}/id-cards-index",
-        `{cluster/node}/${idCardHandler.nodeId}`
+        `{cluster/node}/${idCardHandler.nodeId}`,
       );
     });
 
@@ -118,7 +118,7 @@ describe("ClusterIdCardHandler", () => {
       const args1 = kuzzle.ask.getCall(1).args;
       should(args0[1]).not.eql(args1[1]);
       should(kuzzle.ask.getCall(2).args[0]).be.eql(
-        "core:cache:internal:execute"
+        "core:cache:internal:execute",
       );
     });
 
@@ -174,7 +174,7 @@ describe("ClusterIdCardHandler", () => {
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:execute",
         "smembers",
-        "{cluster/node}/id-cards-index"
+        "{cluster/node}/id-cards-index",
       );
       should(kuzzle.ask).be.calledWith("core:cache:internal:mget", [
         "redis/id2",
@@ -185,7 +185,7 @@ describe("ClusterIdCardHandler", () => {
         "core:cache:internal:execute",
         "srem",
         "{cluster/node}/id-cards-index",
-        "redis/id4"
+        "redis/id4",
       );
       should(remoteCards).be.eql([idCard2, idCard3]);
     });

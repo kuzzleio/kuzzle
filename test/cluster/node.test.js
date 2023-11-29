@@ -221,14 +221,14 @@ describe("#Cluster Node", () => {
       kuzzle.config.cluster.interface = "foobar";
 
       should(() => new ClusterNode()).throw(
-        /^\[CLUSTER\] No suitable IP address found with the provided configuration/
+        /^\[CLUSTER\] No suitable IP address found with the provided configuration/,
       );
     });
 
     it("should throw if the only available address is an APIPA", () => {
       kuzzle.config.cluster.interface = "apipa";
       should(() => new ClusterNode()).throw(
-        /^\[CLUSTER\] No suitable IP address found with the provided configuration/
+        /^\[CLUSTER\] No suitable IP address found with the provided configuration/,
       );
     });
   });
@@ -288,13 +288,13 @@ describe("#Cluster Node", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 300));
       await should(Promise.race([initPromise, resolved])).fulfilledWith(
-        "init_waiting"
+        "init_waiting",
       );
 
       node.countActiveNodes.returns(3);
       await new Promise((resolve) => setTimeout(resolve, 100));
       await should(Promise.race([initPromise, resolved])).fulfilledWith(
-        "foonode"
+        "foonode",
       );
     });
   });
@@ -779,7 +779,7 @@ describe("#Cluster Node", () => {
       should(node.fullState.loadFullState).not.called();
 
       should(kuzzle.log.error).calledWithMatch(
-        /Another node share the same IP address as this one \(2.3.4.2\): baz/
+        /Another node share the same IP address as this one \(2.3.4.2\): baz/,
       );
       should(kuzzle.shutdown).calledOnce();
     });
@@ -933,7 +933,7 @@ describe("#Cluster Node", () => {
         should(subscriber.sync).calledOnce();
         should(subscriber.sync.firstCall.args[0]).oneOf(
           "barmsgid",
-          "quxLastMessageId"
+          "quxLastMessageId",
         );
       }
 
@@ -950,7 +950,7 @@ describe("#Cluster Node", () => {
     it("should shutdown if unable to complete handshake before a timeout", async () => {
       kuzzle.config.cluster.joinTimeout = 10;
       node.idCardHandler.createIdCard.returns(
-        new Promise((resolve) => setTimeout(resolve, 100))
+        new Promise((resolve) => setTimeout(resolve, 100)),
       );
 
       node.handshake();
@@ -965,7 +965,7 @@ describe("#Cluster Node", () => {
   describe("#node addition", () => {
     it("should add the new node to the list and subscribe to it", async () => {
       await should(
-        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true))
+        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true)),
       ).be.fulfilledWith(true);
 
       should(node.idCardHandler.addNode).calledOnce().calledWith("foo");
@@ -981,12 +981,12 @@ describe("#Cluster Node", () => {
       kuzzle.config.cluster.minimumNodes = 2;
 
       await should(
-        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true))
+        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true)),
       ).be.fulfilledWith(true);
 
       should(kuzzle.state).eql(kuzzleStateEnum.RUNNING);
       should(kuzzle.log.warn).calledWithMatch(
-        /Minimum number of nodes reached/
+        /Minimum number of nodes reached/,
       );
     });
 
@@ -994,7 +994,7 @@ describe("#Cluster Node", () => {
       node.remoteNodes.set("foo", {});
 
       await should(
-        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true))
+        node.addNode("foo", "1.2.3.4", Long.fromInt(23, true)),
       ).be.fulfilledWith(false);
 
       should(node.idCardHandler.addNode).not.called();
@@ -1038,7 +1038,7 @@ describe("#Cluster Node", () => {
       await node.evictNode("bar", { broadcast: true, reason: "because" });
 
       should(kuzzle.log.warn).calledWith(
-        '[CLUSTER] Node "bar" evicted. Reason: because'
+        '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
         address: "1.2.3.4",
@@ -1061,7 +1061,7 @@ describe("#Cluster Node", () => {
       await node.evictNode("bar", { reason: "because" });
 
       should(kuzzle.log.warn).calledWith(
-        '[CLUSTER] Node "bar" evicted. Reason: because'
+        '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
         address: "1.2.3.4",
@@ -1083,7 +1083,7 @@ describe("#Cluster Node", () => {
       await node.evictNode("bar", { reason: "because" });
 
       should(kuzzle.log.warn).calledWith(
-        '[CLUSTER] Node "bar" evicted. Reason: because'
+        '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
         address: "1.2.3.4",

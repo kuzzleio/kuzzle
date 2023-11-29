@@ -27,7 +27,7 @@ class MutexMock extends Mutex {
   static __canLock(value) {
     assert(
       typeof value === "boolean",
-      "Mutex.lock can only return a boolean value"
+      "Mutex.lock can only return a boolean value",
     );
     lockResult = value;
   }

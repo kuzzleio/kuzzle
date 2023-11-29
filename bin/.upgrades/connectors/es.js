@@ -34,13 +34,13 @@ let promise = null;
 async function getEsClient(context) {
   const currentConfiguration = _.get(
     context.config,
-    "services.storageEngine.client"
+    "services.storageEngine.client",
   );
 
   if (!currentConfiguration) {
     context.log.error("Missing Kuzzle configuration for Elasticsearch.");
     context.log.error(
-      "Missing configuration value: services.storageEngine.client"
+      "Missing configuration value: services.storageEngine.client",
     );
     context.log.error("Aborted.");
     process.exit(1);
@@ -48,7 +48,7 @@ async function getEsClient(context) {
 
   context.log.notice("Current Elasticsearch configuration:");
   context.log.print(
-    formatWithOptions({ colors: false, depth: null }, currentConfiguration)
+    formatWithOptions({ colors: false, depth: null }, currentConfiguration),
   );
 
   const answers = await context.inquire.prompt([

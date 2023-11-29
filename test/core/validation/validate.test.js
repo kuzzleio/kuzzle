@@ -142,10 +142,10 @@ describe("Test: validation.validate", () => {
         should(result).be.deepEqual(request);
         should(validation.recurseFieldValidation.callCount).be.eql(1);
         should(validation.recurseFieldValidation.args[0][0]).be.deepEqual(
-          documentBody
+          documentBody,
         );
         should(validation.recurseFieldValidation.args[0][1]).be.deepEqual(
-          specification[index][collection].fields.children
+          specification[index][collection].fields.children,
         );
         should(validation.recurseFieldValidation.args[0][2]).be.true();
         should(validation.recurseFieldValidation.args[0][3]).be.eql([]);
@@ -154,7 +154,7 @@ describe("Test: validation.validate", () => {
           .calledOnce()
           .calledWithMatch(
             { ...documentBody, _id: id },
-            `${index}/${collection}`
+            `${index}/${collection}`,
           );
       });
     });
@@ -183,7 +183,7 @@ describe("Test: validation.validate", () => {
         should(result).be.deepEqual(request);
         should(validation.recurseFieldValidation.callCount).be.eql(1);
         should(validation.recurseFieldValidation.args[0][0]).be.deepEqual(
-          documentBody
+          documentBody,
         );
         should(validation.recurseFieldValidation.args[0][1]).be.deepEqual({});
         should(validation.recurseFieldValidation.args[0][2]).be.true();
@@ -213,11 +213,11 @@ describe("Test: validation.validate", () => {
         "manageErrorMessage",
         sinon.spy(function () {
           throw new Error(arguments[2]);
-        })
+        }),
       );
 
       return should(validation.validate(request, verbose)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -241,11 +241,11 @@ describe("Test: validation.validate", () => {
         "manageErrorMessage",
         sinon.spy(function () {
           throw new Error(arguments[2]);
-        })
+        }),
       );
 
       return should(validation.validate(request, verbose)).be.rejectedWith(
-        "The document does not match validation filters."
+        "The document does not match validation filters.",
       );
     });
 
@@ -271,11 +271,11 @@ describe("Test: validation.validate", () => {
         "manageErrorMessage",
         sinon.spy(function () {
           throw new Error(arguments[2]);
-        })
+        }),
       );
 
       return should(validation.validate(request, verbose)).be.rejectedWith(
-        'The document validation is strict. Cannot add unspecified sub-field "field"'
+        'The document validation is strict. Cannot add unspecified sub-field "field"',
       );
     });
 
@@ -314,7 +314,7 @@ describe("Test: validation.validate", () => {
         should(recurseFieldValidationStub.args[0][4]).be.eql(verbose);
         should(manageErrorMessageStub.callCount).be.eql(1);
         should(manageErrorMessageStub.args[0][2]).be.eql(
-          'The document validation is strict. Cannot add unspecified sub-field "field"'
+          'The document validation is strict. Cannot add unspecified sub-field "field"',
         );
       });
     });
@@ -339,11 +339,11 @@ describe("Test: validation.validate", () => {
         "manageErrorMessage",
         sinon.spy(function () {
           throw new Error(arguments[2]);
-        })
+        }),
       );
 
       return should(validation.validate(request, verbose)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -370,7 +370,7 @@ describe("Test: validation.validate", () => {
         "core:storage:public:document:get",
         index,
         collection,
-        "foo"
+        "foo",
       );
     });
   });
@@ -412,8 +412,8 @@ describe("Test: validation.validate", () => {
         validation.recurseApplyDefault(
           isUpdate,
           documentSubset,
-          collectionSpecSubset
-        )
+          collectionSpecSubset,
+        ),
       ).deepEqual(expectedResult);
     });
 
@@ -446,8 +446,8 @@ describe("Test: validation.validate", () => {
         validation.recurseApplyDefault(
           isUpdate,
           documentSubset,
-          collectionSpecSubset
-        )
+          collectionSpecSubset,
+        ),
       ).deepEqual(expectedResult);
     });
 
@@ -487,8 +487,8 @@ describe("Test: validation.validate", () => {
         validation.recurseApplyDefault(
           isUpdate,
           documentSubset,
-          collectionSpecSubset
-        )
+          collectionSpecSubset,
+        ),
       ).deepEqual(expectedResult);
     });
   });
@@ -501,8 +501,8 @@ describe("Test: validation.validate", () => {
           { aField: { some: "specification" } },
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).throw("strictness");
     });
 
@@ -521,8 +521,8 @@ describe("Test: validation.validate", () => {
           },
           false,
           [],
-          false
-        )
+          false,
+        ),
       ).throw("an error");
 
       should(validation.isValidField.callCount).be.eql(1);
@@ -543,8 +543,8 @@ describe("Test: validation.validate", () => {
           },
           false,
           [],
-          true
-        )
+          true,
+        ),
       ).be.true();
 
       should(validation.isValidField.callCount).be.eql(2);
@@ -564,8 +564,8 @@ describe("Test: validation.validate", () => {
           },
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).be.true();
 
       should(validation.isValidField.callCount).be.eql(2);
@@ -583,8 +583,8 @@ describe("Test: validation.validate", () => {
           },
           false,
           [],
-          true
-        )
+          true,
+        ),
       ).be.false();
 
       should(validation.isValidField.callCount).be.eql(2);
@@ -605,8 +605,8 @@ describe("Test: validation.validate", () => {
           },
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).be.false();
 
       should(validation.isValidField.callCount).be.eql(1);
@@ -636,8 +636,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).be.true();
     });
 
@@ -663,8 +663,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).be.true();
     });
 
@@ -692,8 +692,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          false
-        )
+          false,
+        ),
       ).throw(BadRequestError, { id: "validation.check.failed_field" });
     });
 
@@ -721,8 +721,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -756,8 +756,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           [],
-          false
-        )
+          false,
+        ),
       ).be.true();
     });
 
@@ -785,8 +785,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -826,8 +826,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -865,8 +865,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -903,8 +903,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -941,8 +941,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -992,8 +992,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {
@@ -1051,7 +1051,7 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          false
+          false,
         );
       }).throw(BadRequestError, { id: "validation.check.failed_field" });
     });
@@ -1097,8 +1097,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: { children: { aField: { messages: ["an error"] } } },
@@ -1146,8 +1146,8 @@ describe("Test: validation.validate", () => {
           collectionSubset,
           true,
           errorMessages,
-          true
-        )
+          true,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual({
         fieldScope: {

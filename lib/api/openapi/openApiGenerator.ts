@@ -110,7 +110,7 @@ function generateResponse(route: JSONObject) {
  */
 export function generateOpenApi(
   routes: JSONObject[],
-  definition: JSONObject
+  definition: JSONObject,
 ): JSONObject {
   for (const route of routes) {
     // Make sure route verbs are lowercase

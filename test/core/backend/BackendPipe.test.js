@@ -67,7 +67,7 @@ describe("Backend", () => {
       should(global.kuzzle.pluginsManager.registerPipe).be.calledWith(
         global.kuzzle.pluginsManager.application,
         "kuzzle:state:ready",
-        handler
+        handler,
       );
     });
   });
@@ -84,7 +84,7 @@ describe("Backend", () => {
       application.pipe.unregister("unique-pipe-id");
 
       should(global.kuzzle.pluginsManager.unregisterPipe).be.calledWith(
-        "unique-pipe-id"
+        "unique-pipe-id",
       );
     });
 

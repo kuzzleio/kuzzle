@@ -21,7 +21,7 @@ describe("Test: security controller - profiles", () => {
   beforeEach(() => {
     request = new Request(
       { controller: "security" },
-      { user: { _id: "userId" } }
+      { user: { _id: "userId" } },
     );
     kuzzle = new KuzzleMock();
     kuzzle.ask.withArgs("core:storage:private:document:get").resolves({});
@@ -62,7 +62,7 @@ describe("Test: security controller - profiles", () => {
         "core:storage:private:mappings:update",
         kuzzle.internalIndex.index,
         "profiles",
-        request.input.body
+        request.input.body,
       );
 
       should(response).be.instanceof(Object);
@@ -81,7 +81,7 @@ describe("Test: security controller - profiles", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:mappings:get",
         kuzzle.internalIndex.index,
-        "profiles"
+        "profiles",
       );
 
       should(response).be.instanceof(Object);
@@ -109,7 +109,7 @@ describe("Test: security controller - profiles", () => {
         createOrReplaceEvent,
         request.input.args._id,
         request.input.body,
-        { refresh: "wait_for", userId: "userId" }
+        { refresh: "wait_for", userId: "userId" },
       );
 
       should(response).be.an.Object().and.not.instanceof(Profile);
@@ -128,7 +128,7 @@ describe("Test: security controller - profiles", () => {
       createOrReplaceStub.rejects(error);
 
       await should(
-        securityController.createOrReplaceProfile(request)
+        securityController.createOrReplaceProfile(request),
       ).be.rejectedWith(error);
 
       should(createOrReplaceStub).calledOnce();
@@ -144,7 +144,7 @@ describe("Test: security controller - profiles", () => {
           createOrReplaceEvent,
           request.input.args._id,
           request.input.body,
-          { refresh: "false", userId: "userId" }
+          { refresh: "false", userId: "userId" },
         );
       }
     });
@@ -159,7 +159,7 @@ describe("Test: security controller - profiles", () => {
           createOrReplaceEvent,
           request.input.args._id,
           request.input.body,
-          { strict: false, userId: "userId" }
+          { strict: false, userId: "userId" },
         );
       }
 
@@ -170,19 +170,19 @@ describe("Test: security controller - profiles", () => {
         createOrReplaceEvent,
         request.input.args._id,
         request.input.body,
-        { strict: true, userId: "userId" }
+        { strict: true, userId: "userId" },
       );
     });
 
     it("should throw if an invalid profile format is provided", async () => {
       request.input.body = null;
       await should(
-        securityController.createOrReplaceProfile(request)
+        securityController.createOrReplaceProfile(request),
       ).rejectedWith(BadRequestError, { id: "api.assert.body_required" });
 
       request.input.body = {};
       await should(
-        securityController.createOrReplaceProfile(request)
+        securityController.createOrReplaceProfile(request),
       ).rejectedWith(BadRequestError, {
         id: "api.assert.missing_argument",
         message: 'Missing argument "body.policies".',
@@ -195,7 +195,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.invalid_type",
           message: 'Wrong type for argument "body.policies" (expected: array)',
-        }
+        },
       );
       should(createOrReplaceStub).not.called();
 
@@ -206,7 +206,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
       should(createOrReplaceStub).not.called();
     });
@@ -228,7 +228,7 @@ describe("Test: security controller - profiles", () => {
       createStub.rejects(error);
 
       await should(securityController.createProfile(request)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -239,7 +239,7 @@ describe("Test: security controller - profiles", () => {
         createEvent,
         request.input.args._id,
         request.input.body,
-        { refresh: "wait_for", userId: "userId" }
+        { refresh: "wait_for", userId: "userId" },
       );
 
       should(response).be.an.Object().and.not.instanceof(Profile);
@@ -256,7 +256,7 @@ describe("Test: security controller - profiles", () => {
       request.input.body = null;
       await should(securityController.createProfile(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       request.input.body = {};
@@ -265,7 +265,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "body.policies".',
-        }
+        },
       );
       should(createStub).not.called();
 
@@ -275,7 +275,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.invalid_type",
           message: 'Wrong type for argument "body.policies" (expected: array)',
-        }
+        },
       );
       should(createStub).not.called();
 
@@ -286,7 +286,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
       should(createStub).not.called();
     });
@@ -301,7 +301,7 @@ describe("Test: security controller - profiles", () => {
           createStub,
           request.input.args._id,
           request.input.body,
-          { refresh: "false", userId: "userId" }
+          { refresh: "false", userId: "userId" },
         );
       }
     });
@@ -316,7 +316,7 @@ describe("Test: security controller - profiles", () => {
           createEvent,
           request.input.args._id,
           request.input.body,
-          { strict: false, userId: "userId" }
+          { strict: false, userId: "userId" },
         );
       }
 
@@ -327,7 +327,7 @@ describe("Test: security controller - profiles", () => {
         createEvent,
         request.input.args._id,
         request.input.body,
-        { strict: true, userId: "userId" }
+        { strict: true, userId: "userId" },
       );
     });
 
@@ -335,7 +335,7 @@ describe("Test: security controller - profiles", () => {
       request.input.body = null;
       await should(securityController.createProfile(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       request.input.body = {};
@@ -344,7 +344,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "body.policies".',
-        }
+        },
       );
 
       request.input.body = { policies: "foobar" };
@@ -353,7 +353,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.invalid_type",
           message: 'Wrong type for argument "body.policies" (expected: array)',
-        }
+        },
       );
 
       request.input.args._id = null;
@@ -363,7 +363,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
     });
   });
@@ -399,7 +399,7 @@ describe("Test: security controller - profiles", () => {
 
       await should(securityController.getProfile(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(getStub).not.be.called();
@@ -411,7 +411,7 @@ describe("Test: security controller - profiles", () => {
       getStub.rejects(error);
 
       await should(securityController.getProfile(request)).be.rejectedWith(
-        error
+        error,
       );
 
       should(getStub).calledWith(getEvent, request.input.args._id);
@@ -432,7 +432,7 @@ describe("Test: security controller - profiles", () => {
 
       await should(securityController.mGetProfiles(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(mGetStub).not.called();
@@ -444,7 +444,7 @@ describe("Test: security controller - profiles", () => {
       mGetStub.rejects(error);
 
       await should(securityController.mGetProfiles(request)).be.rejectedWith(
-        error
+        error,
       );
 
       should(mGetStub).calledWith(mGetEvent, request.input.body.ids);
@@ -499,7 +499,7 @@ describe("Test: security controller - profiles", () => {
           from: 13,
           size: 42,
           scroll: "duration",
-        }
+        },
       );
 
       should(response).be.an.Object();
@@ -524,7 +524,7 @@ describe("Test: security controller - profiles", () => {
           from: 0,
           size: kuzzle.config.limits.documentsFetchCount,
           scroll: undefined,
-        }
+        },
       );
     });
 
@@ -538,7 +538,7 @@ describe("Test: security controller - profiles", () => {
         SizeLimitError,
         {
           id: "services.storage.get_limit_exceeded",
-        }
+        },
       );
 
       should(searchStub).not.called();
@@ -550,7 +550,7 @@ describe("Test: security controller - profiles", () => {
       searchStub.rejects(error);
 
       return should(securityController.searchProfiles(request)).be.rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -573,7 +573,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "scrollId".',
-        }
+        },
       );
 
       should(scrollStub).not.be.called();
@@ -634,7 +634,7 @@ describe("Test: security controller - profiles", () => {
           refresh: "wait_for",
           retryOnConflict: 10,
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(Profile);
@@ -655,7 +655,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(updateStub).not.called();
@@ -666,7 +666,7 @@ describe("Test: security controller - profiles", () => {
 
       await should(securityController.updateProfile(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
@@ -686,7 +686,7 @@ describe("Test: security controller - profiles", () => {
           retryOnConflict: 123,
           strict: true,
           userId: request.context.user._id,
-        }
+        },
       );
     });
 
@@ -695,7 +695,7 @@ describe("Test: security controller - profiles", () => {
       updateStub.rejects(error);
 
       return should(securityController.updateProfile(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -727,7 +727,7 @@ describe("Test: security controller - profiles", () => {
       deleteStub.rejects(error);
 
       return should(securityController.deleteProfile(request)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -739,7 +739,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(deleteStub).not.called();
@@ -794,7 +794,7 @@ describe("Test: security controller - profiles", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(getStub).not.called();
@@ -805,7 +805,7 @@ describe("Test: security controller - profiles", () => {
       getStub.rejects(error);
 
       return should(securityController.getProfileRights(request)).rejectedWith(
-        error
+        error,
       );
     });
   });

@@ -29,27 +29,27 @@ should.Assertion.add(
         should(objectValue).matchObject(
           expectedValue,
           `"${keyPath}" does not match. Expected "${JSON.stringify(
-            expectedValue
-          )}" have "${JSON.stringify(objectValue)}"`
+            expectedValue,
+          )}" have "${JSON.stringify(objectValue)}"`,
         );
       } else if (_.isArray(objectValue)) {
         for (let i = 0; i < objectValue.length; i++) {
           should(objectValue[i]).matchObject(
             expectedValue[i],
             `"${keyPath}[${i}]" does not match. Expected "${JSON.stringify(
-              expectedValue[i]
-            )}" have "${JSON.stringify(objectValue[i])}"`
+              expectedValue[i],
+            )}" have "${JSON.stringify(objectValue[i])}"`,
           );
         }
       } else {
         should(objectValue).match(
           expectedValue,
           `"${keyPath}" does not match. Expected "${JSON.stringify(
-            expectedValue
-          )}" have "${JSON.stringify(objectValue)}"`
+            expectedValue,
+          )}" have "${JSON.stringify(objectValue)}"`,
         );
       }
     }
   },
-  false
+  false,
 );

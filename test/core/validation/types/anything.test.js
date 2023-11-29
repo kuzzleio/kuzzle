@@ -28,7 +28,7 @@ describe("Test: validation/types/anything", () => {
   describe("#validateFieldSpecification", () => {
     it("should always return the provided options", () => {
       should(anythingType.validateFieldSpecification("foobar")).be.equal(
-        "foobar"
+        "foobar",
       );
     });
   });

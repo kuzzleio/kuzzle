@@ -97,7 +97,7 @@ export class NativeController extends BaseController {
       throw assertionError.get(
         "koncorde_restricted_keyword",
         error.keyword.type,
-        error.keyword.name
+        error.keyword.name,
       );
     }
   }
@@ -140,7 +140,7 @@ export class NativeController extends BaseController {
    */
   assertTargetsAreValid(
     targets: Array<{ index: string; collections?: string[] }>,
-    { allowEmptyCollections = false } = {}
+    { allowEmptyCollections = false } = {},
   ) {
     for (let i = 0; i < targets.length; i++) {
       const target = targets[i];
@@ -150,7 +150,7 @@ export class NativeController extends BaseController {
           "api",
           "assert",
           "missing_argument",
-          `targets[${i}].index`
+          `targets[${i}].index`,
         );
       }
       if (this._hasMultiTargets(target.index)) {
@@ -159,7 +159,7 @@ export class NativeController extends BaseController {
           "storage",
           "invalid_target_format",
           `targets[${i}].index`,
-          target.index
+          target.index,
         );
       }
 
@@ -168,7 +168,7 @@ export class NativeController extends BaseController {
           "api",
           "assert",
           "missing_argument",
-          `targets[${i}].collections`
+          `targets[${i}].collections`,
         );
       }
 
@@ -178,7 +178,7 @@ export class NativeController extends BaseController {
           "assert",
           "invalid_type",
           `targets[${i}].collections`,
-          "array"
+          "array",
         );
       }
 
@@ -187,7 +187,7 @@ export class NativeController extends BaseController {
           "api",
           "assert",
           "empty_argument",
-          `targets[${i}].collections`
+          `targets[${i}].collections`,
         );
       }
 
@@ -207,7 +207,7 @@ export class NativeController extends BaseController {
             "assert",
             "invalid_type",
             `targets[${i}].collections[${j}]`,
-            "string"
+            "string",
           );
         }
 
@@ -217,7 +217,7 @@ export class NativeController extends BaseController {
             "storage",
             "invalid_target_format",
             `targets[${i}].collections[${j}]`,
-            collection
+            collection,
           );
         }
       }

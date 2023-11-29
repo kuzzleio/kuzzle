@@ -39,7 +39,7 @@ describe("funnelController.execute", () => {
       {
         connection: { id: "connectionid" },
         token: null,
-      }
+      },
     );
 
     funnel = new FunnelController();
@@ -99,7 +99,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
 
       funnel.execute(request, (err, res) => {
@@ -121,7 +121,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
 
       funnel.execute(request, (err, res) => {
@@ -149,7 +149,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
 
       funnel.execute(request, (err, res) => {
@@ -170,7 +170,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
       request.input.headers = {
         origin: "foobar",
@@ -198,7 +198,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
       request.input.headers = {
         origin: "foo",
@@ -227,7 +227,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
       request.input.headers = {};
 
@@ -269,7 +269,7 @@ describe("funnelController.execute", () => {
         {
           connection: { id: "connectionid" },
           token: null,
-        }
+        },
       );
       funnel.execute(request, (err, res) => {
         try {
@@ -293,7 +293,7 @@ describe("funnelController.execute", () => {
           should(kuzzle.asyncStore.run).be.calledOnce();
           should(kuzzle.pipe).be.calledWithMatch(
             "request:beforeExecution",
-            request
+            request,
           );
           should(kuzzle.asyncStore.set).be.calledWith("REQUEST", request);
 
@@ -309,7 +309,7 @@ describe("funnelController.execute", () => {
     it("should fire the hook the first time Kuzzle is in overloaded state", () => {
       funnel.overloaded = true;
       funnel.pendingRequestsQueue = Array(
-        kuzzle.config.limits.requestsBufferWarningThreshold + 1
+        kuzzle.config.limits.requestsBufferWarningThreshold + 1,
       );
 
       funnel.execute(request, () => {});
@@ -351,10 +351,10 @@ describe("funnelController.execute", () => {
       should(funnel.pendingRequestsQueue.length).be.eql(1);
       should(funnel.pendingRequestsQueue.shift()).eql(request.internalId);
       should(funnel.pendingRequestsById.get(request.internalId)).be.instanceOf(
-        FunnelController.__get__("PendingRequest")
+        FunnelController.__get__("PendingRequest"),
       );
       should(funnel.pendingRequestsById.get(request.internalId).request).be.eql(
-        request
+        request,
       );
       should(funnel._playPendingRequests).be.calledOnce();
     });
@@ -385,19 +385,19 @@ describe("funnelController.execute", () => {
       should(funnel.pendingRequestsQueue.shift()).be.eql(request.internalId);
       should(funnel.pendingRequestsById.get(request.internalId)).have.property(
         "request",
-        request
+        request,
       );
       should(funnel.pendingRequestsById.get(request.internalId)).have.property(
-        "fn"
+        "fn",
       );
       should(
-        funnel.pendingRequestsById.get(request.internalId).fn
+        funnel.pendingRequestsById.get(request.internalId).fn,
       ).is.not.null();
       should(funnel.pendingRequestsById.get(request.internalId)).have.property(
-        "context"
+        "context",
       );
       should(
-        funnel.pendingRequestsById.get(request.internalId).contex
+        funnel.pendingRequestsById.get(request.internalId).contex,
       ).is.not.null();
       should(funnel._playPendingRequests).have.callCount(0);
     });
@@ -418,7 +418,7 @@ describe("funnelController.execute", () => {
     it("should discard the request if the requestsBufferSize property is reached", (done) => {
       funnel.concurrentRequests = kuzzle.config.limits.concurrentRequests;
       funnel.pendingRequestsQueue = Array(
-        kuzzle.config.limits.requestsBufferSize
+        kuzzle.config.limits.requestsBufferSize,
       );
       funnel.overloaded = true;
 
@@ -427,7 +427,7 @@ describe("funnelController.execute", () => {
         should(funnel._playPendingRequests).have.callCount(0);
         should(funnel.processRequest).not.be.called();
         should(funnel.pendingRequestsQueue.length).be.eql(
-          kuzzle.config.limits.requestsBufferSize
+          kuzzle.config.limits.requestsBufferSize,
         );
         should(err).be.instanceOf(ServiceUnavailableError);
         should(err.status).be.eql(503);
@@ -442,7 +442,7 @@ describe("funnelController.execute", () => {
       kuzzle.router.isConnectionAlive.returns(false);
 
       funnel.checkRights.throws(
-        new Error("funnel.checkRights should not have been called")
+        new Error("funnel.checkRights should not have been called"),
       );
 
       should(funnel.execute(request, cb)).be.eql(0);
@@ -469,7 +469,7 @@ describe("funnelController.execute", () => {
     it("should play pending requests in order", (done) => {
       const serialized = request.serialize(),
         secondRequest = new Request(
-          Object.assign(serialized.data, { id: "req-2" })
+          Object.assign(serialized.data, { id: "req-2" }),
         ),
         firstCallback = sinon.spy(),
         secondCallback = () => {

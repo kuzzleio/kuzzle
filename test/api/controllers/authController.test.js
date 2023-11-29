@@ -297,7 +297,7 @@ describe("Test the auth controller", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "strategy".',
-        }
+        },
       );
     });
 
@@ -327,7 +327,7 @@ describe("Test the auth controller", () => {
       should(createTokenStub).be.calledWith(
         "core:security:token:create",
         user,
-        { expiresIn: "1s" }
+        { expiresIn: "1s" },
       );
     });
 
@@ -344,7 +344,7 @@ describe("Test the auth controller", () => {
         BadRequestError,
         {
           id: "security.credentials.unknown_strategy",
-        }
+        },
       );
     });
   });
@@ -381,7 +381,7 @@ describe("Test the auth controller", () => {
       should(requestcookieAuth.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(response).be.deepEqual({
@@ -422,7 +422,7 @@ describe("Test the auth controller", () => {
       should(requestcookieAuth.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(response).be.deepEqual({
@@ -461,7 +461,7 @@ describe("Test the auth controller", () => {
       should(requestcookieAuth.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=kapikey-foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=kapikey-foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(response).be.deepEqual({
@@ -500,7 +500,7 @@ describe("Test the auth controller", () => {
       should(requestcookieAuth.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=foo; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(response).be.deepEqual({
@@ -567,7 +567,7 @@ describe("Test the auth controller", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "strategy".',
-        }
+        },
       );
     });
 
@@ -592,7 +592,7 @@ describe("Test the auth controller", () => {
       should(requestcookieAuth.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=bar; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(response).be.deepEqual({
@@ -604,7 +604,7 @@ describe("Test the auth controller", () => {
       should(createTokenStub).be.calledWith(
         "core:security:token:create",
         user,
-        { expiresIn: "1s" }
+        { expiresIn: "1s" },
       );
     });
 
@@ -621,7 +621,7 @@ describe("Test the auth controller", () => {
         BadRequestError,
         {
           id: "security.credentials.unknown_strategy",
-        }
+        },
       );
     });
   });
@@ -631,7 +631,7 @@ describe("Test the auth controller", () => {
       const signedToken = jwt.sign(
         { _id: "admin" },
         kuzzle.config.security.jwt.secret,
-        { algorithm: kuzzle.config.security.jwt.algorithm }
+        { algorithm: kuzzle.config.security.jwt.algorithm },
       );
       const t = new Token({
         _id: "foo#" + signedToken,
@@ -649,7 +649,7 @@ describe("Test the auth controller", () => {
           connectionId: "papagaya",
           token: t,
           user: { _id: "foo" },
-        }
+        },
       );
     });
 
@@ -658,7 +658,7 @@ describe("Test the auth controller", () => {
 
       should(kuzzle.ask).calledWith(
         "core:security:token:delete",
-        request.context.token
+        request.context.token,
       );
 
       should(response.responseObject).be.instanceof(Object);
@@ -687,7 +687,7 @@ describe("Test the auth controller", () => {
 
       return should(authController.logout(request)).rejectedWith(
         UnauthorizedError,
-        { id: "security.rights.unauthorized" }
+        { id: "security.rights.unauthorized" },
       );
     });
 
@@ -699,7 +699,7 @@ describe("Test the auth controller", () => {
 
       should(kuzzle.ask).not.be.calledWith(
         "core:security:token:delete",
-        request.context.token
+        request.context.token,
       );
     });
   });
@@ -711,7 +711,7 @@ describe("Test the auth controller", () => {
       const signedToken = jwt.sign(
         { _id: "admin" },
         kuzzle.config.security.jwt.secret,
-        { algorithm: kuzzle.config.security.jwt.algorithm }
+        { algorithm: kuzzle.config.security.jwt.algorithm },
       );
       const t = new Token({
         _id: "foo#" + signedToken,
@@ -729,7 +729,7 @@ describe("Test the auth controller", () => {
           connectionId: "papagaya",
           token: t,
           user: { _id: "foo" },
-        }
+        },
       );
 
       request.input.headers = { cookie: `authToken=${signedToken};` };
@@ -750,7 +750,7 @@ describe("Test the auth controller", () => {
 
       should(kuzzle.ask).calledWith(
         "core:security:token:delete",
-        request.context.token
+        request.context.token,
       );
 
       should(response.responseObject).be.instanceof(Object);
@@ -782,7 +782,7 @@ describe("Test the auth controller", () => {
 
       should(kuzzle.ask).not.be.calledWith(
         "core:security:token:delete",
-        request.context.token
+        request.context.token,
       );
 
       should(response.responseObject).be.instanceof(Object);
@@ -796,7 +796,7 @@ describe("Test the auth controller", () => {
         {
           token: { userId: "admin" },
           user: { _id: "admin" },
-        }
+        },
       );
 
       const response = await authController.getCurrentUser(req);
@@ -807,16 +807,16 @@ describe("Test the auth controller", () => {
     it("should a PluginImplementationError if a plugin throws a non-KuzzleError error", () => {
       const req = new Request(
         { body: {} },
-        { token: { userId: "admin" }, user: { _id: "admin" } }
+        { token: { userId: "admin" }, user: { _id: "admin" } },
       );
 
       kuzzle.pluginsManager.listStrategies.returns(["foo"]);
       kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-        Bluebird.reject(new Error("bar"))
+        Bluebird.reject(new Error("bar")),
       );
 
       return should(authController.getCurrentUser(req)).be.rejectedWith(
-        PluginImplementationError
+        PluginImplementationError,
       );
     });
   });
@@ -831,7 +831,7 @@ describe("Test the auth controller", () => {
           controller: "auth",
           body: { token: "foobar" },
         },
-        {}
+        {},
       );
       testToken = new Token({ expiresAt: 42, userId: "durres" });
     });
@@ -842,7 +842,7 @@ describe("Test the auth controller", () => {
         .resolves(new Token({ userId: "-1" }));
 
       const response = await authController.checkToken(
-        new Request({ body: {} })
+        new Request({ body: {} }),
       );
 
       await should(verifyStub).calledOnce();
@@ -904,7 +904,7 @@ describe("Test the auth controller", () => {
           body: {},
           cookieAuth: true,
         },
-        {}
+        {},
       );
 
       request.input.jwt = "foobar";
@@ -976,9 +976,9 @@ describe("Test the auth controller", () => {
         authController.refreshToken(
           new Request(
             {},
-            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } }
-          )
-        )
+            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } },
+          ),
+        ),
       ).rejectedWith(UnauthorizedError, { id: "security.rights.unauthorized" });
     });
 
@@ -1002,7 +1002,7 @@ describe("Test the auth controller", () => {
           user: {
             _id: "user",
           },
-        }
+        },
       );
 
       kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
@@ -1020,7 +1020,7 @@ describe("Test the auth controller", () => {
         "core:security:token:refresh",
         req.context.user,
         req.context.token,
-        req.input.args.expiresIn
+        req.input.args.expiresIn,
       );
     });
   });
@@ -1036,9 +1036,9 @@ describe("Test the auth controller", () => {
         authController.refreshToken(
           new Request(
             { cookieAuth: true },
-            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } }
-          )
-        )
+            { token: { userId: "anonymous", _id: "-1" }, user: { _id: "-1" } },
+          ),
+        ),
       ).rejectedWith(UnauthorizedError, { id: "security.rights.unauthorized" });
     });
 
@@ -1065,7 +1065,7 @@ describe("Test the auth controller", () => {
           user: {
             _id: "user",
           },
-        }
+        },
       );
 
       kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
@@ -1083,14 +1083,14 @@ describe("Test the auth controller", () => {
       should(req.response.headers["Set-Cookie"])
         .be.an.Array()
         .and.match(
-          /authToken=new-token; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/
+          /authToken=new-token; Path=\/; Expires=[^;]+; HttpOnly; SameSite=Strict/,
         );
 
       should(kuzzle.ask).calledWith(
         "core:security:token:refresh",
         req.context.user,
         req.context.token,
-        req.input.args.expiresIn
+        req.input.args.expiresIn,
       );
     });
   });
@@ -1102,7 +1102,7 @@ describe("Test the auth controller", () => {
         {
           token: { userId: "admin", _id: "admin" },
           user: { _id: "admin" },
-        }
+        },
       );
       kuzzle.ask.resolves(user);
 
@@ -1119,14 +1119,14 @@ describe("Test the auth controller", () => {
           refresh: "wait_for",
           retryOnConflict: 10,
           userId: r.context.user._id,
-        }
+        },
       );
     });
 
     it("should reject an error if profile is specified", () => {
       const r = new Request(
         { body: { foo: "bar", profileIds: ["test"] } },
-        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } }
+        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } },
       );
 
       return should(authController.updateSelf(r)).rejectedWith(
@@ -1135,14 +1135,14 @@ describe("Test the auth controller", () => {
           id: "api.assert.forbidden_argument",
           message:
             'The argument "body.profileIds" is not allowed by this API action.',
-        }
+        },
       );
     });
 
     it("should reject an error if _id is specified in the body", () => {
       const r = new Request(
         { body: { foo: "bar", _id: "test" } },
-        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } }
+        { token: { userId: "admin", _id: "admin" }, user: { _id: "admin" } },
       );
 
       return should(authController.updateSelf(r)).rejectedWith(
@@ -1150,19 +1150,19 @@ describe("Test the auth controller", () => {
         {
           id: "api.assert.forbidden_argument",
           message: 'The argument "body._id" is not allowed by this API action.',
-        }
+        },
       );
     });
 
     it("should reject an error if current user is anonymous", () => {
       const r = new Request(
         { body: { foo: "bar" } },
-        { token: { userId: "-1" }, user: { _id: "-1" } }
+        { token: { userId: "-1" }, user: { _id: "-1" } },
       );
 
       return should(authController.updateSelf(r)).rejectedWith(
         UnauthorizedError,
-        { id: "security.rights.unauthorized" }
+        { id: "security.rights.unauthorized" },
       );
     });
   });
@@ -1193,7 +1193,7 @@ describe("Test the auth controller", () => {
             });
           },
         },
-      }
+      },
     );
 
     it("should be able to get current user's rights", () => {
@@ -1257,7 +1257,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
@@ -1266,16 +1266,16 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ foo: "bar" });
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("create");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1],
           ).be.eql("validate");
           should(methodStub).be.calledTwice();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1307,16 +1307,16 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
 
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(
-          authController.createMyCredentials(request)
+          authController.createMyCredentials(request),
         ).be.rejectedWith(PluginImplementationError);
       });
     });
@@ -1339,7 +1339,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
@@ -1348,16 +1348,16 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ foo: "bar" });
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("update");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1],
           ).be.eql("validate");
           should(methodStub).be.calledTwice();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1389,15 +1389,15 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(
-          authController.updateMyCredentials(request)
+          authController.updateMyCredentials(request),
         ).be.rejectedWith(PluginImplementationError);
       });
     });
@@ -1417,7 +1417,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies = sinon
           .stub()
@@ -1430,10 +1430,10 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ foo: "bar" });
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("exists");
           should(methodStub).be.calledOnce();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1453,15 +1453,15 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(authController.credentialsExist(request)).be.rejectedWith(
-          PluginImplementationError
+          PluginImplementationError,
         );
       });
     });
@@ -1484,7 +1484,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
@@ -1493,10 +1493,10 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ foo: "bar" });
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("validate");
           should(methodStub).be.calledOnce();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1522,16 +1522,16 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
 
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(
-          authController.validateMyCredentials(request)
+          authController.validateMyCredentials(request),
         ).be.rejectedWith(PluginImplementationError);
       });
     });
@@ -1551,7 +1551,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(methodStub);
@@ -1560,10 +1560,10 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ acknowledged: true });
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("delete");
           should(methodStub).be.calledOnce();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1583,16 +1583,16 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
 
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(
-          authController.deleteMyCredentials(request)
+          authController.deleteMyCredentials(request),
         ).be.rejectedWith(PluginImplementationError);
       });
     });
@@ -1612,7 +1612,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(true);
@@ -1622,17 +1622,17 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({ foo: "bar" });
           should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
           ).be.eql("getInfo");
           should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
           ).be.eql("getInfo");
           should(methodStub).be.calledOnce();
           should(methodStub.firstCall.args[0]).be.eql(request);
@@ -1655,7 +1655,7 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(false);
@@ -1665,10 +1665,10 @@ describe("Test the auth controller", () => {
           should(result).be.deepEqual({});
           should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
           should(
-            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+            kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
           ).be.eql("getInfo");
           should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
         });
@@ -1685,17 +1685,17 @@ describe("Test the auth controller", () => {
             user: {
               _id: "someUserId",
             },
-          }
+          },
         );
 
         kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
         kuzzle.pluginsManager.hasStrategyMethod.returns(true);
         kuzzle.pluginsManager.getStrategyMethod.returns(() =>
-          Bluebird.reject(new Error("foo"))
+          Bluebird.reject(new Error("foo")),
         );
 
         return should(authController.getMyCredentials(request)).be.rejectedWith(
-          PluginImplementationError
+          PluginImplementationError,
         );
       });
     });

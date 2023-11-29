@@ -145,7 +145,7 @@ First of all make sure that you have at least `4GB` of ram allocated to your vm 
 
 Run the following command to install all the dependencies in your container:
 ```bash
-npm run docker:install
+docker compose run kuzzle_node_1 npm ci
 ```
 
 Finally, run the command `docker compose up` to start your Kuzzle stack.

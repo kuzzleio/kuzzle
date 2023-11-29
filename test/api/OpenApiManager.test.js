@@ -91,45 +91,45 @@ describe("OpenApiManager", () => {
     manager = new OpenApiManager(
       applicationOpenApi,
       kuzzleRoutes,
-      pluginsRoutes
+      pluginsRoutes,
     );
   });
 
   describe("#constructor", () => {
     it("should generate open API paths from kuzzle routes", () => {
       should(manager.kuzzleDefinition.paths).have.ownProperty(
-        "/nativeController/nativeAction"
+        "/nativeController/nativeAction",
       );
     });
 
     it("should generate open API paths from kuzzle routes", () => {
       should(manager.applicationDefinition.paths).have.ownProperty(
-        "/logistic-objects/patch"
+        "/logistic-objects/patch",
       );
     });
 
     it("should make sure that route verbs are lowercase only", () => {
       should(manager.kuzzleDefinition.paths).have.ownProperty(
-        "/nativeController/nativeAction"
+        "/nativeController/nativeAction",
       );
       should(
-        manager.kuzzleDefinition.paths["/nativeController/nativeAction"]
+        manager.kuzzleDefinition.paths["/nativeController/nativeAction"],
       ).have.ownProperty("get");
     });
 
     it("should transform our :param path notation to {param}", () => {
       should(manager.kuzzleDefinition.paths).have.ownProperty(
-        "/{index}/{collection}/_exists"
+        "/{index}/{collection}/_exists",
       );
     });
 
     it("should extract parameters when required", () => {
       should(manager.kuzzleDefinition.paths).have.ownProperty(
-        "/{index}/{collection}/_exists"
+        "/{index}/{collection}/_exists",
       );
       should(
         manager.kuzzleDefinition.paths["/{index}/{collection}/_exists"].get
-          .parameters
+          .parameters,
       ).match([
         { name: "index", in: "path" },
         { name: "collection", in: "path" },

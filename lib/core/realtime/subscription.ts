@@ -50,7 +50,7 @@ export class Subscription {
     filters: JSONObject,
     roomId: string,
     connectionId: string,
-    user: { _id: string }
+    user: { _id: string },
   ) {
     this.connectionId = connectionId;
     this.roomId = roomId;

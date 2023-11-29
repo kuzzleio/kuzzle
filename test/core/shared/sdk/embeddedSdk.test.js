@@ -24,10 +24,10 @@ describe("EmbeddedSDK", () => {
       const SpyImpersonatedSdk = sinon.spy();
       mockrequire(
         "../../../../lib/core/shared/sdk/impersonatedSdk",
-        SpyImpersonatedSdk
+        SpyImpersonatedSdk,
       );
       const { EmbeddedSDK: MockEmbeddedSDK } = mockrequire.reRequire(
-        "../../../../lib/core/shared/sdk/embeddedSdk"
+        "../../../../lib/core/shared/sdk/embeddedSdk",
       );
 
       try {
@@ -53,7 +53,7 @@ describe("EmbeddedSDK", () => {
       });
       should(() => embeddedSdk.as({ _id: 123 })).throw(
         PluginImplementationError,
-        { id: "plugin.context.invalid_user" }
+        { id: "plugin.context.invalid_user" },
       );
     });
   });
@@ -83,7 +83,7 @@ describe("EmbeddedSDK", () => {
 
       should(() => embeddedSdk.query(forbiddenRequest)).throw(
         PluginImplementationError,
-        { id: "api.process.forbidden_embedded_sdk_action" }
+        { id: "api.process.forbidden_embedded_sdk_action" },
       );
     });
 

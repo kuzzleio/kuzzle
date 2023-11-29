@@ -38,14 +38,14 @@ describe("Test: notifier.notifyDocumentCreate", () => {
 
     should(kuzzle.koncorde.test).calledWith(
       { ..._source, _id },
-      "index/collection"
+      "index/collection",
     );
     should(notifier.notifyDocument).calledWithMatch(
       rooms,
       request,
       "in",
       "create",
-      { _id, _source }
+      { _id, _source },
     );
     should(result).match(rooms);
   });

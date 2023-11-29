@@ -38,7 +38,7 @@ describe("BaseModel", () => {
     mockrequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
 
     StorageEngine = mockrequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
+      "../../../lib/core/storage/storageEngine",
     );
     storageEngine = new StorageEngine();
 
@@ -123,7 +123,7 @@ describe("BaseModel", () => {
         "core:storage:private:document:get",
         kuzzle.internalIndex.index,
         "models",
-        "mylehuong"
+        "mylehuong",
       );
     });
   });
@@ -149,7 +149,7 @@ describe("BaseModel", () => {
         "core:storage:private:document:deleteByQuery",
         kuzzle.internalIndex.index,
         "models",
-        { match_all: {} }
+        { match_all: {} },
       );
 
       should(Model.prototype._afterDelete).be.calledTwice();
@@ -161,7 +161,7 @@ describe("BaseModel", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:collection:refresh",
         kuzzle.internalIndex.index,
-        "models"
+        "models",
       );
     });
   });
@@ -177,7 +177,7 @@ describe("BaseModel", () => {
 
       const models = await Model.search(
         { query: { match_all: {} } },
-        { scroll: "5s" }
+        { scroll: "5s" },
       );
 
       should(kuzzle.ask).be.calledWith(
@@ -185,7 +185,7 @@ describe("BaseModel", () => {
         kuzzle.internalIndex.index,
         "models",
         { query: { match_all: {} } },
-        { scroll: "5s" }
+        { scroll: "5s" },
       );
       should(models).be.length(2);
       should(models[0]._id).be.eql("mylehuong");
@@ -203,7 +203,7 @@ describe("BaseModel", () => {
 
         should(BaseModel.deleteByQuery).be.calledWith(
           { match_all: {} },
-          { refresh: "wait_for" }
+          { refresh: "wait_for" },
         );
         should(ret).be.eql("ret");
       } finally {
@@ -233,7 +233,7 @@ describe("BaseModel", () => {
         kuzzle.internalIndex.index,
         "models",
         { location: "Saigon" },
-        { id: "mylehuong", userId: "aschen", refresh: "wait_for" }
+        { id: "mylehuong", userId: "aschen", refresh: "wait_for" },
       );
       should(model.__persisted).be.true();
     });
@@ -248,7 +248,7 @@ describe("BaseModel", () => {
         kuzzle.internalIndex.index,
         "models",
         { location: "Saigon" },
-        { id: null, userId: null, refresh: undefined }
+        { id: null, userId: null, refresh: undefined },
       );
       should(model._id).be.eql("mylehuong");
     });
@@ -265,7 +265,7 @@ describe("BaseModel", () => {
         "models",
         "mylehuong",
         { location: "Saigon" },
-        { userId: "aschen", refresh: "wait_for" }
+        { userId: "aschen", refresh: "wait_for" },
       );
     });
   });
@@ -285,7 +285,7 @@ describe("BaseModel", () => {
         kuzzle.internalIndex.index,
         "models",
         "mylehuong",
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
       should(model._afterDelete).be.calledOnce();
       should(model.__persisted).be.false();
@@ -297,7 +297,7 @@ describe("BaseModel", () => {
       await model.delete();
 
       should(kuzzle.ask).not.be.calledWith(
-        "core:storage:private:document:delete"
+        "core:storage:private:document:delete",
       );
     });
   });

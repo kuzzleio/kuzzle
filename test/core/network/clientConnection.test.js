@@ -15,7 +15,7 @@ describe("core/network/clientConnection", () => {
     it("should throw if ips is not an array", () => {
       return should(() => new ClientConnection("protocol", "ips")).throw(
         TypeError,
-        { message: "Expected ips to be an Array, got string" }
+        { message: "Expected ips to be an Array, got string" },
       );
     });
 

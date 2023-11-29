@@ -32,7 +32,7 @@ describe("#api.rateLimiter", () => {
         connection: {
           id: "qux",
         },
-      }
+      },
     );
 
     profiles = [

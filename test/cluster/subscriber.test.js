@@ -113,11 +113,11 @@ describe("ClusterSubscriber", () => {
       await subscriber.init();
 
       await new Promise((resolve) =>
-        setTimeout(resolve, localNode.heartbeatDelay * 1.6)
+        setTimeout(resolve, localNode.heartbeatDelay * 1.6),
       );
       should(subscriber.protoroot).not.be.null();
       should(subscriber.socket.connect).be.calledWith(
-        subscriber.remoteNodeAddress
+        subscriber.remoteNodeAddress,
       );
       should(subscriber.socket.subscribe).be.calledOnce();
       should(subscriber.listen).be.calledOnce();
@@ -187,7 +187,7 @@ describe("ClusterSubscriber", () => {
           {
             broadcast: true,
             reason: "you have been a very bad node",
-          }
+          },
         );
       });
     });
@@ -222,7 +222,7 @@ describe("ClusterSubscriber", () => {
       };
       const encodedMessage = Buffer.from(
         "0800120573636f70651a0773656e736f7273",
-        "hex"
+        "hex",
       );
 
       beforeEach(() => {
@@ -276,7 +276,7 @@ describe("ClusterSubscriber", () => {
           {
             broadcast: true,
             reason: `received an invalid message from ${subscriber.remoteNodeId} (unknown topic "AddPokedex")`,
-          }
+          },
         );
       });
 
@@ -315,7 +315,7 @@ describe("ClusterSubscriber", () => {
           {
             broadcast: true,
             reason: "heartbeat timeout",
-          }
+          },
         );
       });
 
@@ -326,7 +326,7 @@ describe("ClusterSubscriber", () => {
         await subscriber.checkHeartbeat();
 
         should(subscriber.state).be.eql(
-          ClusterSubscriber.stateEnum.MISSING_HEARTBEAT
+          ClusterSubscriber.stateEnum.MISSING_HEARTBEAT,
         );
       });
     });
@@ -366,7 +366,7 @@ describe("ClusterSubscriber", () => {
           {
             broadcast: true,
             reason: 'invalid message received (missing "messageId" field)',
-          }
+          },
         );
         should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.EVICTED);
       });
@@ -469,7 +469,7 @@ describe("ClusterSubscriber", () => {
             messageId: "messageId",
             nodeId: subscriber.remoteNodeId,
             subscribers: 0,
-          }
+          },
         );
       });
     });
@@ -486,7 +486,7 @@ describe("ClusterSubscriber", () => {
         should(localNode.fullState.addRealtimeSubscription).be.calledWith(
           "roomId",
           subscriber.remoteNodeId,
-          "messageId"
+          "messageId",
         );
       });
     });
@@ -502,7 +502,7 @@ describe("ClusterSubscriber", () => {
 
         should(localNode.fullState.removeRealtimeRoom).be.calledWith(
           "roomId",
-          subscriber.remoteNodeId
+          subscriber.remoteNodeId,
         );
       });
     });
@@ -519,7 +519,7 @@ describe("ClusterSubscriber", () => {
         should(localNode.fullState.removeRealtimeSubscription).be.calledWith(
           "roomId",
           subscriber.remoteNodeId,
-          "messageId"
+          "messageId",
         );
       });
     });
@@ -601,7 +601,7 @@ describe("ClusterSubscriber", () => {
         should(kuzzle.pluginsManager.registerStrategy).be.calledWith(
           "pluginName",
           "strategyName",
-          "strategy"
+          "strategy",
         );
       });
     });
@@ -616,11 +616,11 @@ describe("ClusterSubscriber", () => {
         await subscriber.handleAuthStrategyRemoval(message);
 
         should(localNode.fullState.removeAuthStrategy).be.calledWith(
-          "strategyName"
+          "strategyName",
         );
         should(kuzzle.pluginsManager.unregisterStrategy).be.calledWith(
           "pluginName",
-          "strategyName"
+          "strategyName",
         );
       });
     });
@@ -673,7 +673,7 @@ describe("ClusterSubscriber", () => {
 
         should(kuzzle.ask).be.calledWith(
           "core:security:profile:invalidate",
-          "profileId"
+          "profileId",
         );
       });
     });
@@ -688,7 +688,7 @@ describe("ClusterSubscriber", () => {
 
         should(kuzzle.ask).be.calledWith(
           "core:security:role:invalidate",
-          "roleId"
+          "roleId",
         );
       });
     });
@@ -704,7 +704,7 @@ describe("ClusterSubscriber", () => {
 
         should(kuzzle.ask).be.calledWith(
           "core:storage:scope:cache:addIndex",
-          "index"
+          "index",
         );
       });
     });
@@ -722,7 +722,7 @@ describe("ClusterSubscriber", () => {
         should(kuzzle.ask).be.calledWith(
           "core:storage:scope:cache:addCollection",
           "index",
-          "collection"
+          "collection",
         );
       });
     });
@@ -740,7 +740,7 @@ describe("ClusterSubscriber", () => {
         should(kuzzle.ask).be.calledWith(
           "core:storage:scope:cache:removeCollection",
           "index",
-          "collection"
+          "collection",
         );
       });
     });

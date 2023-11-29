@@ -70,7 +70,7 @@ describe("Test the bulk controller", () => {
         index,
         collection,
         bulkData,
-        { refresh: "false", userId: null }
+        { refresh: "false", userId: null },
       );
 
       should(response).match({
@@ -133,7 +133,7 @@ describe("Test the bulk controller", () => {
         "core:realtime:document:notify",
         sinon.match.object,
         sinon.match.number,
-        sinon.match.object
+        sinon.match.object,
       );
     });
 
@@ -147,7 +147,7 @@ describe("Test the bulk controller", () => {
         collection,
         _id,
         _source,
-        { refresh: "false", injectKuzzleMeta: false }
+        { refresh: "false", injectKuzzleMeta: false },
       );
 
       should(response).match({
@@ -176,7 +176,7 @@ describe("Test the bulk controller", () => {
         "core:realtime:document:notify",
         request,
         actionEnum.WRITE,
-        { _id, _source }
+        { _id, _source },
       );
     });
   });
@@ -226,7 +226,7 @@ describe("Test the bulk controller", () => {
         "core:realtime:document:mNotify",
         sinon.match.object,
         sinon.match.number,
-        sinon.match.every(sinon.match.object)
+        sinon.match.every(sinon.match.object),
       );
     });
 
@@ -239,7 +239,7 @@ describe("Test the bulk controller", () => {
         index,
         collection,
         documents,
-        { refresh: "false", limits: false, injectKuzzleMeta: false }
+        { refresh: "false", limits: false, injectKuzzleMeta: false },
       );
 
       should(response).match({
@@ -260,7 +260,7 @@ describe("Test the bulk controller", () => {
         "core:realtime:document:mNotify",
         request,
         actionEnum.WRITE,
-        mCreateOrReplaceResult
+        mCreateOrReplaceResult,
       );
     });
 
@@ -306,7 +306,7 @@ describe("Test the bulk controller", () => {
         index,
         collection,
         query,
-        { refresh: "wait_for", fetch: false, size: -1 }
+        { refresh: "wait_for", fetch: false, size: -1 },
       );
 
       should(response.deleted).be.eql(2);
@@ -348,7 +348,7 @@ describe("Test the bulk controller", () => {
         collection,
         query,
         changes,
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
       should(response).be.eql(esResponse);
     });
@@ -362,7 +362,7 @@ describe("Test the bulk controller", () => {
         collection,
         query,
         changes,
-        { refresh: "false" }
+        { refresh: "false" },
       );
     });
 
@@ -374,7 +374,7 @@ describe("Test the bulk controller", () => {
         {
           id: "api.assert.invalid_type",
           message: 'Wrong type for argument "body.query" (expected: object)',
-        }
+        },
       );
     });
 
@@ -386,7 +386,7 @@ describe("Test the bulk controller", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "body.changes".',
-        }
+        },
       );
     });
   });

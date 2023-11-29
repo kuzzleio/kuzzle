@@ -91,7 +91,7 @@ describe("Plugin", () => {
       plugin.init("lambda-core");
 
       should(plugin._context.constructor.name).be.eql(
-        "PrivilegedPluginContext"
+        "PrivilegedPluginContext",
       );
     });
 
@@ -224,7 +224,7 @@ describe("Plugin", () => {
       should(pluginErrors).have.ownProperty(plugin.manifest.name);
       should(pluginErrors[plugin.manifest.name]).have.ownProperty("errors");
       should(pluginErrors[plugin.manifest.name].errors).be.deepEqual(
-        manifest.errors
+        manifest.errors,
       );
     });
 

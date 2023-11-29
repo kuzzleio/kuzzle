@@ -51,7 +51,7 @@ export class KuzzleDebugger {
           this.notifyConnection(connectionId, DEBUGGER_EVENT, {
             event: payload.method,
             result: payload,
-          })
+          }),
         );
       }
 
@@ -66,14 +66,14 @@ export class KuzzleDebugger {
     global.kuzzle.onAsk("core:debugger:enable", () => this.enable());
     global.kuzzle.onAsk("core:debugger:disable", () => this.disable());
     global.kuzzle.onAsk("core:debugger:post", (method, params) =>
-      this.post(method, params)
+      this.post(method, params),
     );
     global.kuzzle.onAsk("core:debugger:isEnabled", () => this.debuggerStatus);
     global.kuzzle.onAsk("core:debugger:removeListener", (event, connectionId) =>
-      this.removeListener(event, connectionId)
+      this.removeListener(event, connectionId),
     );
     global.kuzzle.onAsk("core:debugger:addListener", (event, connectionId) =>
-      this.addListener(event, connectionId)
+      this.addListener(event, connectionId),
     );
   }
 
@@ -237,7 +237,7 @@ export class KuzzleDebugger {
    */
   private async inspectorPost(
     method: string,
-    params: JSONObject
+    params: JSONObject,
   ): Promise<JSONObject> {
     if (!this.debuggerStatus) {
       throw kerror.get("core", "debugger", "not_enabled");
@@ -268,7 +268,7 @@ export class KuzzleDebugger {
   private async notifyConnection(
     connectionId: string,
     event: string,
-    payload: JSONObject
+    payload: JSONObject,
   ) {
     global.kuzzle.entryPoint._notify({
       channels: [event],
@@ -290,7 +290,7 @@ export class KuzzleDebugger {
         this.notifyConnection(connectionId, DEBUGGER_EVENT, {
           event,
           result: payload,
-        })
+        }),
       );
     }
 

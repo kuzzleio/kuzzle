@@ -71,7 +71,7 @@ describe("Test: security/userRepository", () => {
       profileRepositoryMock.loadProfiles.resolves([null]);
 
       return should(
-        userRepository.fromDTO({ _id: "foo", profileIds: ["nope"] })
+        userRepository.fromDTO({ _id: "foo", profileIds: ["nope"] }),
       ).be.rejectedWith(KuzzleInternalError, {
         id: "security.user.cannot_hydrate",
       });
@@ -80,7 +80,7 @@ describe("Test: security/userRepository", () => {
     it("should reject if the user has no profile associated to it", () => {
       return should(userRepository.fromDTO({ _id: "foo" })).rejectedWith(
         KuzzleInternalError,
-        { id: "security.user.no_profile" }
+        { id: "security.user.no_profile" },
       );
     });
   });
@@ -126,7 +126,7 @@ describe("Test: security/userRepository", () => {
   describe("#serializeToCache", () => {
     it("should return a valid plain object", () => {
       const result = userRepository.serializeToCache(
-        userRepository.anonymousUser
+        userRepository.anonymousUser,
       );
 
       should(result).not.be.an.instanceOf(User);
@@ -167,7 +167,7 @@ describe("Test: security/userRepository", () => {
 
     it("should reject if we try to remove the anonymous profile from the anonymous user", () => {
       return should(
-        userRepository.persist({ _id: "-1", profileIds: ["test"] })
+        userRepository.persist({ _id: "-1", profileIds: ["test"] }),
       ).be.rejectedWith(BadRequestError, {
         id: "security.user.anonymous_profile_required",
       });
@@ -274,7 +274,7 @@ describe("Test: security/userRepository", () => {
         .calledWithMatch(
           { input: { resource: { _id: "foo" } } },
           "foo",
-          "someStrategy"
+          "someStrategy",
         );
 
       should(deleteMethod)
@@ -282,7 +282,7 @@ describe("Test: security/userRepository", () => {
         .calledWithMatch(
           { input: { resource: { _id: "foo" } } },
           "foo",
-          "someStrategy"
+          "someStrategy",
         );
     });
 
@@ -336,7 +336,7 @@ describe("Test: security/userRepository", () => {
         "id",
         "profiles",
         "content",
-        "opts"
+        "opts",
       );
     });
 
@@ -365,7 +365,7 @@ describe("Test: security/userRepository", () => {
       });
 
       should(
-        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt
+        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt,
       ).approximately(Date.now(), 1000);
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -385,7 +385,7 @@ describe("Test: security/userRepository", () => {
         {
           refresh: "wait_for",
           userId: "userId",
-        }
+        },
       );
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -402,7 +402,7 @@ describe("Test: security/userRepository", () => {
         "id",
         [],
         {},
-        { userId: "userId" }
+        { userId: "userId" },
       );
 
       should(ret).eql(fakeUser);
@@ -414,14 +414,14 @@ describe("Test: security/userRepository", () => {
       userRepository.persist.rejects(error);
 
       await should(kuzzle.ask(createEvent, "id", [], {}, {})).rejectedWith(
-        error
+        error,
       );
 
       error.id = "services.storage.document_already_exists";
 
       await should(kuzzle.ask(createEvent, "id", [], {}, {})).rejectedWith(
         PreconditionError,
-        { id: "security.user.already_exists" }
+        { id: "security.user.already_exists" },
       );
     });
   });
@@ -447,7 +447,7 @@ describe("Test: security/userRepository", () => {
         "id",
         "profiles",
         "content",
-        "opts"
+        "opts",
       );
     });
 
@@ -475,7 +475,7 @@ describe("Test: security/userRepository", () => {
       });
 
       should(
-        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt
+        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.createdAt,
       ).approximately(Date.now(), 1000);
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -495,7 +495,7 @@ describe("Test: security/userRepository", () => {
         {
           refresh: "wait_for",
           userId: "userId",
-        }
+        },
       );
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -514,7 +514,7 @@ describe("Test: security/userRepository", () => {
         {},
         {
           userId: "userId",
-        }
+        },
       );
 
       should(ret).eql(fakeUser);
@@ -525,7 +525,7 @@ describe("Test: security/userRepository", () => {
       userRepository.load.withArgs("id").rejects(error);
 
       await should(kuzzle.ask(replaceEvent, "id", [], {}, {})).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -559,7 +559,7 @@ describe("Test: security/userRepository", () => {
         "id",
         "profiles",
         "content",
-        "opts"
+        "opts",
       );
     });
 
@@ -586,7 +586,7 @@ describe("Test: security/userRepository", () => {
       });
 
       should(
-        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt
+        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt,
       ).approximately(Date.now(), 1000);
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -623,7 +623,7 @@ describe("Test: security/userRepository", () => {
       });
 
       should(
-        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt
+        userRepository.fromDTO.firstCall.args[0]._kuzzle_info.updatedAt,
       ).approximately(Date.now(), 1000);
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -645,7 +645,7 @@ describe("Test: security/userRepository", () => {
           refresh: "wait_for",
           retryOnConflict: 123,
           userId: "userId",
-        }
+        },
       );
 
       should(userRepository.persist).calledWith(fakeUser, {
@@ -665,7 +665,7 @@ describe("Test: security/userRepository", () => {
         {},
         {
           userId: "userId",
-        }
+        },
       );
 
       should(ret).eql(fakeUser);
@@ -676,7 +676,7 @@ describe("Test: security/userRepository", () => {
       userRepository.load.withArgs("id").rejects(error);
 
       await should(kuzzle.ask(updateEvent, "id", [], {}, {})).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -736,7 +736,7 @@ describe("Test: security/userRepository", () => {
       Repository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(userRepository.loadOneFromDatabase("bar")).fulfilledWith(
-        "foo"
+        "foo",
       );
 
       should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
@@ -750,7 +750,7 @@ describe("Test: security/userRepository", () => {
 
       return should(userRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
-        { id: "security.user.not_found" }
+        { id: "security.user.not_found" },
       );
     });
 
@@ -760,7 +760,7 @@ describe("Test: security/userRepository", () => {
       Repository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(userRepository.loadOneFromDatabase("foo")).rejectedWith(
-        error
+        error,
       );
     });
   });

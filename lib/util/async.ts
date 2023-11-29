@@ -6,7 +6,7 @@
  */
 export function promiseAllN<T>(
   collection: Array<() => Promise<T>>,
-  n = 100
+  n = 100,
 ): Promise<T[]> {
   let i = 0;
   let jobsLeft = collection.length;

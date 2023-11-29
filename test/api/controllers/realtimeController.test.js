@@ -28,7 +28,7 @@ describe("RealtimeController", () => {
       {
         connection: { id: "connectionId" },
         user: { _id: "42" },
-      }
+      },
     );
   });
 
@@ -44,7 +44,7 @@ describe("RealtimeController", () => {
 
       should(realtimeController.subscribe(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -53,7 +53,7 @@ describe("RealtimeController", () => {
 
       should(realtimeController.subscribe(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -62,7 +62,7 @@ describe("RealtimeController", () => {
 
       should(realtimeController.subscribe(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
@@ -113,14 +113,14 @@ describe("RealtimeController", () => {
 
       return should(realtimeController.join(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
     it("should throw an error if roomId is not provided", () => {
       return should(realtimeController.join(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -143,14 +143,14 @@ describe("RealtimeController", () => {
 
       return should(realtimeController.unsubscribe(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
     it("should throw an error if roomId is not provided", () => {
       return should(realtimeController.unsubscribe(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -163,7 +163,7 @@ describe("RealtimeController", () => {
       should(kuzzle.ask).calledWithMatch(
         "core:realtime:unsubscribe",
         "connectionId",
-        "foo"
+        "foo",
       );
     });
   });
@@ -174,14 +174,14 @@ describe("RealtimeController", () => {
 
       return should(realtimeController.count(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
     it("should throw an error if roomId is not provided", () => {
       return should(realtimeController.count(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -234,7 +234,7 @@ describe("RealtimeController", () => {
       should(req.input.body._kuzzle_info.author).be.eql("42");
       should(req.input.body._kuzzle_info.createdAt).be.approximately(
         Date.now(),
-        100
+        100,
       );
     });
 

@@ -25,7 +25,7 @@ describe("Test the passport Wrapper", () => {
 
     mockrequire("passport", passportMock);
     PassportWrapper = mockrequire.reRequire(
-      "../../../lib/core/auth/passportWrapper"
+      "../../../lib/core/auth/passportWrapper",
     );
 
     passportWrapper = new PassportWrapper();
@@ -69,7 +69,7 @@ describe("Test the passport Wrapper", () => {
     passportMock.authenticate.yields(null, user);
 
     return should(passportWrapper.authenticate("foo", "bar")).be.fulfilledWith(
-      user
+      user,
     );
   });
 
@@ -78,7 +78,7 @@ describe("Test the passport Wrapper", () => {
 
     return should(passportWrapper.authenticate("foo", "bar")).be.rejectedWith(
       UnauthorizedError,
-      { message: "foobar" }
+      { message: "foobar" },
     );
   });
 
@@ -87,7 +87,7 @@ describe("Test the passport Wrapper", () => {
     passportMock.authenticate.yields(err);
 
     return should(passportWrapper.authenticate("foo", "bar")).be.rejectedWith(
-      err
+      err,
     );
   });
 
@@ -125,7 +125,7 @@ describe("Test the passport Wrapper", () => {
 
     mockrequire("passport", passport);
     PassportWrapper = mockrequire.reRequire(
-      "../../../lib/core/auth/passportWrapper"
+      "../../../lib/core/auth/passportWrapper",
     );
     passportWrapper = new PassportWrapper();
     passportWrapper.use(new MockupStrategy("mockup", stub));
@@ -142,7 +142,7 @@ describe("Test the passport Wrapper", () => {
     passportMock.authenticate.throws(new ForbiddenError("foobar"));
 
     return should(passportWrapper.authenticate("foo", "bar")).be.rejectedWith(
-      "foobar"
+      "foobar",
     );
   });
 
@@ -151,7 +151,7 @@ describe("Test the passport Wrapper", () => {
 
     return should(passportWrapper.authenticate("foo", "bar")).be.rejectedWith(
       PluginImplementationError,
-      { id: "plugin.runtime.unexpected_error" }
+      { id: "plugin.runtime.unexpected_error" },
     );
   });
 });

@@ -36,7 +36,7 @@ export class BackendPipe extends ApplicationManager {
   register<TEventDefinition extends EventDefinition = EventDefinition>(
     event: TEventDefinition["name"],
     handler: PipeEventHandler<TEventDefinition>,
-    options: any = {}
+    options: any = {},
   ): string | void {
     if (this._application.started && options.dynamic !== true) {
       throw runtimeError.get("already_started", "pipe.register");
@@ -50,7 +50,7 @@ export class BackendPipe extends ApplicationManager {
       return global.kuzzle.pluginsManager.registerPipe(
         global.kuzzle.pluginsManager.application,
         event,
-        handler
+        handler,
       );
     }
 
