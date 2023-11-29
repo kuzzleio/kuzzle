@@ -23,5 +23,3 @@ RUN set -x \
  && rm -rf /var/lib/apt/lists/*
 
 RUN npm i -g kourou
-
-WORKDIR /var/app
