@@ -402,14 +402,14 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           "network",
           "mqtt",
           "unexpected_error",
-          "Unexpected token 'i', \"invalid\" is not valid JSON"
+          "Unexpected token 'i', \"invalid\" is not valid JSON",
         );
 
         should(protocol._respond)
           .be.calledOnce()
           .be.calledWith(
             client,
-            sinon.match(matcher1).or(sinon.match(matcher2))
+            sinon.match(matcher1).or(sinon.match(matcher2)),
           );
 
         protocol._respond.resetHistory();

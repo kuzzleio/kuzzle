@@ -287,8 +287,8 @@ describe("core/network/protocols/websocket", () => {
 
       should(
         parsed.error.message.includes(
-          "Caught an unexpected WebSocket error: Expected property name or '}'"
-        ) || parsed.error.message.includes("Unexpected token o in JSON")
+          "Caught an unexpected WebSocket error: Expected property name or '}'",
+        ) || parsed.error.message.includes("Unexpected token o in JSON"),
       ).be.true();
 
       should(entryPoint.execute).not.be.called();
