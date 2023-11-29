@@ -77,7 +77,7 @@ jobs:
   doc-deploy:
     name: Documentation - Deploy
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master' || github.ref_name == '2-dev') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -102,7 +102,7 @@ jobs:
   dockerhub-deploy:
     name: Build and deploy images to Dockerhub
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.dockerhub_deploy) && github.ref_name == 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -153,7 +153,7 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3

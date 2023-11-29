@@ -7,14 +7,17 @@ on:
 
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
-  NODE_LTS_MAINTENANCE_VERSION: "16"
-  NODE_LTS_ACTIVE_VERSION: "18"
-  NODE_LTS_CURRENT_VERSION: "20"
 
 jobs:
+  publish-runner:
+    name: Build and push image embedding Node.js
+    runs-on: ubuntu-22.04
+
   maintenance:
     name: Build and deploy image embedding Node.js maintenance LTS
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
+    matrix:
+      node-version: [16, 18, 20]
     steps:
       - uses: actions/checkout@v3
 
@@ -37,65 +40,6 @@ jobs:
           context: ./kuzzle-runner
           file: ./kuzzle-runner/Dockerfile
           push: true
-          build-args: NODE_LTS_VERSION=${{ env.NODE_LTS_MAINTENANCE_VERSION }}
+          build-args: NODE_LTS_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ env.NODE_LTS_MAINTENANCE_VERSION }},kuzzleio/kuzzle-runner:maintenance
-
-  active:
-    name: Build and deploy image embedding Node.js active LTS version
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v3
-        with:
-          context: ./kuzzle-runner
-          file: ./kuzzle-runner/Dockerfile
-          push: true
-          build-args: NODE_LTS_VERSION=${{ env.NODE_LTS_ACTIVE_VERSION }}
-          platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ env.NODE_LTS_ACTIVE_VERSION }},kuzzleio/kuzzle-runner:active,kuzzleio/kuzzle-runner:latest
-
-  # Node 20 is not currently supported, this will be uncommented in a upcomming PR
-  # current:
-  #   name: Build and deploy image embedding Node.js latest LTS version
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v3
-
-  #     - name: Set up QEMU
-  #       uses: docker/setup-qemu-action@v3
-
-  #     - name: Set up Docker Buildx
-  #       id: buildx
-  #       uses: docker/setup-buildx-action@v3
-
-  #     - name: Login to DockerHub
-  #       uses: docker/login-action@v3
-  #       with:
-  #         username: ${{ secrets.DOCKER_USERNAME }}
-  #         password: ${{ secrets.DOCKER_PASSWORD }}
-
-  #     - name: Build and push
-  #       uses: docker/build-push-action@v3
-  #       with:
-  #         context: ./kuzzle-runner
-  #         file: ./kuzzle-runner/Dockerfile
-  #         push: true
-  #         build-args: NODE_LTS_VERSION=${{ env.NODE_LTS_CURRENT_VERSION }}
-  #         platforms: ${{ env.DOCKER_PLATFORMS }}
-  #         tags: kuzzleio/kuzzle-runner:${{ env.NODE_LTS_CURRENT_VERSION }},kuzzleio/kuzzle-runner:current
+          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}

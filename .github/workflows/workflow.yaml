@@ -16,11 +16,11 @@ env:
 jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - id: set-matrix
         run: |
-          echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
+          echo 'node-version=["$NODE_LTS_MAINTENANCE_VERSION", "$NODE_LTS_ACTIVE_VERSION"]' >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
@@ -30,7 +30,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -52,11 +52,11 @@ jobs:
 
   lint:
     name: Lint - Node.js LTS ${{ matrix.node-version }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: [prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -78,8 +78,8 @@ jobs:
     needs: [lint, prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-latest
+        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -105,10 +105,10 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
     name: Build and Run
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
@@ -142,8 +142,8 @@ jobs:
             "legacy:http",
             "legacy:websocket",
           ]
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-latest
+        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -156,10 +156,10 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
-      
+
       - name: Install depedencies
         run: npm ci
-      
+
       - name: Build kuzzle
         run: npm run build
 
@@ -174,10 +174,10 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        node-version: ${{ needs.prepare-matrix.outputs.node-version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
