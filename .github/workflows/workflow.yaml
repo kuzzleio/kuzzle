@@ -129,7 +129,7 @@ jobs:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   functional-tests:
-    name: ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: Functional tests
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
