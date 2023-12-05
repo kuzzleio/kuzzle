@@ -12,8 +12,9 @@ jobs:
   publish-runner:
     name: Build and push image embedding Node.js
     runs-on: ubuntu-22.04
-    matrix:
-      node-version: [16, 18, 20]
+    strategy:
+      matrix:
+        node-version: [16, 18, 20]
     steps:
       - uses: actions/checkout@v3
 
