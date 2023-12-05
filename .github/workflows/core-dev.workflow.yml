@@ -31,8 +31,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./core-dev
-          file: ./core-dev/Dockerfile
+          context: ./docker/images/core-dev
+          file: ./docker/images/core-dev/Dockerfile
           push: true
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest

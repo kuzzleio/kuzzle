@@ -32,8 +32,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
-          context: ./elasticsearch
-          file: ./elasticsearch/Dockerfile
+          context: ./docker/images/elasticsearch
+          file: ./docker/images/elasticsearch/Dockerfile
           push: true
           build-args: ELASTICSEARCH_VERSION=${{ env.ELASTICSEARCH_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
