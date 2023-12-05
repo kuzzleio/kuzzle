@@ -34,8 +34,8 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
-          context: ./kuzzle-runner
-          file: ./kuzzle-runner/Dockerfile
+          context: ./docker/images/kuzzle
+          file: ./docker/images/kuzzle/Dockerfile
           push: true
           build-args: NODE_LTS_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
