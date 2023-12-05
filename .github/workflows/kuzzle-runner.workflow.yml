@@ -10,7 +10,7 @@ env:
 
 jobs:
   publish-runner:
-    name: Build and push image embedding Node.js
+    name: kuzzle-runner Node.js
     runs-on: ubuntu-22.04
     strategy:
       matrix:
@@ -32,10 +32,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
-          context: ./docker/images/kuzzle
-          file: ./docker/images/kuzzle/Dockerfile
+          context: ./docker/images/kuzzle-runner
+          file: ./docker/images/kuzzle-runner/Dockerfile
           push: true
           build-args: NODE_LTS_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}

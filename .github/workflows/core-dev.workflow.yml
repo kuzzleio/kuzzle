@@ -10,7 +10,7 @@ env:
 
 jobs:
   build-and-push:
-    name: Build and push core-dev image
+    name: core-dev image
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -29,7 +29,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: ./docker/images/core-dev
           file: ./docker/images/core-dev/Dockerfile

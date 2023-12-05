@@ -11,7 +11,7 @@ env:
 
 jobs:
   build-and-push:
-    name: Build and push elasticsearch image
+    name: Elasticsearch image
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -30,7 +30,7 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
           context: ./docker/images/elasticsearch
           file: ./docker/images/elasticsearch/Dockerfile
