@@ -31,16 +31,7 @@ WORKDIR /app
 # Install dependencies
 RUN  npm ci --production
 
-ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
-
 ADD ./plugins/available/ /app/plugins/available/
-
-RUN  set -x \
-  # Remove useless leftover dependencies
-  && rm -rf node_modules/rxjs/ \
-  # Strip binaries
-  && strip /usr/local/bin/node \
-  && strip node_modules/re2/build/Release/re2.node
 
 ################################################################################
 # Plugin development image

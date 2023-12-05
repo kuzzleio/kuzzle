@@ -27,18 +27,9 @@ WORKDIR /app
 ENV NODE_ENV=production
 
 # Install dependencies
-RUN npm ci --production
-
-ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
+RUN npm ci
 
 ADD ./plugins/available/ /app/plugins/available/
-
-RUN  set -x \
-  # Remove useless leftover dependencies
- && rm -rf node_modules/rxjs/ \
-  # Strip binaries
-  ; strip node_modules/re2/build/Release/re2.node \
-  ; true
 
 ################################################################################
 # Production build 2 image
