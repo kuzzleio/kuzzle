@@ -29,11 +29,11 @@ describe("Test: security controller - roles", () => {
     it("should throw a BadRequestError if the body is missing", async () => {
       await should(securityController.updateRoleMapping(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(
-        kuzzle.ask.withArgs("core:storage:private:mappings:update")
+        kuzzle.ask.withArgs("core:storage:private:mappings:update"),
       ).not.called();
     });
 
@@ -49,7 +49,7 @@ describe("Test: security controller - roles", () => {
         "core:storage:private:mappings:update",
         kuzzle.internalIndex.index,
         "roles",
-        request.input.body
+        request.input.body,
       );
 
       should(response).match(request.input.body);
@@ -67,7 +67,7 @@ describe("Test: security controller - roles", () => {
       should(kuzzle.ask).be.calledWith(
         "core:storage:private:mappings:get",
         kuzzle.internalIndex.index,
-        "roles"
+        "roles",
       );
 
       should(response).match({ mapping: { foo: "bar" } });
@@ -103,7 +103,7 @@ describe("Test: security controller - roles", () => {
           force: false,
           refresh: "wait_for",
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(Role);
@@ -122,7 +122,7 @@ describe("Test: security controller - roles", () => {
       createOrReplaceStub.rejects(error);
 
       return should(
-        securityController.createOrReplaceRole(request)
+        securityController.createOrReplaceRole(request),
       ).be.rejectedWith(error);
     });
 
@@ -140,7 +140,7 @@ describe("Test: security controller - roles", () => {
           force: true,
           refresh: "false",
           userId: request.context.user._id,
-        }
+        },
       );
     });
 
@@ -148,7 +148,7 @@ describe("Test: security controller - roles", () => {
       request.input.args._id = null;
 
       await should(
-        securityController.createOrReplaceRole(request)
+        securityController.createOrReplaceRole(request),
       ).rejectedWith(BadRequestError, { id: "api.assert.missing_argument" });
 
       should(createOrReplaceStub).not.called();
@@ -158,7 +158,7 @@ describe("Test: security controller - roles", () => {
       request.input.body = null;
 
       await should(
-        securityController.createOrReplaceRole(request)
+        securityController.createOrReplaceRole(request),
       ).rejectedWith(BadRequestError, { id: "api.assert.body_required" });
 
       should(createOrReplaceStub).not.called();
@@ -194,7 +194,7 @@ describe("Test: security controller - roles", () => {
           force: false,
           refresh: "wait_for",
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(Role);
@@ -213,7 +213,7 @@ describe("Test: security controller - roles", () => {
       createStub.rejects(error);
 
       return should(securityController.createRole(request)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -231,7 +231,7 @@ describe("Test: security controller - roles", () => {
           force: true,
           refresh: "false",
           userId: request.context.user._id,
-        }
+        },
       );
     });
 
@@ -240,7 +240,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.createRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(createStub).not.called();
@@ -251,7 +251,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.createRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(createStub).not.called();
@@ -301,7 +301,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.getRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(getStub).not.called();
@@ -323,7 +323,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.mGetRoles(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(mGetStub).not.called();
@@ -334,7 +334,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.mGetRoles(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(mGetStub).not.called();
@@ -345,7 +345,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.mGetRoles(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
 
       should(mGetStub).not.called();
@@ -420,7 +420,7 @@ describe("Test: security controller - roles", () => {
       should(searchStub).calledWithMatch(
         searchEvent,
         { controllers: request.input.body.controllers },
-        { from: 0, size: kuzzle.config.limits.documentsFetchCount }
+        { from: 0, size: kuzzle.config.limits.documentsFetchCount },
       );
     });
 
@@ -432,7 +432,7 @@ describe("Test: security controller - roles", () => {
         SizeLimitError,
         {
           id: "services.storage.get_limit_exceeded",
-        }
+        },
       );
 
       should(searchStub).not.called();
@@ -445,7 +445,7 @@ describe("Test: security controller - roles", () => {
         BadRequestError,
         {
           id: "api.assert.invalid_type",
-        }
+        },
       );
 
       should(searchStub).not.called();
@@ -459,7 +459,7 @@ describe("Test: security controller - roles", () => {
           BadRequestError,
           {
             id: "api.assert.invalid_type",
-          }
+          },
         );
 
         should(searchStub).not.called();
@@ -474,7 +474,7 @@ describe("Test: security controller - roles", () => {
           BadRequestError,
           {
             id: "api.assert.invalid_type",
-          }
+          },
         );
 
         should(searchStub).not.called();
@@ -489,7 +489,7 @@ describe("Test: security controller - roles", () => {
       should(searchStub).calledWithMatch(
         searchEvent,
         {},
-        { from: 0, size: kuzzle.config.limits.documentsFetchCount }
+        { from: 0, size: kuzzle.config.limits.documentsFetchCount },
       );
 
       request.input.body = null;
@@ -499,7 +499,7 @@ describe("Test: security controller - roles", () => {
       should(searchStub).calledWithMatch(
         searchEvent,
         {},
-        { from: 0, size: kuzzle.config.limits.documentsFetchCount }
+        { from: 0, size: kuzzle.config.limits.documentsFetchCount },
       );
     });
 
@@ -509,7 +509,7 @@ describe("Test: security controller - roles", () => {
       searchStub.rejects(error);
 
       return should(securityController.searchRoles(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -542,7 +542,7 @@ describe("Test: security controller - roles", () => {
           refresh: "wait_for",
           retryOnConflict: 10,
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(Role);
@@ -560,7 +560,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.updateRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(updateStub).not.called();
@@ -571,7 +571,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.updateRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(updateStub).not.called();
@@ -601,7 +601,7 @@ describe("Test: security controller - roles", () => {
           refresh: "false",
           retryOnConflict: 123,
           userId: request.context.user._id,
-        }
+        },
       );
     });
   });
@@ -631,7 +631,7 @@ describe("Test: security controller - roles", () => {
 
       await should(securityController.deleteRole(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(deleteStub).not.called();

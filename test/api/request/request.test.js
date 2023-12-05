@@ -190,7 +190,7 @@ describe("#Request", () => {
     [42, [true, false], "bar", true].forEach((value) => {
       should(() => rq.setResult("foobar", { headers: value })).throw(
         BadRequestError,
-        { message: 'Attribute headers must be of type "object"' }
+        { message: 'Attribute headers must be of type "object"' },
       );
     });
   });
@@ -393,7 +393,7 @@ describe("#Request", () => {
             connection: {
               protocol: "http",
             },
-          }
+          },
         );
       });
 
@@ -485,20 +485,20 @@ describe("#Request", () => {
       describe("#getBodyArray", () => {
         it("should return the array of the body (lodash parameter)", () => {
           should(request.getBodyArray("relations.lebron")).exactly(
-            request.input.body.relations.lebron
+            request.input.body.relations.lebron,
           );
         });
 
         it("extracts the required parameter", () => {
           should(request.getBodyArray("names")).exactly(
-            request.input.body.names
+            request.input.body.names,
           );
         });
 
         it("should throw if the parameter is missing", () => {
           should(() => request.getBodyArray("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -546,32 +546,32 @@ describe("#Request", () => {
       describe("#getBodyString", () => {
         it("should return the string of the body (lodash parameter)", () => {
           should(request.getBodyString("relatives.Peter")).exactly(
-            request.input.body.relatives.Peter
+            request.input.body.relatives.Peter,
           );
         });
 
         it("should return the string of an array (lodash parameter)", () => {
           should(request.getBodyString("names.0")).exactly(
-            request.input.body.names[0]
+            request.input.body.names[0],
           );
         });
 
         it("should return the string of an array (lodash parameter)", () => {
           should(request.getBodyString("relations.lebron[0]")).exactly(
-            request.input.body.relations.lebron[0]
+            request.input.body.relations.lebron[0],
           );
         });
 
         it("extracts the required parameter", () => {
           should(request.getBodyString("fullname")).exactly(
-            request.input.body.fullname
+            request.input.body.fullname,
           );
         });
 
         it("should throw if the parameter is missing", () => {
           should(() => request.getBodyString("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -592,7 +592,7 @@ describe("#Request", () => {
 
           should(() => request.getBodyString("fullname")).throw(
             BadRequestError,
-            { id: "api.assert.body_required" }
+            { id: "api.assert.body_required" },
           );
         });
 
@@ -608,20 +608,20 @@ describe("#Request", () => {
       describe("#getBodyObject", () => {
         it("should return the object of the body (lodash parameter)", () => {
           should(request.getBodyObject("powers.fire")).exactly(
-            request.input.body.powers.fire
+            request.input.body.powers.fire,
           );
         });
 
         it("extracts the required parameter", () => {
           should(request.getBodyObject("relatives")).exactly(
-            request.input.body.relatives
+            request.input.body.relatives,
           );
         });
 
         it("should throw if the parameter is missing", () => {
           should(() => request.getBodyObject("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -642,7 +642,7 @@ describe("#Request", () => {
 
           should(() => request.getBodyObject("relatives")).throw(
             BadRequestError,
-            { id: "api.assert.body_required" }
+            { id: "api.assert.body_required" },
           );
         });
 
@@ -658,13 +658,13 @@ describe("#Request", () => {
           request.context.connection.protocol = "ws";
           should(() => request.getBodyObject("otherPowers")).throw(
             BadRequestError,
-            { id: "api.assert.invalid_type" }
+            { id: "api.assert.invalid_type" },
           );
 
           request.context.connection.protocol = "http";
           should(() => request.getBodyObject("otherPowers")).throw(
             BadRequestError,
-            { id: "api.assert.invalid_type" }
+            { id: "api.assert.invalid_type" },
           );
         });
       });
@@ -672,7 +672,7 @@ describe("#Request", () => {
       describe("#getBodyNumber", () => {
         it("should return the number of the body (lodash parameter)", () => {
           should(request.getBodyNumber("powers.fire.damage")).exactly(
-            request.input.body.powers.fire.damage
+            request.input.body.powers.fire.damage,
           );
         });
         it("extracts the required parameter and convert it", () => {
@@ -684,7 +684,7 @@ describe("#Request", () => {
         it("should throw if the parameter is missing", () => {
           should(() => request.getBodyNumber("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -697,7 +697,7 @@ describe("#Request", () => {
         it("should throw if the parameter is not a number", () => {
           should(() => request.getBodyNumber("fullname")).throw(
             BadRequestError,
-            { id: "api.assert.invalid_type" }
+            { id: "api.assert.invalid_type" },
           );
         });
 
@@ -721,7 +721,7 @@ describe("#Request", () => {
       describe("#getBodyInteger", () => {
         it("should return the integer of the body (lodash parameter)", () => {
           should(request.getBodyInteger("powers.fire.mana")).exactly(
-            request.input.body.powers.fire.mana
+            request.input.body.powers.fire.mana,
           );
         });
 
@@ -734,7 +734,7 @@ describe("#Request", () => {
         it("should throw if the parameter is missing", () => {
           should(() => request.getBodyInteger("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -751,7 +751,7 @@ describe("#Request", () => {
 
           should(() => request.getBodyInteger("fullname")).throw(
             BadRequestError,
-            { id: "api.assert.invalid_type" }
+            { id: "api.assert.invalid_type" },
           );
         });
 
@@ -851,14 +851,14 @@ describe("#Request", () => {
 
         it("extracts the required parameter", () => {
           should(request.getArrayLegacy("names")).exactly(
-            request.input.args.names
+            request.input.args.names,
           );
         });
 
         it("should throw if the parameter is missing", () => {
           should(() => request.getArrayLegacy("childhood")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
 
@@ -893,7 +893,7 @@ describe("#Request", () => {
       describe("#getString", () => {
         it("extracts the required parameter", () => {
           should(request.getString("fullname")).exactly(
-            request.input.args.fullname
+            request.input.args.fullname,
           );
         });
 
@@ -923,7 +923,7 @@ describe("#Request", () => {
 
         it("extracts the required parameter", () => {
           should(request.getObject("relatives")).exactly(
-            request.input.args.relatives
+            request.input.args.relatives,
           );
         });
 
@@ -974,14 +974,14 @@ describe("#Request", () => {
 
         it("extracts the birthdate in custom format", () => {
           should(request.getDate("birthDateDay", "YYYY-MM-DD")).eql(
-            "2022-04-11"
+            "2022-04-11",
           );
         });
 
         it("should throw if the parameter is invalid date regarding custom date", () => {
           should(() => request.getDate("birthDate", "YYYY-MM-DD")).throw(
             BadRequestError,
-            { id: "api.assert.invalid_type" }
+            { id: "api.assert.invalid_type" },
           );
         });
 
@@ -1006,7 +1006,7 @@ describe("#Request", () => {
         it("should throw if the parameter is missing", () => {
           should(() => request.getTimestamp("anotherDate")).throw(
             BadRequestError,
-            { id: "api.assert.missing_argument" }
+            { id: "api.assert.missing_argument" },
           );
         });
       });
@@ -1172,7 +1172,7 @@ describe("#Request", () => {
             user: {
               _id: "id",
             },
-          }
+          },
         );
       });
 
@@ -1292,7 +1292,7 @@ describe("#Request", () => {
           {},
           {
             connection: { protocol: "http", verb: "POST" },
-          }
+          },
         );
 
         const { from, size, scrollTTL, query, searchBody } =

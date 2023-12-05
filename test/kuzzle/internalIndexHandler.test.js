@@ -30,7 +30,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
       mockrequire.reRequire("../../lib/core/shared/store");
 
       InternalIndexHandler = mockrequire.reRequire(
-        "../../lib/kuzzle/internalIndexHandler"
+        "../../lib/kuzzle/internalIndexHandler",
       );
     });
 
@@ -58,21 +58,21 @@ describe("#kuzzle/InternalIndexHandler", () => {
         "core:storage:private:collection:create",
         "fooindex",
         "foo",
-        { mappings: collections.foo }
+        { mappings: collections.foo },
       );
 
       should(kuzzle.ask).calledWith(
         "core:storage:private:collection:create",
         "fooindex",
         "bar",
-        { mappings: collections.bar }
+        { mappings: collections.bar },
       );
 
       should(kuzzle.ask).calledWith(
         "core:storage:private:collection:create",
         "fooindex",
         "baz",
-        { mappings: collections.baz }
+        { mappings: collections.baz },
       );
     });
 
@@ -89,7 +89,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         "core:storage:private:document:exist",
         internalIndexName,
         "config",
-        internalIndexHandler._BOOTSTRAP_DONE_ID
+        internalIndexHandler._BOOTSTRAP_DONE_ID,
       );
 
       const mutex = MutexMock.__getLastMutex();
@@ -105,7 +105,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID },
       );
     });
 
@@ -123,7 +123,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID },
       );
     });
 
@@ -142,7 +142,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match.object,
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID },
       );
     });
 
@@ -157,7 +157,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       await should(internalIndexHandler.init()).rejectedWith(
         KuzzleInternalError,
-        { id: "services.storage.bootstrap_timeout" }
+        { id: "services.storage.bootstrap_timeout" },
       );
 
       should(kuzzle.ask).not.calledWith(
@@ -165,7 +165,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match({ timestamp: sinon.match.number }),
-        { id: internalIndexHandler._BOOTSTRAP_DONE_ID }
+        { id: internalIndexHandler._BOOTSTRAP_DONE_ID },
       );
     });
   });
@@ -187,7 +187,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match({ version: sinon.match.string }),
-        { id: internalIndexHandler._DATAMODEL_VERSION_ID }
+        { id: internalIndexHandler._DATAMODEL_VERSION_ID },
       );
     });
   });
@@ -210,7 +210,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
             },
           },
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).calledWith(
@@ -227,7 +227,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
             },
           },
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).calledWith(
@@ -244,7 +244,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
             },
           },
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
     });
 
@@ -260,7 +260,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
           policies: [{ roleId: "admin" }],
           rateLimit: 0,
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).calledWith(
@@ -271,7 +271,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         {
           policies: [{ roleId: "default" }],
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).calledWith(
@@ -282,7 +282,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         {
           policies: [{ roleId: "anonymous" }],
         },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
     });
   });
@@ -304,7 +304,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "validations",
         "index#collection",
-        kuzzle.config.validation.index.collection
+        kuzzle.config.validation.index.collection,
       );
     });
   });
@@ -318,7 +318,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
       });
 
       InternalIndexHandler = mockrequire.reRequire(
-        "../../lib/kuzzle/internalIndexHandler"
+        "../../lib/kuzzle/internalIndexHandler",
       );
     });
 
@@ -340,7 +340,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match({ seed: "foobar" }),
-        { id: internalIndexHandler._JWT_SECRET_ID }
+        { id: internalIndexHandler._JWT_SECRET_ID },
       );
 
       should(randomBytesMock).not.called();
@@ -354,7 +354,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         internalIndexName,
         "config",
         sinon.match({ seed: randomBytesMock().toString("hex") }),
-        { id: internalIndexHandler._JWT_SECRET_ID }
+        { id: internalIndexHandler._JWT_SECRET_ID },
       );
 
       should(randomBytesMock).calledWith(512);
@@ -383,7 +383,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
         "core:storage:private:document:get",
         internalIndexName,
         "config",
-        internalIndexHandler._JWT_SECRET_ID
+        internalIndexHandler._JWT_SECRET_ID,
       );
     });
   });

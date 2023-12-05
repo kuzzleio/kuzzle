@@ -53,27 +53,45 @@ kourou app:scaffold playground
 
  🚀 Kourou - Scaffolds a new Kuzzle application
 
-  ✔ Creating and rendering application files
+generic
+  ✔ Checking destination
+  ✔ Prepare temporary folder
+  ✔ Cloning template repository
+  ✔ Copying template files
+  ✔ Cleaning up
 
- [✔] Scaffolding complete! Use cd playground && npm run docker npm install install dependencies and then npm run docker:dev to run your application!
-
+ [✔] Scaffolding complete!
+ [✔] Use cd playground && docker compose up -d to start your Kuzzle stack.
 ```
 
 This will create the following files and directories:
 
 ```
-playground/
-├── lib                  < application code
-├── .eslintignore
-├── .gitignore
-├── .eslintrc-ts.json
-├── .eslintrc.json
-├── app.ts               < application entrypoint
-├── docker-compose.yml   < Docker Compose configuration
-├── ergol.config.json
-├── package.json
+.
 ├── Dockerfile
 ├── README.md
+├── app.ts
+├── docker-compose.yml
+├── environments
+│   ├── local
+│   │   ├── kourou.env
+│   │   └── kuzzlerc
+│   └── main
+│       ├── kourou.env
+│       └── kuzzlerc
+├── ergol.config.json
+├── jest.config.ts
+├── lib
+│   ├── MyApplication.ts
+│   └── modules
+│       └── index.ts
+├── package-lock.json
+├── package.json
+├── start.sh
+├── tests
+│   └── unit
+│       ├── MyApplication.test.ts
+│       └── utils.ts
 └── tsconfig.json
 ```
 
@@ -93,11 +111,8 @@ app
 ```
 
 ::: info
-You can now run `cd playground && npm run docker npm install install dependencies` to install dependencies. After this has run successfully, run our first application with: `npm run docker:dev`.
+You can now run `cd playground && docker compose up -d` to start your application.
 :::
-
-
-Under the hood, the command `npm run docker:dev` uses [nodemon](https://nodemon.io/) and [ts-node](https://www.npmjs.com/package/ts-node) inside the Docker container to run the application.
 
 Now visit [http://localhost:7512](http://localhost:7512) with your browser. You should see the result of the [server:info](/core/2/api/controllers/server/info) action.
 

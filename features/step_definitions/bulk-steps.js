@@ -12,7 +12,7 @@ When("I perform a bulk import with the following:", async function (dataTable) {
   this.props.result = await this.sdk.bulk.import(
     this.props.index,
     this.props.collection,
-    bulkData
+    bulkData,
   );
 });
 
@@ -55,5 +55,5 @@ Then(
     const { result } = await this.sdk.query(request);
 
     this.props.result = result;
-  }
+  },
 );

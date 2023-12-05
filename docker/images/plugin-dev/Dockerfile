@@ -12,7 +12,7 @@ RUN  set -x \
        libzmq3-dev \
        libunwind-dev \
   && npm install -g --unsafe-perm --production \
-    nodemon \
+    ergol \
     kourou \
     pm2 \
   && curl -sfL https://install.goreleaser.com/github.com/tj/node-prune.sh | sh -s -- -b /usr/local/bin
@@ -29,7 +29,7 @@ ADD ./.kuzzlerc.sample.jsonc /app/.kuzzlerc.sample.jsonc
 WORKDIR /app
 
 # Install dependencies
-RUN  npm install --production
+RUN  npm ci --production
 
 ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
 

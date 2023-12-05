@@ -172,7 +172,7 @@ export class ClusterIdCardHandler {
     await this.addIdCardToIndex();
 
     this.refreshWorker = this.constructWorker(
-      `${__dirname}/workers/IDCardRenewer.js`
+      `${__dirname}/workers/IDCardRenewer.js`,
     );
 
     this.refreshWorker.on("message", async (message: JSONObject) => {
@@ -243,7 +243,7 @@ export class ClusterIdCardHandler {
         await this.save();
       } catch (error) {
         global.kuzzle.log.error(
-          `An error occurred while refreshing the ID card during WorkerThread startup: ${error}`
+          `An error occurred while refreshing the ID card during WorkerThread startup: ${error}`,
         );
       }
     }, this.refreshDelay * this.refreshMultiplier);
@@ -255,7 +255,7 @@ export class ClusterIdCardHandler {
           clearInterval(this.refreshTimer);
           this.refreshTimer = null;
         }
-      }
+      },
     );
   }
 
@@ -303,7 +303,7 @@ export class ClusterIdCardHandler {
     let keys: string[] = await global.kuzzle.ask(
       "core:cache:internal:execute",
       "smembers",
-      REDIS_ID_CARDS_INDEX
+      REDIS_ID_CARDS_INDEX,
     );
 
     keys = keys.filter((nodeIdKey) => nodeIdKey !== this.nodeIdKey);
@@ -314,7 +314,7 @@ export class ClusterIdCardHandler {
 
     const rawIdCards: string[] = await global.kuzzle.ask(
       "core:cache:internal:mget",
-      keys
+      keys,
     );
     const expiredIdCards: string[] = [];
 
@@ -334,7 +334,7 @@ export class ClusterIdCardHandler {
         "core:cache:internal:execute",
         "srem",
         REDIS_ID_CARDS_INDEX,
-        idCardKey
+        idCardKey,
       );
     });
 
@@ -373,7 +373,7 @@ export class ClusterIdCardHandler {
       "core:cache:internal:execute",
       "sadd",
       REDIS_ID_CARDS_INDEX,
-      this.nodeIdKey
+      this.nodeIdKey,
     );
   }
 
@@ -387,11 +387,11 @@ export class ClusterIdCardHandler {
       return false;
     }
 
-    return await global.kuzzle.ask(
+    return global.kuzzle.ask(
       "core:cache:internal:store",
       this.nodeIdKey,
       JSON.stringify(this.idCard.serialize()),
-      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier }
+      { onlyIfNew: creation, ttl: this.refreshDelay * this.refreshMultiplier },
     );
   }
 }

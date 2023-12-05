@@ -44,7 +44,7 @@ describe("core/plugin/pluginRepository", () => {
       delete copy._id;
 
       should(pluginRepository.serializeToDatabase(someObject)).be.deepEqual(
-        copy
+        copy,
       );
     });
   });
@@ -59,7 +59,7 @@ describe("core/plugin/pluginRepository", () => {
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
       should(args[3]).be.deepEqual(
-        pluginRepository.serializeToDatabase(someObject)
+        pluginRepository.serializeToDatabase(someObject),
       );
       should(args[4]).match({ id: "someId" });
     });
@@ -70,14 +70,14 @@ describe("core/plugin/pluginRepository", () => {
       await pluginRepository.createOrReplace(someObject);
 
       const args = kuzzle.ask.withArgs(
-        "core:storage:private:document:createOrReplace"
+        "core:storage:private:document:createOrReplace",
       ).firstCall.args;
 
       should(args[1]).be.exactly(pluginRepository.index);
       should(args[2]).be.exactly(someCollection);
       should(args[3]).be.exactly("someId");
       should(args[4]).be.deepEqual(
-        pluginRepository.serializeToDatabase(someObject)
+        pluginRepository.serializeToDatabase(someObject),
       );
     });
   });
@@ -93,7 +93,7 @@ describe("core/plugin/pluginRepository", () => {
       should(args[2]).be.exactly(someCollection);
       should(args[3]).be.exactly("someId");
       should(args[4]).be.deepEqual(
-        pluginRepository.serializeToDatabase(someObject)
+        pluginRepository.serializeToDatabase(someObject),
       );
     });
   });
@@ -109,7 +109,7 @@ describe("core/plugin/pluginRepository", () => {
       should(args[2]).be.exactly(someCollection);
       should(args[3]).be.exactly("someId");
       should(args[4]).be.deepEqual(
-        pluginRepository.serializeToDatabase(someObject)
+        pluginRepository.serializeToDatabase(someObject),
       );
     });
   });

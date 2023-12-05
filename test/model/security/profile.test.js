@@ -20,7 +20,7 @@ describe("Test: model/security/profile", () => {
       controller: "controller",
       action: "action",
     },
-    context
+    context,
   );
   let kuzzle;
 
@@ -78,7 +78,7 @@ describe("Test: model/security/profile", () => {
           Object.entries({
             index2: ["collection1"],
             index3: ["collection1", "collection2"],
-          })
+          }),
         ),
       },
     ];
@@ -104,7 +104,7 @@ describe("Test: model/security/profile", () => {
       restrictedTo: new Map(
         Object.entries({
           index1: ["collection1", "collection2"],
-        })
+        }),
       ),
     });
 
@@ -120,7 +120,7 @@ describe("Test: model/security/profile", () => {
       restrictedTo: new Map(
         Object.entries({
           index2: [],
-        })
+        }),
       ),
     });
 
@@ -145,12 +145,12 @@ describe("Test: model/security/profile", () => {
     should(rights).be.an.Object();
     rights = Object.keys(rights).reduce(
       (array, item) => array.concat(rights[item]),
-      []
+      [],
     );
     should(rights).be.an.Array();
 
     filteredItem = rights.filter(
-      (item) => item.controller === "document" && item.action === "get"
+      (item) => item.controller === "document" && item.action === "get",
     );
 
     should(filteredItem).length(1);
@@ -159,25 +159,25 @@ describe("Test: model/security/profile", () => {
     should(filteredItem[0].value).be.equal("allowed");
 
     filteredItem = rights.filter(
-      (item) => item.controller === "document" && item.action === "*"
+      (item) => item.controller === "document" && item.action === "*",
     );
 
     should(filteredItem).length(2);
     should(filteredItem.every((item) => item.index === "index1")).be.equal(
-      true
+      true,
     );
     should(
-      filteredItem.some((item) => item.collection === "collection1")
+      filteredItem.some((item) => item.collection === "collection1"),
     ).be.equal(true);
     should(
-      filteredItem.some((item) => item.collection === "collection2")
+      filteredItem.some((item) => item.collection === "collection2"),
     ).be.equal(true);
     should(filteredItem.every((item) => item.value === "allowed")).be.equal(
-      true
+      true,
     );
 
     filteredItem = rights.filter(
-      (item) => item.controller === "document" && item.action === "delete"
+      (item) => item.controller === "document" && item.action === "delete",
     );
 
     should(filteredItem).length(1);
@@ -186,7 +186,7 @@ describe("Test: model/security/profile", () => {
     should(filteredItem[0].value).be.equal("allowed");
 
     filteredItem = rights.filter(
-      (item) => item.controller === "document" && item.action === "update"
+      (item) => item.controller === "document" && item.action === "update",
     );
 
     should(
@@ -194,8 +194,8 @@ describe("Test: model/security/profile", () => {
         (item) =>
           item.index === "index2" &&
           item.collection === "*" &&
-          item.value === "allowed"
-      )
+          item.value === "allowed",
+      ),
     ).be.equal(true);
   });
 
@@ -216,7 +216,7 @@ describe("Test: model/security/profile", () => {
 
       return should(profile.validateDefinition()).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -225,14 +225,14 @@ describe("Test: model/security/profile", () => {
 
       return should(profile.validateDefinition()).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
     it("should reject if an empty policies array is provided", () => {
       return should(profile.validateDefinition()).be.rejectedWith(
         BadRequestError,
-        { id: "api.assert.empty_argument" }
+        { id: "api.assert.empty_argument" },
       );
     });
 
@@ -244,7 +244,7 @@ describe("Test: model/security/profile", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "test.policies[0].roleId".',
-        }
+        },
       );
     });
 
@@ -255,7 +255,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.unexpected_argument",
-        }
+        },
       );
     });
 
@@ -266,7 +266,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.invalid_type",
-        }
+        },
       );
     });
 
@@ -277,7 +277,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.invalid_type",
-        }
+        },
       );
     });
 
@@ -288,7 +288,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.missing_argument",
-        }
+        },
       );
     });
 
@@ -304,7 +304,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.unexpected_argument",
-        }
+        },
       );
     });
 
@@ -324,7 +324,7 @@ describe("Test: model/security/profile", () => {
         PreconditionError,
         {
           id: "services.storage.unknown_index",
-        }
+        },
       );
 
       should(kuzzle.ask).calledWith("core:storage:public:index:exist", "index");
@@ -342,7 +342,7 @@ describe("Test: model/security/profile", () => {
         BadRequestError,
         {
           id: "api.assert.invalid_type",
-        }
+        },
       );
     });
 
@@ -364,13 +364,13 @@ describe("Test: model/security/profile", () => {
         PreconditionError,
         {
           id: "services.storage.unknown_collection",
-        }
+        },
       );
 
       should(kuzzle.ask).calledWith(
         "core:storage:public:collection:exist",
         "index",
-        "foo"
+        "foo",
       );
     });
 

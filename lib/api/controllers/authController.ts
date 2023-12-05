@@ -77,7 +77,7 @@ export class AuthController extends NativeController {
    */
   async init() {
     const anonymous = await global.kuzzle.ask(
-      "core:security:user:anonymous:get"
+      "core:security:user:anonymous:get",
     );
     this.anonymousId = anonymous._id;
   }
@@ -91,7 +91,7 @@ export class AuthController extends NativeController {
         "token",
         "invalid_expiration",
         "expiresIn",
-        "cannot be infinite"
+        "cannot be infinite",
       );
     }
 
@@ -101,7 +101,7 @@ export class AuthController extends NativeController {
       {
         expiresIn: request.input.args.expiresIn,
         singleUse,
-      }
+      },
     );
 
     return {
@@ -129,7 +129,7 @@ export class AuthController extends NativeController {
     const user = request.context.user;
 
     const allowed = await user.isActionAllowed(
-      new KuzzleRequest(requestPayload)
+      new KuzzleRequest(requestPayload),
     );
 
     return {
@@ -219,13 +219,13 @@ export class AuthController extends NativeController {
 
     if (
       global.kuzzle.config.internal.notifiableProtocols.includes(
-        request.context.connection.protocol
+        request.context.connection.protocol,
       )
     ) {
       // Unlink connection so the connection will not be notified when the token expires.
       global.kuzzle.tokenManager.unlink(
         request.context.token,
-        request.context.connection.id
+        request.context.connection.id,
       );
     }
 
@@ -234,7 +234,7 @@ export class AuthController extends NativeController {
         await global.kuzzle.ask(
           "core:security:token:deleteByKuid",
           request.getKuid(),
-          { keepApiKeys: true }
+          { keepApiKeys: true },
         );
       } else if (
         request.context.token &&
@@ -242,7 +242,7 @@ export class AuthController extends NativeController {
       ) {
         await global.kuzzle.ask(
           "core:security:token:delete",
-          request.context.token
+          request.context.token,
         );
       }
     }
@@ -339,7 +339,7 @@ export class AuthController extends NativeController {
 
     const content = await global.kuzzle.passport.authenticate(
       passportRequest,
-      strategy
+      strategy,
     );
 
     // do not trigger the "auth:strategyAutenticated" pipe if the result is
@@ -366,7 +366,7 @@ export class AuthController extends NativeController {
 
     const existingToken = global.kuzzle.tokenManager.getConnectedUserToken(
       authResponse.content._id,
-      request.context.connection.id
+      request.context.connection.id,
     );
 
     /**
@@ -385,7 +385,7 @@ export class AuthController extends NativeController {
     const token = await this.ask(
       "core:security:token:create",
       authResponse.content,
-      options
+      options,
     );
 
     if (existingToken) {
@@ -394,7 +394,7 @@ export class AuthController extends NativeController {
 
     if (
       global.kuzzle.config.internal.notifiableProtocols.includes(
-        request.context.connection.protocol
+        request.context.connection.protocol,
       )
     ) {
       // Link the connection with the token, this way the connection can be notified when the token has expired.
@@ -421,13 +421,13 @@ export class AuthController extends NativeController {
       for (const strategy of global.kuzzle.pluginsManager.listStrategies()) {
         const existsMethod = global.kuzzle.pluginsManager.getStrategyMethod(
           strategy,
-          "exists"
+          "exists",
         );
 
         promises.push(
           existsMethod(request, userId, strategy)
             .then((exists) => (exists ? strategy : null))
-            .catch((err) => wrapPluginError(err))
+            .catch((err) => wrapPluginError(err)),
         );
       }
     }
@@ -453,8 +453,8 @@ export class AuthController extends NativeController {
       .then((rights) =>
         Object.keys(rights).reduce(
           (array, item) => array.concat(rights[item]),
-          []
-        )
+          [],
+        ),
       )
       .then((rights) => ({ hits: rights, total: rights.length }));
   }
@@ -480,7 +480,7 @@ export class AuthController extends NativeController {
     try {
       const { expiresAt = -1, userId } = await this.ask(
         "core:security:token:verify",
-        token
+        token,
       );
 
       return { expiresAt, kuid: userId, valid: true };
@@ -515,13 +515,13 @@ export class AuthController extends NativeController {
         refresh: request.getRefresh("wait_for"),
         retryOnConflict: request.getInteger("retryOnConflict", 10),
         userId,
-      }
+      },
     );
 
     global.kuzzle.log.info(
       `[SECURITY] ${SecurityController.userOrSdk(userId)} applied action "${
         request.input.action
-      }" on user "${userId}."`
+      }" on user "${userId}."`,
     );
 
     return formatProcessing.serializeUser(user);
@@ -551,11 +551,11 @@ export class AuthController extends NativeController {
 
     const createMethod = global.kuzzle.pluginsManager.getStrategyMethod(
         strategy,
-        "create"
+        "create",
       ),
       validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
         strategy,
-        "validate"
+        "validate",
       );
 
     return validateMethod(request, credentials, userId, strategy, false)
@@ -578,11 +578,11 @@ export class AuthController extends NativeController {
 
     const updateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
         request.input.args.strategy,
-        "update"
+        "update",
       ),
       validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
         request.input.args.strategy,
-        "validate"
+        "validate",
       );
 
     return validateMethod(request, credentials, userId, strategy, true)
@@ -604,11 +604,11 @@ export class AuthController extends NativeController {
 
     const existsMethod = global.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
-      "exists"
+      "exists",
     );
 
     return existsMethod(request, userId, strategy).catch((err) =>
-      wrapPluginError(err)
+      wrapPluginError(err),
     );
   }
 
@@ -627,11 +627,11 @@ export class AuthController extends NativeController {
 
     const validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
-      "validate"
+      "validate",
     );
 
     return validateMethod(request, credentials, userId, strategy, false).catch(
-      (err) => wrapPluginError(err)
+      (err) => wrapPluginError(err),
     );
   }
 
@@ -649,7 +649,7 @@ export class AuthController extends NativeController {
 
     const deleteMethod = global.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
-      "delete"
+      "delete",
     );
 
     return deleteMethod(request, userId, strategy)
@@ -675,11 +675,11 @@ export class AuthController extends NativeController {
 
     const getInfoMethod = global.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
-      "getInfo"
+      "getInfo",
     );
 
     return getInfoMethod(request, userId, strategy).catch((err) =>
-      wrapPluginError(err)
+      wrapPluginError(err),
     );
   }
 
@@ -693,7 +693,7 @@ export class AuthController extends NativeController {
       "core:security:token:refresh",
       request.context.user,
       request.context.token,
-      request.input.args.expiresIn
+      request.input.args.expiresIn,
     );
 
     return this._sendToken(token, request);
@@ -706,7 +706,7 @@ export class AuthController extends NativeController {
         "rights",
         "unauthorized",
         request.input.controller,
-        request.input.action
+        request.input.action,
       );
     }
   }
@@ -719,7 +719,7 @@ function wrapPluginError(error) {
       "plugin",
       "runtime",
       "unexpected_error",
-      error.message
+      error.message,
     );
   }
 

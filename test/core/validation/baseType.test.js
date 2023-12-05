@@ -40,19 +40,19 @@ describe("Test: validation/baseType", () => {
 
     it("should be true with proper arguments", () => {
       should(
-        baseType.checkAllowedProperties(genericMock, ["foo", "mod"])
+        baseType.checkAllowedProperties(genericMock, ["foo", "mod"]),
       ).be.true();
     });
 
     it("should be false if the first argument is not an object", () => {
       should(
-        baseType.checkAllowedProperties("notAnObject", ["foo"])
+        baseType.checkAllowedProperties("notAnObject", ["foo"]),
       ).be.false();
     });
 
     it("should be false if one of the property is not allowed", () => {
       should(
-        baseType.checkAllowedProperties({ foo: "bar", baz: "bar" }, ["foo"])
+        baseType.checkAllowedProperties({ foo: "bar", baz: "bar" }, ["foo"]),
       ).be.false();
     });
   });

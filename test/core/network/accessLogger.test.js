@@ -64,7 +64,7 @@ describe("#AccessLogger", () => {
 
     beforeEach(() => {
       ({ AccessLogger } = mockRequire.reRequire(
-        "../../../lib/core/network/accessLogger"
+        "../../../lib/core/network/accessLogger",
       ));
       accessLogger = new AccessLogger();
     });
@@ -123,7 +123,7 @@ describe("#AccessLogger", () => {
       should(accessLogger.isActive).be.false();
       should(workerArgs).be.null();
       should(kuzzle.log.error).calledWith(
-        'Failed to initialize logger transport "ohnoes": unsupported transport. Skipped.'
+        'Failed to initialize logger transport "ohnoes": unsupported transport. Skipped.',
       );
     });
 
@@ -249,7 +249,7 @@ describe("#AccessLogger", () => {
       mockRequire("winston-syslog", winstonTransportSyslog);
 
       ({ AccessLoggerWorker } = mockRequire.reRequire(
-        "../../../lib/core/network/accessLogger"
+        "../../../lib/core/network/accessLogger",
       ));
     });
 
@@ -269,7 +269,7 @@ describe("#AccessLogger", () => {
             accessLogIpOffset: 0,
           },
         },
-        "-1"
+        "-1",
       );
     });
 
@@ -307,7 +307,7 @@ describe("#AccessLogger", () => {
 
         for (let i = 0; i < 3; i++) {
           accessLoggerWorker.config.logs.transports.push(
-            Object.assign({}, accessLoggerWorker.config.logs.access)
+            Object.assign({}, accessLoggerWorker.config.logs.access),
           );
         }
 
@@ -396,7 +396,7 @@ describe("#AccessLogger", () => {
 
         accessLoggerWorker.config.logs.transports = [Object.assign({}, config)];
         accessLoggerWorker.config.logs.transports.push(
-          Object.assign({}, config)
+          Object.assign({}, config),
         );
 
         Object.assign(accessLoggerWorker.config.logs.transports[0], {
@@ -481,7 +481,7 @@ describe("#AccessLogger", () => {
           {
             referer: "http://referer.com",
             "user-agent": "user agent",
-          }
+          },
         );
 
         const extra = { method: "METHOD", url: "url" };
@@ -494,7 +494,7 @@ describe("#AccessLogger", () => {
             token: {
               userId: "admin",
             },
-          }
+          },
         );
 
         request.status = 444;
@@ -507,7 +507,7 @@ describe("#AccessLogger", () => {
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
           .be.calledWithMatch(
-            /^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 327 "http:\/\/referer.com" "user agent"$/
+            /^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 327 "http:\/\/referer.com" "user agent"$/,
           );
       });
 
@@ -523,7 +523,7 @@ describe("#AccessLogger", () => {
             token: {
               userId: "foobar",
             },
-          }
+          },
         );
         const connection = new ClientConnection("websocket", ["ip"]);
 
@@ -532,7 +532,7 @@ describe("#AccessLogger", () => {
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
           .be.calledWithMatch(
-            /^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 339 - -$/
+            /^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 339 - -$/,
           );
       });
     });
@@ -561,7 +561,7 @@ describe("#AccessLogger", () => {
             "connection",
             sinon.match.instanceOf(KuzzleRequest),
             "123",
-            "extra"
+            "extra",
           );
       });
     });

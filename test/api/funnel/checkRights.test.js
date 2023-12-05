@@ -71,7 +71,7 @@ describe("funnel.checkRights", () => {
 
     should(global.kuzzle.tokenManager.link).be.calledWith(
       request.context.token,
-      "connection-id"
+      "connection-id",
     );
   });
 

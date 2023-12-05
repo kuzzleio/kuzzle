@@ -129,7 +129,7 @@ describe("#RequestResponse", () => {
 
         should(response.headers[name]).be.exactly(
           "foobar9",
-          `Header tested: ${name}`
+          `Header tested: ${name}`,
         );
       });
     });

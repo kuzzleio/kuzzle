@@ -38,7 +38,7 @@ Then(
       }
       throw e;
     }
-  }
+  },
 );
 
 Then(
@@ -51,9 +51,9 @@ Then(
 
     await this.tryAction(
       this.sdk.security[method + "Role"](roleId, { controllers }, options),
-      not
+      not,
     );
-  }
+  },
 );
 
 Then(/I am (not )?able to get a role with id "(.*?)"/, function (not, roleId) {
@@ -66,9 +66,9 @@ Then(
     return this.tryAction(
       this.sdk.security.getProfile(profileId),
       not,
-      `Profile ${profileId} exists`
+      `Profile ${profileId} exists`,
     );
-  }
+  },
 );
 
 Then(
@@ -79,7 +79,7 @@ Then(
     const result = await this.sdk.security.searchRoles(controller);
 
     this.props.result = result;
-  }
+  },
 );
 
 Then(
@@ -92,20 +92,20 @@ Then(
     }
 
     this.props.result = await this.sdk.security.mGetRoles(roleIds);
-  }
+  },
 );
 
 Then(/I (can not )?delete the role "(.*?)"/, function (not, roleId) {
   return this.tryAction(
     this.sdk.security.deleteRole(roleId, { refresh: "wait_for" }),
-    not
+    not,
   );
 });
 
 Then(/I (can not )?delete the profile "(.*?)"/, function (not, profileId) {
   return this.tryAction(
     this.sdk.security.deleteProfile(profileId, { refresh: "wait_for" }),
-    not
+    not,
   );
 });
 
@@ -133,7 +133,7 @@ Then(
     this.props.result = await this.sdk.security.createUser(userId, body, {
       refresh: "wait_for",
     });
-  }
+  },
 );
 
 Then("I update the role {string} with:", async function (roleId, dataTable) {
@@ -148,7 +148,7 @@ Then("I update the role {string} with:", async function (roleId, dataTable) {
   this.props.result = await this.sdk.security.updateRole(
     roleId,
     { controllers: rights },
-    { refresh: "wait_for" }
+    { refresh: "wait_for" },
   );
 });
 
@@ -183,7 +183,7 @@ Then(
     for (let i = 0; i < profile.policies; i++) {
       should(profile.policies[i]).match(expectedPolicies[i]);
     }
-  }
+  },
 );
 
 Then(
@@ -194,7 +194,7 @@ Then(
     const user = await this.sdk.security.getUser(userId);
 
     should(user.profileIds).be.eql(expectedProfiles);
-  }
+  },
 );
 
 Then(
@@ -215,7 +215,7 @@ Then(
         throw error;
       }
     }
-  }
+  },
 );
 
 Then(
@@ -223,5 +223,5 @@ Then(
   async function (dataTable) {
     const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
     this.props.result = await this.sdk.security.mGetUsers(userIds);
-  }
+  },
 );

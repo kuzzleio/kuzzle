@@ -87,7 +87,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @throws If already exists or if the policies are invalid
      */
     global.kuzzle.onAsk("core:security:profile:create", (id, policies, opts) =>
-      this.create(id, policies, opts)
+      this.create(id, policies, opts),
     );
 
     /**
@@ -100,7 +100,7 @@ export class ProfileRepository extends Repository<Profile> {
      */
     global.kuzzle.onAsk(
       "core:security:profile:createOrReplace",
-      (id, policies, opts) => this.createOrReplace(id, policies, opts)
+      (id, policies, opts) => this.createOrReplace(id, policies, opts),
     );
 
     /**
@@ -111,7 +111,7 @@ export class ProfileRepository extends Repository<Profile> {
      *         still in use
      */
     global.kuzzle.onAsk("core:security:profile:delete", (id, opts) =>
-      this.deleteById(id, opts)
+      this.deleteById(id, opts),
     );
 
     /**
@@ -129,7 +129,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @param  {String} [id] - profile identifier
      */
     global.kuzzle.onAsk("core:security:profile:invalidate", (id) =>
-      this.invalidate(id)
+      this.invalidate(id),
     );
 
     /**
@@ -139,7 +139,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @throws If one or more profiles don't exist
      */
     global.kuzzle.onAsk("core:security:profile:mGet", (ids) =>
-      this.loadProfiles(ids)
+      this.loadProfiles(ids),
     );
 
     /**
@@ -149,7 +149,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @returns {Object} Search results
      */
     global.kuzzle.onAsk("core:security:profile:scroll", (id, ttl) =>
-      this.scroll(id, ttl)
+      this.scroll(id, ttl),
     );
 
     /**
@@ -161,7 +161,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @returns {Object} Search results
      */
     global.kuzzle.onAsk("core:security:profile:search", (searchBody, opts) =>
-      this.search(searchBody, opts)
+      this.search(searchBody, opts),
     );
 
     /**
@@ -169,7 +169,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @param  {Object} opts (refresh)
      */
     global.kuzzle.onAsk("core:security:profile:truncate", (opts) =>
-      this.truncate(opts)
+      this.truncate(opts),
     );
 
     /**
@@ -180,7 +180,7 @@ export class ProfileRepository extends Repository<Profile> {
      * @returns {Profile} Updated profile
      */
     global.kuzzle.onAsk("core:security:profile:update", (id, content, opts) =>
-      this.update(id, content, opts)
+      this.update(id, content, opts),
     );
   }
 
@@ -227,7 +227,7 @@ export class ProfileRepository extends Repository<Profile> {
         "assert",
         "invalid_type",
         "profileIds",
-        "string[]"
+        "string[]",
       );
     }
 
@@ -278,7 +278,7 @@ export class ProfileRepository extends Repository<Profile> {
       refresh = "false",
       strict,
       userId = null,
-    }: CreateOrReplaceOptions = {}
+    }: CreateOrReplaceOptions = {},
   ) {
     const profile = await this.fromDTO({
       // content should be first: ignores _id and _kuzzle_info in it
@@ -306,7 +306,7 @@ export class ProfileRepository extends Repository<Profile> {
   async create(
     id: string,
     content: JSONObject,
-    opts: JSONObject = {}
+    opts: JSONObject = {},
   ): Promise<Profile> {
     return this._createOrReplace(id, content, {
       method: "create",
@@ -325,7 +325,7 @@ export class ProfileRepository extends Repository<Profile> {
   async createOrReplace(
     id: string,
     content: JSONObject,
-    opts: JSONObject = {}
+    opts: JSONObject = {},
   ): Promise<Profile> {
     return this._createOrReplace(id, content, {
       method: "createOrReplace",
@@ -343,7 +343,7 @@ export class ProfileRepository extends Repository<Profile> {
   async update(
     id: string,
     content: JSONObject,
-    { refresh, retryOnConflict, strict, userId }: UpdateOptions = {}
+    { refresh, retryOnConflict, strict, userId }: UpdateOptions = {},
   ) {
     const profile = await this.load(id);
     const pojo = super.toDTO(profile);
@@ -384,7 +384,7 @@ export class ProfileRepository extends Repository<Profile> {
    */
   async delete(
     profile: Profile,
-    { refresh = "false", onAssignedUsers = "fail", userId = "-1" } = {}
+    { refresh = "false", onAssignedUsers = "fail", userId = "-1" } = {},
   ) {
     if (["admin", "default", "anonymous"].includes(profile._id)) {
       throw kerror.get("security", "profile", "cannot_delete");
@@ -401,7 +401,7 @@ export class ProfileRepository extends Repository<Profile> {
       let treated = 0;
       let userPage = await this.module.user.search(
         { query },
-        { scroll: "1m", size: 100 }
+        { scroll: "1m", size: 100 },
       );
 
       while (treated < userPage.total) {
@@ -418,7 +418,7 @@ export class ProfileRepository extends Repository<Profile> {
             this.module.user.update(user._id, user.profileIds, user, {
               refresh,
               userId,
-            })
+            }),
           );
         }
 
@@ -433,7 +433,7 @@ export class ProfileRepository extends Repository<Profile> {
     } else {
       const hits = await this.module.user.search(
         { query },
-        { from: 0, size: 1 }
+        { from: 0, size: 1 },
       );
 
       if (hits.total > 0) {
@@ -478,7 +478,7 @@ export class ProfileRepository extends Repository<Profile> {
       refresh,
       retryOnConflict,
       strict,
-    }: ValidateAndSaveProfileOptions = {}
+    }: ValidateAndSaveProfileOptions = {},
   ) {
     const policiesRoles = profile.policies.map((p) => p.roleId);
 
@@ -504,7 +504,7 @@ export class ProfileRepository extends Repository<Profile> {
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
     // Recompute optimized policies based on new policies
     updatedProfile.optimizedPolicies = this.optimizePolicies(
-      updatedProfile.policies
+      updatedProfile.policies,
     );
 
     this.profiles.set(profile._id, updatedProfile);

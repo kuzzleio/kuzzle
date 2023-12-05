@@ -24,11 +24,11 @@ describe("HotelClerk", () => {
 
     hotelClerk.subscriptions.set(
       "a",
-      new ConnectionRooms(new Map([["foo", null]]))
+      new ConnectionRooms(new Map([["foo", null]])),
     );
     hotelClerk.subscriptions.set(
       "b",
-      new ConnectionRooms(new Map([["foo", null]]))
+      new ConnectionRooms(new Map([["foo", null]])),
     );
 
     return hotelClerk.init();

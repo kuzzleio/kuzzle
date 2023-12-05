@@ -49,7 +49,7 @@ describe("Redis", () => {
 
   it("should raise an error if unable to connect", () => {
     Redis.prototype._buildClient.returns(
-      new RedisClientMock(undefined, new Error("connection error"))
+      new RedisClientMock(undefined, new Error("connection error")),
     );
 
     const testredis = new Redis(config);

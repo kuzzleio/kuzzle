@@ -99,7 +99,7 @@ describe("kerror: error codes loader", () => {
     it("should throw if a domain is missing a code", () => {
       delete domains.foo.code;
       should(() => checkDomains(domains)).throw(
-        /missing required 'code' field/i
+        /missing required 'code' field/i,
       );
     });
 
@@ -109,7 +109,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be an integer/i
+          /field 'code' must be an integer/i,
         );
       }
     });
@@ -125,7 +125,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be between 0 and 255/i
+          /field 'code' must be between 0 and 255/i,
         );
       }
 
@@ -142,7 +142,7 @@ describe("kerror: error codes loader", () => {
     it("should throw if no subDomains are defined", () => {
       delete domains.foo.subDomains;
       should(() => checkDomains(domains)).throw(
-        /missing required 'subDomains' field/i
+        /missing required 'subDomains' field/i,
       );
     });
 
@@ -160,7 +160,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'subDomains' must be an object/i
+          /field 'subDomains' must be an object/i,
         );
       }
     });
@@ -168,7 +168,7 @@ describe("kerror: error codes loader", () => {
     it("should throw if a non-plugin subdomain is missing a code", () => {
       delete domains.bar.subDomains.sub1.code;
       should(() => checkDomains(domains)).throw(
-        /missing required 'code' field/i
+        /missing required 'code' field/i,
       );
     });
 
@@ -184,7 +184,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be an integer/i
+          /field 'code' must be an integer/i,
         );
       }
     });
@@ -205,7 +205,7 @@ describe("kerror: error codes loader", () => {
       domains.foo.subDomains.sub1.code = 42;
       domains.foo.subDomains.sub2.code = 42;
       should(() => checkDomains(domains, { plugin: true })).throw(
-        /code .* is not unique/i
+        /code .* is not unique/i,
       );
     });
 
@@ -214,7 +214,7 @@ describe("kerror: error codes loader", () => {
         domains.foo.subDomains.sub2.code = code;
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be between 0 and 255/i
+          /field 'code' must be between 0 and 255/i,
         );
       }
 
@@ -232,7 +232,7 @@ describe("kerror: error codes loader", () => {
     it("should throw if a subdomain is missing an errors object", () => {
       delete domains.foo.subDomains.sub2.errors;
       should(() => checkDomains(domains)).throw(
-        /missing required 'errors' field/i
+        /missing required 'errors' field/i,
       );
     });
 
@@ -242,7 +242,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'errors' must be an object/i
+          /field 'errors' must be an object/i,
         );
       }
     });
@@ -250,7 +250,7 @@ describe("kerror: error codes loader", () => {
     it("should throw if an error is missing a code", () => {
       delete domains.foo.subDomains.sub1.errors.err1.code;
       should(() => checkDomains(domains)).throw(
-        /missing required 'code' field/i
+        /missing required 'code' field/i,
       );
     });
 
@@ -260,7 +260,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be an integer/i
+          /field 'code' must be an integer/i,
         );
       }
     });
@@ -271,7 +271,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'code' must be between 1 and 65535/i
+          /field 'code' must be between 1 and 65535/i,
         );
       }
 
@@ -287,7 +287,7 @@ describe("kerror: error codes loader", () => {
       delete domains.foo.subDomains.sub1.errors.err1.message;
 
       should(() => checkDomains(domains)).throw(
-        /missing required 'message' field/i
+        /missing required 'message' field/i,
       );
     });
 
@@ -297,7 +297,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'message' must be a non-empty string/i
+          /field 'message' must be a non-empty string/i,
         );
       }
     });
@@ -306,7 +306,7 @@ describe("kerror: error codes loader", () => {
       delete domains.foo.subDomains.sub1.errors.err1.class;
 
       should(() => checkDomains(domains)).throw(
-        /missing required 'class' field/i
+        /missing required 'class' field/i,
       );
     });
 
@@ -316,7 +316,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'class' must be a string/i
+          /field 'class' must be a string/i,
         );
       }
     });
@@ -325,7 +325,7 @@ describe("kerror: error codes loader", () => {
       domains.foo.subDomains.sub2.errors.err1.class = "foo";
 
       should(() => checkDomains(domains)).throw(
-        /field 'class' must target a known KuzzleError object/i
+        /field 'class' must target a known KuzzleError object/i,
       );
 
       for (const name of Object.keys(kuzzleObjectErrors)) {
@@ -340,7 +340,7 @@ describe("kerror: error codes loader", () => {
       delete domains.foo.subDomains.sub2.errors.err1.description;
 
       should(() => checkDomains(domains)).throw(
-        /field 'description' must be a non-empty string/i
+        /field 'description' must be a non-empty string/i,
       );
 
       for (const description of [
@@ -357,7 +357,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'description' must be a non-empty string/i
+          /field 'description' must be a non-empty string/i,
         );
       }
     });
@@ -374,7 +374,7 @@ describe("kerror: error codes loader", () => {
 
         /* eslint-disable-next-line no-loop-func -- false positive */
         should(() => checkDomains(domains)).throw(
-          /field 'deprecated' must be a non-empty string/i
+          /field 'deprecated' must be a non-empty string/i,
         );
       }
     });

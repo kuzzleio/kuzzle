@@ -14,7 +14,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -28,7 +28,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -42,7 +42,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -58,7 +58,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -74,7 +74,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -92,7 +92,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -110,7 +110,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -128,7 +128,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -146,7 +146,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -163,7 +163,7 @@ describe("QueryTranslator", () => {
       };
 
       const esClause = translator._translateClause(
-        ...Object.entries(clause)[0]
+        ...Object.entries(clause)[0],
       );
 
       should(esClause).be.eql({
@@ -181,7 +181,7 @@ describe("QueryTranslator", () => {
       };
 
       const esOperator = translator._translateOperator(
-        ...Object.entries(operator)[0]
+        ...Object.entries(operator)[0],
       );
 
       should(esOperator).be.eql({
@@ -197,7 +197,7 @@ describe("QueryTranslator", () => {
       };
 
       const esOperator = translator._translateOperator(
-        ...Object.entries(operator)[0]
+        ...Object.entries(operator)[0],
       );
 
       should(esOperator).be.eql({
@@ -213,7 +213,7 @@ describe("QueryTranslator", () => {
       };
 
       const esOperator = translator._translateOperator(
-        ...Object.entries(operator)[0]
+        ...Object.entries(operator)[0],
       );
 
       should(esOperator).be.eql({

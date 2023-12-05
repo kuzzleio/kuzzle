@@ -30,7 +30,7 @@ describe("ClusterIDCardRenewer", () => {
         {
           initTimeout: 42,
         },
-        "foo"
+        "foo",
       );
     });
 

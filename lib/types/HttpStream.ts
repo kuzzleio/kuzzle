@@ -41,7 +41,7 @@ export class HttpStream {
 
   constructor(
     readableStream: Readable,
-    { totalBytes = -1 }: HttpStreamProperties = {}
+    { totalBytes = -1 }: HttpStreamProperties = {},
   ) {
     this.stream = readableStream;
     this.totalBytes = totalBytes;

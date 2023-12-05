@@ -24,7 +24,7 @@ describe("Test: validation/types/url", () => {
   describe("#validate", () => {
     it("should return true if the value is valid", () => {
       should(
-        urlType.validate({ notEmpty: true }, "http://www.domain.com/", [])
+        urlType.validate({ notEmpty: true }, "http://www.domain.com/", []),
       ).be.true();
     });
 
@@ -43,7 +43,11 @@ describe("Test: validation/types/url", () => {
       var errorMessage = [];
 
       should(
-        urlType.validate({ notEmpty: true }, "not an url address", errorMessage)
+        urlType.validate(
+          { notEmpty: true },
+          "not an url address",
+          errorMessage,
+        ),
       ).be.false();
       should(errorMessage).be.deepEqual(["The string must be a valid URL."]);
     });
@@ -53,7 +57,7 @@ describe("Test: validation/types/url", () => {
         const errorMessage = [];
 
         should(
-          urlType.validate({ notEmpty: true }, v, errorMessage)
+          urlType.validate({ notEmpty: true }, v, errorMessage),
         ).be.false();
         should(errorMessage).be.deepEqual(["The field must be a string."]);
       });
@@ -71,7 +75,7 @@ describe("Test: validation/types/url", () => {
       should(
         urlType.validateFieldSpecification({
           notEmpty: true,
-        })
+        }),
       ).be.deepEqual({
         notEmpty: true,
       });
@@ -81,7 +85,7 @@ describe("Test: validation/types/url", () => {
       [[], {}, "foo", 123, undefined, null].forEach((v) => {
         should(() => urlType.validateFieldSpecification({ notEmpty: v })).throw(
           PreconditionError,
-          { id: "validation.assert.invalid_type" }
+          { id: "validation.assert.invalid_type" },
         );
       });
     });

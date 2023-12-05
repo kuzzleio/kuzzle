@@ -51,7 +51,7 @@ export class BackendSubscription extends ApplicationManager {
       volatile?: JSONObject;
       scope?: "in" | "out" | "all" | "none";
       users?: "in" | "out" | "all" | "none";
-    } = {}
+    } = {},
   ): Promise<{ roomId: string; channel: string }> {
     if (!this._application.started) {
       throw runtimeError.get("unavailable_before_start", "subscriptions.add");
@@ -70,12 +70,12 @@ export class BackendSubscription extends ApplicationManager {
       {
         connectionId: connection.id,
         volatile,
-      }
+      },
     );
 
     const { channel, roomId } = await global.kuzzle.ask(
       "core:realtime:subscribe",
-      subscriptionRequest
+      subscriptionRequest,
     );
 
     return { channel, roomId };
@@ -85,7 +85,7 @@ export class BackendSubscription extends ApplicationManager {
     if (!this._application.started) {
       throw runtimeError.get(
         "unavailable_before_start",
-        "subscriptions.remove"
+        "subscriptions.remove",
       );
     }
 

@@ -45,7 +45,7 @@ describe("Test: Kuzzle Debugger", () => {
         {
           method: "notification",
           foo: "bar",
-        }
+        },
       );
 
       await should(kuzzleDebugger.notifyConnection)
@@ -126,7 +126,7 @@ describe("Test: Kuzzle Debugger", () => {
 
       await should(kuzzleDebugger.post("Debugger.enable")).be.rejectedWith(
         PreconditionError,
-        { id: "core.debugger.not_enabled" }
+        { id: "core.debugger.not_enabled" },
       );
     });
 
@@ -137,7 +137,7 @@ describe("Test: Kuzzle Debugger", () => {
 
       await should(kuzzleDebugger.inspectorPost).be.calledWithMatch(
         "Debugger.enable",
-        {}
+        {},
       );
     });
   });
@@ -150,14 +150,14 @@ describe("Test: Kuzzle Debugger", () => {
     it("should throw if the debugger is not enabled", async () => {
       kuzzleDebugger.debuggerStatus = false;
       await should(
-        kuzzleDebugger.addListener("EventMock.event_foo", "foobar")
+        kuzzleDebugger.addListener("EventMock.event_foo", "foobar"),
       ).be.rejectedWith(PreconditionError, { id: "core.debugger.not_enabled" });
     });
 
     it("should add the connectionId to the list of listener for the requested event", async () => {
       await kuzzleDebugger.addListener("EventMock.event_foo", "foobar");
       should(kuzzleDebugger.events.get("EventMock.event_foo")).be.eql(
-        new Set(["foobar"])
+        new Set(["foobar"]),
       );
     });
   });
@@ -170,7 +170,7 @@ describe("Test: Kuzzle Debugger", () => {
     it("should throw if the debugger is not enabled", async () => {
       kuzzleDebugger.debuggerStatus = false;
       await should(
-        kuzzleDebugger.removeListener("EventMock.event_foo", "foobar")
+        kuzzleDebugger.removeListener("EventMock.event_foo", "foobar"),
       ).be.rejectedWith(PreconditionError, { id: "core.debugger.not_enabled" });
     });
 
@@ -180,7 +180,7 @@ describe("Test: Kuzzle Debugger", () => {
       ]);
       await kuzzleDebugger.removeListener("EventMock.event_foo", "foobar");
       should(kuzzleDebugger.events.get("EventMock.event_foo")).be.eql(
-        new Set([])
+        new Set([]),
       );
     });
   });
@@ -194,7 +194,7 @@ describe("Test: Kuzzle Debugger", () => {
       kuzzleDebugger.debuggerStatus = false;
       await should(kuzzleDebugger.inspectorPost("method", {})).be.rejectedWith(
         PreconditionError,
-        { id: "core.debugger.not_enabled" }
+        { id: "core.debugger.not_enabled" },
       );
     });
 
@@ -264,12 +264,12 @@ describe("Test: Kuzzle Debugger", () => {
       should(kuzzleDebugger.notifyConnection).be.calledWith(
         "foo",
         "kuzzle-debugger-event",
-        { event: "my-event", result: { foo: "bar" } }
+        { event: "my-event", result: { foo: "bar" } },
       );
       should(kuzzleDebugger.notifyConnection).be.calledWith(
         "bar",
         "kuzzle-debugger-event",
-        { event: "my-event", result: { foo: "bar" } }
+        { event: "my-event", result: { foo: "bar" } },
       );
     });
   });

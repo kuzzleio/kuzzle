@@ -125,7 +125,7 @@ class RoomState {
     roomId: string,
     index: string,
     collection: string,
-    filters: JSONObject
+    filters: JSONObject,
   ) {
     this.id = roomId;
     this.index = index;
@@ -144,13 +144,13 @@ class RoomState {
     if (this.nodes.has(nodeId)) {
       throw errorFatal.get(
         "desync",
-        `cannot add node ${nodeId} to room ${this.id} (duplicate node)`
+        `cannot add node ${nodeId} to room ${this.id} (duplicate node)`,
       );
     }
 
     this.nodes.set(
       nodeId,
-      new RoomSubscriptions(nodeId, messageId, subscribers)
+      new RoomSubscriptions(nodeId, messageId, subscribers),
     );
   }
 
@@ -165,7 +165,7 @@ class RoomState {
       // die
       throw errorFatal.get(
         "desync",
-        `cannot add subscription to room ${this.id} (unknown node ${nodeId})`
+        `cannot add subscription to room ${this.id} (unknown node ${nodeId})`,
       );
     }
 
@@ -179,14 +179,14 @@ class RoomState {
       // die
       throw errorFatal.get(
         "desync",
-        `cannot remove subscription from room ${this.id} (unknown node ${nodeId})`
+        `cannot remove subscription from room ${this.id} (unknown node ${nodeId})`,
       );
     }
 
     if (node.decr(messageId) < 0) {
       throw errorFatal.get(
         "desync",
-        `node ${nodeId} has a negative subscribers count on room ${this.id}`
+        `node ${nodeId} has a negative subscribers count on room ${this.id}`,
       );
     }
   }
@@ -268,7 +268,7 @@ export default class State {
     index: string,
     collection: string,
     filters: JSONObject,
-    node: SerializedRoomSubscriptions
+    node: SerializedRoomSubscriptions,
   ) {
     let room = this.realtime.get(roomId);
 
@@ -281,7 +281,7 @@ export default class State {
 
     if (!global.kuzzle.koncorde.hasFilterId(roomId, kindex)) {
       global.kuzzle.koncorde.store(
-        new NormalizedFilter(filters, roomId, kindex)
+        new NormalizedFilter(filters, roomId, kindex),
       );
     }
 
@@ -303,7 +303,7 @@ export default class State {
     return new NormalizedFilter(
       room.filters,
       roomId,
-      toKoncordeIndex(room.index, room.collection)
+      toKoncordeIndex(room.index, room.collection),
     );
   }
 
@@ -331,7 +331,7 @@ export default class State {
 
       global.kuzzle.koncorde.remove(
         roomId,
-        toKoncordeIndex(room.index, room.collection)
+        toKoncordeIndex(room.index, room.collection),
       );
     }
   }
@@ -370,7 +370,7 @@ export default class State {
     if (!room) {
       throw errorFatal.get(
         "desync",
-        `cannot add subscription to room ${roomId} (room doesn't exist)`
+        `cannot add subscription to room ${roomId} (room doesn't exist)`,
       );
     }
 
@@ -383,7 +383,7 @@ export default class State {
     if (!room) {
       throw errorFatal.get(
         "desync",
-        `cannot remove subscription from room ${roomId} (room doesn't exist)`
+        `cannot remove subscription from room ${roomId} (room doesn't exist)`,
       );
     }
 
@@ -439,7 +439,7 @@ export default class State {
             state.index,
             state.collection,
             JSON.parse(state.filters),
-            node
+            node,
           );
         }
       }
@@ -450,7 +450,7 @@ export default class State {
         global.kuzzle.pluginsManager.registerStrategy(
           state.pluginName,
           state.strategyName,
-          state.strategy
+          state.strategy,
         );
 
         this.addAuthStrategy(state);

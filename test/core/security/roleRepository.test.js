@@ -51,7 +51,7 @@ describe("Test: security/roleRepository", () => {
       Repository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(roleRepository.loadOneFromDatabase("bar")).fulfilledWith(
-        "foo"
+        "foo",
       );
 
       should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
@@ -65,7 +65,7 @@ describe("Test: security/roleRepository", () => {
 
       return should(roleRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
-        { id: "security.role.not_found" }
+        { id: "security.role.not_found" },
       );
     });
 
@@ -75,7 +75,7 @@ describe("Test: security/roleRepository", () => {
       Repository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(roleRepository.loadOneFromDatabase("foo")).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -266,7 +266,7 @@ describe("Test: security/roleRepository", () => {
 
       result = await roleRepository.searchRole(
         { controllers: ["foo"] },
-        { from: 1 }
+        { from: 1 },
       );
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
@@ -275,7 +275,7 @@ describe("Test: security/roleRepository", () => {
 
       result = await roleRepository.searchRole(
         { controllers: ["foo"] },
-        { size: 2 }
+        { size: 2 },
       );
       should(result.total).be.exactly(3);
       should(result.hits.length).be.exactly(2);
@@ -287,7 +287,7 @@ describe("Test: security/roleRepository", () => {
         {
           from: 1,
           size: 2,
-        }
+        },
       );
       should(result.total).be.exactly(4);
       should(result.hits.length).be.exactly(2);
@@ -332,7 +332,7 @@ describe("Test: security/roleRepository", () => {
 
         await should(roleRepository.deleteById(id)).rejectedWith(
           BadRequestError,
-          { id: "security.role.cannot_delete" }
+          { id: "security.role.cannot_delete" },
         );
 
         should(kuzzle.emit).not.be.called();
@@ -348,7 +348,7 @@ describe("Test: security/roleRepository", () => {
 
       await should(roleRepository.deleteById(fakeRole._id)).rejectedWith(
         PreconditionError,
-        { id: "security.role.in_use" }
+        { id: "security.role.in_use" },
       );
 
       should(kuzzle.emit).not.be.called();
@@ -373,7 +373,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.load.withArgs(fakeRole._id).rejects(error);
 
       return should(roleRepository.deleteById(fakeRole._id)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -417,7 +417,7 @@ describe("Test: security/roleRepository", () => {
 
       await should(roleRepository.validateAndSaveRole(fakeRole)).rejectedWith(
         BadRequestError,
-        { id: "security.role.login_required" }
+        { id: "security.role.login_required" },
       );
     });
 
@@ -435,7 +435,7 @@ describe("Test: security/roleRepository", () => {
 
       await should(roleRepository.validateAndSaveRole(fakeRole)).rejectedWith(
         BadRequestError,
-        { id: "security.role.login_required" }
+        { id: "security.role.login_required" },
       );
     });
 
@@ -453,7 +453,7 @@ describe("Test: security/roleRepository", () => {
 
       await should(roleRepository.validateAndSaveRole(fakeRole)).rejectedWith(
         BadRequestError,
-        { id: "security.role.login_required" }
+        { id: "security.role.login_required" },
       );
     });
 
@@ -512,11 +512,11 @@ describe("Test: security/roleRepository", () => {
     beforeEach(() => {
       kuzzle.funnel.controllers.set(
         "document",
-        new NativeController(["create", "delete"])
+        new NativeController(["create", "delete"]),
       );
 
       kuzzle.funnel.isNativeController.callsFake((ctrl) =>
-        kuzzle.funnel.controllers.has(ctrl)
+        kuzzle.funnel.controllers.has(ctrl),
       );
     });
 
@@ -645,7 +645,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.checkRolePluginsRights(role, { force: true });
 
       should(kuzzle.log.warn).be.calledWith(
-        'The role "test" gives access to the non-existing controller "invalid_controller".'
+        'The role "test" gives access to the non-existing controller "invalid_controller".',
       );
     });
 
@@ -669,7 +669,7 @@ describe("Test: security/roleRepository", () => {
       });
 
       should(kuzzle.log.warn).be.calledWith(
-        'The role "test" gives access to the non-existing controller "invalid_controller".'
+        'The role "test" gives access to the non-existing controller "invalid_controller".',
       );
     });
 
@@ -710,7 +710,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.checkRolePluginsRights(role, { force: true });
 
       should(kuzzle.log.warn).be.calledWith(
-        'The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".'
+        'The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".',
       );
     });
 
@@ -788,7 +788,7 @@ describe("Test: security/roleRepository", () => {
         {
           method: "create",
           refresh: "refresh",
-        }
+        },
       );
 
       const role = roleRepository.validateAndSaveRole.firstCall.args[0];
@@ -808,7 +808,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.validateAndSaveRole.resolves("foobar");
 
       return should(roleRepository.create("foo", {}, {})).fulfilledWith(
-        "foobar"
+        "foobar",
       );
     });
   });
@@ -826,7 +826,7 @@ describe("Test: security/roleRepository", () => {
         "core:security:role:createOrReplace",
         "foo",
         "bar",
-        "baz"
+        "baz",
       );
 
       should(roleRepository.createOrReplace).calledWith("foo", "bar", "baz");
@@ -850,7 +850,7 @@ describe("Test: security/roleRepository", () => {
         {
           method: "createOrReplace",
           refresh: "refresh",
-        }
+        },
       );
 
       const role = roleRepository.validateAndSaveRole.firstCall.args[0];
@@ -870,7 +870,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.validateAndSaveRole.resolves("foobar");
 
       return should(
-        roleRepository.createOrReplace("foo", {}, {})
+        roleRepository.createOrReplace("foo", {}, {}),
       ).fulfilledWith("foobar");
     });
   });
@@ -951,7 +951,7 @@ describe("Test: security/roleRepository", () => {
         {
           method: "replace",
           refresh: "refresh",
-        }
+        },
       );
 
       const role = roleRepository.validateAndSaveRole.firstCall.args[0];
@@ -969,7 +969,7 @@ describe("Test: security/roleRepository", () => {
       roleRepository.validateAndSaveRole.resolves("foobar");
 
       return should(roleRepository.update("foo", {}, {})).fulfilledWith(
-        "foobar"
+        "foobar",
       );
     });
   });

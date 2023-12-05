@@ -40,7 +40,7 @@ describe("Test: validation/types/integer", () => {
       const errorMessages = [];
 
       should(
-        integerType.validate(emptyTypeOptions, "a string", errorMessages)
+        integerType.validate(emptyTypeOptions, "a string", errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual(["The field must be a number."]);
     });
@@ -49,7 +49,7 @@ describe("Test: validation/types/integer", () => {
       const errorMessages = [];
 
       should(
-        integerType.validate(emptyTypeOptions, 42.42, errorMessages)
+        integerType.validate(emptyTypeOptions, 42.42, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual(["The field must be an integer."]);
     });
@@ -58,7 +58,7 @@ describe("Test: validation/types/integer", () => {
       const errorMessages = [];
 
       should(
-        integerType.validate(rangeTypeOptions, 40, errorMessages)
+        integerType.validate(rangeTypeOptions, 40, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "Value 40 is lesser than the allowed minimum (41)",
@@ -69,7 +69,7 @@ describe("Test: validation/types/integer", () => {
       const errorMessages = [];
 
       should(
-        integerType.validate(rangeTypeOptions, 43, errorMessages)
+        integerType.validate(rangeTypeOptions, 43, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "Value 43 is greater than the allowed maximum (42)",

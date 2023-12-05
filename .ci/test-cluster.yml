@@ -31,14 +31,6 @@ x-kuzzle-config: &kuzzle-config
     - NODE_VERSION=${NODE_VERSION:-}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
-    # Travis env var must be propagated into the container
-    - TRAVIS
-    - TRAVIS_COMMIT
-    - TRAVIS_JOB_NUMBER
-    - TRAVIS_BRANCH
-    - TRAVIS_JOB_ID
-    - TRAVIS_PULL_REQUEST
-    - TRAVIS_REPO_SLUG
     # cluster
     - kuzzle_plugins__cluster__privileged=true
     - kuzzle_plugins__cluster__minimumNodes=3
@@ -60,8 +52,8 @@ services:
     <<: *kuzzle-config
     container_name: kuzzle_node_1
     ports:
-      - "17510:7512" # Kuzzle API port, used to check if it is up
-      - "1883:1883" # TCP load balancing is hard with nginx
+      - "17510:7512"
+      - "1883:1883"
 
   kuzzle_node_2:
     <<: *kuzzle-config

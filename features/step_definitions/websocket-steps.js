@@ -21,7 +21,7 @@ When(
   "I send the message {string} to Kuzzle through websocket",
   function (message) {
     this.props.client.send(message);
-  }
+  },
 );
 
 Then("I wait to receive a websocket response from Kuzzle", function () {
@@ -40,5 +40,5 @@ Then(
   function (dataTable) {
     const message = this.parseObject(dataTable);
     should(this.props.result).be.eql(message);
-  }
+  },
 );

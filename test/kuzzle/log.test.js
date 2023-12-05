@@ -25,7 +25,7 @@ describe("/lib/kuzzle/log", () => {
 
     should(kuzzle.emit).be.calledWith(
       "log:info",
-      "[knode-nasty-author-4242] Kiev"
+      "[knode-nasty-author-4242] Kiev",
     );
   });
 
@@ -36,7 +36,7 @@ describe("/lib/kuzzle/log", () => {
 
     should(kuzzle.emit).be.calledWith(
       "log:info",
-      "[knode-nasty-author-4242] [request-unique-id] Kiev"
+      "[knode-nasty-author-4242] [request-unique-id] Kiev",
     );
   });
 });

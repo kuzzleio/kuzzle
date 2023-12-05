@@ -62,7 +62,7 @@ describe("#base/native controller", () => {
       koncordeFilters = "not an object";
 
       return should(
-        nativeController.translateKoncorde(koncordeFilters)
+        nativeController.translateKoncorde(koncordeFilters),
       ).rejectedWith(BadRequestError, { id: "api.assert.invalid_type" });
     });
 
@@ -73,7 +73,7 @@ describe("#base/native controller", () => {
       kuzzle.ask.withArgs("core:storage:public:translate").rejects(error);
 
       return should(
-        nativeController.translateKoncorde(koncordeFilters)
+        nativeController.translateKoncorde(koncordeFilters),
       ).rejectedWith(BadRequestError, {
         id: "api.assert.koncorde_restricted_keyword",
       });
@@ -93,7 +93,7 @@ describe("#base/native controller", () => {
       should(
         (async () => {
           nativeController.assertTargetsAreValid([{ collections: "foo" }]);
-        })()
+        })(),
       ).rejectedWith(BadRequestError, { id: "api.assert.missing_argument" });
     });
 
@@ -101,7 +101,7 @@ describe("#base/native controller", () => {
       should(
         (async () => {
           nativeController.assertTargetsAreValid([{ index: "index" }]);
-        })()
+        })(),
       ).rejectedWith(BadRequestError, { id: "api.assert.missing_argument" });
     });
 
@@ -111,7 +111,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([
             { index: "index", collections: [] },
           ]);
-        })()
+        })(),
       ).rejectedWith(BadRequestError, { id: "api.assert.empty_argument" });
     });
 
@@ -120,9 +120,9 @@ describe("#base/native controller", () => {
         (async () => {
           nativeController.assertTargetsAreValid(
             [{ index: "index", collections: [] }],
-            { emptyCollectionsAllowed: true }
+            { emptyCollectionsAllowed: true },
           );
-        })()
+        })(),
       ).not.be.rejectedWith(BadRequestError, {
         id: "api.assert.empty_argument",
       });
@@ -134,7 +134,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([{ index: "index" }], {
             emptyCollectionsAllowed: true,
           });
-        })()
+        })(),
       ).not.be.rejectedWith(BadRequestError, {
         id: "api.assert.missing_argument",
       });
@@ -146,7 +146,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([
             { index: "index", collections: "" },
           ]);
-        })()
+        })(),
       ).rejectedWith(BadRequestError, { id: "api.assert.invalid_type" });
     });
 
@@ -156,7 +156,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([
             { index: "index", collections: [42] },
           ]);
-        })()
+        })(),
       ).rejectedWith(BadRequestError, { id: "api.assert.invalid_type" });
     });
 
@@ -166,7 +166,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([
             { index: "index", collections: ["a,b"] },
           ]);
-        })()
+        })(),
       ).rejectedWith({ id: "services.storage.invalid_target_format" });
     });
 
@@ -176,7 +176,7 @@ describe("#base/native controller", () => {
           nativeController.assertTargetsAreValid([
             { index: "index,bar", collections: ["foo"] },
           ]);
-        })()
+        })(),
       ).rejectedWith({ id: "services.storage.invalid_target_format" });
     });
   });

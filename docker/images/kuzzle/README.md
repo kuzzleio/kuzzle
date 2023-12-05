@@ -10,13 +10,13 @@ You should use this image as a base build your own application:
 
 ```dockerfile
 # Build image
-FROM node:18-bullseye-slim as builder
+FROM node:18 as builder
 
 ADD . /your-plugin-name
 
 WORKDIR /your-plugin-name
 
-RUN  npm install --production
+RUN  npm ci --production
 
 # Final image
 FROM kuzzleio/kuzzle:2

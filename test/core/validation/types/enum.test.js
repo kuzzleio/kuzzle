@@ -37,12 +37,12 @@ describe("Test: validation/types/enum", () => {
         enumType.validate(
           typeOptions,
           "not the string you are looking for",
-          errorMessage
-        )
+          errorMessage,
+        ),
       ).be.false();
       should(errorMessage).be.deepEqual([
         `The field only accepts following values: "${typeOptions.values.join(
-          ", "
+          ", ",
         )}".`,
       ]);
     });
@@ -51,7 +51,7 @@ describe("Test: validation/types/enum", () => {
       const errorMessage = [];
 
       should(
-        enumType.validate(typeOptions, { not: "a string" }, errorMessage)
+        enumType.validate(typeOptions, { not: "a string" }, errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual(["The field must be a string."]);
     });
@@ -61,26 +61,26 @@ describe("Test: validation/types/enum", () => {
     it("should throw if no values are provided", () => {
       should(() => enumType.validateFieldSpecification({})).throw(
         PreconditionError,
-        { id: "validation.types.missing_enum_values" }
+        { id: "validation.types.missing_enum_values" },
       );
 
       should(() => enumType.validateFieldSpecification({ values: [] })).throw(
         PreconditionError,
-        { id: "validation.assert.invalid_type" }
+        { id: "validation.assert.invalid_type" },
       );
 
       should(() =>
-        enumType.validateFieldSpecification({ values: "foobar" })
+        enumType.validateFieldSpecification({ values: "foobar" }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
     });
 
     it("should throw if a listed value is not a string", () => {
       should(() =>
-        enumType.validateFieldSpecification({ values: [true, 42, "a string"] })
+        enumType.validateFieldSpecification({ values: [true, 42, "a string"] }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
 
       should(() =>
-        enumType.validateFieldSpecification({ values: ["a string", null] })
+        enumType.validateFieldSpecification({ values: ["a string", null] }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
     });
 
@@ -88,7 +88,7 @@ describe("Test: validation/types/enum", () => {
       should(
         enumType.validateFieldSpecification({
           values: ["a string", "another string", "one more string"],
-        })
+        }),
       ).be.deepEqual({
         values: ["a string", "another string", "one more string"],
       });

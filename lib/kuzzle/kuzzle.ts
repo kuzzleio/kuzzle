@@ -73,7 +73,7 @@ Reflect.defineProperty(global, "kuzzle", {
   get() {
     if (_kuzzle === null) {
       throw new Error(
-        "Kuzzle instance not found. Did you try to use a live-only feature before starting your application?"
+        "Kuzzle instance not found. Did you try to use a live-only feature before starting your application?",
       );
     }
 
@@ -82,7 +82,7 @@ Reflect.defineProperty(global, "kuzzle", {
   set(value) {
     if (_kuzzle !== null) {
       throw new Error(
-        "Cannot build a Kuzzle instance: another one already exists"
+        "Cannot build a Kuzzle instance: another one already exists",
       );
     }
 
@@ -176,7 +176,7 @@ class Kuzzle extends KuzzleEventEmitter {
         toImport: ImportConfig;
         toSupport: SupportConfig;
       },
-      status: ImportStatus
+      status: ImportStatus,
     ) => Promise<void>;
   };
 
@@ -191,7 +191,7 @@ class Kuzzle extends KuzzleEventEmitter {
   constructor(config: KuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
-      config.plugins.common.pipesBufferSize
+      config.plugins.common.pipesBufferSize,
     );
 
     global.kuzzle = this;
@@ -285,7 +285,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this.log.info(
         `[✔] Successfully loaded ${
           this.pluginsManager.loadedPlugins.length
-        } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`
+        } plugins: ${this.pluginsManager.loadedPlugins.join(", ")}`,
       );
 
       const imports = _.merge({}, pluginImports, options.import);
@@ -303,12 +303,12 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.install(options.installations);
 
       this.log.info(
-        `[✔] Start "${this.pluginsManager.application.name}" application`
+        `[✔] Start "${this.pluginsManager.application.name}" application`,
       );
       this.openApiManager = new OpenApiManager(
         application.openApi,
         this.config.http.routes,
-        this.pluginsManager.routes
+        this.pluginsManager.routes,
       );
 
       // @deprecated
@@ -321,7 +321,7 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.pipe("kuzzle:state:ready");
 
       this.log.info(
-        `[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`
+        `[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`,
       );
 
       // @deprecated
@@ -330,7 +330,7 @@ class Kuzzle extends KuzzleEventEmitter {
       this._state = kuzzleStateEnum.RUNNING;
     } catch (error) {
       this.log.error(
-        `[X] Cannot start Kuzzle ${this.version}: ${error.message}`
+        `[X] Cannot start Kuzzle ${this.version}: ${error.message}`,
       );
 
       throw error;
@@ -377,7 +377,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     while (this.funnel.remainingRequests !== 0) {
       this.log.info(
-        `[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`
+        `[shutdown] Waiting: ${this.funnel.remainingRequests} remaining requests`,
       );
       await Bluebird.delay(1000);
     }
@@ -408,7 +408,7 @@ class Kuzzle extends KuzzleEventEmitter {
           "core:storage:private:document:exist",
           "kuzzle",
           "installations",
-          installation.id
+          installation.id,
         );
 
         if (!isAlreadyInstalled) {
@@ -420,7 +420,7 @@ class Kuzzle extends KuzzleEventEmitter {
               "runtime",
               "unexpected_installation_error",
               installation.id,
-              error
+              error,
             );
           }
 
@@ -433,11 +433,11 @@ class Kuzzle extends KuzzleEventEmitter {
               handler: installation.handler.toString(),
               installedAt: Date.now(),
             },
-            { id: installation.id }
+            { id: installation.id },
           );
 
           this.log.info(
-            `[✔] Install code "${installation.id}" successfully executed`
+            `[✔] Install code "${installation.id}" successfully executed`,
           );
         }
       }
@@ -466,7 +466,7 @@ class Kuzzle extends KuzzleEventEmitter {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
-    status: ImportStatus
+    status: ImportStatus,
   ): Promise<void> {
     if (!status.firstCall) {
       return;
@@ -486,7 +486,7 @@ class Kuzzle extends KuzzleEventEmitter {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
-    status: ImportStatus
+    status: ImportStatus,
   ): Promise<void> {
     const toImport = config.toImport;
     const toSupport = config.toSupport;
@@ -497,7 +497,7 @@ class Kuzzle extends KuzzleEventEmitter {
         "runtime",
         "incompatible",
         "_support.mappings",
-        "import.mappings"
+        "import.mappings",
       );
     } else if (!_.isEmpty(toSupport.mappings)) {
       await this.ask(
@@ -512,7 +512,7 @@ class Kuzzle extends KuzzleEventEmitter {
           propagate: false, // Each node needs to do the import themselves
           rawMappings: true,
           refresh: true,
-        }
+        },
       );
       this.log.info("[✔] Mappings import successful");
     } else if (!_.isEmpty(toImport.mappings)) {
@@ -534,7 +534,7 @@ class Kuzzle extends KuzzleEventEmitter {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
-    status: ImportStatus
+    status: ImportStatus,
   ): Promise<void> {
     if (!status.firstCall) {
       return;
@@ -553,7 +553,7 @@ class Kuzzle extends KuzzleEventEmitter {
       toImport: ImportConfig;
       toSupport: SupportConfig;
     },
-    status: ImportStatus
+    status: ImportStatus,
   ): Promise<void> {
     if (!status.firstCall) {
       return;
@@ -580,7 +580,7 @@ class Kuzzle extends KuzzleEventEmitter {
         "runtime",
         "incompatible",
         "_support.securities",
-        "import profiles roles or users"
+        "import profiles roles or users",
       );
     } else if (isPermissionsToSupport) {
       await this.ask("core:security:load", toSupport.securities, {
@@ -600,7 +600,7 @@ class Kuzzle extends KuzzleEventEmitter {
           onExistingUsers: toImport.onExistingUsers,
           onExistingUsersWarning: true,
           refresh: "wait_for",
-        }
+        },
       );
       this.log.info("[✔] Permissions import successful");
     }
@@ -616,7 +616,7 @@ class Kuzzle extends KuzzleEventEmitter {
       if (
         await this.ask(
           "core:cache:internal:get",
-          `${BACKEND_IMPORT_KEY}:${importType}`
+          `${BACKEND_IMPORT_KEY}:${importType}`,
         )
       ) {
         return;
@@ -636,7 +636,7 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   async loadInitialState(
     toImport: ImportConfig = {},
-    toSupport: SupportConfig = {}
+    toSupport: SupportConfig = {},
   ): Promise<void> {
     if (
       _.isEmpty(toImport.mappings) &&
@@ -678,7 +678,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
         const existingHash = await this.ask(
           "core:cache:internal:get",
-          `${BACKEND_IMPORT_KEY}:${type}`
+          `${BACKEND_IMPORT_KEY}:${type}`,
         );
 
         const initialized = existingHash === importPayloadHash;
@@ -690,7 +690,7 @@ class Kuzzle extends KuzzleEventEmitter {
             firstCall: !initialized && locked,
             initialized,
             locked,
-          }
+          },
         );
 
         if (!initialized && locked) {
@@ -699,7 +699,7 @@ class Kuzzle extends KuzzleEventEmitter {
           await this.ask(
             "core:cache:internal:store",
             `${BACKEND_IMPORT_KEY}:${type}`,
-            importPayloadHash
+            importPayloadHash,
           );
         }
       }
@@ -732,7 +732,7 @@ class Kuzzle extends KuzzleEventEmitter {
     return murmur(
       Buffer.from(inString),
       "hex",
-      this.config.internal.hash.seed as number
+      this.config.internal.hash.seed as number,
     );
   }
 
@@ -757,7 +757,7 @@ class Kuzzle extends KuzzleEventEmitter {
       if (reason !== undefined) {
         if (reason instanceof Error) {
           this.log.error(
-            `ERROR: unhandledRejection: ${reason.message}. Reason: ${reason.stack}`
+            `ERROR: unhandledRejection: ${reason.message}. Reason: ${reason.stack}`,
           );
         } else {
           this.log.error(`ERROR: unhandledRejection: ${reason}`);
@@ -771,10 +771,10 @@ class Kuzzle extends KuzzleEventEmitter {
       // this is what Node.js will do automatically in future versions anyway.
       if (global.NODE_ENV === "development") {
         this.log.error(
-          "Kuzzle caught an unhandled rejected promise and will shutdown."
+          "Kuzzle caught an unhandled rejected promise and will shutdown.",
         );
         this.log.error(
-          'This behavior is only triggered if global.NODE_ENV is set to "development"'
+          'This behavior is only triggered if global.NODE_ENV is set to "development"',
         );
 
         throw reason;

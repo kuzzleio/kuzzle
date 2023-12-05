@@ -74,7 +74,7 @@ export function koncordeTest(
   index: string,
   collection: string,
   body: JSONObject,
-  _id?: string
+  _id?: string,
 ): string[] {
   const indexV4 = toKoncordeIndex(index, collection);
 
