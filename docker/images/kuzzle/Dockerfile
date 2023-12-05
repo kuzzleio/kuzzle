@@ -1,7 +1,8 @@
 ################################################################################
 # Production build image
 ################################################################################
-FROM node:18-bullseye-slim AS builder
+ARG NODE_LTS_VERSION="18"
+FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
 
 RUN  set -x \
  && apt-get update \
@@ -14,27 +15,29 @@ RUN  set -x \
       libzmq3-dev \
       libunwind-dev
 
-ADD ./bin /app/bin
-ADD ./config /app/config
-ADD ./lib /app/lib
-ADD ./package.json /app/package.json
-ADD ./package-lock.json /app/package-lock.json
-ADD ./index.js /app/index.js
-ADD ./.kuzzlerc.sample.jsonc /app/.kuzzlerc.sample.jsonc
-
 WORKDIR /app
 
-ENV NODE_ENV=production
+ADD ./bin bin
+ADD ./config config
+ADD ./lib lib
+ADD ./package.json package.json
+ADD ./package-lock.json package-lock.json
+ADD ./index.ts index.ts
+ADD ./tsconfig.json tsconfig.json
+ADD ./.kuzzlerc.sample.jsonc .kuzzlerc.sample.jsonc
 
-# Install dependencies
 RUN npm ci
+RUN npm run build
+RUN npm prune --production
+
+RUN rm -rf tsconfig.json index.ts
 
 ADD ./plugins/available/ /app/plugins/available/
 
 ################################################################################
 # Production build 2 image
 ################################################################################
-FROM node:18-bullseye-slim AS minifier
+FROM node:${NODE_LTS_VERSION}-bullseye-slim AS minifier
 
 ENV NODE_ENV=production
 
@@ -49,7 +52,7 @@ RUN  set -x \
 ################################################################################
 # Production image
 ################################################################################
-FROM node:18-bullseye-slim
+FROM node:${NODE_LTS_VERSION}-bullseye-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
