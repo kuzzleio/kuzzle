@@ -1,6 +1,4 @@
 ################################################################################
-# Production build image
-################################################################################
 ARG NODE_LTS_VERSION="18"
 FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
 
@@ -25,7 +23,7 @@ ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
 ADD ./tsconfig.json tsconfig.json
 
-RUN npm ci
+RUN --noproxy registry.npmjs.org --maxsockets 1
 RUN npm run build
 RUN npm prune --production
 
@@ -33,8 +31,6 @@ RUN rm -rf tsconfig.json index.ts
 
 ADD ./plugins/available/ /app/plugins/available/
 
-################################################################################
-# Production build 2 image
 ################################################################################
 FROM node:${NODE_LTS_VERSION}-bullseye-slim AS minifier
 
@@ -48,8 +44,6 @@ RUN  set -x \
  && apt-get clean autoclean \
  && apt-get autoremove --yes
 
-################################################################################
-# Production image
 ################################################################################
 FROM node:${NODE_LTS_VERSION}-bullseye-slim
 

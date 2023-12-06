@@ -1,4 +1,4 @@
-name: Workflow Deployments
+name: publish the documentation and NPM package
 
 on:
   workflow_call:

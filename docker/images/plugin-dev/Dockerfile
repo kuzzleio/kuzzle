@@ -1,6 +1,4 @@
 ################################################################################
-# Plugin development build image
-################################################################################
 ARG NODE_LTS_VERSION="18"
 FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
 
@@ -13,7 +11,7 @@ RUN  set -x \
        libzmq3-dev \
        libunwind-dev
 
-RUN npm install ergol kourou
+RUN npm install -g ergol kourou
 
 WORKDIR /app
 
@@ -23,6 +21,7 @@ ADD ./lib lib
 ADD ./package.json package.json
 ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
+ADD ./tsconfig.json tsconfig.json
 
 RUN npm ci
 RUN npm run build
@@ -32,8 +31,6 @@ RUN rm -rf tsconfig.json index.ts
 
 ADD ./plugins/available/ plugins/available/
 
-################################################################################
-# Plugin development image
 ################################################################################
 FROM node:${NODE_LTS_VERSION}-bullseye-slim
 

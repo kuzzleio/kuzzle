@@ -1,4 +1,4 @@
-name: Workflow
+name: Run tests, then publish
 
 on:
   push:
@@ -205,7 +205,7 @@ jobs:
   deploy-workflow:
     name: Deployment Workflow
     needs: [cluster-monkey-tests, prepare-matrix]
-    uses: ./.github/workflows/workflow-deployments.yaml
+    uses: ./.github/workflows/workflow-deployments.yml
     secrets: inherit
     with:
       node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
