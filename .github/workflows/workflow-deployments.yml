@@ -1,4 +1,4 @@
-name: publish the documentation and NPM package
+name: Publish docs and NPM package
 
 on:
   workflow_call:
