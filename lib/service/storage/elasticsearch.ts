@@ -221,7 +221,7 @@ export default class ElasticSearch extends Service {
         "services",
         "storage",
         "version_mismatch",
-        version.number
+        version.number,
       );
     }
 
@@ -360,7 +360,7 @@ export default class ElasticSearch extends Service {
           "services",
           "storage",
           "scroll_duration_too_great",
-          _scrollTTL
+          _scrollTTL,
         );
       }
     }
@@ -434,7 +434,7 @@ export default class ElasticSearch extends Service {
       from?: number;
       size?: number;
       scroll?: string;
-    } = {}
+    } = {},
   ) {
     let esIndexes: any;
 
@@ -470,7 +470,7 @@ export default class ElasticSearch extends Service {
           "services",
           "storage",
           "scroll_duration_too_great",
-          scroll
+          scroll,
         );
       }
     }
@@ -594,7 +594,7 @@ export default class ElasticSearch extends Service {
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
           (innerHit as any).hits.hits,
-          formatHit
+          formatHit,
         );
       }
       return formattedInnerHits;
@@ -755,7 +755,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     assertIsObject(content);
 
@@ -819,7 +819,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest = {
       body: content,
@@ -883,7 +883,7 @@ export default class ElasticSearch extends Service {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
       _source: "true",
@@ -949,7 +949,7 @@ export default class ElasticSearch extends Service {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
       _source: "true",
@@ -1022,7 +1022,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1055,7 +1055,7 @@ export default class ElasticSearch extends Service {
           "not_found",
           id,
           index,
-          collection
+          collection,
         );
       }
 
@@ -1091,7 +1091,7 @@ export default class ElasticSearch extends Service {
       refresh,
     }: {
       refresh?: boolean | "wait_for";
-    } = {}
+    } = {},
   ) {
     const esRequest = {
       id,
@@ -1139,7 +1139,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       size?: number;
       fetch?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest: RequestParams.DeleteByQuery<KRequestBody<JSONObject>> = {
       body: this._sanitizeSearchBody({ query }),
@@ -1201,7 +1201,7 @@ export default class ElasticSearch extends Service {
     }: {
       refresh?: boolean | "wait_for";
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1271,7 +1271,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       size?: number;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     try {
       const esRequest = {
@@ -1326,7 +1326,7 @@ export default class ElasticSearch extends Service {
       refresh = false,
     }: {
       refresh?: boolean;
-    } = {}
+    } = {},
   ) {
     const script = {
       params: {},
@@ -1370,7 +1370,7 @@ export default class ElasticSearch extends Service {
         "storage",
         "incomplete_update",
         response.body.updated,
-        errors
+        errors,
       );
     }
 
@@ -1402,7 +1402,7 @@ export default class ElasticSearch extends Service {
     }: {
       size?: number;
       scrollTTl?: string;
-    } = {}
+    } = {},
   ): Promise<any> {
     const esRequest: RequestParams.Search = {
       body: this._sanitizeSearchBody({ query }),
@@ -1501,7 +1501,7 @@ export default class ElasticSearch extends Service {
           "storage",
           "index_already_exists",
           indexType,
-          index
+          index,
         );
       }
     }
@@ -1527,7 +1527,7 @@ export default class ElasticSearch extends Service {
     {
       mappings = {},
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {}
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
   ) {
     this._assertValidIndexAndCollection(index, collection);
 
@@ -1536,7 +1536,7 @@ export default class ElasticSearch extends Service {
         "services",
         "storage",
         "collection_reserved",
-        HIDDEN_COLLECTION
+        HIDDEN_COLLECTION,
       );
     }
 
@@ -1650,7 +1650,7 @@ export default class ElasticSearch extends Service {
       includeKuzzleMeta = false,
     }: {
       includeKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const indice = await this._getIndice(index, collection);
     const esRequest = {
@@ -1691,7 +1691,7 @@ export default class ElasticSearch extends Service {
     {
       mappings = {},
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {}
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
   ) {
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1797,7 +1797,7 @@ export default class ElasticSearch extends Service {
   async updateMapping(
     index: string,
     collection: string,
-    mappings: TypeMapping = {}
+    mappings: TypeMapping = {},
   ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
     const esRequest: RequestParams.IndicesPutMapping<Record<string, any>> = {
       body: {},
@@ -1932,7 +1932,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const dateNow = Date.now();
@@ -2094,7 +2094,7 @@ export default class ElasticSearch extends Service {
 
     for (const [index, collections] of Object.entries(schema)) {
       schema[index] = (collections as string[]).filter(
-        (c) => c !== HIDDEN_COLLECTION
+        (c) => c !== HIDDEN_COLLECTION,
       );
     }
 
@@ -2266,7 +2266,7 @@ export default class ElasticSearch extends Service {
   async exists(
     index: string,
     collection: string,
-    id: string
+    id: string,
   ): Promise<boolean> {
     const esRequest: RequestParams.Exists = {
       id,
@@ -2398,7 +2398,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2496,7 +2496,7 @@ export default class ElasticSearch extends Service {
       injectKuzzleMeta = true,
       limits = true,
       source = true,
-    }: KRequestParams = {}
+    }: KRequestParams = {},
   ) {
     let kuzzleMeta = {};
 
@@ -2568,7 +2568,7 @@ export default class ElasticSearch extends Service {
       retryOnConflict = 0,
       timeout = undefined,
       userId = null,
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2669,7 +2669,7 @@ export default class ElasticSearch extends Service {
       retryOnConflict?: number;
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -2776,7 +2776,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2866,7 +2866,7 @@ export default class ElasticSearch extends Service {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: number;
-    } = {}
+    } = {},
   ) {
     const query = { ids: { values: [] } };
     const validIds = [];
@@ -2944,7 +2944,7 @@ export default class ElasticSearch extends Service {
     esRequest: RequestParams.Bulk,
     documents: JSONObject[],
     partialErrors: JSONObject[] = [],
-    { limits = true, source = true } = {}
+    { limits = true, source = true } = {},
   ) {
     assertWellFormedRefresh(esRequest);
 
@@ -3026,7 +3026,7 @@ export default class ElasticSearch extends Service {
   _extractMDocuments(
     documents: JSONObject[],
     metadata: JSONObject,
-    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {}
+    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {},
   ) {
     const rejected = [];
     const extractedDocuments = [];
@@ -3075,7 +3075,7 @@ export default class ElasticSearch extends Service {
           metadata,
           document,
           extractedDocuments,
-          documentsToGet
+          documentsToGet,
         );
       }
     }
@@ -3097,7 +3097,7 @@ export default class ElasticSearch extends Service {
     metadata: JSONObject,
     document: JSONObject,
     extractedDocuments: JSONObject[],
-    documentsToGet: JSONObject[]
+    documentsToGet: JSONObject[],
   ) {
     let extractedDocument;
 
@@ -3110,7 +3110,7 @@ export default class ElasticSearch extends Service {
             {},
             metadata.upsert,
             document.changes,
-            document.default
+            document.default,
           ),
         },
       };
@@ -3234,7 +3234,7 @@ export default class ElasticSearch extends Service {
    * @private
    */
   async _getSettings(
-    esRequest: RequestParams.IndicesGetSettings
+    esRequest: RequestParams.IndicesGetSettings,
   ): Promise<any> {
     const response = await this._client.indices.getSettings(esRequest);
     const index = esRequest.index as string;
@@ -3253,10 +3253,10 @@ export default class ElasticSearch extends Service {
    */
   async _getAvailableIndice(
     index: string,
-    collection: string
+    collection: string,
   ): Promise<string> {
     let indice = this._getAlias(index, collection).substring(
-      INDEX_PREFIX_POSITION_IN_ALIAS
+      INDEX_PREFIX_POSITION_IN_ALIAS,
     );
 
     if (!(await this._client.indices.exists({ index: indice })).body) {
@@ -3357,7 +3357,7 @@ export default class ElasticSearch extends Service {
         "services",
         "storage",
         "invalid_collection_name",
-        collection
+        collection,
       );
     }
   }
@@ -3490,7 +3490,7 @@ export default class ElasticSearch extends Service {
    * @returns {Promise.<Array>} resolve to an array of documents
    */
   async _getAllDocumentsFromQuery(
-    esRequest: RequestParams.Search<Record<string, any>>
+    esRequest: RequestParams.Search<Record<string, any>>,
   ) {
     let {
       body: { hits, _scroll_id },
@@ -3568,7 +3568,7 @@ export default class ElasticSearch extends Service {
               "services",
               "storage",
               "invalid_query_keyword",
-              `${key}.${scriptArg}`
+              `${key}.${scriptArg}`,
             );
           }
         }
@@ -3729,7 +3729,7 @@ export default class ElasticSearch extends Service {
   _setLastActionToKuzzleMeta(
     esRequest: JSONObject,
     alias: string,
-    kuzzleMeta: JSONObject
+    kuzzleMeta: JSONObject,
   ) {
     /**
      * @warning Critical code section
@@ -3819,7 +3819,7 @@ function assertWellFormedRefresh(esRequest) {
       "storage",
       "invalid_argument",
       "refresh",
-      '"wait_for", false'
+      '"wait_for", false',
     );
   }
 }
