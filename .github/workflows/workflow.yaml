@@ -11,7 +11,6 @@ env:
   NODE_LTS_MAINTENANCE_VERSION: "16"
   NODE_LTS_ACTIVE_VERSION: "18"
   NODE_LTS_CURRENT_VERSION: "20"
-  DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
 
 jobs:
   prepare-matrix:
@@ -26,7 +25,6 @@ jobs:
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
-      docker_platforms: ${{ env.DOCKER_PLATFORMS }}
 
   error-codes-check:
     name: Documentation - Error codes check
@@ -213,4 +211,3 @@ jobs:
       node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
       node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
       node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}
-      docker_platforms: ${{ needs.prepare-matrix.outputs.docker_platforms }}
