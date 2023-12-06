@@ -24,7 +24,6 @@ ADD ./package.json package.json
 ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
 ADD ./tsconfig.json tsconfig.json
-ADD ./.kuzzlerc.sample.jsonc .kuzzlerc.sample.jsonc
 
 RUN npm ci
 RUN npm run build
