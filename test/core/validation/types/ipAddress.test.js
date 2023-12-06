@@ -24,14 +24,14 @@ describe("Test: validation/types/ipAddress", () => {
   describe("#validate", () => {
     it("should return true if the value is a valid IPv4 address", () => {
       should(
-        ipAddressType.validate({ notEmpty: true }, "127.0.0.1", [])
+        ipAddressType.validate({ notEmpty: true }, "127.0.0.1", []),
       ).be.true();
     });
 
     it("should return true if the value is a valid IPv6 address", () => {
       should(ipAddressType.validate({ notEmpty: true }, "::1", [])).be.true();
       should(
-        ipAddressType.validate({ notEmpty: true }, "2001:db8::1", [])
+        ipAddressType.validate({ notEmpty: true }, "2001:db8::1", []),
       ).be.true();
     });
 
@@ -43,7 +43,7 @@ describe("Test: validation/types/ipAddress", () => {
       const errorMessage = [];
 
       should(
-        ipAddressType.validate({ notEmpty: true }, "", errorMessage)
+        ipAddressType.validate({ notEmpty: true }, "", errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual(["The string must not be empty."]);
     });
@@ -53,7 +53,7 @@ describe("Test: validation/types/ipAddress", () => {
         const errorMessage = [];
 
         should(
-          ipAddressType.validate({ notEmpty: true }, ip, errorMessage)
+          ipAddressType.validate({ notEmpty: true }, ip, errorMessage),
         ).be.false();
         should(errorMessage).be.deepEqual([
           "The string must be a valid IP address.",
@@ -66,7 +66,7 @@ describe("Test: validation/types/ipAddress", () => {
         const errorMessage = [];
 
         should(
-          ipAddressType.validate({ notEmpty: true }, v, errorMessage)
+          ipAddressType.validate({ notEmpty: true }, v, errorMessage),
         ).be.false();
         should(errorMessage).be.deepEqual(["The field must be a string."]);
       });
@@ -84,7 +84,7 @@ describe("Test: validation/types/ipAddress", () => {
       should(
         ipAddressType.validateFieldSpecification({
           notEmpty: true,
-        })
+        }),
       ).be.deepEqual({
         notEmpty: true,
       });
@@ -92,7 +92,7 @@ describe("Test: validation/types/ipAddress", () => {
 
     it('should throw if "notEmpty" is not set properly', () => {
       should(() =>
-        ipAddressType.validateFieldSpecification({ notEmpty: null })
+        ipAddressType.validateFieldSpecification({ notEmpty: null }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
     });
   });

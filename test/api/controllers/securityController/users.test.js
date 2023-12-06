@@ -132,7 +132,7 @@ describe("Test: security controller - users", () => {
       kuzzle.pluginsManager.listStrategies.returns(["oops"]);
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).be.rejectedWith(BadRequestError, {
         id: "security.credentials.unknown_strategy",
       });
@@ -145,7 +145,7 @@ describe("Test: security controller - users", () => {
       strategyExistsStub.resolves(true);
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).be.rejectedWith(PluginImplementationError, {
         id: "security.credentials.database_inconsistency",
       });
@@ -158,7 +158,7 @@ describe("Test: security controller - users", () => {
       strategyValidateStub.rejects(new Error("error"));
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).be.rejectedWith(BadRequestError, {
         id: "security.credentials.rejected",
       });
@@ -168,7 +168,7 @@ describe("Test: security controller - users", () => {
         request.input.args._id,
         profileIds,
         content,
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
 
       should(kuzzle.ask).calledWithMatch(deleteEvent, request.input.args._id, {
@@ -180,7 +180,7 @@ describe("Test: security controller - users", () => {
       strategyCreateStub.rejects(new Error("some error"));
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).rejectedWith(PluginImplementationError, {
         id: "plugin.runtime.unexpected_error",
       });
@@ -195,7 +195,7 @@ describe("Test: security controller - users", () => {
       createStub.rejects(error);
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).rejectedWith(error);
 
       should(strategyCreateStub).not.called();
@@ -227,7 +227,7 @@ describe("Test: security controller - users", () => {
       request.input.body.credentials.foo = { firstname: "X Æ A-12" };
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).rejectedWith(PluginImplementationError, {
         id: "plugin.runtime.unexpected_error",
         message: /.*oh noes\nsomeStrategy delete error\n.*/,
@@ -236,7 +236,7 @@ describe("Test: security controller - users", () => {
       should(strategyDeleteStub).calledWithMatch(
         request,
         request.input.args._id,
-        "someStrategy"
+        "someStrategy",
       );
     });
 
@@ -246,14 +246,14 @@ describe("Test: security controller - users", () => {
       strategyValidateStub.rejects(error);
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).be.rejectedWith(error);
 
       strategyValidateStub.resolves();
       strategyCreateStub.rejects(error);
 
       await should(
-        securityController._persistUser(request, profileIds, content)
+        securityController._persistUser(request, profileIds, content),
       ).be.rejectedWith(error);
     });
   });
@@ -264,7 +264,7 @@ describe("Test: security controller - users", () => {
     it("should reject if the body is missing", () => {
       return should(securityController.updateUserMapping(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
     });
 
@@ -278,7 +278,7 @@ describe("Test: security controller - users", () => {
         "core:storage:private:mappings:update",
         kuzzle.internalIndex.index,
         "users",
-        request.input.body
+        request.input.body,
       );
 
       should(response).eql(foo);
@@ -296,7 +296,7 @@ describe("Test: security controller - users", () => {
       should(kuzzle.ask).calledWith(
         "core:storage:private:mappings:get",
         kuzzle.internalIndex.index,
-        "users"
+        "users",
       );
 
       should(response).match({ mapping: { foo: "bar" } });
@@ -307,7 +307,7 @@ describe("Test: security controller - users", () => {
     it("should reject if no id is given", () => {
       return should(securityController.getUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -368,7 +368,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "ids".',
-        }
+        },
       );
 
       should(mGetStub).not.called();
@@ -465,7 +465,7 @@ describe("Test: security controller - users", () => {
           from: request.input.args.from,
           size: request.input.args.size,
           scroll: request.input.args.scroll,
-        }
+        },
       );
 
       // highlight only
@@ -480,7 +480,7 @@ describe("Test: security controller - users", () => {
           from: request.input.args.from,
           size: request.input.args.size,
           scroll: request.input.args.scroll,
-        }
+        },
       );
 
       // all in one
@@ -504,7 +504,7 @@ describe("Test: security controller - users", () => {
           from: request.input.args.from,
           size: request.input.args.size,
           scroll: request.input.args.scroll,
-        }
+        },
       );
     });
 
@@ -516,7 +516,7 @@ describe("Test: security controller - users", () => {
         SizeLimitError,
         {
           id: "services.storage.get_limit_exceeded",
-        }
+        },
       );
     });
 
@@ -525,7 +525,7 @@ describe("Test: security controller - users", () => {
       searchStub.rejects(error);
 
       return should(securityController.searchUsers(request)).be.rejectedWith(
-        error
+        error,
       );
     });
 
@@ -535,7 +535,7 @@ describe("Test: security controller - users", () => {
 
       return should(securityController.searchUsers(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_argument" }
+        { id: "api.assert.invalid_argument" },
       );
     });
 
@@ -570,7 +570,7 @@ describe("Test: security controller - users", () => {
 
       return should(securityController.scrollUsers(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -627,7 +627,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(deleteStub).not.called();
@@ -638,7 +638,7 @@ describe("Test: security controller - users", () => {
       deleteStub.rejects(error);
 
       return should(
-        securityController.deleteUser(new Request({ _id: "test" }))
+        securityController.deleteUser(new Request({ _id: "test" })),
       ).be.rejectedWith(error);
     });
 
@@ -680,7 +680,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.createUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(securityController._persistUser).not.called();
@@ -694,7 +694,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "body.content.profileIds".',
-        }
+        },
       );
 
       should(securityController._persistUser).not.called();
@@ -709,7 +709,7 @@ describe("Test: security controller - users", () => {
           id: "api.assert.invalid_type",
           message:
             'Wrong type for argument "body.content.profileIds" (expected: array)',
-        }
+        },
       );
 
       should(securityController._persistUser).not.called();
@@ -740,7 +740,7 @@ describe("Test: security controller - users", () => {
         });
 
       should(
-        securityController._persistUser.firstCall.args[2]
+        securityController._persistUser.firstCall.args[2],
       ).not.have.ownProperty("profileIds");
 
       should(response).eql(createdUser);
@@ -750,7 +750,7 @@ describe("Test: security controller - users", () => {
       request.input.body.content.profileIds = ["ohnoes"];
 
       await should(
-        securityController.createRestrictedUser(request)
+        securityController.createRestrictedUser(request),
       ).rejectedWith(BadRequestError, {
         id: "api.assert.forbidden_argument",
         message:
@@ -770,11 +770,11 @@ describe("Test: security controller - users", () => {
         .calledWithMatch(
           request,
           kuzzle.config.security.restrictedProfileIds,
-          {}
+          {},
         );
 
       should(
-        securityController._persistUser.firstCall.args[2]
+        securityController._persistUser.firstCall.args[2],
       ).not.have.ownProperty("profileIds");
 
       should(response).eql(createdUser);
@@ -814,7 +814,7 @@ describe("Test: security controller - users", () => {
           refresh: "wait_for",
           retryOnConflict: 10,
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(User);
@@ -832,7 +832,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(updateStub).not.called();
@@ -843,7 +843,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.updateUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(updateStub).not.called();
@@ -864,7 +864,7 @@ describe("Test: security controller - users", () => {
           refresh: "false",
           retryOnConflict: 123,
           userId: request.context.user._id,
-        }
+        },
       );
     });
 
@@ -897,7 +897,7 @@ describe("Test: security controller - users", () => {
       kuzzle.ask
         .withArgs("core:security:user:update", request.input.args._id)
         .rejects(
-          kerror.get("security", "user", "not_found", request.input.args._id)
+          kerror.get("security", "user", "not_found", request.input.args._id),
         );
 
       const response = await securityController.upsertUser(request);
@@ -933,7 +933,7 @@ describe("Test: security controller - users", () => {
       kuzzle.ask
         .withArgs("core:security:user:update", request.input.args._id)
         .rejects(
-          kerror.get("security", "user", "not_found", request.input.args._id)
+          kerror.get("security", "user", "not_found", request.input.args._id),
         );
 
       const response = await securityController.upsertUser(request);
@@ -982,7 +982,7 @@ describe("Test: security controller - users", () => {
           refresh: "wait_for",
           retryOnConflict: 10,
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(User);
@@ -1014,7 +1014,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.replaceUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.body_required" }
+        { id: "api.assert.body_required" },
       );
 
       should(replaceStub).not.called();
@@ -1025,7 +1025,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.replaceUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
 
       should(replaceStub).not.called();
@@ -1036,7 +1036,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.replaceUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -1045,7 +1045,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.replaceUser(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.invalid_type" }
+        { id: "api.assert.invalid_type" },
       );
     });
 
@@ -1067,7 +1067,7 @@ describe("Test: security controller - users", () => {
       Object.assign(
         replacedUser,
         { _id: request.input.args._id },
-        replacedUserContent
+        replacedUserContent,
       );
 
       const response = await securityController.replaceUser(request);
@@ -1080,7 +1080,7 @@ describe("Test: security controller - users", () => {
         {
           refresh: "wait_for",
           userId: request.context.user._id,
-        }
+        },
       );
 
       should(response).be.an.Object().and.not.instanceof(User);
@@ -1103,7 +1103,7 @@ describe("Test: security controller - users", () => {
         {
           refresh: "false",
           userId: request.context.user._id,
-        }
+        },
       );
     });
   });
@@ -1154,7 +1154,7 @@ describe("Test: security controller - users", () => {
       getStub.withArgs(getEvent, request.input.args._id).rejects(error);
 
       await should(securityController.getUserStrategies(request)).rejectedWith(
-        error
+        error,
       );
     });
 
@@ -1166,7 +1166,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(getStub).not.called();
@@ -1230,7 +1230,7 @@ describe("Test: security controller - users", () => {
         {
           id: "api.assert.missing_argument",
           message: 'Missing argument "_id".',
-        }
+        },
       );
 
       should(getStub).not.called();
@@ -1242,7 +1242,7 @@ describe("Test: security controller - users", () => {
       getStub.rejects(error);
 
       return should(securityController.getUserRights(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -1252,7 +1252,7 @@ describe("Test: security controller - users", () => {
       sinon.stub(securityController, "_mDelete").resolves("foobar");
 
       await should(securityController.mDeleteUsers(request)).fulfilledWith(
-        "foobar"
+        "foobar",
       );
 
       should(securityController._mDelete)
@@ -1271,7 +1271,7 @@ describe("Test: security controller - users", () => {
 
       should(kuzzle.ask).calledWithMatch(
         "core:security:token:deleteByKuid",
-        request.input.args._id
+        request.input.args._id,
       );
     });
 
@@ -1280,7 +1280,7 @@ describe("Test: security controller - users", () => {
 
       await should(securityController.revokeTokens(request)).rejectedWith(
         BadRequestError,
-        { id: "api.assert.missing_argument" }
+        { id: "api.assert.missing_argument" },
       );
     });
 
@@ -1292,7 +1292,7 @@ describe("Test: security controller - users", () => {
         .rejects(error);
 
       return should(securityController.revokeTokens(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -1313,7 +1313,7 @@ describe("Test: security controller - users", () => {
       createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
 
       createOrReplaceProfileStub = kuzzle.ask.withArgs(
-        createOrReplaceProfileEvent
+        createOrReplaceProfileEvent,
       );
 
       adminExistsStub = kuzzle.ask.withArgs(adminExistsEvent).resolves(false);
@@ -1323,7 +1323,7 @@ describe("Test: security controller - users", () => {
       adminExistsStub.resolves(true);
 
       await should(
-        securityController.createFirstAdmin(request)
+        securityController.createFirstAdmin(request),
       ).be.rejectedWith(PreconditionError, { id: "api.process.admin_exists" });
 
       should(securityController._persistUser).not.called();
@@ -1360,7 +1360,7 @@ describe("Test: security controller - users", () => {
           createOrReplaceRoleEvent,
           key,
           content,
-          { refresh: "wait_for", userId: request.context.user._id }
+          { refresh: "wait_for", userId: request.context.user._id },
         );
       }
 
@@ -1369,7 +1369,7 @@ describe("Test: security controller - users", () => {
           createOrReplaceProfileEvent,
           key,
           content,
-          { refresh: "wait_for", userId: request.context.user._id }
+          { refresh: "wait_for", userId: request.context.user._id },
         );
       }
     });

@@ -101,12 +101,12 @@ describe("Test: model/security/user", () => {
       should(rights).be.an.Object();
       rights = Object.keys(rights).reduce(
         (array, item) => array.concat(rights[item]),
-        []
+        [],
       );
       should(rights).be.an.Array();
 
       filteredItem = rights.filter(
-        (item) => item.controller === "document" && item.action === "get"
+        (item) => item.controller === "document" && item.action === "get",
       );
 
       should(filteredItem).length(1);
@@ -115,7 +115,7 @@ describe("Test: model/security/user", () => {
       should(filteredItem[0].value).be.equal("allowed");
 
       filteredItem = rights.filter(
-        (item) => item.controller === "document" && item.action === "delete"
+        (item) => item.controller === "document" && item.action === "delete",
       );
 
       should(filteredItem).length(1);
@@ -124,7 +124,7 @@ describe("Test: model/security/user", () => {
       should(filteredItem[0].value).be.equal("denied");
 
       filteredItem = rights.filter(
-        (item) => item.controller === "document" && item.action === "create"
+        (item) => item.controller === "document" && item.action === "create",
       );
 
       should(filteredItem).length(1);
@@ -164,7 +164,7 @@ describe("Test: model/security/user", () => {
 
     return should(user.isActionAllowed(new Request({}))).be.rejectedWith(
       InternalError,
-      { id: "security.user.uninitialized" }
+      { id: "security.user.uninitialized" },
     );
   });
 
@@ -239,7 +239,7 @@ describe("Test: model/security/user", () => {
       let allowed = await user.areTargetsAllowed(
         request,
         [profile, profile2],
-        [{ index: "*", collections: ["foo"] }]
+        [{ index: "*", collections: ["foo"] }],
       );
 
       await should(allowed).be.false();
@@ -247,7 +247,7 @@ describe("Test: model/security/user", () => {
       allowed = await user.areTargetsAllowed(
         request,
         [profile, profile2],
-        [{ index: "foo", collections: ["*"] }]
+        [{ index: "foo", collections: ["*"] }],
       );
 
       await should(allowed).be.false();
@@ -258,7 +258,7 @@ describe("Test: model/security/user", () => {
       let allowed = await user.areTargetsAllowed(
         request,
         [profile, profile2],
-        []
+        [],
       );
 
       await should(allowed).be.true();
@@ -269,7 +269,7 @@ describe("Test: model/security/user", () => {
       let allowed = await user.areTargetsAllowed(
         request,
         [profile, profile2],
-        [{ collections: ["foo"] }]
+        [{ collections: ["foo"] }],
       );
 
       await should(allowed).be.true();
@@ -277,7 +277,7 @@ describe("Test: model/security/user", () => {
       allowed = await user.areTargetsAllowed(
         request,
         [profile, profile2],
-        [{ index: "foo" }]
+        [{ index: "foo" }],
       );
 
       await should(allowed).be.true();
@@ -291,7 +291,7 @@ describe("Test: model/security/user", () => {
         [
           { index: "foo", collections: ["bar", "baz"] },
           { index: "alpha", collections: ["beta"] },
-        ]
+        ],
       );
 
       await should(allowed).be.true();
@@ -300,76 +300,76 @@ describe("Test: model/security/user", () => {
         profilePolicies[0].role.checkRestrictions.firstCall,
         "foo",
         "bar",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies[0].role.checkRestrictions.secondCall,
         "foo",
         "baz",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies[0].role.checkRestrictions.thirdCall,
         "alpha",
         "beta",
-        new Map()
+        new Map(),
       );
 
       await sinon.assert.calledWithMatch(
         profilePolicies[1].role.checkRestrictions.firstCall,
         "foo",
         "bar",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies[1].role.checkRestrictions.secondCall,
         "foo",
         "baz",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies[1].role.checkRestrictions.thirdCall,
         "alpha",
         "beta",
-        new Map()
+        new Map(),
       );
 
       await sinon.assert.calledWithMatch(
         profilePolicies2[0].role.checkRestrictions.firstCall,
         "foo",
         "bar",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies2[0].role.checkRestrictions.secondCall,
         "foo",
         "baz",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies2[0].role.checkRestrictions.thirdCall,
         "alpha",
         "beta",
-        new Map()
+        new Map(),
       );
 
       await sinon.assert.calledWithMatch(
         profilePolicies2[1].role.checkRestrictions.firstCall,
         "foo",
         "bar",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies2[1].role.checkRestrictions.secondCall,
         "foo",
         "baz",
-        new Map()
+        new Map(),
       );
       await sinon.assert.calledWithMatch(
         profilePolicies2[1].role.checkRestrictions.thirdCall,
         "alpha",
         "beta",
-        new Map()
+        new Map(),
       );
     });
   });

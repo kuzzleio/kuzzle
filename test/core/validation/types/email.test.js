@@ -24,7 +24,7 @@ describe("Test: validation/types/email", () => {
   describe("#validate", () => {
     it("should return true if the provided email is valid", () => {
       should(
-        emailType.validate({ notEmpty: true }, "user@domain.com", [])
+        emailType.validate({ notEmpty: true }, "user@domain.com", []),
       ).be.true();
     });
 
@@ -38,19 +38,19 @@ describe("Test: validation/types/email", () => {
       const errorMessage = [];
 
       should(
-        emailType.validate({ notEmpty: true }, "", errorMessage)
+        emailType.validate({ notEmpty: true }, "", errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual(["The string must not be empty."]);
 
       errorMessage.shift();
       should(
-        emailType.validate({ notEmpty: true }, undefined, errorMessage)
+        emailType.validate({ notEmpty: true }, undefined, errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual(["Field cannot be undefined or null"]);
 
       errorMessage.shift();
       should(
-        emailType.validate({ notEmpty: true }, null, errorMessage)
+        emailType.validate({ notEmpty: true }, null, errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual(["Field cannot be undefined or null"]);
     });
@@ -59,7 +59,7 @@ describe("Test: validation/types/email", () => {
       const errorMessage = [];
 
       should(
-        emailType.validate({ notEmpty: true }, "not an email", errorMessage)
+        emailType.validate({ notEmpty: true }, "not an email", errorMessage),
       ).be.false();
       should(errorMessage).be.deepEqual([
         "The string must be a valid email address.",
@@ -73,8 +73,8 @@ describe("Test: validation/types/email", () => {
         emailType.validate(
           { notEmpty: true },
           { not: "a string" },
-          errorMessage
-        )
+          errorMessage,
+        ),
       ).be.false();
       should(errorMessage).be.deepEqual(["The field must be a string."]);
     });
@@ -91,7 +91,7 @@ describe("Test: validation/types/email", () => {
       should(
         emailType.validateFieldSpecification({
           notEmpty: true,
-        })
+        }),
       ).be.deepEqual({
         notEmpty: true,
       });
@@ -99,7 +99,7 @@ describe("Test: validation/types/email", () => {
 
     it('should throw if the provided "notEmpty" option is invalid', () => {
       should(() =>
-        emailType.validateFieldSpecification({ notEmpty: "foobar" })
+        emailType.validateFieldSpecification({ notEmpty: "foobar" }),
       ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
     });
   });

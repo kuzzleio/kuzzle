@@ -132,7 +132,7 @@ describe("#core/storage/indexCache", () => {
         PreconditionError,
         {
           id: "services.storage.unknown_index",
-        }
+        },
       );
     });
 
@@ -143,12 +143,12 @@ describe("#core/storage/indexCache", () => {
 
       should(() => indexCache.assertCollectionExists("foo", "baz")).throw(
         PreconditionError,
-        { id: "services.storage.unknown_collection" }
+        { id: "services.storage.unknown_collection" },
       );
 
       should(() => indexCache.assertCollectionExists("fooz", "bar")).throw(
         PreconditionError,
-        { id: "services.storage.unknown_index" }
+        { id: "services.storage.unknown_index" },
       );
     });
   });

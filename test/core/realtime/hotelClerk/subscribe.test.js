@@ -45,7 +45,7 @@ describe("Test: hotelClerk.subscribe", () => {
           bar: ["foo", "bar", "baz", "qux"],
         },
       },
-      { connectionId, token: null }
+      { connectionId, token: null },
     );
 
     kuzzle.koncorde.normalize.returns({
@@ -105,7 +105,7 @@ describe("Test: hotelClerk.subscribe", () => {
       "foobar",
       request,
       "in",
-      { count: 1 }
+      { count: 1 },
     );
 
     const roomId = hotelClerk.rooms.get(response.roomId).id;
@@ -133,7 +133,7 @@ describe("Test: hotelClerk.subscribe", () => {
       "barfoo",
       request,
       "in",
-      { count: 1 }
+      { count: 1 },
     );
 
     should(kuzzle.call).be.calledWithMatch("core:realtime:room:create:after", {
@@ -151,7 +151,7 @@ describe("Test: hotelClerk.subscribe", () => {
         roomId,
         connectionId,
         kuid: "Umraniye",
-      }
+      },
     );
   });
 
@@ -168,7 +168,7 @@ describe("Test: hotelClerk.subscribe", () => {
       secondResponse.roomId,
       request,
       "in",
-      { count: 1 }
+      { count: 1 },
     );
   });
 
@@ -203,7 +203,7 @@ describe("Test: hotelClerk.subscribe", () => {
       result.roomId,
       request,
       "in",
-      { count: 1 }
+      { count: 1 },
     );
   });
 

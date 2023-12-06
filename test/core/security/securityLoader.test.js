@@ -36,17 +36,17 @@ describe("security/securityLoader", () => {
     should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql(
-      "createOrReplaceRole"
+      "createOrReplaceRole",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(0).args[0].input.args._id
+      kuzzle.funnel.processRequest.getCall(0).args[0].input.args._id,
     ).be.eql("driver");
     should(
-      kuzzle.funnel.processRequest.getCall(0).args[0].input.args.force
+      kuzzle.funnel.processRequest.getCall(0).args[0].input.args.force,
     ).be.eql(true);
     should(
       kuzzle.funnel.processRequest.getCall(0).args[0].input.body.controllers
-        .document.actions["*"]
+        .document.actions["*"],
     ).be.eql(true);
   });
 
@@ -75,7 +75,7 @@ describe("security/securityLoader", () => {
       BadRequestError,
       {
         id: "security.user.prevent_overwrite",
-      }
+      },
     );
   });
 
@@ -91,21 +91,21 @@ describe("security/securityLoader", () => {
     should(kuzzle.funnel.processRequest.callCount).be.eql(2);
 
     should(kuzzle.funnel.processRequest.getCall(0).args[0].input.action).be.eql(
-      "mGetUsers"
+      "mGetUsers",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids
+      kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids,
     ).be.eql(["gfreeman", "bcalhoun"]);
 
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql(
-      "createUser"
+      "createUser",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(1).args[0].input.args._id
+      kuzzle.funnel.processRequest.getCall(1).args[0].input.args._id,
     ).be.eql("bcalhoun");
     should(
       kuzzle.funnel.processRequest.getCall(1).args[0].input.body.content
-        .profileIds
+        .profileIds,
     ).be.eql(["customer"]);
   });
 
@@ -118,34 +118,34 @@ describe("security/securityLoader", () => {
 
     await loader.load(
       { users: securities.users },
-      { onExistingUsers: "overwrite" }
+      { onExistingUsers: "overwrite" },
     );
 
     should(kuzzle.funnel.processRequest.callCount).be.eql(4);
 
     should(kuzzle.funnel.processRequest.getCall(0).args[0].input.action).be.eql(
-      "mGetUsers"
+      "mGetUsers",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids
+      kuzzle.funnel.processRequest.getCall(0).args[0].input.body.ids,
     ).be.eql(["gfreeman", "bcalhoun"]);
 
     should(kuzzle.funnel.processRequest.getCall(1).args[0].input.action).be.eql(
-      "mDeleteUsers"
+      "mDeleteUsers",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(1).args[0].input.body.ids
+      kuzzle.funnel.processRequest.getCall(1).args[0].input.body.ids,
     ).be.eql(["gfreeman"]);
 
     should(kuzzle.funnel.processRequest.getCall(2).args[0].input.action).be.eql(
-      "createUser"
+      "createUser",
     );
     should(
-      kuzzle.funnel.processRequest.getCall(2).args[0].input.args._id
+      kuzzle.funnel.processRequest.getCall(2).args[0].input.args._id,
     ).be.eql("gfreeman");
     should(
       kuzzle.funnel.processRequest.getCall(2).args[0].input.body.content
-        .profileIds
+        .profileIds,
     ).be.eql(["driver"]);
   });
 
@@ -162,7 +162,7 @@ describe("security/securityLoader", () => {
         roles: { foo: 123 },
         profiles: securities.profiles,
         users: securities.users,
-      })
+      }),
     ).rejectedWith(BadRequestError, {
       id: "api.assert.invalid_argument",
       message: 'Invalid argument "123". Expected: object',
@@ -175,7 +175,7 @@ describe("security/securityLoader", () => {
         roles: securities.roles,
         profiles: { foo: 123 },
         users: securities.users,
-      })
+      }),
     ).rejectedWith(BadRequestError, {
       id: "api.assert.invalid_argument",
       message: 'Invalid argument "123". Expected: object',
@@ -190,7 +190,7 @@ describe("security/securityLoader", () => {
         roles: {},
         profiles: {},
         users: { foo: 123 },
-      })
+      }),
     ).rejectedWith(BadRequestError, {
       id: "api.assert.invalid_argument",
       message: 'Invalid argument "123". Expected: object',

@@ -108,7 +108,7 @@ export class OpenApiManager {
   constructor(
     applicationDefinition: OpenApiDefinition,
     kuzzleRoutes: any[],
-    pluginsRoutes: any[]
+    pluginsRoutes: any[],
   ) {
     this.applicationDefinition = applicationDefinition;
 
@@ -124,7 +124,7 @@ export class OpenApiManager {
 
     global.kuzzle.onAsk(
       "core:api:openapi:app",
-      () => this.applicationDefinition
+      () => this.applicationDefinition,
     );
   }
 }

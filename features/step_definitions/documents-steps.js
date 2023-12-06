@@ -16,13 +16,13 @@ Given(
     await this.tryAction(
       this.sdk.document.create(index, collection, document.body, document._id),
       not,
-      "Document should not have been created"
+      "Document should not have been created",
     );
 
     if (!not) {
       this.props.documentId = this.props.result._id;
     }
-  }
+  },
 );
 
 Then(
@@ -33,13 +33,13 @@ Then(
     const document = await this.sdk.document.get(
       this.props.index,
       this.props.collection,
-      documentId
+      documentId,
     );
 
     for (const [key, value] of Object.entries(expectedContent)) {
       should(_.get(document._source, key)).be.eql(value);
     }
-  }
+  },
 );
 
 Then(
@@ -52,9 +52,9 @@ Then(
     this.props.result = await this.sdk.document[action](
       this.props.index,
       this.props.collection,
-      documents
+      documents,
     );
-  }
+  },
 );
 
 Then(
@@ -71,7 +71,7 @@ Then(
     });
 
     this.props.result = response.result;
-  }
+  },
 );
 
 Then(
@@ -84,23 +84,23 @@ Then(
         this.props.index,
         this.props.collection,
         body,
-        _id
+        _id,
       );
     } else {
       this.props.result = await this.sdk.document[action](
         this.props.index,
         this.props.collection,
         _id,
-        body
+        body,
       );
     }
-  }
+  },
 );
 
 Then("I count {int} documents", async function (expectedCount) {
   const count = await this.sdk.document.count(
     this.props.index,
-    this.props.collection
+    this.props.collection,
   );
 
   should(count).be.eql(expectedCount);
@@ -120,18 +120,18 @@ Then(
     const count = await this.sdk.document.count(
       this.props.index,
       this.props.collection,
-      { query }
+      { query },
     );
 
     should(count).be.eql(expectedCount);
-  }
+  },
 );
 
 Then(/The document "(.*?)" should( not)? exist/, async function (id, not) {
   const exists = await this.sdk.document.exists(
     this.props.index,
     this.props.collection,
-    id
+    id,
   );
 
   if (not && exists) {
@@ -155,9 +155,9 @@ Then(
       this.props.index,
       this.props.collection,
       ids,
-      options
+      options,
     );
-  }
+  },
 );
 
 Then("I search documents with the following query:", function (queryRaw) {
@@ -172,7 +172,7 @@ Then(
     const searchBody = JSON.parse(searchBodyRaw);
 
     this.props.searchBody = searchBody;
-  }
+  },
 );
 
 Then("with the following highlights:", function (highlightsRaw) {
@@ -257,7 +257,7 @@ Then("I delete the document {string}", async function (id) {
   this.props.result = await this.sdk.document.delete(
     this.props.index,
     this.props.collection,
-    id
+    id,
   );
 });
 
@@ -286,12 +286,12 @@ Then(
           response.on("error", (error) => {
             reject(error);
           });
-        }
+        },
       );
 
       req.end();
     });
-  }
+  },
 );
 
 Then(
@@ -334,12 +334,12 @@ Then(
           response.on("error", (error) => {
             reject(error);
           });
-        }
+        },
       );
 
       req.end();
     });
-  }
+  },
 );
 
 Then(
@@ -370,11 +370,11 @@ Then(
           response.on("error", (error) => {
             reject(error);
           });
-        }
+        },
       );
 
       req.write(JSON.stringify(options));
       req.end();
     });
-  }
+  },
 );

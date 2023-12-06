@@ -118,13 +118,13 @@ export class TokenManager {
 
   async init() {
     const anonymous = await global.kuzzle.ask(
-      "core:security:user:anonymous:get"
+      "core:security:user:anonymous:get",
     );
     this.anonymousUserId = anonymous._id;
 
     global.kuzzle.on("connection:remove", (connection) => {
       this.removeConnection(connection.id).catch((err) =>
-        global.kuzzle.log.info(err)
+        global.kuzzle.log.info(err),
       );
     });
   }
@@ -133,7 +133,7 @@ export class TokenManager {
     if (this.tokens.array.length > 0) {
       const delay = Math.min(
         this.tokens.array[0].expiresAt - Date.now(),
-        TIMEOUT_MAX
+        TIMEOUT_MAX,
       );
 
       if (this.timer) {
@@ -239,7 +239,7 @@ export class TokenManager {
         this.tokensByConnection.delete(connectionId);
         await global.kuzzle.ask(
           "core:realtime:connection:remove",
-          connectionId
+          connectionId,
         );
       }
 
@@ -290,7 +290,7 @@ export class TokenManager {
       for (const connectionId of managedToken.connectionIds) {
         await global.kuzzle.ask(
           "core:realtime:tokenExpired:notify",
-          connectionId
+          connectionId,
         );
         this.tokensByConnection.delete(connectionId);
       }
@@ -351,7 +351,7 @@ export class TokenManager {
 
   private removeConnectionLinkedToToken(
     connectionId: string,
-    managedToken: ManagedToken
+    managedToken: ManagedToken,
   ) {
     managedToken.connectionIds.delete(connectionId);
 

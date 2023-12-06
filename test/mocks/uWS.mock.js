@@ -164,7 +164,7 @@ class App {
 
     return this._httpMessageHandler(
       this._httpResponse,
-      new MockHttpRequest(method, url, qs, headers)
+      new MockHttpRequest(method, url, qs, headers),
     );
   }
 }

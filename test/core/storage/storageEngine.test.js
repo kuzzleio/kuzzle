@@ -16,7 +16,7 @@ describe("#core/storage/StorageEngine", () => {
   before(() => {
     mockRequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
     StorageEngine = mockRequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
+      "../../../lib/core/storage/storageEngine",
     );
   });
 

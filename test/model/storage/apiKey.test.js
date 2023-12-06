@@ -21,7 +21,7 @@ describe("ApiKey", () => {
     mockrequire("../../../lib/core/storage/clientAdapter", ClientAdapterMock);
 
     StorageEngine = mockrequire.reRequire(
-      "../../../lib/core/storage/storageEngine"
+      "../../../lib/core/storage/storageEngine",
     );
     storageEngine = new StorageEngine();
 
@@ -108,7 +108,7 @@ describe("ApiKey", () => {
         user,
         "expiresIn",
         "Sigfox API key",
-        {}
+        {},
       );
       should(apiKey._id).be.eql(apiKey._source.fingerprint);
     });
@@ -139,7 +139,7 @@ describe("ApiKey", () => {
 
       should(deleteByQueryStub).be.calledWith(
         { term: { userId: "mylehuong" } },
-        { refresh: "wait_for" }
+        { refresh: "wait_for" },
       );
     });
   });
@@ -163,11 +163,11 @@ describe("ApiKey", () => {
     it("should return the apiKey without the token if specified", () => {
       const apiKey = new ApiKey(
         { token: "encrypted-token", userId: "mylehuong" },
-        "api-key-id"
+        "api-key-id",
       );
       const apiKey2 = new ApiKey(
         { token: "encrypted-token", userId: "mylehuong" },
-        "api-key-id2"
+        "api-key-id2",
       );
 
       const serialized = apiKey.serialize();

@@ -129,20 +129,20 @@ export class BackendController extends ApplicationManager {
 
     if (!controller.name) {
       controller.name = Inflector.kebabCase(
-        controller.constructor.name
+        controller.constructor.name,
       ).replace("-controller", "");
     }
 
     Plugin.checkControllerDefinition(controller.name, controller.definition);
 
     for (const [action, definition] of Object.entries(
-      controller.definition.actions
+      controller.definition.actions,
     )) {
       if (typeof definition.handler !== "function") {
         throw assertionError.get(
           "invalid_controller_definition",
           controller.name,
-          `Handler for action "${action}" is not a function.`
+          `Handler for action "${action}" is not a function.`,
         );
       }
 
@@ -168,7 +168,7 @@ export class BackendController extends ApplicationManager {
       throw assertionError.get(
         "invalid_controller_definition",
         name,
-        "A controller with this name already exists"
+        "A controller with this name already exists",
       );
     }
 

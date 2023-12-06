@@ -138,7 +138,7 @@ export class Channel {
       scope?: RealtimeScope;
       users?: RealtimeUsers;
       propagate?: boolean;
-    } = {}
+    } = {},
   ) {
     this.scope = scope;
     this.users = users;

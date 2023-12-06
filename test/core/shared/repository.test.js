@@ -43,7 +43,7 @@ describe("Test: repositories/repository", () => {
 
       return should(repository.loadOneFromDatabase(-9999)).rejectedWith(
         NotFoundError,
-        { id: "services.storage.not_found" }
+        { id: "services.storage.not_found" },
       );
     });
 
@@ -54,7 +54,7 @@ describe("Test: repositories/repository", () => {
 
       return should(repository.loadOneFromDatabase("error")).rejectedWith(
         KuzzleInternalError,
-        { message: "error" }
+        { message: "error" },
       );
     });
 
@@ -145,7 +145,7 @@ describe("Test: repositories/repository", () => {
         KuzzleInternalError,
         {
           id: "services.cache.read_failed",
-        }
+        },
       );
     });
 
@@ -156,7 +156,7 @@ describe("Test: repositories/repository", () => {
         KuzzleInternalError,
         {
           id: "services.cache.read_failed",
-        }
+        },
       );
     });
 
@@ -195,7 +195,7 @@ describe("Test: repositories/repository", () => {
 
       return should(repository.load("error")).rejectedWith(
         KuzzleInternalError,
-        { message: "test" }
+        { message: "test" },
       );
     });
 
@@ -206,7 +206,7 @@ describe("Test: repositories/repository", () => {
         KuzzleInternalError,
         {
           id: "services.cache.read_failed",
-        }
+        },
       );
     });
 
@@ -273,7 +273,7 @@ describe("Test: repositories/repository", () => {
         kuzzle.internalIndex.index,
         repository.collection,
         "someId",
-        repository.serializeToDatabase(object)
+        repository.serializeToDatabase(object),
       );
     });
   });
@@ -286,7 +286,7 @@ describe("Test: repositories/repository", () => {
         "core:storage:private:document:delete",
         kuzzle.internalIndex.index,
         repository.collection,
-        "someId"
+        "someId",
       );
     });
   });
@@ -299,7 +299,7 @@ describe("Test: repositories/repository", () => {
 
       should(kuzzle.ask).calledWith(
         "core:cache:internal:del",
-        repository.getCacheKey("someId")
+        repository.getCacheKey("someId"),
       );
 
       repository.cacheDb = cacheDbEnum.PUBLIC;
@@ -308,7 +308,7 @@ describe("Test: repositories/repository", () => {
 
       should(kuzzle.ask).calledWith(
         "core:cache:public:del",
-        repository.getCacheKey("someId")
+        repository.getCacheKey("someId"),
       );
     });
   });
@@ -321,14 +321,14 @@ describe("Test: repositories/repository", () => {
 
       should(kuzzle.ask).calledWith(
         "core:cache:internal:del",
-        repository.getCacheKey("someId")
+        repository.getCacheKey("someId"),
       );
 
       should(kuzzle.ask).calledWith(
         "core:storage:private:document:delete",
         kuzzle.internalIndex.index,
         repository.collection,
-        "someId"
+        "someId",
       );
     });
   });
@@ -343,7 +343,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).calledWith(
         "core:cache:internal:store",
         "someKey",
-        JSON.stringify(cachePojo)
+        JSON.stringify(cachePojo),
       );
     });
 
@@ -354,7 +354,7 @@ describe("Test: repositories/repository", () => {
         "core:cache:internal:store",
         "someKey",
         JSON.stringify(cachePojo),
-        { ttl: 500 }
+        { ttl: 500 },
       );
     });
   });
@@ -365,7 +365,7 @@ describe("Test: repositories/repository", () => {
 
       should(kuzzle.ask).calledWith(
         "core:cache:internal:persist",
-        repository.getCacheKey(cachePojo._id, repository.collection)
+        repository.getCacheKey(cachePojo._id, repository.collection),
       );
     });
 
@@ -375,7 +375,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).calledWith(
         "core:cache:internal:expire",
         repository.getCacheKey(cachePojo._id, repository.collection),
-        500
+        500,
       );
     });
 
@@ -387,7 +387,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).calledWith(
         "core:cache:internal:expire",
         repository.getCacheKey(pojo._id, repository.collection),
-        1234
+        1234,
       );
     });
 
@@ -399,7 +399,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).calledWith(
         "core:cache:internal:expire",
         repository.getCacheKey(pojo._id, repository.collection),
-        500
+        500,
       );
     });
   });
@@ -411,7 +411,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).calledWith(
         "core:cache:internal:expire",
         repository.getCacheKey(cachePojo._id, repository.collection),
-        -1
+        -1,
       );
     });
   });
@@ -424,7 +424,7 @@ describe("Test: repositories/repository", () => {
       const serialized = repository.serializeToCache(object);
 
       should(Object.keys(serialized).length).be.exactly(
-        Object.keys(object).length
+        Object.keys(object).length,
       );
       Object.keys(repository.serializeToCache(object)).forEach((key) => {
         should(object[key]).be.exactly(serialized[key]);
@@ -458,7 +458,7 @@ describe("Test: repositories/repository", () => {
         kuzzle.internalIndex.index,
         repository.collection,
         { query: "noquery" },
-        {}
+        {},
       );
     });
 
@@ -475,7 +475,7 @@ describe("Test: repositories/repository", () => {
           from: 13,
           scroll: "45s",
           size: 42,
-        }
+        },
       );
 
       should(response).be.an.Object();
@@ -487,7 +487,7 @@ describe("Test: repositories/repository", () => {
         kuzzle.internalIndex.index,
         repository.collection,
         { query: "noquery" },
-        { from: 13, scroll: "45s", size: 42 }
+        { from: 13, scroll: "45s", size: 42 },
       );
     });
 
@@ -530,7 +530,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).be.calledWithMatch(
         "core:storage:private:document:scroll",
         "foo",
-        undefined
+        undefined,
       );
     });
 
@@ -550,7 +550,7 @@ describe("Test: repositories/repository", () => {
       should(kuzzle.ask).be.calledWithMatch(
         "core:storage:private:document:scroll",
         "foo",
-        "bar"
+        "bar",
       );
     });
 

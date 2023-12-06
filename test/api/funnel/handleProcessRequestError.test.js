@@ -59,13 +59,13 @@ describe("funnel.processRequest", () => {
     kuzzle.pipe.onSecondCall().callsFake(() =>
       Promise.resolve().then(() => {
         throw customError;
-      })
+      }),
     );
 
     const res = funnel.handleProcessRequestError(
       request,
       request,
-      originalError
+      originalError,
     );
 
     return should(res).rejectedWith(PluginImplementationError, {

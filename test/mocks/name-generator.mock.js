@@ -27,7 +27,7 @@ class NameGeneratorMock {
 
     return `${prefix}${adjective}${separator}${name}${separator}${randomNumberMock(
       min,
-      max
+      max,
     )}`;
   }
 }

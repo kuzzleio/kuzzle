@@ -82,7 +82,7 @@ export class Repository<TObject extends { _id: string }> {
         this.fromDTO({
           ...item._source,
           _id: item._id,
-        })
+        }),
       );
     }
 
@@ -102,7 +102,7 @@ export class Repository<TObject extends { _id: string }> {
     const response = await this.store.search(
       this.collection,
       searchBody,
-      options
+      options,
     );
 
     return this.formatSearchResults(response);
@@ -130,7 +130,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   async loadFromCache(
     id: string,
-    options: { key?: string } = {}
+    options: { key?: string } = {},
   ): Promise<TObject> {
     const key = options.key || this.getCacheKey(id);
     let response;
@@ -204,7 +204,7 @@ export class Repository<TObject extends { _id: string }> {
       return this.store.create(
         this.collection,
         this.serializeToDatabase(object),
-        { ...options, id: object._id }
+        { ...options, id: object._id },
       );
     }
 
@@ -212,7 +212,7 @@ export class Repository<TObject extends { _id: string }> {
       this.collection,
       object._id,
       this.serializeToDatabase(object),
-      options
+      options,
     );
   }
 
@@ -252,7 +252,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   async persistToCache(
     object: TObject,
-    options: { key?: string; ttl?: number } = {}
+    options: { key?: string; ttl?: number } = {},
   ): Promise<TObject> {
     const key = options.key || this.getCacheKey(object._id);
     const value = JSON.stringify(this.serializeToCache(object));
@@ -284,7 +284,7 @@ export class Repository<TObject extends { _id: string }> {
    */
   refreshCacheTTL(
     object: JSONObject,
-    options: { key?: string; ttl?: number } = {}
+    options: { key?: string; ttl?: number } = {},
   ) {
     const key = options.key || this.getCacheKey(object._id);
     let ttl;
@@ -381,7 +381,7 @@ export class Repository<TObject extends { _id: string }> {
     if (part === null) {
       const objects = await this.search(
         {},
-        { refresh: options.refresh, scroll: "5s", size: 100 }
+        { refresh: options.refresh, scroll: "5s", size: 100 },
       );
       const deleted = await this.truncatePart(objects, options);
 
@@ -470,7 +470,7 @@ export class Repository<TObject extends { _id: string }> {
           this.fromDTO({
             ...hit._source,
             _id: hit._id,
-          })
+          }),
         );
       }
 

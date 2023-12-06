@@ -199,7 +199,7 @@ export default class ElasticSearch extends Service {
           "Your dynamic mapping policy is set to 'true' for new fields.",
           "Elasticsearch will try to automatically infer mapping for new fields, and those cannot be changed afterward.",
           'See the "services.storageEngine.commonMapping.dynamic" option in the kuzzlerc configuration file to change this value.',
-        ].join("\n")
+        ].join("\n"),
       );
     }
 
@@ -367,7 +367,7 @@ export default class ElasticSearch extends Service {
 
     const stringifiedScrollInfo = await global.kuzzle.ask(
       "core:cache:internal:get",
-      cacheKey
+      cacheKey,
     );
 
     if (!stringifiedScrollInfo) {
@@ -392,7 +392,7 @@ export default class ElasticSearch extends Service {
           JSON.stringify(scrollInfo),
           {
             ttl: ms(_scrollTTL) || this.scrollTTL,
-          }
+          },
         );
       }
 
@@ -494,7 +494,7 @@ export default class ElasticSearch extends Service {
             index,
             targets,
           }),
-          { ttl }
+          { ttl },
         );
 
         body.remaining = body.hits.total.value - body.hits.hits.length;
@@ -1294,7 +1294,7 @@ export default class ElasticSearch extends Service {
         index,
         collection,
         documents,
-        { refresh, userId }
+        { refresh, userId },
       );
 
       return {
@@ -1428,7 +1428,7 @@ export default class ElasticSearch extends Service {
           esRequest,
           async function getMoreUntilDone(
             error,
-            { body: { hits, _scroll_id } }
+            { body: { hits, _scroll_id } },
           ) {
             if (error) {
               reject(error);
@@ -1448,12 +1448,12 @@ export default class ElasticSearch extends Service {
                   scroll: esRequest.scroll,
                   scroll_id: _scroll_id,
                 },
-                getMoreUntilDone
+                getMoreUntilDone,
               );
             } else {
               resolve(results);
             }
-          }
+          },
         );
       });
     } finally {
@@ -1579,7 +1579,7 @@ export default class ElasticSearch extends Service {
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
         mappings.properties,
-        this._config.commonMapping.properties
+        this._config.commonMapping.properties,
       ),
     };
 
@@ -1828,7 +1828,7 @@ export default class ElasticSearch extends Service {
 
     const fullProperties = _.merge(
       collectionMappings.properties,
-      mappings.properties
+      mappings.properties,
     );
 
     return {
@@ -2195,7 +2195,7 @@ export default class ElasticSearch extends Service {
 
           return request;
         },
-        { index: [] }
+        { index: [] },
       );
 
       if (esRequest.index.length === 0) {
@@ -2520,7 +2520,7 @@ export default class ElasticSearch extends Service {
     };
     const { rejected, extractedDocuments } = this._extractMDocuments(
       documents,
-      kuzzleMeta
+      kuzzleMeta,
     );
 
     esRequest.body = [];
@@ -2586,7 +2586,7 @@ export default class ElasticSearch extends Service {
       },
       { rejected, extractedDocuments } = this._extractMDocuments(
         documents,
-        kuzzleMeta
+        kuzzleMeta,
       );
 
     /**
@@ -2701,7 +2701,7 @@ export default class ElasticSearch extends Service {
       {
         prepareMUpsert: true,
         requireId: true,
-      }
+      },
     );
 
     /**
@@ -2723,7 +2723,7 @@ export default class ElasticSearch extends Service {
         {
           doc: extractedDocuments[i]._source.changes,
           upsert: extractedDocuments[i]._source.default,
-        }
+        },
       );
       // _source: true
       // Makes ES return the updated document source in the response.
@@ -2734,7 +2734,7 @@ export default class ElasticSearch extends Service {
     const response = await this._mExecute(
       esRequest,
       extractedDocuments,
-      rejected
+      rejected,
     );
 
     // with _source: true, ES returns the updated document in
@@ -3157,7 +3157,7 @@ export default class ElasticSearch extends Service {
           "storage",
           "invalid_mapping",
           currentPath,
-          didYouMean(property, mappingProperties)
+          didYouMean(property, mappingProperties),
         );
       }
 
@@ -3219,7 +3219,7 @@ export default class ElasticSearch extends Service {
         "storage",
         "multiple_indice_alias",
         `"alias" starting with "${ALIAS_PREFIX}"`,
-        '"indices"'
+        '"indices"',
       );
     }
 
@@ -3297,7 +3297,7 @@ export default class ElasticSearch extends Service {
   async _getAliasFromIndice(indice) {
     const { body } = await this._client.indices.getAlias({ index: indice });
     const aliases = Object.keys(body[indice].aliases).filter((alias) =>
-      alias.startsWith(ALIAS_PREFIX)
+      alias.startsWith(ALIAS_PREFIX),
     );
 
     if (aliases.length < 1) {
@@ -3323,7 +3323,7 @@ export default class ElasticSearch extends Service {
       const indicesWithoutAlias = indices.filter(
         (indice) =>
           indice[INDEX_PREFIX_POSITION_IN_INDICE] === this._indexPrefix &&
-          !aliases.some((alias) => alias.indice === indice)
+          !aliases.some((alias) => alias.indice === indice),
       );
 
       const esRequest = { body: { actions: [] } };
@@ -3372,7 +3372,7 @@ export default class ElasticSearch extends Service {
   _extractIndex(alias) {
     return alias.substr(
       INDEX_PREFIX_POSITION_IN_ALIAS + 1,
-      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1
+      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1,
     );
   }
 
@@ -3517,7 +3517,7 @@ export default class ElasticSearch extends Service {
         hits.hits.map((h: JSONObject) => ({
           _id: h._id,
           _source: h._source,
-        }))
+        })),
       );
     }
 
@@ -3623,14 +3623,14 @@ export default class ElasticSearch extends Service {
 
     assert(
       typeof configValue === "string",
-      `services.storageEngine.${key} must be a string.`
+      `services.storageEngine.${key} must be a string.`,
     );
 
     const parsedValue = ms(configValue);
 
     assert(
       typeof parsedValue === "number",
-      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`
+      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`,
     );
 
     return parsedValue;
@@ -3683,7 +3683,7 @@ export default class ElasticSearch extends Service {
           esState = esStateEnum.OK;
         } else {
           global.kuzzle.log.info(
-            `[ℹ] Still waiting for Elasticsearch: ${health.body.number_of_pending_tasks} cluster tasks remaining`
+            `[ℹ] Still waiting for Elasticsearch: ${health.body.number_of_pending_tasks} cluster tasks remaining`,
           );
           await Bluebird.delay(1000);
         }
@@ -3708,7 +3708,7 @@ export default class ElasticSearch extends Service {
           "storage",
           "invalid_mapping",
           path,
-          "Dynamic property value should be a string."
+          "Dynamic property value should be a string.",
         );
       }
 
@@ -3719,8 +3719,8 @@ export default class ElasticSearch extends Service {
           "invalid_mapping",
           path,
           `Incorrect dynamic property value (${value}). Should be one of "${DYNAMIC_PROPERTY_VALUES.join(
-            '", "'
-          )}"`
+            '", "',
+          )}"`,
         );
       }
     }

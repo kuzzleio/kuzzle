@@ -33,7 +33,7 @@ describe("#mutex", () => {
         "core:cache:internal:store",
         "foo",
         sinon.match.string,
-        { onlyIfNew: true, ttl: 123 }
+        { onlyIfNew: true, ttl: 123 },
       );
     });
 
@@ -67,7 +67,7 @@ describe("#mutex", () => {
         "core:cache:internal:store",
         "foo",
         sinon.match.string,
-        { onlyIfNew: true, ttl: 123 }
+        { onlyIfNew: true, ttl: 123 },
       );
     });
 
@@ -81,7 +81,7 @@ describe("#mutex", () => {
 
       for (let seconds = 0; seconds < 10; seconds++) {
         await should(
-          Promise.race([mutexPromise, resolvedPromise])
+          Promise.race([mutexPromise, resolvedPromise]),
         ).fulfilledWith("pending");
         clock.tick(1000);
       }
@@ -99,7 +99,7 @@ describe("#mutex", () => {
 
       for (let seconds = 0; seconds < 5; seconds++) {
         await should(
-          Promise.race([mutexPromise, resolvedPromise])
+          Promise.race([mutexPromise, resolvedPromise]),
         ).fulfilledWith("pending");
         clock.tick(1000);
       }
@@ -119,7 +119,7 @@ describe("#mutex", () => {
 
       for (let seconds = 0; seconds < 1000; seconds++) {
         await should(
-          Promise.race([mutexPromise, resolvedPromise])
+          Promise.race([mutexPromise, resolvedPromise]),
         ).fulfilledWith("pending");
 
         clock.tick(1000);
@@ -184,7 +184,7 @@ describe("#mutex", () => {
         "core:cache:internal:script:execute",
         "delIfValueEqual",
         "foo",
-        mutex.mutexId
+        mutex.mutexId,
       );
     });
 
@@ -209,7 +209,7 @@ describe("#mutex", () => {
         "core:cache:internal:script:define",
         "delIfValueEqual",
         1,
-        sinon.match.string
+        sinon.match.string,
       );
 
       kuzzle.ask.resetHistory();

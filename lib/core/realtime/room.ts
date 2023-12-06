@@ -82,7 +82,7 @@ export class Room {
     index: string,
     collection: string,
     channels?: Map<string, Channel>,
-    connections?: Set<string>
+    connections?: Set<string>,
   ) {
     this.id = id;
     this.index = index;

@@ -109,7 +109,7 @@ describe("#KuzzleEventEmitter", () => {
         "hook:onError",
         "plugin-foobar",
         "foo:bar",
-        new Error("error")
+        new Error("error"),
       );
 
       setImmediate(() => {
@@ -321,7 +321,7 @@ describe("#KuzzleEventEmitter", () => {
     it("should throw if a non-function answerer is submitted", () => {
       [{}, [], null, undefined, 123, false, true, "foo"].forEach((fn) => {
         should(() => emitter.onAsk("foo:bar", fn)).throw(
-          `Cannot listen to ask event "foo:bar": "${fn}" is not a function`
+          `Cannot listen to ask event "foo:bar": "${fn}" is not a function`,
         );
       });
     });
@@ -330,7 +330,7 @@ describe("#KuzzleEventEmitter", () => {
       emitter.onAsk("foo:bar", sinon.stub());
 
       should(() => emitter.onAsk("foo:bar", sinon.stub())).throw(
-        'Cannot add a listener to the ask event "foo:bar": event has already an answerer'
+        'Cannot add a listener to the ask event "foo:bar": event has already an answerer',
       );
     });
 
@@ -378,7 +378,7 @@ describe("#KuzzleEventEmitter", () => {
     it("should throw if a non-function answerer is submitted", () => {
       [{}, [], null, undefined, 123, false, true, "foo"].forEach((fn) => {
         should(() => emitter.onCall("foo:bar", fn)).throw(
-          `Cannot register callback for event "foo:bar": "${fn}" is not a function`
+          `Cannot register callback for event "foo:bar": "${fn}" is not a function`,
         );
       });
     });
@@ -387,7 +387,7 @@ describe("#KuzzleEventEmitter", () => {
       emitter.onCall("foo:bar", sinon.stub());
 
       should(() => emitter.onCall("foo:bar", sinon.stub())).throw(
-        'Cannot register callback for event "foo:bar": a callback has already been registered'
+        'Cannot register callback for event "foo:bar": a callback has already been registered',
       );
     });
 

@@ -186,7 +186,7 @@ A Kuzzle Response is a **JSON object** with the following format:
 **Example:** _Display the entire response content of server:now action with Kourou_
 
 ```bash
-kourou sdk:request server:now --display ""
+kourou server:now --display ""
 
 # {
 #   "requestId": "60b6c20d-6cd6-4478-b2e0-5638475ae64b",

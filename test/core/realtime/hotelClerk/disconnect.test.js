@@ -37,17 +37,17 @@ describe("Test: hotelClerk.removeConnection", () => {
         new Map([
           ["foo", { volatile: "room foo" }],
           ["bar", { volatile: "room bar" }],
-        ])
-      )
+        ]),
+      ),
     );
 
     hotelClerk.subscriptions.set(
       "a",
-      new ConnectionRooms(new Map([["foo", null]]))
+      new ConnectionRooms(new Map([["foo", null]])),
     );
     hotelClerk.subscriptions.set(
       "b",
-      new ConnectionRooms(new Map([["foo", null]]))
+      new ConnectionRooms(new Map([["foo", null]])),
     );
 
     hotelClerk.rooms.set(
@@ -57,8 +57,8 @@ describe("Test: hotelClerk.removeConnection", () => {
         index,
         collection,
         new Map([["foobar", new Channel("foo")]]),
-        new Set([connectionId, "a", "b"])
-      )
+        new Set([connectionId, "a", "b"]),
+      ),
     );
     hotelClerk.rooms.set(
       "bar",
@@ -67,8 +67,8 @@ describe("Test: hotelClerk.removeConnection", () => {
         index,
         collection,
         new Map([["barfoo", new Channel("bar")]]),
-        new Set([connectionId])
-      )
+        new Set([connectionId]),
+      ),
     );
 
     hotelClerk.roomsCount = 2;
@@ -116,7 +116,7 @@ describe("Test: hotelClerk.removeConnection", () => {
         },
       },
       "out",
-      { count: 2 }
+      { count: 2 },
     );
 
     should(realtimeModule.notifier.notifyUser).calledWithMatch(
@@ -130,7 +130,7 @@ describe("Test: hotelClerk.removeConnection", () => {
         },
       },
       "out",
-      { count: 0 }
+      { count: 0 },
     );
   });
 

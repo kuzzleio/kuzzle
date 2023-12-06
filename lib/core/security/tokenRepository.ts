@@ -54,7 +54,7 @@ export class TokenRepository extends Repository<Token> {
     }
 
     this.tokenGracePeriod = Math.floor(
-      global.kuzzle.config.security.jwt.gracePeriod
+      global.kuzzle.config.security.jwt.gracePeriod,
     );
 
     this.anonymousToken = new Token({ userId: "-1" });
@@ -71,7 +71,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:assign", (hash, userId, ttl) =>
-      this.persistForUser(hash, userId, { singleUse: false, ttl })
+      this.persistForUser(hash, userId, { singleUse: false, ttl }),
     );
 
     /**
@@ -81,7 +81,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:create", (user, opts) =>
-      this.generateToken(user, opts)
+      this.generateToken(user, opts),
     );
 
     /**
@@ -89,7 +89,7 @@ export class TokenRepository extends Repository<Token> {
      * @param  {Token} token
      */
     global.kuzzle.onAsk("core:security:token:delete", (token) =>
-      this.expire(token)
+      this.expire(token),
     );
 
     /**
@@ -98,7 +98,7 @@ export class TokenRepository extends Repository<Token> {
      * @param  {Objects} opts (keepApiKeys)
      */
     global.kuzzle.onAsk("core:security:token:deleteByKuid", (kuid, opts) =>
-      this.deleteByKuid(kuid, opts)
+      this.deleteByKuid(kuid, opts),
     );
 
     /**
@@ -108,7 +108,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:get", (userId, hash) =>
-      this.loadForUser(userId, hash)
+      this.loadForUser(userId, hash),
     );
 
     /**
@@ -124,7 +124,7 @@ export class TokenRepository extends Repository<Token> {
      */
     global.kuzzle.onAsk(
       "core:security:token:refresh",
-      (user, token, expiresIn) => this.refresh(user, token, expiresIn)
+      (user, token, expiresIn) => this.refresh(user, token, expiresIn),
     );
 
     /**
@@ -134,7 +134,7 @@ export class TokenRepository extends Repository<Token> {
      * @returns {Token}
      */
     global.kuzzle.onAsk("core:security:token:verify", (hash) =>
-      this.verifyToken(hash)
+      this.verifyToken(hash),
     );
   }
 
@@ -165,7 +165,7 @@ export class TokenRepository extends Repository<Token> {
     if (token.type === "apiKey" || token.ttl < 0) {
       throw securityError.get(
         "refresh_forbidden",
-        token.type === "apiKey" ? "API Key" : "Token with infinite TTL"
+        token.type === "apiKey" ? "API Key" : "Token with infinite TTL",
       );
     }
 
@@ -200,7 +200,7 @@ export class TokenRepository extends Repository<Token> {
       bypassMaxTTL?: boolean;
       type?: string;
       singleUse?: boolean;
-    } = {}
+    } = {},
   ): Promise<Token> {
     if (!user || user._id === null) {
       throw securityError.get("unknown_user");
@@ -229,7 +229,7 @@ export class TokenRepository extends Repository<Token> {
         "assert",
         "invalid_argument",
         "expiresIn",
-        "a number of milliseconds, or a parsable timespan string"
+        "a number of milliseconds, or a parsable timespan string",
       );
     }
     // -1 mean infite duration, so we don't pass the expiresIn option to
@@ -243,7 +243,7 @@ export class TokenRepository extends Repository<Token> {
       encodedToken = jwt.sign(
         { _id: user._id },
         global.kuzzle.secret,
-        signOptions
+        signOptions,
       );
     } catch (err) {
       throw securityError.getFrom(err, "generation_failed", err.message);
@@ -277,7 +277,7 @@ export class TokenRepository extends Repository<Token> {
     }: {
       ttl: number;
       singleUse: boolean;
-    }
+    },
   ): Promise<Token> {
     const redisTTL = ttl === -1 ? 0 : ttl;
     const expiresAt = ttl === -1 ? -1 : Date.now() + ttl;
@@ -298,7 +298,7 @@ export class TokenRepository extends Repository<Token> {
         "services",
         "cache",
         "write_failed",
-        err.message
+        err.message,
       );
     }
   }
@@ -389,7 +389,7 @@ export class TokenRepository extends Repository<Token> {
 
     const keys = await global.kuzzle.ask(
       "core:cache:internal:searchKeys",
-      userKey
+      userKey,
     );
 
     /*
@@ -450,7 +450,7 @@ export class TokenRepository extends Repository<Token> {
     try {
       const bootstrapped = await global.kuzzle.ask(
         "core:cache:internal:get",
-        BOOTSTRAP_DONE_KEY
+        BOOTSTRAP_DONE_KEY,
       );
 
       if (bootstrapped) {
@@ -468,7 +468,7 @@ export class TokenRepository extends Repository<Token> {
             this.persistForUser(_source.token, _source.userId, {
               singleUse: false,
               ttl: _source.ttl,
-            })
+            }),
           );
         }
       });
@@ -478,7 +478,7 @@ export class TokenRepository extends Repository<Token> {
       await global.kuzzle.ask(
         "core:cache:internal:store",
         BOOTSTRAP_DONE_KEY,
-        1
+        1,
       );
     } finally {
       await mutex.unlock();

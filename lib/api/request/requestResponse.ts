@@ -283,7 +283,7 @@ export class RequestResponse {
       headers?: JSONObject;
       status?: number;
       format?: "standard" | "raw";
-    } = {}
+    } = {},
   ): void {
     if (options.headers) {
       this.setHeaders(options.headers);

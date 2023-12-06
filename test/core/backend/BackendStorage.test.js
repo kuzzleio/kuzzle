@@ -32,7 +32,7 @@ describe("Backend", () => {
       const client = new application.storage.StorageClient({ maxRetries: 42 });
       should(client).be.instanceOf(ElasticsearchClient);
       should(client.connectionPool.connections[0].url.toString()).be.eql(
-        "http://es:9200/"
+        "http://es:9200/",
       );
       should(client.helpers.maxRetries).be.eql(42);
     });
@@ -47,10 +47,10 @@ describe("Backend", () => {
       should(application.storage._client).be.null();
 
       should(application.storage.storageClient).be.instanceOf(
-        ElasticsearchClient
+        ElasticsearchClient,
       );
       should(
-        application.storage.storageClient.connectionPool.connections[0].url.toString()
+        application.storage.storageClient.connectionPool.connections[0].url.toString(),
       ).be.eql("http://es:9200/");
     });
   });

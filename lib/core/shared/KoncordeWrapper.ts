@@ -194,12 +194,12 @@ export class Koncorde {
   async normalize(
     index: string,
     collection: string,
-    filter: JSONObject
+    filter: JSONObject,
   ): Promise<NormalizedFilterV3> {
     return new NormalizedFilterV3(
       index,
       collection,
-      this.koncorde.normalize(filter, toKoncordeIndex(index, collection))
+      this.koncorde.normalize(filter, toKoncordeIndex(index, collection)),
     );
   }
 
@@ -215,7 +215,7 @@ export class Koncorde {
   async register(
     index: string,
     collection: string,
-    filter: JSONObject
+    filter: JSONObject,
   ): Promise<JSONObject> {
     const indexV4 = toKoncordeIndex(index, collection);
     const normalized = this.koncorde.normalize(filter, indexV4);
@@ -254,7 +254,7 @@ export class Koncorde {
     const normalizedV4 = new NormalizedFilter(
       normalized.normalized,
       normalized.id,
-      indexV4
+      indexV4,
     );
 
     this.koncorde.store(normalizedV4);
@@ -281,7 +281,7 @@ export class Koncorde {
     index: string,
     collection: string,
     data: JSONObject,
-    id?: string
+    id?: string,
   ): string[] {
     return koncordeTest(this.koncorde, index, collection, data, id);
   }

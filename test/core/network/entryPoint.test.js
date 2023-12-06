@@ -88,7 +88,7 @@ describe("lib/core/core/network/entryPoint", () => {
               return Promise.reject(err);
             }
             return result;
-          })
+          }),
         ),
       resolve: sinon.stub().resolves(),
       timeout: sinon.stub().resolves(),
@@ -131,7 +131,7 @@ describe("lib/core/core/network/entryPoint", () => {
 
     it("should throw if the event is unknown", () => {
       return should(() => entrypoint.dispatch("foo", {})).throw(
-        KuzzleInternalError
+        KuzzleInternalError,
       );
     });
   });
@@ -174,7 +174,7 @@ describe("lib/core/core/network/entryPoint", () => {
       entrypoint.execute({}, request, (response) => {
         should(response.status).eql(503);
         should(response.content.error).be.an.instanceof(
-          ServiceUnavailableError
+          ServiceUnavailableError,
         );
 
         done();
@@ -226,7 +226,7 @@ describe("lib/core/core/network/entryPoint", () => {
         {
           id: "network.entrypoint.invalid_port",
           message: "Invalid network port number: foobar.",
-        }
+        },
       );
     });
 
@@ -273,7 +273,7 @@ describe("lib/core/core/network/entryPoint", () => {
         .be.calledOnce()
         .be.calledWith("channel", "connectionId");
       should(kuzzle.log.error).be.calledWith(
-        "[join] protocol protocol failed: test"
+        "[join] protocol protocol failed: test",
       );
     });
   });
@@ -314,7 +314,7 @@ describe("lib/core/core/network/entryPoint", () => {
         .be.calledOnce()
         .be.calledWith("channel", "connectionId");
       should(kuzzle.log.error).be.calledWith(
-        "[leave channel] protocol protocol failed: test"
+        "[leave channel] protocol protocol failed: test",
       );
     });
   });
@@ -367,7 +367,7 @@ describe("lib/core/core/network/entryPoint", () => {
         Rewired.__with__({ require: requireStub })(() => {
           const ep = new Rewired();
           return ep.loadMoreProtocols();
-        })
+        }),
       ).rejectedWith(PluginImplementationError, {
         id: "plugin.manifest.cannot_load",
       });

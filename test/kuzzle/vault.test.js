@@ -17,7 +17,7 @@ describe("/lib/kuzzle/vault", () => {
     })(async () => {
       const vault = new Vault(
         "the spoon does not exist",
-        "config/secrets.json"
+        "config/secrets.json",
       );
 
       should(vaultArgs).eql(["the spoon does not exist"]);

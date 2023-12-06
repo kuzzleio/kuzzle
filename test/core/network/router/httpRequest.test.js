@@ -40,7 +40,7 @@ describe("Test: router.httpRequest", () => {
       undefined,
       {
         origin: "foobar",
-      }
+      },
     );
     const httpMessage = new HttpMessage(connection, req);
 
@@ -50,10 +50,10 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("getrange");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.headers["Access-Control-Allow-Origin"]).be.eql(
-          "foobar"
+          "foobar",
         );
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -77,7 +77,7 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("count");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -101,7 +101,7 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("updateSelf");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -124,7 +124,7 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("delete");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.status).be.eql(1234);
         should(kuzzle.pipe).be.calledOnce();
@@ -147,7 +147,7 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("info");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.status).be.eql(1234);
         done();
@@ -167,7 +167,7 @@ describe("Test: router.httpRequest", () => {
         should(request.input.action).be.eql("bar");
         should(request.response.requestId).be.eql(httpMessage.requestId);
         should(request.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(request.response.status).be.eql(1234);
         done();
@@ -185,11 +185,11 @@ describe("Test: router.httpRequest", () => {
       try {
         should(result.response.requestId).be.eql(httpMessage.requestId);
         should(result.response.headers["content-type"]).be.eql(
-          "application/json"
+          "application/json",
         );
         should(result.response.status).be.eql(404);
         should(result.response.error.message).be.eql(
-          "API URL not found: /a/b/c/d."
+          "API URL not found: /a/b/c/d.",
         );
         done();
       } catch (e) {

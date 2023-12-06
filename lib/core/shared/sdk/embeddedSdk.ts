@@ -111,7 +111,7 @@ interface EmbeddedRealtime extends RealtimeController {
        * Propagate the callback execution on each cluster node (default: false)
        */
       propagate?: boolean;
-    }
+    },
   ): Promise<string>;
 }
 
@@ -151,10 +151,10 @@ export class EmbeddedSDK extends Kuzzle {
    */
   query<
     TRequest extends BaseRequest = BaseRequest,
-    TResult extends JSONObject = JSONObject
+    TResult extends JSONObject = JSONObject,
   >(
     request: TRequest,
-    options: { propagate?: boolean } = {}
+    options: { propagate?: boolean } = {},
   ): Promise<ResponsePayload<TResult>> {
     // By default, do not propagate realtime notification accross cluster nodes
     if (
@@ -179,7 +179,7 @@ export class EmbeddedSDK extends Kuzzle {
         "forbidden_embedded_sdk_action",
         request.controller,
         request.action,
-        ", use user impersonation or security controller instead"
+        ", use user impersonation or security controller instead",
       );
     }
 

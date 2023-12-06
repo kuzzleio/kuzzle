@@ -37,7 +37,7 @@ async function copyKey(context, key) {
 
 async function getSourceKeys(context, pattern) {
   if (!context.source.nodes) {
-    return await context.source.keys(pattern);
+    return context.source.keys(pattern);
   }
 
   const keys = [];

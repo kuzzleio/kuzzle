@@ -32,7 +32,7 @@ describe("Test: ElasticSearch Wrapper", () => {
 
     it("should handle version conflict errors", () => {
       const error = new Error(
-        '[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }'
+        '[version_conflict_engine_exception] [data][AVrbg0eg90VMe4Z_dG8j]: version conflict, current version [153] is different than the one provided [152], with { index_uuid="iDrU6CfZSO6CghM1t6dl0A" & shard="2" & index="userglobaldata" }',
       );
       error.meta = {
         statusCode: 409,

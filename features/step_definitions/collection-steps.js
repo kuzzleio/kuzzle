@@ -23,7 +23,7 @@ Given(
 
     this.props.index = index;
     this.props.collection = collection;
-  }
+  },
 );
 
 Then(
@@ -50,7 +50,7 @@ Then(
         this.props.result = await this.sdk.collection[action](
           index,
           collection,
-          { mappings, settings }
+          { mappings, settings },
         );
       }
 
@@ -59,7 +59,7 @@ Then(
     } catch (error) {
       this.props.error = error;
     }
-  }
+  },
 );
 
 Then(
@@ -70,7 +70,7 @@ Then(
     this.props.result = {
       collections: collections.filter(({ type }) => type === expectedType),
     };
-  }
+  },
 );
 
 Then(
@@ -85,14 +85,14 @@ Then(
     } else {
       should(collectionNames).containEql(collection);
     }
-  }
+  },
 );
 
 Then(
   "I get mappings of collection {string}:{string}",
   async function (index, collection) {
     this.props.result = await this.sdk.collection.getMapping(index, collection);
-  }
+  },
 );
 
 Then("I refresh the collection", function () {

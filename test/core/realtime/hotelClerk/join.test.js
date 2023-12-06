@@ -42,7 +42,7 @@ describe("Test: hotelClerk.join", () => {
           bar: ["foo", "bar", "baz", "qux"],
         },
       },
-      { connectionId, token: null }
+      { connectionId, token: null },
     );
 
     kuzzle.config.limits.subscriptionMinterms = 0;
@@ -75,7 +75,7 @@ describe("Test: hotelClerk.join", () => {
       roomId,
       request,
       "in",
-      { count: 1 }
+      { count: 1 },
     );
 
     const request2 = new Request(
@@ -86,7 +86,7 @@ describe("Test: hotelClerk.join", () => {
         action: "join",
         body: { roomId },
       },
-      { connectionId: "connection2", user: null }
+      { connectionId: "connection2", user: null },
     );
 
     request2.input.body = { roomId };
@@ -101,7 +101,7 @@ describe("Test: hotelClerk.join", () => {
       roomId,
       request2,
       "in",
-      { count: 2 }
+      { count: 2 },
     );
   });
 
@@ -114,7 +114,7 @@ describe("Test: hotelClerk.join", () => {
         action: "join",
         body: { roomId: "i-exist" },
       },
-      context
+      context,
     );
 
     return should(hotelClerk.join(joinRequest)).be.rejectedWith(NotFoundError, {
@@ -131,7 +131,7 @@ describe("Test: hotelClerk.join", () => {
         action: "join",
         body: { roomId: "i-exist" },
       },
-      context
+      context,
     );
     const response = { cluster: false, channel: "foobar", subscribed: true };
     hotelClerk.rooms.set("i-exist", {});
@@ -151,7 +151,7 @@ describe("Test: hotelClerk.join", () => {
 
     should(kuzzle.call).be.calledWith(
       "core:realtime:subscribe:after",
-      "i-exist"
+      "i-exist",
     );
   });
 });

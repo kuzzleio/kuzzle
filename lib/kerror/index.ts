@@ -70,7 +70,7 @@ export function rawGet(
 
   const kuzzleError = _.get(
     domains,
-    `${domain}.subDomains.${subdomain}.errors.${error}`
+    `${domain}.subDomains.${subdomain}.errors.${error}`,
   ) as any as ErrorDefinition;
 
   if (!kuzzleError) {
@@ -78,7 +78,7 @@ export function rawGet(
       "core",
       "fatal",
       "unexpected_error",
-      `${domain}.${subdomain}.${error}`
+      `${domain}.${subdomain}.${error}`,
     );
   }
 
@@ -173,7 +173,7 @@ export function rawReject(
   ...placeholders
 ): Promise<any> {
   return Promise.reject(
-    rawGet(domains, domain, subdomain, error, ...placeholders)
+    rawGet(domains, domain, subdomain, error, ...placeholders),
   );
 }
 
@@ -201,7 +201,7 @@ export function rawGetFrom(
     domain,
     subdomain,
     error,
-    ...placeholders
+    ...placeholders,
   );
 
   // If a stacktrace is present, we need to modify the first line because it
@@ -224,7 +224,7 @@ export function rawGetFrom(
 export function rawWrap(
   domains: ErrorDomains,
   domain: string,
-  subdomain: string
+  subdomain: string,
 ) {
   return {
     get: (error, ...placeholders) =>
@@ -294,7 +294,7 @@ export function getFrom(
     domain,
     subdomain,
     error,
-    ...placeholders
+    ...placeholders,
   );
 }
 

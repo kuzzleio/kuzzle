@@ -124,7 +124,7 @@ export class NameGenerator {
 
     return `${prefix}${adjective}${separator}${name}${separator}${randomNumber(
       min,
-      max
+      max,
     )}`;
   }
 }

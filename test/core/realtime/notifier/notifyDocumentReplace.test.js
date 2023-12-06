@@ -45,7 +45,7 @@ describe("Test: notifier.notifyDocumentReplace", () => {
         _id,
         _source: request.input.body,
       },
-      JSON.stringify(["foo", "bar"])
+      JSON.stringify(["foo", "bar"]),
     );
 
     should(notifier.notifyDocument.callCount).be.eql(2);
@@ -58,7 +58,7 @@ describe("Test: notifier.notifyDocumentReplace", () => {
       {
         _id,
         _source: request.input.body,
-      }
+      },
     );
 
     should(notifier.notifyDocument.getCall(1)).calledWith(
@@ -66,7 +66,7 @@ describe("Test: notifier.notifyDocumentReplace", () => {
       request,
       "out",
       "replace",
-      { _id, _source: request.input.body }
+      { _id, _source: request.input.body },
     );
 
     should(result).match(["foo"]);
@@ -81,7 +81,7 @@ describe("Test: notifier.notifyDocumentReplace", () => {
         _id: request.input.args._id,
         _source: request.input.body,
       },
-      JSON.stringify(["foo", "bar"])
+      JSON.stringify(["foo", "bar"]),
     );
 
     should(rooms).be.an.Array().and.be.empty();

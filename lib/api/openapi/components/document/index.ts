@@ -74,7 +74,7 @@ export const OpenApiDocumentValidateComponent =
 // reading the description of the mCreateOrReplace action in the controller document.
 // The yaml objects are then stored in the variables below
 const mCreateOrReplaceObject = readYamlFile(
-  __dirname + "/mCreateOrReplace.yaml"
+  __dirname + "/mCreateOrReplace.yaml",
 );
 export const OpenApiDocumentmCreateOrReplace =
   mCreateOrReplaceObject.DocumentmCreateOrReplace;

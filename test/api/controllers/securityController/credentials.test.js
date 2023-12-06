@@ -12,7 +12,7 @@ const {
 const KuzzleMock = require("../../../mocks/kuzzle.mock");
 
 const SecurityController = rewire(
-  "../../../../lib/api/controllers/securityController"
+  "../../../../lib/api/controllers/securityController",
 );
 
 describe("Test: security controller - credentials", () => {
@@ -44,16 +44,16 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("validate");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1],
         ).be.eql("create");
         should(methodStub).be.calledTwice();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -88,7 +88,7 @@ describe("Test: security controller - credentials", () => {
         .rejects(error);
 
       return should(securityController.createCredentials(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -111,16 +111,16 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledTwice();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("validate");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.secondCall.args[1],
         ).be.eql("update");
         should(methodStub).be.calledTwice();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -155,7 +155,7 @@ describe("Test: security controller - credentials", () => {
         .rejects(error);
 
       return should(securityController.updateCredentials(request)).rejectedWith(
-        error
+        error,
       );
     });
   });
@@ -175,10 +175,10 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("exists");
         should(methodStub).be.calledOnce();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -206,10 +206,10 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("validate");
         should(methodStub).be.calledOnce();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -237,10 +237,10 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ acknowledged: true });
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("delete");
         should(methodStub).be.calledOnce();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -289,7 +289,7 @@ describe("Test: security controller - credentials", () => {
       should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
       should(kuzzle.pluginsManager.getStrategyMethod).be.calledWith(
         "someStrategy",
-        "search"
+        "search",
       );
       should(methodStub).be.calledOnce();
       should(methodStub.firstCall.args[0]).be.eql({ query });
@@ -300,7 +300,7 @@ describe("Test: security controller - credentials", () => {
       kuzzle.pluginsManager.getStrategyMethod.returns(undefined);
 
       return should(
-        securityController.searchUsersByCredentials(request)
+        securityController.searchUsersByCredentials(request),
       ).rejectedWith({ id: "plugin.strategy.missing_optional_method" });
     });
 
@@ -309,7 +309,7 @@ describe("Test: security controller - credentials", () => {
       request.input.args.size = 10;
 
       return should(
-        securityController.searchUsersByCredentials(request)
+        securityController.searchUsersByCredentials(request),
       ).rejectedWith(SizeLimitError, {
         id: "services.storage.get_limit_exceeded",
       });
@@ -319,7 +319,7 @@ describe("Test: security controller - credentials", () => {
       request.input.args.lang = "turkish";
 
       return should(
-        securityController.searchUsersByCredentials(request)
+        securityController.searchUsersByCredentials(request),
       ).rejectedWith(BadRequestError, { id: "api.assert.invalid_argument" });
     });
 
@@ -353,17 +353,17 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
         ).be.eql("getInfo");
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("getInfo");
         should(methodStub).be.calledOnce();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -387,10 +387,10 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({});
         should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
         ).be.eql("getInfo");
         should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
       });
@@ -413,17 +413,17 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({ foo: "bar" });
         should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
         ).be.eql("getById");
         should(kuzzle.pluginsManager.getStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.getStrategyMethod.firstCall.args[1],
         ).be.eql("getById");
         should(methodStub).be.calledOnce();
         should(methodStub.firstCall.args[0]).be.eql(request);
@@ -447,10 +447,10 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual({});
         should(kuzzle.pluginsManager.hasStrategyMethod).be.calledOnce();
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[0],
         ).be.eql("someStrategy");
         should(
-          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1]
+          kuzzle.pluginsManager.hasStrategyMethod.firstCall.args[1],
         ).be.eql("getById");
         should(kuzzle.pluginsManager.getStrategyMethod.callCount).be.eql(0);
       });
@@ -473,7 +473,7 @@ describe("Test: security controller - credentials", () => {
         should(result).be.deepEqual(["aField", "anotherField"]);
         should(kuzzle.pluginsManager.getStrategyFields).be.calledOnce();
         should(
-          kuzzle.pluginsManager.getStrategyFields.firstCall.args[0]
+          kuzzle.pluginsManager.getStrategyFields.firstCall.args[0],
         ).be.eql("someStrategy");
       });
     });
@@ -504,10 +504,10 @@ describe("Test: security controller - credentials", () => {
           });
           should(kuzzle.pluginsManager.getStrategyFields).be.calledTwice();
           should(
-            kuzzle.pluginsManager.getStrategyFields.firstCall.args[0]
+            kuzzle.pluginsManager.getStrategyFields.firstCall.args[0],
           ).be.eql("someStrategy");
           should(
-            kuzzle.pluginsManager.getStrategyFields.secondCall.args[0]
+            kuzzle.pluginsManager.getStrategyFields.secondCall.args[0],
           ).be.eql("someOtherStrategy");
         });
     });

@@ -110,8 +110,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(errorMessages).be.deepEqual([]);
     });
@@ -128,7 +128,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPointStub.callCount).be.eql(1);
     });
@@ -145,7 +145,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isLine", isLineStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isLineStub.callCount).be.eql(1);
     });
@@ -162,7 +162,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPolygon", isPolygonStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPolygonStub.callCount).be.eql(1);
     });
@@ -184,7 +184,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPointStub.callCount).be.eql(1);
     });
@@ -201,7 +201,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isEnvelope", isEnvelopeStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isEnvelopeStub.callCount).be.eql(1);
     });
@@ -220,7 +220,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPointStub).calledOnce();
     });
@@ -238,7 +238,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPointStub.callCount).be.eql(1);
     });
@@ -255,7 +255,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.true();
       should(isPointStub.callCount).be.eql(2);
     });
@@ -272,7 +272,7 @@ describe("Test: validation/types/geoShape", () => {
       GeoShapeType.__set__("isPoint", isPointStub);
 
       should(
-        geoShapeType.recursiveShapeValidation(allowedShapes, shape, [])
+        geoShapeType.recursiveShapeValidation(allowedShapes, shape, []),
       ).be.false();
       should(isPointStub.callCount).be.eql(1);
     });
@@ -294,8 +294,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(isPolygonStub.callCount).be.eql(1);
       should(errorMessages).be.deepEqual([
@@ -324,8 +324,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(isPointStub.callCount).be.eql(1);
       should(errorMessages).be.deepEqual([
@@ -350,8 +350,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(isPointStub.callCount).be.eql(1);
       should(errorMessages).be.deepEqual([
@@ -377,8 +377,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(isPointStub.callCount).be.eql(1);
       should(errorMessages).be.deepEqual([
@@ -404,8 +404,8 @@ describe("Test: validation/types/geoShape", () => {
         geoShapeType.recursiveShapeValidation(
           allowedShapes,
           shape,
-          errorMessages
-        )
+          errorMessages,
+        ),
       ).be.false();
       should(isPointStub.callCount).be.eql(1);
       should(errorMessages).be.deepEqual([
@@ -433,7 +433,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "The shape object has no type defined.",
@@ -450,7 +450,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "The shape object has a not allowed property.",
@@ -466,7 +466,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         "The provided shape type is not allowed.",
@@ -483,7 +483,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         'The coordinates property must not be provided for the "geometrycollection" shape type.',
@@ -499,7 +499,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         'The coordinates property must be provided for the "allowed" shape type.',
@@ -515,7 +515,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         'The radius property is mandatory for the "circle" shape type.',
@@ -532,7 +532,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         `The radius property must not be provided for the "${shape.type}" shape type.`,
@@ -549,7 +549,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         `The orientation property must not be provided for the "${shape.type}" shape type.`,
@@ -566,7 +566,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         `The geometries property must not be provided for the "${shape.type}" shape type.`,
@@ -582,7 +582,7 @@ describe("Test: validation/types/geoShape", () => {
         };
 
       should(
-        geoShapeType.checkStructure(allowedShapes, shape, errorMessages)
+        geoShapeType.checkStructure(allowedShapes, shape, errorMessages),
       ).be.false();
       should(errorMessages).be.deepEqual([
         'The geometries property must be provided for the "geometrycollection" shape type.',
@@ -607,14 +607,14 @@ describe("Test: validation/types/geoShape", () => {
       };
 
       should(geoShapeType.validateFieldSpecification({})).be.deepEqual(
-        expectedTypeOptions
+        expectedTypeOptions,
       );
     });
 
     it("should return the typeOptions if shapeTypes is provided and valid", () => {
       const typeOptions = { shapeTypes: ["point", "linestring"] };
       should(geoShapeType.validateFieldSpecification(typeOptions)).be.deepEqual(
-        typeOptions
+        typeOptions,
       );
     });
 
@@ -622,20 +622,20 @@ describe("Test: validation/types/geoShape", () => {
       should(() =>
         geoShapeType.validateFieldSpecification({
           shapeTypes: ["circle", "multipolygon", "invalid"],
-        })
+        }),
       ).throw(PreconditionError, { id: "validation.types.invalid_geoshape" });
 
       should(() =>
         geoShapeType.validateFieldSpecification({
           shapeTypes: ["invalid", "circle", "foo", "multipolygon", "bar"],
-        })
+        }),
       ).throw(PreconditionError, { id: "validation.types.invalid_geoshape" });
     });
 
     it("should throw if the provided shapeTypes list is empty or not an array", () => {
       [[], null, undefined, "foo", 123].forEach((t) => {
         should(() =>
-          geoShapeType.validateFieldSpecification({ shapeTypes: t })
+          geoShapeType.validateFieldSpecification({ shapeTypes: t }),
         ).throw(PreconditionError, { id: "validation.assert.invalid_type" });
       });
     });

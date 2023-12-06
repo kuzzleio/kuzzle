@@ -36,7 +36,7 @@ export function flattenObject(target: JSONObject): JSONObject {
 function flattenStep(
   output: JSONObject,
   object: JSONObject,
-  prev: string | null = null
+  prev: string | null = null,
 ): void {
   const keys = Object.keys(object);
 
@@ -119,7 +119,7 @@ abstract class AbstractDumper {
       scroll: "5s",
       separator: ",",
       size: 10,
-    }
+    },
   ) {
     if (!writeStream) {
       throw kerror.get("api", "assert", "missing_argument", "writeStream");
@@ -172,7 +172,7 @@ abstract class AbstractDumper {
       return await global.kuzzle.ask(
         "core:storage:public:document:scroll",
         scrollId,
-        { scrollTTL: this.options.scroll }
+        { scrollTTL: this.options.scroll },
       );
     } catch {
       return null;
@@ -187,7 +187,7 @@ abstract class AbstractDumper {
    */
   async dump() {
     const waitWrite: Promise<void> = new Promise((resolve, reject) =>
-      this.writeStream ? this.writeStream.on("finish", resolve) : reject()
+      this.writeStream ? this.writeStream.on("finish", resolve) : reject(),
     );
 
     this.writeStream.on("error", (error) => {
@@ -207,7 +207,7 @@ abstract class AbstractDumper {
           lang: this.options.lang,
           scroll: this.options.scroll,
           size: this.options.size,
-        }
+        },
       );
 
       do {
@@ -276,7 +276,7 @@ class CSVDumper extends AbstractDumper {
     query: any = {},
     writeStream: stream.Writable,
     options: JSONObject,
-    protected fields: string[]
+    protected fields: string[],
   ) {
     super(index, collection, query, writeStream, options);
   }
@@ -290,13 +290,13 @@ class CSVDumper extends AbstractDumper {
       const mappings = await global.kuzzle.ask(
         "core:storage:public:mappings:get",
         this.index,
-        this.collection
+        this.collection,
       );
       if (!mappings.properties) {
         return;
       }
       this.fields = Object.keys(
-        flattenObject(extractMappingFields(mappings.properties))
+        flattenObject(extractMappingFields(mappings.properties)),
       );
     } else if (this.fields.includes("_id")) {
       // Delete '_id' from the selected fields, since IDs are
@@ -334,7 +334,7 @@ export function dumpCollectionDocuments(
   query: any = {},
   format = "jsonl",
   fields: string[] = [],
-  options: JSONObject = {}
+  options: JSONObject = {},
 ): HttpStream {
   let dumper: AbstractDumper;
 
@@ -348,7 +348,7 @@ export function dumpCollectionDocuments(
         query,
         writableStream,
         options,
-        fields
+        fields,
       );
       dumper.dump();
       break;
@@ -358,7 +358,7 @@ export function dumpCollectionDocuments(
         collection,
         query,
         writableStream,
-        options
+        options,
       );
       dumper.dump();
       break;

@@ -29,7 +29,7 @@ interface EventAliases {
 
 function filter(
   obj: Record<string, unknown>,
-  expectValue: string
+  expectValue: string,
 ): Array<string> {
   const result = [];
 
