@@ -5,6 +5,9 @@ on:
     branches:
       - master
 
+env:
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+
 jobs:
   dockerhub-deploy:
     name: Kuzzle plugin-dev Node.js
@@ -38,5 +41,5 @@ jobs:
           context: .
           file: ./docker/images/plugin-dev/Dockerfile
           push: true
-          platforms: "linux/amd64,linux/arm64"
+          platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/plugin-dev:${{ steps.get-version.outputs.major-version }},kuzzleio/plugin-dev:latest,kuzzleio/plugin-dev:${{ steps.get-version.outputs.version }}

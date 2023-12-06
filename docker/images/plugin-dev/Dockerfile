@@ -11,8 +11,6 @@ RUN  set -x \
        libzmq3-dev \
        libunwind-dev
 
-RUN npm install -g ergol kourou
-
 WORKDIR /app
 
 ADD ./bin bin
@@ -23,7 +21,7 @@ ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
 ADD ./tsconfig.json tsconfig.json
 
-RUN npm ci
+RUN npm ci --noproxy registry.npmjs.org --maxsockets 1
 RUN npm run build
 RUN npm prune --production
 
