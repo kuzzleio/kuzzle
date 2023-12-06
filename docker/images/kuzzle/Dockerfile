@@ -1,7 +1,6 @@
 ################################################################################
-# Production build image
-################################################################################
-FROM node:18-bullseye-slim as builder
+ARG NODE_LTS_VERSION="18"
+FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
 
 RUN  set -x \
  && apt-get update \
@@ -14,36 +13,26 @@ RUN  set -x \
       libzmq3-dev \
       libunwind-dev
 
-ADD ./bin /app/bin
-ADD ./config /app/config
-ADD ./lib /app/lib
-ADD ./package.json /app/package.json
-ADD ./package-lock.json /app/package-lock.json
-ADD ./index.js /app/index.js
-ADD ./.kuzzlerc.sample.jsonc /app/.kuzzlerc.sample.jsonc
-
 WORKDIR /app
 
-ENV NODE_ENV=production
+ADD ./bin bin
+ADD ./config config
+ADD ./lib lib
+ADD ./package.json package.json
+ADD ./package-lock.json package-lock.json
+ADD ./index.ts index.ts
+ADD ./tsconfig.json tsconfig.json
 
-# Install dependencies
-RUN npm ci --production
+RUN npm ci --noproxy registry.npmjs.org --maxsockets 1
+RUN npm run build
+RUN npm prune --production
 
-ADD ./docker/scripts/clean-node.sh /usr/bin/clean-node
+RUN rm -rf tsconfig.json index.ts
 
 ADD ./plugins/available/ /app/plugins/available/
 
-RUN  set -x \
-  # Remove useless leftover dependencies
- && rm -rf node_modules/rxjs/ \
-  # Strip binaries
-  ; strip node_modules/re2/build/Release/re2.node \
-  ; true
-
 ################################################################################
-# Production build 2 image
-################################################################################
-FROM node:18-bullseye-slim as minifier
+FROM node:${NODE_LTS_VERSION}-bullseye-slim AS minifier
 
 ENV NODE_ENV=production
 
@@ -56,9 +45,7 @@ RUN  set -x \
  && apt-get autoremove --yes
 
 ################################################################################
-# Production image
-################################################################################
-FROM bitnami/minideb:bullseye
+FROM node:${NODE_LTS_VERSION}-bullseye-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"

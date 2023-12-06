@@ -1,4 +1,4 @@
-name: kuzzleio/kuzzle-runner
+name: kuzzleio/core-dev
 
 on:
   push:
@@ -9,11 +9,9 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
 
 jobs:
-  publish-runner:
-    name: Build and push image embedding Node.js
+  build-and-push:
+    name: core-dev image
     runs-on: ubuntu-22.04
-    matrix:
-      node-version: [16, 18, 20]
     steps:
       - uses: actions/checkout@v3
 
@@ -31,11 +29,10 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v3
+        uses: docker/build-push-action@v5
         with:
-          context: ./kuzzle-runner
-          file: ./kuzzle-runner/Dockerfile
+          context: ./docker/images/core-dev
+          file: ./docker/images/core-dev/Dockerfile
           push: true
-          build-args: NODE_LTS_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
+          tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest

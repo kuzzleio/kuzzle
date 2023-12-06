@@ -1,4 +1,4 @@
-name: kuzzleio/core-dev
+name: kuzzleio/elasticsearch
 
 on:
   push:
@@ -6,11 +6,12 @@ on:
       - master
 
 env:
-  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
+  ELASTICSEARCH_VERSION: "7.16.2"
 
 jobs:
   build-and-push:
-    name: Build and push core-dev image
+    name: Elasticsearch image
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
@@ -29,10 +30,11 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and push
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v5
         with:
-          context: ./core-dev
-          file: ./core-dev/Dockerfile
+          context: ./docker/images/elasticsearch
+          file: ./docker/images/elasticsearch/Dockerfile
           push: true
+          build-args: ELASTICSEARCH_VERSION=${{ env.ELASTICSEARCH_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest
+          tags: kuzzleio/elasticsearch:${{ env.ELASTICSEARCH_VERSION }},kuzzleio/elasticsearch:7, kuzzleio/elasticsearch:latest
