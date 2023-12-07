@@ -68,8 +68,13 @@ jobs:
           node-version: ${{ matrix.node-version }}
           cache: "npm"
 
-      - name: Run ESlint
-        uses: ./.github/actions/es-lint
+      - name: Install depedencies
+        run: npm ci
+        shell: bash
+
+      - name: Run ESLint
+        run: npm run test:lint
+        shell: bash
 
   unit-tests:
     name: Unit Tests
@@ -153,13 +158,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-
-      - name: Install depedencies
-        run: npm ci
-
-      - name: Build kuzzle
-        run: npm run build
 
       - name: test suit ${{ matrix.test_set }}
         uses: ./.github/actions/functional-tests
@@ -193,7 +191,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Run monkey testing tests suit
         uses: ./.github/actions/monkey-tests

@@ -9,15 +9,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - run: npm ci
-      shell: bash
-
-    - run: npm run build
-      shell: bash
-
-    - run: npm prune --production
-      shell: bash
-
     - run: |
         export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
         docker compose -f ./.ci/services.yml up -d

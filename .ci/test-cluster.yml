@@ -1,7 +1,7 @@
 version: '3.4'
 
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-16}
+  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-20}
   command: > 
     bash -c "
       node ./docker/scripts/start-kuzzle-test.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
@@ -28,7 +28,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_limits__loginsPerSecond=50
     - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
     - NODE_ENV=development
-    - NODE_VERSION=${NODE_VERSION:-}
+    - NODE_VERSION=${NODE_VERSION:-20}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
     # cluster
@@ -38,7 +38,6 @@ x-kuzzle-config: &kuzzle-config
 services:
   nginx:
     image: nginx:1.19-alpine
-    container_name: kuzzle_nginx
     depends_on:
       - kuzzle_node_1
       - kuzzle_node_2
@@ -50,29 +49,24 @@ services:
 
   kuzzle_node_1:
     <<: *kuzzle-config
-    container_name: kuzzle_node_1
     ports:
       - "17510:7512"
       - "1883:1883"
 
   kuzzle_node_2:
     <<: *kuzzle-config
-    container_name: kuzzle_node_2
     ports:
       - "17511:7512"
 
   kuzzle_node_3:
     <<: *kuzzle-config
-    container_name: kuzzle_node_3
     ports:
       - "17512:7512"
 
   redis:
     image: redis:6
-    container_name: kuzzle_redis
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
-    container_name: kuzzle_elasticsearch
     ulimits:
       nofile: 65536
