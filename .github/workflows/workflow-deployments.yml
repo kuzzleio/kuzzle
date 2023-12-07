@@ -99,7 +99,6 @@ jobs:
         with:
           node-version: ${{ inputs.node_lts_active_version }}
           registry-url: "https://registry.npmjs.org"
-          cache: 'npm'
 
       - name: Install depedencies
         run: npm ci

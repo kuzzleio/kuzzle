@@ -25,7 +25,7 @@ ADD ./tsconfig.json tsconfig.json
 
 RUN npm ci --noproxy registry.npmjs.org --maxsockets 1
 RUN npm run build
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 RUN rm -rf tsconfig.json index.ts
 

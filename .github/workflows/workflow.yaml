@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
-          cache: "npm"
 
       - name: Install depedencies
         run: npm ci
@@ -66,7 +65,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Install depedencies
         run: npm ci
@@ -94,7 +92,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Run unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
@@ -111,20 +108,10 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
