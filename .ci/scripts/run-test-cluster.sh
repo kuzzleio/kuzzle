@@ -9,9 +9,9 @@ then
   export NODE_VERSION=$NODE_20_VERSION
 fi
 
-docker compose -f ./.ci/test-cluster.yml down -v
-
 echo "Testing Kuzzle against node v$NODE_VERSION"
+
+docker compose -f ./.ci/test-cluster.yml down -v
 
 echo "Installing dependencies..."
 docker compose -f ./.ci/test-cluster.yml run --rm kuzzle_node_1 npm ci

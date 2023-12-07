@@ -151,8 +151,6 @@ jobs:
         with:
           test-set: test:functional:${{ matrix.test_set }}
           node-version: ${{ matrix.node-version }}
-        env:
-          REBUILD: "true"
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
@@ -183,8 +181,6 @@ jobs:
         uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
-        env:
-          REBUILD: "true"
 
   deploy-workflow:
     name: Deployment Workflow
