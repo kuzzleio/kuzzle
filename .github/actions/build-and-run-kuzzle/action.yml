@@ -10,11 +10,16 @@ runs:
   using: "composite"
   steps:
     - run: |
+        npm install -g kuzzle-sdk
+      shell: bash
+
+    - run: |
         export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
         docker compose -f ./.ci/services.yml up -d
       shell: bash
 
     - run: |
+        export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
         trap 'docker compose -f ./.ci/services.yml logs' err
 
         export MAX_TRIES=60
