@@ -1,6 +1,6 @@
 ################################################################################
-ARG NODE_LTS_VERSION="18"
-FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
+ARG NODE_VERSION="20"
+FROM node:${NODE_VERSION}-bullseye-slim AS builder
 
 RUN  set -x \
  && apt-get update \
@@ -32,7 +32,7 @@ RUN rm -rf tsconfig.json index.ts
 ADD ./plugins/available/ /app/plugins/available/
 
 ################################################################################
-FROM node:${NODE_LTS_VERSION}-bullseye-slim AS minifier
+FROM node:${NODE_VERSION}-bullseye-slim AS minifier
 
 ENV NODE_ENV=production
 
@@ -45,7 +45,7 @@ RUN  set -x \
  && apt-get autoremove --yes
 
 ################################################################################
-FROM node:${NODE_LTS_VERSION}-bullseye-slim
+FROM node:${NODE_VERSION}-bullseye-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
