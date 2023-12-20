@@ -389,16 +389,28 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           client,
         );
 
-        const matcher = errorMatcher.fromMessage(
+        // NodeJS < 20
+        const matcher1 = errorMatcher.fromMessage(
           "network",
           "mqtt",
           "unexpected_error",
           "Unexpected token i in JSON at position 0",
         );
 
+        // NodeJS >= 20
+        const matcher2 = errorMatcher.fromMessage(
+          "network",
+          "mqtt",
+          "unexpected_error",
+          "Unexpected token 'i', \"invalid\" is not valid JSON",
+        );
+
         should(protocol._respond)
           .be.calledOnce()
-          .be.calledWith(client, sinon.match(matcher));
+          .be.calledWith(
+            client,
+            sinon.match(matcher1).or(sinon.match(matcher2)),
+          );
 
         protocol._respond.resetHistory();
       }

@@ -7,6 +7,7 @@ on:
 
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+  NODE_VERSION: "20"
 
 jobs:
   dockerhub-deploy:
@@ -41,5 +42,6 @@ jobs:
           context: .
           file: ./docker/images/kuzzle/Dockerfile
           push: true
+          build-args: NODE_VERSION=${{ env.NODE_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}

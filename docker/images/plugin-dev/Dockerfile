@@ -1,6 +1,6 @@
 ################################################################################
-ARG NODE_LTS_VERSION="18"
-FROM node:${NODE_LTS_VERSION}-bullseye-slim AS builder
+ARG NODE_VERSION="20"
+FROM node:${NODE_VERSION}-bullseye-slim AS builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
@@ -23,14 +23,14 @@ ADD ./tsconfig.json tsconfig.json
 
 RUN npm ci --noproxy registry.npmjs.org --maxsockets 1
 RUN npm run build
-RUN npm prune --production
+RUN npm prune --omit=dev
 
 RUN rm -rf tsconfig.json index.ts
 
 ADD ./plugins/available/ plugins/available/
 
 ################################################################################
-FROM node:${NODE_LTS_VERSION}-bullseye-slim
+FROM node:${NODE_VERSION}-bullseye-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"

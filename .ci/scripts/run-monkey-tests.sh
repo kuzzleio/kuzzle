@@ -4,21 +4,23 @@ set -ex
 
 if [ -z "$NODE_VERSION" ];
 then
-  echo "Missing NODE_VERSION, use default NODE_18_VERSION"
-  export NODE_VERSION=$NODE_18_VERSION
+  echo "Missing NODE_VERSION, use default NODE_20_VERSION"
+  export NODE_VERSION=$NODE_20_VERSION
 fi
 
 echo "Testing Kuzzle against node v$NODE_VERSION"
 
+docker compose -f ./.ci/test-cluster.yml down -v
+
 echo "Installing dependencies..."
-npm ci --unsafe-perm
+docker compose -f ./.ci/test-cluster.yml run --rm kuzzle_node_1 npm ci
 
 if [ "$REBUILD" == "true" ];
 then
-  docker compose -f ./.ci/test-cluster.yml run kuzzle_node_1 npm rebuild
+  docker compose -f ./.ci/test-cluster.yml run --rm kuzzle_node_1 npm rebuild
 fi
 
-npm run build
+docker compose -f ./.ci/test-cluster.yml run --rm kuzzle_node_1 npm run build
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
