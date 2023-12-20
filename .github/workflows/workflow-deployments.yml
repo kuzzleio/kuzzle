@@ -104,7 +104,7 @@ jobs:
         run: npm ci
 
       - name: Build depedencies
-        run: npm build
+        run: npm run build
 
       - name: Publish package
         run: npm publish
