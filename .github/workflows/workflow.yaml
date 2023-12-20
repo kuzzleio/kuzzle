@@ -19,7 +19,7 @@ jobs:
     steps:
       - id: set-matrix
         run: |
-          echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
+          echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
@@ -40,7 +40,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
-          cache: "npm"
 
       - name: Install depedencies
         run: npm ci
@@ -66,10 +65,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
-      - name: Run ESlint
-        uses: ./.github/actions/es-lint
+      - name: Install depedencies
+        run: npm ci
+        shell: bash
+
+      - name: Run ESLint
+        run: npm run test:lint
+        shell: bash
 
   unit-tests:
     name: Unit Tests
@@ -89,7 +92,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Run unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
@@ -106,20 +108,10 @@ jobs:
     runs-on: ubuntu-22.04
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         kuzzle-image: ["kuzzle"]
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ matrix.node-version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
@@ -127,7 +119,7 @@ jobs:
           KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
 
   functional-tests:
-    name: ${{ matrix.test_set }} - Node.js v${{ matrix.node-version }}
+    name: Functional tests
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
@@ -153,21 +145,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
-
-      - name: Install depedencies
-        run: npm ci
-
-      - name: Build kuzzle
-        run: npm run build
 
       - name: test suit ${{ matrix.test_set }}
         uses: ./.github/actions/functional-tests
         with:
           test-set: test:functional:${{ matrix.test_set }}
           node-version: ${{ matrix.node-version }}
-        env:
-          REBUILD: "true"
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
@@ -193,14 +176,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: "npm"
 
       - name: Run monkey testing tests suit
         uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
-        env:
-          REBUILD: "true"
 
   deploy-workflow:
     name: Deployment Workflow

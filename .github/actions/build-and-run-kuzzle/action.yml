@@ -15,7 +15,7 @@ runs:
     - run: npm run build
       shell: bash
 
-    - run: npm prune --production
+    - run: npm prune --omit=dev
       shell: bash
 
     - run: |

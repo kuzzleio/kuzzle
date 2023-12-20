@@ -94,15 +94,17 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
       
-      - name: Node version ${{ inputs.node_lts_active_version }}
+      - name: Node version ${{ inputs.node_lts_current_version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node_lts_active_version }}
+          node-version: ${{ inputs.node_lts_current_version }}
           registry-url: "https://registry.npmjs.org"
-          cache: 'npm'
 
       - name: Install depedencies
         run: npm ci
+
+      - name: Build depedencies
+        run: npm build
 
       - name: Publish package
         run: npm publish

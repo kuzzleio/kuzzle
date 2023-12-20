@@ -36,6 +36,6 @@ jobs:
           context: ./docker/images/kuzzle-runner
           file: ./docker/images/kuzzle-runner/Dockerfile
           push: true
-          build-args: NODE_LTS_VERSION=${{ matrix.node-version }}
+          build-args: NODE_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}

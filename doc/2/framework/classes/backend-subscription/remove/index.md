@@ -27,10 +27,10 @@ remove(
 
 <br/>
 
-| Argument     | Type                 | Description                                |
-| ------------ | -------------------- | ------------------------------------------ |
-| `connection` | <pre>Connection<pre> | Connection to remove the subscription from |
-| `roomId`     | <pre>string</pre>    | Room identifier                            |
+| Argument     | Type                  | Description                                |
+| ------------ | --------------------- | ------------------------------------------ |
+| `connection` | <pre>Connection</pre> | Connection to remove the subscription from |
+| `roomId`     | <pre>string</pre>     | Room identifier                            |
 
 ## Usage
 
