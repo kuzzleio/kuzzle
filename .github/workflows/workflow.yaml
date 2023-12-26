@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - beta
       - 2-dev
   pull_request:
 
