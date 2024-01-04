@@ -1,12 +1,12 @@
-import { ByteSize, ClusterNodesStats } from "@elastic/elasticsearch/api/types";
+import { estypes } from "@elastic/elasticsearch";
 
 export type InfoResult = {
   type: string;
   version: string;
   status?: string;
   lucene?: string;
-  spaceUsed?: ByteSize;
-  nodes?: ClusterNodesStats;
+  spaceUsed?: estypes.ByteSize;
+  nodes?: estypes.ClusterStatsClusterNodes;
 };
 
 export type KRequestBody<T> = T & {

@@ -25,7 +25,7 @@
     "test:lint:ts": "eslint ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
     "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
-    "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit:coverage && npm run test:functional"
+    "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit && npm run test:functional"
   },
   "directories": {
     "lib": "lib"
