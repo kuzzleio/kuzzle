@@ -21,7 +21,11 @@
 
 import _ from "lodash";
 
-import { Client as StorageClient, ClientOptions, estypes } from '@elastic/elasticsearch';
+import {
+  Client as StorageClient,
+  ClientOptions,
+  estypes,
+} from "@elastic/elasticsearch";
 import {
   InfoResult,
   JSONObject,
@@ -190,10 +194,7 @@ export default class ElasticSearch extends Service {
 
     const { version } = await this._client.info();
 
-    if (
-      version &&
-      !semver.satisfies(semver.coerce(version.number), "^8.0.0")
-    ) {
+    if (version && !semver.satisfies(semver.coerce(version.number), "^8.0.0")) {
       throw kerror.get(
         "services",
         "storage",
@@ -805,8 +806,8 @@ export default class ElasticSearch extends Service {
       injectKuzzleMeta?: boolean;
     } = {},
   ) {
-    const esRequest = {
-      body: content,
+    const esRequest: estypes.IndexRequest<KRequestBody<JSONObject>> = {
+      document: content,
       id,
       index: this._getAlias(index, collection),
       refresh,
@@ -817,7 +818,7 @@ export default class ElasticSearch extends Service {
 
     // Add metadata
     if (injectKuzzleMeta) {
-      esRequest.body._kuzzle_info = {
+      esRequest.document._kuzzle_info = {
         author: getKuid(userId),
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -832,7 +833,7 @@ export default class ElasticSearch extends Service {
 
       return {
         _id: body._id,
-        _source: esRequest.body,
+        _source: esRequest.document,
         _version: body._version,
         created: body.result === "created", // Needed by the notifier
       };
@@ -1016,8 +1017,8 @@ export default class ElasticSearch extends Service {
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
-    const esRequest = {
-      body: content,
+    const esRequest: estypes.IndexRequest<KRequestBody<JSONObject>> = {
+      document: content,
       id,
       index: alias,
       refresh,
@@ -1028,7 +1029,7 @@ export default class ElasticSearch extends Service {
 
     if (injectKuzzleMeta) {
       // Add metadata
-      esRequest.body._kuzzle_info = {
+      esRequest.document._kuzzle_info = {
         author: getKuid(userId),
         createdAt: Date.now(),
         updatedAt: Date.now(),
@@ -1056,7 +1057,7 @@ export default class ElasticSearch extends Service {
 
       return {
         _id: id,
-        _source: esRequest.body,
+        _source: esRequest.document,
         _version: body._version,
       };
     } catch (error) {
@@ -1116,7 +1117,7 @@ export default class ElasticSearch extends Service {
    * @param {Object} query - Query to match documents
    * @param {Object} options - size (undefined), refresh (undefined), fetch (true)
    *
-   * @returns {Promise.<{ documents, total, deleted, failures: Array<{ _shardId, reason }> }>}
+   * @returns {Promise.<{ documents, total, deleted, failures: Array<{ id, reason }> }>}
    */
   async deleteByQuery(
     index: string,
@@ -1136,8 +1137,7 @@ export default class ElasticSearch extends Service {
       ...this._sanitizeSearchBody({ query }),
       index: this._getAlias(index, collection),
       scroll: "5s",
-      size,
-    } satisfies estypes.DeleteByQueryRequest;
+    } satisfies estypes.DeleteByQueryRequest | estypes.SearchRequest;
 
     if (!isPlainObject(query)) {
       throw kerror.get("services", "storage", "missing_argument", "body.query");
@@ -1147,21 +1147,27 @@ export default class ElasticSearch extends Service {
       let documents = [];
 
       if (fetch) {
-        documents = await this._getAllDocumentsFromQuery(esRequest);
+        documents = await this._getAllDocumentsFromQuery({
+          ...esRequest,
+          size,
+        });
       }
 
       debug("Delete by query: %o", esRequest);
 
       esRequest.refresh = refresh === "wait_for" ? true : refresh;
 
-      const body = await this._client.deleteByQuery(esRequest);
+      const body = await this._client.deleteByQuery({
+        ...esRequest,
+        max_docs: size,
+      });
 
       return {
         deleted: body.deleted,
         documents,
         failures: body.failures.map(({ id, cause }) => ({
-          cause,
           id,
+          reason: cause.reason,
         })),
         total: body.total,
       };
@@ -1195,14 +1201,14 @@ export default class ElasticSearch extends Service {
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
-    const esRequest = {
+    const esRequest: estypes.GetRequest = {
       id,
       index: alias,
     };
 
     try {
       debug("DeleteFields document: %o", esRequest);
-      const body = await this._client.get<Record<string, unknown>>(esRequest);
+      const body = await this._client.get<JSONObject>(esRequest);
 
       for (const field of fields) {
         if (_.has(body._source, field)) {
@@ -1210,16 +1216,22 @@ export default class ElasticSearch extends Service {
         }
       }
 
+      const updatedInfos = {
+        updatedAt: Date.now(),
+        updater: getKuid(userId),
+      };
+
       if (typeof body._source._kuzzle_info === "object") {
         body._source._kuzzle_info = {
           ...body._source._kuzzle_info,
-          updatedAt: Date.now(),
-          updater: getKuid(userId),
+          ...updatedInfos,
         };
+      } else {
+        body._source._kuzzle_info = updatedInfos;
       }
 
-      const newEsRequest = {
-        body: body._source,
+      const newEsRequest: estypes.IndexRequest = {
+        document: body._source,
         id,
         index: alias,
         refresh,
@@ -1623,7 +1635,7 @@ export default class ElasticSearch extends Service {
     } = {},
   ) {
     const indice = await this._getIndice(index, collection);
-    const esRequest = {
+    const esRequest: estypes.IndicesGetMappingRequest = {
       index: indice,
     };
 
@@ -1805,7 +1817,7 @@ export default class ElasticSearch extends Service {
 
     return {
       _meta: esRequest._meta,
-      dynamic: JSON.stringify(esRequest.dynamic),
+      dynamic: esRequest.dynamic.toString(),
       properties: fullProperties,
     };
   }
@@ -2386,9 +2398,9 @@ export default class ElasticSearch extends Service {
         : { docs: [] };
 
     const existingDocuments = body.docs;
-    const esRequest = {
-      body: [],
+    const esRequest: estypes.BulkRequest = {
       index: alias,
+      operations: [],
       refresh,
       timeout,
     };
@@ -2418,20 +2430,20 @@ export default class ElasticSearch extends Service {
             status: 400,
           });
         } else {
-          esRequest.body.push({
+          esRequest.operations.push({
             index: {
               _id: document._id,
               _index: alias,
             },
           });
-          esRequest.body.push(document._source);
+          esRequest.operations.push(document._source);
 
           toImport.push(document);
         }
         idx++;
       } else {
-        esRequest.body.push({ index: { _index: alias } });
-        esRequest.body.push(document._source);
+        esRequest.operations.push({ index: { _index: alias } });
+        esRequest.operations.push(document._source);
 
         toImport.push(document);
       }
@@ -2478,9 +2490,9 @@ export default class ElasticSearch extends Service {
     }
 
     const alias = this._getAlias(index, collection);
-    const esRequest = {
-      body: [],
+    const esRequest: estypes.BulkRequest = {
       index: alias,
+      operations: [],
       refresh,
       timeout,
     };
@@ -2489,7 +2501,7 @@ export default class ElasticSearch extends Service {
       kuzzleMeta,
     );
 
-    esRequest.body = [];
+    esRequest.operations = [];
 
     /**
      * @warning Critical code section
@@ -2497,13 +2509,13 @@ export default class ElasticSearch extends Service {
      * request can contain more than 10K elements
      */
     for (let i = 0; i < extractedDocuments.length; i++) {
-      esRequest.body.push({
+      esRequest.operations.push({
         index: {
           _id: extractedDocuments[i]._id,
           _index: alias,
         },
       });
-      esRequest.body.push(extractedDocuments[i]._source);
+      esRequest.operations.push(extractedDocuments[i]._source);
     }
     /* end critical code section */
 
@@ -2538,9 +2550,9 @@ export default class ElasticSearch extends Service {
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
-      esRequest = {
-        body: [],
+      esRequest: estypes.BulkRequest = {
         index: alias,
+        operations: [],
         refresh,
         timeout,
       },
@@ -2564,7 +2576,7 @@ export default class ElasticSearch extends Service {
       const extractedDocument = extractedDocuments[i];
 
       if (typeof extractedDocument._id === "string") {
-        esRequest.body.push({
+        esRequest.operations.push({
           update: {
             _id: extractedDocument._id,
             _index: alias,
@@ -2575,7 +2587,7 @@ export default class ElasticSearch extends Service {
 
         // _source: true => makes ES return the updated document source in the
         // response. Required by the real-time notifier component
-        esRequest.body.push({
+        esRequest.operations.push({
           _source: true,
           doc: extractedDocument._source,
         });
@@ -2638,8 +2650,8 @@ export default class ElasticSearch extends Service {
     } = {},
   ) {
     const alias = this._getAlias(index, collection);
-    const esRequest = {
-      body: [],
+    const esRequest: estypes.BulkRequest = {
+      operations: [],
       refresh,
       timeout,
     };
@@ -2676,7 +2688,7 @@ export default class ElasticSearch extends Service {
      * request can contain more than 10K elements
      */
     for (let i = 0; i < extractedDocuments.length; i++) {
-      esRequest.body.push(
+      esRequest.operations.push(
         {
           update: {
             _id: extractedDocuments[i]._id,
@@ -2769,8 +2781,8 @@ export default class ElasticSearch extends Service {
     });
 
     const existingDocuments = body.docs;
-    const esRequest = {
-      body: [],
+    const esRequest: estypes.BulkRequest = {
+      operations: [],
       refresh,
       timeout,
     };
@@ -2788,13 +2800,13 @@ export default class ElasticSearch extends Service {
       const doc = existingDocuments[i];
 
       if (!("error" in doc) && doc?.found) {
-        esRequest.body.push({
+        esRequest.operations.push({
           index: {
             _id: document._id,
             _index: alias,
           },
         });
-        esRequest.body.push(document._source);
+        esRequest.operations.push(document._source);
 
         toImport.push(document);
       } else {
