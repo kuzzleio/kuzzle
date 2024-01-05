@@ -21,7 +21,7 @@
 
 import _ from "lodash";
 
-import { Client as StorageClient, estypes } from "@elastic/elasticsearch";
+import { Client as StorageClient, ClientOptions, estypes } from '@elastic/elasticsearch';
 import {
   InfoResult,
   JSONObject,
@@ -106,22 +106,8 @@ export default class ElasticSearch extends Service {
    *
    * @returns {Object}
    */
-  static buildClient(config) {
-    // Passed to Elasticsearch's client to make it use
-    // Bluebird instead of ES6 promises
-    const defer = function defer() {
-      let resolve;
-      let reject;
-
-      const promise = new Bluebird((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-
-      return { promise, reject, resolve };
-    };
-
-    return new StorageClient({ defer, ...config });
+  static buildClient(config: ClientOptions) {
+    return new StorageClient(config);
   }
 
   constructor(config, scope = scopeEnum.PUBLIC) {

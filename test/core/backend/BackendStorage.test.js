@@ -34,7 +34,7 @@ describe("Backend", () => {
       should(client.connectionPool.connections[0].url.toString()).be.eql(
         "http://es:9200/",
       );
-      should(client.helpers.maxRetries).be.eql(42);
+      should(client.helpers[Object.getOwnPropertySymbols(client.helpers).find((s) => s.description === 'max retries')]).be.eql(42);
     });
   });
 
