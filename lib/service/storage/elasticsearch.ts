@@ -192,7 +192,7 @@ export default class ElasticSearch extends Service {
 
     if (
       version &&
-      !semver.satisfies(semver.coerce(version.number), ">= 7.0.0")
+      !semver.satisfies(semver.coerce(version.number), "^8.0.0")
     ) {
       throw kerror.get(
         "services",
