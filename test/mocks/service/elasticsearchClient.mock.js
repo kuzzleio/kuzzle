@@ -17,10 +17,8 @@ class ElasticsearchClientMock {
     this.get = sinon.stub().resolves();
     this.index = sinon.stub().resolves();
     this.info = sinon.stub().resolves({
-      body: {
-        version: {
-          number: "7.0.0",
-        },
+      version: {
+        number: "8.0.0",
       },
     });
     this.mget = sinon.stub().resolves();
@@ -37,9 +35,7 @@ class ElasticsearchClientMock {
 
     this.cluster = {
       health: sinon.stub().resolves({
-        body: {
-          number_of_pending_tasks: 0,
-        },
+        number_of_pending_tasks: 0,
       }),
       stats: sinon.stub().resolves(),
     };
