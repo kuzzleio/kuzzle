@@ -700,12 +700,10 @@ describe("Test: ElasticSearch service", () => {
 
       return promise.then((result) => {
         should(elasticsearch._client.mget).be.calledWithMatch({
-          body: {
-            docs: [
-              { _id: "liia", _index: alias },
-              { _id: "mhery", _index: alias },
-            ],
-          },
+          docs: [
+            { _id: "liia", _index: alias },
+            { _id: "mhery", _index: alias },
+          ],
         });
 
         should(result).match({
@@ -784,8 +782,8 @@ describe("Test: ElasticSearch service", () => {
 
       return promise.then((result) => {
         should(elasticsearch._client.count).be.calledWithMatch({
+          ...filter,
           index: alias,
-          body: filter,
         });
 
         should(result).be.eql(42);
@@ -1564,7 +1562,7 @@ describe("Test: ElasticSearch service", () => {
 
       should(elasticsearch._getAllDocumentsFromQuery).be.calledWithMatch({
         index: alias,
-        body: { query: { filter: "term" } },
+        query: { filter: "term" },
         scroll: "5s",
         size: 3,
       });

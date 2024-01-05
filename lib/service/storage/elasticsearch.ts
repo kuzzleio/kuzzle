@@ -256,7 +256,7 @@ export default class ElasticSearch extends Service {
    * @returns {Promise.<Object>}
    */
   async stats() {
-    const esRequest = {
+    const esRequest: estypes.IndicesStatsRequest = {
       metric: ["docs", "store"],
     };
 
@@ -610,7 +610,7 @@ export default class ElasticSearch extends Service {
    * @returns {Promise.<{ _id, _version, _source }>}
    */
   async get(index, collection, id) {
-    const esRequest = {
+    const esRequest: estypes.GetRequest = {
       id,
       index: this._getAlias(index, collection),
     };
@@ -653,13 +653,11 @@ export default class ElasticSearch extends Service {
       return { errors: [], item: [] };
     }
 
-    const esRequest = {
-      body: {
-        docs: ids.map((_id) => ({
-          _id,
-          _index: this._getAlias(index, collection),
-        })),
-      },
+    const esRequest: estypes.MgetRequest = {
+      docs: ids.map((_id) => ({
+        _id,
+        _index: this._getAlias(index, collection),
+      })),
     };
 
     debug("Multi-get documents: %o", esRequest);
@@ -700,8 +698,8 @@ export default class ElasticSearch extends Service {
    * @returns {Promise.<Number>} count
    */
   async count(index: string, collection: string, searchBody = {}) {
-    const esRequest = {
-      body: this._sanitizeSearchBody(searchBody),
+    const esRequest: estypes.CountRequest = {
+      ...this._sanitizeSearchBody(searchBody),
       index: this._getAlias(index, collection),
     };
 
@@ -1085,7 +1083,7 @@ export default class ElasticSearch extends Service {
       refresh?: boolean | "wait_for";
     } = {},
   ) {
-    const esRequest = {
+    const esRequest: estypes.DeleteRequest = {
       id,
       index: this._getAlias(index, collection),
       refresh,
@@ -1279,8 +1277,8 @@ export default class ElasticSearch extends Service {
     } = {},
   ) {
     try {
-      const esRequest = {
-        body: this._sanitizeSearchBody({ query }),
+      const esRequest: estypes.SearchRequest = {
+        ...this._sanitizeSearchBody({ query }),
         index: this._getAlias(index, collection),
         scroll: "5s",
         size,
@@ -1678,7 +1676,7 @@ export default class ElasticSearch extends Service {
       settings?: Record<string, any>;
     } = {},
   ) {
-    const esRequest = {
+    const esRequest: estypes.IndicesGetSettingsRequest = {
       index: await this._getIndice(index, collection),
     };
 
