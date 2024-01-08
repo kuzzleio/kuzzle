@@ -176,4 +176,3 @@ class MqttApi extends ApiBase {
 }
 
 module.exports = MqttApi;
-
