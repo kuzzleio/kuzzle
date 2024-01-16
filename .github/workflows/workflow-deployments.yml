@@ -53,14 +53,13 @@ on:
         default: "20"
         type: string
 
-
 jobs:
   # -----------------------------------------------------------------------------
   # Deployments: Documentation, Docker images, NPM package (only on git push)
   # -----------------------------------------------------------------------------
   doc-deploy:
     name: Documentation - Deploy
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master' || github.ref_name == '2-dev') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta') }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
@@ -85,7 +84,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && github.ref_name == 'master' }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta') }}
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -97,13 +96,13 @@ jobs:
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
-      
+
       - name: Node version ${{ inputs.node_lts_current_version }}
         uses: actions/setup-node@v4
         with:
           node-version: ${{ inputs.node_lts_current_version }}
           registry-url: "https://registry.npmjs.org"
-          scope: '@kuzzleio'
+          scope: "@kuzzleio"
 
       - name: Install depedencies
         run: npm ci
