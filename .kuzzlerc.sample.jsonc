@@ -63,6 +63,9 @@
     //      NB: A condition is either a "simple" operator (anything but "and",
     //          "or" and "bool"), or a boolean condition that contains only
     //          simple operators.
+    // * subscriptionMinterms
+    //      Maximum number of minterms (AND) clauses
+    //      after the filters are transformed in their Canonical Disjunctive Normal Form (CDNF).
     // * subscriptionRooms
     //      Maximum number of different subscription rooms
     //      (i.e. different index+collection+filters subscription
@@ -88,6 +91,7 @@
     "requestsBufferSize": 50000,
     "requestsBufferWarningThreshold": 5000,
     "subscriptionConditionsCount": 100,
+    "subscriptionMinterms": 0,
     "subscriptionRooms": 1000000,
     "subscriptionDocumentTTL": 259200000 // 72 * 60 * 60 * 1000
   },
@@ -133,8 +137,8 @@
     "common": {
       "failsafeMode": false,
       "bootstrapLockTimeout": 30000,
-      "pipeWarnTime": 40,
-      "initTimeout": 2000,
+      "pipeWarnTime": 500,
+      "initTimeout": 10000,
       "maxConcurrentPipes": 50,
       "pipesBufferSize": 50000,
       "include": [
@@ -147,7 +151,9 @@
     "kuzzle-plugin-logger": {
       "services": {
         "stdout": {
-          "level": "info"
+          "level": "info",
+          "addDate": true,
+          "dateFormat": "YYYY-MM-DD HH-mm-ss"
         }
       }
     },

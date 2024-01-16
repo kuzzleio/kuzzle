@@ -1,5 +1,5 @@
-ARG NODE_LTS_VERSION="18"
-FROM node:${NODE_LTS_VERSION}-bullseye-slim
+ARG NODE_VERSION="20"
+FROM node:${NODE_VERSION}-bullseye-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your in-development Kuzzle application with ease"

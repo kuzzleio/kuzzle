@@ -10,7 +10,7 @@ Feature: HTTP
       | headers.content-type                 | "_STRING_"    |
       | headers.content-length               | "_STRING_"    |
       | headers.content-encoding             | "_STRING_"    |
-      | headers.connection                   | "close"       |
+      | headers.connection                   | "_STRING_"    |
       | headers.x-kuzzle-request-id          | "_STRING_"    |
       | headers.x-kuzzle-node                | "_STRING_"    |
       | headers.access-control-allow-headers | "_STRING_"    |

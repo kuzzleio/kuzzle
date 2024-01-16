@@ -27,7 +27,6 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_limits__loginsPerSecond=50
     - NODE_ENV=${NODE_ENV:-development}
     - DEBUG=${DEBUG:-kuzzle:*,-kuzzle:network:protocols:websocket,-kuzzle:events}
-    # - DEBUG=${DEBUG:-none}
     - DEBUG_DEPTH=${DEBUG_DEPTH:-0}
     - DEBUG_MAX_ARRAY_LENGTH=${DEBUG_MAX_ARRAY:-100}
     - DEBUG_EXPAND=${DEBUG_EXPAND:-off}
@@ -38,7 +37,7 @@ x-kuzzle-config: &kuzzle-config
     # Variables used by the development scripts
     - NODE_16_VERSION=16.19.1
     - NODE_18_VERSION=18.17.0
-    - NODE_20_VERSION=20.0.0
+    - NODE_20_VERSION=20.10.0
     - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
     - REBUILD # Force a rebuild of npm modules
 
