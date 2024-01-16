@@ -105,12 +105,7 @@ export default class ElasticSearch extends Service {
   public scrollTTL: number;
   public _config: any;
 
-  /**
-   * Returns a new elasticsearch client instance
-   *
-   * @returns {Object}
-   */
-  static buildClient(config: ClientOptions) {
+  static buildClient(config: ClientOptions): StorageClient {
     return new StorageClient(config);
   }
 
