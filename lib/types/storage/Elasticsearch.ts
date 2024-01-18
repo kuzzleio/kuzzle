@@ -9,6 +9,33 @@ export type InfoResult = {
   nodes?: estypes.ClusterStatsClusterNodes;
 };
 
+export type KUpdateResponse = {
+  _id: string;
+  _source: unknown;
+  _version: number;
+}
+
+export type KStatsIndexesCollection = {
+  documentCount: number;
+  name: string;
+  size: estypes.ByteSize;
+};
+
+export type KStatsIndex = {
+  collections: KStatsIndexesCollection[];
+  name: string;
+  size: estypes.ByteSize;
+};
+
+export type KStatsIndexes = {
+  [key: string]: KStatsIndex;
+};
+
+export type KStats = {
+  indexes: KStatsIndex[];
+  size: estypes.ByteSize;
+};
+
 export type KRequestBody<T> = T & {
   _kuzzle_info?: {
     author: string;

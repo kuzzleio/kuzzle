@@ -1027,7 +1027,7 @@ describe("Test: ElasticSearch service", () => {
           },
           id: "liia",
           refresh: "wait_for",
-          _source: "true",
+          _source: true,
           retry_on_conflict: 42,
         });
 
@@ -1077,7 +1077,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: "true",
+        _source: true,
         retry_on_conflict:
           elasticsearch.config.defaults.onUpdateConflictRetries,
       });
@@ -1253,7 +1253,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: "true",
+        _source: true,
         retry_on_conflict: 42,
       });
 
@@ -1305,7 +1305,7 @@ describe("Test: ElasticSearch service", () => {
         },
         id: "liia",
         refresh: "wait_for",
-        _source: "true",
+        _source: true,
         retry_on_conflict:
           elasticsearch.config.defaults.onUpdateConflictRetries,
       });
