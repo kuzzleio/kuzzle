@@ -1,4 +1,4 @@
-version: '3.4'
+version: '3.8'
 
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
@@ -42,58 +42,14 @@ x-kuzzle-config: &kuzzle-config
     - REBUILD # Force a rebuild of npm modules
 
 services:
-  nginx:
-    image: nginx:1.19-alpine
-    container_name: kuzzle_nginx
-    depends_on:
-      kuzzle_node_1:
-        condition: service_healthy
-      kuzzle_node_2:
-        condition: service_healthy
-      kuzzle_node_3:
-        condition: service_healthy
-    ports:
-      - '7512:7512'
-    volumes:
-      - ./docker/nginx-dev:/etc/nginx/conf.d
-
-  kuzzle_node_1:
+  node:
     <<: *kuzzle-config
-    container_name: kuzzle_node_1
     ports:
-      - '17510:7512' # Kuzzle API port
-      - '1883:1883' # Kuzzle MQTT port
-      - '9229:9229' # Debug port
+      - '7512-7599:7512' # Kuzzle API port
+      - '1883-1899:1883' # Kuzzle MQTT port
+      - '9229-9299:9229' # Debug port
     healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_1:7512/_healthcheck']
-      timeout: 1s
-      interval: 2s
-      retries: 10
-      start_period: 1m
-
-  kuzzle_node_2:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_2
-    ports:
-      - '17511:7512' # Kuzzle API port
-      - '11883:1883' # Kuzzle MQTT port
-      - '9230:9229' # Debug port
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_2:7512/_healthcheck']
-      timeout: 1s
-      interval: 2s
-      retries: 10
-      start_period: 1m
-
-  kuzzle_node_3:
-    <<: *kuzzle-config
-    container_name: kuzzle_node_3
-    ports:
-      - '17512:7512' # Kuzzle API port
-      - '11884:1883' # Kuzzle MQTT port
-      - '9231:9229' # Debug port
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://kuzzle_node_3:7512/_healthcheck']
+      test: ['CMD', 'curl', '-f', 'http://node:7512/_healthcheck']
       timeout: 1s
       interval: 2s
       retries: 10
@@ -101,7 +57,6 @@ services:
 
   redis:
     image: redis:6
-    container_name: kuzzle_redis
     ports:
       - '6379:6379'
     healthcheck:
@@ -112,7 +67,6 @@ services:
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
-    container_name: kuzzle_elasticsearch
     ports:
       - '9200:9200'
     healthcheck:
