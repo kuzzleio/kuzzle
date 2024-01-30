@@ -1128,7 +1128,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "C", topology: ["A", "B"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.shutdown).not.called();
     });
@@ -1140,7 +1140,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "C", topology: ["B"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1154,7 +1154,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "D", topology: ["B", "C"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1169,7 +1169,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "E", topology: ["C", "D"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1186,7 +1186,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "G", topology: ["F"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1201,7 +1201,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "E", topology: ["C", "D"] }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1217,7 +1217,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "D", topology: ["C"], birthdate: 200 }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1233,7 +1233,7 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "D", topology: ["C"], birthdate: 200 }),
       ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.log.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
@@ -1258,7 +1258,7 @@ describe("#Cluster Node", () => {
           new IdCard({ id: "C", topology: ["A", "B"] }),
         ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.shutdown).not.called();
     });
@@ -1291,7 +1291,7 @@ describe("#Cluster Node", () => {
           new IdCard({ id: "C", topology: ["A", "B"], birthdate: 850 }),
         ]);
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.shutdown).not.called();
     });
@@ -1310,7 +1310,7 @@ describe("#Cluster Node", () => {
         return [];
       });
 
-      await node.enforceClusterConsistency();
+      node.enforceClusterConsistency();
 
       should(kuzzle.shutdown).not.called();
     });
