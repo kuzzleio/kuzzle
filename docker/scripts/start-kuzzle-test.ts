@@ -262,6 +262,7 @@ app.hook.register("custom:event", async (name) => {
 let syncedHello = "World";
 let dynamicPipeId;
 
+app.openApi.definition.components = {}
 app.openApi.definition.components.LogisticObjects = {
   Item: {
     type: "object",
