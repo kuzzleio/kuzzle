@@ -150,3 +150,17 @@ docker compose run kuzzle_node_1 npm ci
 
 Finally, run the command `docker compose up` to start your Kuzzle stack.
 
+
+## Launching tests suits
+
+### Unit tests
+
+```bash
+npm run test:unit
+```
+
+### Functional tests
+
+```bash
+KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" NODE_VERSION="20" ./.ci/scripts/run-test-cluster.sh
+```
