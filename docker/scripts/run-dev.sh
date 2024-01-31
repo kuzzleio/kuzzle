@@ -8,8 +8,8 @@ fi
 
 if [ -z "$NODE_VERSION" ];
 then
-  echo "Missing NODE_VERSION, use default $NODE_18_VERSION"
-  n $NODE_18_VERSION
+  echo "Missing NODE_VERSION, use default $NODE_20_VERSION"
+  n $NODE_20_VERSION
 fi
 
 if [ -n "$TRAVIS" ] || [ -n "$REBUILD" ]; then

@@ -8,23 +8,23 @@ const { After, Before, BeforeAll } = require("cucumber"),
 
 async function resetSecurityDefault(sdk) {
   await sdk.query({
-    controller: "admin",
     action: "resetSecurity",
+    controller: "admin",
     refresh: "wait_for",
   });
 
   sdk.jwt = null;
 
   await sdk.query({
-    controller: "admin",
     action: "loadSecurities",
     body: testPermissions,
+    controller: "admin",
     refresh: "wait_for",
   });
 
   await sdk.auth.login("local", {
-    username: "test-admin",
     password: "password",
+    username: "test-admin",
   });
 }
 
@@ -42,9 +42,9 @@ BeforeAll({ timeout: 10 * 1000 }, async function () {
   console.log("Loading default permissions..");
 
   await world.sdk.query({
-    controller: "admin",
     action: "loadSecurities",
     body: testPermissions,
+    controller: "admin",
     onExistingUsers: "overwrite",
     refresh: "wait_for",
   });
@@ -56,15 +56,15 @@ Before({ timeout: 10 * 1000 }, async function () {
   await this.sdk.connect();
 
   await this.sdk.auth.login("local", {
-    username: "test-admin",
     password: "password",
+    username: "test-admin",
   });
 });
 
 Before({ tags: "not @preserveDatabase" }, async function () {
   await this.sdk.query({
-    controller: "admin",
     action: "resetDatabase",
+    controller: "admin",
     refresh: "wait_for",
   });
 });
@@ -106,8 +106,8 @@ Before({ tags: "@not-http" }, async function () {
 
 Before({ tags: "@firstAdmin" }, async function () {
   await this.sdk.query({
-    controller: "admin",
     action: "resetSecurity",
+    controller: "admin",
     refresh: "wait_for",
   });
 
@@ -128,16 +128,16 @@ After({ tags: "@security", timeout: 60 * 1000 }, async function () {
 
 Before({ tags: "@mappings" }, async function () {
   await this.sdk.query({
-    controller: "admin",
     action: "loadMappings",
     body: testMappings,
+    controller: "admin",
     refresh: "wait_for",
   });
 
   await this.sdk.query({
-    controller: "admin",
     action: "loadFixtures",
     body: testFixtures,
+    controller: "admin",
     refresh: "wait_for",
   });
 });
@@ -146,13 +146,13 @@ Before({ tags: "@mappings" }, async function () {
 
 After({ tags: "@events" }, async function () {
   await this.sdk.query({
-    controller: "functional-test-plugin/pipes",
     action: "deactivateAll",
+    controller: "functional-test-plugin/pipes",
   });
 
   await this.sdk.query({
-    controller: "pipes",
     action: "deactivateAll",
+    controller: "pipes",
   });
 });
 
@@ -160,8 +160,8 @@ After({ tags: "@events" }, async function () {
 
 After({ tags: "@login" }, async function () {
   await this.sdk.auth.login("local", {
-    username: "test-admin",
     password: "password",
+    username: "test-admin",
   });
 });
 

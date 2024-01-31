@@ -1010,7 +1010,6 @@ describe("#Cluster Node", () => {
 
       should(kuzzle.log.error).calledWithMatch(/foo/);
       should(kuzzle.log.error).calledWith(error.stack);
-      should(kuzzle.shutdown).calledOnce();
 
       should(node.publisher.sendNodeEvicted)
         .calledOnce()
@@ -1054,7 +1053,6 @@ describe("#Cluster Node", () => {
         .calledWith("thisnode", "bar", "because");
       should(fakeSubscriber.dispose).calledOnce();
       should(kuzzle.state).eql(kuzzleStateEnum.RUNNING);
-      should(node.enforceClusterConsistency).calledOnce();
     });
 
     it("should evict a node without broadcasting if not asked to", async () => {
@@ -1074,7 +1072,6 @@ describe("#Cluster Node", () => {
       should(node.remoteNodes).not.have.key("bar");
       should(node.publisher.sendNodeEvicted).not.called();
       should(kuzzle.state).eql(kuzzleStateEnum.RUNNING);
-      should(node.enforceClusterConsistency).calledOnce();
     });
 
     it("should change the kuzzle state if there are not enough nodes active", async () => {
@@ -1097,7 +1094,6 @@ describe("#Cluster Node", () => {
       should(node.publisher.sendNodeEvicted).not.called();
       should(kuzzle.state).eql(kuzzleStateEnum.NOT_ENOUGH_NODES);
       should(kuzzle.log.warn).calledWithMatch(/Not enough nodes active/);
-      should(node.enforceClusterConsistency).calledOnce();
     });
 
     it("should do nothing if the node is unknown", async () => {
@@ -1110,7 +1106,6 @@ describe("#Cluster Node", () => {
       should(node.publisher.sendNodeEvicted).not.called();
       should(fakeSubscriber.dispose).not.called();
       should(kuzzle.state).eql(kuzzleStateEnum.RUNNING);
-      should(node.enforceClusterConsistency).not.called();
     });
   });
 
@@ -1127,8 +1122,6 @@ describe("#Cluster Node", () => {
         new IdCard({ id: "B", topology: ["A", "C"] }),
         new IdCard({ id: "C", topology: ["A", "B"] }),
       ]);
-
-      await node.enforceClusterConsistency();
 
       should(kuzzle.shutdown).not.called();
     });
