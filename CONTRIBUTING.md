@@ -39,7 +39,7 @@ cd kuzzle
 docker compose up
 ```
 
-### ENOSPC error
+## ENOSPC error
 
 On some Linux environments, you may get `ENOSPC` errors from the filesystem watcher, because of limits set too low.
 
@@ -70,8 +70,6 @@ Everytime a modification is detected in the source files, the nodes are automati
 
 ### Kuzzle over SSL
 
-[See our complete guide](https://docs.kuzzle.io/core/2/guides/essentials/ssl-support/)
-
 The development stack include a endpoint to access Kuzzle API through SSL on port `7443`.  
 
 The certificates are privately signed, using provided [CA certificate](docker/nginx/kuzzleCA.crt).  
@@ -93,24 +91,29 @@ NODE_EXTRA_CA_CERTS=/path/to/certificate/kuzzleCA.crt wscat -c wss://localhost:7
 
 See our [plugins documentation](https://docs.kuzzle.io/core/2/plugins/)
 
-## Running Tests
-   
-### Using docker, with Kuzzle running in Docker
+
+## About Mac M1
+
+First of all make sure that you have at least `4GB` of ram allocated to your vm **docker desktop** and that it is running.
+
+Run the following command to install all the dependencies in your container:
+```bash
+docker compose run kuzzle_node_1 npm ci
+```
+
+Finally, run the command `docker compose up` to start your Kuzzle stack.
+
+
+## Launching tests suits
+
+### Unit tests
 
 ```bash
-$ docker compose up -d
+npm run test:unit
+```
 
-# Wait for Kuzzle stack to be up, and start the entire test suite (long)
-$ npm run test
+### Functional tests
 
-# To launch tests individually:
-
-# linter: check that the code is properly written
-$ npm run test:lint
-
-# unit tests: test parts of the code individually
-$ npm run test:unit
-
-# functional tests: test Kuzzle's API behavior
-$ npm run test:functional
+```bash
+KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" NODE_VERSION="20" ./.ci/scripts/run-test-cluster.sh
 ```

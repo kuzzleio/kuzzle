@@ -138,29 +138,3 @@ Check our [contributing documentation](./CONTRIBUTING.md) to know about our codi
 ## License
 
 Kuzzle is published under [Apache 2 License](./LICENSE.md).
-
-## About Mac M1
-
-First of all make sure that you have at least `4GB` of ram allocated to your vm **docker desktop** and that it is running.
-
-Run the following command to install all the dependencies in your container:
-```bash
-docker compose run kuzzle_node_1 npm ci
-```
-
-Finally, run the command `docker compose up` to start your Kuzzle stack.
-
-
-## Launching tests suits
-
-### Unit tests
-
-```bash
-npm run test:unit
-```
-
-### Functional tests
-
-```bash
-KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" NODE_VERSION="20" ./.ci/scripts/run-test-cluster.sh
-```
