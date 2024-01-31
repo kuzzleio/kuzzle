@@ -37,16 +37,6 @@ describe("OpenApiManager", () => {
         description: "Kuzzle API Documentation",
         url: "https://docs.kuzzle.io/core/2/api/",
       },
-      servers: [
-        {
-          url: "https://{baseUrl}:{port}",
-          description: "Kuzzle Base Url",
-          variables: {
-            baseUrl: { default: "localhost" },
-            port: { default: 7512 },
-          },
-        },
-      ],
       tags: [],
       schemes: ["https", "http"],
       paths: {},
