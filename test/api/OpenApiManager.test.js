@@ -50,7 +50,6 @@ describe("OpenApiManager", () => {
       tags: [],
       schemes: ["https", "http"],
       paths: {},
-      components: {},
     };
 
     pluginsRoutes = [

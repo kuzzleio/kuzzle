@@ -19,22 +19,6 @@
  * limitations under the License.
  */
 
-import {
-  OpenApiPayloadsDefinitions,
-  OpenApiDocumentCountComponent,
-  OpenApiDocumentDeleteByQueryComponent,
-  OpenApiDocumentDeleteComponent,
-  OpenApiDocumentScrollComponent,
-  OpenApiDocumentExistsComponent,
-  OpenApiDocumentUpdateComponent,
-  OpenApiDocumentReplaceComponent,
-  OpenApiDocumentGetComponent,
-  OpenApiDocumentCreateOrReplaceComponent,
-  OpenApiDocumentCreateComponent,
-  OpenApiDocumentValidateComponent,
-  OpenApiSecurityUpsertUserComponent,
-  OpenApiDocumentmCreateOrReplaceComponent,
-} from "./components";
 import { OpenApiDefinition } from "../../types/OpenApiDefinition";
 import { version } from "../../../package.json";
 import { generateOpenApi } from "./openApiGenerator";
@@ -50,7 +34,6 @@ export class OpenApiManager {
         name: "Kuzzle team",
         url: "https://kuzzle.io",
         email: "support@kuzzle.io",
-        discord: "http://join.discord.kuzzle.io",
       },
       license: {
         name: "Apache 2",
@@ -62,40 +45,9 @@ export class OpenApiManager {
       description: "Kuzzle API Documentation",
       url: "https://docs.kuzzle.io/core/2/api/",
     },
-    servers: [
-      {
-        url: "https://{baseUrl}:{port}",
-        description: "Kuzzle Base Url",
-        variables: {
-          baseUrl: { default: "localhost" },
-          port: { default: 7512 },
-        },
-      },
-    ],
     tags: [],
     schemes: ["https", "http"],
     paths: {},
-    components: {
-      ...OpenApiPayloadsDefinitions,
-
-      document: {
-        ...OpenApiDocumentCountComponent,
-        ...OpenApiDocumentDeleteByQueryComponent,
-        ...OpenApiDocumentDeleteComponent,
-        ...OpenApiDocumentScrollComponent,
-        ...OpenApiDocumentExistsComponent,
-        ...OpenApiDocumentUpdateComponent,
-        ...OpenApiDocumentReplaceComponent,
-        ...OpenApiDocumentGetComponent,
-        ...OpenApiDocumentCreateOrReplaceComponent,
-        ...OpenApiDocumentCreateComponent,
-        ...OpenApiDocumentValidateComponent,
-      },
-      security: {
-        ...OpenApiSecurityUpsertUserComponent,
-        ...OpenApiDocumentmCreateOrReplaceComponent,
-      },
-    },
   };
   /* eslint-enable sort-keys */
 
