@@ -30,8 +30,8 @@ describe("Plugin", () => {
 
   beforeEach(() => {
     manifest = {
-      name: "lambda-core",
       kuzzleVersion: ">=2.x",
+      name: "lambda-core",
     };
 
     packageJson = { version: "version" };
@@ -55,7 +55,7 @@ describe("Plugin", () => {
 
   describe("#constructor", () => {
     it("should instantiates the plugin and set the name if given", () => {
-      const options = { name: "lambda-core", application: true };
+      const options = { application: true, name: "lambda-core" };
 
       plugin = new Plugin(instance, options);
 
@@ -104,20 +104,28 @@ describe("Plugin", () => {
         id: "plugin.manifest.version_mismatch",
       });
     });
+
+    it("should allow if the manifest kuzzleVersion is a prerelease", () => {
+      plugin = new Plugin({ _manifest: { kuzzleVersion: ">2.27.0-beta.1" } });
+
+      should(() => {
+        plugin.init("2.28.0");
+      }).not.throwError();
+    });
   });
 
   describe("#info", () => {
     it("should returns application info", () => {
-      const options = { name: "lambda-core", application: true };
+      const options = { application: true, name: "lambda-core" };
       instance = {
         api: "api",
         hooks: {
-          "document:beforeCreate": "handler",
           "document:afterCreate": "handler",
+          "document:beforeCreate": "handler",
         },
         pipes: {
-          "index:beforeCreate": "handler",
           "index:afterCreate": "handler",
+          "index:beforeCreate": "handler",
         },
       };
       plugin = new Plugin(instance, options);
@@ -128,10 +136,10 @@ describe("Plugin", () => {
       should(info.name).be.eql("lambda-core");
       should(info.version).be.eql("version");
       should(info.controllers).be.eql("api");
-      should(info.pipes).be.eql(["index:beforeCreate", "index:afterCreate"]);
+      should(info.pipes).be.eql(["index:afterCreate", "index:beforeCreate"]);
       should(info.hooks).be.eql([
-        "document:beforeCreate",
         "document:afterCreate",
+        "document:beforeCreate",
       ]);
     });
 
@@ -143,16 +151,16 @@ describe("Plugin", () => {
             send: () => {},
           },
         },
-        routes: ["routes"],
-        strategies: { ldap: "LDAP" },
         hooks: {
-          "document:beforeCreate": "handler",
           "document:afterCreate": "handler",
+          "document:beforeCreate": "handler",
         },
         pipes: {
-          "index:beforeCreate": "handler",
           "index:afterCreate": "handler",
+          "index:beforeCreate": "handler",
         },
+        routes: ["routes"],
+        strategies: { ldap: "LDAP" },
       };
       plugin = new Plugin(instance, options);
       plugin.version = "version";
@@ -162,11 +170,11 @@ describe("Plugin", () => {
 
       should(info.controllers).be.eql(["lambda-core/email"]);
       should(info.hooks).be.eql([
-        "document:beforeCreate",
         "document:afterCreate",
+        "document:beforeCreate",
       ]);
       should(info.manifest).be.eql("manifest");
-      should(info.pipes).be.eql(["index:beforeCreate", "index:afterCreate"]);
+      should(info.pipes).be.eql(["index:afterCreate", "index:beforeCreate"]);
       should(info.routes).be.eql(["routes"]);
       should(info.strategies).be.eql(["ldap"]);
       should(info.version).be.eql("version");
@@ -200,16 +208,16 @@ describe("Plugin", () => {
       const errors = require("../../../lib/kerror/codes");
       manifest.errors = {
         some_error: {
-          description: "foo",
-          code: 1,
-          message: "Some error occured %s",
           class: "BadRequestError",
+          code: 1,
+          description: "foo",
+          message: "Some error occured %s",
         },
         some_other_error: {
-          description: "bar",
-          code: 2,
-          message: "Some other error occured %s",
           class: "ForbiddenError",
+          code: 2,
+          description: "bar",
+          message: "Some other error occured %s",
         },
       };
 
@@ -231,13 +239,13 @@ describe("Plugin", () => {
     it("should throw PluginImplementationError if customs errors from manifest.json are badly formatted", () => {
       manifest.errors = {
         some_error: {
-          message: "Some error occured %s",
           class: "BadRequestError",
+          message: "Some error occured %s",
         },
         some_other_error: {
+          class: "ForbiddenError",
           code: 2,
           message: "Some other error occured %s",
-          class: "ForbiddenError",
         },
       };
 

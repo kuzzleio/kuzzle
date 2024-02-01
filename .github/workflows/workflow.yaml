@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - master
-      - 2-dev
+      - beta
   pull_request:
 
 env:

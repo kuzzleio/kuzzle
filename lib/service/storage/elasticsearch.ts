@@ -19,27 +19,44 @@
  * limitations under the License.
  */
 
-"use strict";
+import _ from "lodash";
 
-const assert = require("assert");
-const _ = require("lodash");
-const { Client: StorageClient } = require("@elastic/elasticsearch");
-const ms = require("ms");
-const Bluebird = require("bluebird");
-const semver = require("semver");
+import {
+  ApiResponse,
+  RequestParams,
+  Client as StorageClient,
+} from "@elastic/elasticsearch";
+import {
+  InfoResult,
+  KRequestBody,
+  JSONObject,
+  KImportError,
+  KRequestParams,
+} from "../../types/storage/Elasticsearch";
+import { Index, IndicesCreate } from "@elastic/elasticsearch/api/requestParams";
 
-const debug = require("../../util/debug")("kuzzle:services:elasticsearch");
-const ESWrapper = require("./esWrapper");
-const QueryTranslator = require("./queryTranslator");
-const didYouMean = require("../../util/didYouMean");
-const Service = require("../service");
-const { assertIsObject } = require("../../util/requestAssertions");
-const kerror = require("../../kerror").wrap("services", "storage");
-const { isPlainObject } = require("../../util/safeObject");
-const scopeEnum = require("../../core/storage/storeScopeEnum");
-const extractFields = require("../../util/extractFields");
-const { Mutex } = require("../../util/mutex");
-const { randomNumber } = require("../../util/name-generator");
+import { TypeMapping } from "@elastic/elasticsearch/api/types";
+
+import assert from "assert";
+
+import ms from "ms";
+import Bluebird from "bluebird";
+import semver from "semver";
+import debug from "../../util/debug";
+
+import ESWrapper from "./esWrapper";
+import QueryTranslator from "./queryTranslator";
+import didYouMean from "../../util/didYouMean";
+import Service from "../service";
+import * as kerror from "../../kerror";
+import { assertIsObject } from "../../util/requestAssertions";
+import { isPlainObject } from "../../util/safeObject";
+import scopeEnum from "../../core/storage/storeScopeEnum";
+import extractFields from "../../util/extractFields";
+import { Mutex } from "../../util/mutex";
+import { randomNumber } from "../../util/name-generator";
+
+debug("kuzzle:services:elasticsearch");
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
 
@@ -63,11 +80,12 @@ const FORBIDDEN_CHARS = `\\/*?"<>| \t\r\n,+#:${NAME_SEPARATOR}${PUBLIC_PREFIX}${
 const DYNAMIC_PROPERTY_VALUES = ["true", "false", "strict"];
 
 // used to check whether we need to wait for ES to initialize or not
-const esStateEnum = Object.freeze({
-  AWAITING: 1,
-  NONE: 2,
-  OK: 3,
-});
+enum esStateEnum {
+  AWAITING = 1,
+  NONE = 2,
+  OK = 3,
+}
+
 let esState = esStateEnum.NONE;
 
 /**
@@ -76,7 +94,20 @@ let esState = esStateEnum.NONE;
  * @param {storeScopeEnum} scope
  * @constructor
  */
-class ElasticSearch extends Service {
+export default class ElasticSearch extends Service {
+  public _client: StorageClient;
+  public _scope: scopeEnum;
+  public _indexPrefix: string;
+  public _esWrapper: ESWrapper;
+  public _esVersion: any;
+  public _translator: QueryTranslator;
+  public searchBodyKeys: string[];
+  public scriptKeys: string[];
+  public scriptAllowedArgs: string[];
+  public maxScrollDuration: number;
+  public scrollTTL: number;
+  public _config: any;
+
   /**
    * Returns a new elasticsearch client instance
    *
@@ -186,7 +217,12 @@ class ElasticSearch extends Service {
       version &&
       !semver.satisfies(semver.coerce(version.number), ">= 7.0.0")
     ) {
-      throw kerror.get("version_mismatch", version.number);
+      throw kerror.get(
+        "services",
+        "storage",
+        "version_mismatch",
+        version.number,
+      );
     }
 
     this._esVersion = version;
@@ -209,7 +245,7 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object>} service informations
    */
   info() {
-    const result = {
+    const result: InfoResult = {
       type: "elasticsearch",
       version: this._esVersion,
     };
@@ -251,10 +287,11 @@ class ElasticSearch extends Service {
     let size = 0;
 
     for (const [indice, indiceInfo] of Object.entries(body.indices)) {
+      const infos = indiceInfo as any;
       // Ignore non-Kuzzle indices
       if (
-        indice[INDEX_PREFIX_POSITION_IN_INDICE] !== PRIVATE_PREFIX &&
-        indice[INDEX_PREFIX_POSITION_IN_INDICE] !== PUBLIC_PREFIX
+        !indice.startsWith(PRIVATE_PREFIX) &&
+        !indice.startsWith(PUBLIC_PREFIX)
       ) {
         continue;
       }
@@ -279,12 +316,12 @@ class ElasticSearch extends Service {
         };
       }
       indexes[indexName].collections.push({
-        documentCount: indiceInfo.total.docs.count,
+        documentCount: infos.total.docs.count,
         name: collectionName,
-        size: indiceInfo.total.store.size_in_bytes,
+        size: infos.total.store.size_in_bytes,
       });
-      indexes[indexName].size += indiceInfo.total.store.size_in_bytes;
-      size += indiceInfo.total.store.size_in_bytes;
+      indexes[indexName].size += infos.total.store.size_in_bytes;
+      size += infos.total.store.size_in_bytes;
     }
 
     return {
@@ -303,15 +340,15 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ scrollId, hits, aggregations, total }>}
    */
-  async scroll(scrollId, { scrollTTL } = {}) {
+  async scroll(scrollId: string, { scrollTTL }: { scrollTTL?: string } = {}) {
     const _scrollTTL = scrollTTL || this._config.defaults.scrollTTL;
-    const esRequest = {
+    const esRequest: RequestParams.Scroll<Record<string, any>> = {
       scroll: _scrollTTL,
-      scrollId,
+      scroll_id: scrollId,
     };
 
     const cacheKey =
-      SCROLL_CACHE_PREFIX + global.kuzzle.hash(esRequest.scrollId);
+      SCROLL_CACHE_PREFIX + global.kuzzle.hash(esRequest.scroll_id);
 
     debug("Scroll: %o", esRequest);
 
@@ -319,7 +356,12 @@ class ElasticSearch extends Service {
       const scrollDuration = ms(_scrollTTL);
 
       if (scrollDuration > this.maxScrollDuration) {
-        throw kerror.get("scroll_duration_too_great", _scrollTTL);
+        throw kerror.get(
+          "services",
+          "storage",
+          "scroll_duration_too_great",
+          _scrollTTL,
+        );
       }
     }
 
@@ -329,7 +371,7 @@ class ElasticSearch extends Service {
     );
 
     if (!stringifiedScrollInfo) {
-      throw kerror.get("unknown_scroll_id");
+      throw kerror.get("services", "storage", "unknown_scroll_id");
     }
 
     const scrollInfo = JSON.parse(stringifiedScrollInfo);
@@ -373,10 +415,28 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ scrollId, hits, aggregations, suggest, total }>}
    */
   async search(
-    { index, collection, searchBody, targets } = {},
-    { from, size, scroll } = {},
+    {
+      index,
+      collection,
+      searchBody,
+      targets,
+    }: {
+      index?: string;
+      collection?: string;
+      searchBody?: JSONObject;
+      targets?: any[];
+    } = {},
+    {
+      from,
+      size,
+      scroll,
+    }: {
+      from?: number;
+      size?: number;
+      scroll?: string;
+    } = {},
   ) {
-    let esIndexes;
+    let esIndexes: any;
 
     if (targets && targets.length > 0) {
       const indexes = new Set();
@@ -406,7 +466,12 @@ class ElasticSearch extends Service {
       const scrollDuration = ms(scroll);
 
       if (scrollDuration > this.maxScrollDuration) {
-        throw kerror.get("scroll_duration_too_great", scroll);
+        throw kerror.get(
+          "services",
+          "storage",
+          "scroll_duration_too_great",
+          scroll,
+        );
       }
     }
 
@@ -469,7 +534,7 @@ class ElasticSearch extends Service {
     return aliasToTargets;
   }
 
-  async _formatSearchResult(body, searchInfo = {}) {
+  async _formatSearchResult(body: any, searchInfo: any = {}) {
     let aliasToTargets = {};
     const aliasCache = new Map();
 
@@ -528,7 +593,7 @@ class ElasticSearch extends Service {
       const formattedInnerHits = {};
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
-          innerHit.hits.hits,
+          (innerHit as any).hits.hits,
           formatHit,
         );
       }
@@ -569,7 +634,7 @@ class ElasticSearch extends Service {
     // Without this test we return something weird: a result.hits.hits with all
     // document without filter because the body is empty in HTTP by default
     if (esRequest.id === "_search") {
-      return kerror.reject("search_as_an_id");
+      return kerror.reject("services", "storage", "search_as_an_id");
     }
 
     debug("Get document: %o", esRequest);
@@ -598,7 +663,7 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ items: Array<{ _id, _source, _version }>, errors }>}
    */
-  async mGet(index, collection, ids) {
+  async mGet(index: string, collection: string, ids: string[]) {
     if (ids.length === 0) {
       return { errors: [], item: [] };
     }
@@ -625,9 +690,7 @@ class ElasticSearch extends Service {
     const errors = [];
     const items = [];
 
-    for (let i = 0; i < body.docs.length; i++) {
-      const doc = body.docs[i];
-
+    for (const doc of body.docs) {
       if (doc.found) {
         items.push({
           _id: doc._id,
@@ -651,7 +714,7 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<Number>} count
    */
-  async count(index, collection, searchBody = {}) {
+  async count(index: string, collection: string, searchBody = {}) {
     const esRequest = {
       body: this._sanitizeSearchBody(searchBody),
       index: this._getAlias(index, collection),
@@ -679,14 +742,24 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object>} { _id, _version, _source }
    */
   async create(
-    index,
-    collection,
-    content,
-    { id, refresh, userId = null, injectKuzzleMeta = true } = {},
+    index: string,
+    collection: string,
+    content: JSONObject,
+    {
+      id,
+      refresh,
+      userId = null,
+      injectKuzzleMeta = true,
+    }: {
+      id?: string;
+      refresh?: boolean | "wait_for";
+      userId?: string;
+      injectKuzzleMeta?: boolean;
+    } = {},
   ) {
     assertIsObject(content);
 
-    const esRequest = {
+    const esRequest: Index<KRequestBody<JSONObject>> = {
       body: content,
       id,
       index: this._getAlias(index, collection),
@@ -738,7 +811,15 @@ class ElasticSearch extends Service {
     collection,
     id,
     content,
-    { refresh, userId = null, injectKuzzleMeta = true } = {},
+    {
+      refresh,
+      userId = null,
+      injectKuzzleMeta = true,
+    }: {
+      refresh?: boolean | "wait_for";
+      userId?: string;
+      injectKuzzleMeta?: boolean;
+    } = {},
   ) {
     const esRequest = {
       body: content,
@@ -788,14 +869,24 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ _id, _version }>}
    */
   async update(
-    index,
-    collection,
-    id,
-    content,
-    { refresh, userId = null, retryOnConflict, injectKuzzleMeta = true } = {},
+    index: string,
+    collection: string,
+    id: string,
+    content: JSONObject,
+    {
+      refresh,
+      userId = null,
+      retryOnConflict,
+      injectKuzzleMeta = true,
+    }: {
+      refresh?: boolean | "wait_for";
+      userId?: string;
+      retryOnConflict?: number;
+      injectKuzzleMeta?: boolean;
+    } = {},
   ) {
-    const esRequest = {
-      _source: true,
+    const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
+      _source: "true",
       body: { doc: content },
       id,
       index: this._getAlias(index, collection),
@@ -842,20 +933,26 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ _id, _version }>}
    */
   async upsert(
-    index,
-    collection,
-    id,
-    content,
+    index: string,
+    collection: string,
+    id: string,
+    content: JSONObject,
     {
       defaultValues = {},
       refresh,
       userId = null,
       retryOnConflict,
       injectKuzzleMeta = true,
+    }: {
+      defaultValues?: JSONObject;
+      refresh?: boolean | "wait_for";
+      userId?: string;
+      retryOnConflict?: number;
+      injectKuzzleMeta?: boolean;
     } = {},
   ) {
-    const esRequest = {
-      _source: true,
+    const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
+      _source: "true",
       body: {
         doc: content,
         upsert: { ...defaultValues, ...content },
@@ -913,11 +1010,19 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ _id, _version, _source }>}
    */
   async replace(
-    index,
-    collection,
-    id,
-    content,
-    { refresh, userId = null, injectKuzzleMeta = true } = {},
+    index: string,
+    collection: string,
+    id: string,
+    content: JSONObject,
+    {
+      refresh,
+      userId = null,
+      injectKuzzleMeta = true,
+    }: {
+      refresh?: boolean | "wait_for";
+      userId?: string;
+      injectKuzzleMeta?: boolean;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -944,7 +1049,14 @@ class ElasticSearch extends Service {
       const { body: exists } = await this._client.exists({ id, index: alias });
 
       if (!exists) {
-        throw kerror.get("not_found", id, index, collection);
+        throw kerror.get(
+          "services",
+          "storage",
+          "not_found",
+          id,
+          index,
+          collection,
+        );
       }
 
       debug("Replace document: %o", esRequest);
@@ -971,7 +1083,16 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise}
    */
-  async delete(index, collection, id, { refresh } = {}) {
+  async delete(
+    index: string,
+    collection: string,
+    id: string,
+    {
+      refresh,
+    }: {
+      refresh?: boolean | "wait_for";
+    } = {},
+  ) {
     const esRequest = {
       id,
       index: this._getAlias(index, collection),
@@ -1007,12 +1128,20 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ documents, total, deleted, failures: Array<{ _shardId, reason }> }>}
    */
   async deleteByQuery(
-    index,
-    collection,
-    query,
-    { refresh, size = 1000, fetch = true } = {},
+    index: string,
+    collection: string,
+    query: JSONObject,
+    {
+      refresh,
+      size = 1000,
+      fetch = true,
+    }: {
+      refresh?: boolean | "wait_for";
+      size?: number;
+      fetch?: boolean;
+    } = {},
   ) {
-    const esRequest = {
+    const esRequest: RequestParams.DeleteByQuery<KRequestBody<JSONObject>> = {
       body: this._sanitizeSearchBody({ query }),
       index: this._getAlias(index, collection),
       scroll: "5s",
@@ -1020,7 +1149,7 @@ class ElasticSearch extends Service {
     };
 
     if (!isPlainObject(query)) {
-      throw kerror.get("missing_argument", "body.query");
+      throw kerror.get("services", "storage", "missing_argument", "body.query");
     }
 
     try {
@@ -1062,11 +1191,17 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ _id, _version, _source }>}
    */
   async deleteFields(
-    index,
-    collection,
-    id,
-    fields,
-    { refresh, userId = null } = {},
+    index: string,
+    collection: string,
+    id: string,
+    fields: string,
+    {
+      refresh,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      userId?: string;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1124,11 +1259,19 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ successes: [_id, _source, _status], errors: [ document, status, reason ] }>}
    */
   async updateByQuery(
-    index,
-    collection,
-    query,
-    changes,
-    { refresh, size = 1000, userId = null } = {},
+    index: string,
+    collection: string,
+    query: JSONObject,
+    changes: JSONObject,
+    {
+      refresh,
+      size = 1000,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      size?: number;
+      userId?: string;
+    } = {},
   ) {
     try {
       const esRequest = {
@@ -1140,9 +1283,7 @@ class ElasticSearch extends Service {
 
       const documents = await this._getAllDocumentsFromQuery(esRequest);
 
-      for (let i = 0; i < documents.length; i++) {
-        const document = documents[i];
-
+      for (const document of documents) {
         document._source = undefined;
         document.body = changes;
       }
@@ -1177,11 +1318,15 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ successes: [_id, _source, _status], errors: [ document, status, reason ] }>}
    */
   async bulkUpdateByQuery(
-    index,
-    collection,
-    query,
-    changes,
-    { refresh = "false" } = {},
+    index: string,
+    collection: string,
+    query: JSONObject,
+    changes: JSONObject,
+    {
+      refresh = false,
+    }: {
+      refresh?: boolean;
+    } = {},
   ) {
     const script = {
       params: {},
@@ -1195,7 +1340,7 @@ class ElasticSearch extends Service {
       script.params[key] = value;
     }
 
-    const esRequest = {
+    const esRequest: RequestParams.UpdateByQuery<KRequestBody<JSONObject>> = {
       body: {
         query: this._sanitizeSearchBody({ query }).query,
         script,
@@ -1207,6 +1352,7 @@ class ElasticSearch extends Service {
     debug("Bulk Update by query: %o", esRequest);
 
     let response;
+
     try {
       response = await this._client.updateByQuery(esRequest);
     } catch (error) {
@@ -1219,7 +1365,13 @@ class ElasticSearch extends Service {
         shardId,
       }));
 
-      throw kerror.get("incomplete_update", response.body.updated, errors);
+      throw kerror.get(
+        "services",
+        "storage",
+        "incomplete_update",
+        response.body.updated,
+        errors,
+      );
     }
 
     return {
@@ -1240,13 +1392,19 @@ class ElasticSearch extends Service {
    * @returns {Promise.<any[]>} Array of results returned by the callback
    */
   async mExecute(
-    index,
-    collection,
-    query,
-    callback,
-    { size = 10, scrollTTl = "5s" } = {},
-  ) {
-    const esRequest = {
+    index: string,
+    collection: string,
+    query: JSONObject,
+    callback: any,
+    {
+      size = 10,
+      scrollTTl = "5s",
+    }: {
+      size?: number;
+      scrollTTl?: string;
+    } = {},
+  ): Promise<any> {
+    const esRequest: RequestParams.Search = {
       body: this._sanitizeSearchBody({ query }),
       from: 0,
       index: this._getAlias(index, collection),
@@ -1255,7 +1413,7 @@ class ElasticSearch extends Service {
     };
 
     if (!isPlainObject(query)) {
-      throw kerror.get("missing_argument", "body.query");
+      throw kerror.get("services", "storage", "missing_argument", "body.query");
     }
 
     const client = this._client;
@@ -1288,7 +1446,7 @@ class ElasticSearch extends Service {
               client.scroll(
                 {
                   scroll: esRequest.scroll,
-                  scrollId: _scroll_id,
+                  scroll_id: _scroll_id,
                 },
                 getMoreUntilDone,
               );
@@ -1317,13 +1475,13 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise}
    */
-  async createIndex(index) {
+  async createIndex(index: string) {
     this._assertValidIndexAndCollection(index);
 
-    let body;
+    let body: ApiResponse<Record<string, any>>["body"];
 
     try {
-      ({ body } = await this._client.cat.aliases({ format: "json" })); // NOSONAR
+      body = (await this._client.cat.aliases({ format: "json" })).body;
     } catch (error) {
       throw this._esWrapper.formatESError(error);
     }
@@ -1338,7 +1496,13 @@ class ElasticSearch extends Service {
             ? "private"
             : "public";
 
-        throw kerror.get("index_already_exists", indexType, index);
+        throw kerror.get(
+          "services",
+          "storage",
+          "index_already_exists",
+          indexType,
+          index,
+        );
       }
     }
 
@@ -1358,14 +1522,22 @@ class ElasticSearch extends Service {
    * @returns {Promise}
    */
   async createCollection(
-    index,
-    collection,
-    { mappings = {}, settings = {} } = {},
+    index: string,
+    collection: string,
+    {
+      mappings = {},
+      settings = {},
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
   ) {
     this._assertValidIndexAndCollection(index, collection);
 
     if (collection === HIDDEN_COLLECTION) {
-      throw kerror.get("collection_reserved", HIDDEN_COLLECTION);
+      throw kerror.get(
+        "services",
+        "storage",
+        "collection_reserved",
+        HIDDEN_COLLECTION,
+      );
     }
 
     const mutex = new Mutex(`hiddenCollection/create/${index}`);
@@ -1381,7 +1553,7 @@ class ElasticSearch extends Service {
       await mutex.unlock();
     }
 
-    const esRequest = {
+    const esRequest: RequestParams.IndicesCreate<KRequestBody<JSONObject>> = {
       body: {
         aliases: {
           [this._getAlias(index, collection)]: {},
@@ -1413,11 +1585,11 @@ class ElasticSearch extends Service {
 
     esRequest.body.settings.number_of_replicas =
       esRequest.body.settings.number_of_replicas ||
-      this.config.defaultSettings.number_of_replicas;
+      this._config.defaultSettings.number_of_replicas;
 
     esRequest.body.settings.number_of_shards =
       esRequest.body.settings.number_of_shards ||
-      this.config.defaultSettings.number_of_shards;
+      this._config.defaultSettings.number_of_shards;
 
     try {
       await this._client.indices.create(esRequest);
@@ -1445,9 +1617,9 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ settings }>}
    */
-  async getSettings(index, collection) {
+  async getSettings(index: string, collection: string) {
     const indice = await this._getIndice(index, collection);
-    const esRequest = {
+    const esRequest: RequestParams.IndicesGetSettings = {
       index: indice,
     };
 
@@ -1471,7 +1643,15 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ dynamic, _meta, properties }>}
    */
-  async getMapping(index, collection, { includeKuzzleMeta = false } = {}) {
+  async getMapping(
+    index: string,
+    collection: string,
+    {
+      includeKuzzleMeta = false,
+    }: {
+      includeKuzzleMeta?: boolean;
+    } = {},
+  ) {
     const indice = await this._getIndice(index, collection);
     const esRequest = {
       index: indice,
@@ -1506,9 +1686,12 @@ class ElasticSearch extends Service {
    * @returns {Promise}
    */
   async updateCollection(
-    index,
-    collection,
-    { mappings = {}, settings = {} } = {},
+    index: string,
+    collection: string,
+    {
+      mappings = {},
+      settings = {},
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
   ) {
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1519,6 +1702,7 @@ class ElasticSearch extends Service {
     // update the settings first, then the mappings and we rollback the settings
     // if putMappings fail.
     let indexSettings;
+
     try {
       indexSettings = await this._getSettings(esRequest);
     } catch (error) {
@@ -1531,7 +1715,9 @@ class ElasticSearch extends Service {
 
     try {
       if (!_.isEmpty(mappings)) {
-        const previousMappings = await this.getMapping(index, collection);
+        const previousMappings = await this.getMapping(index, collection, {
+          includeKuzzleMeta: true,
+        });
 
         await this.updateMapping(index, collection, mappings);
 
@@ -1577,8 +1763,8 @@ class ElasticSearch extends Service {
    * @param {String} collection - Collection name
    * @returns {Promise.<Object>} {}
    */
-  async updateSearchIndex(index, collection) {
-    const esRequest = {
+  async updateSearchIndex(index: string, collection: string) {
+    const esRequest: RequestParams.UpdateByQuery<KRequestBody<JSONObject>> = {
       body: {},
       // @cluster: conflicts when two nodes start at the same time
       conflicts: "proceed",
@@ -1587,7 +1773,7 @@ class ElasticSearch extends Service {
       // This operation can take some time: this should be an ES
       // background task. And it's preferable to a request timeout when
       // processing large indexes.
-      waitForCompletion: false,
+      wait_for_completion: false,
     };
 
     debug("UpdateByQuery: %o", esRequest);
@@ -1608,14 +1794,21 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ dynamic, _meta, properties }>}
    */
-  async updateMapping(index, collection, mappings = {}) {
-    const esRequest = {
+  async updateMapping(
+    index: string,
+    collection: string,
+    mappings: TypeMapping = {},
+  ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
+    const esRequest: RequestParams.IndicesPutMapping<Record<string, any>> = {
+      body: {},
       index: this._getAlias(index, collection),
     };
 
     this._checkDynamicProperty(mappings);
 
-    const collectionMappings = await this.getMapping(index, collection, true);
+    const collectionMappings = await this.getMapping(index, collection, {
+      includeKuzzleMeta: true,
+    });
 
     this._checkMappings(mappings);
 
@@ -1680,7 +1873,7 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise}
    */
-  async truncateCollection(index, collection) {
+  async truncateCollection(index: string, collection: string) {
     let mappings;
     let settings;
 
@@ -1728,13 +1921,20 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ items, errors }>
    */
   async import(
-    index,
-    collection,
-    documents,
-    { refresh, timeout, userId = null } = {},
+    index: string,
+    collection: string,
+    documents: JSONObject[],
+    {
+      refresh,
+      timeout,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      timeout?: string;
+      userId?: string;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
-    const actionNames = ["index", "create", "update", "delete"];
     const dateNow = Date.now();
     const esRequest = {
       body: documents,
@@ -1757,39 +1957,10 @@ class ElasticSearch extends Service {
     assertWellFormedRefresh(esRequest);
     this._scriptCheck(documents);
 
-    let lastAction; // NOSONAR
+    this._setLastActionToKuzzleMeta(esRequest, alias, kuzzleMeta);
 
-    /**
-     * @warning Critical code section
-     *
-     * bulk body can contain more than 10K elements
-     */
-    for (let i = 0; i < esRequest.body.length; i++) {
-      const item = esRequest.body[i];
-      const action = Object.keys(item)[0];
+    let response: Record<string, any>;
 
-      if (actionNames.indexOf(action) !== -1) {
-        lastAction = action;
-
-        item[action]._index = alias;
-
-        if (item[action]._type) {
-          item[action]._type = undefined;
-        }
-      } else if (lastAction === "index" || lastAction === "create") {
-        item._kuzzle_info = kuzzleMeta.created;
-      } else if (lastAction === "update") {
-        // we can only update metadata on a partial update, or on an upsert
-        for (const prop of ["doc", "upsert"]) {
-          if (isPlainObject(item[prop])) {
-            item[prop]._kuzzle_info = kuzzleMeta.updated;
-          }
-        }
-      }
-    }
-    /* end critical code section */
-
-    let response;
     try {
       response = await this._client.bulk(esRequest);
     } catch (error) {
@@ -1816,7 +1987,7 @@ class ElasticSearch extends Service {
       const item = row[action];
 
       if (item.status >= 400) {
-        const error = {
+        const error: KImportError = {
           _id: item._id,
           status: item.status,
         };
@@ -1888,7 +2059,7 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Array>} Index names
    */
   async listIndexes() {
-    let body;
+    let body: ApiResponse<any, unknown>["body"];
 
     try {
       ({ body } = await this._client.cat.aliases({ format: "json" }));
@@ -1909,7 +2080,8 @@ class ElasticSearch extends Service {
    * @returns {Object.<String, String[]>} Object<index, collections>
    */
   async getSchema() {
-    let body;
+    let body: ApiResponse<any, unknown>["body"];
+
     try {
       ({ body } = await this._client.cat.aliases({ format: "json" }));
     } catch (error) {
@@ -1921,7 +2093,9 @@ class ElasticSearch extends Service {
     const schema = this._extractSchema(aliases, { includeHidden: true });
 
     for (const [index, collections] of Object.entries(schema)) {
-      schema[index] = collections.filter((c) => c !== HIDDEN_COLLECTION);
+      schema[index] = (collections as string[]).filter(
+        (c) => c !== HIDDEN_COLLECTION,
+      );
     }
 
     return schema;
@@ -1964,17 +2138,20 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise}
    */
-  async deleteCollection(index, collection) {
-    const esRequest = {
-      index: await this._getIndice(index, collection),
+  async deleteCollection(index: string, collection: string): Promise<void> {
+    const indice = await this._getIndice(index, collection);
+    const esRequest: RequestParams.IndicesDelete = {
+      index: indice,
     };
 
     try {
       await this._client.indices.delete(esRequest);
+      const alias = this._getAlias(index, collection);
 
-      if (await this._checkIfAliasExists(this._getAlias(index, collection))) {
+      if (await this._checkIfAliasExists(alias)) {
         await this._client.indices.deleteAlias({
-          name: this._getAlias(index, collection),
+          index: indice,
+          name: alias,
         });
       }
 
@@ -1993,7 +2170,7 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<String[]>}
    */
-  async deleteIndexes(indexes = []) {
+  async deleteIndexes(indexes: string[] = []) {
     if (indexes.length === 0) {
       return Bluebird.resolve([]);
     }
@@ -2042,8 +2219,9 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise}
    */
-  async deleteIndex(index) {
+  async deleteIndex(index: string): Promise<void> {
     await this.deleteIndexes([index]);
+
     return null;
   }
 
@@ -2058,12 +2236,12 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<Object>} { _shards }
    */
-  async refreshCollection(index, collection) {
-    const esRequest = {
+  async refreshCollection(index: string, collection: string) {
+    const esRequest: RequestParams.IndicesRefresh = {
       index: this._getAlias(index, collection),
     };
 
-    let _shards;
+    let _shards: any;
 
     try {
       ({
@@ -2085,8 +2263,12 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<boolean>}
    */
-  async exists(index, collection, id) {
-    const esRequest = {
+  async exists(
+    index: string,
+    collection: string,
+    id: string,
+  ): Promise<boolean> {
+    const esRequest: RequestParams.Exists = {
       id,
       index: this._getAlias(index, collection),
     };
@@ -2111,13 +2293,13 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ items: Array<{ _id, _source, _version }>, errors }>}
    */
-  async mExists(index, collection, ids) {
+  async mExists(index: string, collection: string, ids: string[]) {
     if (ids.length === 0) {
       return { errors: [], item: [] };
     }
 
-    const esRequest = {
-      _source: false,
+    const esRequest: RequestParams.Mget = {
+      _source: "false",
       body: {
         docs: ids.map((_id) => ({ _id })),
       },
@@ -2157,7 +2339,7 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<boolean>}
    */
-  async hasIndex(index) {
+  async hasIndex(index: string): Promise<boolean> {
     const indexes = await this.listIndexes();
 
     return indexes.some((idx) => idx === index);
@@ -2171,10 +2353,10 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<boolean>}
    */
-  async hasCollection(index, collection) {
+  async hasCollection(index: string, collection: string): Promise<boolean> {
     const collections = await this.listCollections(index);
 
-    return collections.some((col) => col === collection);
+    return collections.some((col: string) => col === collection);
   }
 
   /**
@@ -2205,10 +2387,18 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object>} { items, errors }
    */
   async mCreate(
-    index,
-    collection,
-    documents,
-    { refresh, timeout, userId = null } = {},
+    index: string,
+    collection: string,
+    documents: JSON[],
+    {
+      refresh,
+      timeout,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      timeout?: string;
+      userId?: string;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2296,9 +2486,9 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ items, errors }>
    */
   async mCreateOrReplace(
-    index,
-    collection,
-    documents,
+    index: string,
+    collection: string,
+    documents: JSONObject[],
     {
       refresh,
       timeout,
@@ -2306,7 +2496,7 @@ class ElasticSearch extends Service {
       injectKuzzleMeta = true,
       limits = true,
       source = true,
-    } = {},
+    }: KRequestParams = {},
   ) {
     let kuzzleMeta = {};
 
@@ -2370,10 +2560,15 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object>} { items, errors }
    */
   async mUpdate(
-    index,
-    collection,
-    documents,
-    { refresh, retryOnConflict = 0, timeout, userId = null } = {},
+    index: string,
+    collection: string,
+    documents: JSONObject[],
+    {
+      refresh = undefined,
+      retryOnConflict = 0,
+      timeout = undefined,
+      userId = null,
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2461,10 +2656,20 @@ class ElasticSearch extends Service {
    * @returns {Promise.<{ items, errors }>
    */
   async mUpsert(
-    index,
-    collection,
-    documents,
-    { refresh, retryOnConflict = 0, timeout, userId = null } = {},
+    index: string,
+    collection: string,
+    documents: JSONObject[],
+    {
+      refresh,
+      retryOnConflict = 0,
+      timeout,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      retryOnConflict?: number;
+      timeout?: string;
+      userId?: string;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -2560,10 +2765,18 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object>} { items, errors }
    */
   async mReplace(
-    index,
-    collection,
-    documents,
-    { refresh, timeout, userId = null } = {},
+    index: string,
+    collection: string,
+    documents: JSONObject[],
+    {
+      refresh,
+      timeout,
+      userId = null,
+    }: {
+      refresh?: boolean | "wait_for";
+      timeout?: string;
+      userId?: string;
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2606,7 +2819,7 @@ class ElasticSearch extends Service {
       const document = extractedDocuments[i];
 
       // Documents are retrieved in the same order than we got them from user
-      if (existingDocuments[i] && existingDocuments[i].found) {
+      if (existingDocuments[i]?.found) {
         esRequest.body.push({
           index: {
             _id: document._id,
@@ -2644,7 +2857,17 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<{ documents, errors }>
    */
-  async mDelete(index, collection, ids, { refresh, timeout } = {}) {
+  async mDelete(
+    index: string,
+    collection: string,
+    ids: string[],
+    {
+      refresh,
+    }: {
+      refresh?: boolean | "wait_for";
+      timeout?: number;
+    } = {},
+  ) {
     const query = { ids: { values: [] } };
     const validIds = [];
     const partialErrors = [];
@@ -2700,7 +2923,6 @@ class ElasticSearch extends Service {
     // deleteByQuery
     const { documents } = await this.deleteByQuery(index, collection, query, {
       refresh,
-      timeout,
     });
 
     return { documents, errors: partialErrors };
@@ -2719,18 +2941,15 @@ class ElasticSearch extends Service {
    * @returns {Promise.<Object[]>} results
    */
   async _mExecute(
-    esRequest,
-    documents,
-    partialErrors,
+    esRequest: RequestParams.Bulk,
+    documents: JSONObject[],
+    partialErrors: JSONObject[] = [],
     { limits = true, source = true } = {},
   ) {
     assertWellFormedRefresh(esRequest);
 
-    if (
-      limits &&
-      documents.length > global.kuzzle.config.limits.documentsWriteCount
-    ) {
-      return kerror.reject("write_limit_exceeded");
+    if (this._hasExceededLimit(limits, documents)) {
+      return kerror.reject("services", "storage", "write_limit_exceeded");
     }
 
     let response = { body: { items: [] } };
@@ -2805,8 +3024,8 @@ class ElasticSearch extends Service {
    * @returns {Object} { rejected, extractedDocuments, documentsToGet }
    */
   _extractMDocuments(
-    documents,
-    metadata,
+    documents: JSONObject[],
+    metadata: JSONObject,
     { prepareMGet = false, requireId = false, prepareMUpsert = false } = {},
   ) {
     const rejected = [];
@@ -2850,44 +3069,70 @@ class ElasticSearch extends Service {
           status: 400,
         });
       } else {
-        let extractedDocument;
-        if (prepareMUpsert) {
-          extractedDocument = {
-            _source: {
-              // Do not use destructuring, it's 10x slower
-              changes: Object.assign({}, metadata.doc, document.changes),
-              default: Object.assign(
-                {},
-                metadata.upsert,
-                document.changes,
-                document.default,
-              ),
-            },
-          };
-        } else {
-          extractedDocument = {
-            // Do not use destructuring, it's 10x slower
-            _source: Object.assign({}, metadata, document.body),
-          };
-        }
-
-        if (document._id) {
-          extractedDocument._id = document._id;
-        }
-
-        extractedDocuments.push(extractedDocument);
-
-        if (prepareMGet && typeof document._id === "string") {
-          documentsToGet.push({
-            _id: document._id,
-            _source: false,
-          });
-        }
+        this._processExtract(
+          prepareMUpsert,
+          prepareMGet,
+          metadata,
+          document,
+          extractedDocuments,
+          documentsToGet,
+        );
       }
     }
     /* end critical code section */
 
     return { documentsToGet, extractedDocuments, rejected };
+  }
+
+  private _hasExceededLimit(limits: boolean, documents: JSONObject[]) {
+    return (
+      limits &&
+      documents.length > global.kuzzle.config.limits.documentsWriteCount
+    );
+  }
+
+  private _processExtract(
+    prepareMUpsert: boolean,
+    prepareMGet: boolean,
+    metadata: JSONObject,
+    document: JSONObject,
+    extractedDocuments: JSONObject[],
+    documentsToGet: JSONObject[],
+  ) {
+    let extractedDocument;
+
+    if (prepareMUpsert) {
+      extractedDocument = {
+        _source: {
+          // Do not use destructuring, it's 10x slower
+          changes: Object.assign({}, metadata.doc, document.changes),
+          default: Object.assign(
+            {},
+            metadata.upsert,
+            document.changes,
+            document.default,
+          ),
+        },
+      };
+    } else {
+      extractedDocument = {
+        // Do not use destructuring, it's 10x slower
+        _source: Object.assign({}, metadata, document.body),
+      };
+    }
+
+    if (document._id) {
+      extractedDocument._id = document._id;
+    }
+
+    extractedDocuments.push(extractedDocument);
+
+    if (prepareMGet && typeof document._id === "string") {
+      documentsToGet.push({
+        _id: document._id,
+        _source: false,
+      });
+    }
   }
 
   /**
@@ -2896,7 +3141,7 @@ class ElasticSearch extends Service {
    * @param {Object} mapping
    * @throws
    */
-  _checkMappings(mapping, path = [], check = true) {
+  _checkMappings(mapping: JSONObject, path = [], check = true) {
     const properties = Object.keys(mapping);
     const mappingProperties =
       path.length === 0
@@ -2908,6 +3153,8 @@ class ElasticSearch extends Service {
         const currentPath = [...path, property].join(".");
 
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           currentPath,
           didYouMean(property, mappingProperties),
@@ -2917,7 +3164,7 @@ class ElasticSearch extends Service {
       if (property === "properties") {
         // type definition level, we don't check
         this._checkMappings(mapping[property], [...path, "properties"], false);
-      } else if (mapping[property] && mapping[property].properties) {
+      } else if (mapping[property]?.properties) {
         // root properties level, check for "properties", "dynamic" and "_meta"
         this._checkMappings(mapping[property], [...path, property], true);
       }
@@ -2957,7 +3204,7 @@ class ElasticSearch extends Service {
    * @returns {String} Indice name (eg: '&nepali.liia')
    * @throws If there is not exactly one indice associated
    */
-  async _getIndice(index, collection) {
+  async _getIndice(index: string, collection: string): Promise<string> {
     const alias = `${ALIAS_PREFIX}${this._indexPrefix}${index}${NAME_SEPARATOR}${collection}`;
     const { body } = await this._client.cat.aliases({
       format: "json",
@@ -2965,9 +3212,11 @@ class ElasticSearch extends Service {
     });
 
     if (body.length < 1) {
-      throw kerror.get("unknown_index_collection");
+      throw kerror.get("services", "storage", "unknown_index_collection");
     } else if (body.length > 1) {
       throw kerror.get(
+        "services",
+        "storage",
         "multiple_indice_alias",
         `"alias" starting with "${ALIAS_PREFIX}"`,
         '"indices"',
@@ -2984,9 +3233,13 @@ class ElasticSearch extends Service {
    * @return {Promise<*>} the settings of the indice.
    * @private
    */
-  async _getSettings(esRequest) {
+  async _getSettings(
+    esRequest: RequestParams.IndicesGetSettings,
+  ): Promise<any> {
     const response = await this._client.indices.getSettings(esRequest);
-    return response.body[esRequest.index].settings;
+    const index = esRequest.index as string;
+
+    return response.body[index].settings;
   }
 
   /**
@@ -2998,8 +3251,11 @@ class ElasticSearch extends Service {
    *
    * @returns {String} Available indice name (eg: '&nepali.liia2')
    */
-  async _getAvailableIndice(index, collection) {
-    let indice = this._getAlias(index, collection).substr(
+  async _getAvailableIndice(
+    index: string,
+    collection: string,
+  ): Promise<string> {
+    let indice = this._getAlias(index, collection).substring(
       INDEX_PREFIX_POSITION_IN_ALIAS,
     );
 
@@ -3016,13 +3272,15 @@ class ElasticSearch extends Service {
       if (overflow > 0) {
         const indiceBuffer = Buffer.from(indice);
         indice = indiceBuffer
-          .slice(0, indiceBuffer.length - overflow)
+          .subarray(0, indiceBuffer.length - overflow)
           .toString();
       }
 
-      notAvailable = await this._client.indices.exists({
+      const response = await this._client.indices.exists({
         index: indice + suffix,
-      }).body;
+      });
+
+      notAvailable = response.body;
     } while (notAvailable);
 
     return indice + suffix;
@@ -3043,7 +3301,7 @@ class ElasticSearch extends Service {
     );
 
     if (aliases.length < 1) {
-      throw kerror.get("unknown_index_collection");
+      throw kerror.get("services", "storage", "unknown_index_collection");
     }
 
     return aliases;
@@ -3091,11 +3349,16 @@ class ElasticSearch extends Service {
    */
   _assertValidIndexAndCollection(index, collection = null) {
     if (!this.isIndexNameValid(index)) {
-      throw kerror.get("invalid_index_name", index);
+      throw kerror.get("services", "storage", "invalid_index_name", index);
     }
 
     if (collection !== null && !this.isCollectionNameValid(collection)) {
-      throw kerror.get("invalid_collection_name", collection);
+      throw kerror.get(
+        "services",
+        "storage",
+        "invalid_collection_name",
+        collection,
+      );
     }
   }
 
@@ -3175,14 +3438,14 @@ class ElasticSearch extends Service {
         return;
       }
 
-      const esRequest = {
+      const esRequest: IndicesCreate<KRequestBody<JSONObject>> = {
         body: {
           aliases: {
             [this._getAlias(index, HIDDEN_COLLECTION)]: {},
           },
           settings: {
-            number_of_replicas: this.config.defaultSettings.number_of_replicas,
-            number_of_shards: this.config.defaultSettings.number_of_shards,
+            number_of_replicas: this._config.defaultSettings.number_of_replicas,
+            number_of_shards: this._config.defaultSettings.number_of_shards,
           },
         },
         index: await this._getAvailableIndice(index, HIDDEN_COLLECTION),
@@ -3205,7 +3468,7 @@ class ElasticSearch extends Service {
    * To find the best value for this setting, we need to take into account
    * the number of nodes in the cluster and the number of shards per index.
    */
-  async _getWaitForActiveShards() {
+  async _getWaitForActiveShards(): Promise<string> {
     const { body } = await this._client.cat.nodes({ format: "json" });
 
     const numberOfNodes = body.length;
@@ -3214,7 +3477,7 @@ class ElasticSearch extends Service {
       return "all";
     }
 
-    return 1;
+    return "1";
   }
 
   /**
@@ -3226,27 +3489,32 @@ class ElasticSearch extends Service {
    *
    * @returns {Promise.<Array>} resolve to an array of documents
    */
-  async _getAllDocumentsFromQuery(esRequest) {
+  async _getAllDocumentsFromQuery(
+    esRequest: RequestParams.Search<Record<string, any>>,
+  ) {
     let {
       body: { hits, _scroll_id },
     } = await this._client.search(esRequest);
 
     if (hits.total.value > global.kuzzle.config.limits.documentsWriteCount) {
-      throw kerror.get("write_limit_exceeded");
+      throw kerror.get("services", "storage", "write_limit_exceeded");
     }
 
-    let documents = hits.hits.map((h) => ({ _id: h._id, _source: h._source }));
+    let documents = hits.hits.map((h: JSONObject) => ({
+      _id: h._id,
+      _source: h._source,
+    }));
 
     while (hits.total.value !== documents.length) {
       ({
         body: { hits, _scroll_id },
       } = await this._client.scroll({
         scroll: esRequest.scroll,
-        scrollId: _scroll_id,
+        scroll_id: _scroll_id,
       }));
 
       documents = documents.concat(
-        hits.hits.map((h) => ({
+        hits.hits.map((h: JSONObject) => ({
           _id: h._id,
           _source: h._source,
         })),
@@ -3268,7 +3536,7 @@ class ElasticSearch extends Service {
     // Only allow a whitelist of top level properties
     for (const key of Object.keys(searchBody)) {
       if (searchBody[key] !== undefined && !this.searchBodyKeys.includes(key)) {
-        throw kerror.get("invalid_search_query", key);
+        throw kerror.get("services", "storage", "invalid_search_query", key);
       }
     }
 
@@ -3296,7 +3564,12 @@ class ElasticSearch extends Service {
       if (this.scriptKeys.includes(key)) {
         for (const scriptArg of Object.keys(value)) {
           if (!this.scriptAllowedArgs.includes(scriptArg)) {
-            throw kerror.get("invalid_query_keyword", `${key}.${scriptArg}`);
+            throw kerror.get(
+              "services",
+              "storage",
+              "invalid_query_keyword",
+              `${key}.${scriptArg}`,
+            );
           }
         }
       }
@@ -3330,10 +3603,10 @@ class ElasticSearch extends Service {
    * @param  {[type]} id [description]
    * @returns {[type]}    [description]
    */
-  async clearScroll(id) {
+  async clearScroll(id?: string) {
     if (id) {
       debug("clearing scroll: %s", id);
-      await this._client.clearScroll({ scrollId: id });
+      await this._client.clearScroll({ scroll_id: id });
     }
   }
 
@@ -3402,7 +3675,7 @@ class ElasticSearch extends Service {
       try {
         // Wait for at least 1 shard to be initialized
         const health = await this._client.cluster.health({
-          waitForNoInitializingShards: true,
+          wait_for_no_initializing_shards: true,
         });
 
         if (health.body.number_of_pending_tasks === 0) {
@@ -3431,6 +3704,8 @@ class ElasticSearch extends Service {
         _.set(mappings, path, value.toString());
       } else if (typeof value !== "string") {
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           path,
           "Dynamic property value should be a string.",
@@ -3439,6 +3714,8 @@ class ElasticSearch extends Service {
 
       if (!DYNAMIC_PROPERTY_VALUES.includes(value.toString())) {
         throw kerror.get(
+          "services",
+          "storage",
           "invalid_mapping",
           path,
           `Incorrect dynamic property value (${value}). Should be one of "${DYNAMIC_PROPERTY_VALUES.join(
@@ -3448,9 +3725,49 @@ class ElasticSearch extends Service {
       }
     }
   }
-}
 
-module.exports = ElasticSearch;
+  _setLastActionToKuzzleMeta(
+    esRequest: JSONObject,
+    alias: string,
+    kuzzleMeta: JSONObject,
+  ) {
+    /**
+     * @warning Critical code section
+     *
+     * bulk body can contain more than 10K elements
+     */
+    let lastAction = "";
+    const actionNames = ["index", "create", "update", "delete"];
+
+    for (let i = 0; i < esRequest.body.length; i++) {
+      const item = esRequest.body[i];
+      const action = Object.keys(item)[0];
+
+      if (actionNames.indexOf(action) !== -1) {
+        lastAction = action;
+
+        item[action]._index = alias;
+
+        if (item[action]?._type) {
+          item[action]._type = undefined;
+        }
+      } else if (lastAction === "index" || lastAction === "create") {
+        item._kuzzle_info = kuzzleMeta.created;
+      } else if (lastAction === "update") {
+        this._setLastActionToKuzzleMetaUpdate(item, kuzzleMeta);
+      }
+    }
+    /* end critical code section */
+  }
+
+  _setLastActionToKuzzleMetaUpdate(item: JSONObject, kuzzleMeta: JSONObject) {
+    for (const prop of ["doc", "upsert"]) {
+      if (isPlainObject(item[prop])) {
+        item[prop]._kuzzle_info = kuzzleMeta.updated;
+      }
+    }
+  }
+}
 
 /**
  * Finds paths and values of mappings dynamic properties
@@ -3485,7 +3802,7 @@ function findDynamic(mappings, path = [], results = {}) {
  */
 function assertNoRouting(esRequest) {
   if (esRequest.body._routing) {
-    throw kerror.get("no_routing");
+    throw kerror.get("services", "storage", "no_routing");
   }
 }
 
@@ -3497,11 +3814,17 @@ function assertNoRouting(esRequest) {
  */
 function assertWellFormedRefresh(esRequest) {
   if (!["wait_for", "false", false, undefined].includes(esRequest.refresh)) {
-    throw kerror.get("invalid_argument", "refresh", '"wait_for", false');
+    throw kerror.get(
+      "services",
+      "storage",
+      "invalid_argument",
+      "refresh",
+      '"wait_for", false',
+    );
   }
 }
 
-function getKuid(userId) {
+function getKuid(userId: string): string | null {
   if (!userId) {
     return null;
   }
@@ -3524,7 +3847,7 @@ function getKuid(userId) {
  * @param  {string}  name
  * @returns {Boolean}
  */
-function _isObjectNameValid(name) {
+function _isObjectNameValid(name: string): boolean {
   if (typeof name !== "string" || name.length === 0) {
     return false;
   }
@@ -3549,3 +3872,7 @@ function _isObjectNameValid(name) {
 
   return valid;
 }
+
+// TODO: Remove this function when we move to Jest
+// This is kept because we use an old ReRequire that use require() instead of import
+module.exports = ElasticSearch;

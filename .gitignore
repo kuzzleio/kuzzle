@@ -162,6 +162,7 @@ lib/model/security/profile.js
 lib/model/security/role.js
 lib/model/security/token.js
 lib/model/security/user.js
+lib/service/storage/elasticsearch.js
 lib/types/ClientConnection.js
 lib/types/config/DumpConfiguration.js
 lib/types/config/HttpConfiguration.js
@@ -182,6 +183,7 @@ lib/types/DebugModule.js
 lib/types/Deprecation.js
 lib/types/errors/ErrorDefinition.js
 lib/types/errors/ErrorDomains.js
+lib/types/storage/Elasticsearch.js
 lib/types/EventHandler.js
 lib/types/events/EventGenericDocument.js
 lib/types/events/EventProtocol.js
