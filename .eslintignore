@@ -58,6 +58,7 @@ lib/types/Token.js
 lib/types/User.js
 lib/types/Global.d.ts
 lib/types/Global.js
+lib/types/storage/Elasticsearch.js
 lib/util/interfaces.js
 lib/util/mutex.js
 lib/util/Inflector.js
@@ -125,6 +126,7 @@ lib/util/dump-collection.js
 lib/api/controllers/debugController.js
 lib/api/openapi/components/security/index.js
 lib/config/documentEventAliases.js
+lib/service/storage/elasticsearch.js
 lib/types/DebugModule.js
 lib/util/time.js
 lib/util/async.js

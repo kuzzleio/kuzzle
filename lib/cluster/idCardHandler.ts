@@ -96,7 +96,7 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID Card
    */
-  private idCard: IdCard = null;
+  public idCard: IdCard = null;
 
   /**
    * Local node IP address
@@ -222,7 +222,6 @@ export class ClusterIdCardHandler {
           // It could happens that the worker has been killed before the dispose causing disconnect to fail
         }
       }
-      process.exit();
     };
 
     process.on("exit", exitHandler);
