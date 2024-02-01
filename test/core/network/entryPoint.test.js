@@ -78,6 +78,8 @@ describe("lib/core/core/network/entryPoint", () => {
     // Bluebird.map forces a different context, preventing rewire to mock
     // "require"
     mockrequire("bluebird", {
+      all: Bluebird.all,
+      catch: sinon.stub().resolves(),
       map: (arr, fn) =>
         Promise.all(
           arr.map((e) => {
@@ -91,10 +93,8 @@ describe("lib/core/core/network/entryPoint", () => {
           }),
         ),
       resolve: sinon.stub().resolves(),
-      timeout: sinon.stub().resolves(),
-      catch: sinon.stub().resolves(),
       then: sinon.stub().resolves(),
-      all: Bluebird.all,
+      timeout: sinon.stub().resolves(),
     });
 
     EntryPoint = mockrequire.reRequire(`${network}/entryPoint`);
@@ -330,12 +330,12 @@ describe("lib/core/core/network/entryPoint", () => {
       });
 
       mockrequire(path.join(protocolDir, "one/manifest.json"), {
-        name: "foo",
         kuzzleVersion: ">=2.0.0 <3.0.0",
+        name: "foo",
       });
       mockrequire(path.join(protocolDir, "two/manifest.json"), {
-        name: "bar",
         kuzzleVersion: ">=2.0.0 <3.0.0",
+        name: "bar",
       });
       mockrequire.reRequire(entryPointDir);
       const Rewired = rewire(entryPointDir);
@@ -380,8 +380,8 @@ describe("lib/core/core/network/entryPoint", () => {
       });
 
       mockrequire(path.join(protocolDir, "protocol/manifest.json"), {
-        name: "foo",
         kuzzleVersion: ">=2.0.0 <3.0.0",
+        name: "foo",
       });
       mockrequire.reRequire(entryPointDir);
       const Rewired = rewire(entryPointDir);
@@ -405,9 +405,9 @@ describe("lib/core/core/network/entryPoint", () => {
 
     beforeEach(() => {
       connection = {
+        headers: "headers",
         id: "connectionId",
         protocol: "protocol",
-        headers: "headers",
       };
     });
 
@@ -433,9 +433,9 @@ describe("lib/core/core/network/entryPoint", () => {
 
     beforeEach(() => {
       connection = {
+        headers: "headers",
         id: "connectionId",
         protocol: "protocol",
-        headers: "headers",
       };
 
       entrypoint._clients.set(connection.id, connection);
@@ -454,9 +454,9 @@ describe("lib/core/core/network/entryPoint", () => {
       entrypoint.removeConnection(connection.id);
 
       should(kuzzle.emit).be.calledWithMatch("connection:remove", {
+        headers: "headers",
         id: "connectionId",
         protocol: "protocol",
-        headers: "headers",
       });
     });
   });
