@@ -183,6 +183,7 @@ lib/types/DebugModule.js
 lib/types/Deprecation.js
 lib/types/errors/ErrorDefinition.js
 lib/types/errors/ErrorDomains.js
+lib/types/storage/Elasticsearch.js
 lib/types/EventHandler.js
 lib/types/events/EventGenericDocument.js
 lib/types/events/EventProtocol.js

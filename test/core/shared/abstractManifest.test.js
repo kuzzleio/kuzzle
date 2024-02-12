@@ -37,7 +37,7 @@ describe("AbstractManifest class", () => {
   it("should throw if kuzzleVersion is not a string", () => {
     const manifest = new Manifest(pluginPath);
 
-    mockRequireManifest({ name: "foobar", kuzzleVersion: 123 })(() => {
+    mockRequireManifest({ kuzzleVersion: 123, name: "foobar" })(() => {
       should(() => manifest.load()).throw(PluginImplementationError, {
         id: "plugin.manifest.version_mismatch",
       });
@@ -58,41 +58,51 @@ describe("AbstractManifest class", () => {
     const kuzzleVersion = ">1.0.0 <=99.99.99";
     const manifest = new Manifest(pluginPath);
 
-    mockRequireManifest({ name: "foobar", kuzzleVersion })(() => {
+    mockRequireManifest({ kuzzleVersion, name: "foobar" })(() => {
       manifest.load();
-      should(manifest).match({ name: "foobar", kuzzleVersion });
+      should(manifest).match({ kuzzleVersion, name: "foobar" });
+    });
+  });
+
+  it("should accept a prerelease kuzzleVersion value", () => {
+    const kuzzleVersion = ">2.27.0-beta.1";
+    const manifest = new Manifest(pluginPath);
+
+    mockRequireManifest({ kuzzleVersion, name: "foobar" })(() => {
+      manifest.load();
+      should(manifest).match({ kuzzleVersion, name: "foobar" });
     });
   });
 
   it("should throw if the provided name is not a non-empty string", () => {
     const manifest = new Manifest(pluginPath);
 
-    [123, false, ""].forEach((name) => {
-      mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
+    for (const name of [123, false, ""]) {
+      mockRequireManifest({ kuzzleVersion: defaultKuzzleVersion, name })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, {
           id: "plugin.manifest.invalid_name_type",
         });
       });
-    });
+    }
   });
 
   it("should throw if no name property is provided", () => {
     const manifest = new Manifest(pluginPath);
 
-    [undefined, null].forEach((name) => {
-      mockRequireManifest({ name, kuzzleVersion: defaultKuzzleVersion })(() => {
+    for (const name of [undefined, null]) {
+      mockRequireManifest({ kuzzleVersion: defaultKuzzleVersion, name })(() => {
         should(() => manifest.load()).throw(PluginImplementationError, {
           id: "plugin.manifest.missing_name",
         });
       });
-    });
+    }
   });
 
   it("should throw if kuzzleVersion does not match the current Kuzzle version", () => {
     const kuzzleVersion = ">0.4.2 <1.0.0";
     const manifest = new Manifest(pluginPath);
 
-    mockRequireManifest({ name: "foobar", kuzzleVersion })(() => {
+    mockRequireManifest({ kuzzleVersion, name: "foobar" })(() => {
       should(() => manifest.load()).throw(PluginImplementationError, {
         id: "plugin.manifest.version_mismatch",
       });
@@ -111,9 +121,9 @@ describe("AbstractManifest class", () => {
       const serialized = JSON.parse(JSON.stringify(manifest));
 
       should(serialized).eql({
+        kuzzleVersion: manifest.kuzzleVersion,
         name: manifest.name,
         path: manifest.path,
-        kuzzleVersion: manifest.kuzzleVersion,
       });
     });
   });
