@@ -284,6 +284,7 @@ const defaultConfig: KuzzleConfiguration = {
       bootstrapLockTimeout: 60000,
     },
     storageEngine: {
+      majorVersion: 7,
       aliases: ["storageEngine"],
       backend: "elasticsearch",
       client: {

@@ -31,7 +31,8 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "8.11.0",
+    "sdk-es7": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
+    "sdk-es8": "npm:@elastic/elasticsearch@8.12.1",
     "aedes": "0.46.3",
     "bluebird": "3.7.2",
     "cli-color": "2.0.3",

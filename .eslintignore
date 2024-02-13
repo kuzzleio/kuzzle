@@ -126,7 +126,7 @@ lib/util/dump-collection.js
 lib/api/controllers/debugController.js
 lib/api/openapi/components/security/index.js
 lib/config/documentEventAliases.js
-lib/service/storage/elasticsearch.js
+lib/service/storage/Elasticsearch.js
 lib/types/DebugModule.js
 lib/util/time.js
 lib/util/async.js

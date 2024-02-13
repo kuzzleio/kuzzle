@@ -21,13 +21,12 @@
 
 import Bluebird from "bluebird";
 import { Koncorde } from "../shared/KoncordeWrapper";
-import { Client } from "@elastic/elasticsearch";
 import { JSONObject } from "kuzzle-sdk";
 
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import PluginRepository from "./pluginRepository";
 import Store from "../shared/store";
-import Elasticsearch from "../../service/storage/elasticsearch";
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { isPlainObject } from "../../util/safeObject";
 import Promback from "../../util/promback";
 import { Mutex } from "../../util/mutex";
@@ -130,7 +129,7 @@ export class PluginContext {
         connectionId: string,
         index: string,
         collection: string,
-        filters: JSONObject,
+        filters: JSONObject
       ) => Promise<{ roomId: string }>;
 
       /**
@@ -139,7 +138,7 @@ export class PluginContext {
       unregister: (
         connectionId: string,
         roomId: string,
-        notify: boolean,
+        notify: boolean
       ) => Promise<void>;
     };
 
@@ -205,7 +204,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: typeof Client;
+    ESClient: new () => any;
   };
 
   /**
@@ -283,7 +282,7 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository(
       collection: string,
-      ObjectConstructor: any = null,
+      ObjectConstructor: any = null
     ) {
       if (!collection) {
         throw contextError.get("missing_collection");
@@ -305,21 +304,20 @@ export class PluginContext {
       } as Repository;
     }
 
-    // eslint-disable-next-line no-inner-declarations
-    function PluginContextESClient(): Client {
+    function PluginContextESClient(): any {
       return Elasticsearch.buildClient(
-        global.kuzzle.config.services.storageEngine.client,
+        global.kuzzle.config.services.storageEngine.client
       );
     }
 
     this.constructors = {
       BaseValidationType: require("../validation/baseType"),
-      ESClient: PluginContextESClient as unknown as new () => Client,
+      ESClient: PluginContextESClient as any,
       Koncorde: Koncorde as any,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (
         collection: string,
-        objectConstructor: any,
+        objectConstructor: any
       ) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
@@ -369,7 +367,7 @@ export class PluginContext {
             },
             {
               connectionId: connectionId,
-            },
+            }
           );
           return global.kuzzle.ask("core:realtime:subscribe", request);
         },
@@ -378,17 +376,17 @@ export class PluginContext {
             "core:realtime:unsubscribe",
             connectionId,
             roomId,
-            notify,
+            notify
           ),
       },
       trigger: (eventName, payload) =>
         global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload),
       validation: {
         addType: global.kuzzle.validation.addType.bind(
-          global.kuzzle.validation,
+          global.kuzzle.validation
         ),
         validate: global.kuzzle.validation.validate.bind(
-          global.kuzzle.validation,
+          global.kuzzle.validation
         ),
       },
     };
@@ -423,7 +421,7 @@ function execute(request, callback) {
     ["subscribe", "unsubscribe"].includes(request.input.action)
   ) {
     return promback.reject(
-      contextError.get("unavailable_realtime", request.input.action),
+      contextError.get("unavailable_realtime", request.input.action)
     );
   }
 
@@ -497,11 +495,10 @@ function instantiateRequest(request, data, options = {}) {
     }
 
     if (_data) {
-      target.input.volatile = Object.assign(
-        {},
-        _request.input.volatile,
-        _data.volatile,
-      );
+      target.input.volatile = {
+        ..._request.input.volatile,
+        ..._data.volatile,
+      };
     } else {
       target.input.volatile = _request.input.volatile;
     }

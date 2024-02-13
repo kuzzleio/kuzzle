@@ -1,39 +1,12 @@
-import { estypes } from "@elastic/elasticsearch";
+import { ByteSize, ClusterNodesStats } from "sdk-es7/api/types";
 
 export type InfoResult = {
   type: string;
   version: string;
   status?: string;
   lucene?: string;
-  spaceUsed?: estypes.ByteSize;
-  nodes?: estypes.ClusterStatsClusterNodes;
-};
-
-export type KUpdateResponse = {
-  _id: string;
-  _source: unknown;
-  _version: number;
-}
-
-export type KStatsIndexesCollection = {
-  documentCount: number;
-  name: string;
-  size: estypes.ByteSize;
-};
-
-export type KStatsIndex = {
-  collections: KStatsIndexesCollection[];
-  name: string;
-  size: estypes.ByteSize;
-};
-
-export type KStatsIndexes = {
-  [key: string]: KStatsIndex;
-};
-
-export type KStats = {
-  indexes: KStatsIndex[];
-  size: estypes.ByteSize;
+  spaceUsed?: ByteSize;
+  nodes?: ClusterNodesStats;
 };
 
 export type KRequestBody<T> = T & {

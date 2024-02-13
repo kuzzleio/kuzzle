@@ -2,7 +2,6 @@
 
 const should = require("should");
 const mockrequire = require("mock-require");
-const { Client: ElasticsearchClient } = require("@elastic/elasticsearch");
 
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
@@ -30,7 +29,6 @@ describe("Backend", () => {
       should(application.storage.StorageClient).be.a.Function();
 
       const client = new application.storage.StorageClient({ maxRetries: 42 });
-      should(client).be.instanceOf(ElasticsearchClient);
       should(client.connectionPool.connections[0].url.toString()).be.eql(
         "http://es:9200/",
       );
@@ -52,9 +50,6 @@ describe("Backend", () => {
         "http://es:9200";
       should(application.storage._client).be.null();
 
-      should(application.storage.storageClient).be.instanceOf(
-        ElasticsearchClient,
-      );
       should(
         application.storage.storageClient.connectionPool.connections[0].url.toString(),
       ).be.eql("http://es:9200/");

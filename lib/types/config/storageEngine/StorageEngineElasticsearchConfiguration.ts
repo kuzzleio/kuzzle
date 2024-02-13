@@ -1,6 +1,9 @@
-import { ClientOptions } from "@elastic/elasticsearch";
-
 export type StorageEngineElasticsearch = {
+  /**
+   * Elasticsearch major version
+   * @default 7
+   */
+  majorVersion: 7 | 8;
   /**
    * @default ['storageEngine']
    */
@@ -25,7 +28,7 @@ export type StorageEngineElasticsearch = {
    * }
    *
    */
-  client: ClientOptions;
+  client: any;
 
   /**
    * Default policy against new fields that are not referenced in the

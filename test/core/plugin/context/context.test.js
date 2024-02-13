@@ -6,7 +6,6 @@ const mockrequire = require("mock-require");
 const should = require("should");
 const sinon = require("sinon");
 const _ = require("lodash");
-const { Client: ESClient } = require("@elastic/elasticsearch");
 
 const {
   Request,
@@ -103,7 +102,7 @@ describe("Plugin Context", () => {
       it("should expose the ESClient constructor", () => {
         const storageClient = new context.constructors.ESClient();
 
-        should(storageClient).be.instanceOf(ESClient);
+        should(storageClient).be.instanceOf(context.constructors.ESClient);
       });
 
       it("should allow to instantiate an ESClient connected to the ES cluster", () => {
@@ -127,21 +126,21 @@ describe("Plugin Context", () => {
       it("should replicate the right request information", () => {
         let request = new Request(
             {
-              action: "action",
-              controller: "controller",
-              foobar: "foobar",
               _id: "_id",
-              index: "index",
+              action: "action",
               collection: "collection",
-              result: "result",
+              controller: "controller",
               error: new Error("error"),
-              status: 666,
+              foobar: "foobar",
+              index: "index",
               jwt: "jwt",
+              result: "result",
+              status: 666,
               volatile: { foo: "bar" },
             },
             {
-              protocol: "protocol",
               connectionId: "connectionId",
+              protocol: "protocol",
             },
           ),
           pluginRequest = new context.constructors.Request(request, {});
@@ -170,33 +169,33 @@ describe("Plugin Context", () => {
       it("should override origin request data with provided ones", () => {
         let request = new Request(
             {
-              action: "action",
-              controller: "controller",
-              foo: "foo",
-              bar: "bar",
               _id: "_id",
-              index: "index",
+              action: "action",
+              bar: "bar",
               collection: "collection",
-              result: "result",
+              controller: "controller",
               error: new Error("error"),
-              status: 666,
+              foo: "foo",
+              index: "index",
               jwt: "jwt",
+              result: "result",
+              status: 666,
               volatile: { foo: "bar" },
             },
             {
-              protocol: "protocol",
               connectionId: "connectionId",
+              protocol: "protocol",
             },
           ),
           pluginRequest = new context.constructors.Request(request, {
             action: "pluginAction",
+            collection: "pluginCollection",
             controller: "pluginController",
             foo: false,
             from: 0,
-            size: 99,
-            collection: "pluginCollection",
             jwt: null,
-            volatile: { foo: "overridden", bar: "baz" },
+            size: 99,
+            volatile: { bar: "baz", foo: "overridden" },
           });
 
         should(pluginRequest.context.protocol).be.eql("protocol");
@@ -215,15 +214,15 @@ describe("Plugin Context", () => {
         should(pluginRequest.input.args.index).be.eql("index");
         should(pluginRequest.input.args.collection).be.eql("pluginCollection");
         should(pluginRequest.input.volatile).match({
-          foo: "overridden",
           bar: "baz",
+          foo: "overridden",
         });
       });
 
       it("should allow building a request without providing another one", () => {
         const rq = new context.constructors.Request({
-          controller: "foo",
           action: "bar",
+          controller: "foo",
         });
 
         should(rq).be.instanceOf(KuzzleRequest);
@@ -234,20 +233,20 @@ describe("Plugin Context", () => {
 
     it("should expose all error objects as capitalized constructors", () => {
       const errors = {
-        KuzzleError,
-        UnauthorizedError,
-        TooManyRequestsError,
-        SizeLimitError,
-        ServiceUnavailableError,
-        PreconditionError,
-        PluginImplementationError,
-        PartialError,
-        NotFoundError,
-        InternalError,
-        GatewayTimeoutError,
-        ForbiddenError,
-        ExternalServiceError,
         BadRequestError,
+        ExternalServiceError,
+        ForbiddenError,
+        GatewayTimeoutError,
+        InternalError,
+        KuzzleError,
+        NotFoundError,
+        PartialError,
+        PluginImplementationError,
+        PreconditionError,
+        ServiceUnavailableError,
+        SizeLimitError,
+        TooManyRequestsError,
+        UnauthorizedError,
       };
 
       should(context.errors).be.an.Object().and.not.be.empty();
@@ -259,7 +258,7 @@ describe("Plugin Context", () => {
     });
 
     it("should expose the right accessors", () => {
-      ["verbose", "info", "debug", "warn", "error"].forEach((level) => {
+      for (const level of ["verbose", "info", "debug", "warn", "error"]) {
         should(context.log[level]).be.an.instanceOf(Function);
 
         context.log[level]("test");
@@ -267,7 +266,7 @@ describe("Plugin Context", () => {
         should(kuzzle.log[level])
           .calledOnce()
           .calledWithExactly("[pluginName] test");
-      });
+      }
 
       should(context.accessors).be.an.Object().and.not.be.empty();
       should(context.accessors).have.properties([
@@ -415,12 +414,12 @@ describe("Plugin Context", () => {
         kuzzle.pipe.resolves("pipe chain result");
         const eventName = "backHome";
         const payload = {
-          question: "whose motorcycle is this?",
-          answer: "it's a chopper, baby.",
-          anotherQuestion: "whose chopper is this, then?",
           anotherAnswer: "it's Zed's",
-          yetAnotherQuestion: "who's Zed?",
+          anotherQuestion: "whose chopper is this, then?",
+          answer: "it's a chopper, baby.",
+          question: "whose motorcycle is this?",
           yetAnotherAnswer: "Zed's dead, baby, Zed's dead.",
+          yetAnotherQuestion: "who's Zed?",
         };
 
         const result = await context.accessors.trigger(eventName, payload);
@@ -556,8 +555,8 @@ describe("Plugin Context", () => {
             return should(
               context.accessors.execute(
                 new Request({
-                  controller: "realtime",
                   action: "subscribe",
+                  controller: "realtime",
                 }),
               ),
             ).be.rejectedWith(PluginImplementationError, {
@@ -568,8 +567,8 @@ describe("Plugin Context", () => {
             return should(
               context.accessors.execute(
                 new Request({
-                  controller: "realtime",
                   action: "unsubscribe",
+                  controller: "realtime",
                 }),
               ),
             ).be.rejectedWith(PluginImplementationError, {
@@ -597,8 +596,8 @@ describe("Plugin Context", () => {
             mockedStrategy,
           );
           should(kuzzle.pipe).calledWith("core:auth:strategyAdded", {
-            pluginName: "pluginName",
             name: "foo",
+            pluginName: "pluginName",
             strategy: mockedStrategy,
           });
         });
@@ -639,8 +638,8 @@ describe("Plugin Context", () => {
             "foo",
           );
           should(kuzzle.pipe).calledWith("core:auth:strategyRemoved", {
-            pluginName: "pluginName",
             name: "foo",
+            pluginName: "pluginName",
           });
         });
       });

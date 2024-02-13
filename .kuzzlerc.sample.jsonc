@@ -761,6 +761,14 @@
     // [storageEngine]
     // The default storage layer is Elasticsearch and it is
     // currently the only storage layer we support.
+    //  * majorVersion:
+    //      The major version of the Elasticsearch server.
+    //      This value is used to determine which Elasticsearch client to use.
+    //      Currently, only Elasticsearch 7.x and 8.x are supported.
+    //  * backend:
+    //      The storage engine to use. Currently, only "elasticsearch" is supported.
+    //  * aliases:
+    //      List of aliases for the storageEngine configuration.
     //   * client:
     //       Elasticsearch constructor options. Use this field to specify your
     //       Elasticsearch config options, this object is passed through to the
@@ -779,6 +787,7 @@
     //         - "strict": Rejects document
     //       See https://www.elastic.co/guide/en/elasticsearch/reference/7.4/dynamic-mapping.html
     "storageEngine": {
+      "majorVersion": "8",
       "backend": "elasticsearch",
       "aliases": [
         "storageEngine"
