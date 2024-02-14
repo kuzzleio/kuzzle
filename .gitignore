@@ -163,6 +163,8 @@ lib/model/security/role.js
 lib/model/security/token.js
 lib/model/security/user.js
 lib/service/storage/Elasticsearch.js
+lib/service/storage/7/elasticsearch.js
+lib/service/storage/8/elasticsearch.js
 lib/types/ClientConnection.js
 lib/types/config/DumpConfiguration.js
 lib/types/config/HttpConfiguration.js
@@ -208,7 +210,8 @@ lib/types/realtime/RoomList.js
 lib/types/RequestPayload.js
 lib/types/ResponsePayload.js
 lib/types/RoleDefinition.js
-lib/types/storage/Elasticsearch.js
+lib/types/storage/7/Elasticsearch.js
+lib/types/storage/8/Elasticsearch.js
 lib/types/StrategyDefinition.js
 lib/types/Target.js
 lib/types/Token.js
