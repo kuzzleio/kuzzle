@@ -171,7 +171,7 @@ export class ES8 {
           "Your dynamic mapping policy is set to 'true' for new fields.",
           "Elasticsearch will try to automatically infer mapping for new fields, and those cannot be changed afterward.",
           'See the "services.storageEngine.commonMapping.dynamic" option in the kuzzlerc configuration file to change this value.',
-        ].join("\n")
+        ].join("\n"),
       );
     }
 
@@ -188,7 +188,7 @@ export class ES8 {
         "services",
         "storage",
         "version_mismatch",
-        version.number
+        version.number,
       );
     }
 
@@ -324,14 +324,14 @@ export class ES8 {
           "services",
           "storage",
           "scroll_duration_too_great",
-          _scrollTTL
+          _scrollTTL,
         );
       }
     }
 
     const stringifiedScrollInfo = await global.kuzzle.ask(
       "core:cache:internal:get",
-      cacheKey
+      cacheKey,
     );
 
     if (!stringifiedScrollInfo) {
@@ -357,7 +357,7 @@ export class ES8 {
           JSON.stringify(scrollInfo),
           {
             ttl: ms(_scrollTTL) || this.scrollTTL,
-          }
+          },
         );
       }
 
@@ -399,7 +399,7 @@ export class ES8 {
       from?: number;
       size?: number;
       scroll?: string;
-    } = {}
+    } = {},
   ) {
     let esIndexes: any;
 
@@ -435,7 +435,7 @@ export class ES8 {
           "services",
           "storage",
           "scroll_duration_too_great",
-          scroll
+          scroll,
         );
       }
     }
@@ -461,7 +461,7 @@ export class ES8 {
             index,
             targets,
           }),
-          { ttl }
+          { ttl },
         );
 
         remaining = totalHitsValue - body.hits.hits.length;
@@ -473,7 +473,6 @@ export class ES8 {
         targets,
       });
     } catch (error) {
-      console.error(error);
       throw this._esWrapper.formatESError(error);
     }
   }
@@ -505,7 +504,7 @@ export class ES8 {
   async _formatSearchResult(
     body: any,
     remaining?: number,
-    searchInfo: any = {}
+    searchInfo: any = {},
   ) {
     let aliasToTargets = {};
     const aliasCache = new Map();
@@ -566,7 +565,7 @@ export class ES8 {
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
           (innerHit as any).hits.hits,
-          formatHit
+          formatHit,
         );
       }
       return formattedInnerHits;
@@ -725,7 +724,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     assertIsObject(content);
 
@@ -789,7 +788,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest: estypes.IndexRequest<KRequestBody<JSONObject>> = {
       document: content,
@@ -853,7 +852,7 @@ export class ES8 {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ): Promise<KUpdateResponse> {
     const esRequest: estypes.UpdateRequest<
       KRequestBody<JSONObject>,
@@ -924,7 +923,7 @@ export class ES8 {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest: estypes.UpdateRequest<
       KRequestBody<JSONObject>,
@@ -1000,7 +999,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest: estypes.IndexRequest<KRequestBody<JSONObject>> = {
@@ -1033,7 +1032,7 @@ export class ES8 {
           "not_found",
           id,
           index,
-          collection
+          collection,
         );
       }
 
@@ -1069,7 +1068,7 @@ export class ES8 {
       refresh,
     }: {
       refresh?: boolean | "wait_for";
-    } = {}
+    } = {},
   ) {
     const esRequest: estypes.DeleteRequest = {
       id,
@@ -1117,7 +1116,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       size?: number;
       fetch?: boolean;
-    } = {}
+    } = {},
   ) {
     const esRequest = {
       ...this._sanitizeSearchBody({ query }),
@@ -1190,7 +1189,7 @@ export class ES8 {
     }: {
       refresh?: boolean | "wait_for";
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest: estypes.GetRequest = {
@@ -1268,7 +1267,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       size?: number;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     try {
       const esRequest: estypes.SearchRequest = {
@@ -1291,7 +1290,7 @@ export class ES8 {
         index,
         collection,
         documents,
-        { refresh, userId }
+        { refresh, userId },
       );
 
       return {
@@ -1323,7 +1322,7 @@ export class ES8 {
       refresh = false,
     }: {
       refresh?: boolean;
-    } = {}
+    } = {},
   ) {
     const script = {
       params: {},
@@ -1365,7 +1364,7 @@ export class ES8 {
         "storage",
         "incomplete_update",
         response.updated,
-        errors
+        errors,
       );
     }
 
@@ -1397,7 +1396,7 @@ export class ES8 {
     }: {
       size?: number;
       scrollTTl?: string;
-    } = {}
+    } = {},
   ): Promise<any> {
     const esRequest: estypes.SearchRequest = {
       ...this._sanitizeSearchBody({ query }),
@@ -1474,7 +1473,7 @@ export class ES8 {
           "storage",
           "index_already_exists",
           indexType,
-          index
+          index,
         );
       }
     }
@@ -1503,7 +1502,7 @@ export class ES8 {
     }: {
       mappings?: estypes.MappingTypeMapping;
       settings?: Record<string, any>;
-    } = {}
+    } = {},
   ) {
     this._assertValidIndexAndCollection(index, collection);
 
@@ -1512,7 +1511,7 @@ export class ES8 {
         "services",
         "storage",
         "collection_reserved",
-        HIDDEN_COLLECTION
+        HIDDEN_COLLECTION,
       );
     }
 
@@ -1553,7 +1552,7 @@ export class ES8 {
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
         mappings.properties,
-        this._config.commonMapping.properties
+        this._config.commonMapping.properties,
       ),
     };
 
@@ -1624,7 +1623,7 @@ export class ES8 {
       includeKuzzleMeta = false,
     }: {
       includeKuzzleMeta?: boolean;
-    } = {}
+    } = {},
   ) {
     const indice = await this._getIndice(index, collection);
     const esRequest: estypes.IndicesGetMappingRequest = {
@@ -1668,7 +1667,7 @@ export class ES8 {
     }: {
       mappings?: estypes.MappingTypeMapping;
       settings?: Record<string, any>;
-    } = {}
+    } = {},
   ) {
     const esRequest: estypes.IndicesGetSettingsRequest = {
       index: await this._getIndice(index, collection),
@@ -1773,7 +1772,7 @@ export class ES8 {
   async updateMapping(
     index: string,
     collection: string,
-    mappings: estypes.MappingTypeMapping = {}
+    mappings: estypes.MappingTypeMapping = {},
   ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
     let esRequest: estypes.IndicesPutMappingRequest = {
       index: this._getAlias(index, collection),
@@ -1804,7 +1803,7 @@ export class ES8 {
 
     const fullProperties = _.merge(
       collectionMappings.properties,
-      mappings.properties
+      mappings.properties,
     );
 
     return {
@@ -1906,7 +1905,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const dateNow = Date.now();
@@ -2067,7 +2066,7 @@ export class ES8 {
 
     for (const [index, collections] of Object.entries(schema)) {
       schema[index] = (collections as string[]).filter(
-        (c) => c !== HIDDEN_COLLECTION
+        (c) => c !== HIDDEN_COLLECTION,
       );
     }
 
@@ -2168,7 +2167,7 @@ export class ES8 {
 
           return request;
         },
-        { index: [] }
+        { index: [] },
       );
 
       if (esRequest.index.length === 0) {
@@ -2237,7 +2236,7 @@ export class ES8 {
   async exists(
     index: string,
     collection: string,
-    id: string
+    id: string,
   ): Promise<boolean> {
     const esRequest: estypes.ExistsRequest = {
       id,
@@ -2365,7 +2364,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2465,7 +2464,7 @@ export class ES8 {
       injectKuzzleMeta = true,
       limits = true,
       source = true,
-    }: KRequestParams = {}
+    }: KRequestParams = {},
   ) {
     let kuzzleMeta = {};
 
@@ -2489,7 +2488,7 @@ export class ES8 {
     };
     const { rejected, extractedDocuments } = this._extractMDocuments(
       documents,
-      kuzzleMeta
+      kuzzleMeta,
     );
 
     esRequest.operations = [];
@@ -2537,7 +2536,7 @@ export class ES8 {
       retryOnConflict = 0,
       timeout = undefined,
       userId = null,
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2555,7 +2554,7 @@ export class ES8 {
       },
       { rejected, extractedDocuments } = this._extractMDocuments(
         documents,
-        kuzzleMeta
+        kuzzleMeta,
       );
 
     /**
@@ -2638,7 +2637,7 @@ export class ES8 {
       retryOnConflict?: number;
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest: estypes.BulkRequest = {
@@ -2670,7 +2669,7 @@ export class ES8 {
       {
         prepareMUpsert: true,
         requireId: true,
-      }
+      },
     );
 
     /**
@@ -2692,7 +2691,7 @@ export class ES8 {
         {
           doc: extractedDocuments[i]._source.changes,
           upsert: extractedDocuments[i]._source.default,
-        }
+        },
       );
       // _source: true
       // Makes ES return the updated document source in the response.
@@ -2703,7 +2702,7 @@ export class ES8 {
     const response = await this._mExecute(
       esRequest,
       extractedDocuments,
-      rejected
+      rejected,
     );
 
     // with _source: true, ES returns the updated document in
@@ -2745,7 +2744,7 @@ export class ES8 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {}
+    } = {},
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2837,7 +2836,7 @@ export class ES8 {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: number;
-    } = {}
+    } = {},
   ) {
     const query = { ids: { values: [] } };
     const validIds = [];
@@ -2915,7 +2914,7 @@ export class ES8 {
     esRequest: estypes.BulkRequest,
     documents: JSONObject[],
     partialErrors: JSONObject[] = [],
-    { limits = true, source = true } = {}
+    { limits = true, source = true } = {},
   ) {
     assertWellFormedRefresh(esRequest);
 
@@ -2996,7 +2995,7 @@ export class ES8 {
   _extractMDocuments(
     documents: JSONObject[],
     metadata: JSONObject,
-    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {}
+    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {},
   ) {
     const rejected = [];
     const extractedDocuments = [];
@@ -3045,7 +3044,7 @@ export class ES8 {
           metadata,
           document,
           extractedDocuments,
-          documentsToGet
+          documentsToGet,
         );
       }
     }
@@ -3067,7 +3066,7 @@ export class ES8 {
     metadata: JSONObject,
     document: JSONObject,
     extractedDocuments: JSONObject[],
-    documentsToGet: JSONObject[]
+    documentsToGet: JSONObject[],
   ) {
     let extractedDocument;
 
@@ -3080,7 +3079,7 @@ export class ES8 {
             {},
             metadata.upsert,
             document.changes,
-            document.default
+            document.default,
           ),
         },
       };
@@ -3127,7 +3126,7 @@ export class ES8 {
           "storage",
           "invalid_mapping",
           currentPath,
-          didYouMean(property, mappingProperties)
+          didYouMean(property, mappingProperties),
         );
       }
 
@@ -3188,7 +3187,7 @@ export class ES8 {
         "storage",
         "multiple_indice_alias",
         `"alias" starting with "${ALIAS_PREFIX}"`,
-        '"indices"'
+        '"indices"',
       );
     }
 
@@ -3203,7 +3202,7 @@ export class ES8 {
    * @private
    */
   async _getSettings(
-    esRequest: estypes.IndicesGetSettingsRequest
+    esRequest: estypes.IndicesGetSettingsRequest,
   ): Promise<any> {
     const response = await this._client.indices.getSettings(esRequest);
     const index = esRequest.index as string;
@@ -3222,10 +3221,10 @@ export class ES8 {
    */
   async _getAvailableIndice(
     index: string,
-    collection: string
+    collection: string,
   ): Promise<string> {
     let indice = this._getAlias(index, collection).substring(
-      INDEX_PREFIX_POSITION_IN_ALIAS
+      INDEX_PREFIX_POSITION_IN_ALIAS,
     );
 
     if (!(await this._client.indices.exists({ index: indice }))) {
@@ -3264,7 +3263,7 @@ export class ES8 {
   async _getAliasFromIndice(indice) {
     const body = await this._client.indices.getAlias({ index: indice });
     const aliases = Object.keys(body[indice].aliases).filter((alias) =>
-      alias.startsWith(ALIAS_PREFIX)
+      alias.startsWith(ALIAS_PREFIX),
     );
 
     if (aliases.length < 1) {
@@ -3290,7 +3289,7 @@ export class ES8 {
       const indicesWithoutAlias = indices.filter(
         (indice) =>
           indice[INDEX_PREFIX_POSITION_IN_INDICE] === this._indexPrefix &&
-          !aliases.some((alias) => alias.indice === indice)
+          !aliases.some((alias) => alias.indice === indice),
       );
 
       const esRequest = { body: { actions: [] } };
@@ -3324,7 +3323,7 @@ export class ES8 {
         "services",
         "storage",
         "invalid_collection_name",
-        collection
+        collection,
       );
     }
   }
@@ -3339,7 +3338,7 @@ export class ES8 {
   _extractIndex(alias) {
     return alias.substr(
       INDEX_PREFIX_POSITION_IN_ALIAS + 1,
-      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1
+      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1,
     );
   }
 
@@ -3479,7 +3478,7 @@ export class ES8 {
           _id: h._id,
           _source: h._source,
           body: {},
-        }))
+        })),
       );
     }
 
@@ -3530,7 +3529,7 @@ export class ES8 {
               "services",
               "storage",
               "invalid_query_keyword",
-              `${key}.${scriptArg}`
+              `${key}.${scriptArg}`,
             );
           }
         }
@@ -3585,14 +3584,14 @@ export class ES8 {
 
     assert(
       typeof configValue === "string",
-      `services.storageEngine.${key} must be a string.`
+      `services.storageEngine.${key} must be a string.`,
     );
 
     const parsedValue = ms(configValue);
 
     assert(
       typeof parsedValue === "number",
-      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`
+      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`,
     );
 
     return parsedValue;
@@ -3645,7 +3644,7 @@ export class ES8 {
           esState = esStateEnum.OK;
         } else {
           global.kuzzle.log.info(
-            `[ℹ] Still waiting for Elasticsearch: ${health.number_of_pending_tasks} cluster tasks remaining`
+            `[ℹ] Still waiting for Elasticsearch: ${health.number_of_pending_tasks} cluster tasks remaining`,
           );
           await Bluebird.delay(1000);
         }
@@ -3670,7 +3669,7 @@ export class ES8 {
           "storage",
           "invalid_mapping",
           path,
-          "Dynamic property value should be a string."
+          "Dynamic property value should be a string.",
         );
       }
 
@@ -3681,8 +3680,8 @@ export class ES8 {
           "invalid_mapping",
           path,
           `Incorrect dynamic property value (${value}). Should be one of "${DYNAMIC_PROPERTY_VALUES.join(
-            '", "'
-          )}"`
+            '", "',
+          )}"`,
         );
       }
     }
@@ -3691,7 +3690,7 @@ export class ES8 {
   _setLastActionToKuzzleMeta(
     esRequest: JSONObject,
     alias: string,
-    kuzzleMeta: JSONObject
+    kuzzleMeta: JSONObject,
   ) {
     /**
      * @warning Critical code section
@@ -3789,7 +3788,7 @@ function assertWellFormedRefresh(esRequest) {
       "storage",
       "invalid_argument",
       "refresh",
-      '"wait_for", false'
+      '"wait_for", false',
     );
   }
 }

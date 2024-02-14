@@ -129,7 +129,7 @@ export class PluginContext {
         connectionId: string,
         index: string,
         collection: string,
-        filters: JSONObject
+        filters: JSONObject,
       ) => Promise<{ roomId: string }>;
 
       /**
@@ -138,7 +138,7 @@ export class PluginContext {
       unregister: (
         connectionId: string,
         roomId: string,
-        notify: boolean
+        notify: boolean,
       ) => Promise<void>;
     };
 
@@ -282,7 +282,7 @@ export class PluginContext {
     // eslint-disable-next-line no-inner-declarations
     function PluginContextRepository(
       collection: string,
-      ObjectConstructor: any = null
+      ObjectConstructor: any = null,
     ) {
       if (!collection) {
         throw contextError.get("missing_collection");
@@ -306,7 +306,7 @@ export class PluginContext {
 
     function PluginContextESClient(): any {
       return Elasticsearch.buildClient(
-        global.kuzzle.config.services.storageEngine.client
+        global.kuzzle.config.services.storageEngine.client,
       );
     }
 
@@ -317,7 +317,7 @@ export class PluginContext {
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (
         collection: string,
-        objectConstructor: any
+        objectConstructor: any,
       ) => Repository,
       Request: instantiateRequest as any,
       RequestContext: RequestContext as any,
@@ -367,7 +367,7 @@ export class PluginContext {
             },
             {
               connectionId: connectionId,
-            }
+            },
           );
           return global.kuzzle.ask("core:realtime:subscribe", request);
         },
@@ -376,17 +376,17 @@ export class PluginContext {
             "core:realtime:unsubscribe",
             connectionId,
             roomId,
-            notify
+            notify,
           ),
       },
       trigger: (eventName, payload) =>
         global.kuzzle.pipe(`plugin-${pluginName}:${eventName}`, payload),
       validation: {
         addType: global.kuzzle.validation.addType.bind(
-          global.kuzzle.validation
+          global.kuzzle.validation,
         ),
         validate: global.kuzzle.validation.validate.bind(
-          global.kuzzle.validation
+          global.kuzzle.validation,
         ),
       },
     };
@@ -421,7 +421,7 @@ function execute(request, callback) {
     ["subscribe", "unsubscribe"].includes(request.input.action)
   ) {
     return promback.reject(
-      contextError.get("unavailable_realtime", request.input.action)
+      contextError.get("unavailable_realtime", request.input.action),
     );
   }
 

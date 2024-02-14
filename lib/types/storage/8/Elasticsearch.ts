@@ -13,7 +13,7 @@ export type KUpdateResponse = {
   _id: string;
   _source: unknown;
   _version: number;
-}
+};
 
 export type KStatsIndexesCollection = {
   documentCount: number;

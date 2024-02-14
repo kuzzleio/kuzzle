@@ -58,7 +58,7 @@ export class BackendStorage extends ApplicationManager {
   getElasticsearchClient(clientConfig?: JSONObject): any {
     return Elasticsearch.buildClient(
       { ...this._kuzzle.config.services.storageEngine.client, ...clientConfig },
-      this._kuzzle.config.services.storageEngine.majorVersion
+      this._kuzzle.config.services.storageEngine.majorVersion,
     );
   }
 }

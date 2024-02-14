@@ -19,12 +19,14 @@ export class Elasticsearch extends Service {
 
     if (config.majorVersion === 7) {
       if (scope === scopeEnum.PUBLIC) {
+        /* eslint-disable */
         console.warn(
-          "Elasticsearch 7 is deprecated and will be removed in the next major release."
+          "Elasticsearch 7 is deprecated and will be removed in the next major release.",
         );
         console.warn("Please consider upgrading your Elasticsearch version.");
         console.warn("Update your configuration to set 'majorVersion' to 8.");
         console.warn("Under the key service.storageEngine.majorVersion");
+        /* eslint-disable */
       }
       this._client = new ES7(config, scope);
     } else if (config.majorVersion === 8) {
