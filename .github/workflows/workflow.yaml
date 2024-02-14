@@ -48,12 +48,9 @@ jobs:
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
   lint:
-    name: Lint - Node.js LTS ${{ matrix.node-version }}
+    name: Lint - Node.js
     runs-on: ubuntu-22.04
     needs: [prepare-matrix]
-    strategy:
-      matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v3
@@ -61,10 +58,10 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Node version ${{ matrix.node-version }}
+      - name: Node version ${{ env.NODE_LTS_CURRENT_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
 
       - name: Install depedencies
         run: npm ci
