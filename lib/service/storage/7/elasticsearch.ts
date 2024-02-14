@@ -570,7 +570,7 @@ export class ES7 {
       return formattedInnerHits;
     }
 
-    const hits = await Bluebird.map(body.hits.hits, async (hit) => ({
+    const hits = await Bluebird.map(body.hits.hits, async (hit: any) => ({
       inner_hits: await formatInnerHits(hit.inner_hits),
       ...(await formatHit(hit)),
     }));

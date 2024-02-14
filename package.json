@@ -24,15 +24,13 @@
     "test:lint:js": "eslint ./lib ./test ./features ./plugins/available/functional-test-plugin",
     "test:lint:ts": "eslint ./lib --ext .ts --config .eslintc-ts.json",
     "test:lint": "npm run test:lint:js && npm run test:lint:ts",
-    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
+    "test:unit": "mocha --exit",
     "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit && npm run test:functional"
   },
   "directories": {
     "lib": "lib"
   },
   "dependencies": {
-    "sdk-es7": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
-    "sdk-es8": "npm:@elastic/elasticsearch@8.12.1",
     "aedes": "0.46.3",
     "bluebird": "3.7.2",
     "cli-color": "2.0.3",
@@ -63,7 +61,9 @@
     "passport": "0.7.0",
     "protobufjs": "7.2.5",
     "rc": "1.2.8",
-    "semver": "7.5.4",
+    "sdk-es7": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
+    "sdk-es8": "npm:@elastic/elasticsearch@8.12.1",
+    "semver": "7.6.0",
     "sorted-array": "2.0.4",
     "uuid": "9.0.1",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.34.0.tar.gz",
@@ -87,6 +87,7 @@
     "@semantic-release/commit-analyzer": "^10.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^11.0.4",
+    "@types/bluebird": "^3.5.42",
     "@types/jest": "29.5.10",
     "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.14.202",
