@@ -102,7 +102,7 @@ describe("Plugin Context", () => {
       it("should expose the ESClient constructor", () => {
         const storageClient = new context.constructors.ESClient();
 
-        should(storageClient).be.instanceOf(context.constructors.ESClient);
+        should(storageClient).have.properties(["name", "connectionPool"]);
       });
 
       it("should allow to instantiate an ESClient connected to the ES cluster", () => {

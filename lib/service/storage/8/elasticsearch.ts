@@ -157,7 +157,7 @@ export class ES8 {
    * @override
    * @returns {Promise}
    */
-  async _initSequence() {
+  async _initSequence(): Promise<void> {
     if (this._client) {
       return;
     }
@@ -183,7 +183,7 @@ export class ES8 {
 
     const { version } = await this._client.info();
 
-    if (version && !semver.satisfies(semver.coerce(version.number), "^8.0.0")) {
+    if (version && !semver.satisfies(semver.coerce(version.number), ">=8.0.0")) {
       throw kerror.get(
         "services",
         "storage",
@@ -2009,7 +2009,7 @@ export class ES8 {
    *
    * @returns {Promise.<Array>} Collection names
    */
-  async listCollections(index, { includeHidden = false } = {}) {
+  async listCollections(index: string, { includeHidden = false } = {}) {
     let body: estypes.CatAliasesResponse;
 
     try {
@@ -3233,8 +3233,9 @@ export class ES8 {
 
     let notAvailable;
     let suffix;
+
     do {
-      suffix = `.${randomNumber(100000)}`;
+      suffix = `.${this._getRandomNumber(100000)}`;
 
       const overflow = Buffer.from(indice + suffix).length - 255;
       if (overflow > 0) {
@@ -3363,7 +3364,7 @@ export class ES8 {
    *
    * @returns {Object.<String, String[]>} Indexes as key and an array of their collections as value
    */
-  _extractSchema(aliases, { includeHidden = false } = {}) {
+  _extractSchema(aliases: string[], { includeHidden = false } = {}) {
     const schema = {};
 
     for (const alias of aliases) {
@@ -3735,6 +3736,10 @@ export class ES8 {
     }
 
     return hits.total.value;
+  }
+
+  _getRandomNumber(number: number): number {
+    return randomNumber(number);
   }
 }
 

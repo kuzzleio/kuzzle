@@ -24,21 +24,17 @@ describe("Backend", () => {
   describe("StorageManager#StorageClient", () => {
     it("should allows to construct an ES StorageClient", async () => {
       await application.start();
+      global.kuzzle.config.services.storageEngine.majorVersion = 7;
       global.kuzzle.config.services.storageEngine.client.node =
-        "http://es:9200";
+        "http://es-7:9200";
       should(application.storage.StorageClient).be.a.Function();
 
       const client = new application.storage.StorageClient({ maxRetries: 42 });
       should(client.connectionPool.connections[0].url.toString()).be.eql(
-        "http://es:9200/",
+        "http://es-7:9200/",
       );
-      should(
-        client.helpers[
-          Object.getOwnPropertySymbols(client.helpers).find(
-            (s) => s.description === "max retries",
-          )
-        ],
-      ).be.eql(42);
+
+      should(client.helpers.maxRetries).be.eql(42);
     });
   });
 

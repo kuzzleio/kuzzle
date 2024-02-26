@@ -7,7 +7,7 @@
     "plugin:kuzzle/node"
   ],
   "rules": {
-    "sort-keys": "warn",
-    "kuzzle/array-foreach": "warn"
+    "sort-keys": "off",
+    "kuzzle/array-foreach": "off"
   }
 }

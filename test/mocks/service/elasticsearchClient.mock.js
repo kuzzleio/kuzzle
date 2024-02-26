@@ -8,7 +8,7 @@ const sinon = require("sinon");
  * @constructor
  */
 class ElasticsearchClientMock {
-  constructor() {
+  constructor(version = "7.0.0") {
     this.bulk = sinon.stub().resolves();
     this.count = sinon.stub().resolves();
     this.create = sinon.stub().resolves();
@@ -18,7 +18,7 @@ class ElasticsearchClientMock {
     this.index = sinon.stub().resolves();
     this.info = sinon.stub().resolves({
       version: {
-        number: "8.0.0",
+        number: version,
       },
     });
     this.mget = sinon.stub().resolves();
@@ -64,6 +64,7 @@ class ElasticsearchClientMock {
     this.mcreateOrReplace = sinon.stub().resolves();
     this.mdelete = sinon.stub().resolves();
     this.clearScroll = sinon.stub().resolves();
+    this._getRandomNumber = sinon.stub().returns(10000);
   }
 }
 

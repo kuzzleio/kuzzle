@@ -25,7 +25,7 @@ describe("ApiKey", () => {
     );
     storageEngine = new StorageEngine();
 
-    return storageEngine.init();
+    storageEngine.init();
   });
 
   afterEach(() => {

@@ -155,7 +155,7 @@ export class ES7 {
    * @override
    * @returns {Promise}
    */
-  async _initSequence() {
+  async _initSequence(): Promise<void> {
     if (this._client) {
       return;
     }
@@ -169,10 +169,9 @@ export class ES7 {
           "Your dynamic mapping policy is set to 'true' for new fields.",
           "Elasticsearch will try to automatically infer mapping for new fields, and those cannot be changed afterward.",
           'See the "services.storageEngine.commonMapping.dynamic" option in the kuzzlerc configuration file to change this value.',
-        ].join("\n"),
+        ].join("\n")
       );
     }
-
     this._client = new Client(this._config.client);
 
     await this.waitForElasticsearch();
@@ -191,7 +190,7 @@ export class ES7 {
         "services",
         "storage",
         "version_mismatch",
-        version.number,
+        version.number
       );
     }
 
@@ -330,14 +329,14 @@ export class ES7 {
           "services",
           "storage",
           "scroll_duration_too_great",
-          _scrollTTL,
+          _scrollTTL
         );
       }
     }
 
     const stringifiedScrollInfo = await global.kuzzle.ask(
       "core:cache:internal:get",
-      cacheKey,
+      cacheKey
     );
 
     if (!stringifiedScrollInfo) {
@@ -362,7 +361,7 @@ export class ES7 {
           JSON.stringify(scrollInfo),
           {
             ttl: ms(_scrollTTL) || this.scrollTTL,
-          },
+          }
         );
       }
 
@@ -404,7 +403,7 @@ export class ES7 {
       from?: number;
       size?: number;
       scroll?: string;
-    } = {},
+    } = {}
   ) {
     let esIndexes: any;
 
@@ -440,7 +439,7 @@ export class ES7 {
           "services",
           "storage",
           "scroll_duration_too_great",
-          scroll,
+          scroll
         );
       }
     }
@@ -464,7 +463,7 @@ export class ES7 {
             index,
             targets,
           }),
-          { ttl },
+          { ttl }
         );
 
         body.remaining = body.hits.total.value - body.hits.hits.length;
@@ -564,7 +563,7 @@ export class ES7 {
       for (const [name, innerHit] of Object.entries(innerHits)) {
         formattedInnerHits[name] = await Bluebird.map(
           (innerHit as any).hits.hits,
-          formatHit,
+          formatHit
         );
       }
       return formattedInnerHits;
@@ -725,7 +724,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     assertIsObject(content);
 
@@ -789,7 +788,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     const esRequest = {
       body: content,
@@ -853,7 +852,7 @@ export class ES7 {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
       _source: "true",
@@ -919,7 +918,7 @@ export class ES7 {
       userId?: string;
       retryOnConflict?: number;
       injectKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     const esRequest: RequestParams.Update<KRequestBody<JSONObject>> = {
       _source: "true",
@@ -992,7 +991,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       userId?: string;
       injectKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1025,7 +1024,7 @@ export class ES7 {
           "not_found",
           id,
           index,
-          collection,
+          collection
         );
       }
 
@@ -1061,7 +1060,7 @@ export class ES7 {
       refresh,
     }: {
       refresh?: boolean | "wait_for";
-    } = {},
+    } = {}
   ) {
     const esRequest = {
       id,
@@ -1109,7 +1108,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       size?: number;
       fetch?: boolean;
-    } = {},
+    } = {}
   ) {
     const esRequest: RequestParams.DeleteByQuery<KRequestBody<JSONObject>> = {
       body: this._sanitizeSearchBody({ query }),
@@ -1171,7 +1170,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       userId?: string;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -1241,7 +1240,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       size?: number;
       userId?: string;
-    } = {},
+    } = {}
   ) {
     try {
       const esRequest = {
@@ -1264,7 +1263,7 @@ export class ES7 {
         index,
         collection,
         documents,
-        { refresh, userId },
+        { refresh, userId }
       );
 
       return {
@@ -1296,7 +1295,7 @@ export class ES7 {
       refresh = false,
     }: {
       refresh?: boolean;
-    } = {},
+    } = {}
   ) {
     const script = {
       params: {},
@@ -1340,7 +1339,7 @@ export class ES7 {
         "storage",
         "incomplete_update",
         response.body.updated,
-        errors,
+        errors
       );
     }
 
@@ -1372,7 +1371,7 @@ export class ES7 {
     }: {
       size?: number;
       scrollTTl?: string;
-    } = {},
+    } = {}
   ): Promise<any> {
     const esRequest: RequestParams.Search = {
       body: this._sanitizeSearchBody({ query }),
@@ -1398,7 +1397,7 @@ export class ES7 {
           esRequest,
           async function getMoreUntilDone(
             error,
-            { body: { hits, _scroll_id } },
+            { body: { hits, _scroll_id } }
           ) {
             if (error) {
               reject(error);
@@ -1418,12 +1417,12 @@ export class ES7 {
                   scroll: esRequest.scroll,
                   scroll_id: _scroll_id,
                 },
-                getMoreUntilDone,
+                getMoreUntilDone
               );
             } else {
               resolve(results);
             }
-          },
+          }
         );
       });
     } finally {
@@ -1471,7 +1470,7 @@ export class ES7 {
           "storage",
           "index_already_exists",
           indexType,
-          index,
+          index
         );
       }
     }
@@ -1497,7 +1496,7 @@ export class ES7 {
     {
       mappings = {},
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {}
   ) {
     this._assertValidIndexAndCollection(index, collection);
 
@@ -1506,7 +1505,7 @@ export class ES7 {
         "services",
         "storage",
         "collection_reserved",
-        HIDDEN_COLLECTION,
+        HIDDEN_COLLECTION
       );
     }
 
@@ -1549,7 +1548,7 @@ export class ES7 {
       dynamic: mappings.dynamic || this._config.commonMapping.dynamic,
       properties: _.merge(
         mappings.properties,
-        this._config.commonMapping.properties,
+        this._config.commonMapping.properties
       ),
     };
 
@@ -1620,7 +1619,7 @@ export class ES7 {
       includeKuzzleMeta = false,
     }: {
       includeKuzzleMeta?: boolean;
-    } = {},
+    } = {}
   ) {
     const indice = await this._getIndice(index, collection);
     const esRequest = {
@@ -1661,7 +1660,7 @@ export class ES7 {
     {
       mappings = {},
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
+    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {}
   ) {
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1767,7 +1766,7 @@ export class ES7 {
   async updateMapping(
     index: string,
     collection: string,
-    mappings: TypeMapping = {},
+    mappings: TypeMapping = {}
   ): Promise<{ dynamic: string; _meta: JSONObject; properties: JSONObject }> {
     const esRequest: RequestParams.IndicesPutMapping<Record<string, any>> = {
       body: {},
@@ -1798,7 +1797,7 @@ export class ES7 {
 
     const fullProperties = _.merge(
       collectionMappings.properties,
-      mappings.properties,
+      mappings.properties
     );
 
     return {
@@ -1902,7 +1901,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const dateNow = Date.now();
@@ -2064,7 +2063,7 @@ export class ES7 {
 
     for (const [index, collections] of Object.entries(schema)) {
       schema[index] = (collections as string[]).filter(
-        (c) => c !== HIDDEN_COLLECTION,
+        (c) => c !== HIDDEN_COLLECTION
       );
     }
 
@@ -2165,7 +2164,7 @@ export class ES7 {
 
           return request;
         },
-        { index: [] },
+        { index: [] }
       );
 
       if (esRequest.index.length === 0) {
@@ -2236,7 +2235,7 @@ export class ES7 {
   async exists(
     index: string,
     collection: string,
-    id: string,
+    id: string
   ): Promise<boolean> {
     const esRequest: RequestParams.Exists = {
       id,
@@ -2368,7 +2367,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2466,7 +2465,7 @@ export class ES7 {
       injectKuzzleMeta = true,
       limits = true,
       source = true,
-    }: KRequestParams = {},
+    }: KRequestParams = {}
   ) {
     let kuzzleMeta = {};
 
@@ -2490,7 +2489,7 @@ export class ES7 {
     };
     const { rejected, extractedDocuments } = this._extractMDocuments(
       documents,
-      kuzzleMeta,
+      kuzzleMeta
     );
 
     esRequest.body = [];
@@ -2538,7 +2537,7 @@ export class ES7 {
       retryOnConflict = 0,
       timeout = undefined,
       userId = null,
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection),
       toImport = [],
@@ -2556,7 +2555,7 @@ export class ES7 {
       },
       { rejected, extractedDocuments } = this._extractMDocuments(
         documents,
-        kuzzleMeta,
+        kuzzleMeta
       );
 
     /**
@@ -2639,7 +2638,7 @@ export class ES7 {
       retryOnConflict?: number;
       timeout?: string;
       userId?: string;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection);
     const esRequest = {
@@ -2671,7 +2670,7 @@ export class ES7 {
       {
         prepareMUpsert: true,
         requireId: true,
-      },
+      }
     );
 
     /**
@@ -2693,7 +2692,7 @@ export class ES7 {
         {
           doc: extractedDocuments[i]._source.changes,
           upsert: extractedDocuments[i]._source.default,
-        },
+        }
       );
       // _source: true
       // Makes ES return the updated document source in the response.
@@ -2704,7 +2703,7 @@ export class ES7 {
     const response = await this._mExecute(
       esRequest,
       extractedDocuments,
-      rejected,
+      rejected
     );
 
     // with _source: true, ES returns the updated document in
@@ -2746,7 +2745,7 @@ export class ES7 {
       refresh?: boolean | "wait_for";
       timeout?: string;
       userId?: string;
-    } = {},
+    } = {}
   ) {
     const alias = this._getAlias(index, collection),
       kuzzleMeta = {
@@ -2836,7 +2835,7 @@ export class ES7 {
     }: {
       refresh?: boolean | "wait_for";
       timeout?: number;
-    } = {},
+    } = {}
   ) {
     const query = { ids: { values: [] } };
     const validIds = [];
@@ -2914,7 +2913,7 @@ export class ES7 {
     esRequest: RequestParams.Bulk,
     documents: JSONObject[],
     partialErrors: JSONObject[] = [],
-    { limits = true, source = true } = {},
+    { limits = true, source = true } = {}
   ) {
     assertWellFormedRefresh(esRequest);
 
@@ -2996,7 +2995,7 @@ export class ES7 {
   _extractMDocuments(
     documents: JSONObject[],
     metadata: JSONObject,
-    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {},
+    { prepareMGet = false, requireId = false, prepareMUpsert = false } = {}
   ) {
     const rejected = [];
     const extractedDocuments = [];
@@ -3045,7 +3044,7 @@ export class ES7 {
           metadata,
           document,
           extractedDocuments,
-          documentsToGet,
+          documentsToGet
         );
       }
     }
@@ -3067,7 +3066,7 @@ export class ES7 {
     metadata: JSONObject,
     document: JSONObject,
     extractedDocuments: JSONObject[],
-    documentsToGet: JSONObject[],
+    documentsToGet: JSONObject[]
   ) {
     let extractedDocument;
 
@@ -3080,7 +3079,7 @@ export class ES7 {
             {},
             metadata.upsert,
             document.changes,
-            document.default,
+            document.default
           ),
         },
       };
@@ -3127,7 +3126,7 @@ export class ES7 {
           "storage",
           "invalid_mapping",
           currentPath,
-          didYouMean(property, mappingProperties),
+          didYouMean(property, mappingProperties)
         );
       }
 
@@ -3189,7 +3188,7 @@ export class ES7 {
         "storage",
         "multiple_indice_alias",
         `"alias" starting with "${ALIAS_PREFIX}"`,
-        '"indices"',
+        '"indices"'
       );
     }
 
@@ -3204,7 +3203,7 @@ export class ES7 {
    * @private
    */
   async _getSettings(
-    esRequest: RequestParams.IndicesGetSettings,
+    esRequest: RequestParams.IndicesGetSettings
   ): Promise<any> {
     const response = await this._client.indices.getSettings(esRequest);
     const index = esRequest.index as string;
@@ -3223,10 +3222,10 @@ export class ES7 {
    */
   async _getAvailableIndice(
     index: string,
-    collection: string,
+    collection: string
   ): Promise<string> {
     let indice = this._getAlias(index, collection).substring(
-      INDEX_PREFIX_POSITION_IN_ALIAS,
+      INDEX_PREFIX_POSITION_IN_ALIAS
     );
 
     if (!(await this._client.indices.exists({ index: indice })).body) {
@@ -3236,7 +3235,7 @@ export class ES7 {
     let notAvailable;
     let suffix;
     do {
-      suffix = `.${randomNumber(100000)}`;
+      suffix = `.${this._getRandomNumber(100000)}`;
 
       const overflow = Buffer.from(indice + suffix).length - 255;
       if (overflow > 0) {
@@ -3264,10 +3263,10 @@ export class ES7 {
    * @returns {String} Alias name (eg: '@&nepali.liia')
    * @throws If there is not exactly one alias associated that is prefixed with @
    */
-  async _getAliasFromIndice(indice) {
+  async _getAliasFromIndice(indice: string) {
     const { body } = await this._client.indices.getAlias({ index: indice });
     const aliases = Object.keys(body[indice].aliases).filter((alias) =>
-      alias.startsWith(ALIAS_PREFIX),
+      alias.startsWith(ALIAS_PREFIX)
     );
 
     if (aliases.length < 1) {
@@ -3293,7 +3292,7 @@ export class ES7 {
       const indicesWithoutAlias = indices.filter(
         (indice) =>
           indice[INDEX_PREFIX_POSITION_IN_INDICE] === this._indexPrefix &&
-          !aliases.some((alias) => alias.indice === indice),
+          !aliases.some((alias) => alias.indice === indice)
       );
 
       const esRequest = { body: { actions: [] } };
@@ -3327,7 +3326,7 @@ export class ES7 {
         "services",
         "storage",
         "invalid_collection_name",
-        collection,
+        collection
       );
     }
   }
@@ -3342,7 +3341,7 @@ export class ES7 {
   _extractIndex(alias) {
     return alias.substr(
       INDEX_PREFIX_POSITION_IN_ALIAS + 1,
-      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1,
+      alias.indexOf(NAME_SEPARATOR) - INDEX_PREFIX_POSITION_IN_ALIAS - 1
     );
   }
 
@@ -3460,7 +3459,7 @@ export class ES7 {
    * @returns {Promise.<Array>} resolve to an array of documents
    */
   async _getAllDocumentsFromQuery(
-    esRequest: RequestParams.Search<Record<string, any>>,
+    esRequest: RequestParams.Search<Record<string, any>>
   ) {
     let {
       body: { hits, _scroll_id },
@@ -3487,7 +3486,7 @@ export class ES7 {
         hits.hits.map((h: JSONObject) => ({
           _id: h._id,
           _source: h._source,
-        })),
+        }))
       );
     }
 
@@ -3538,7 +3537,7 @@ export class ES7 {
               "services",
               "storage",
               "invalid_query_keyword",
-              `${key}.${scriptArg}`,
+              `${key}.${scriptArg}`
             );
           }
         }
@@ -3593,14 +3592,14 @@ export class ES7 {
 
     assert(
       typeof configValue === "string",
-      `services.storageEngine.${key} must be a string.`,
+      `services.storageEngine.${key} must be a string.`
     );
 
     const parsedValue = ms(configValue);
 
     assert(
       typeof parsedValue === "number",
-      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`,
+      `Invalid parsed value from ms() for services.storageEngine.${key} ("${typeof parsedValue}").`
     );
 
     return parsedValue;
@@ -3653,7 +3652,7 @@ export class ES7 {
           esState = esStateEnum.OK;
         } else {
           global.kuzzle.log.info(
-            `[ℹ] Still waiting for Elasticsearch: ${health.body.number_of_pending_tasks} cluster tasks remaining`,
+            `[ℹ] Still waiting for Elasticsearch: ${health.body.number_of_pending_tasks} cluster tasks remaining`
           );
           await Bluebird.delay(1000);
         }
@@ -3678,7 +3677,7 @@ export class ES7 {
           "storage",
           "invalid_mapping",
           path,
-          "Dynamic property value should be a string.",
+          "Dynamic property value should be a string."
         );
       }
 
@@ -3689,8 +3688,8 @@ export class ES7 {
           "invalid_mapping",
           path,
           `Incorrect dynamic property value (${value}). Should be one of "${DYNAMIC_PROPERTY_VALUES.join(
-            '", "',
-          )}"`,
+            '", "'
+          )}"`
         );
       }
     }
@@ -3699,7 +3698,7 @@ export class ES7 {
   _setLastActionToKuzzleMeta(
     esRequest: JSONObject,
     alias: string,
-    kuzzleMeta: JSONObject,
+    kuzzleMeta: JSONObject
   ) {
     /**
      * @warning Critical code section
@@ -3736,6 +3735,10 @@ export class ES7 {
         item[prop]._kuzzle_info = kuzzleMeta.updated;
       }
     }
+  }
+
+  _getRandomNumber(number: number): number {
+    return randomNumber(number);
   }
 }
 
@@ -3789,7 +3792,7 @@ function assertWellFormedRefresh(esRequest) {
       "storage",
       "invalid_argument",
       "refresh",
-      '"wait_for", false',
+      '"wait_for", false'
     );
   }
 }

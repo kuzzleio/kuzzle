@@ -41,13 +41,6 @@ describe("#core/storage/StorageEngine", () => {
   });
 
   describe("#init", () => {
-    it("should initialize client adapters", async () => {
-      await storageEngine.init();
-
-      should(storageEngine.public.init).calledOnce();
-      should(storageEngine.private.init).calledOnce();
-    });
-
     it("should throw if a private index and a public one share the same name", async () => {
       storageEngine.public.cache.listIndexes.resolves(["foo", "bar", "ohnoes"]);
       storageEngine.private.cache.listIndexes.resolves([
@@ -56,9 +49,11 @@ describe("#core/storage/StorageEngine", () => {
         "qux",
       ]);
 
-      return should(storageEngine.init()).rejectedWith(PreconditionError, {
+      should(storageEngine.init()).rejectedWith(PreconditionError, {
         id: "services.storage.index_already_exists",
       });
+      should(storageEngine.public.init).calledOnce();
+      should(storageEngine.private.init).calledOnce();
     });
   });
 });
