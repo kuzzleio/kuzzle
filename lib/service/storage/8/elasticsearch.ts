@@ -3369,7 +3369,6 @@ export class ES8 {
    */
   _extractSchema(aliases: string[], { includeHidden = false } = {}) {
     const schema = {};
-    console.log(aliases);
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
