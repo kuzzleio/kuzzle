@@ -7,17 +7,6 @@ import { ES8 } from "./8/elasticsearch";
 import Service from "../service";
 import scopeEnum from "../../core/storage/storeScopeEnum";
 
-function printWarning() {
-  /* eslint-disable */
-  console.warn(
-    "Elasticsearch 7 is deprecated and will be removed in the next major release."
-  );
-  console.warn("Please consider upgrading your Elasticsearch version.");
-  console.warn("Update your configuration to set 'majorVersion' to 8.");
-  console.warn("Under the key service.storageEngine.majorVersion");
-  /* eslint-disable */
-}
-
 export class Elasticsearch extends Service {
   public client: any;
 
@@ -25,9 +14,6 @@ export class Elasticsearch extends Service {
     super("elasticsearch", config);
 
     if (config.majorVersion === 7) {
-      if (scope === scopeEnum.PUBLIC) {
-        // printWarning();
-      }
       this.client = new ES7(config, scope);
     } else if (config.majorVersion === 8) {
       this.client = new ES8(config, scope);
@@ -43,7 +29,6 @@ export class Elasticsearch extends Service {
 
     switch (version) {
       case 7:
-        // printWarning();
         return new ClientES7(config);
       case 8:
         return new ClientES8(config);

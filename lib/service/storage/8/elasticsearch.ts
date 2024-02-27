@@ -183,7 +183,10 @@ export class ES8 {
 
     const { version } = await this._client.info();
 
-    if (version && !semver.satisfies(semver.coerce(version.number), ">=8.0.0")) {
+    if (
+      version &&
+      !semver.satisfies(semver.coerce(version.number), ">=8.0.0")
+    ) {
       throw kerror.get(
         "services",
         "storage",
