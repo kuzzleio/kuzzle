@@ -3366,12 +3366,12 @@ export class ES7 {
    *
    * @returns {Object.<String, String[]>} Indexes as key and an array of their collections as value
    */
-  _extractSchema(aliases, { includeHidden = false } = {}) {
+  _extractSchema(aliases: string[], { includeHidden = false } = {}) {
     const schema = {};
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
-        .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
+        .slice(INDEX_PREFIX_POSITION_IN_ALIAS + 1)
         .split(NAME_SEPARATOR);
 
       if (

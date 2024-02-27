@@ -3369,10 +3369,11 @@ export class ES8 {
    */
   _extractSchema(aliases: string[], { includeHidden = false } = {}) {
     const schema = {};
+    console.log(aliases);
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
-        .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
+        .slice(INDEX_PREFIX_POSITION_IN_ALIAS + 1)
         .split(NAME_SEPARATOR);
 
       if (
