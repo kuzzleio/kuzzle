@@ -120,7 +120,7 @@ jobs:
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
         with:
-          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
+          kuzzle-image: ${{ matrix.kuzzle-image }}
           es-version: ${{ matrix.es-version }}
 
   functional-tests:
