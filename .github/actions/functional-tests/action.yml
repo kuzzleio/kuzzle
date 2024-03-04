@@ -10,6 +10,9 @@ inputs:
   node-version:
     description: Node version to use in the Kuzzle Docker image
     required: true
+  es-version:
+    description: Elasticsearch version to use
+    required: true
 
 runs:
   using: "composite"
