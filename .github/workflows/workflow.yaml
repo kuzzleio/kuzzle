@@ -22,7 +22,7 @@ jobs:
       - id: set-matrix
         run: |
           echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
-          echo "es-matrix={\"es-version\": [\"$ELASTICSEARCH_MAINTENANCE_VERSION\", \"ELASTICSEARCH_ACTIVE_VERSION\"]} >> $GITHUB_OUTPUT
+          echo "es-matrix={\"es-version\": [\"$ELASTICSEARCH_MAINTENANCE_VERSION\", \"ELASTICSEARCH_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
           echo "test-set={\"test-set\":[\"jest\", \"http\", \"websocket\", \"legacy:mqtt\", \"legacy:http\", \"legacy:websocket\"]}" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
