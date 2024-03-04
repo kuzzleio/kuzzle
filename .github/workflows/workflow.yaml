@@ -186,6 +186,6 @@ jobs:
     uses: ./.github/workflows/workflow-deployments.yml
     secrets: inherit
     with:
-      node_lts_maintenance_version:  ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
+      node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
