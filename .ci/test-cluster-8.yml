@@ -18,7 +18,7 @@ x-kuzzle-config: &kuzzle-config
     - redis
     - elasticsearch
   environment:
-    - kuzzle_services__storageEngine__majorVersion=8
+    - kuzzle_services__storageEngine__majorVersion="8"
     - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
     - kuzzle_services__storageEngine__commonMapping__dynamic=true
     - kuzzle_services__internalCache__node__host=redis
