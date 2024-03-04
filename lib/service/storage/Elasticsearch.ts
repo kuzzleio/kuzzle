@@ -13,8 +13,6 @@ export class Elasticsearch extends Service {
   constructor(config: any, scope = scopeEnum.PUBLIC) {
     super("elasticsearch", config);
 
-    console.log(config)
-
     if (config.majorVersion === "7") {
       this.client = new ES7(config, scope);
     } else if (config.majorVersion === "8") {
