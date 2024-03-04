@@ -38,7 +38,7 @@ describe("#core/storage/ClientAdapter", () => {
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
-    kuzzle.config.services.storageEngine.majorVersion = 7;
+    kuzzle.config.services.storageEngine.majorVersion = "7";
     kuzzle.ask.restore();
 
     publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);

@@ -24,7 +24,7 @@ describe("Backend", () => {
   describe("StorageManager#StorageClient", () => {
     it("should allows to construct an ES StorageClient", async () => {
       await application.start();
-      global.kuzzle.config.services.storageEngine.majorVersion = 7;
+      global.kuzzle.config.services.storageEngine.majorVersion = "7";
       global.kuzzle.config.services.storageEngine.client.node =
         "http://es-7:9200";
       should(application.storage.StorageClient).be.a.Function();

@@ -40,7 +40,7 @@ describe("Test: ElasticSearch service", () => {
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
-    kuzzle.config.services.storageEngine.majorVersion = 7;
+    kuzzle.config.services.storageEngine.majorVersion = "7";
 
     index = "nyc-open-data";
     collection = "yellow-taxi";
