@@ -1,0 +1,31 @@
+version: '3'
+
+services:
+  kuzzle:
+    build:
+      dockerfile: ./docker/images/${KUZZLE_IMAGE}/Dockerfile
+      context: ..
+    command: ["kuzzle", "start"]
+    cap_add:
+      - SYS_PTRACE
+    ulimits:
+      nofile: 65536
+    sysctls:
+      - net.core.somaxconn=8192
+    environment:
+      - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
+      - kuzzle_services__internalCache__node__host=redis
+      - kuzzle_services__memoryStorage__node__host=redis
+    depends_on:
+      - redis
+      - elasticsearch
+    ports:
+      - "7512:7512"
+
+  redis:
+    image: redis:6
+
+  elasticsearch:
+    image: kuzzleio/elasticsearch:7
+    ulimits:
+      nofile: 65536

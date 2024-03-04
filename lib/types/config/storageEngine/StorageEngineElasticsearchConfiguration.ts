@@ -1,9 +1,9 @@
 export type StorageEngineElasticsearch = {
   /**
    * Elasticsearch major version
-   * @default 7
+   * @default "7"
    */
-  majorVersion: 7 | 8;
+  majorVersion: "7" | "8";
   /**
    * @default ['storageEngine']
    */

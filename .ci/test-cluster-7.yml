@@ -67,14 +67,6 @@ services:
     image: redis:6
 
   elasticsearch:
-    image: elasticsearch:8.11.3
-    environment:
-      - xpack.security.enabled=false
-      - action.destructive_requires_name=false
-      - cluster.name=kuzzle
-      - node.name=alyx
-      - discovery.type=single-node
-      - ingest.geoip.downloader.enabled=false
-      - indices.id_field_data.enabled=true
-    ports:
-      - '9200:9200'
+    image: kuzzleio/elasticsearch:7
+    ulimits:
+      nofile: 65536

@@ -18,4 +18,5 @@ runs:
       env:
         KUZZLE_FUNCTIONAL_TESTS: ${{ inputs.test-set }}
         NODE_VERSION: ${{ inputs.node-version }}
+        ES_VERSION: ${{ inputs.es-version }}
       shell: bash

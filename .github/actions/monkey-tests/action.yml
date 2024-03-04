@@ -11,4 +11,5 @@ runs:
     - run: ./.ci/scripts/run-monkey-tests.sh
       env:
         NODE_VERSION: ${{ inputs.node-version }}
+        ES_VERSION: ${{ inputs.es-version }}
       shell: bash

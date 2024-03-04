@@ -13,24 +13,26 @@ export class Elasticsearch extends Service {
   constructor(config: any, scope = scopeEnum.PUBLIC) {
     super("elasticsearch", config);
 
-    if (config.majorVersion === 7) {
+    console.log(config)
+
+    if (config.majorVersion === "7") {
       this.client = new ES7(config, scope);
-    } else if (config.majorVersion === 8) {
+    } else if (config.majorVersion === "8") {
       this.client = new ES8(config, scope);
     } else {
       throw new Error("Invalid Elasticsearch version.");
     }
   }
 
-  static buildClient(config: any, version?: 7 | 8): any {
+  static buildClient(config: any, version?: "7" | "8"): any {
     if (!version) {
-      version = 7;
+      version = "7";
     }
 
     switch (version) {
-      case 7:
+      case "7":
         return new ClientES7(config);
-      case 8:
+      case "8":
         return new ClientES8(config);
       default:
         throw new Error("Invalid Elasticsearch version.");
