@@ -19,17 +19,17 @@ else
     exit 1 
 fi
 
-# docker compose -f $YML_FILE down -v
+docker compose -f $YML_FILE down -v
 
-# echo "Installing dependencies..."
-# docker compose -f $YML_FILE run --rm kuzzle_node_1 npm ci
+echo "Installing dependencies..."
+docker compose -f $YML_FILE run --rm kuzzle_node_1 npm ci
 
-# if [ "$REBUILD" == "true" ];
-# then
-#   docker compose -f $YML_FILE run --rm kuzzle_node_1 npm rebuild
-# fi
+if [ "$REBUILD" == "true" ];
+then
+  docker compose -f $YML_FILE run --rm kuzzle_node_1 npm rebuild
+fi
 
-# docker compose -f $YML_FILE run --rm kuzzle_node_1 npm run build
+docker compose -f $YML_FILE run --rm kuzzle_node_1 npm run build
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
