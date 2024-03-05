@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract references from context
         shell: bash
@@ -92,7 +92,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages

@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -59,7 +59,7 @@ jobs:
     needs: [prepare-matrix]
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -115,7 +115,7 @@ jobs:
         es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
@@ -134,7 +134,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -161,13 +161,13 @@ jobs:
         es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
       - name: Cloning Monkey Tester
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
