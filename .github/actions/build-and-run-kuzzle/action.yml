@@ -38,7 +38,7 @@ runs:
       shell: bash
 
     - run: |
-        export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
+        export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
 
         if [ "$ES_VERSION" == "7" ]; then
@@ -59,7 +59,7 @@ runs:
       shell: bash
 
     - run: |
-        export KUZZLE_IMAGE=${{ inputs.KUZZLE_IMAGE }}
+        export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
 
         if [ "$ES_VERSION" == "7" ]; then
