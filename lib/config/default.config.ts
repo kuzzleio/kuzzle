@@ -425,6 +425,19 @@ const defaultConfig: KuzzleConfiguration = {
               },
             },
           },
+          imports: {
+            settings: {
+              // @deprecated : replace undefined by 1
+              number_of_shards: undefined,
+              number_of_replicas: undefined,
+            },
+            mappings: {
+              dynamic: "strict",
+              properties: {
+                hash: { type: "keyword" },
+              },
+            },
+          },
         },
       },
       maxScrollDuration: "1m",
