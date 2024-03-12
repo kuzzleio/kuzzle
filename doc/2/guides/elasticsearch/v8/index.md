@@ -22,13 +22,13 @@ Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/q
 
 The support of Elasticsearch 8 has been introduced in Kuzzle 2.30.0.
 
-The choice has been made to keep kuzzle compatible to avoid breaking changes around the support of ES8.
+The choice has been made to keep Kuzzle compatible to avoid breaking changes around the support of ES8. 
 
-We wanted to allow the user to OPT-IN for the feature so no modification is needed on your behalf to stay with Elasticsearch 7.
+We wanted to allow the user to **opt-in** for this feature, so no modification is needed on your behalf if you want to keep using Elasticsearch 7.
 
-By default the majorVersion support will be 7 until Kuzzle v3.
+The default major version of Elasticsearch will be 7 until Kuzzle v3.
 
-The new key to change the version supported by is available under
+The new configuration key to change the version supported is available under:  
 
 ```json
 {
@@ -41,11 +41,11 @@ The new key to change the version supported by is available under
 ```
 
 :::warning
-You can not set the majorVersion to 8 if you are using a version of Kuzzle that does not support it.
+You can not set the `majorVersion` key to 8 if you are using a version of Kuzzle that does not support it. 
 :::
 
 :::info
-Kuzzle cannot connect to both ES7 and ES8 at the same time.
+Kuzzle cannot connect to both Elasticsearch 7 and Elasticsearch 8 at the same time.  
 :::
 
 Once the version is set to 8, Kuzzle will use the Elasticsearch 8 API to communicate with the database.
