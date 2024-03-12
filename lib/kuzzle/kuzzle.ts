@@ -642,16 +642,13 @@ class Kuzzle extends KuzzleEventEmitter {
     return false;
   }
 
-  private async ensureImportDataConsistency({
+  private async persistHashedImport({
     existingRedisHash,
     existingESHash,
     importPayloadHash,
     type,
-    mutex,
-    lockedMutex,
   }) {
     if (!existingRedisHash && !existingESHash) {
-      lockedMutex.push(mutex);
       // If the import is not initialized in the redis cache and in the ES, we initialize it
       this.log.info(`${type} import is not initialized, initializing...`);
 
@@ -670,8 +667,8 @@ class Kuzzle extends KuzzleEventEmitter {
         importPayloadHash,
       );
     } else if (existingRedisHash && !existingESHash) {
-      lockedMutex.push(mutex);
-      // If the import is initialized in the redis cache but not in the ES, we initialize it in the ES
+      // If the import is initialized in the redis cache but not in the ES
+      // We initialize it in the ES
       this.log.info(
         `${type} import is not initialized in %kuzzle.imports, initializing...`,
       );
@@ -691,11 +688,12 @@ class Kuzzle extends KuzzleEventEmitter {
         { id: `${BACKEND_IMPORT_KEY}:${type}` },
       );
     } else if (!existingRedisHash && existingESHash) {
-      lockedMutex.push(mutex);
-      // If the import is initialized in the ES but not in the redis cache, we initialize it in the redis cache
+      // If the import is initialized in the ES but not in the redis cache
+      // We initialize it in the redis cache
       this.log.info(
         `${type} import is not initialized in the redis cache, initializing...`,
       );
+
       const esDocument = await this.ask(
         "core:storage:private:document:get",
         "kuzzle",
@@ -792,12 +790,12 @@ class Kuzzle extends KuzzleEventEmitter {
         );
 
         if (locked) {
-          await this.ensureImportDataConsistency({
+          lockedMutex.push(mutex);
+
+          await this.persistHashedImport({
             existingESHash,
             existingRedisHash,
             importPayloadHash,
-            lockedMutex,
-            mutex,
             type,
           });
         }
