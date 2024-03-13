@@ -626,6 +626,89 @@ class Kuzzle extends KuzzleEventEmitter {
     }
   }
 
+  private isConfigsEmpty(importConfig, supportConfig) {
+    if (
+      _.isEmpty(importConfig.mappings) &&
+      _.isEmpty(importConfig.profiles) &&
+      _.isEmpty(importConfig.roles) &&
+      _.isEmpty(importConfig.userMappings) &&
+      _.isEmpty(importConfig.users) &&
+      _.isEmpty(supportConfig.fixtures) &&
+      _.isEmpty(supportConfig.mappings) &&
+      _.isEmpty(supportConfig.securities)
+    ) {
+      return true;
+    }
+    return false;
+  }
+
+  private async persistHashedImport({
+    existingRedisHash,
+    existingESHash,
+    importPayloadHash,
+    type,
+  }) {
+    if (!existingRedisHash && !existingESHash) {
+      // If the import is not initialized in the redis cache and in the ES, we initialize it
+      this.log.info(`${type} import is not initialized, initializing...`);
+
+      await this.ask(
+        "core:storage:private:document:create",
+        "kuzzle",
+        "imports",
+        {
+          hash: importPayloadHash,
+        },
+        { id: `${BACKEND_IMPORT_KEY}:${type}` },
+      );
+      await this.ask(
+        "core:cache:internal:store",
+        `${BACKEND_IMPORT_KEY}:${type}`,
+        importPayloadHash,
+      );
+    } else if (existingRedisHash && !existingESHash) {
+      // If the import is initialized in the redis cache but not in the ES
+      // We initialize it in the ES
+      this.log.info(
+        `${type} import is not initialized in %kuzzle.imports, initializing...`,
+      );
+
+      const redisCache = await this.ask(
+        "core:cache:internal:get",
+        `${BACKEND_IMPORT_KEY}:${type}`,
+      );
+
+      await this.ask(
+        "core:storage:private:document:create",
+        "kuzzle",
+        "imports",
+        {
+          hash: redisCache,
+        },
+        { id: `${BACKEND_IMPORT_KEY}:${type}` },
+      );
+    } else if (!existingRedisHash && existingESHash) {
+      // If the import is initialized in the ES but not in the redis cache
+      // We initialize it in the redis cache
+      this.log.info(
+        `${type} import is not initialized in the redis cache, initializing...`,
+      );
+
+      const esDocument = await this.ask(
+        "core:storage:private:document:get",
+        "kuzzle",
+        "imports",
+        `${BACKEND_IMPORT_KEY}:${type}`,
+      );
+
+      await this.ask(
+        "core:cache:internal:store",
+        `${BACKEND_IMPORT_KEY}:${type}`,
+        esDocument._source.hash,
+      );
+    }
+  }
+
   /**
    * Load into the app several imports
    *
@@ -638,16 +721,7 @@ class Kuzzle extends KuzzleEventEmitter {
     toImport: ImportConfig = {},
     toSupport: SupportConfig = {},
   ): Promise<void> {
-    if (
-      _.isEmpty(toImport.mappings) &&
-      _.isEmpty(toImport.profiles) &&
-      _.isEmpty(toImport.roles) &&
-      _.isEmpty(toImport.userMappings) &&
-      _.isEmpty(toImport.users) &&
-      _.isEmpty(toSupport.fixtures) &&
-      _.isEmpty(toSupport.mappings) &&
-      _.isEmpty(toSupport.securities)
-    ) {
+    if (this.isConfigsEmpty(toImport, toSupport)) {
       return;
     }
 
@@ -676,31 +750,54 @@ class Kuzzle extends KuzzleEventEmitter {
         const importPayloadHash = sha256(stringify(importPayload));
         const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
 
-        const existingHash = await this.ask(
+        const existingRedisHash = await this.ask(
           "core:cache:internal:get",
           `${BACKEND_IMPORT_KEY}:${type}`,
         );
 
-        const initialized = existingHash === importPayloadHash;
+        const existingESHash = await this.ask(
+          "core:storage:private:document:exist",
+          "kuzzle",
+          "imports",
+          `${BACKEND_IMPORT_KEY}:${type}`,
+        );
+
+        let initialized = false;
+
+        if (existingRedisHash) {
+          // Check if the import is already initialized inside the redis cache
+          initialized = existingRedisHash === importPayloadHash;
+        } else if (existingESHash) {
+          // Check if the import is already initialized inside the ES
+          const esDocument = await this.ask(
+            "core:storage:private:document:get",
+            "kuzzle",
+            "imports",
+            `${BACKEND_IMPORT_KEY}:${type}`,
+          );
+          initialized = esDocument._source.hash === importPayloadHash;
+        }
+
         const locked = await mutex.lock();
 
         await importMethod(
           { toImport, toSupport },
           {
             firstCall: !initialized && locked,
-            initialized,
+            initialized: initialized,
             locked,
           },
         );
 
-        if (!initialized && locked) {
+        if (locked) {
           lockedMutex.push(mutex);
 
-          await this.ask(
-            "core:cache:internal:store",
-            `${BACKEND_IMPORT_KEY}:${type}`,
+          await this.persistHashedImport({
+            existingESHash,
+            existingRedisHash,
             importPayloadHash,
-          );
+            type,
+          });
         }
       }
 
