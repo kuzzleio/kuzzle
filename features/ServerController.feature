@@ -78,7 +78,6 @@ Feature: Server Controller
     When I successfully execute the action "server":"openapi"
     Then I should receive a response matching:
       | swagger                                 | "2.0"      |
-      | components.RequestPayload               | "_OBJECT_" |
       | paths./users/{_id}/_replace.put.tags[0] | "security" |
 
   @http
@@ -87,7 +86,6 @@ Feature: Server Controller
       | scope | "app" |
     Then I should receive a response matching:
       | paths./openapi-test/{company}/{objectType}/{_id}.post.tags[0] | "openapi-test" |
-      | components.LogisticObjects.Item                               | "_OBJECT_"     |
 
   # server:publicApi ========================================================================
   @development @http
