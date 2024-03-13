@@ -317,6 +317,26 @@ export type StorageEngineElasticsearch = {
           };
         };
       };
+      imports: {
+        settings: {
+          /**
+           * @default 1
+           */
+          number_of_shards: number;
+
+          /**
+           * @default 1
+           */
+          number_of_replicas: number;
+        };
+
+        mappings: {
+          dynamic: "strict";
+          properties: {
+            hash: { type: "keyword" };
+          };
+        };
+      };
     };
   };
   maxScrollDuration: string;

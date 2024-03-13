@@ -79,7 +79,7 @@ function generateParameters(route: JSONObject) {
         in: "path",
         name: m[1],
         required: true,
-        schema: { type: "string" },
+        type: "string",
       });
 
       m = routeUrlMatch.exec(route.path);
