@@ -66,16 +66,7 @@ services:
       retries: 30
 
   elasticsearch:
-    image: elasticsearch:8.11.3
-    container_name: kuzzle_elasticsearch
-    environment:
-      - xpack.security.enabled=false
-      - action.destructive_requires_name=false
-      - cluster.name=kuzzle
-      - node.name=alyx
-      - discovery.type=single-node
-      - ingest.geoip.downloader.enabled=false
-      - indices.id_field_data.enabled=true
+    image: kuzzleio/elasticsearch:7
     ports:
       - '9200:9200'
     healthcheck:
