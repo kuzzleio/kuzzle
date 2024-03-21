@@ -17,6 +17,6 @@ declare global {
 
 global.NODE_ENV = process.env.NODE_ENV;
 
-export { };
+export {};
 
 /* eslint-enable no-var, vars-on-top*/
