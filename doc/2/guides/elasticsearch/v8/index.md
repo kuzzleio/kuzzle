@@ -153,4 +153,4 @@ Conduct a dry run in a development environment to spot potential issues and esti
 
 > Note: Migration steps can vary depending on your setup and needs. Always refer to the official Elasticsearch documentation for the most accurate information, you can find it [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-upgrade.html).
 
-Disclaimer: The above steps provide a general migration guide. Migrations can be complex and it's advised to always test these steps in a non-production environment before applying them to production. Consulting with a database/DevOps expert is also recommended for unique implementations.
+Disclaimer: The above steps provide a general migration guide. Migrations can be complex and it's advised to always test these steps in a non-production environment before applying them to production.
