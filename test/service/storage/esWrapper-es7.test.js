@@ -6,7 +6,7 @@ const { ExternalServiceError } = require("../../../index");
 const ESClientMock = require("../../mocks/service/elasticsearchClient.mock");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const ESWrapper = require("../../../lib/service/storage/esWrapper");
+const ESWrapper = require("../../../lib/service/storage/7/esWrapper");
 
 describe("Test: ElasticSearch Wrapper", () => {
   let kuzzle;

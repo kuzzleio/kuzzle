@@ -42,7 +42,7 @@ describe("BaseModel", () => {
     );
     storageEngine = new StorageEngine();
 
-    return storageEngine.init();
+    storageEngine.init();
   });
 
   describe("BaseModel.register", () => {

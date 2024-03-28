@@ -7,7 +7,8 @@ class ClientAdapterMock extends ClientAdapter {
   constructor(kuzzle, scope) {
     super(kuzzle, scope);
 
-    sinon.stub(this, "init").callsFake(() => {
+    sinon.stub(this, "init").callsFake(async () => {
+      await this.es.init();
       this.registerCollectionEvents();
       this.registerIndexEvents();
       this.registerDocumentEvents();
@@ -25,10 +26,10 @@ class ClientAdapterMock extends ClientAdapter {
     sinon.stub(this, "deleteIndex").resolves();
     sinon.stub(this, "deleteIndexes").resolves();
     sinon.stub(this, "deleteCollection").resolves();
-    sinon.stub(this, "populateCache").resolves();
-    sinon.stub(this, "loadMappings").resolves();
     sinon.stub(this, "loadFixtures").resolves();
-    sinon.stub(this.cache, "listIndexes").resolves([]);
+    sinon.stub(this, "loadMappings").resolves();
+    sinon.stub(this, "populateCache").resolves();
+    sinon.stub(this.cache, "listIndexes").returns([]);
 
     sinon.stub(this.client, "isIndexNameValid").resolves(true);
     sinon.stub(this.client, "isCollectionNameValid").resolves(true);

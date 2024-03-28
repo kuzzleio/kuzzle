@@ -21,13 +21,12 @@
 
 import Bluebird from "bluebird";
 import { Koncorde } from "../shared/KoncordeWrapper";
-import { Client } from "@elastic/elasticsearch";
 import { JSONObject } from "kuzzle-sdk";
 
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import PluginRepository from "./pluginRepository";
 import Store from "../shared/store";
-import Elasticsearch from "../../service/storage/elasticsearch";
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { isPlainObject } from "../../util/safeObject";
 import Promback from "../../util/promback";
 import { Mutex } from "../../util/mutex";
@@ -205,7 +204,7 @@ export class PluginContext {
     /**
      * Constructor for Elasticsearch SDK Client
      */
-    ESClient: typeof Client;
+    ESClient: new () => any;
   };
 
   /**
@@ -305,8 +304,7 @@ export class PluginContext {
       } as Repository;
     }
 
-    // eslint-disable-next-line no-inner-declarations
-    function PluginContextESClient(): Client {
+    function PluginContextESClient(): any {
       return Elasticsearch.buildClient(
         global.kuzzle.config.services.storageEngine.client,
       );
@@ -314,7 +312,7 @@ export class PluginContext {
 
     this.constructors = {
       BaseValidationType: require("../validation/baseType"),
-      ESClient: PluginContextESClient as unknown as new () => Client,
+      ESClient: PluginContextESClient as any,
       Koncorde: Koncorde as any,
       Mutex: Mutex,
       Repository: PluginContextRepository as unknown as new (
@@ -497,11 +495,10 @@ function instantiateRequest(request, data, options = {}) {
     }
 
     if (_data) {
-      target.input.volatile = Object.assign(
-        {},
-        _request.input.volatile,
-        _data.volatile,
-      );
+      target.input.volatile = {
+        ..._request.input.volatile,
+        ..._data.volatile,
+      };
     } else {
       target.input.volatile = _request.input.volatile;
     }

@@ -15,7 +15,8 @@
       ]
     },
     "esModuleInterop": true,
-    "resolveJsonModule": true
+    "resolveJsonModule": true,
+    "skipDefaultLibCheck": true
   },
   "rootDir": "lib/",
   "include": [

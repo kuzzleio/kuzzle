@@ -19,19 +19,13 @@
  * limitations under the License.
  */
 
-import { Client } from "@elastic/elasticsearch";
-
-import Elasticsearch from "../../service/storage/elasticsearch";
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { JSONObject } from "../../../index";
-import { ApplicationManager, Backend } from "./index";
+import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
-  private _client: Client = null;
-  private _Client: new (clientConfig?: any) => Client = null;
-
-  constructor(application: Backend) {
-    super(application);
-  }
+  private _client: any = null;
+  private _Client: new (clientConfig?: any) => any = null;
 
   /**
    * Storage client constructor.
@@ -39,16 +33,19 @@ export class BackendStorage extends ApplicationManager {
    *
    * @param clientConfig Overload configuration for the underlaying storage client
    */
-  get StorageClient(): new (clientConfig?: any) => Client {
-    if (!this._Client) {
-      const kuzzle = this._kuzzle;
+  get StorageClient(): new (clientConfig?: any) => any {
+    const kuzzle = this._kuzzle;
 
+    if (!this._Client) {
       this._Client = function ESClient(clientConfig: JSONObject = {}) {
-        return Elasticsearch.buildClient({
-          ...kuzzle.config.services.storageEngine.client,
-          ...clientConfig,
-        });
-      } as any;
+        return Elasticsearch.buildClient(
+          {
+            ...kuzzle.config.services.storageEngine.client,
+            ...clientConfig,
+          },
+          kuzzle.config.services.storageEngine.majorVersion,
+        );
+      } as unknown as new (clientConfig?: any) => any;
     }
 
     return this._Client;
@@ -58,10 +55,13 @@ export class BackendStorage extends ApplicationManager {
    * Access to the underlaying storage engine client.
    * (Currently Elasticsearch)
    */
-  get storageClient(): Client {
+  get storageClient(): any {
+    const kuzzle = this._kuzzle;
+
     if (!this._client) {
       this._client = Elasticsearch.buildClient(
-        this._kuzzle.config.services.storageEngine.client,
+        kuzzle.config.services.storageEngine.client,
+        kuzzle.config.services.storageEngine.majorVersion,
       );
     }
 
