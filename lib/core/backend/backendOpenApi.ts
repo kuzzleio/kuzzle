@@ -33,7 +33,7 @@ export class BackendOpenApi extends ApplicationManager {
 
     /* eslint-disable sort-keys */
     this.definition = {
-      openapi: "3.0.0",
+      openapi: "3.1.0",
       info: {
         title: `${application.name} API`,
         description: `${application.name} HTTP API definition`,
@@ -41,7 +41,6 @@ export class BackendOpenApi extends ApplicationManager {
           name: "Kuzzle team",
           url: "https://kuzzle.io",
           email: "support@kuzzle.io",
-          discord: "http://join.discord.kuzzle.io",
         },
         license: {
           name: "Apache 2",
@@ -53,20 +52,9 @@ export class BackendOpenApi extends ApplicationManager {
         description: "Kuzzle API Documentation",
         url: "https://docs.kuzzle.io/core/2/api/",
       },
-      servers: [
-        {
-          url: "https://{baseUrl}:{port}",
-          description: `${application.name} Base Url`,
-          variables: {
-            baseUrl: { default: "localhost" },
-            port: { default: 7512 },
-          },
-        },
-      ],
       tags: [],
       schemes: ["https", "http"],
       paths: {},
-      components: {},
     };
     /* eslint-enable sort-keys */
   }

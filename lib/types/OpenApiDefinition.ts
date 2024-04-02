@@ -11,7 +11,6 @@ export type OpenApiDefinition = {
       name: string;
       url: string;
       email: string;
-      discord: string;
     };
     license: {
       name: string;
@@ -23,19 +22,11 @@ export type OpenApiDefinition = {
     description: string;
     url: string;
   };
-  servers: Array<{
-    url: string;
-    description: string;
-    variables: {
-      baseUrl: { default: string };
-      port: { default: number };
-    };
-  }>;
   tags: Array<{
     description: string;
     name: string;
   }>;
   schemes: string[];
   paths: JSONObject;
-  components: JSONObject;
+  components?: JSONObject;
 };
