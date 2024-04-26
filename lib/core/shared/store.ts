@@ -24,14 +24,14 @@ import { StoreCollectionsDefinition } from "../../types";
 import { promiseAllN } from "../../util/async";
 import { getESIndexDynamicSettings } from "../../util/esRequest";
 import { Mutex } from "../../util/mutex";
-import storeScopeEnum from "../storage/storeScopeEnum";
+import { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
  * Wrapper around the document store.
  * Once instantiated, this class can only access the index passed in the
  * constructor
  */
-class Store {
+export class Store {
   public count: (...args: any[]) => Promise<any>;
   public create: (...args: any[]) => Promise<any>;
   public createCollection: (...args: any[]) => Promise<any>;
@@ -246,5 +246,3 @@ class Store {
     );
   }
 }
-
-export default Store;

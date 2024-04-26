@@ -23,9 +23,7 @@
  * Enum for the storage target (used by classes using either private or
  * public indexes)
  */
-enum storeScopeEnum {
+export enum storeScopeEnum {
   PRIVATE = "private",
   PUBLIC = "public",
 }
-
-export default storeScopeEnum;

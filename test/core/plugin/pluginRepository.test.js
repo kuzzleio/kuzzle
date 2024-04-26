@@ -6,8 +6,8 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 
 const PluginRepository = require("../../../lib/core/plugin/pluginRepository");
 const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
-const Store = require("../../../lib/core/shared/store");
+const { storeScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
+const { Store } = require("../../../lib/core/shared/store");
 
 describe("core/plugin/pluginRepository", () => {
   const someObject = { _id: "someId", some: { defined: "object" } };
@@ -19,7 +19,7 @@ describe("core/plugin/pluginRepository", () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    store = new Store("pluginName", scopeEnum.PRIVATE);
+    store = new Store("pluginName", storeScopeEnum.PRIVATE);
 
     pluginRepository = new PluginRepository(store, someCollection);
     pluginRepository.init({

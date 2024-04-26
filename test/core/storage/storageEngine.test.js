@@ -7,7 +7,7 @@ const { PreconditionError } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { storeScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 
 describe("#core/storage/StorageEngine", () => {
   let StorageEngine;
@@ -33,10 +33,10 @@ describe("#core/storage/StorageEngine", () => {
   describe("#constructor", () => {
     it("should instantiate a client adapter per storage scope", () => {
       should(storageEngine.public).instanceOf(ClientAdapterMock);
-      should(storageEngine.public.scope).eql(scopeEnum.PUBLIC);
+      should(storageEngine.public.scope).eql(storeScopeEnum.PUBLIC);
 
       should(storageEngine.private).instanceOf(ClientAdapterMock);
-      should(storageEngine.private.scope).eql(scopeEnum.PRIVATE);
+      should(storageEngine.private.scope).eql(storeScopeEnum.PRIVATE);
     });
   });
 
