@@ -142,7 +142,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
         return null;
       }
 
-      return await this.fromDTO(Object.assign({}, JSON.parse(response)));
+      return await this.fromDTO({ ...JSON.parse(response) });
     } catch (err) {
       throw kerror.get("services", "cache", "read_failed", err.message);
     }
@@ -256,7 +256,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
   ): Promise<TObject> {
     const key = options.key || this.getCacheKey(object._id);
     const value = JSON.stringify(this.serializeToCache(object));
-    const ttl = options.ttl !== undefined ? options.ttl : this.ttl;
+    const ttl = options.ttl ?? this.ttl;
 
     await global.kuzzle.ask(`core:cache:${this.cacheDb}:store`, key, value, {
       ttl,
@@ -359,7 +359,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @returns {object}
    */
   toDTO(o: TObject): any {
-    return Object.assign({}, o);
+    return { ...o };
   }
 
   /**
