@@ -19,26 +19,26 @@
  * limitations under the License.
  */
 
-import _ from "lodash";
 import jwt from "jsonwebtoken";
-import ms from "ms";
 import { JSONObject } from "kuzzle-sdk";
+import _ from "lodash";
+import ms from "ms";
 
-import ApiKey from "../../model/storage/apiKey";
+import * as kerror from "../../kerror";
 import { UnauthorizedError } from "../../kerror/errors";
 import { Token } from "../../model/security/token";
-import * as kerror from "../../kerror";
+import { User } from "../../model/security/user";
+import ApiKey from "../../model/storage/apiKey";
 import debugFactory from "../../util/debug";
 import { Mutex } from "../../util/mutex";
-import { Repository } from "../shared/repository";
-import { User } from "../../model/security/user";
+import { ObjectRepository } from "../shared/ObjectRepository";
 
 const securityError = kerror.wrap("security", "token");
 const debug = debugFactory("kuzzle:bootstrap:tokens");
 
 const BOOTSTRAP_DONE_KEY = "token/bootstrap";
 
-export class TokenRepository extends Repository<Token> {
+export class TokenRepository extends ObjectRepository<Token> {
   private tokenGracePeriod: number;
   private anonymousToken: Token;
 

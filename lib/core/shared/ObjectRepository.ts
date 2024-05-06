@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import cacheDbEnum from "../cache/cacheDbEnum";
-import * as kerror from "../../kerror";
 import { JSONObject } from "kuzzle-sdk";
+import * as kerror from "../../kerror";
+import cacheDbEnum from "../cache/cacheDbEnum";
 
-export class Repository<TObject extends { _id: string }> {
+export class ObjectRepository<TObject extends { _id: string }> {
   protected ttl: number;
   protected index: string;
   protected collection: string;
