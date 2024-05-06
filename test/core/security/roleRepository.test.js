@@ -12,7 +12,9 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 
 const { Role } = require("../../../lib/model/security/role");
 const RoleRepository = require("../../../lib/core/security/roleRepository");
-const { Repository } = require("../../../lib/core/shared/repository");
+const {
+  ObjectRepository,
+} = require("../../../lib/core/shared/ObjectRepository");
 const kuzzleStateEnum = require("../../../lib/kuzzle/kuzzleStateEnum");
 
 describe("Test: security/roleRepository", () => {
@@ -40,28 +42,28 @@ describe("Test: security/roleRepository", () => {
 
   describe("#loadOneFromDatabase", () => {
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "loadOneFromDatabase");
+      sinon.stub(ObjectRepository.prototype, "loadOneFromDatabase");
     });
 
     afterEach(() => {
-      Repository.prototype.loadOneFromDatabase.restore();
+      ObjectRepository.prototype.loadOneFromDatabase.restore();
     });
 
     it("should invoke its super function", async () => {
-      Repository.prototype.loadOneFromDatabase.resolves("foo");
+      ObjectRepository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(roleRepository.loadOneFromDatabase("bar")).fulfilledWith(
         "foo",
       );
 
-      should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
+      should(ObjectRepository.prototype.loadOneFromDatabase).calledWith("bar");
     });
 
     it("should wrap generic 404s into profile dedicated errors", () => {
       const error = new Error("foo");
       error.status = 404;
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(roleRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
@@ -72,7 +74,7 @@ describe("Test: security/roleRepository", () => {
     it("should re-throw non-404 errors as is", () => {
       const error = new Error("foo");
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(roleRepository.loadOneFromDatabase("foo")).rejectedWith(
         error,
@@ -877,11 +879,11 @@ describe("Test: security/roleRepository", () => {
 
   describe("#truncate", () => {
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "truncate").resolves();
+      sinon.stub(ObjectRepository.prototype, "truncate").resolves();
     });
 
     afterEach(() => {
-      Repository.prototype.truncate.restore();
+      ObjectRepository.prototype.truncate.restore();
     });
 
     it('should register a "truncate" event', async () => {
@@ -901,14 +903,14 @@ describe("Test: security/roleRepository", () => {
 
       await roleRepository.truncate(opts);
 
-      should(Repository.prototype.truncate).calledWith(opts);
+      should(ObjectRepository.prototype.truncate).calledWith(opts);
       should(roleRepository.roles).be.empty();
     });
 
     it("should clear the RAM cache even if the truncate fails", async () => {
       const error = new Error("foo");
 
-      Repository.prototype.truncate.rejects(error);
+      ObjectRepository.prototype.truncate.rejects(error);
 
       roleRepository.roles.set("foo", "bar");
       roleRepository.roles.set("baz", "qux");
