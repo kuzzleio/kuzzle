@@ -19,29 +19,53 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { Mutex } = require("../../util/mutex");
-const { promiseAllN } = require("../../util/async");
-const kerror = require("../../kerror");
-const { getESIndexDynamicSettings } = require("../../util/esRequest");
+import * as kerror from "../../kerror";
+import { StoreCollectionsDefinition } from "../../types";
+import { promiseAllN } from "../../util/async";
+import { getESIndexDynamicSettings } from "../../util/esRequest";
+import { Mutex } from "../../util/mutex";
+import { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
  * Wrapper around the document store.
  * Once instantiated, this class can only access the index passed in the
  * constructor
  */
-class Store {
-  /**
-   * @param {Kuzzle} kuzzle
-   * @param {String} index
-   * @param {storeScopeEnum} scope
-   */
-  constructor(index, scope) {
+export class Store {
+  public count: (...args: any[]) => Promise<any>;
+  public create: (...args: any[]) => Promise<any>;
+  public createCollection: (...args: any[]) => Promise<any>;
+  public createOrReplace: (...args: any[]) => Promise<any>;
+  public delete: (...args: any[]) => Promise<any>;
+  public deleteByQuery: (...args: any[]) => Promise<any>;
+  public deleteCollection: (...args: any[]) => Promise<any>;
+  public deleteFields: (...args: any[]) => Promise<any>;
+  public deleteIndex: (...args: any[]) => Promise<any>;
+  public exists: (...args: any[]) => Promise<any>;
+  public get: (...args: any[]) => Promise<any>;
+  public getMapping: (...args: any[]) => Promise<any>;
+  public getSettings: (...args: any[]) => Promise<any>;
+  public mExecute: (...args: any[]) => Promise<any>;
+  public mGet: (...args: any[]) => Promise<any>;
+  public multiSearch: (...args: any[]) => Promise<any>;
+  public refreshCollection: (...args: any[]) => Promise<any>;
+  public replace: (...args: any[]) => Promise<any>;
+  public search: (...args: any[]) => Promise<any>;
+  public scroll: (...args: any[]) => Promise<any>;
+  public truncateCollection: (...args: any[]) => Promise<any>;
+  public update: (...args: any[]) => Promise<any>;
+  public updateByQuery: (...args: any[]) => Promise<any>;
+  public updateCollection: (...args: any[]) => Promise<any>;
+  public updateMapping: (...args: any[]) => Promise<any>;
+
+  protected index: string;
+  protected scope: storeScopeEnum;
+
+  constructor(index: string, scope: storeScopeEnum) {
     this.index = index;
     this.scope = scope;
 
-    const methodsMapping = {
+    const methodsMapping: Record<string, string> = {
       count: `core:storage:${scope}:document:count`,
       create: `core:storage:${scope}:document:create`,
       createCollection: `core:storage:${scope}:collection:create`,
@@ -68,19 +92,20 @@ class Store {
     };
 
     for (const [method, event] of Object.entries(methodsMapping)) {
-      this[method] = (...args) => global.kuzzle.ask(event, this.index, ...args);
+      this[method] = (...args: any[]) =>
+        global.kuzzle.ask(event, this.index, ...args);
     }
 
     // the scroll and multiSearch method are special: they doesn't need an index parameter
     // we keep them for ease of use
-    this.scroll = (scrollId, opts) =>
+    this.scroll = (scrollId: string, opts: any) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:scroll`,
         scrollId,
         opts,
       );
 
-    this.multiSearch = (targets, searchBody, opts) =>
+    this.multiSearch = (targets: any, searchBody: any, opts: any) =>
       global.kuzzle.ask(
         `core:storage:${scope}:document:multiSearch`,
         targets,
@@ -91,12 +116,8 @@ class Store {
 
   /**
    * Initialize the index, and creates provided collections
-   *
-   * @param {Object} collections - List of collections with mappings to create
-   *
-   * @returns {Promise}
    */
-  async init(collections = {}) {
+  async init(collections: StoreCollectionsDefinition = {}): Promise<void> {
     const creatingMutex = new Mutex(`Store.init(${this.index})`, {
       timeout: 0,
       ttl: 30000,
@@ -126,7 +147,10 @@ class Store {
    *
    * @returns {Promise}
    */
-  createCollections(collections, { indexCacheOnly = false } = {}) {
+  createCollections(
+    collections: StoreCollectionsDefinition,
+    { indexCacheOnly = false } = {},
+  ): Promise<any> {
     return promiseAllN(
       Object.entries(collections).map(([collection, config]) => async () => {
         // @deprecated
@@ -222,5 +246,3 @@ class Store {
     );
   }
 }
-
-module.exports = Store;

@@ -16,7 +16,9 @@ const { Profile } = require("../../../lib/model/security/profile");
 const {
   ProfileRepository,
 } = require("../../../lib/core/security/profileRepository");
-const { Repository } = require("../../../lib/core/shared/repository");
+const {
+  ObjectRepository,
+} = require("../../../lib/core/shared/ObjectRepository");
 
 describe("Test: security/profileRepository", () => {
   let kuzzle;
@@ -92,10 +94,10 @@ describe("Test: security/profileRepository", () => {
       let profile;
 
       try {
-        sinon.stub(Repository.prototype, "load").resolves(testProfile);
+        sinon.stub(ObjectRepository.prototype, "load").resolves(testProfile);
         profile = await profileRepository.load("foo");
       } finally {
-        Repository.prototype.load.restore();
+        ObjectRepository.prototype.load.restore();
       }
 
       should(profile).be.exactly(testProfile);
@@ -425,28 +427,28 @@ describe("Test: security/profileRepository", () => {
 
   describe("#loadOneFromDatabase", () => {
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "loadOneFromDatabase");
+      sinon.stub(ObjectRepository.prototype, "loadOneFromDatabase");
     });
 
     afterEach(() => {
-      Repository.prototype.loadOneFromDatabase.restore();
+      ObjectRepository.prototype.loadOneFromDatabase.restore();
     });
 
     it("should invoke its super function", async () => {
-      Repository.prototype.loadOneFromDatabase.resolves("foo");
+      ObjectRepository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(profileRepository.loadOneFromDatabase("bar")).fulfilledWith(
         "foo",
       );
 
-      should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
+      should(ObjectRepository.prototype.loadOneFromDatabase).calledWith("bar");
     });
 
     it("should wrap generic 404s into profile dedicated errors", () => {
       const error = new Error("foo");
       error.status = 404;
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(profileRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
@@ -457,7 +459,7 @@ describe("Test: security/profileRepository", () => {
     it("should re-throw non-404 errors as is", () => {
       const error = new Error("foo");
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(profileRepository.loadOneFromDatabase("foo")).rejectedWith(
         error,
@@ -467,11 +469,11 @@ describe("Test: security/profileRepository", () => {
 
   describe("#load", () => {
     afterEach(() => {
-      Repository.prototype.load.restore();
+      ObjectRepository.prototype.load.restore();
     });
 
     it("should compute the optimized policies", async () => {
-      sinon.stub(Repository.prototype, "load").resolves(testProfile);
+      sinon.stub(ObjectRepository.prototype, "load").resolves(testProfile);
 
       profileRepository.optimizePolicies = sinon.stub().resolves([]);
 
@@ -684,11 +686,11 @@ describe("Test: security/profileRepository", () => {
 
   describe("#truncate", () => {
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "truncate").resolves();
+      sinon.stub(ObjectRepository.prototype, "truncate").resolves();
     });
 
     afterEach(() => {
-      Repository.prototype.truncate.restore();
+      ObjectRepository.prototype.truncate.restore();
     });
 
     it('should register a "truncate" event', async () => {
@@ -708,14 +710,14 @@ describe("Test: security/profileRepository", () => {
 
       await profileRepository.truncate(opts);
 
-      should(Repository.prototype.truncate).calledWith(opts);
+      should(ObjectRepository.prototype.truncate).calledWith(opts);
       should(profileRepository.profiles).be.empty();
     });
 
     it("should clear the RAM cache even if the truncate fails", async () => {
       const error = new Error("foo");
 
-      Repository.prototype.truncate.rejects(error);
+      ObjectRepository.prototype.truncate.rejects(error);
 
       profileRepository.profiles.set("foo", "bar");
       profileRepository.profiles.set("baz", "qux");

@@ -26,35 +26,35 @@ import {
   RequestParams,
   Client as StorageClient,
 } from "@elastic/elasticsearch";
+import { Index, IndicesCreate } from "@elastic/elasticsearch/api/requestParams";
 import {
   InfoResult,
-  KRequestBody,
   JSONObject,
   KImportError,
+  KRequestBody,
   KRequestParams,
 } from "../../types/storage/Elasticsearch";
-import { Index, IndicesCreate } from "@elastic/elasticsearch/api/requestParams";
 
 import { TypeMapping } from "@elastic/elasticsearch/api/types";
 
 import assert from "assert";
 
-import ms from "ms";
 import Bluebird from "bluebird";
+import ms from "ms";
 import semver from "semver";
 import debug from "../../util/debug";
 
-import ESWrapper from "./esWrapper";
-import QueryTranslator from "./queryTranslator";
-import didYouMean from "../../util/didYouMean";
-import Service from "../service";
+import { storeScopeEnum } from "../../core/storage/storeScopeEnum";
 import * as kerror from "../../kerror";
-import { assertIsObject } from "../../util/requestAssertions";
-import { isPlainObject } from "../../util/safeObject";
-import scopeEnum from "../../core/storage/storeScopeEnum";
+import didYouMean from "../../util/didYouMean";
 import extractFields from "../../util/extractFields";
 import { Mutex } from "../../util/mutex";
 import { randomNumber } from "../../util/name-generator";
+import { assertIsObject } from "../../util/requestAssertions";
+import { isPlainObject } from "../../util/safeObject";
+import Service from "../service";
+import ESWrapper from "./esWrapper";
+import QueryTranslator from "./queryTranslator";
 
 debug("kuzzle:services:elasticsearch");
 
@@ -96,7 +96,7 @@ let esState = esStateEnum.NONE;
  */
 export default class ElasticSearch extends Service {
   public _client: StorageClient;
-  public _scope: scopeEnum;
+  public _scope: storeScopeEnum;
   public _indexPrefix: string;
   public _esWrapper: ESWrapper;
   public _esVersion: any;
@@ -131,12 +131,12 @@ export default class ElasticSearch extends Service {
     return new StorageClient({ defer, ...config });
   }
 
-  constructor(config, scope = scopeEnum.PUBLIC) {
+  constructor(config, scope = storeScopeEnum.PUBLIC) {
     super("elasticsearch", config);
 
     this._scope = scope;
     this._indexPrefix =
-      scope === scopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
+      scope === storeScopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
 
     this._client = null;
     this._esWrapper = null;

@@ -15,7 +15,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ESClientMock = require("../../mocks/service/elasticsearchClient.mock");
 const { randomNumberMock } = require("../../mocks/name-generator.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { storeScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 const { Mutex } = require("../../../lib/util/mutex");
 
 describe("Test: ElasticSearch service", () => {
@@ -76,7 +76,7 @@ describe("Test: ElasticSearch service", () => {
       const esPublic = new ES(kuzzle.config.services.storageEngine);
       const esInternal = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE,
+        storeScopeEnum.PRIVATE,
       );
 
       should(esPublic.config).be.exactly(kuzzle.config.services.storageEngine);
@@ -5219,7 +5219,7 @@ describe("Test: ElasticSearch service", () => {
       publicES = new ES(kuzzle.config.services.storageEngine);
       internalES = new ES(
         kuzzle.config.services.storageEngine,
-        scopeEnum.PRIVATE,
+        storeScopeEnum.PRIVATE,
       );
 
       await publicES.init();

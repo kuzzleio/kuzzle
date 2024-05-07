@@ -11,7 +11,9 @@ const {
 } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const { Repository } = require("../../../lib/core/shared/repository");
+const {
+  ObjectRepository,
+} = require("../../../lib/core/shared/ObjectRepository");
 const { User } = require("../../../lib/model/security/user");
 const ApiKey = require("../../../lib/model/storage/apiKey");
 const UserRepository = require("../../../lib/core/security/userRepository");
@@ -89,11 +91,11 @@ describe("Test: security/userRepository", () => {
     const getEvent = "core:security:user:get";
 
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "load").resolves();
+      sinon.stub(ObjectRepository.prototype, "load").resolves();
     });
 
     afterEach(() => {
-      Repository.prototype.load.restore();
+      ObjectRepository.prototype.load.restore();
     });
 
     it('should register a "get" event', async () => {
@@ -108,18 +110,18 @@ describe("Test: security/userRepository", () => {
       for (const id of ["-1", "anonymous"]) {
         const user = await kuzzle.ask(getEvent, id);
         assertIsAnonymous(user);
-        should(Repository.prototype.load).not.called();
+        should(ObjectRepository.prototype.load).not.called();
       }
     });
 
     it("should invoke the parent load method", async () => {
       const fakeUser = new User();
-      Repository.prototype.load.resolves(fakeUser);
+      ObjectRepository.prototype.load.resolves(fakeUser);
 
       const user = await kuzzle.ask(getEvent, "foo");
 
       should(user).eql(fakeUser);
-      should(Repository.prototype.load).calledWith("foo");
+      should(ObjectRepository.prototype.load).calledWith("foo");
     });
   });
 
@@ -218,7 +220,7 @@ describe("Test: security/userRepository", () => {
 
     beforeEach(() => {
       sinon.stub(ApiKey, "deleteByUser");
-      sinon.stub(Repository.prototype, "delete").resolves();
+      sinon.stub(ObjectRepository.prototype, "delete").resolves();
 
       fakeUser = new User();
       fakeUser._id = "foo";
@@ -227,7 +229,7 @@ describe("Test: security/userRepository", () => {
 
     afterEach(() => {
       ApiKey.deleteByUser.restore();
-      Repository.prototype.delete.restore();
+      ObjectRepository.prototype.delete.restore();
     });
 
     it('should register a "delete" event', async () => {
@@ -250,7 +252,7 @@ describe("Test: security/userRepository", () => {
         refresh: "false",
       });
       should(tokenRepositoryMock.deleteByKuid).calledWith("foo");
-      should(Repository.prototype.delete).calledWithMatch(fakeUser, {
+      should(ObjectRepository.prototype.delete).calledWithMatch(fakeUser, {
         refresh: "false",
       });
     });
@@ -298,7 +300,7 @@ describe("Test: security/userRepository", () => {
         refresh: "wait_for",
       });
       should(tokenRepositoryMock.deleteByKuid).calledWith("foo");
-      should(Repository.prototype.delete).calledWithMatch(fakeUser, {
+      should(ObjectRepository.prototype.delete).calledWithMatch(fakeUser, {
         refresh: "wait_for",
       });
     });
@@ -306,14 +308,18 @@ describe("Test: security/userRepository", () => {
 
   describe("#mGet", () => {
     it("should register a mGet event and forward it to the parent class", async () => {
-      sinon.stub(Repository.prototype, "loadMultiFromDatabase").resolves();
+      sinon
+        .stub(ObjectRepository.prototype, "loadMultiFromDatabase")
+        .resolves();
 
       try {
         await kuzzle.ask("core:security:user:mGet", "foo");
 
-        should(Repository.prototype.loadMultiFromDatabase).calledWith("foo");
+        should(ObjectRepository.prototype.loadMultiFromDatabase).calledWith(
+          "foo",
+        );
       } finally {
-        Repository.prototype.loadMultiFromDatabase.restore();
+        ObjectRepository.prototype.loadMultiFromDatabase.restore();
       }
     });
   });
@@ -683,70 +689,70 @@ describe("Test: security/userRepository", () => {
 
   describe("#scroll", () => {
     it("should register a scroll event and forward it to the parent class", async () => {
-      sinon.stub(Repository.prototype, "scroll").resolves();
+      sinon.stub(ObjectRepository.prototype, "scroll").resolves();
 
       try {
         await kuzzle.ask("core:security:user:scroll", "foo", "bar");
 
-        should(Repository.prototype.scroll).calledWith("foo", "bar");
+        should(ObjectRepository.prototype.scroll).calledWith("foo", "bar");
       } finally {
-        Repository.prototype.scroll.restore();
+        ObjectRepository.prototype.scroll.restore();
       }
     });
   });
 
   describe("#search", () => {
     it("should register a search event and forward it to the parent class", async () => {
-      sinon.stub(Repository.prototype, "search").resolves();
+      sinon.stub(ObjectRepository.prototype, "search").resolves();
 
       try {
         await kuzzle.ask("core:security:user:search", "foo", "bar");
 
-        should(Repository.prototype.search).calledWith("foo", "bar");
+        should(ObjectRepository.prototype.search).calledWith("foo", "bar");
       } finally {
-        Repository.prototype.search.restore();
+        ObjectRepository.prototype.search.restore();
       }
     });
   });
 
   describe("#truncate", () => {
     it("should register a truncate event and forward it to the parent class", async () => {
-      sinon.stub(Repository.prototype, "truncate").resolves();
+      sinon.stub(ObjectRepository.prototype, "truncate").resolves();
 
       try {
         await kuzzle.ask("core:security:user:truncate", "foo");
 
-        should(Repository.prototype.truncate).calledWith("foo");
+        should(ObjectRepository.prototype.truncate).calledWith("foo");
       } finally {
-        Repository.prototype.truncate.restore();
+        ObjectRepository.prototype.truncate.restore();
       }
     });
   });
 
   describe("#loadOneFromDatabase", () => {
     beforeEach(() => {
-      sinon.stub(Repository.prototype, "loadOneFromDatabase");
+      sinon.stub(ObjectRepository.prototype, "loadOneFromDatabase");
     });
 
     afterEach(() => {
-      Repository.prototype.loadOneFromDatabase.restore();
+      ObjectRepository.prototype.loadOneFromDatabase.restore();
     });
 
     it("should invoke its super function", async () => {
-      Repository.prototype.loadOneFromDatabase.resolves("foo");
+      ObjectRepository.prototype.loadOneFromDatabase.resolves("foo");
 
       await should(userRepository.loadOneFromDatabase("bar")).fulfilledWith(
         "foo",
       );
 
-      should(Repository.prototype.loadOneFromDatabase).calledWith("bar");
+      should(ObjectRepository.prototype.loadOneFromDatabase).calledWith("bar");
     });
 
     it("should wrap generic 404s into profile dedicated errors", () => {
       const error = new Error("foo");
       error.status = 404;
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(userRepository.loadOneFromDatabase("foo")).rejectedWith(
         NotFoundError,
@@ -757,7 +763,7 @@ describe("Test: security/userRepository", () => {
     it("should re-throw non-404 errors as is", () => {
       const error = new Error("foo");
 
-      Repository.prototype.loadOneFromDatabase.rejects(error);
+      ObjectRepository.prototype.loadOneFromDatabase.rejects(error);
 
       return should(userRepository.loadOneFromDatabase("foo")).rejectedWith(
         error,

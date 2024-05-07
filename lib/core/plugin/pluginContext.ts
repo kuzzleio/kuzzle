@@ -19,27 +19,25 @@
  * limitations under the License.
  */
 
-import Bluebird from "bluebird";
-import { Koncorde } from "../shared/KoncordeWrapper";
 import { Client } from "@elastic/elasticsearch";
+import Bluebird from "bluebird";
 import { JSONObject } from "kuzzle-sdk";
+import { Koncorde } from "../shared/KoncordeWrapper";
 
-import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
-import PluginRepository from "./pluginRepository";
-import Store from "../shared/store";
-import Elasticsearch from "../../service/storage/elasticsearch";
-import { isPlainObject } from "../../util/safeObject";
-import Promback from "../../util/promback";
-import { Mutex } from "../../util/mutex";
+import {
+  KuzzleRequest,
+  Request,
+  RequestContext,
+  RequestInput,
+} from "../../../index";
 import * as kerror from "../../kerror";
-import storeScopeEnum from "../storage/storeScopeEnum";
 import {
   BadRequestError,
   ExternalServiceError,
   ForbiddenError,
   GatewayTimeoutError,
-  InternalError as KuzzleInternalError,
   KuzzleError,
+  InternalError as KuzzleInternalError,
   NotFoundError,
   PartialError,
   PluginImplementationError,
@@ -49,13 +47,15 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import {
-  RequestContext,
-  RequestInput,
-  KuzzleRequest,
-  Request,
-} from "../../../index";
+import Elasticsearch from "../../service/storage/elasticsearch";
+import { Mutex } from "../../util/mutex";
+import Promback from "../../util/promback";
+import { isPlainObject } from "../../util/safeObject";
 import { BackendCluster } from "../backend";
+import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
+import { Store } from "../shared/store";
+import { storeScopeEnum } from "../storage/storeScopeEnum";
+import PluginRepository from "./pluginRepository";
 
 const contextError = kerror.wrap("plugin", "context");
 

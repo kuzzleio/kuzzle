@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { omit } from "lodash";
 import Bluebird from "bluebird";
+import { omit } from "lodash";
 
-import { Profile } from "../../model/security/profile";
-import { Repository } from "../shared/repository";
-import * as kerror from "../../kerror";
-import cacheDbEnum from "../cache/cacheDbEnum";
 import { JSONObject } from "kuzzle-sdk";
-import { Policy, OptimizedPolicy } from "../../../index";
+import { OptimizedPolicy, Policy } from "../../../index";
+import * as kerror from "../../kerror";
+import { Profile } from "../../model/security/profile";
+import { cacheDbEnum } from "../cache/cacheDbEnum";
+import { ObjectRepository } from "../shared/ObjectRepository";
 
 /** @internal */
 type CreateOrReplaceOptions = {
@@ -55,9 +55,9 @@ type UpdateOptions = {
 
 /**
  * @class ProfileRepository
- * @extends Repository
+ * @extends ObjectRepository
  */
-export class ProfileRepository extends Repository<Profile> {
+export class ProfileRepository extends ObjectRepository<Profile> {
   private module: any;
   private profiles: Map<string, Profile>;
 
