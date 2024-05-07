@@ -19,22 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
-
-/**
- * @typedef {string} cacheDbEnum
- */
-
 /**
  * Enum for the cache engine target (used by classes using either the
  * internal or the public DB)
- * @readOnly
- * @enum {cacheDbEnum}
  */
-const cacheDbEnum = Object.freeze({
-  INTERNAL: "internal",
-  NONE: "none",
-  PUBLIC: "public",
-});
-
-module.exports = cacheDbEnum;
+export enum cacheDbEnum {
+  INTERNAL = "internal",
+  NONE = "none",
+  PUBLIC = "public",
+}

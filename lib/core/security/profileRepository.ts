@@ -26,7 +26,7 @@ import { JSONObject } from "kuzzle-sdk";
 import { OptimizedPolicy, Policy } from "../../../index";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";
-import cacheDbEnum from "../cache/cacheDbEnum";
+import { cacheDbEnum } from "../cache/cacheDbEnum";
 import { ObjectRepository } from "../shared/ObjectRepository";
 
 /** @internal */

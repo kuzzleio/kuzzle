@@ -5,7 +5,7 @@ const should = require("should");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
 const PluginRepository = require("../../../lib/core/plugin/pluginRepository");
-const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
+const { cacheDbEnum } = require("../../../lib/core/cache/cacheDbEnum");
 const { storeScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 const { Store } = require("../../../lib/core/shared/store");
 

@@ -12,7 +12,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const {
   ObjectRepository,
 } = require("../../../lib/core/shared/ObjectRepository");
-const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
+const { cacheDbEnum } = require("../../../lib/core/cache/cacheDbEnum");
 
 describe("Test: repositories/repository", () => {
   let kuzzle;

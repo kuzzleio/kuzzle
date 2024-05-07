@@ -21,7 +21,7 @@
 
 import { JSONObject } from "kuzzle-sdk";
 import * as kerror from "../../kerror";
-import cacheDbEnum from "../cache/cacheDbEnum";
+import { cacheDbEnum } from "../cache/cacheDbEnum";
 
 export class ObjectRepository<TObject extends { _id: string }> {
   protected ttl: number;
@@ -29,7 +29,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
   protected collection: string;
   protected ObjectConstructor: any;
   protected store: any;
-  protected cacheDb: any;
+  protected cacheDb: cacheDbEnum;
 
   constructor({ cache = cacheDbEnum.INTERNAL, store = null } = {}) {
     this.ttl = global.kuzzle.config.repositories.common.cacheTTL;
