@@ -23,3 +23,7 @@ export * from "./lib/core/shared/KoncordeWrapper";
 export * from "./lib/core/shared/ObjectRepository";
 
 export * from "./lib/core/shared/store";
+
+export * from "./lib/core/cache/cacheDbEnum";
+
+export * from "./lib/core/storage/storeScopeEnum";
