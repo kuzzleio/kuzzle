@@ -5,12 +5,12 @@ import { ES7 } from "./7/elasticsearch";
 import { ES8 } from "./8/elasticsearch";
 
 import Service from "../service";
-import scopeEnum from "../../core/storage/storeScopeEnum";
+import { storeScopeEnum } from "../../core/storage/storeScopeEnum";
 
 export class Elasticsearch extends Service {
   public client: any;
 
-  constructor(config: any, scope = scopeEnum.PUBLIC) {
+  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     super("elasticsearch", config);
 
     if (config.majorVersion === "7") {

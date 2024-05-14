@@ -19,21 +19,11 @@
  * limitations under the License.
  */
 
-"use strict";
-
-/**
- * @typedef {string} storeScopeEnum
- */
-
 /**
  * Enum for the storage target (used by classes using either private or
  * public indexes)
- * @readOnly
- * @enum {storeScopeEnum}
  */
-const storeScopeEnum = Object.freeze({
-  PRIVATE: "private",
-  PUBLIC: "public",
-});
-
-module.exports = storeScopeEnum;
+export enum storeScopeEnum {
+  PRIVATE = "private",
+  PUBLIC = "public",
+}

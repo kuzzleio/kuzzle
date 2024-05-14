@@ -370,8 +370,11 @@ describe("/lib/kuzzle/kuzzle.js", () => {
     let mappingsPayload;
     let permissionsPayload;
     let fixturesPayload;
+    let userMappingsPayload;
 
     beforeEach(() => {
+      userMappingsPayload = { something: "here" };
+
       mappingsPayload = {
         toImport: {
           mappings: { something: "here" },
@@ -407,13 +410,13 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         onExistingUsers: "skip",
         profiles: permissionsPayload.toImport.profiles,
         roles: permissionsPayload.toImport.roles,
-        userMappings: { something: "here" },
+        userMappings: userMappingsPayload,
         users: permissionsPayload.toImport.users,
       };
 
       toSupport = {
-        mappings: mappingsPayload.toSupport.mappings,
         fixtures: fixturesPayload.toSupport.fixtures,
+        mappings: mappingsPayload.toSupport.mappings,
         securities: permissionsPayload.toSupport.securities,
       };
 
@@ -575,6 +578,148 @@ describe("/lib/kuzzle/kuzzle.js", () => {
           { securities: { roles: { something: "here" } } },
         ),
       ).be.rejectedWith({ id: "plugin.runtime.incompatible" });
+    });
+
+    it("should ensure to persist hash of the importedPayload when nor Redis nor ES have a hash", async () => {
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves(null);
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      kuzzle.persistHashedImport = sinon.stub().resolves();
+
+      await kuzzle.loadInitialState(toImport, {});
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: fixturesPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "fixtures",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: mappingsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "mappings",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: permissionsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "permissions",
+      });
+    });
+
+    it("should ensure to persist hash of the importedPayload when ES have a hash and not redis", async () => {
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves(null);
+      kuzzle.ask.withArgs("core:storage:private:document:exist").resolves(true);
+      kuzzle.ask
+        .withArgs("core:storage:private:document:get")
+        .resolves({ _source: { hash: "123" } });
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      kuzzle.persistHashedImport = sinon.stub().resolves();
+
+      await kuzzle.loadInitialState(toImport, {});
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: true,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: fixturesPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "fixtures",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: true,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: mappingsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "mappings",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: true,
+        existingRedisHash: null,
+        importPayloadHash: sha256(
+          stringify({
+            toImport: permissionsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "permissions",
+      });
+    });
+
+    it("should ensure to persist hash of the importedPayload when Redis have a hash and not ES", async () => {
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves("123");
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      kuzzle.persistHashedImport = sinon.stub().resolves();
+
+      await kuzzle.loadInitialState(toImport, {});
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: "123",
+        importPayloadHash: sha256(
+          stringify({
+            toImport: fixturesPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "fixtures",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: "123",
+        importPayloadHash: sha256(
+          stringify({
+            toImport: mappingsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "mappings",
+      });
+
+      should(kuzzle.persistHashedImport).calledWith({
+        existingESHash: false,
+        existingRedisHash: "123",
+        importPayloadHash: sha256(
+          stringify({
+            toImport: permissionsPayload.toImport,
+            toSupport: {},
+          }),
+        ),
+        type: "permissions",
+      });
     });
   });
 });

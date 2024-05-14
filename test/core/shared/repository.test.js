@@ -9,8 +9,10 @@ const {
 } = require("../../../index");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 
-const { Repository } = require("../../../lib/core/shared/repository");
-const cacheDbEnum = require("../../../lib/core/cache/cacheDbEnum");
+const {
+  ObjectRepository,
+} = require("../../../lib/core/shared/ObjectRepository");
+const { cacheDbEnum } = require("../../../lib/core/cache/cacheDbEnum");
 
 describe("Test: repositories/repository", () => {
   let kuzzle;
@@ -26,7 +28,7 @@ describe("Test: repositories/repository", () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    repository = new Repository({
+    repository = new ObjectRepository({
       cache: cacheDbEnum.INTERNAL,
       store: kuzzle.internalIndex,
     });

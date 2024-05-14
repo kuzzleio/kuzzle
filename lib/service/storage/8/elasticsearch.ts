@@ -47,7 +47,7 @@ import didYouMean from "../../../util/didYouMean";
 import * as kerror from "../../../kerror";
 import { assertIsObject } from "../../../util/requestAssertions";
 import { isPlainObject } from "../../../util/safeObject";
-import scopeEnum from "../../../core/storage/storeScopeEnum";
+import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
 import extractFields from "../../../util/extractFields";
 import { Mutex } from "../../../util/mutex";
 import { randomNumber } from "../../../util/name-generator";
@@ -92,7 +92,7 @@ let esState = esStateEnum.NONE;
  */
 export class ES8 {
   public _client: Client;
-  public _scope: scopeEnum;
+  public _scope: storeScopeEnum;
   public _indexPrefix: string;
   public _esWrapper: ESWrapper;
   public _esVersion: any;
@@ -104,11 +104,11 @@ export class ES8 {
   public scrollTTL: number;
   public _config: any;
 
-  constructor(config: any, scope = scopeEnum.PUBLIC) {
+  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     this._config = config;
     this._scope = scope;
     this._indexPrefix =
-      scope === scopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
+      scope === storeScopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
 
     this._client = null;
     this._esWrapper = null;

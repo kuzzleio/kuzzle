@@ -1,13 +1,14 @@
 {
-  "plugins": [
-    "kuzzle"
-  ],
-  "extends": [
-    "plugin:kuzzle/default",
-    "plugin:kuzzle/node"
-  ],
+  "plugins": ["kuzzle"],
+  "extends": ["plugin:kuzzle/default", "plugin:kuzzle/node"],
   "rules": {
     "sort-keys": "warn",
     "kuzzle/array-foreach": "warn"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["*.ts"],
+      "extends": ["plugin:kuzzle/typescript"]
+    }
+  ]
 }

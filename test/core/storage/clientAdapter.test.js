@@ -13,7 +13,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const ElasticsearchMock = require("../../mocks/elasticsearch.mock");
 const MutexMock = require("../../mocks/mutex.mock");
 
-const scopeEnum = require("../../../lib/core/storage/storeScopeEnum");
+const { storeScopeEnum } = require("../../../lib/core/storage/storeScopeEnum");
 
 describe("#core/storage/ClientAdapter", () => {
   let ClientAdapter;
@@ -41,8 +41,8 @@ describe("#core/storage/ClientAdapter", () => {
     kuzzle.config.services.storageEngine.majorVersion = "7";
     kuzzle.ask.restore();
 
-    publicAdapter = new ClientAdapter(scopeEnum.PUBLIC);
-    privateAdapter = new ClientAdapter(scopeEnum.PRIVATE);
+    publicAdapter = new ClientAdapter(storeScopeEnum.PUBLIC);
+    privateAdapter = new ClientAdapter(storeScopeEnum.PRIVATE);
 
     sinon.stub(publicAdapter, "populateCache").resolves();
     sinon.stub(privateAdapter, "populateCache").resolves();
@@ -59,7 +59,7 @@ describe("#core/storage/ClientAdapter", () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
-      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(storeScopeEnum.PUBLIC);
       sinon.stub(uninitializedAdapter, "populateCache").resolves();
 
       // prevents event conflicts with the already initialized adapters above
@@ -72,7 +72,7 @@ describe("#core/storage/ClientAdapter", () => {
     let uninitializedAdapter;
 
     beforeEach(() => {
-      uninitializedAdapter = new ClientAdapter(scopeEnum.PUBLIC);
+      uninitializedAdapter = new ClientAdapter(storeScopeEnum.PUBLIC);
 
       sinon
         .stub(uninitializedAdapter.client, "generateMissingAliases")
