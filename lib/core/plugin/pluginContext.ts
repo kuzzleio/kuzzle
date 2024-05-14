@@ -23,13 +23,13 @@ import Bluebird from "bluebird";
 import { Koncorde } from "../shared/KoncordeWrapper";
 import { JSONObject } from "kuzzle-sdk";
 
-
 import {
   KuzzleRequest,
   Request,
   RequestContext,
   RequestInput,
 } from "../../../index";
+
 import * as kerror from "../../kerror";
 import {
   BadRequestError,
@@ -47,7 +47,7 @@ import {
   TooManyRequestsError,
   UnauthorizedError,
 } from "../../kerror/errors";
-import { Elasticsearch } from "../../service/storage/elasticsearch";
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
