@@ -104,6 +104,7 @@ lib/api/request/requestContext.js
 lib/api/request/requestInput.js
 lib/api/request/requestResponse.js
 lib/cluster/idCardHandler.js
+lib/core/cache/cacheDbEnum.js
 lib/cluster/state.js
 lib/cluster/workers/IDCardRenewer.js
 lib/config/default.config.js
@@ -138,6 +139,10 @@ lib/core/shared/KoncordeWrapper.js
 lib/core/shared/repository.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
+lib/core/shared/ObjectRepository.js
+lib/core/shared/store.js
+lib/core/storage/storeScopeEnum.js
+lib/types/shared/StoreCollectionsDefinition.js
 lib/core/storage/indexCache.js
 lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js

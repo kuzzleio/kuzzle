@@ -41,20 +41,20 @@ class ElasticsearchClientMock {
     };
 
     this.indices = {
-      open: sinon.stub().resolves(),
       close: sinon.stub().resolves(),
-      putSettings: sinon.stub().resolves(),
-      getSettings: sinon.stub().resolves(),
       create: sinon.stub().resolves(),
       delete: sinon.stub().resolves(),
       exists: sinon.stub().resolves(),
       existsType: sinon.stub().resolves(),
-      getMapping: sinon.stub().resolves(),
-      putMapping: sinon.stub().resolves(),
-      refresh: sinon.stub().resolves(),
-      stats: sinon.stub().resolves(),
       get: sinon.stub().resolves(),
       getAlias: sinon.stub().resolves(),
+      getMapping: sinon.stub().resolves(),
+      getSettings: sinon.stub().resolves(),
+      open: sinon.stub().resolves(),
+      putMapping: sinon.stub().resolves(),
+      putSettings: sinon.stub().resolves(),
+      refresh: sinon.stub().resolves(),
+      stats: sinon.stub().resolves(),
       updateAliases: sinon.stub().resolves(),
     };
 
