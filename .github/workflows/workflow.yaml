@@ -5,6 +5,7 @@ on:
     branches:
       - master
       - beta
+      - elasticsearch-8
   pull_request:
 
 env:
