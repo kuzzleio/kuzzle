@@ -1111,6 +1111,8 @@ describe("MemoryStorageController", () => {
         "value2",
         "key3",
         "value3",
+        "key4",
+        0,
       ]);
     });
 
