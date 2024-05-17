@@ -1022,6 +1022,7 @@ describe("MemoryStorageController", () => {
           entries: [
             { field: "foo", value: "bar" },
             { field: "baz", value: "qux" },
+            { field: "bar", value: 0 }
           ],
         },
       });
