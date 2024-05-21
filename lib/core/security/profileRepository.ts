@@ -66,7 +66,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
    */
   constructor(securityModule) {
     super({
-      cache: cacheDbEnum.NONE,
+      cache: cacheDbEnum.INTERNAL,
       store: global.kuzzle.internalIndex,
     });
 
