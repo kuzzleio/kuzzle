@@ -84,7 +84,7 @@ Following arguments are available: `query`, `fields` and `fieldsName`.
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "search",
+  "action": "export",
   "body": {
     "query": {
       // ...
