@@ -64,14 +64,6 @@ describe("Test: security/profileRepository", () => {
       should(profileRepository.load).calledWith("foo");
     });
 
-    it("should return a profile from memory cache", async () => {
-      profileRepository.profiles.set("foo", testProfile);
-
-      const profile = await profileRepository.load("foo");
-
-      should(profile).be.exactly(testProfile);
-    });
-
     it("should reject if the profile does not exist", () => {
       kuzzle.ask
         .withArgs(
@@ -94,14 +86,15 @@ describe("Test: security/profileRepository", () => {
       let profile;
 
       try {
-        sinon.stub(ObjectRepository.prototype, "load").resolves(testProfile);
+        sinon
+          .stub(ObjectRepository.prototype, "loadOneFromDatabase")
+          .resolves(testProfile);
         profile = await profileRepository.load("foo");
       } finally {
-        ObjectRepository.prototype.load.restore();
+        ObjectRepository.prototype.loadOneFromDatabase.restore();
       }
 
       should(profile).be.exactly(testProfile);
-      should(profileRepository.profiles).have.value("foo", testProfile);
     });
   });
 
@@ -141,43 +134,18 @@ describe("Test: security/profileRepository", () => {
       const p3 = { _id: "p3", baz: "foo", constructor: { _hash: () => false } };
 
       profileRepository.loadOneFromDatabase.withArgs("p1").resolves(p1);
+      profileRepository.loadOneFromDatabase.withArgs("p2").resolves(p2);
       profileRepository.loadOneFromDatabase.withArgs("p3").resolves(p3);
 
       roleRepositoryMock.loadRoles.resolves([{ _id: "default" }]);
-
-      profileRepository.profiles.set("p2", p2);
 
       const result = await profileRepository.loadProfiles(["p1", "p2", "p3"]);
 
       should(result).eql([p1, p2, p3]);
       // should not load p2 from the database since it has been cached
       should(profileRepository.loadOneFromDatabase).calledWith("p1");
-      should(profileRepository.loadOneFromDatabase).neverCalledWith("p2");
+      should(profileRepository.loadOneFromDatabase).calledWith("p2");
       should(profileRepository.loadOneFromDatabase).calledWith("p3");
-      should(profileRepository.profiles).have.value("p1", p1);
-      should(profileRepository.profiles).have.value("p2", p2);
-      should(profileRepository.profiles).have.value("p3", p3);
-    });
-
-    it("should use only the cache if all profiles are known", async () => {
-      const p1 = { _id: "p1", foo: "bar", constructor: { _hash: () => false } };
-      const p2 = { _id: "p2", bar: "baz", constructor: { _hash: () => false } };
-      const p3 = { _id: "p3", baz: "foo", constructor: { _hash: () => false } };
-
-      roleRepositoryMock.loadRoles.resolves([{ _id: "default" }]);
-
-      profileRepository.profiles.set("p1", p1);
-      profileRepository.profiles.set("p2", p2);
-      profileRepository.profiles.set("p3", p3);
-
-      const result = await profileRepository.loadProfiles(["p1", "p2", "p3"]);
-
-      should(result).eql([p1, p2, p3]);
-      // should not load p2 from the database since it has been cached
-      should(profileRepository.loadOneFromDatabase).not.called();
-      should(profileRepository.profiles).have.value("p1", p1);
-      should(profileRepository.profiles).have.value("p2", p2);
-      should(profileRepository.profiles).have.value("p3", p3);
     });
   });
 
@@ -260,16 +228,16 @@ describe("Test: security/profileRepository", () => {
       }
     });
 
-    it("should call deleteFromDatabase and remove the profile from memory", async () => {
-      profileRepository.profiles.set(testProfile._id, true);
-
+    it("should call deleteFromDatabase and deleteFromCache", async () => {
       await profileRepository.deleteById(testProfile._id);
 
       should(profileRepository.deleteFromDatabase)
         .be.calledOnce()
         .be.calledWithMatch(testProfile._id, { refresh: "false" });
 
-      should(profileRepository.profiles).not.have.key(testProfile._id);
+      should(profileRepository.deleteFromCache)
+        .be.calledOnce()
+        .be.calledWithMatch(testProfile._id);
     });
 
     it("should be able to handle the refresh option", async () => {
@@ -293,8 +261,6 @@ describe("Test: security/profileRepository", () => {
         hits: [user],
         total: 1,
       });
-
-      profileRepository.profiles.set(testProfile._id, true);
 
       await profileRepository.deleteById(testProfile._id, {
         onAssignedUsers: "remove",
@@ -381,7 +347,6 @@ describe("Test: security/profileRepository", () => {
         await profileRepository.validateAndSaveProfile(testProfile);
 
       should(result).be.exactly(testProfile);
-      should(profileRepository.profiles).have.value("foo", testProfile);
     });
 
     it("should compute the optimized policies", async () => {
@@ -469,11 +434,13 @@ describe("Test: security/profileRepository", () => {
 
   describe("#load", () => {
     afterEach(() => {
-      ObjectRepository.prototype.load.restore();
+      ObjectRepository.prototype.loadOneFromDatabase.restore();
     });
 
     it("should compute the optimized policies", async () => {
-      sinon.stub(ObjectRepository.prototype, "load").resolves(testProfile);
+      sinon
+        .stub(ObjectRepository.prototype, "loadOneFromDatabase")
+        .resolves(testProfile);
 
       profileRepository.optimizePolicies = sinon.stub().resolves([]);
 
@@ -694,37 +661,10 @@ describe("Test: security/profileRepository", () => {
     });
 
     it('should register a "truncate" event', async () => {
-      sinon.stub(profileRepository, "truncate");
-
       kuzzle.ask.restore();
       await kuzzle.ask("core:security:profile:truncate", "foo");
 
       should(profileRepository.truncate).calledWith("foo");
-    });
-
-    it("should clear the RAM cache once the truncate succeeds", async () => {
-      const opts = { foo: "bar" };
-
-      profileRepository.profiles.set("foo", "bar");
-      profileRepository.profiles.set("baz", "qux");
-
-      await profileRepository.truncate(opts);
-
-      should(ObjectRepository.prototype.truncate).calledWith(opts);
-      should(profileRepository.profiles).be.empty();
-    });
-
-    it("should clear the RAM cache even if the truncate fails", async () => {
-      const error = new Error("foo");
-
-      ObjectRepository.prototype.truncate.rejects(error);
-
-      profileRepository.profiles.set("foo", "bar");
-      profileRepository.profiles.set("baz", "qux");
-
-      await should(profileRepository.truncate()).rejectedWith(error);
-
-      should(profileRepository.profiles).be.empty();
     });
   });
 
@@ -782,31 +722,12 @@ describe("Test: security/profileRepository", () => {
 
   describe("#invalidate", () => {
     it('should register an "invalidate" event', async () => {
-      sinon.stub(profileRepository, "invalidate");
+      sinon.stub(profileRepository, "deleteFromCache");
 
       kuzzle.ask.restore();
       await kuzzle.ask("core:security:profile:invalidate", "foo");
 
-      should(profileRepository.invalidate).calledWith("foo");
-    });
-
-    it("should invalidate only the provided profile", async () => {
-      profileRepository.profiles.set("foo", "bar");
-      profileRepository.profiles.set("baz", "qux");
-
-      await profileRepository.invalidate("baz");
-
-      should(profileRepository.profiles).has.key("foo");
-      should(profileRepository.profiles).not.has.key("baz");
-    });
-
-    it("should invalidate the entire cache with no argument", async () => {
-      profileRepository.profiles.set("foo", "bar");
-      profileRepository.profiles.set("baz", "qux");
-
-      await profileRepository.invalidate();
-
-      should(profileRepository.profiles).be.empty();
+      should(profileRepository.deleteFromCache).calledWith("foo");
     });
   });
 });
