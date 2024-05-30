@@ -195,14 +195,17 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       const profileFromDatabase = await this.loadOneFromDatabase(id);
 
       if (profileFromDatabase !== null) {
+        await this.persistToCache(profileFromDatabase);
+
         profileFromDatabase.optimizedPolicies = this.optimizePolicies(
           profileFromDatabase.policies,
         );
-        await this.persistToCache(profileFromDatabase);
       }
 
       return profileFromDatabase;
     }
+
+    profile.optimizedPolicies = this.optimizePolicies(profile.policies);
 
     await this.refreshCacheTTL(profile);
 
@@ -498,12 +501,12 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     });
 
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
+    await this.persistToCache(updatedProfile);
+
     // Recompute optimized policies based on new policies
     updatedProfile.optimizedPolicies = this.optimizePolicies(
       updatedProfile.policies,
     );
-
-    await this.persistToCache(updatedProfile);
     return updatedProfile;
   }
 
