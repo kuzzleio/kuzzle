@@ -142,7 +142,6 @@ describe("Test: security/profileRepository", () => {
       const result = await profileRepository.loadProfiles(["p1", "p2", "p3"]);
 
       should(result).eql([p1, p2, p3]);
-      // should not load p2 from the database since it has been cached
       should(profileRepository.loadOneFromDatabase).calledWith("p1");
       should(profileRepository.loadOneFromDatabase).calledWith("p2");
       should(profileRepository.loadOneFromDatabase).calledWith("p3");
