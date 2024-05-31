@@ -125,6 +125,7 @@ lib/core/backend/backendSubscription.js
 lib/core/backend/backendVault.js
 lib/core/backend/index.js
 lib/core/backend/internalLogger.js
+lib/core/cache/cacheDbEnum.js
 lib/core/debug/kuzzleDebugger.js
 lib/core/plugin/pluginContext.js
 lib/core/realtime/channel.js
@@ -135,10 +136,12 @@ lib/core/realtime/subscription.js
 lib/core/security/profileRepository.js
 lib/core/security/tokenRepository.js
 lib/core/shared/KoncordeWrapper.js
-lib/core/shared/repository.js
+lib/core/shared/ObjectRepository.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
+lib/core/shared/store.js
 lib/core/storage/indexCache.js
+lib/core/storage/storeScopeEnum.js
 lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js
 lib/kerror/errors/externalServiceError.js
@@ -208,6 +211,7 @@ lib/types/realtime/RoomList.js
 lib/types/RequestPayload.js
 lib/types/ResponsePayload.js
 lib/types/RoleDefinition.js
+lib/types/shared/StoreCollectionsDefinition.js
 lib/types/StrategyDefinition.js
 lib/types/Target.js
 lib/types/Token.js
