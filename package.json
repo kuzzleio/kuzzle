@@ -48,7 +48,7 @@
     "koncorde": "4.3.0",
     "kuzzle-plugin-auth-passport-local": "6.4.0",
     "kuzzle-plugin-logger": "3.0.3",
-    "kuzzle-sdk": "7.11.1",
+    "kuzzle-sdk": "^7.11.3",
     "kuzzle-vault": "2.0.4",
     "lodash": "4.17.21",
     "long": "5.2.3",
