@@ -13,6 +13,10 @@ export class Elasticsearch extends Service {
   constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     super("elasticsearch", config);
 
+    global.kuzzle.log.info(
+      `[ℹ] Elasticsearch configuration is set to major version : ${config.majorVersion}`,
+    );
+
     if (config.majorVersion === "7") {
       this.client = new ES7(config, scope);
     } else if (config.majorVersion === "8") {
