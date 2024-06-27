@@ -38,7 +38,7 @@ import Router from "../core/network/router";
 import Statistics from "../core/statistics";
 import { TokenManager } from "../core/auth/tokenManager";
 import Validation from "../core/validation";
-import Logger from "./log";
+import { Logger } from "./Logger";
 import vault from "./vault";
 import DumpGenerator from "./dumpGenerator";
 import AsyncStore from "../util/asyncStore";
