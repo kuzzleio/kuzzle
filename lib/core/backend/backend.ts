@@ -251,16 +251,6 @@ export class Backend {
       writable: true,
     });
 
-    /**
-     * Set the "started" property in this event so developers can use runtime
-     * features in pipes/hooks attached to this event.
-     */
-    this._pipes["kuzzle:state:ready"] = [
-      async () => {
-        this.started = true;
-      },
-    ];
-
     try {
       const info = JSON.parse(fs.readFileSync("./package.json", "utf8"));
       this.version = info.version;

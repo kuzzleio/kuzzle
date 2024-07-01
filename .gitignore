@@ -83,7 +83,7 @@ kuzzle-*.tgz
 docker/scripts/functional-tests-controller.js
 docker/scripts/start-kuzzle-dev.js
 docker/scripts/start-kuzzle-test.js
-features-sdk/support/application/functional-tests-app.js
+features/support/application/functional-tests-app.js
 lib/api/controllers/authController.js
 lib/api/controllers/baseController.js
 lib/api/controllers/debugController.js
@@ -96,7 +96,6 @@ lib/api/openapi/openApiGenerator.js
 lib/api/openapi/OpenApiManager.js
 lib/api/openapi/tools.js
 lib/api/openApiGenerator.js
-lib/api/request/*.js
 lib/api/request/index.js
 lib/api/request/kuzzle-request.js
 lib/api/request/kuzzleRequest.js
@@ -105,7 +104,6 @@ lib/api/request/requestInput.js
 lib/api/request/requestResponse.js
 lib/cluster/idCardHandler.js
 lib/cluster/state.js
-lib/cluster/workers/IDCardRenewer.js
 lib/config/default.config.js
 lib/config/documentEventAliases.js
 lib/core/auth/tokenManager.js
@@ -119,6 +117,7 @@ lib/core/backend/backendHook.js
 lib/core/backend/backendImport.js
 lib/core/backend/backendOpenApi.js
 lib/core/backend/backendPipe.js
+lib/core/backend/backendPlugin.js
 lib/core/backend/backendPlugin.js
 lib/core/backend/backendStorage.js
 lib/core/backend/backendSubscription.js
@@ -137,12 +136,12 @@ lib/core/security/profileRepository.js
 lib/core/security/tokenRepository.js
 lib/core/shared/KoncordeWrapper.js
 lib/core/shared/ObjectRepository.js
+lib/core/shared/repository.js
 lib/core/shared/sdk/embeddedSdk.js
 lib/core/shared/sdk/funnelProtocol.js
 lib/core/shared/store.js
 lib/core/storage/indexCache.js
 lib/core/storage/storeScopeEnum.js
-lib/kerror/errors/*.js
 lib/kerror/errors/badRequestError.js
 lib/kerror/errors/externalServiceError.js
 lib/kerror/errors/forbiddenError.js
@@ -186,7 +185,6 @@ lib/types/DebugModule.js
 lib/types/Deprecation.js
 lib/types/errors/ErrorDefinition.js
 lib/types/errors/ErrorDomains.js
-lib/types/storage/Elasticsearch.js
 lib/types/EventHandler.js
 lib/types/events/EventGenericDocument.js
 lib/types/events/EventProtocol.js
@@ -212,6 +210,7 @@ lib/types/RequestPayload.js
 lib/types/ResponsePayload.js
 lib/types/RoleDefinition.js
 lib/types/shared/StoreCollectionsDefinition.js
+lib/types/storage/Elasticsearch.js
 lib/types/StrategyDefinition.js
 lib/types/Target.js
 lib/types/Token.js
