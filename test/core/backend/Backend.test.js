@@ -82,10 +82,6 @@ describe("Backend", () => {
         fixtures: "fixtures",
         securities: "securities",
       };
-      application._pipes["kuzzle:state:ready"] = [
-        ...application._pipes["kuzzle:state:ready"],
-        async () => should(application.started).be.true(),
-      ];
       application._import = {
         mappings: {
           index1: { collection1: { mappings: { fieldA: { type: "text" } } } },
