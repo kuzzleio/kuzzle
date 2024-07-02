@@ -31,7 +31,7 @@ describe("Backend", () => {
       application.pipe.register("kuzzle:state:ready", handler_bis);
 
       // The first pipe is the one who set "started: true"
-      should(application._pipes["kuzzle:state:ready"]).have.length(3);
+      should(application._pipes["kuzzle:state:ready"]).have.length(2);
       should(application._pipes["kuzzle:state:ready"][1]).be.eql(handler);
       should(application._pipes["kuzzle:state:ready"][2]).be.eql(handler_bis);
     });
