@@ -32,6 +32,7 @@ const _body = "body\u200b";
 const _headers = "headers\u200b";
 const _controller = "controller\u200b";
 const _action = "action\u200b";
+const _allowTriggerEvents = "allowTriggerEvents\u200b";
 
 // any property not listed here will be copied into
 // RequestInput.args
@@ -155,6 +156,7 @@ export class RequestInput {
     this[_body] = null;
     this[_controller] = null;
     this[_action] = null;
+    this[_allowTriggerEvents] = null;
 
     // default value to null for former "resources" to avoid breaking
     this.args = {};
@@ -181,6 +183,7 @@ export class RequestInput {
     this.body = data.body;
     this.controller = data.controller;
     this.action = data.action;
+    this.allowTriggerEvents = data.allowTriggerEvents;
   }
 
   /**
@@ -263,7 +266,12 @@ export class RequestInput {
       this[_action] = assert.assertString("action", str);
     }
   }
-
+  get allowTriggerEvents(): boolean | undefined {
+    return this[_allowTriggerEvents];
+  }
+  set allowTriggerEvents(bool: boolean) {
+    this[_allowTriggerEvents] = bool === true ? true : undefined;
+  }
   /**
    * Request body.
    * In Http it's the request body parsed.
