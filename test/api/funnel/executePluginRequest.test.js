@@ -102,11 +102,11 @@ describe("funnel.executePluginRequest", () => {
       });
   });
 
-  it("should trigger pipes if allowTriggerEvent is enabled", async () => {
+  it("should trigger pipes if triggerEvent is enabled", async () => {
     const request = new Request({
       controller: "testme",
       action: "succeed",
-      allowTriggerEvents: true,
+      triggerEvents: true,
     });
 
     return funnel.executePluginRequest(request).then((response) => {
@@ -116,7 +116,7 @@ describe("funnel.executePluginRequest", () => {
     });
   });
 
-  it("should not trigger pipes if allowTriggerEvent is disabled", async () => {
+  it("should not trigger pipes if triggerEvent is disabled", async () => {
     const request = new Request({
       controller: "testme",
       action: "succeed",
