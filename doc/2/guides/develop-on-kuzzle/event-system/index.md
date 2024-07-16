@@ -187,3 +187,25 @@ await app.trigger('app-name/file-available', fileUrl);
 ::: warning
 If an internal event is triggered, the payload must be the same as the original event.
 :::
+
+**Events can be triggered** with SDK and controllers actions.
+
+::: warning
+By default, actions executed through the embedded SDK or controllers won't trigger any events and thus no pipe or hooks will be called.
+:::
+
+This behaviour is set in order to prevent an infinite loop in which a pipe calls a controller generating an event calling this same pipe again and again. 
+
+It is nonetheless possible to pass the flag `allowTrigggerEvents` to the options parameters of the controller to allow events firing :
+
+```ts
+await this.sdk.document.create(
+              "index",
+              'collection',
+              {
+                contentOfDocument: 'CREATED VIA CONTROLLER',
+              },
+              _idOfDocument,
+              { allowTriggerEvents: true },
+            );
+```
