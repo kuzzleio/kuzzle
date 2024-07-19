@@ -2,7 +2,6 @@
 
 const should = require("should");
 const sinon = require("sinon");
-
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const { MockNativeController } = require("../../mocks/controller.mock");
 const FunnelController = require("../../../lib/api/funnel");
@@ -101,5 +100,32 @@ describe("funnel.executePluginRequest", () => {
         }
         done(e);
       });
+  });
+
+  it("should trigger pipes if triggerEvent is enabled", async () => {
+    const request = new Request({
+      controller: "testme",
+      action: "succeed",
+      triggerEvents: true,
+    });
+
+    return funnel.executePluginRequest(request).then((response) => {
+      should(response).be.exactly(request);
+      should(kuzzle.pipe).calledWith("testme:beforeSucceed");
+      should(kuzzle.pipe).calledWith("testme:afterSucceed");
+    });
+  });
+
+  it("should not trigger pipes if triggerEvent is disabled", async () => {
+    const request = new Request({
+      controller: "testme",
+      action: "succeed",
+    });
+
+    return funnel.executePluginRequest(request).then((response) => {
+      should(response).be.exactly(request);
+      should(kuzzle.pipe).not.calledWith("testme:beforeSucceed");
+      should(kuzzle.pipe).not.calledWith("testme:afterSucceed");
+    });
   });
 });
