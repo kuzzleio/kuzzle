@@ -110,10 +110,7 @@ describe("Backend", () => {
 
       should(options.secretsFile).be.eql(application._secretsFile);
       should(options.vaultKey).be.eql(application._vaultKey);
-      should(options.plugins).have.keys(
-        "kuzzle-plugin-logger",
-        "kuzzle-plugin-auth-passport-local",
-      );
+      should(options.plugins).have.keys("kuzzle-plugin-auth-passport-local");
       should(options.installations).be.eql(
         application._installationsWaitingList,
       );
@@ -129,7 +126,7 @@ describe("Backend", () => {
       );
 
       application.config.content.plugins.common.include = [
-        "kuzzle-plugin-logger",
+        "kuzzle-plugin-auth-passport-local",
       ];
 
       await application.start();
@@ -138,8 +135,7 @@ describe("Backend", () => {
 
       const [, options] = global.kuzzle.start.getCall(0).args;
 
-      should(options.plugins).have.keys("kuzzle-plugin-logger");
-      should(options.plugins).not.have.keys(
+      should(options.plugins).have.only.keys(
         "kuzzle-plugin-auth-passport-local",
       );
     });
