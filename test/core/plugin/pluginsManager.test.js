@@ -112,13 +112,9 @@ describe("Plugin", () => {
     });
 
     it("should only load core plugins in failsafe mode", async () => {
-      const loggerPlugin = createPlugin("kuzzle-plugin-logger");
       const localPlugin = createPlugin("kuzzle-plugin-auth-passport-local");
       pluginsManager.loadPlugins.returns(
-        new Map([
-          [loggerPlugin.name, loggerPlugin],
-          [localPlugin.name, localPlugin],
-        ]),
+        new Map([[localPlugin.name, localPlugin]]),
       );
       pluginsManager._plugins.set(plugin.name, plugin);
       pluginsManager.config.common.failsafeMode = true;
@@ -126,7 +122,6 @@ describe("Plugin", () => {
       await pluginsManager.init();
 
       should(pluginsManager.loadedPlugins).be.eql([
-        "kuzzle-plugin-logger",
         "kuzzle-plugin-auth-passport-local",
       ]);
     });
