@@ -75,7 +75,7 @@ const defaultConfig: KuzzleConfiguration = {
       initTimeout: 10000,
       maxConcurrentPipes: 50,
       pipesBufferSize: 50000,
-      include: ["kuzzle-plugin-logger", "kuzzle-plugin-auth-passport-local"],
+      include: ["kuzzle-plugin-auth-passport-local"],
     },
     "kuzzle-plugin-logger": {
       services: {
