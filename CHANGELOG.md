@@ -1,3 +1,11 @@
+# [2.31.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.30.1-beta.1...v2.31.0-beta.1) (2024-07-22)
+
+
+### Features
+
+* **doc:** add documentation in the event-system guide ([4913389](https://github.com/kuzzleio/kuzzle/commit/4913389e4be38f3cb23d85ca2bc769fc979dd64e))
+* **funnel:** add optional parameter to request to trigger pipes ([508ac72](https://github.com/kuzzleio/kuzzle/commit/508ac72a25b690ac452ff32dbe80e0833c00290d))
+
 ## [2.30.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.30.0...v2.30.1-beta.1) (2024-06-03)
 
 
