@@ -138,7 +138,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
     try {
       response = await global.kuzzle.ask(`core:cache:${this.cacheDb}:get`, key);
 
-      if (response === null) {
+      if (response === null || response === undefined) {
         return null;
       }
 

@@ -26,7 +26,6 @@ import { JSONObject } from "kuzzle-sdk";
 import { OptimizedPolicy, Policy } from "../../../index";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";
-import { cacheDbEnum } from "../cache/cacheDbEnum";
 import { ObjectRepository } from "../shared/ObjectRepository";
 
 /** @internal */
@@ -59,19 +58,14 @@ type UpdateOptions = {
  */
 export class ProfileRepository extends ObjectRepository<Profile> {
   private module: any;
-  private profiles: Map<string, Profile>;
 
   /**
    * @constructor
    */
   constructor(securityModule) {
-    super({
-      cache: cacheDbEnum.NONE,
-      store: global.kuzzle.internalIndex,
-    });
+    super({ store: global.kuzzle.internalIndex });
 
     this.module = securityModule;
-    this.profiles = new Map();
 
     this.collection = "profiles";
     this.ObjectConstructor = Profile;
@@ -129,7 +123,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
      * @param  {String} [id] - profile identifier
      */
     global.kuzzle.onAsk("core:security:profile:invalidate", (id) =>
-      this.invalidate(id),
+      this.deleteFromCache(id),
     );
 
     /**
@@ -191,15 +185,29 @@ export class ProfileRepository extends ObjectRepository<Profile> {
    * @returns {Promise.<Promise>}
    * @throws {NotFoundError} If the corresponding profile doesn't exist
    */
-  async load(id: string): Promise<Profile> {
-    if (this.profiles.has(id)) {
-      return this.profiles.get(id);
+  override async load(
+    id: string,
+    options: { key?: string } = {},
+  ): Promise<Profile> {
+    const profile = await this.loadFromCache(id, options);
+
+    if (profile === null) {
+      const profileFromDatabase = await this.loadOneFromDatabase(id);
+
+      if (profileFromDatabase !== null) {
+        await this.persistToCache(profileFromDatabase);
+
+        profileFromDatabase.optimizedPolicies = this.optimizePolicies(
+          profileFromDatabase.policies,
+        );
+      }
+
+      return profileFromDatabase;
     }
 
-    const profile = await super.load(id);
-
     profile.optimizedPolicies = this.optimizePolicies(profile.policies);
-    this.profiles.set(id, profile);
+
+    await this.refreshCacheTTL(profile);
 
     return profile;
   }
@@ -232,16 +240,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     }
 
     for (const id of profileIds) {
-      let profile: Profile | Promise<Profile> = this.profiles.get(id);
-
-      if (!profile) {
-        profile = this.loadOneFromDatabase(id).then((p) => {
-          p.optimizedPolicies = this.optimizePolicies(p.policies);
-          this.profiles.set(id, p);
-          return p;
-        });
-      }
-
+      const profile: Profile | Promise<Profile> = this.load(id);
       profiles.push(profile);
     }
 
@@ -443,7 +442,7 @@ export class ProfileRepository extends ObjectRepository<Profile> {
 
     await this.deleteFromDatabase(profile._id, { refresh });
 
-    this.profiles.delete(profile._id);
+    await this.deleteFromCache(profile._id);
   }
 
   /**
@@ -502,12 +501,12 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     });
 
     const updatedProfile = await this.loadOneFromDatabase(profile._id);
+    await this.persistToCache(updatedProfile);
+
     // Recompute optimized policies based on new policies
     updatedProfile.optimizedPolicies = this.optimizePolicies(
       updatedProfile.policies,
     );
-
-    this.profiles.set(profile._id, updatedProfile);
     return updatedProfile;
   }
 
@@ -536,32 +535,6 @@ export class ProfileRepository extends ObjectRepository<Profile> {
     }
 
     return profile;
-  }
-
-  /**
-   * @override
-   */
-  async truncate(opts: JSONObject) {
-    try {
-      await super.truncate(opts);
-    } finally {
-      // always clear the RAM cache: even if truncate fails in the middle of it,
-      // some of the cached profiles might not be valid anymore
-      this.invalidate();
-    }
-  }
-
-  /**
-   * Invalidate the cache entries for the given profile. If none is provided,
-   * the entire cache is emptied.
-   * @param {string} [profileId]
-   */
-  invalidate(profileId?: string) {
-    if (!profileId) {
-      this.profiles.clear();
-    } else {
-      this.profiles.delete(profileId);
-    }
   }
 
   /**
@@ -636,11 +609,11 @@ export class ProfileRepository extends ObjectRepository<Profile> {
   // Otherwise we cannot stub them
   // ============================================
 
-  async toDTO(dto: Profile): Promise<JSONObject> {
+  toDTO(dto: Profile): JSONObject {
     return super.toDTO(dto);
   }
 
-  async deleteFromDatabase(id: string, options: JSONObject) {
+  deleteFromDatabase(id: string, options: JSONObject) {
     return super.deleteFromDatabase(id, options);
   }
 

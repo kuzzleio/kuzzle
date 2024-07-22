@@ -91,7 +91,7 @@ Returns an object containing updated document information, with the following pr
   "index": "<index>",
   "collection": "<collection>",
   "controller": "document",
-  "action": "replace",
+  "action": "deleteFields",
   "requestId": "<unique request identifier>",
   "result": {
     "_id": "<documentId>",
