@@ -6,7 +6,6 @@ RUN  set -x \
      && apt-get update \
      && apt-get install -y \
      curl \
-     python \
      make \
      g++ \
      python3 \
