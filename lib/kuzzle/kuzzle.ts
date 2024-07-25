@@ -21,47 +21,47 @@
 
 import path from "path";
 
-import { murmurHash128 as murmur } from "murmurhash-native";
+import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
 import { Koncorde } from "koncorde";
-import Bluebird from "bluebird";
-import segfaultHandler from "node-segfault-handler";
 import _ from "lodash";
+import { murmurHash128 as murmur } from "murmurhash-native";
+import segfaultHandler from "node-segfault-handler";
 
-import kuzzleStateEnum from "./kuzzleStateEnum";
-import KuzzleEventEmitter from "./event/kuzzleEventEmitter";
-import EntryPoint from "../core/network/entryPoint";
+import { version } from "../../package.json";
 import Funnel from "../api/funnel";
+import { OpenApiManager } from "../api/openapi";
+import Cluster from "../cluster";
 import PassportWrapper from "../core/auth/passportWrapper";
-import PluginsManager from "../core/plugin/pluginsManager";
-import Router from "../core/network/router";
-import Statistics from "../core/statistics";
 import { TokenManager } from "../core/auth/tokenManager";
+import CacheEngine from "../core/cache/cacheEngine";
+import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
+import EntryPoint from "../core/network/entryPoint";
+import Router from "../core/network/router";
+import PluginsManager from "../core/plugin/pluginsManager";
+import RealtimeModule from "../core/realtime";
+import SecurityModule from "../core/security";
+import Statistics from "../core/statistics";
+import StorageEngine from "../core/storage/storageEngine";
 import Validation from "../core/validation";
+import * as kerror from "../kerror";
+import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import AsyncStore from "../util/asyncStore";
+import { sha256 } from "../util/crypto";
+import { Mutex } from "../util/mutex";
+import { NameGenerator } from "../util/name-generator";
+import {
+  ImportConfig,
+  InstallationConfig,
+  StartOptions,
+  SupportConfig,
+} from "./../types/Kuzzle";
+import DumpGenerator from "./dumpGenerator";
+import KuzzleEventEmitter from "./event/KuzzleEventEmitter";
+import InternalIndexHandler from "./internalIndexHandler";
+import kuzzleStateEnum from "./kuzzleStateEnum";
 import Logger from "./log";
 import vault from "./vault";
-import DumpGenerator from "./dumpGenerator";
-import AsyncStore from "../util/asyncStore";
-import { Mutex } from "../util/mutex";
-import * as kerror from "../kerror";
-import InternalIndexHandler from "./internalIndexHandler";
-import CacheEngine from "../core/cache/cacheEngine";
-import StorageEngine from "../core/storage/storageEngine";
-import SecurityModule from "../core/security";
-import RealtimeModule from "../core/realtime";
-import Cluster from "../cluster";
-import {
-  InstallationConfig,
-  ImportConfig,
-  SupportConfig,
-  StartOptions,
-} from "./../types/Kuzzle";
-import { version } from "../../package.json";
-import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
-import { NameGenerator } from "../util/name-generator";
-import { OpenApiManager } from "../api/openapi";
-import { sha256 } from "../util/crypto";
-import { KuzzleDebugger } from "../core/debug/kuzzleDebugger";
 
 export const BACKEND_IMPORT_KEY = "backend:init:import";
 
@@ -102,28 +102,28 @@ type ImportStatus = {
 };
 
 class Kuzzle extends KuzzleEventEmitter {
-  private config: KuzzleConfiguration;
+  public config: KuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
-  private log: Logger;
+  public log: Logger;
   private rootPath: string;
   /**
    * Internal index bootstrapper and accessor
    */
-  private internalIndex: InternalIndexHandler;
+  public internalIndex: InternalIndexHandler;
 
-  private pluginsManager: PluginsManager;
-  private tokenManager: TokenManager;
-  private passport: PassportWrapper;
+  public pluginsManager: PluginsManager;
+  public tokenManager: TokenManager;
+  public passport: PassportWrapper;
 
   /**
    * The funnel dispatches messages to API controllers
    */
-  private funnel: Funnel;
+  public funnel: Funnel;
 
   /**
    * The router listens to client requests and pass them to the funnel
    */
-  private router: Router;
+  public router: Router;
 
   /**
    * Statistics core component
@@ -133,12 +133,12 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Network entry point
    */
-  private entryPoint: EntryPoint;
+  public entryPoint: EntryPoint;
 
   /**
    * Validation core component
    */
-  private validation: Validation;
+  public validation: Validation;
 
   /**
    * Dump generator
@@ -148,12 +148,12 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
-  private vault: vault;
+  public vault: vault;
 
   /**
    * AsyncLocalStorage wrapper
    */
-  private asyncStore: AsyncStore;
+  public asyncStore: AsyncStore;
 
   /**
    * Kuzzle internal debugger
@@ -180,8 +180,8 @@ class Kuzzle extends KuzzleEventEmitter {
     ) => Promise<void>;
   };
 
-  private koncorde: Koncorde;
-  private secret: string;
+  public koncorde: Koncorde;
+  public secret: string;
 
   /**
    * Node unique ID amongst other cluster nodes
@@ -447,18 +447,18 @@ class Kuzzle extends KuzzleEventEmitter {
   }
 
   // For testing purpose
-  async ask(...args: any[]) {
-    return super.ask(...args);
+  async ask(event: string, ...args: [payload?: any, ...rest: any]) {
+    return super.ask(event, ...args);
   }
 
   // For testing purpose
-  async emit(...args: any[]) {
-    return super.emit(...args);
+  emit(event: string, ...args: any[]) {
+    return super.emit(event, ...args);
   }
 
   // For testing purpose
-  async pipe(...args: any[]) {
-    return super.pipe(...args);
+  async pipe(event: string, ...args: any[]) {
+    return super.pipe(event, ...args);
   }
 
   private async importUserMappings(

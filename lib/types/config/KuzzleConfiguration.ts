@@ -1,11 +1,11 @@
 import {
+  DumpConfiguration,
+  HttpConfiguration,
+  LimitsConfiguration,
+  PluginsConfiguration,
+  SecurityConfiguration,
   ServerConfiguration,
   ServicesConfiguration,
-  SecurityConfiguration,
-  HttpConfiguration,
-  PluginsConfiguration,
-  LimitsConfiguration,
-  DumpConfiguration,
 } from "../index";
 
 export interface IKuzzleConfiguration {
@@ -153,6 +153,7 @@ export interface IKuzzleConfiguration {
 
   internal: {
     hash: any;
+    notifiableProtocols: string[];
   };
 
   validation: Record<string, unknown>;
