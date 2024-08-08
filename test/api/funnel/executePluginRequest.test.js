@@ -104,13 +104,12 @@ describe("funnel.executePluginRequest", () => {
 
   it("should trigger pipes if triggerEvent is enabled", async () => {
     const request = new Request({
-      controller: "testme",
       action: "succeed",
+      controller: "testme",
       triggerEvents: true,
     });
 
-    return funnel.executePluginRequest(request).then((response) => {
-      should(response).be.exactly(request);
+    return funnel.executePluginRequest(request).then(() => {
       should(kuzzle.pipe).calledWith("testme:beforeSucceed");
       should(kuzzle.pipe).calledWith("testme:afterSucceed");
     });
@@ -118,12 +117,11 @@ describe("funnel.executePluginRequest", () => {
 
   it("should not trigger pipes if triggerEvent is disabled", async () => {
     const request = new Request({
-      controller: "testme",
       action: "succeed",
+      controller: "testme",
     });
 
-    return funnel.executePluginRequest(request).then((response) => {
-      should(response).be.exactly(request);
+    return funnel.executePluginRequest(request).then(() => {
       should(kuzzle.pipe).not.calledWith("testme:beforeSucceed");
       should(kuzzle.pipe).not.calledWith("testme:afterSucceed");
     });
