@@ -927,4 +927,4 @@ class Kuzzle extends KuzzleEventEmitter {
 }
 
 export { Kuzzle };
-module.exports = Kuzzle;
+export default Kuzzle;

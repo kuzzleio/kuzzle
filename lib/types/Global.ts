@@ -1,5 +1,5 @@
 import { Backend } from "../core/backend";
-import { Kuzzle } from "../kuzzle/kuzzle";
+import { Kuzzle } from "../kuzzle";
 
 /**
  * This file contains global type declarations for Kuzzle.
