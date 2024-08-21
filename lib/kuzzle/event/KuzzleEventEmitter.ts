@@ -80,12 +80,12 @@ class KuzzleEventEmitter extends EventEmitter {
     /**
      * Map of plugin pipe handler functions by event
      */
-    this.pluginPipes = new Map();
+    this.pluginPipes = new Map<string, PipeEventHandler[]>();
 
     /**
      * Map of plugin pipe definitions by pipeId
      */
-    this.pluginPipeDefinitions = new Map();
+    this.pluginPipeDefinitions = new Map<string, PluginPipeDefinition>();
 
     this.corePipes = new Map<string, PipeEventHandler[]>();
     this.coreAnswerers = new Map<string, AskEventHandler>();
