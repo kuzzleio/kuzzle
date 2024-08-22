@@ -142,7 +142,6 @@
       "maxConcurrentPipes": 50,
       "pipesBufferSize": 50000,
       "include": [
-        "kuzzle-plugin-logger",
         "kuzzle-plugin-auth-passport-local"
       ]
     },
