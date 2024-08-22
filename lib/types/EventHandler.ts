@@ -38,11 +38,34 @@ export type EventDefinition = {
 };
 
 /**
+ * Describe an ask event with it's name and the payload and result types
+ */
+export type AskEventDefinition = {
+  /**
+   * Name of the event
+   *
+   * @example
+   * "core:document:create"
+   */
+  name: string;
+
+  /**
+   * Payload of the event
+   */
+  payload: any;
+
+  /**
+   * Result of the event
+   */
+  result: any;
+};
+
+/**
  * Handler for hook events
  */
 export type HookEventHandler<
   TEventDefinition extends EventDefinition = EventDefinition,
-> = (...args: TEventDefinition["args"]) => void;
+> = (...args: TEventDefinition["args"]) => Promise<void> | void;
 
 /**
  * Handler for pipe event.
@@ -59,6 +82,24 @@ export type PipeEventHandler<
 export type ClusterEventHandler<
   TEventDefinition extends EventDefinition = EventDefinition,
 > = (...args: TEventDefinition["args"]) => any;
+
+/**
+ * Handler for ask event.
+ */
+export type AskEventHandler<
+  TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
+> = (
+  ...args: [payload?: TAskEventDefinition["payload"], ...rest: any[]]
+) => Promise<TAskEventDefinition["result"]> | TAskEventDefinition["result"];
+
+/**
+ * Handler for call event.
+ */
+export type CallEventHandler<
+  TAskEventDefinition extends AskEventDefinition = AskEventDefinition,
+> = (
+  ...args: [payload?: TAskEventDefinition["payload"], ...rest: any[]]
+) => TAskEventDefinition["result"];
 
 /**
  * @deprecated Use HookEventHandler, PipeEventHandler or ClusterEventHandler

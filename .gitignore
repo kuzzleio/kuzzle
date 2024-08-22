@@ -160,7 +160,9 @@ lib/kerror/errors/sizeLimitError.js
 lib/kerror/errors/tooManyRequestsError.js
 lib/kerror/errors/unauthorizedError.js
 lib/kerror/index.js
+lib/kuzzle/index.js
 lib/kuzzle/kuzzle.js
+lib/kuzzle/event/KuzzleEventEmitter.js
 lib/model/security/profile.js
 lib/model/security/role.js
 lib/model/security/token.js

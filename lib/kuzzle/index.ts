@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
-"use strict";
+import { Kuzzle } from "./kuzzle";
 
-module.exports = require("./kuzzle");
+export { Kuzzle };
+export default Kuzzle;

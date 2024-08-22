@@ -84,6 +84,7 @@
     "@semantic-release/commit-analyzer": "^10.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^11.0.4",
+    "@types/cookie": "^0.6.0",
     "@types/jest": "29.5.10",
     "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.14.202",
