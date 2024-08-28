@@ -1,17 +1,16 @@
 ################################################################################
 ARG NODE_VERSION="20"
-FROM node:${NODE_VERSION}-bullseye-slim AS builder
+FROM node:${NODE_VERSION}-bookworm-slim AS builder
 
 RUN  set -x \
- && apt-get update \
- && apt-get install -y \
-      curl \
-      python \
-      make \
-      g++ \
-      python3 \
-      libzmq3-dev \
-      libunwind-dev
+     && apt-get update \
+     && apt-get install -y \
+     curl \
+     make \
+     g++ \
+     python3 \
+     libzmq3-dev \
+     libunwind-dev
 
 WORKDIR /app
 
@@ -32,27 +31,27 @@ RUN rm -rf tsconfig.json index.ts
 ADD ./plugins/available/ /app/plugins/available/
 
 ################################################################################
-FROM node:${NODE_VERSION}-bullseye-slim AS minifier
+FROM node:${NODE_VERSION}-bookworm-slim AS minifier
 
 ENV NODE_ENV=production
 
 COPY --from=builder /app /app
 
 RUN  set -x \
- && apt-get update && apt-get install -y \
-      curl \
- && apt-get clean autoclean \
- && apt-get autoremove --yes
+     && apt-get update && apt-get install -y \
+     curl \
+     && apt-get clean autoclean \
+     && apt-get autoremove --yes
 
 ################################################################################
-FROM node:${NODE_VERSION}-bullseye-slim
+FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
 RUN set -x \
- && apt-get update && apt-get install -y \
-      libunwind-dev
+     && apt-get update && apt-get install -y \
+     libunwind-dev
 
 COPY --from=minifier /lib /lib
 COPY --from=minifier /usr /usr

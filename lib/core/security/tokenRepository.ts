@@ -494,7 +494,7 @@ export class TokenRepository extends ObjectRepository<Token> {
    *
    * So we need to override the TTL auto-refresh function to disable it
    */
-  refreshCacheTTL() {
+  async refreshCacheTTL() {
     // This comment is here to please Sonarqube. It requires a comment
     // explaining why a function is empty, but there is no sense
     // duplicating what has been just said in the JSDoc.

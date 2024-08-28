@@ -3,7 +3,7 @@
 const should = require("should");
 const sinon = require("sinon");
 
-const Emitter = require("../../../lib/kuzzle/event/kuzzleEventEmitter");
+const Emitter = require("../../../lib/kuzzle/event/KuzzleEventEmitter").default;
 const { InternalError: KuzzleInternalError } = require("../../../index");
 
 describe("#KuzzleEventEmitter", () => {

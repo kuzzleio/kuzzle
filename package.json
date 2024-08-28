@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.31.0-elasticsearch-8.2",
+  "version": "2.31.0",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
@@ -47,7 +47,7 @@
     "koncorde": "4.3.0",
     "kuzzle-plugin-auth-passport-local": "6.4.0",
     "kuzzle-plugin-logger": "3.0.3",
-    "kuzzle-sdk": "7.11.1",
+    "kuzzle-sdk": "^7.11.3",
     "kuzzle-vault": "2.0.4",
     "lodash": "4.17.21",
     "long": "5.2.3",
@@ -86,6 +86,7 @@
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^11.0.4",
     "@types/bluebird": "^3.5.42",
+    "@types/cookie": "^0.6.0",
     "@types/jest": "29.5.10",
     "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.14.202",

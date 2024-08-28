@@ -54,15 +54,17 @@ Body:
   "action": "searchUsersByCredentials",
   "strategy": "<strategy>",
   "body": {
-    "bool": {
-      "must": [
-        {
-          "match": {
-            // example with the "local" authentication strategy
-            "username":  "test@example.com"
+    "query":{
+      "bool": {
+        "must": [
+          {
+            "match": {
+              // example with the "local" authentication strategy
+              "username":  "test@example.com"
+            }
           }
-        }
-      ]
+        ]
+      }
     }
   },
 }

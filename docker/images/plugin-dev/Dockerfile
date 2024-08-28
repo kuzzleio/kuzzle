@@ -1,15 +1,15 @@
 ################################################################################
 ARG NODE_VERSION="20"
-FROM node:${NODE_VERSION}-bullseye-slim AS builder
+FROM node:${NODE_VERSION}-bookworm-slim AS builder
 
 RUN  set -x \
   && apt-get update && apt-get install -y \
-       curl \
-       make \
-       g++ \
-       python3 \
-       libzmq3-dev \
-       libunwind-dev
+  curl \
+  make \
+  g++ \
+  python3 \
+  libzmq3-dev \
+  libunwind-dev
 
 WORKDIR /app
 
@@ -30,7 +30,7 @@ RUN rm -rf tsconfig.json index.ts
 ADD ./plugins/available/ plugins/available/
 
 ################################################################################
-FROM node:${NODE_VERSION}-bullseye-slim
+FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Develop new plugin or protocol for Kuzzle with ease"
@@ -39,7 +39,7 @@ WORKDIR /var/app
 
 RUN set -x \
   && apt-get update && apt-get install -y \
-    libunwind-dev
+  libunwind-dev
 
 ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
 ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
