@@ -130,6 +130,7 @@ lib/config/documentEventAliases.js
 lib/service/storage/Elasticsearch.js
 lib/service/storage/7/elasticsearch.js
 lib/service/storage/8/elasticsearch.js
+lib/service/storage/commons/queryTranslator.js
 lib/types/DebugModule.js
 lib/util/time.js
 lib/util/async.js

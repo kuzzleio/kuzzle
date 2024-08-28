@@ -27,3 +27,5 @@ export * from "./lib/core/shared/store";
 export * from "./lib/core/cache/cacheDbEnum";
 
 export * from "./lib/core/storage/storeScopeEnum";
+
+export * from "./lib/service/storage/commons/queryTranslator";

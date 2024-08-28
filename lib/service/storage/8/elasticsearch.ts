@@ -42,7 +42,7 @@ import semver from "semver";
 
 import debug from "../../../util/debug";
 import ESWrapper from "./esWrapper";
-import QueryTranslator from "../commons/queryTranslator";
+import { QueryTranslator } from "../commons/queryTranslator";
 import didYouMean from "../../../util/didYouMean";
 import * as kerror from "../../../kerror";
 import { assertIsObject } from "../../../util/requestAssertions";

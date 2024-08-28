@@ -18,12 +18,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-"use strict";
-
-const kerror = require("../../../kerror");
+import { get } from "../../../kerror";
 
 class KeywordError extends Error {
+  public keyword: { name: string; type: string };
+
   constructor(type, name) {
     super(
       `The ${type} "${name}" of Koncorde DSL is not supported for search queries.`,
@@ -54,7 +53,7 @@ function parseKoncordePath(path) {
   const lastBracket = path.lastIndexOf("]");
 
   if (lastBracket < 0) {
-    throw kerror.get(
+    throw get(
       "services",
       "koncorde",
       "elastic_translation_error",
@@ -172,7 +171,7 @@ const KONCORDE_OPERATORS_TO_ES = {
   }),
 };
 
-class QueryTranslator {
+export class QueryTranslator {
   translate(filters) {
     const [name, value] = Object.entries(filters)[0];
 
@@ -215,5 +214,3 @@ class QueryTranslator {
     return converter(content);
   }
 }
-
-module.exports = QueryTranslator;
