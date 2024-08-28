@@ -3,6 +3,7 @@
     "func-names": 0,
     "no-invalid-this": 0,
     "no-new": 0,
-    "new-cap": 0
+    "new-cap": 0,
+    "sort-keys": 0
   }
 }
