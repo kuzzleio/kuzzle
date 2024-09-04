@@ -1,16 +1,19 @@
-name: Run tests
+name: Tests
 
 on:
   push:
     branches:
       - master
       - beta
+      - elasticsearch-8
   pull_request:
 
 env:
   NODE_LTS_MAINTENANCE_VERSION: "16"
   NODE_LTS_ACTIVE_VERSION: "18"
   NODE_LTS_CURRENT_VERSION: "20"
+  ELASTICSEARCH_MAINTENANCE_VERSION: "7"
+  ELASTICSEARCH_ACTIVE_VERSION: "8"
 
 jobs:
   prepare-matrix:
@@ -20,8 +23,12 @@ jobs:
       - id: set-matrix
         run: |
           echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
+          echo "es-matrix={\"es-version\": [\"$ELASTICSEARCH_MAINTENANCE_VERSION\", \"$ELASTICSEARCH_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
+          echo "test-set={\"test-set\":[\"jest\", \"http\", \"websocket\", \"legacy:mqtt\", \"legacy:http\", \"legacy:websocket\"]}" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      es-matrix: ${{ steps.set-matrix.outputs.es-matrix }}
+      test-set: ${{ steps.set-matrix.outputs.test-set }}
       node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
       node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
       node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
@@ -31,7 +38,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -48,29 +55,26 @@ jobs:
         run: ./.ci/scripts/check-error-codes-documentation.sh
 
   lint:
-    name: Lint - Node.js LTS ${{ matrix.node-version }}
+    name: Lint - Node.js
     runs-on: ubuntu-22.04
     needs: [prepare-matrix]
-    strategy:
-      matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Node version ${{ matrix.node-version }}
+      - name: Node version ${{ env.NODE_LTS_CURRENT_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
 
       - name: Install depedencies
         run: npm ci
         shell: bash
 
-      - name: Run ESLint
+      - name: ESLint
         run: npm run test:lint
         shell: bash
 
@@ -83,7 +87,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -93,7 +97,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Run unit test using Node ${{ matrix.node-version }}
+      - name: Unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
@@ -109,34 +113,29 @@ jobs:
     strategy:
       matrix:
         kuzzle-image: ["kuzzle"]
+        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Test to run Kuzzle image
         uses: ./.github/actions/build-and-run-kuzzle
         with:
-          KUZZLE_IMAGE: ${{ matrix.kuzzle-image }}
+          kuzzle-image: ${{ matrix.kuzzle-image }}
+          es-version: ${{ matrix.es-version }}
 
   functional-tests:
     name: Functional tests
     needs: [unit-tests, prepare-matrix]
     strategy:
       matrix:
-        test_set:
-          [
-            jest,
-            http,
-            websocket,
-            "legacy:mqtt",
-            "legacy:http",
-            "legacy:websocket",
-          ]
+        test-set: ${{ fromJson(needs.prepare-matrix.outputs.test-set).test-set }}
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
@@ -146,11 +145,12 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: test suit ${{ matrix.test_set }}
+      - name: Test suit ${{ matrix.test-set }}
         uses: ./.github/actions/functional-tests
         with:
-          test-set: test:functional:${{ matrix.test_set }}
+          test-set: test:functional:${{ matrix.test-set }}
           node-version: ${{ matrix.node-version }}
+          es-version: ${{ matrix.es-version }}
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
@@ -159,15 +159,16 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
       - name: Cloning Monkey Tester
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: kuzzleio/kuzzle-monkey-tests
           path: "kuzzle-monkey-tests"
@@ -177,10 +178,11 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
 
-      - name: Run monkey testing tests suit
+      - name: Monkey testing
         uses: ./.github/actions/monkey-tests
         with:
           node-version: ${{ matrix.node-version }}
+          es-version: ${{matrix.es-version}}
 
   deploy-workflow:
     name: Deployment Workflow

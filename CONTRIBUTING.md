@@ -36,8 +36,16 @@ git clone git@github.com:kuzzleio/kuzzle.git
 cd kuzzle
 
 # Start a kuzzle cluster with development tools enabled
+# This will start a kuzzle with Elasticsearch 7
+docker compose -f docker-compose.yml up
+
+# Start a kuzzle cluster with development tools enabled
+# This will start a kuzzle with Elasticsearch 8
+# See [docker-compose.override.yml](docker-compose.override.yml) for more details
 docker compose up
 ```
+
+⚠️ **Important**: The two docker-compose command launch launch different configurations.
 
 ## ENOSPC error
 

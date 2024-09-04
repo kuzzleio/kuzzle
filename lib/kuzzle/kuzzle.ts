@@ -395,7 +395,7 @@ class Kuzzle extends KuzzleEventEmitter {
    * @returns {Promise<void>}
    */
   async install(installations: InstallationConfig[]): Promise<void> {
-    if (!installations || !installations.length) {
+    if (!installations?.length) {
       return;
     }
 

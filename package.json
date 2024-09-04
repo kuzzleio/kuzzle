@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.31.0",
+  "version": "2.32.0-elasticsearch-8.1",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
@@ -12,7 +12,7 @@
     "dev": "ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
     "prepublishOnly": "npm run build",
-    "prettier": "prettier ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin --write",
+    "prettier": "prettier ./lib ./test ./features ./plugins/available/functional-test-plugin --write",
     "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http",
     "test:functional:jest": "jest",
     "test:functional:legacy:http": "cucumber-js --format progress-bar --profile http ./features-legacy",
@@ -29,7 +29,6 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
     "aedes": "0.46.3",
     "bluebird": "3.7.2",
     "cli-color": "2.0.3",
@@ -60,7 +59,9 @@
     "passport": "0.7.0",
     "protobufjs": "7.2.5",
     "rc": "1.2.8",
-    "semver": "7.5.4",
+    "sdk-es7": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
+    "sdk-es8": "npm:@elastic/elasticsearch@8.12.1",
+    "semver": "7.6.0",
     "sorted-array": "2.0.4",
     "uuid": "9.0.1",
     "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.34.0.tar.gz",
@@ -84,6 +85,7 @@
     "@semantic-release/commit-analyzer": "^10.0.1",
     "@semantic-release/git": "^10.0.1",
     "@semantic-release/release-notes-generator": "^11.0.4",
+    "@types/bluebird": "^3.5.42",
     "@types/cookie": "^0.6.0",
     "@types/jest": "29.5.10",
     "@types/js-yaml": "4.0.9",

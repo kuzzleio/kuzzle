@@ -424,11 +424,19 @@ app.controller.register("tests", {
         const response = await client.index(esRequest);
         const response2 = await app.storage.storageClient.index(esRequest);
 
-        should(omit(response.body, ["_version", "result", "_seq_no"])).match(
-          omit(response2.body, ["_version", "result", "_seq_no"])
-        );
-
-        return response.body;
+        if (response.body && response2.body) {
+          // ES7
+          should(omit(response.body, ["_version", "result", "_seq_no"])).match(
+            omit(response2.body, ["_version", "result", "_seq_no"])
+          );
+          return response.body;
+        } else {
+          // ES8
+          should(omit(response, ["_version", "result", "_seq_no"])).match(
+            omit(response2, ["_version", "result", "_seq_no"])
+          );
+          return response;
+        }
       },
       http: [{ verb: "post", path: "/tests/storage-client/:index" }],
     },

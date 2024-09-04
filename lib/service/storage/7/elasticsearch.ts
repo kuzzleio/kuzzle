@@ -21,40 +21,34 @@
 
 import _ from "lodash";
 
-import {
-  ApiResponse,
-  RequestParams,
-  Client as StorageClient,
-} from "@elastic/elasticsearch";
-import { Index, IndicesCreate } from "@elastic/elasticsearch/api/requestParams";
+import { ApiResponse, RequestParams, Client } from "sdk-es7";
+import { Index, IndicesCreate } from "sdk-es7/api/requestParams";
+import { TypeMapping } from "sdk-es7/api/types";
 import {
   InfoResult,
   JSONObject,
   KImportError,
   KRequestBody,
   KRequestParams,
-} from "../../types/storage/Elasticsearch";
-
-import { TypeMapping } from "@elastic/elasticsearch/api/types";
+} from "../../../types/storage/7/Elasticsearch";
 
 import assert from "assert";
 
 import Bluebird from "bluebird";
 import ms from "ms";
 import semver from "semver";
-import debug from "../../util/debug";
+import debug from "../../../util/debug";
 
-import { storeScopeEnum } from "../../core/storage/storeScopeEnum";
-import * as kerror from "../../kerror";
-import didYouMean from "../../util/didYouMean";
-import extractFields from "../../util/extractFields";
-import { Mutex } from "../../util/mutex";
-import { randomNumber } from "../../util/name-generator";
-import { assertIsObject } from "../../util/requestAssertions";
-import { isPlainObject } from "../../util/safeObject";
-import Service from "../service";
 import ESWrapper from "./esWrapper";
-import QueryTranslator from "./queryTranslator";
+import { QueryTranslator } from "../commons/queryTranslator";
+import didYouMean from "../../../util/didYouMean";
+import * as kerror from "../../../kerror";
+import { assertIsObject } from "../../../util/requestAssertions";
+import { isPlainObject } from "../../../util/safeObject";
+import extractFields from "../../../util/extractFields";
+import { Mutex } from "../../../util/mutex";
+import { randomNumber } from "../../../util/name-generator";
+import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
 
 debug("kuzzle:services:elasticsearch");
 
@@ -94,8 +88,8 @@ let esState = esStateEnum.NONE;
  * @param {storeScopeEnum} scope
  * @constructor
  */
-export default class ElasticSearch extends Service {
-  public _client: StorageClient;
+export class ES7 {
+  public _client: Client;
   public _scope: storeScopeEnum;
   public _indexPrefix: string;
   public _esWrapper: ESWrapper;
@@ -108,32 +102,8 @@ export default class ElasticSearch extends Service {
   public scrollTTL: number;
   public _config: any;
 
-  /**
-   * Returns a new elasticsearch client instance
-   *
-   * @returns {Object}
-   */
-  static buildClient(config) {
-    // Passed to Elasticsearch's client to make it use
-    // Bluebird instead of ES6 promises
-    const defer = function defer() {
-      let resolve;
-      let reject;
-
-      const promise = new Bluebird((res, rej) => {
-        resolve = res;
-        reject = rej;
-      });
-
-      return { promise, reject, resolve };
-    };
-
-    return new StorageClient({ defer, ...config });
-  }
-
-  constructor(config, scope = storeScopeEnum.PUBLIC) {
-    super("elasticsearch", config);
-
+  constructor(config: any, scope = storeScopeEnum.PUBLIC) {
+    this._config = config;
     this._scope = scope;
     this._indexPrefix =
       scope === storeScopeEnum.PRIVATE ? PRIVATE_PREFIX : PUBLIC_PREFIX;
@@ -185,7 +155,7 @@ export default class ElasticSearch extends Service {
    * @override
    * @returns {Promise}
    */
-  async _initSequence() {
+  async _initSequence(): Promise<void> {
     if (this._client) {
       return;
     }
@@ -202,8 +172,7 @@ export default class ElasticSearch extends Service {
         ].join("\n"),
       );
     }
-
-    this._client = ElasticSearch.buildClient(this._config.client);
+    this._client = new Client(this._config.client);
 
     await this.waitForElasticsearch();
 
@@ -600,7 +569,7 @@ export default class ElasticSearch extends Service {
       return formattedInnerHits;
     }
 
-    const hits = await Bluebird.map(body.hits.hits, async (hit) => ({
+    const hits = await Bluebird.map(body.hits.hits, async (hit: any) => ({
       inner_hits: await formatInnerHits(hit.inner_hits),
       ...(await formatHit(hit)),
     }));
@@ -796,7 +765,7 @@ export default class ElasticSearch extends Service {
   }
 
   /**
-   * Creates a new document to ElasticSearch, or replace it if it already exist
+   * Creates a new document to Elasticsearch, or replace it if it already exist
    *
    * @param {String} index - Index name
    * @param {String} collection - Collection name
@@ -999,7 +968,7 @@ export default class ElasticSearch extends Service {
   }
 
   /**
-   * Replaces a document to ElasticSearch
+   * Replaces a document to Elasticsearch
    *
    * @param {String} index - Index name
    * @param {String} collection - Collection name
@@ -3266,7 +3235,7 @@ export default class ElasticSearch extends Service {
     let notAvailable;
     let suffix;
     do {
-      suffix = `.${randomNumber(100000)}`;
+      suffix = `.${this._getRandomNumber(100000)}`;
 
       const overflow = Buffer.from(indice + suffix).length - 255;
       if (overflow > 0) {
@@ -3294,7 +3263,7 @@ export default class ElasticSearch extends Service {
    * @returns {String} Alias name (eg: '@&nepali.liia')
    * @throws If there is not exactly one alias associated that is prefixed with @
    */
-  async _getAliasFromIndice(indice) {
+  async _getAliasFromIndice(indice: string) {
     const { body } = await this._client.indices.getAlias({ index: indice });
     const aliases = Object.keys(body[indice].aliases).filter((alias) =>
       alias.startsWith(ALIAS_PREFIX),
@@ -3397,12 +3366,12 @@ export default class ElasticSearch extends Service {
    *
    * @returns {Object.<String, String[]>} Indexes as key and an array of their collections as value
    */
-  _extractSchema(aliases, { includeHidden = false } = {}) {
+  _extractSchema(aliases: string[], { includeHidden = false } = {}) {
     const schema = {};
 
     for (const alias of aliases) {
       const [indexName, collectionName] = alias
-        .substr(INDEX_PREFIX_POSITION_IN_ALIAS + 1, alias.length)
+        .slice(INDEX_PREFIX_POSITION_IN_ALIAS + 1)
         .split(NAME_SEPARATOR);
 
       if (
@@ -3767,6 +3736,10 @@ export default class ElasticSearch extends Service {
       }
     }
   }
+
+  _getRandomNumber(number: number): number {
+    return randomNumber(number);
+  }
 }
 
 /**
@@ -3872,7 +3845,3 @@ function _isObjectNameValid(name: string): boolean {
 
   return valid;
 }
-
-// TODO: Remove this function when we move to Jest
-// This is kept because we use an old ReRequire that use require() instead of import
-module.exports = ElasticSearch;

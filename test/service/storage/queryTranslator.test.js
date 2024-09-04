@@ -2,7 +2,9 @@
 
 const should = require("should");
 
-const QueryTranslator = require("../../../lib/service/storage/queryTranslator");
+const {
+  QueryTranslator,
+} = require("../../../lib/service/storage/commons/queryTranslator");
 
 describe("QueryTranslator", () => {
   const translator = new QueryTranslator();

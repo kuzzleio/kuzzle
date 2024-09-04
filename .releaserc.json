@@ -1,7 +1,16 @@
 {
-  "extends": ["semantic-release-config-kuzzle"],
+  "extends": [
+    "semantic-release-config-kuzzle"
+  ],
   "branches": [
     "master",
-    { "name": "beta", "prerelease": true }
+    {
+      "name": "beta",
+      "prerelease": true
+    },
+    {
+      "name": "elasticsearch-8",
+      "prerelease": true
+    }
   ]
 }

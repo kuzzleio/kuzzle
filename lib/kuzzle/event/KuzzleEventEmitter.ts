@@ -400,7 +400,7 @@ async function pipeCallback(error: any, ...updated: any[]) {
   const corePipes = this.instance.corePipes.get(this.targetEvent);
 
   if (corePipes) {
-    await Bluebird.map(corePipes, (fn) => fn(...updated));
+    await Bluebird.map(corePipes, (fn: any) => fn(...updated));
   }
 
   for (const element of this.events) {

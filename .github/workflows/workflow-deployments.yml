@@ -63,7 +63,7 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Extract references from context
         shell: bash
@@ -84,7 +84,7 @@ jobs:
 
   npm-deploy:
     name: Build and deploy release on NPM.js
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta') }}
+    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta' || github.ref_name == 'elasticsearch-8') }}
     runs-on: ubuntu-22.04
     permissions:
       contents: write
@@ -92,7 +92,7 @@ jobs:
       pull-requests: write
     steps:
       - name: Checkout project
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install additional libraries
         uses: ./.github/actions/install-packages

@@ -13,6 +13,7 @@ services:
     sysctls:
       - net.core.somaxconn=8192
     environment:
+      - kuzzle_services__storageEngine__majorVersion=8
       - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
       - kuzzle_services__internalCache__node__host=redis
       - kuzzle_services__memoryStorage__node__host=redis
@@ -26,6 +27,14 @@ services:
     image: redis:6
 
   elasticsearch:
-    image: kuzzleio/elasticsearch:7
-    ulimits:
-      nofile: 65536
+    image: elasticsearch:8.11.3
+    environment:
+      - xpack.security.enabled=false
+      - action.destructive_requires_name=false
+      - cluster.name=kuzzle
+      - node.name=alyx
+      - discovery.type=single-node
+      - ingest.geoip.downloader.enabled=false
+      - indices.id_field_data.enabled=true
+    ports:
+      - '9200:9200'

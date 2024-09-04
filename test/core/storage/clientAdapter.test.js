@@ -24,7 +24,7 @@ describe("#core/storage/ClientAdapter", () => {
   before(() => {
     mockRequire("../../../lib/util/mutex", { Mutex: MutexMock });
     mockRequire(
-      "../../../lib/service/storage/elasticsearch",
+      "../../../lib/service/storage/Elasticsearch",
       ElasticsearchMock,
     );
     ClientAdapter = mockRequire.reRequire(
@@ -38,6 +38,7 @@ describe("#core/storage/ClientAdapter", () => {
 
   beforeEach(async () => {
     kuzzle = new KuzzleMock();
+    kuzzle.config.services.storageEngine.majorVersion = "7";
     kuzzle.ask.restore();
 
     publicAdapter = new ClientAdapter(storeScopeEnum.PUBLIC);
