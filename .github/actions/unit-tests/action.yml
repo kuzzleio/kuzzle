@@ -12,6 +12,3 @@ runs:
 
     - run: npm run test:unit
       shell: bash
-
-    - run: npm run codecov
-      shell: bash

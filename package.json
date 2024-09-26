@@ -7,7 +7,6 @@
   "scripts": {
     "build": "tsc",
     "clean": "touch index.ts && npm run build | grep TSFILE | cut -d' ' -f 2 | xargs rm",
-    "codecov": "codecov",
     "cucumber": "cucumber.js --fail-fast",
     "dev": "ergol docker/scripts/start-kuzzle-dev.ts -c ./config/ergol.config.json",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
@@ -92,7 +91,6 @@
     "@types/lodash": "4.14.202",
     "async": "3.2.5",
     "chokidar": "3.5.3",
-    "codecov": "3.8.3",
     "cucumber": "6.0.5",
     "cz-conventional-changelog": "^3.3.0",
     "ergol": "1.0.2",

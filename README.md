@@ -4,9 +4,6 @@
 <p align="center">
   <img alt="GitHub branch checks state" src="https://img.shields.io/github/checks-status/kuzzleio/kuzzle/master">
   <img alt="Sonarcloud" src="https://sonarcloud.io/api/project_badges/measure?project=kuzzleio_kuzzle&metric=alert_status&branch=master">
-  <a href="https://codecov.io/gh/kuzzleio/kuzzle">
-    <img src="https://codecov.io/gh/kuzzleio/kuzzle/branch/master/graph/badge.svg?token=jOrGhzslSM"/>
-  </a>
   <a href="https://lgtm.com/projects/g/kuzzleio/kuzzle/context:javascript">
     <img src="https://img.shields.io/lgtm/grade/javascript/g/kuzzleio/kuzzle.svg?logo=lgtm&logoWidth=18" />
   </a>
