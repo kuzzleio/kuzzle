@@ -59,7 +59,7 @@ import DumpGenerator from "./dumpGenerator";
 import KuzzleEventEmitter from "./event/KuzzleEventEmitter";
 import InternalIndexHandler from "./internalIndexHandler";
 import kuzzleStateEnum from "./kuzzleStateEnum";
-import Logger from "./log";
+import { Logger } from "./Logger";
 import vault from "./vault";
 
 export const BACKEND_IMPORT_KEY = "backend:init:import";

@@ -29,7 +29,6 @@
     "lib": "lib"
   },
   "dependencies": {
-    "@elastic/ecs-pino-format": "^1.5.0",
     "aedes": "0.51.3",
     "bluebird": "3.7.2",
     "cli-color": "2.0.4",
@@ -59,6 +58,7 @@
     "pino": "^9.2.0",
     "pino-elasticsearch": "^8.0.0",
     "pino-syslog": "^3.1.0",
+    "pino-transport-ecs": "^1.0.1",
     "protobufjs": "7.4.0",
     "rc": "1.2.8",
     "sdk-es7": "npm:@elastic/elasticsearch@7.13.0",
@@ -124,6 +124,11 @@
     "node": ">=18.0.0 <23.0.0"
   },
   "engineStrict": true,
+  "overrides": {
+    "pino-elasticsearch": {
+      "@elastic/elasticsearch": "~8.10.0"
+    }
+  },
   "license": "Apache-2.0",
   "files": [
     "check-node-version.js",
