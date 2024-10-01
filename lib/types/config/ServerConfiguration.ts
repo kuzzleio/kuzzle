@@ -19,16 +19,15 @@ export type ServerConfiguration = {
   port: number;
 
   /**
-   * Configuration section for Kuzzle access logs.
+   * Configuration section for Kuzzle logs.
    */
   logs: {
     /**
-    * An array of Winston transports configurations to output access
-    * logs.
+    * An array of Pino transports configurations to output logs.
     *
     * Possible transport types are: console, file, elasticsearch and syslog.
     *
-    * Please refer to https://github.com/winstonjs/winston/blob/master/docs/transports.md
+    * Please refer to https://getpino.io/#/docs/transports?id=known-transports
     * for more information on transports configuration.
     *
     * @default
@@ -55,6 +54,7 @@ export type ServerConfiguration = {
      * be consumed by logstash agent.
      *
      * @default "combined"
+     * @deprecated use "pino-clf" to get combined logs or "pino-socket" to send logs to logstash.
      */
     accessLogFormat: "combined" | "logstash";
 
