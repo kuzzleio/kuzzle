@@ -52,6 +52,7 @@ Body:
       }
     }
   },
+  "reindexCollection": true|false,
   "settings": {
     "analysis" : {
       "analyzer":{
@@ -92,6 +93,7 @@ Body:
         }
       }
     },
+    "reindexCollection": true|false,
     "settings": {
       "analysis" : {
         "analyzer":{
@@ -117,8 +119,9 @@ Body:
 
 ## Body properties
 
-* `settings`: Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)
-* `mappings`: [collection mappings](/core/2/guides/main-concepts/data-storage#mappings-properties)
+- `settings`: Elasticsearch index [settings](https://www.elastic.co/guide/en/elasticsearch/reference/7.5/index-modules.html#index-modules-settings)
+- `mappings`: [collection mappings](/core/2/guides/main-concepts/data-storage#mappings-properties)
+- `reindexCollection`: boolean, if `true`, the collection will be reindexed after the update
 
 ---
 
@@ -143,4 +146,3 @@ Body:
 
 - [Common errors](/core/2/api/errors/types#common-errors)
 - [NotFoundError](/core/2/api/errors/types#notfounderror)
-
