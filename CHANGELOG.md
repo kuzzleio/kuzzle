@@ -1,3 +1,29 @@
+# [2.32.0](https://github.com/kuzzleio/kuzzle/compare/v2.31.0...v2.32.0) (2024-10-02)
+
+
+### Bug Fixes
+
+* bump deps to remove vulnerabilities ([ef27719](https://github.com/kuzzleio/kuzzle/commit/ef277194e0ed355ca0a5c16c9131875094f3a0b8))
+* **ci:** indent to pass linter ([f849e2c](https://github.com/kuzzleio/kuzzle/commit/f849e2c9d2aff5a3636a0b2fc0d11ac86561277a))
+* **conflicts:** merge conflict ([e763392](https://github.com/kuzzleio/kuzzle/commit/e76339261029262aac31af972dc81f05a082e469))
+* **es8:** add elasticsearch-8 in listened branches ([e59cedd](https://github.com/kuzzleio/kuzzle/commit/e59cedd2a2404e315024f18eb3823af03e341411))
+* **es8:** update deployment to allow elasticsearch-8 package to be deployed as a pre-release ([8286522](https://github.com/kuzzleio/kuzzle/commit/8286522368ee70efd54a6d631a5917f02d96b952))
+* **kuzzleeventemitter:** add missing generics parameters ([48cbcf2](https://github.com/kuzzleio/kuzzle/commit/48cbcf2e2713e96a1e5e21ba6bf23452669edaad))
+* **storage:** update more types ([50bfe58](https://github.com/kuzzleio/kuzzle/commit/50bfe580db9e86d6e1de761605ac86debdae2e48))
+* **tests:** fixing unit tests ([50f2cac](https://github.com/kuzzleio/kuzzle/commit/50f2cac418f1616ec1c9c68ef149f8072a7a45e4))
+* **triggerEvents:** fix response format for request with triggerEvents ([#2546](https://github.com/kuzzleio/kuzzle/issues/2546)) ([ffed901](https://github.com/kuzzleio/kuzzle/commit/ffed901d6051d6c0558019d1b67d30fdec3093ff))
+
+
+### Features
+
+* **dockerfiles:** move images from bullseye to bookworm ([#2545](https://github.com/kuzzleio/kuzzle/issues/2545)) ([c225aa1](https://github.com/kuzzleio/kuzzle/commit/c225aa183267fcdbd842e37fce1e4091780e7b1d))
+* **elasticsearch8:** tests unit are now okay ([1f4d1e8](https://github.com/kuzzleio/kuzzle/commit/1f4d1e8686c3f460496f8a73d983371a173d3a14))
+* **es8:** elasticsearch 8 unit tests & functional tests running ([bdcce96](https://github.com/kuzzleio/kuzzle/commit/bdcce96fc97ff58143f29484ae1da2076ee2e885))
+* **es8:** support both es7 and es8 ([e12c35a](https://github.com/kuzzleio/kuzzle/commit/e12c35af6b3a8d375005177cdf56509396db5cb4))
+* only support ES 8.x ([4a8038e](https://github.com/kuzzleio/kuzzle/commit/4a8038e7729a9cdf5b9d7b2c0540899f8911d11c))
+* **storage:** add more types, fix some requests ([a18d454](https://github.com/kuzzleio/kuzzle/commit/a18d454b36d5fe565ad6b08a772c13c3e6a16bab))
+* **storage:** upgrade to the Elasticsearch 8 client ([6753640](https://github.com/kuzzleio/kuzzle/commit/675364013e3b07fc665bfea70e2489b28bad0d8e))
+
 # [2.32.0-elasticsearch-8.1](https://github.com/kuzzleio/kuzzle/compare/v2.31.0...v2.32.0-elasticsearch-8.1) (2024-08-28)
 
 
