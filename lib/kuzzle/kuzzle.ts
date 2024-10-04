@@ -103,7 +103,7 @@ type ImportStatus = {
 
 class Kuzzle extends KuzzleEventEmitter {
   public config: KuzzleConfiguration;
-  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  private _state: typeof kuzzleStateEnum = kuzzleStateEnum.STARTING;
   public log: Logger;
   private rootPath: string;
   /**
@@ -138,7 +138,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Validation core component
    */
-  public validation: Validation;
+  public validation: typeof Validation;
 
   /**
    * Dump generator
@@ -148,7 +148,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
-  public vault: vault;
+  public vault: typeof vault;
 
   /**
    * AsyncLocalStorage wrapper
@@ -833,11 +833,11 @@ class Kuzzle extends KuzzleEventEmitter {
     );
   }
 
-  get state() {
+  get state(): typeof kuzzleStateEnum {
     return this._state;
   }
 
-  set state(value) {
+  set state(value: typeof kuzzleStateEnum) {
     this._state = value;
     this.emit("kuzzle:state:change", value);
   }

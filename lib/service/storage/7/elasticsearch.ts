@@ -21,7 +21,7 @@
 
 import _ from "lodash";
 
-import { ApiResponse, RequestParams, Client } from "sdk-es7";
+import { ApiResponse, Client, RequestParams } from "sdk-es7";
 import { Index, IndicesCreate } from "sdk-es7/api/requestParams";
 import { TypeMapping } from "sdk-es7/api/types";
 import {
@@ -39,16 +39,16 @@ import ms from "ms";
 import semver from "semver";
 import debug from "../../../util/debug";
 
-import ESWrapper from "./esWrapper";
-import { QueryTranslator } from "../commons/queryTranslator";
-import didYouMean from "../../../util/didYouMean";
+import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
 import * as kerror from "../../../kerror";
-import { assertIsObject } from "../../../util/requestAssertions";
-import { isPlainObject } from "../../../util/safeObject";
+import didYouMean from "../../../util/didYouMean";
 import extractFields from "../../../util/extractFields";
 import { Mutex } from "../../../util/mutex";
 import { randomNumber } from "../../../util/name-generator";
-import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
+import { assertIsObject } from "../../../util/requestAssertions";
+import { isPlainObject } from "../../../util/safeObject";
+import { QueryTranslator } from "../commons/queryTranslator";
+import ESWrapper from "./esWrapper";
 
 debug("kuzzle:services:elasticsearch");
 
@@ -1659,8 +1659,13 @@ export class ES7 {
     collection: string,
     {
       mappings = {},
+      reindexCollection = false,
       settings = {},
-    }: { mappings?: TypeMapping; settings?: Record<string, any> } = {},
+    }: {
+      mappings?: TypeMapping;
+      reindexCollection?: boolean;
+      settings?: Record<string, any>;
+    } = {},
   ) {
     const esRequest = {
       index: await this._getIndice(index, collection),
@@ -1690,7 +1695,10 @@ export class ES7 {
 
         await this.updateMapping(index, collection, mappings);
 
-        if (this._dynamicChanges(previousMappings, mappings)) {
+        if (
+          reindexCollection ||
+          this._dynamicChanges(previousMappings, mappings)
+        ) {
           await this.updateSearchIndex(index, collection);
         }
       }
