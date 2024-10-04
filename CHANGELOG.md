@@ -1,3 +1,15 @@
+# [2.33.0](https://github.com/kuzzleio/kuzzle/compare/v2.32.0...v2.33.0) (2024-10-04)
+
+
+### Bug Fixes
+
+* improve typing to avoid typescript build errors ([569bf2c](https://github.com/kuzzleio/kuzzle/commit/569bf2c680e70c47cb5b8f81a326f4039e8a5214))
+
+
+### Features
+
+* **elasticsearch:** add flag to reindex collection after an update ([3cbc2b5](https://github.com/kuzzleio/kuzzle/commit/3cbc2b55e3ff1eb7ddd9c682fd34c87e18c86cbb))
+
 # [2.32.0](https://github.com/kuzzleio/kuzzle/compare/v2.31.0...v2.32.0) (2024-10-02)
 
 
