@@ -62,6 +62,7 @@ index-dump/*
 #doc framework
 doc/framework
 frontmatter-errors.json
+codes/
 
 #vscode
 .vscode
