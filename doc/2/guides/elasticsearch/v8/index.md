@@ -12,7 +12,7 @@ meta:
 
 # Elasticsearch 8
 
-<SinceBadge version="2.30.0"/>
+<SinceBadge version="2.32.0"/>
 
 Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concepts/data-storage).
 

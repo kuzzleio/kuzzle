@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 50
-title: Elasticsearch 8 | Develop on Kuzzle | Guide | Core
+title: Migrate project from v7 to v8 | Develop on Kuzzle | Guide | Core
 meta:
   - name: description
     content: Extend Kuzzle API with controllers and actions
@@ -12,7 +12,7 @@ meta:
 
 # Migrate a project from Elasticsearch 7 to Elasticsearch 8
 
-<SinceBadge version="2.30.0"/>
+<SinceBadge version="2.32.0"/>
 
 Kuzzle relies on Elasticsearch as a [NoSQL document store](/core/2/guides/main-concepts/data-storage).
 
