@@ -40,13 +40,13 @@ add(
 
 <br/>
 
-| Argument     | Type                  | Description                                            |
-| ------------ | --------------------- | ------------------------------------------------------ |
-| `connection` | <pre>Connection<pre>  | Connection to register the subscription on             |
-| `index`      | <pre>string</pre>     | Index name                                             |
-| `collection` | <pre>string</pre>     | Collection name                                        |
-| `filters`    | <pre>JSONObject</pre> | Subscription filters                                   |
-| `options`    | <pre>JSONObject</pre> | Subscription options (`volatile`, `scope` and `users`) |
+| Argument     | Type         | Description                                            |
+| ------------ | ------------ | ------------------------------------------------------ |
+| `connection` | `Connection` | Connection to register the subscription on             |
+| `index`      | `string`     | Index name                                             |
+| `collection` | `string`     | Collection name                                        |
+| `filters`    | `JSONObject` | Subscription filters                                   |
+| `options`    | `JSONObject` | Subscription options (`volatile`, `scope` and `users`) |
 
 ## Usage
 

@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x07: security | API | Core " 
+title: "0x07: security | API | Core "
 description: Error codes definitions
 ---
 

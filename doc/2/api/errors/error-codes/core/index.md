@@ -1,7 +1,7 @@
 ---
 code: true
 type: page
-title: "0x00: core | API | Core " 
+title: "0x00: core | API | Core "
 description: Error codes definitions
 ---
 
@@ -66,6 +66,7 @@ description: Error codes definitions
 ### Subdomain: 0x0004: sandbox
 
 <DeprecatedBadge version="2.0.0">
+
 | id / code | class / status | message | description |
 | --------- | -------------- | --------| ----------- |
 | core.sandbox.process_already_running<br/><pre>0x00040001</pre>  | [InternalError](/core/2/api/errors/error-codes#internalerror) <pre>(500)</pre> | A process is already running for this sandbox | A process is already running for this sandbox |

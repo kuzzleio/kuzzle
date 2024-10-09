@@ -2,17 +2,17 @@
 code: false
 type: page
 order: 100
-title: Elasticsearch 8 | Develop on Kuzzle | Guide | Core
+title: Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
-    content: Extend Kuzzle API with controllers and actions
+    content: Configure Kuzzle to use Elasticsearch 8
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
 
 # Elasticsearch 8
 
-<SinceBadge version="2.30.0"/>
+<SinceBadge version="2.32.0"/>
 
 Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concepts/data-storage).
 
@@ -22,13 +22,13 @@ Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/q
 
 The support of Elasticsearch 8 has been introduced in Kuzzle 2.30.0.
 
-The choice has been made to keep Kuzzle compatible to avoid breaking changes around the support of ES8. 
+The choice has been made to keep Kuzzle compatible to avoid breaking changes around the support of ES8.
 
 We wanted to allow the user to **opt-in** for this feature, so no modification is needed on your behalf if you want to keep using Elasticsearch 7.
 
 The default major version of Elasticsearch will be 7 until Kuzzle v3.
 
-The new configuration key to change the version supported is available under:  
+The new configuration key to change the version supported is available under:
 
 ```json
 {
@@ -41,11 +41,11 @@ The new configuration key to change the version supported is available under:
 ```
 
 :::warning
-You can not set the `majorVersion` key to 8 if you are using a version of Kuzzle that does not support it. 
+You can not set the `majorVersion` key to 8 if you are using a version of Kuzzle that does not support it.
 :::
 
 :::info
-Kuzzle cannot connect to both Elasticsearch 7 and Elasticsearch 8 at the same time.  
+Kuzzle cannot connect to both Elasticsearch 7 and Elasticsearch 8 at the same time.
 :::
 
 Once the version is set to 8, Kuzzle will use the Elasticsearch 8 API to communicate with the database.
