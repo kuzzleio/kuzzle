@@ -1,8 +1,21 @@
-# [2.32.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.31.0...v2.32.0-beta.1) (2024-09-13)
+# [2.33.0](https://github.com/kuzzleio/kuzzle/compare/v2.32.0...v2.33.0) (2024-10-04)
 
 
 ### Bug Fixes
 
+* improve typing to avoid typescript build errors ([569bf2c](https://github.com/kuzzleio/kuzzle/commit/569bf2c680e70c47cb5b8f81a326f4039e8a5214))
+
+
+### Features
+
+* **elasticsearch:** add flag to reindex collection after an update ([3cbc2b5](https://github.com/kuzzleio/kuzzle/commit/3cbc2b55e3ff1eb7ddd9c682fd34c87e18c86cbb))
+
+# [2.32.0](https://github.com/kuzzleio/kuzzle/compare/v2.31.0...v2.32.0) (2024-10-02)
+
+
+### Bug Fixes
+
+* bump deps to remove vulnerabilities ([ef27719](https://github.com/kuzzleio/kuzzle/commit/ef277194e0ed355ca0a5c16c9131875094f3a0b8))
 * **ci:** indent to pass linter ([f849e2c](https://github.com/kuzzleio/kuzzle/commit/f849e2c9d2aff5a3636a0b2fc0d11ac86561277a))
 * **conflicts:** merge conflict ([e763392](https://github.com/kuzzleio/kuzzle/commit/e76339261029262aac31af972dc81f05a082e469))
 * **es8:** add elasticsearch-8 in listened branches ([e59cedd](https://github.com/kuzzleio/kuzzle/commit/e59cedd2a2404e315024f18eb3823af03e341411))
