@@ -341,7 +341,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
           "core:storage:private:document:get",
           internalIndexName,
           "config",
-          "security.jwt.secret",
+          internalIndexHandler._JWT_SECRET_ID,
         )
         .resolves({
           _source: {
@@ -368,7 +368,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
           "core:storage:private:document:exists",
           internalIndexName,
           "config",
-          "security.jwt.secret",
+          internalIndexHandler._JWT_SECRET_ID,
         )
         .resolves(false);
       kuzzle.ask
@@ -376,7 +376,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
           "core:storage:private:document:create",
           internalIndexName,
           "config",
-          "security.jwt.secret",
+          internalIndexHandler._JWT_SECRET_ID,
         )
         .resolves();
       kuzzle.ask
@@ -384,7 +384,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
           "core:storage:private:document:get",
           internalIndexName,
           "config",
-          "security.jwt.secret",
+          internalIndexHandler._JWT_SECRET_ID,
         )
         .resolves({
           _source: {
