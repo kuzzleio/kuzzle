@@ -48,6 +48,18 @@ This deployment does not use any SSL encryption (HTTPS).
 A production deployment must include a reverse proxy to securize the connection with SSL.
 :::
 
+::: warning
+#### Production Deployment: Auth Token Secret
+
+For every production deployment of Kuzzle, it is essential to set the kuzzle_security__authToken__secret environment variable. This ensures that the JWT secrets used for authenticating requests are generated externally and not stored in Elasticsearch. By managing the secret through an environment variable, you enhance security, prevent potential data exposure, and ensure tokens remain valid only as long as the secret remains unchanged.
+
+Important: If the `kuzzle_security__authToken__secret` value is changed when Kuzzle restarts, all existing tokens will be invalidated. This ensures that only tokens signed with the current secret remain valid, adding an extra layer of security.
+
+For default configuration values, you can refer to [the sample Kuzzle configuration file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
+
+Note: If the secret is not set, Kuzzle will fallback to a less secure method of generating and storing the secret, which is not recommended for production environments.
+:::
+
 ## Prepare our Docker Compose deployment
 
 We are going to write a `docker-compose.yml` file that describes our services.  
