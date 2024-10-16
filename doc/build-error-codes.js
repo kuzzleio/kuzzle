@@ -64,7 +64,7 @@ function getHeader (title) {
   return `---
 code: true
 type: page
-title: "${title} | API | Core " 
+title: "${title} | API | Core "
 description: Error codes definitions
 ---
 
@@ -122,7 +122,7 @@ function buildErrorCodes (name) {
     doc += `\n\n### Subdomain: 0x${buffer.toString('hex', 2)}: ${subname}\n\n`;
 
     if (subdomain.deprecated) {
-      doc += `<DeprecatedBadge version="${subdomain.deprecated}">\n`;
+      doc += `<DeprecatedBadge version="${subdomain.deprecated}">\n\n`;
     }
 
     doc += '| id / code | class / status | message | description |\n';

@@ -22,6 +22,7 @@ Body:
 ```
 
 <DeprecatedBadge version="2.11.0">
+
 ```http
 URL: http://kuzzle:7512/<index>/<collection>/<_id>/_update[?refresh=wait_for][&retryOnConflict=<int>][&source][&silent]
 Method: PUT
