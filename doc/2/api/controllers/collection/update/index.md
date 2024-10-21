@@ -123,6 +123,8 @@ Body:
 - `mappings`: [collection mappings](/core/2/guides/main-concepts/data-storage#mappings-properties)
 - `reindexCollection`: boolean, if `true`, the collection will be reindexed after the update
 
+<SinceBadge version="2.33.0"/>
+
 ---
 
 ## Response
