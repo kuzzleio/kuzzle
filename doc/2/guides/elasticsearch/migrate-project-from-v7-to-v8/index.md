@@ -1,94 +1,57 @@
 ---
 code: false
 type: page
-order: 50
-title: Migrate to Elasticsearch 8 | Elasticsearch | Guide | Core
+order: 200
+title: Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
-    content: Migrate your Kuzzle project from Elasticsearch 7 to Elasticsearch 8
+    content: Configure Kuzzle to use Elasticsearch 8
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
 
-# Migrate a project from Elasticsearch 7 to Elasticsearch 8
+# Elasticsearch 8
 
-<SinceBadge version="2.32.0"/>
+<SinceBadge version="2.30.0"/>
 
-Kuzzle relies on Elasticsearch as a [NoSQL document store](/core/2/guides/main-concepts/data-storage).
 
-The support of Elasticsearch 8 has been introduced in Kuzzle 2.30.0.
+## Migrating production data from Elasticsearch 7 to 8
 
-To avoid any breaking changes around the support of Elasticsearch 8, we kept Kuzzle working seemlessly with Elasticsearch 7 and Elasticsearch 8.
+Is this section, we will see how to migrate a production environnement data from Elasticsearch 7.x to Elasticsearch 8.x
 
-The use of Elasticsearch 8 is an **opt-in** option, so no modification is needed on your behalf if you want to keep using Elasticsearch 7.
+### Prerequisites
 
-The default major version of Elasticsearch will be 7 until the next major version of Kuzzle that would ne Kuzzle v3.
+Before starting the migration process, ensure the following:
+* __Backup your data__: Always backup your indices and cluster settings before starting the migration. Use the Snapshot and Restore feature for this.
+* __Version Check__: Make sure your Elasticsearch 7.x is at the latest minor version. Elasticsearch supports migrating from the last minor version of the previous major version.
 
-## How to setup your project to use Elasticsearch 8
+### Check Deprecation API
 
-### Setup Kuzzle to use Elasticsearch 8
+* Elasticsearch Deprecation API can be used to check for any features or settings in your current cluster that are deprecated or removed in the 8.x version. Address these issues before proceeding.
+* Test in a **Non-Production Environment**
+Conduct a dry run in a development environment to spot potential issues and estimate the duration the migration process might take.
 
-#### Upgrade the npm package
-First you need to upgrade you Kuzzle package to version `>= 2.30.0-es8` in the `package.json` file. Then run `npm install` to upgrade the packages for you application.
+### Migration Methods
 
-### Configure Kuzzle
-A new configuration key `majorVersion` has been introduced ine the `storageEngine` section to allow the selection of the Eleasticsearch version you want to support for your project.
+Theire are 2 strategies to upgrade Elasticsearch in a production environment:
+1. Re-indexing
+	* Step 1: Create a new cluster running Elasticsearch 8.x.
+	* Step 2: Take a snapshot of your data in the current 7.x cluster.
+	* Step 3: Restore the snapshot into the new 8.x cluster.
+1. Rolling Upgrade
+	* Step 1: Disable Shard Allocation.
+	* Step 2: Stop and upgrade a single Elasticsearch node.
+	* Step 3: Enable Shard Allocation and allow the node to join the cluster and the cluster to re-balance.
+	* Step 4: Repeat for each node in the cluster.
 
-When not specified, it will be considered to be version 7, specify 8 if you want to switch Kuzzle to support Elasticasearch 8.
+After you have migrated your data:
+1. Post Upgrade Checks
+	* Run the health and stats APIs to ensure the health of your newly upgraded cluster.
+	* Update your clients and integrations to the latest version that's compatible with Elasticsearch 8.x, if not done already.
+	* Monitor your cluster using the Monitoring API or third-party monitoring services.
+1. Troubleshoot
+	* If you encounter any issues during the migration process, take advantage of the Elasticsearch documentation, forums, and issue trackers for troubleshooting information and support.
 
-This has to be add to you kuzzlerc file, or provided via an environnement variable (see RC doc for details on kuzzlerc configation options)
+> Note: Migration steps can vary depending on your setup and needs. Always refer to the official Elasticsearch documentation for the most accurate information, you can find it [here](https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-upgrade.html).
 
-```json
-{
-  "services": {
-    "storageEngine": {
-      "majorVersion": 8
-    }
-  }
-}
-```
-
-:::warning
-You can not set the `majorVersion` key to 8 if you are using a version of Kuzzle that does not support it. (older versions of Kuzzle won't complain about this value)
-:::
-
-:::info
-Kuzzle cannot connect to both Elasticsearch 7 and Elasticsearch 8 at the same time.
-:::
-
-Once the version is set to 8, Kuzzle will use the Elasticsearch 8 API to communicate with the database.
-
-### Launch Elasticsearch 8 (dev environnement)
-
-Next you will have to change the docker-compose.yml file so that it pulls Elasticsearch 8 image with the recommanded configuration to work with Kuzzle
-
-You can replace the original `elasticsearch` section with the following exemple
-
-```yaml
- elasticsearch:
-    image: elasticsearch:8.11.3
-    container_name: kuzzle_elasticsearch
-    environment:
-      - xpack.security.enabled=false
-      - action.destructive_requires_name=false
-      - cluster.name=kuzzle
-      - node.name=alyx
-      - discovery.type=single-node
-      - ingest.geoip.downloader.enabled=false
-      - indices.id_field_data.enabled=true
-    ports:
-      - '9200:9200'
-    healthcheck:
-      test: ['CMD', 'curl', '-f', 'http://localhost:9200']
-      interval: 2s
-      timeout: 2s
-      retries: 10
-    ulimits:
-      nofile: 65536
-```
-
-### Data migration
-
-In the context of running the project in a development envinronnement, you can run your usual initialisation scripts as usual, or use Kourou to dump data from the project still running on Elasticsearch 7 and import them when you are done with setuping the project to run with Elasticsearch 8.
-
-In the context of an hosted environment such as pre-prodcution or production environnement, we recommand following this guide.
+Disclaimer: The above steps provide a general migration guide. Migrations can be complex and it's advised to always test these steps in a **non-production environment** before applying them to production.
