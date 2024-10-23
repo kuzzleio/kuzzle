@@ -136,6 +136,24 @@ export class TokenRepository extends ObjectRepository<Token> {
     global.kuzzle.onAsk("core:security:token:verify", (hash) =>
       this.verifyToken(hash),
     );
+
+    // ? those checks are necessary to detect JWT seed changes and delete existing token if necessary
+    const existingTokens = await global.kuzzle.ask(
+      "core:cache:internal:searchKeys",
+      "repos/kuzzle/token/*",
+    );
+
+    if (existingTokens.length > 0) {
+      try {
+        const [, token] = existingTokens[0].split("#");
+        await this.verifyToken(token);
+      } catch (e) {
+        // ? seed has changed
+        if (e.id === "security.token.invalid") {
+          await global.kuzzle.ask("core:cache:internal:del", existingTokens);
+        }
+      }
+    }
   }
 
   /**
@@ -189,8 +207,10 @@ export class TokenRepository extends ObjectRepository<Token> {
   async generateToken(
     user: User,
     {
-      algorithm = global.kuzzle.config.security.jwt.algorithm,
-      expiresIn = global.kuzzle.config.security.jwt.expiresIn,
+      algorithm = global.kuzzle.config.security.authToken.algorithm ??
+        global.kuzzle.config.security.jwt.algorithm,
+      expiresIn = global.kuzzle.config.security.authToken.expiresIn ??
+        global.kuzzle.config.security.jwt.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
       singleUse = false,
@@ -211,7 +231,8 @@ export class TokenRepository extends ObjectRepository<Token> {
     const maxTTL =
       type === "apiKey"
         ? global.kuzzle.config.security.apiKey.maxTTL
-        : global.kuzzle.config.security.jwt.maxTTL;
+        : global.kuzzle.config.security.authToken.maxTTL ??
+          global.kuzzle.config.security.jwt.maxTTL;
 
     if (
       !bypassMaxTTL &&
@@ -318,12 +339,12 @@ export class TokenRepository extends ObjectRepository<Token> {
         throw new jwt.JsonWebTokenError("Invalid token");
       }
     } catch (err) {
-      if (err instanceof jwt.TokenExpiredError) {
-        throw securityError.get("expired");
-      }
-
       if (err instanceof jwt.JsonWebTokenError) {
         throw securityError.get("invalid");
+      }
+
+      if (err instanceof jwt.TokenExpiredError) {
+        throw securityError.get("expired");
       }
 
       throw securityError.getFrom(err, "verification_error", err.message);
