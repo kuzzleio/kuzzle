@@ -25,9 +25,8 @@ It is recommended to use Node Version Manager to avoid rights problems when usin
 You can install NVM with the one-liner script documented on [NVM Github repository](https://github.com/nvm-sh/nvm#install--update-script)
 :::
 
-- [Node.js <= 18](https://nodejs.org/en/download/)
+- [Node.js >= 16](https://nodejs.org/en/download/)
 - [Docker](https://docs.docker.com/engine/install/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
 - [Kourou](https://github.com/kuzzleio/kourou)
 
 
@@ -118,14 +117,14 @@ Now visit [http://localhost:7512](http://localhost:7512) with your browser. You 
 
 ### Admin Console
 
-You can also use the [Admin Console](https://next-console.kuzzle.io) which allows you to manage your data, your users and your rights.
+You can also use the [Admin Console](https://console.kuzzle.io) which allows you to manage your data, your users and your rights.
 
 ::: info
 The Admin Console is a [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application) written in Vue.js and using the [Javascript SDK](/sdk/js/7).
 No data related to your connection to Kuzzle will pass through our servers.
 :::
 
-First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://next-console.kuzzle.io) in your browser and then fill the form as follows:
+First, we need to setup a new connection to a Kuzzle application. Open the [Admin Console](http://console.kuzzle.io) in your browser and then fill the form as follows:
 
 ![Admin Console create connection form](./admin-console-create-connection.png)
 
@@ -139,6 +138,7 @@ You are now connected to your local Kuzzle application using the Admin Console! 
 
 ::: info
 The minimum rights required for an user to connect to the Kuzzle Admin Console are:
+:::
 
 ```js
 {
@@ -154,8 +154,6 @@ The minimum rights required for an user to connect to the Kuzzle Admin Console a
   }
 }
 ```
-
-:::
 
 <GuidesLinks
   :next="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"
