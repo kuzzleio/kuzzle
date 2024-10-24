@@ -18,13 +18,13 @@ Rather than developing the same standard features over and over again every time
 
 ## API First
 
-The majority of Kuzzle's features are available via its [API](/core/2/guides/main-concepts/api) for various external clients.
+The majority of Kuzzle's features are available via its API for various external clients.
 
 This **multi-protocol API** allows clients to communicate with Kuzzle and use the backend features through the **protocol that best suits their needs**:
- - [HTTP](/core/2/api/protocols/http)
- - [WebSocket](/core/2/api/protocols/websocket)
- - [MQTT](/core/2/api/protocols/mqtt)
- - Or [any IP protocol](/core/2/guides/write-protocols/start-writing-protocols)
+- HTTP
+- WebSocket 
+- MQTT
+- Or any IP protocol
 
 Whether it is the creation and modification of the database or the management of users and rights, **everything is available through the different controllers of the API**.
 
@@ -34,13 +34,14 @@ Access to every action is **centralized within the rights management system** fo
 
 ## Ready-to-use Database
 
-Kuzzle uses Elasticsearch as a [NoSQL document store](/core/2/guides/main-concepts/data-storage).
+Kuzzle uses Elasticsearch as a NoSQL document store.
 
 With Kuzzle, customers **can directly access data stored in the database** as long as they have the rights to do so.
 
-Kuzzle exposes the [Elasticsearch Query Language](/core/2/guides/main-concepts/querying) in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
+Kuzzle exposes the Elasticsearch Query Language in a secure way. It is therefore possible to **take full advantage of the possibilities of Elasticsearch** with boolean queries, aggregations, special fields, etc.
 
 It is then **no longer needed to create a new controller every time new data needs to be displayed**, and it is no longer needed to add parameters to controller actions to refine searches either: **queries are expressed directly on the client side**.
+
 
 ```js
 // Retrieve documents matching the Elasticsearch query
