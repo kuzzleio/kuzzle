@@ -138,7 +138,6 @@ You are now connected to your local Kuzzle application using the Admin Console! 
 
 ::: info
 The minimum rights required for an user to connect to the Kuzzle Admin Console are:
-:::
 
 ```js
 {
@@ -154,6 +153,7 @@ The minimum rights required for an user to connect to the Kuzzle Admin Console a
   }
 }
 ```
+:::
 
 <GuidesLinks
   :next="{ text: 'Store and Access Data', url: '/guides/getting-started/store-and-access-data/' }"
