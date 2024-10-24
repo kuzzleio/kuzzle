@@ -10,7 +10,7 @@ meta:
     content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, iot, backend, opensource,  API Controllers
 ---
 
-# Migrate a project from Elasticsearch 7 to Elasticsearch 8
+# Elasticsearch 8 support
 
 <SinceBadge version="2.30.0"/>
 
@@ -117,6 +117,29 @@ services:
 
 Or you can run `kourou app:scaffold sandbox` to create a new Kuzzle project with a `docker-compose.yml` file that uses Elasticsearch 8.
 
-### Data migration
+## Inside a kuberenetes cluster
 
-In the context of running the project in a development environment, you can run your usual initialisation scripts or use Kourou to dump data from the project still running on Elasticsearch 7 and import them when you are done with setuping the project to run with Elasticsearch 8.
+While running Kuzzle inside a Kubernetes cluster, you can use the following configuration to run Kuzzle with Elasticsearch 8:
+
+```yaml
+  # SSL/TLS Configuration
+  - name: kuzzle_services__storageEngine__client__tls__ca
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-certs
+        key: ca.crt
+  - name: kuzzle_services__storageEngine__client__tls__rejectUnauthorized
+    value: "false"
+  - name: kuzzle_services__storageEngine__client__tls__cert
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-certs
+        key: tls.crt
+  - name: kuzzle_services__storageEngine__client__tls__key
+    valueFrom:
+      secretKeyRef:
+        name: elasticsearch-master-certs
+        key: tls.key
+```
+
+This will allow Kuzzle to connect to Elasticsearch 8 using a secure connection.
