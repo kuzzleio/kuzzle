@@ -58,7 +58,7 @@
     "passport": "0.7.0",
     "protobufjs": "7.2.5",
     "rc": "1.2.8",
-    "sdk-es7": "https://github.com/elastic/elasticsearch-js/archive/refs/tags/v7.13.0.tar.gz",
+    "sdk-es7": "npm:@elastic/elasticsearch@7.13.0",
     "sdk-es8": "npm:@elastic/elasticsearch@8.12.1",
     "semver": "7.6.0",
     "sorted-array": "2.0.4",
