@@ -27,21 +27,20 @@ Given(
     should(token).not.be.undefined();
 
     this.sdk.jwt = token;
-
-    const { valid } = await this.sdk.auth.checkToken();
-
-    this.sdk.jwt = previousToken;
-
     if (not) {
-      should(valid).be.false("Provided token is valid");
+      should(await this.sdk.auth.checkToken()).throwError({
+        id: "services.storage.not_found",
+      });
     } else {
+      const { valid } = await this.sdk.auth.checkToken();
+      this.sdk.jwt = previousToken;
       should(valid).be.true("Provided token is invalid");
     }
   },
 );
 
 Given("I save the created API key", function () {
-  this.props.token = this.props.result._source.token;
+  this.props.token = this.props.result.token;
 });
 
 Given(
