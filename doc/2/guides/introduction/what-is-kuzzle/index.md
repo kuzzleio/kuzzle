@@ -9,29 +9,51 @@ meta:
   - name: keywords
     content: Kuzzle, Documentation, kuzzle write pluggins, What is kuzzle
 ---
-# What is Kuzzle
 
-If you reached this page, it probably is because **you are looking for a backend** for your mobile, web or IoT application.
+# Why Choose a Ready-Made Backend?
 
-You were surely thinking about **developing another backend from scratch**, or maybe using some kind of framework to code it faster.
+If you're here, you're probably planning to build a backend system for your:
+- Mobile application
+- Web platform
+- IoT project
 
-Using a framework is handy because having predefined structures, classes and configurations will indeed make the whole process easier, however you will still have to develop the majority of the basic features you truly need like:
- - Storing and searching data
- - Rights management
- - User authentication
- - Access to data and functionalities via API
+## The Traditional Approach
 
-Developing **these features can be a huge timesink**, not only to write them but also to debug, test, secure and maintain them as well.
+Your first instinct might be to:
+1. Build everything from scratch
+2. Use a framework to speed things up
 
-In short, you were going to spend a consequential amount of time on code that **does not bring value to your users**, time that could have been used for many other things like:
- - Development of business functionalities
- - UI / UX of frontend applications
- - 100% coverage by automated tests
- - Implementation of DevOps best practices
- - Product marketing
- - ...
+While frameworks provide helpful structures and patterns, you'll still need to implement fundamental features like:
+- Database operations and search functionality
+- Permission systems
+- User authentication
+- API endpoints
 
-To optimize our own development times and help developers around the world to get their backends running in no time, we started developing Kuzzle, **our ready-to-use backend platform**.
+## The Hidden Cost
+
+Building these basic components isn't just about writing code. It involves:
+- Extensive debugging
+- Security hardening
+- Testing
+- Ongoing maintenance
+
+This represents significant time spent on infrastructure rather than value-adding features.
+
+## What You Could Focus On Instead
+
+The time saved could be better invested in:
+- Core business features
+- Frontend experience
+- Comprehensive testing
+- DevOps optimization
+- Marketing initiatives
+
+## The Solution: Kuzzle
+
+This is why Kuzzle was created - a pre-built backend platform that handles all the foundational elements, allowing developers to focus on what truly matters: building distinctive features for their users.
+
+Think of it as skipping the "infrastructure homework" and jumping straight to the unique aspects of your application.
+
 
 ## How it works
 
@@ -169,9 +191,3 @@ Our multidisciplinary team of experts is capable of addressing any type of issue
 You can thus pass the development and production phases with a relaxed spirit, knowing that you can rely on quality professional support.
 
 [Get a quote](https://info.kuzzle.io/contact-us)
-
-### Meet the community
-
-We federate a community of developers using Kuzzle around the world.
-
-Whether you want to ask a question on [StackOverflow](https://stackoverflow.com/questions/ask?tags=kuzzle), check out the [Kuzzle awesome list](https://github.com/kuzzleio/awesome-kuzzle), watch our video on [YouTube](https://www.youtube.com/channel/UCHcEzVQoH10YSyxc7jD3SMw/videos), or discuss Kuzzle on [Discord](http://join.discord.kuzzle.io), the community and the core team will be there to help you.
