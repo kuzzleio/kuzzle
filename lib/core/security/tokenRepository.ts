@@ -363,20 +363,24 @@ export class TokenRepository extends ObjectRepository<Token> {
 
     if (isApiKey) {
       const fingerprint = sha256(token);
-      
-      const userApiKeys = await ApiKey.search({ query : {
-        term: {
-          userId: decoded._id,
+
+      const userApiKeys = await ApiKey.search({
+        query: {
+          term: {
+            userId: decoded._id,
+          },
         },
-      } });
+      });
 
       if (userApiKeys.length === 0) {
         throw securityError.get("invalid");
       }
 
-      const targetApiKey = userApiKeys.find((apiKey) => apiKey.fingerprint === fingerprint);
-      
-      if(!targetApiKey) {
+      const targetApiKey = userApiKeys.find(
+        (apiKey) => apiKey.fingerprint === fingerprint,
+      );
+
+      if (!targetApiKey) {
         throw securityError.get("invalid");
       }
 
