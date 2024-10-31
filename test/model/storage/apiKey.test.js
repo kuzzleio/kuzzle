@@ -116,23 +116,16 @@ describe("ApiKey", () => {
 
   describe("ApiKey.load", () => {
     it("should throw if the key does not belong to the provided user", async () => {
-      const searchStub = sinon
-        .stub(BaseModel, "search")
+      const loadStub = sinon
+        .stub(BaseModel, "load")
         .resolves({ userId: "mylehuong" });
 
       const promise = ApiKey.load("aschen", "api-key-id");
-
       await should(promise).be.rejectedWith({
         id: "services.storage.not_found",
       });
 
-      should(searchStub).be.calledWith({
-        query: {
-          term: {
-            userId: "aschen",
-          },
-        },
-      });
+      should(loadStub).be.calledWith("api-key-id");
     });
   });
 
