@@ -123,5 +123,5 @@ npm run test:unit
 ### Functional tests
 
 ```bash
-KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" NODE_VERSION="20" ./.ci/scripts/run-test-cluster.sh
+KUZZLE_FUNCTIONAL_TESTS="test:functional:websocket" NODE_VERSION="20" ES_VERSION=8 ./.ci/scripts/run-test-cluster.sh
 ```
