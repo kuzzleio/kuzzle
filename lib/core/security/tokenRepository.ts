@@ -135,7 +135,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       this.verifyToken(hash),
     );
 
-    // ? those checks are necessary to detect JWT seed changes and delete existing token if necessary
+    // ? those checks are necessary to detect JWT seed changes and delete existing tokens if necessary
     const existingTokens = await global.kuzzle.ask(
       "core:cache:internal:searchKeys",
       "repos/kuzzle/token/*",
