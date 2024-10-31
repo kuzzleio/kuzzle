@@ -362,7 +362,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     }
 
     if (isApiKey) {
-      return this._verifyApiKey(decoded, token)
+      return this._verifyApiKey(decoded, token);
     }
 
     let userToken;
@@ -390,33 +390,33 @@ export class TokenRepository extends ObjectRepository<Token> {
   async _verifyApiKey(decoded, token: string) {
     const fingerprint = sha256(token);
 
-      const userApiKeys = await ApiKey.search({
-        query: {
-          term: {
-            userId: decoded._id,
-          },
+    const userApiKeys = await ApiKey.search({
+      query: {
+        term: {
+          userId: decoded._id,
         },
-      });
+      },
+    });
 
-      const targetApiKey = userApiKeys?.find(
-        (apiKey) => apiKey.fingerprint === fingerprint,
-      );
+    const targetApiKey = userApiKeys?.find(
+      (apiKey) => apiKey.fingerprint === fingerprint,
+    );
 
-      if (!targetApiKey) {
-        throw securityError.get("invalid");
-      }
+    if (!targetApiKey) {
+      throw securityError.get("invalid");
+    }
 
-      const apiKey = await ApiKey.load(decoded._id, targetApiKey._id);
+    const apiKey = await ApiKey.load(decoded._id, targetApiKey._id);
 
-      const userToken = new Token({
-        _id: `${decoded._id}#${token}`,
-        expiresAt: apiKey.expiresAt,
-        jwt: token,
-        ttl: apiKey.ttl,
-        userId: decoded._id,
-      });
+    const userToken = new Token({
+      _id: `${decoded._id}#${token}`,
+      expiresAt: apiKey.expiresAt,
+      jwt: token,
+      ttl: apiKey.ttl,
+      userId: decoded._id,
+    });
 
-      return userToken;
+    return userToken;
   }
 
   removeTokenPrefix(token: string) {
