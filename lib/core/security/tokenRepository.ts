@@ -30,8 +30,8 @@ import { Token } from "../../model/security/token";
 import { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
 import debugFactory from "../../util/debug";
-import { Mutex } from "../../util/mutex";
 import { ObjectRepository } from "../shared/ObjectRepository";
+import { sha256 } from "../../util/crypto";
 
 const securityError = kerror.wrap("security", "token");
 const debug = debugFactory("kuzzle:bootstrap:tokens");
@@ -61,8 +61,6 @@ export class TokenRepository extends ObjectRepository<Token> {
   }
 
   async init() {
-    await this.loadApiKeys();
-
     /**
      * Assign an existing token to a user. Stores the token in Kuzzle's cache.
      * @param  {String} hash - JWT
@@ -136,6 +134,24 @@ export class TokenRepository extends ObjectRepository<Token> {
     global.kuzzle.onAsk("core:security:token:verify", (hash) =>
       this.verifyToken(hash),
     );
+
+    // ? those checks are necessary to detect JWT seed changes and delete existing tokens if necessary
+    const existingTokens = await global.kuzzle.ask(
+      "core:cache:internal:searchKeys",
+      "repos/kuzzle/token/*",
+    );
+
+    if (existingTokens.length > 0) {
+      try {
+        const [, token] = existingTokens[0].split("#");
+        await this.verifyToken(token);
+      } catch (e) {
+        // ? seed has changed
+        if (e.id === "security.token.invalid") {
+          await global.kuzzle.ask("core:cache:internal:del", existingTokens);
+        }
+      }
+    }
   }
 
   /**
@@ -189,8 +205,10 @@ export class TokenRepository extends ObjectRepository<Token> {
   async generateToken(
     user: User,
     {
-      algorithm = global.kuzzle.config.security.jwt.algorithm,
-      expiresIn = global.kuzzle.config.security.jwt.expiresIn,
+      algorithm = global.kuzzle.config.security.authToken.algorithm ??
+        global.kuzzle.config.security.jwt.algorithm,
+      expiresIn = global.kuzzle.config.security.authToken.expiresIn ??
+        global.kuzzle.config.security.jwt.expiresIn,
       bypassMaxTTL = false,
       type = "authToken",
       singleUse = false,
@@ -211,7 +229,8 @@ export class TokenRepository extends ObjectRepository<Token> {
     const maxTTL =
       type === "apiKey"
         ? global.kuzzle.config.security.apiKey.maxTTL
-        : global.kuzzle.config.security.jwt.maxTTL;
+        : global.kuzzle.config.security.authToken.maxTTL ??
+          global.kuzzle.config.security.jwt.maxTTL;
 
     if (
       !bypassMaxTTL &&
@@ -251,10 +270,21 @@ export class TokenRepository extends ObjectRepository<Token> {
 
     if (type === "apiKey") {
       encodedToken = Token.APIKEY_PREFIX + encodedToken;
-    } else {
-      encodedToken = Token.AUTH_PREFIX + encodedToken;
-    }
 
+      // For API keys, we don't persist the token
+      const expiresAt =
+        parsedExpiresIn === -1 ? -1 : Date.now() + parsedExpiresIn;
+      return new Token({
+        _id: `${user._id}#${encodedToken}`,
+        expiresAt,
+        jwt: encodedToken,
+        ttl: parsedExpiresIn,
+        userId: user._id,
+      });
+    }
+    encodedToken = Token.AUTH_PREFIX + encodedToken;
+
+    // Persist regular tokens
     return this.persistForUser(encodedToken, user._id, {
       singleUse,
       ttl: parsedExpiresIn,
@@ -308,28 +338,34 @@ export class TokenRepository extends ObjectRepository<Token> {
       return this.anonymousToken;
     }
 
+    const isApiKey = token.startsWith(Token.APIKEY_PREFIX);
+    const tokenWithoutPrefix = this.removeTokenPrefix(token);
+
     let decoded = null;
 
     try {
-      decoded = jwt.verify(this.removeTokenPrefix(token), global.kuzzle.secret);
-
+      decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);
       // probably forged token => throw without providing any information
       if (!decoded._id) {
         throw new jwt.JsonWebTokenError("Invalid token");
       }
     } catch (err) {
-      if (err instanceof jwt.TokenExpiredError) {
-        throw securityError.get("expired");
-      }
-
       if (err instanceof jwt.JsonWebTokenError) {
         throw securityError.get("invalid");
+      }
+
+      if (err instanceof jwt.TokenExpiredError) {
+        throw securityError.get("expired");
       }
 
       throw securityError.getFrom(err, "verification_error", err.message);
     }
 
-    let userToken: Token;
+    if (isApiKey) {
+      return this._verifyApiKey(decoded, token);
+    }
+
+    let userToken;
 
     try {
       userToken = await this.loadForUser(decoded._id, token);
@@ -337,7 +373,6 @@ export class TokenRepository extends ObjectRepository<Token> {
       if (err instanceof UnauthorizedError) {
         throw err;
       }
-
       throw securityError.getFrom(err, "verification_error", err.message);
     }
 
@@ -348,6 +383,38 @@ export class TokenRepository extends ObjectRepository<Token> {
     if (userToken.singleUse) {
       await this.expire(userToken);
     }
+
+    return userToken;
+  }
+
+  async _verifyApiKey(decoded, token: string) {
+    const fingerprint = sha256(token);
+
+    const userApiKeys = await ApiKey.search({
+      query: {
+        term: {
+          userId: decoded._id,
+        },
+      },
+    });
+
+    const targetApiKey = userApiKeys?.find(
+      (apiKey) => apiKey.fingerprint === fingerprint,
+    );
+
+    if (!targetApiKey) {
+      throw securityError.get("invalid");
+    }
+
+    const apiKey = await ApiKey.load(decoded._id, targetApiKey._id);
+
+    const userToken = new Token({
+      _id: `${decoded._id}#${token}`,
+      expiresAt: apiKey.expiresAt,
+      jwt: token,
+      ttl: apiKey.ttl,
+      userId: decoded._id,
+    });
 
     return userToken;
   }
@@ -434,55 +501,6 @@ export class TokenRepository extends ObjectRepository<Token> {
     }
 
     await Promise.all(promises);
-  }
-
-  /**
-   * Loads authentication token from API key into Redis
-   */
-  private async loadApiKeys() {
-    const mutex = new Mutex("ApiKeysBootstrap", {
-      timeout: -1,
-      ttl: 30000,
-    });
-
-    await mutex.lock();
-
-    try {
-      const bootstrapped = await global.kuzzle.ask(
-        "core:cache:internal:get",
-        BOOTSTRAP_DONE_KEY,
-      );
-
-      if (bootstrapped) {
-        debug("API keys already in cache. Skip.");
-        return;
-      }
-
-      debug("Loading API keys into Redis");
-
-      const promises = [];
-
-      await ApiKey.batchExecute({ match_all: {} }, (documents) => {
-        for (const { _source } of documents) {
-          promises.push(
-            this.persistForUser(_source.token, _source.userId, {
-              singleUse: false,
-              ttl: _source.ttl,
-            }),
-          );
-        }
-      });
-
-      await Promise.all(promises);
-
-      await global.kuzzle.ask(
-        "core:cache:internal:store",
-        BOOTSTRAP_DONE_KEY,
-        1,
-      );
-    } finally {
-      await mutex.unlock();
-    }
   }
 
   /**

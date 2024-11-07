@@ -37,10 +37,10 @@ trap 'docker compose -f $YML_FILE logs' err
 
 docker compose -f $YML_FILE up -d
 
-# don't wait on 7512: nginx will accept connections far before Kuzzle does
 KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
+KUZZLE_PORT=7512 ./bin/wait-kuzzle
 
 trap - err
 

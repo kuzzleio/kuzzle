@@ -1,3 +1,17 @@
+# [2.34.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.33.1...v2.34.0-beta.1) (2024-11-07)
+
+
+### Bug Fixes
+
+* do not store api keys in internal index, use fingerprint instead ([c9cb2b8](https://github.com/kuzzleio/kuzzle/commit/c9cb2b869a1e94ff19a8812415985290d7efb95f))
+* remove un wanted breaking change ([a351f96](https://github.com/kuzzleio/kuzzle/commit/a351f968383e9a9d7cd28970332f514b7f08272a))
+* target right ecma version in  eslint ([a96e7e1](https://github.com/kuzzleio/kuzzle/commit/a96e7e1434c2e765bf40cc6535d99b9381c28eb7))
+
+
+### Features
+
+* remove seed from internal storage if we have it from config ([2467201](https://github.com/kuzzleio/kuzzle/commit/24672019074a30384bcfa7cdc6af148e39338ef3))
+
 ## [2.33.1](https://github.com/kuzzleio/kuzzle/compare/v2.33.0...v2.33.1) (2024-10-29)
 
 
