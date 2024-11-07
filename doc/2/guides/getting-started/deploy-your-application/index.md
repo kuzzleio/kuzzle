@@ -49,17 +49,25 @@ A production deployment must include a reverse proxy to securize the connection 
 :::
 
 ::: warning
-#### Production Deployment: Auth Token Secret
+# Authentication Security in Production
 
-For every production deployment of Kuzzle, it is essential to set the `kuzzle_security__authToken__secret` environment variable. This ensures that the JWT secrets used for authenticating requests are generated externally and not stored in Elasticsearch. By managing the secret through an environment variable, you enhance security, prevent potential data exposure, and ensure tokens remain valid only as long as the secret remains unchanged.
+## ⚠️ Important Security Requirement
 
-Important: If the `kuzzle_security__authToken__secret` value is changed when Kuzzle restarts, all existing tokens will be invalidated. This ensures that only tokens signed with the current secret remain valid, adding an extra layer of security.
+You must set the `kuzzle_security__authToken__secret` environment variable before deploying Kuzzle to production. This secret is used to sign and verify JSON Web Tokens (JWTs) for user authentication.
 
-For default configuration values, you can refer to [the sample Kuzzle configuration file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
+## Why This Matters
+- Prevents tokens from being stored in Elasticsearch
+- Improves overall security
+- Gives you direct control over token management
 
-Note: If the secret is not set, Kuzzle will fallback to a less secure method of generating and storing the secret, which is not recommended for production environments.
+## Security Notes
+1. **Fallback Warning**: If you don't set this variable, Kuzzle will use a less secure fallback method (not recommended for production)
+2. **Token Invalidation**: Changing the secret value will immediately invalidate all existing authentication tokens
+3. **User Impact**: Users will need to log in again if the secret changes
+
+## Additional Resources
+For other configuration options, see the [sample configuration file](https://github.com/kuzzleio/kuzzle/blob/master/.kuzzlerc.sample.jsonc).
 :::
-
 ## Prepare our Docker Compose deployment
 
 We are going to write a `docker-compose.yml` file that describes our services.  
