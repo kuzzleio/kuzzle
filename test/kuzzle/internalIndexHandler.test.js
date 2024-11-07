@@ -52,6 +52,8 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       internalIndexHandler = new InternalIndexHandler();
 
+      sinon.stub(internalIndexHandler, "_initSecret").resolves();
+
       await internalIndexHandler.init();
 
       should(kuzzle.ask).calledWith(
@@ -113,9 +115,11 @@ describe("#kuzzle/InternalIndexHandler", () => {
       kuzzle.ask.withArgs("core:storage:private:document:exist").resolves(true);
 
       sinon.stub(internalIndexHandler, "_bootstrapSequence").resolves();
+      sinon.stub(internalIndexHandler, "_initSecret").resolves();
 
       await internalIndexHandler.init();
 
+      should(internalIndexHandler._initSecret).called();
       should(internalIndexHandler._bootstrapSequence).not.called();
 
       should(kuzzle.ask).not.calledWith(
@@ -174,13 +178,13 @@ describe("#kuzzle/InternalIndexHandler", () => {
     it("should trigger a complete bootstrap of the internal structures", async () => {
       sinon.stub(internalIndexHandler, "createInitialSecurities");
       sinon.stub(internalIndexHandler, "createInitialValidations");
-      sinon.stub(internalIndexHandler, "_persistSecret");
+      sinon.stub(internalIndexHandler, "_initSecret");
 
       await internalIndexHandler._bootstrapSequence();
 
       should(internalIndexHandler.createInitialSecurities).called();
       should(internalIndexHandler.createInitialValidations).called();
-      should(internalIndexHandler._persistSecret).called();
+      should(internalIndexHandler._initSecret).called();
 
       should(kuzzle.ask).calledWith(
         "core:storage:private:document:create",
@@ -309,7 +313,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
     });
   });
 
-  describe("#_persistSecret", () => {
+  describe("#_initSecret", () => {
     const randomBytesMock = sinon.stub().returns(Buffer.from("12345"));
 
     before(() => {
@@ -332,10 +336,22 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
     it("should use the configured seed, if one is present", async () => {
       kuzzle.config.security.jwt.secret = "foobar";
+      kuzzle.ask
+        .withArgs(
+          "core:storage:private:document:get",
+          internalIndexName,
+          "config",
+          internalIndexHandler._JWT_SECRET_ID,
+        )
+        .resolves({
+          _source: {
+            seed: "foobar",
+          },
+        });
 
-      await internalIndexHandler._persistSecret();
+      await internalIndexHandler._initSecret();
 
-      should(kuzzle.ask).calledWith(
+      should(kuzzle.ask).not.calledWith(
         "core:storage:private:document:create",
         internalIndexName,
         "config",
@@ -347,7 +363,35 @@ describe("#kuzzle/InternalIndexHandler", () => {
     });
 
     it("should auto-generate a new random seed if none is present in the config file", async () => {
-      await internalIndexHandler._persistSecret();
+      kuzzle.ask
+        .withArgs(
+          "core:storage:private:document:exists",
+          internalIndexName,
+          "config",
+          internalIndexHandler._JWT_SECRET_ID,
+        )
+        .resolves(false);
+      kuzzle.ask
+        .withArgs(
+          "core:storage:private:document:create",
+          internalIndexName,
+          "config",
+          internalIndexHandler._JWT_SECRET_ID,
+        )
+        .resolves();
+      kuzzle.ask
+        .withArgs(
+          "core:storage:private:document:get",
+          internalIndexName,
+          "config",
+          internalIndexHandler._JWT_SECRET_ID,
+        )
+        .resolves({
+          _source: {
+            seed: randomBytesMock().toString("hex"),
+          },
+        });
+      await internalIndexHandler._initSecret();
 
       should(kuzzle.ask).calledWith(
         "core:storage:private:document:create",
@@ -365,26 +409,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
       kuzzle.ask.withArgs("core:storage:private:document:create").rejects(err);
 
-      return should(internalIndexHandler._persistSecret()).rejectedWith(err);
-    });
-  });
-
-  describe("#getSecret", () => {
-    it("should fetch the secret seed from the storage space", async () => {
-      kuzzle.ask.withArgs("core:storage:private:document:get").resolves({
-        _source: {
-          seed: "foobar",
-        },
-      });
-
-      await should(internalIndexHandler.getSecret()).fulfilledWith("foobar");
-
-      should(kuzzle.ask).calledWith(
-        "core:storage:private:document:get",
-        internalIndexName,
-        "config",
-        internalIndexHandler._JWT_SECRET_ID,
-      );
+      return should(internalIndexHandler._initSecret()).rejectedWith(err);
     });
   });
 });
