@@ -11,7 +11,6 @@ class InternalIndexHandlerMock extends InternalIndexHandler {
     sinon.stub(this, "init");
     sinon.stub(this, "createInitialSecurities").resolves();
     sinon.stub(this, "createInitialValidations").resolves();
-    sinon.stub(this, "getSecret").resolves();
   }
 }
 

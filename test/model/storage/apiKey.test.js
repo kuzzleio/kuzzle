@@ -121,7 +121,6 @@ describe("ApiKey", () => {
         .resolves({ userId: "mylehuong" });
 
       const promise = ApiKey.load("aschen", "api-key-id");
-
       await should(promise).be.rejectedWith({
         id: "services.storage.not_found",
       });
