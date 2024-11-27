@@ -1,4 +1,4 @@
-ARG ELASTICSEARCH_VERSION="7.16.2"
+ARG ELASTICSEARCH_VERSION="7.17.25"
 FROM docker.elastic.co/elasticsearch/elasticsearch:${ELASTICSEARCH_VERSION}
 
 LABEL maintainer="kuzzle" contact="<support@kuzzle.io>"
