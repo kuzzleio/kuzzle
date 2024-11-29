@@ -7,7 +7,7 @@ on:
 
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
-  ELASTICSEARCH_VERSION: "7.16.2"
+  ELASTICSEARCH_VERSION: "7.17.25"
 
 jobs:
   build-and-push:
