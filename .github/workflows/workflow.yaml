@@ -100,6 +100,24 @@ jobs:
         env:
           NODE_VERSION: ${{ matrix.node-version }}
 
+   build-and-run-kuzzle:
+     needs: [lint, prepare-matrix]
+     name: Build and Run
+     runs-on: ubuntu-20.04
+     strategy:
+       matrix:
+         kuzzle-image: ["kuzzle"]
+         es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
+     steps:
+       - name: Checkout project
+         uses: actions/checkout@v4
+
+       - name: Test to run Kuzzle image
+         uses: ./.github/actions/build-and-run-kuzzle
+         with:
+           kuzzle-image: ${{ matrix.kuzzle-image }}
+           es-version: ${{ matrix.es-version }}
+
   functional-tests:
     name: Functional tests
     needs: [unit-tests, prepare-matrix]
