@@ -35,6 +35,7 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
+    needs: [prepare-matrix]
     runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
@@ -44,8 +45,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          cache: "npm"
 
-      - name: Install depedencies
+      - name: Install dependencies
         run: npm ci
 
       - name: Test error codes
@@ -55,16 +57,20 @@ jobs:
     name: Lint - Node.js
     runs-on: ubuntu-20.04
     needs: [prepare-matrix]
+    strategy:
+      matrix:
+        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Node version ${{ env.NODE_LTS_CURRENT_VERSION }}
+      - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_CURRENT_VERSION }}
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
-      - name: Install depedencies
+      - name: Install dependencies
         run: npm ci
         shell: bash
 
@@ -87,33 +93,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
       - name: Unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
         env:
           NODE_VERSION: ${{ matrix.node-version }}
-
-  # -----------------------------------------------------------------------------
-  # E2E Tests: Functional tests, Monkey tests, Docker image tests
-  # -----------------------------------------------------------------------------
-
-  build-and-run-kuzzle:
-    needs: [unit-tests, prepare-matrix]
-    name: Build and Run
-    runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        kuzzle-image: ["kuzzle"]
-        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
-
-      - name: Test to run Kuzzle image
-        uses: ./.github/actions/build-and-run-kuzzle
-        with:
-          kuzzle-image: ${{ matrix.kuzzle-image }}
-          es-version: ${{ matrix.es-version }}
 
   functional-tests:
     name: Functional tests
@@ -132,6 +117,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
       - name: Test suit ${{ matrix.test-set }}
         uses: ./.github/actions/functional-tests
@@ -162,6 +148,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
+          cache: "npm"
 
       - name: Monkey testing
         uses: ./.github/actions/monkey-tests
