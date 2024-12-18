@@ -61,7 +61,7 @@ jobs:
   doc-deploy:
     name: Documentation - Deploy
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta') }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -86,7 +86,7 @@ jobs:
   npm-deploy:
     name: Build and deploy release on NPM.js
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.npm_deploy) && (github.ref_name == 'master' || github.ref_name == 'beta') }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     permissions:
       contents: write
       issues: write
@@ -94,9 +94,6 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ inputs.node_lts_current_version }}
         uses: actions/setup-node@v4
@@ -122,7 +119,7 @@ jobs:
   publish-runner:
     name: Kuzzle runner Docker image
     needs: [npm-deploy]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         node-version: [16, 18, 20]
@@ -154,7 +151,7 @@ jobs:
   publish-plugin-dev:
     name: Kuzzle plugin-dev Docker image
     needs: [npm-deploy]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -191,7 +188,7 @@ jobs:
   publish-kuzzle-core:
     name: Kuzzle core Docker image
     needs: [npm-deploy]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -228,7 +225,7 @@ jobs:
   publish-core-dev:
     name: Kuzzle core-dev Docker image
     needs: [npm-deploy]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 
@@ -258,7 +255,7 @@ jobs:
   publish-elasticsearch:
     name: Elasticsearch Docker image
     needs: [npm-deploy]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v4
 

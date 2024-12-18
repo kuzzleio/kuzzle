@@ -18,7 +18,7 @@ env:
 jobs:
   prepare-matrix:
     name: Forge Node LTS Matrix
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - id: set-matrix
         run: |
@@ -35,13 +35,10 @@ jobs:
 
   error-codes-check:
     name: Documentation - Error codes check
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
         uses: actions/setup-node@v4
@@ -56,14 +53,11 @@ jobs:
 
   lint:
     name: Lint - Node.js
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     needs: [prepare-matrix]
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ env.NODE_LTS_CURRENT_VERSION }}
         uses: actions/setup-node@v4
@@ -84,13 +78,10 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -109,7 +100,7 @@ jobs:
   build-and-run-kuzzle:
     needs: [unit-tests, prepare-matrix]
     name: Build and Run
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         kuzzle-image: ["kuzzle"]
@@ -132,13 +123,10 @@ jobs:
         test-set: ${{ fromJson(needs.prepare-matrix.outputs.test-set).test-set }}
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
         es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Node version ${{ matrix.node-version }}
         uses: actions/setup-node@v4
@@ -155,7 +143,7 @@ jobs:
   cluster-monkey-tests:
     name: Cluster Monkey Tests
     needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
@@ -163,9 +151,6 @@ jobs:
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
 
       - name: Cloning Monkey Tester
         uses: actions/checkout@v4
