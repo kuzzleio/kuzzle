@@ -2,15 +2,26 @@
 ARG NODE_VERSION="20"
 FROM node:${NODE_VERSION}-bookworm-slim AS builder
 
-RUN  set -x \
+RUN set -x \
+     \
      && apt-get update \
      && apt-get install -y \
+     bash-completion \
+     build-essential \
      curl \
-     make \
      g++ \
-     python3 \
+     gdb \
+     git \
+     gnupg \
+     libfontconfig \
      libzmq3-dev \
-     libunwind-dev
+     python3 \
+     procps \
+     wget \
+     libunwind-dev \
+     && npm install -g kourou \
+     && apt-get clean \
+     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
