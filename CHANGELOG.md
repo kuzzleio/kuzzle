@@ -1,3 +1,10 @@
+# [2.35.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.2...v2.35.0-beta.3) (2024-12-19)
+
+
+### Bug Fixes
+
+* elasticsearch docker_platforms ([b91edfe](https://github.com/kuzzleio/kuzzle/commit/b91edfed7c2ddd54b4de4f36ac3e117cf83054fa))
+
 # [2.35.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.1...v2.35.0-beta.2) (2024-12-19)
 
 
