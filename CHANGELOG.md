@@ -1,3 +1,21 @@
+# [2.35.0](https://github.com/kuzzleio/kuzzle/compare/v2.34.0...v2.35.0) (2024-12-19)
+
+
+### Bug Fixes
+
+* add node_version env var in workflow ([05ff115](https://github.com/kuzzleio/kuzzle/commit/05ff1155b109b86b39a5e254742ab200beba3a80))
+* ci was not running properly ([699f180](https://github.com/kuzzleio/kuzzle/commit/699f180006fb4e061273428fcb8f375f8f1ba720))
+* deployment workflow run rework ([db0501e](https://github.com/kuzzleio/kuzzle/commit/db0501e4581b773d1ca5e53bb4d6b118974b4451))
+* elasticsearch docker_platforms ([b91edfe](https://github.com/kuzzleio/kuzzle/commit/b91edfed7c2ddd54b4de4f36ac3e117cf83054fa))
+* only deploy on master branch ([c481243](https://github.com/kuzzleio/kuzzle/commit/c4812438bebd61147a37300680908414e9d4e10d))
+* typo in workflow ([e565d7d](https://github.com/kuzzleio/kuzzle/commit/e565d7dbadbe5fad4e7bc98e4615525d56fc6ed4))
+* ubuntu version and deps issues ([8ef4738](https://github.com/kuzzleio/kuzzle/commit/8ef4738389833e6caf7406e33e108f70105724df))
+
+
+### Features
+
+* **protocols:** add logging socket closing ([5da5930](https://github.com/kuzzleio/kuzzle/commit/5da5930af18d447d82dd4c4f7c2810257479fec2))
+
 # [2.35.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.3...v2.35.0-beta.4) (2024-12-19)
 
 
