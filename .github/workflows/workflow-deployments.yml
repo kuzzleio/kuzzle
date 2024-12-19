@@ -2,6 +2,7 @@ name: Documentation and NPM package
 
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+  DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
   ELASTICSEARCH_VERSION: "7.17.26"
   NODE_VERSION: "20"
 
@@ -301,5 +302,5 @@ jobs:
           file: ./docker/images/elasticsearch/Dockerfile
           push: true
           build-args: ELASTICSEARCH_VERSION=${{ env.ELASTICSEARCH_VERSION }}
-          platforms: ${{ env.DOCKER_PLATFORMS }}
+          platforms: ${{ env.DOCKER_PLATFORMS_ELASTICSEARCH }}
           tags: kuzzleio/elasticsearch:${{ env.ELASTICSEARCH_VERSION }},kuzzleio/elasticsearch:7, kuzzleio/elasticsearch:latest
