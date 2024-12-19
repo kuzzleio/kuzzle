@@ -1,3 +1,10 @@
+# [2.35.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.1...v2.35.0-beta.2) (2024-12-19)
+
+
+### Bug Fixes
+
+* add node_version env var in workflow ([05ff115](https://github.com/kuzzleio/kuzzle/commit/05ff1155b109b86b39a5e254742ab200beba3a80))
+
 # [2.35.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.34.0...v2.35.0-beta.1) (2024-12-19)
 
 
