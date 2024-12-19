@@ -1,3 +1,10 @@
+# [2.35.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.3...v2.35.0-beta.4) (2024-12-19)
+
+
+### Bug Fixes
+
+* only deploy on master branch ([c481243](https://github.com/kuzzleio/kuzzle/commit/c4812438bebd61147a37300680908414e9d4e10d))
+
 # [2.35.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.35.0-beta.2...v2.35.0-beta.3) (2024-12-19)
 
 
