@@ -22,11 +22,11 @@ RUN set -x \
      git \
      gnupg \
      libfontconfig \
-     libzmq3-dev \
-     python3 \
-     procps \
-     wget \
      libunwind-dev \
+     libzmq3-dev \
+     procps \
+     python3 \
+     wget \
      && npm install -g kourou \
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/*

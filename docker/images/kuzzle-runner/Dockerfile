@@ -11,15 +11,22 @@ ENV NPM_CONFIG_CACHE=/var/npm
 WORKDIR /var/app
 
 RUN set -x \
-     && apt-get update && apt-get install -y \
+     \
+     && apt-get update \
+     && apt-get install -y \
+     bash-completion \
+     build-essential \
      curl \
-     python3 \
-     make \
      g++ \
+     gdb \
      git \
-     libzmq3-dev \
+     gnupg \
+     libfontconfig \
      libunwind-dev \
+     libzmq3-dev \
+     procps \
+     python3 \
+     wget \
+     && npm install -g kourou \
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/*
-
-RUN npm i -g kourou

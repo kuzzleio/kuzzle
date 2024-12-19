@@ -21,7 +21,7 @@ ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
 ADD ./tsconfig.json tsconfig.json
 
-RUN npm ci --noproxy registry.npmjs.org --maxsockets 1
+RUN npm ci
 RUN npm run build
 RUN npm prune --omit=dev
 
