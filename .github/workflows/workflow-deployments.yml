@@ -2,7 +2,8 @@ name: Documentation and NPM package
 
 env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
-  ELASTICSEARCH_VERSION: "7.17.25"
+  ELASTICSEARCH_VERSION: "7.17.26"
+  NODE_VERSION: "20"
 
 on:
   workflow_call:
