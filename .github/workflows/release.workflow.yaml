@@ -15,7 +15,6 @@ jobs:
   publish-runner:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle runner Docker image
-    needs: [npm-deploy]
     runs-on: ubuntu-24.04
     strategy:
       matrix:
@@ -51,7 +50,6 @@ jobs:
   publish-plugin-dev:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle plugin-dev Docker image
-    needs: [npm-deploy]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -92,7 +90,6 @@ jobs:
   publish-kuzzle-core:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle core Docker image
-    needs: [npm-deploy]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -133,7 +130,6 @@ jobs:
   publish-core-dev:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle core-dev Docker image
-    needs: [npm-deploy]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -167,7 +163,6 @@ jobs:
   publish-elasticsearch:
     if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Elasticsearch Docker image
-    needs: [npm-deploy]
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
