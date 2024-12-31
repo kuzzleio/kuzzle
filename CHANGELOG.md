@@ -1,3 +1,10 @@
+## [2.35.1](https://github.com/kuzzleio/kuzzle/compare/v2.35.0...v2.35.1) (2024-12-31)
+
+
+### Bug Fixes
+
+* process was releasing beta version of images ([9b541f9](https://github.com/kuzzleio/kuzzle/commit/9b541f94879d29e298b730c2371e05eeb98d6015))
+
 ## [2.35.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.35.0...v2.35.1-beta.1) (2024-12-31)
 
 
