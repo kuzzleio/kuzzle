@@ -1,3 +1,10 @@
+## [2.35.2](https://github.com/kuzzleio/kuzzle/compare/v2.35.1...v2.35.2) (2024-12-31)
+
+
+### Bug Fixes
+
+* Remove needs statement in action ([2dec872](https://github.com/kuzzleio/kuzzle/commit/2dec8724b994685fe38a6b6d5fc11821fe897939))
+
 ## [2.35.1](https://github.com/kuzzleio/kuzzle/compare/v2.35.0...v2.35.1) (2024-12-31)
 
 
