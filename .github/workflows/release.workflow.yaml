@@ -13,7 +13,6 @@ on:
 
 jobs:
   publish-runner:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle runner Docker image
     runs-on: ubuntu-24.04
     strategy:
@@ -48,7 +47,6 @@ jobs:
           tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
 
   publish-plugin-dev:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle plugin-dev Docker image
     runs-on: ubuntu-24.04
     steps:
@@ -88,7 +86,6 @@ jobs:
           tags: kuzzleio/plugin-dev:${{ steps.get-version.outputs.major-version }},kuzzleio/plugin-dev:latest,kuzzleio/plugin-dev:${{ steps.get-version.outputs.version }}
 
   publish-kuzzle-core:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle core Docker image
     runs-on: ubuntu-24.04
     steps:
@@ -128,7 +125,6 @@ jobs:
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
 
   publish-core-dev:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Kuzzle core-dev Docker image
     runs-on: ubuntu-24.04
     steps:
@@ -161,7 +157,6 @@ jobs:
           tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest
 
   publish-elasticsearch:
-    if: ${{ (github.event_name != 'workflow_dispatch' || inputs.doc_deploy) && (github.ref_name == 'master') }}
     name: Elasticsearch Docker image
     runs-on: ubuntu-24.04
     steps:
