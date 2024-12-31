@@ -1,3 +1,10 @@
+## [2.35.3](https://github.com/kuzzleio/kuzzle/compare/v2.35.2...v2.35.3) (2024-12-31)
+
+
+### Bug Fixes
+
+* remove if statement that was blocking release ([486ad1a](https://github.com/kuzzleio/kuzzle/commit/486ad1a0863d1258d89b8f85d5421126124dd137))
+
 ## [2.35.2](https://github.com/kuzzleio/kuzzle/compare/v2.35.1...v2.35.2) (2024-12-31)
 
 
