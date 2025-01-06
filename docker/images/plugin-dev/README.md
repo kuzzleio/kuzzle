@@ -13,8 +13,6 @@ It contain a complete build toolchain to install and update NPM modules.
 The easiest way is to use this image in a `docker-compose.yml` file:
 
 ```yml
-version: '3'
-
 services:
   kuzzle:
     image: kuzzleio/plugin-dev:2

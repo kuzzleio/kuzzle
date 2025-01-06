@@ -25,7 +25,7 @@ import Bluebird from "bluebird";
 import stringify from "json-stable-stringify";
 import { Koncorde } from "koncorde";
 import _ from "lodash";
-import { murmurHash128 as murmur } from "murmurhash-native";
+import murmur from "murmurhash";
 import segfaultHandler from "node-segfault-handler";
 
 import { version } from "../../package.json";
@@ -823,9 +823,8 @@ class Kuzzle extends KuzzleEventEmitter {
         inString = stringify(input);
     }
 
-    return murmur(
+    return murmur.v3(
       Buffer.from(inString),
-      "hex",
       this.config.internal.hash.seed as number,
     );
   }
