@@ -29,14 +29,10 @@ import { UnauthorizedError } from "../../kerror/errors";
 import { Token } from "../../model/security/token";
 import { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
-import debugFactory from "../../util/debug";
 import { ObjectRepository } from "../shared/ObjectRepository";
 import { sha256 } from "../../util/crypto";
 
 const securityError = kerror.wrap("security", "token");
-const debug = debugFactory("kuzzle:bootstrap:tokens");
-
-const BOOTSTRAP_DONE_KEY = "token/bootstrap";
 
 export class TokenRepository extends ObjectRepository<Token> {
   private tokenGracePeriod: number;
