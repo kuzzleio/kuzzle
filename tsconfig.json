@@ -19,7 +19,8 @@
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "types": [
-      "node"
+      "node",
+      "jest"
     ]
   },
   "rootDir": "lib/",
