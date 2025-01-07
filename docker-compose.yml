@@ -1,5 +1,3 @@
-version: '3.8'
-
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/core-dev:2
   command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'

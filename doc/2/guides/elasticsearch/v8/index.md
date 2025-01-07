@@ -53,8 +53,6 @@ Once the version is set to 8, Kuzzle will use the Elasticsearch 8 API to communi
 You will find below an example of a `docker-compose.yml` file to run Kuzzle with Elasticsearch 8.
 
 ```yaml
-version: '3.8'
-
 services:
   node:
     image: kuzzleio/kuzzle:2

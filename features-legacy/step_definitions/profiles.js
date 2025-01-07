@@ -7,6 +7,7 @@ const
     Then
   } = require('cucumber'),
   async = require('async'),
+  _ = require('lodash'),
   stringify = require('json-stable-stringify');
 
 When(/^I get the profile mapping$/, function () {
@@ -132,12 +133,12 @@ Then(/^I'm ?(not)* able to find rights for profile "([^"]*)"$/, { timeout: 20 * 
         throw new Error(body.error.message);
       }
 
-      const
-        policies = stringify(body.result.hits),
-        expected = stringify(this.policies[id]);
+      const policies = body.result.hits;
+      const expected = this.policies[id];
+      const diff = _.differenceWith(policies, expected, _.isEqual);
 
-      if (policies !== expected) {
-        throw new Error(`Bad profileRights for ${id}.\nExpected: ${expected}\nGot: ${policies}`);
+      if (diff.length > 0) {
+        throw new Error(`Bad profileRights for ${id}.\nExpected: ${JSON.stringify(expected)}\nGot: ${JSON.stringify(policies)}`);
       }
 
       if (not) {

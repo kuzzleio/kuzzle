@@ -1,5 +1,3 @@
-version: '3.4'
-
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/kuzzle-runner:${NODE_VERSION:-20}
   command: > 
