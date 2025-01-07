@@ -225,8 +225,8 @@ export class TokenRepository extends ObjectRepository<Token> {
     const maxTTL =
       type === "apiKey"
         ? global.kuzzle.config.security.apiKey.maxTTL
-        : global.kuzzle.config.security.authToken.maxTTL ??
-          global.kuzzle.config.security.jwt.maxTTL;
+        : (global.kuzzle.config.security.authToken.maxTTL ??
+          global.kuzzle.config.security.jwt.maxTTL);
 
     if (
       !bypassMaxTTL &&
