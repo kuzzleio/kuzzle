@@ -66,6 +66,7 @@ describe("Backend", () => {
 
     beforeEach(() => {
       definition = getDefinition();
+      global.app.config.content.controllers.definition.allowAdditionalActionProperties = false;
     });
 
     it("should registers a new controller definition", () => {
@@ -89,8 +90,25 @@ describe("Backend", () => {
       delete definition.actions;
 
       should(() => {
-        application.controller.register(definition);
+        application.controller.register("greeting", definition);
       }).throwError({ id: "plugin.assert.invalid_controller_definition" });
+    });
+
+    it("should reject additional properties", () => {
+      definition.actions.sayHello.foo = "bar";
+
+      should(() => {
+        application.controller.register("greeting", definition);
+      }).throwError({ id: "plugin.assert.invalid_controller_definition" });
+    });
+
+    it("should accept additional properties if config allows it", () => {
+      global.app.config.content.controllers.definition.allowAdditionalActionProperties = true;
+      definition.actions.sayHello.foo = "bar";
+
+      should(() => {
+        application.controller.register("greeting", definition);
+      }).not.throwError({ id: "plugin.assert.invalid_controller_definition" });
     });
   });
 
@@ -113,6 +131,7 @@ describe("Backend", () => {
 
     beforeEach(() => {
       controller = new GreetingController();
+      global.app.config.content.controllers.definition.allowAdditionalActionProperties = false;
     });
 
     it("should uses a new controller instance", () => {
@@ -154,6 +173,23 @@ describe("Backend", () => {
       should(() => {
         application.controller.use(controller);
       }).throwError({ id: "plugin.assert.invalid_controller_definition" });
+    });
+
+    it("should reject additional properties", () => {
+      controller.definition.actions.sayHello.foo = "bar";
+
+      should(() => {
+        application.controller.use(controller);
+      }).throwError({ id: "plugin.assert.invalid_controller_definition" });
+    });
+
+    it("should accept additional properties if config allows it", () => {
+      global.app.config.content.controllers.definition.allowAdditionalActionProperties = true;
+      controller.definition.actions.sayHello.foo = "bar";
+
+      should(() => {
+        application.controller.use(controller);
+      }).not.throwError({ id: "plugin.assert.invalid_controller_definition" });
     });
   });
 });
