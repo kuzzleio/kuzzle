@@ -16,7 +16,11 @@
     },
     "esModuleInterop": true,
     "resolveJsonModule": true,
-    "skipDefaultLibCheck": true
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "types": [
+      "node"
+    ]
   },
   "rootDir": "lib/",
   "include": [
