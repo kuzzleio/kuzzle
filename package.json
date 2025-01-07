@@ -21,7 +21,7 @@
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket",
     "test:functional": "npm run test:functional:http && npm run test:functional:websocket && npm run test:functional:jest",
     "test:lint": "eslint ./lib ./test ./bin ./features ./plugins/available/functional-test-plugin",
-    "test:unit": "DEBUG= npx --node-arg=--trace-warnings mocha --exit",
+    "test:unit": "npx mocha --exit",
     "test": "npm run clean && npm run --silent test:lint && npm run build && npm run test:unit:coverage && npm run test:functional"
   },
   "directories": {
