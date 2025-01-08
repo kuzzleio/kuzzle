@@ -1,3 +1,19 @@
+# [2.37.0](https://github.com/kuzzleio/kuzzle/compare/v2.36.0...v2.37.0) (2025-01-08)
+
+
+### Bug Fixes
+
+* Add COPY instead of ADD in dockerfile ([24e5be6](https://github.com/kuzzleio/kuzzle/commit/24e5be6059ecbdcd072dcc8c5d091253896a3656))
+* Add version check in docker images ([32a2efd](https://github.com/kuzzleio/kuzzle/commit/32a2efd896d4f5cf3d010cc7710ca8d523389ef3))
+* cookie import ([f582a9f](https://github.com/kuzzleio/kuzzle/commit/f582a9fbb97b2231399bbf84dfa7123937283e42))
+* fixing tests with aedes upgrade ([212e98e](https://github.com/kuzzleio/kuzzle/commit/212e98ef7f5ec26946d984564151ed4b0ca9cb92))
+* tsconfig.json ([328a04d](https://github.com/kuzzleio/kuzzle/commit/328a04d22ee6cb0310b5194e14afe1d8354361b3))
+
+
+### Features
+
+* update deps ([563a6ba](https://github.com/kuzzleio/kuzzle/commit/563a6ba5507c3cdc90e31065c2f4c6a2c5086bd9))
+
 # [2.37.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.36.0...v2.37.0-beta.1) (2025-01-08)
 
 
