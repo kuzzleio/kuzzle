@@ -473,6 +473,12 @@ const defaultConfig: KuzzleConfiguration = {
   },
   /** @type {DocumentSpecification} */
   validation: {},
+
+  controllers: {
+    definition: {
+      allowAdditionalActionProperties: false,
+    },
+  },
 };
 
 export default defaultConfig;

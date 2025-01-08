@@ -157,6 +157,17 @@ export interface IKuzzleConfiguration {
   };
 
   validation: Record<string, unknown>;
+
+  controllers: {
+    definition: {
+      /**
+       * Allow additional properties in action definitions.
+       *
+       * @default false
+       */
+      allowAdditionalActionProperties: boolean;
+    };
+  };
 }
 
 export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;
