@@ -25,13 +25,14 @@ RUN set -x \
 
 WORKDIR /app
 
-ADD ./bin bin
-ADD ./config config
-ADD ./lib lib
-ADD ./package.json package.json
-ADD ./package-lock.json package-lock.json
-ADD ./index.ts index.ts
-ADD ./tsconfig.json tsconfig.json
+COPY ./bin bin
+COPY ./config config
+COPY ./lib lib
+COPY ./package.json package.json
+COPY ./package-lock.json package-lock.json
+COPY ./index.ts index.ts
+COPY ./tsconfig.json tsconfig.json
+COPY ./check-node-version.js check-node-version.js
 
 RUN npm ci
 RUN npm run build
@@ -39,7 +40,7 @@ RUN npm prune --omit=dev
 
 RUN rm -rf tsconfig.json index.ts
 
-ADD ./plugins/available/ /app/plugins/available/
+COPY ./plugins/available/ /app/plugins/available/
 
 ################################################################################
 FROM node:${NODE_VERSION}-bookworm-slim AS minifier
@@ -70,8 +71,8 @@ COPY --from=minifier /app /var/app
 
 ENV NODE_ENV=production
 
-ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/run-prod.sh /bin/kuzzle
+COPY ./docker/scripts/entrypoint.sh /bin/entrypoint
+COPY ./docker/scripts/run-prod.sh /bin/kuzzle
 
 RUN ln -s /var/app /app
 

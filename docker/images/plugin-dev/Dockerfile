@@ -13,13 +13,14 @@ RUN  set -x \
 
 WORKDIR /app
 
-ADD ./bin bin
-ADD ./config config
-ADD ./lib lib
-ADD ./package.json package.json
-ADD ./package-lock.json package-lock.json
-ADD ./index.ts index.ts
-ADD ./tsconfig.json tsconfig.json
+COPY ./bin bin
+COPY ./config config
+COPY ./lib lib
+COPY ./package.json package.json
+COPY ./package-lock.json package-lock.json
+COPY ./index.ts index.ts
+COPY ./tsconfig.json tsconfig.json
+COPY ./check-node-version.js check-node-version.js
 
 RUN npm ci
 RUN npm run build
@@ -27,7 +28,7 @@ RUN npm prune --omit=dev
 
 RUN rm -rf tsconfig.json index.ts
 
-ADD ./plugins/available/ plugins/available/
+COPY ./plugins/available/ plugins/available/
 
 ################################################################################
 FROM node:${NODE_VERSION}-bookworm-slim
@@ -41,8 +42,8 @@ RUN set -x \
   && apt-get update && apt-get install -y \
   libunwind-dev
 
-ADD ./docker/scripts/entrypoint.sh /bin/entrypoint
-ADD ./docker/scripts/run-plugin.sh /bin/run-plugin
+COPY ./docker/scripts/entrypoint.sh /bin/entrypoint
+COPY ./docker/scripts/run-plugin.sh /bin/run-plugin
 
 COPY --from=builder /lib /lib
 COPY --from=builder /usr /usr
