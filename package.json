@@ -103,7 +103,7 @@
     "nyc": "17.1.0",
     "request": "2.88.2",
     "request-promise": "4.2.6",
-    "rewire": "7.0.0",
+    "rewire": "5.0.0",
     "semantic-release-config-kuzzle": "1.0.0",
     "semantic-release-slack-bot": "4.0.2",
     "should": "13.2.3",
