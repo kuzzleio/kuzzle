@@ -1,3 +1,11 @@
+## [2.37.1](https://github.com/kuzzleio/kuzzle/compare/v2.37.0...v2.37.1) (2025-01-08)
+
+
+### Bug Fixes
+
+* reverting zeromq to 6.0.0-beta.6, need futher investigation ([0ec5a73](https://github.com/kuzzleio/kuzzle/commit/0ec5a73b8943d8022d318864f2413988cbab04d8))
+* update package-lock.json ([e80b6ab](https://github.com/kuzzleio/kuzzle/commit/e80b6aba6e55583b760edfff7f374688afe7aec2))
+
 # [2.37.0](https://github.com/kuzzleio/kuzzle/compare/v2.36.0...v2.37.0) (2025-01-08)
 
 
