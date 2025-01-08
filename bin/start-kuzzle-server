@@ -21,46 +21,49 @@
  * limitations under the License.
  */
 
-'use strict';
+"use strict";
 
 /* eslint-disable no-console */
 
-const fs = require('fs');
+const fs = require("fs");
 
-const yargs = require('yargs');
+const yargs = require("yargs");
 
-const { Backend } = require('../index');
+const { Backend } = require("../index");
 
-function loadJson (path) {
-  if (! path) {
+function loadJson(path) {
+  if (!path) {
     return {};
   }
 
-  return JSON.parse(fs.readFileSync(path, 'utf8'));
+  return JSON.parse(fs.readFileSync(path, "utf8"));
 }
 
-async function startKuzzle (options = {}) {
-  const app = new Backend('kuzzle');
+async function startKuzzle(options = {}) {
+  const app = new Backend("kuzzle");
 
   if (options.enablePlugins) {
     const additionalPlugins = options.enablePlugins
       .trim()
-      .split(',')
-      .map(x => x.trim().replace(/(^")|("$)/g, ''));
+      .split(",")
+      .map((x) => x.trim().replace(/(^")|("$)/g, ""));
 
     for (const additionalPlugin of additionalPlugins) {
       const PluginClass = require(`../plugins/available/${additionalPlugin}`);
-      const manifest = require(`../plugins/available/${additionalPlugin}/manifest.json`);
+      const manifest = require(
+        `../plugins/available/${additionalPlugin}/manifest.json`,
+      );
       const plugin = new PluginClass();
 
       try {
-        plugin.version = require(`../plugins/available/${additionalPlugin}/package.json`).version;
-      }
-      catch (e) {
+        plugin.version = require(
+          `../plugins/available/${additionalPlugin}/package.json`,
+        ).version;
+      } catch (e) {
         // ignore
       }
 
-      app.plugin.use(plugin, { name: manifest.name, manifest });
+      app.plugin.use(plugin, { manifest, name: manifest.name });
     }
   }
 
@@ -74,36 +77,43 @@ async function startKuzzle (options = {}) {
 
   app.vault.file = options.secretsFile;
 
-  app.version = '1.0.0';
+  app.version = "1.0.0";
 
   await app.start();
 
   const { total: admins } = await app.sdk.security.searchUsers({
-    query: { term: { profileIds: 'admin' } }
+    query: { term: { profileIds: "admin" } },
   });
 
   if (admins.length === 0) {
-    console.log('[!] [WARNING] There is no administrator user yet: everyone has administrator rights.');
-    console.log('[ℹ]  You can use the CLI or the admin console to create the first administrator user.');
-    console.log('    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/');
+    console.log(
+      "[!] [WARNING] There is no administrator user yet: everyone has administrator rights.",
+    );
+    console.log(
+      "[ℹ]  You can use the CLI or the admin console to create the first administrator user.",
+    );
+    console.log(
+      "    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/",
+    );
   }
 }
 
 const options = yargs
-  .usage('start-kuzzle-server [options]')
-  .describe('fixtures', 'Import data from file')
-  .describe('mappings', 'Apply mappings from file')
-  .describe('securities', 'Import roles, profiles and users from file')
-  .describe('vault-key', 'Vault key used to decrypt secrets')
-  .describe('secrets-file', 'Output file to write decrypted secrets')
-  .describe('enable-plugins', 'Enable plugins from "plugins/available" directory')
-  .argv;
+  .usage("start-kuzzle-server [options]")
+  .describe("fixtures", "Import data from file")
+  .describe("mappings", "Apply mappings from file")
+  .describe("securities", "Import roles, profiles and users from file")
+  .describe("vault-key", "Vault key used to decrypt secrets")
+  .describe("secrets-file", "Output file to write decrypted secrets")
+  .describe(
+    "enable-plugins",
+    'Enable plugins from "plugins/available" directory',
+  ).argv;
 
 const run = async () => {
   try {
     await startKuzzle(options);
-  }
-  catch (error) {
+  } catch (error) {
     console.error(`[x] [ERROR] ${error.stack}`);
     process.exit(1);
   }
