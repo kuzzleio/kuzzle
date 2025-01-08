@@ -20,6 +20,7 @@ ADD ./package.json package.json
 ADD ./package-lock.json package-lock.json
 ADD ./index.ts index.ts
 ADD ./tsconfig.json tsconfig.json
+ADD ./check-node-version.js check-node-version.js
 
 RUN npm ci
 RUN npm run build

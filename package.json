@@ -5,7 +5,7 @@
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "bin": "bin/start-kuzzle-server",
   "scripts": {
-    "preinstall": "node ./check-node-version",
+    "preinstall": "node ./check-node-version.js",
     "build": "tsc",
     "clean": "touch index.ts && npm run build | grep TSFILE | cut -d' ' -f 2 | xargs rm",
     "cucumber": "cucumber.js --fail-fast",
