@@ -26,7 +26,6 @@ import stringify from "json-stable-stringify";
 import { Koncorde } from "koncorde";
 import _ from "lodash";
 import murmur from "murmurhash";
-import segfaultHandler from "node-segfault-handler";
 
 import { version } from "../../package.json";
 import Funnel from "../api/funnel";
@@ -904,8 +903,6 @@ class Kuzzle extends KuzzleEventEmitter {
         this.shutdown();
       });
     }
-
-    segfaultHandler.registerHandler();
   }
 
   async dumpAndExit(suffix) {

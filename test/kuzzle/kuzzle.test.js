@@ -7,7 +7,6 @@ const rewire = require("rewire");
 const Bluebird = require("bluebird");
 const stringify = require("json-stable-stringify");
 
-const SegfaultHandlerMock = require("../mocks/node-segfault-handler");
 const KuzzleMock = require("../mocks/kuzzle.mock");
 const MutexMock = require("../mocks/mutex.mock.js");
 const Plugin = require("../../lib/core/plugin/plugin");
@@ -65,7 +64,6 @@ describe("/lib/kuzzle/kuzzle.js", () => {
       return { init: sinon.stub().resolves() };
     };
 
-    mockrequire("node-segfault-handler", SegfaultHandlerMock);
     mockrequire("../../lib/core/cache/cacheEngine", coreModuleStub);
     mockrequire("../../lib/core/storage/storageEngine", coreModuleStub);
     mockrequire("../../lib/core/security", coreModuleStub);
