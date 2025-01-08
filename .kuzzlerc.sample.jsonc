@@ -1117,5 +1117,18 @@
       "sync": 7511
     },
     "syncTimeout": 5000
+  },
+  // [controllers]
+  // Controllers configuration
+  //   * definition:
+  //      Options to manage controllers definition behavior
+  //       * allowAdditionalActionProperties:
+  //          If set to true, Kuzzle will allow additional properties in
+  //          actions definitions. If set to false, Kuzzle will throw an error
+  //          if an action definition contains additional properties.
+  "controllers": {
+    "definition": {
+      "allowAdditionalActionProperties": false
+    }
   }
 }
