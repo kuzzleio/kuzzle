@@ -1,3 +1,16 @@
+# [2.36.0](https://github.com/kuzzleio/kuzzle/compare/v2.35.3...v2.36.0) (2025-01-08)
+
+
+### Bug Fixes
+
+* issue with tests and array sorting ([345563e](https://github.com/kuzzleio/kuzzle/commit/345563eff3b1a08d4c8401a21dbb443297982459))
+
+
+### Features
+
+* **controllers:** add a config to allow additional properties in actions definitions ([8c3eabe](https://github.com/kuzzleio/kuzzle/commit/8c3eabe5cd5b8d438a33c8b5e36d18243560599e))
+* remove murmurhash native in favor of murmurhashJS ([453f8e4](https://github.com/kuzzleio/kuzzle/commit/453f8e412e3526da1bed88663dceb68d24db3c08))
+
 ## [2.35.3](https://github.com/kuzzleio/kuzzle/compare/v2.35.2...v2.35.3) (2024-12-31)
 
 
