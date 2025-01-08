@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 import { IncomingMessage } from "http";
-import Cookie from "cookie";
+import * as Cookie from "cookie";
 
 import Bluebird from "bluebird";
 import { isEmpty } from "lodash";

@@ -46,7 +46,7 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
     };
 
     mockrequire("net", netMock);
-    mockrequire("aedes", { Server: AedesMock });
+    mockrequire("aedes", AedesMock);
 
     MqttProtocol = mockrequire.reRequire(
       "../../../../lib/core/network/protocols/mqttProtocol",
