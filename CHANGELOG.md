@@ -1,3 +1,10 @@
+# [2.38.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.37.1...v2.38.0-beta.1) (2025-01-09)
+
+
+### Features
+
+* **funnel:** add request:onExecution pipe ([8711746](https://github.com/kuzzleio/kuzzle/commit/87117468bc6e9d33072a3875416f80bb34c39ec6))
+
 ## [2.37.1](https://github.com/kuzzleio/kuzzle/compare/v2.37.0...v2.37.1) (2025-01-08)
 
 
