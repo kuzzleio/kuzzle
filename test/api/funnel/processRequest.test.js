@@ -174,6 +174,7 @@ describe("funnel.processRequest", () => {
 
     return funnel.processRequest(request).then((response) => {
       should(response).be.exactly(request);
+      should(kuzzle.pipe).calledWith("request:onExecution");
       should(kuzzle.pipe).calledWith("fakeController:beforeSucceed");
       should(kuzzle.pipe).calledWith("fakeController:afterSucceed");
       should(kuzzle.pipe).calledWith("request:onSuccess", request);
