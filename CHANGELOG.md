@@ -1,3 +1,10 @@
+## [2.38.1](https://github.com/kuzzleio/kuzzle/compare/v2.38.0...v2.38.1) (2025-01-13)
+
+
+### Bug Fixes
+
+* **plugin:** fix allowAdditionalActionProperties config accessing ([5fc8096](https://github.com/kuzzleio/kuzzle/commit/5fc80968c62a5bca675e154dfb1e22d43493f09c))
+
 # [2.38.0](https://github.com/kuzzleio/kuzzle/compare/v2.37.1...v2.38.0) (2025-01-09)
 
 
