@@ -1,3 +1,10 @@
+# [2.39.0](https://github.com/kuzzleio/kuzzle/compare/v2.38.1...v2.39.0) (2025-01-15)
+
+
+### Features
+
+* update deps ([1477510](https://github.com/kuzzleio/kuzzle/commit/14775108247661f70ef538ae27f1aea5fe2659c1))
+
 # [2.39.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.38.1...v2.39.0-beta.1) (2025-01-15)
 
 
