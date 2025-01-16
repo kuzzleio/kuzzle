@@ -1,3 +1,10 @@
+# [2.40.0](https://github.com/kuzzleio/kuzzle/compare/v2.39.0...v2.40.0) (2025-01-16)
+
+
+### Features
+
+* **elasticsearch:** add post_filter to whitelist of body terms for ES 7 and 8 ([99344c6](https://github.com/kuzzleio/kuzzle/commit/99344c6f8e161d7c428e7bb9195c263dd15ac645))
+
 # [2.39.0](https://github.com/kuzzleio/kuzzle/compare/v2.38.1...v2.39.0) (2025-01-15)
 
 
