@@ -122,6 +122,7 @@ export class ES7 {
       "fields",
       "from",
       "highlight",
+      "post_filter",
       "query",
       "search_after",
       "search_timeout",
