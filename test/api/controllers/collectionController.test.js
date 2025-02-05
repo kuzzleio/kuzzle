@@ -156,7 +156,7 @@ describe("Test: collection controller", () => {
 
       return should(collectionController.getSettings(request)).be.rejectedWith(
         NotFoundError,
-        { id: "settings.not_found" }
+        { id: "settings.not_found" },
       );
     });
   });
