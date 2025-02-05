@@ -125,6 +125,42 @@ describe("Test: collection controller", () => {
     });
   });
 
+  describe("#getSettings", () => {
+    it("should trigger the proper methods and return a valid response", async () => {
+      kuzzle.ask
+        .withArgs("core:storage:public:collection:settings:get")
+        .resolves({
+          _source: {
+            some: "settings",
+          },
+        });
+
+      const response = await collectionController.getSettings(request);
+
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:collection:settings:get",
+        kuzzle.internalIndex.index,
+        "settings",
+        `${index}#${collection}`,
+      );
+
+      should(response).match({
+        some: "settings",
+      });
+    });
+
+    it("should give a meaningful message if there is no specifications", () => {
+      kuzzle.ask
+        .withArgs("core:storage:public:collection:settings:get")
+        .rejects(new NotFoundError("not found"));
+
+      return should(collectionController.getSettings(request)).be.rejectedWith(
+        NotFoundError,
+        { id: "settings.not_found" }
+      );
+    });
+  });
+
   describe("#truncate", () => {
     it("should trigger the proper methods and return a valid response", async () => {
       const response = await collectionController.truncate(request);
