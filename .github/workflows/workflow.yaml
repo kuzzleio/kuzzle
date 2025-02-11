@@ -8,7 +8,6 @@ on:
   pull_request:
 
 env:
-  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
   NODE_LTS_MAINTENANCE_VERSION: "18"
   NODE_LTS_ACTIVE_VERSION: "20"
   NODE_LTS_CURRENT_VERSION: "22"
