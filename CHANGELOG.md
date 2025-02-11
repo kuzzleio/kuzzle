@@ -1,3 +1,10 @@
+## [2.40.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.40.0...v2.40.1-beta.1) (2025-02-11)
+
+
+### Bug Fixes
+
+* arm architecture not needed ([dd751a9](https://github.com/kuzzleio/kuzzle/commit/dd751a990be3211f71490b31de285f25dd3600ff))
+
 # [2.40.0](https://github.com/kuzzleio/kuzzle/compare/v2.39.0...v2.40.0) (2025-01-16)
 
 
