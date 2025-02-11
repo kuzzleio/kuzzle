@@ -1,7 +1,7 @@
 name: Release workflow
 
 env:
-  DOCKER_PLATFORMS: "linux/amd64,linux/arm64,linux/arm/v7"
+  DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
   DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
   ELASTICSEARCH_VERSION: "7.17.26"
   NODE_VERSION: "20"
