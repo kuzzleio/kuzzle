@@ -6,7 +6,7 @@ title: getSettings | API | Core
 
 # getSettings
 
-Returns a collection settings.
+Retrieves the Elasticsearch index settings for the specified Kuzzle collection.
 
 ---
 
