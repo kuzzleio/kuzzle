@@ -10,7 +10,7 @@ test("Check _ready result", async () => {
 
 test("Check _ready during node startup", async () => {
   let response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/simulate-outage?type=nodeNotStarted",
+    uri: "http://localhost:17510/tests/simulate-outage?type=nodeNotStarted",
   });
 
   response = rp.get({
@@ -20,13 +20,13 @@ test("Check _ready during node startup", async () => {
   await expect(response).resolves.toThrow(); // Should return 503
 
   response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/clear-outage",
+    uri: "http://localhost:17510/tests/clear-outage",
   });
 });
 
 test("Check _ready during node overload", async () => {
   let response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/simulate-outage?type=overload",
+    uri: "http://localhost:17510/tests/simulate-outage?type=overload",
   });
 
   response = rp.get({
@@ -36,13 +36,13 @@ test("Check _ready during node overload", async () => {
   await expect(response).resolves.toThrow(); // Should return 503
 
   response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/clear-outage",
+    uri: "http://localhost:17510/tests/clear-outage",
   });
 });
 
 test("Check _ready during node shutdown", async () => {
   let response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/simulate-outage?type=shutdown",
+    uri: "http://localhost:17510/tests/simulate-outage?type=shutdown",
   });
 
   response = rp.get({
@@ -52,13 +52,13 @@ test("Check _ready during node shutdown", async () => {
   await expect(response).resolves.toThrow(); // Should return 503
 
   response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/clear-outage",
+    uri: "http://localhost:17510/tests/clear-outage",
   });
 });
 
 test("Check _ready during network outage", async () => {
   let response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/simulate-outage?type=notEnoughNodes",
+    uri: "http://localhost:17510/tests/simulate-outage?type=notEnoughNodes",
   });
 
   response = rp.get({
@@ -68,6 +68,6 @@ test("Check _ready during network outage", async () => {
   await expect(response).resolves.toThrow(); // Should return 503
 
   response = await rp.get({
-    uri: "http://localhost:17510/tests/tests/clear-outage",
+    uri: "http://localhost:17510/tests/clear-outage",
   });
 });
