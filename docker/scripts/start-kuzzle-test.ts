@@ -21,7 +21,6 @@ import {
 import { HttpMessage } from "../../lib/types/HttpMessage";
 import { EventGenericDocumentInjectMetadata } from "../../lib/types/events/EventGenericDocument";
 import { FunctionalTestsController } from "./functional-tests-controller";
-import { request } from "http";
 
 const app = new Backend("functional-tests-app");
 
@@ -506,7 +505,6 @@ app.controller.register("tests", {
           default:
             break;
         }
-        return;
       },
     },
     clearOutage: {
@@ -514,7 +512,6 @@ app.controller.register("tests", {
       handler: async () => {
         global.kuzzle.funnel.overloaded = false;
         global.kuzzle.state = 2;
-        return;
       },
     },
   },

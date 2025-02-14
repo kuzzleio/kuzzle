@@ -9,33 +9,33 @@ test("Check _ready result", async () => {
 });
 
 test("Check _ready during node startup", async () => {
-  let response = await rp.get({
+  await rp.get({
     uri: "http://localhost:17510/tests/simulate-outage?type=nodeNotStarted",
   });
 
-  response = rp.get({
+  const response = rp.get({
     uri: "http://localhost:17510/_ready",
   });
   
   await expect(response).rejects; // Should return 503
 
-  response = await rp.get({
+  await rp.get({
     uri: "http://localhost:17510/tests/clear-outage",
   });
 });
 
 test("Check _ready during node overload", async () => {
-  let response = await rp.get({
+  await rp.get({
     uri: "http://localhost:17510/tests/simulate-outage?type=overload",
   });
 
-  response = rp.get({
+  const response = rp.get({
     uri: "http://localhost:17510/_ready",
   });
   
   await expect(response).rejects; // Should return 503
 
-  response = await rp.get({
+  await rp.get({
     uri: "http://localhost:17510/tests/clear-outage",
   });
 });
