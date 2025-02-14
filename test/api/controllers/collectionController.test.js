@@ -651,7 +651,6 @@ describe("Test: collection controller", () => {
         index,
         collection,
       );
-
       should(response).be.instanceof(Object);
       should(response).match({
         acknowledged: true,
