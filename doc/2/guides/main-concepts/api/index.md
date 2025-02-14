@@ -98,9 +98,29 @@ This endpoint is accessible with the route `GET /_healthcheck`.
 curl "http://localhost:7512/_healthcheck"
 ```
 
-This route does not require any authentication. It returns a `200` status code if the server is up and running.
+This route does not require any authentication. It returns a `200` status code if the Kuzzle server is started.
 
-This is useful when kuzzle is deployed inside a Kubernetes cluster and you want to configure probes to check the server.
+This is useful when Kuzzle is deployed inside a Kubernetes cluster and you want to configure a [`livenessProbe`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-a-liveness-http-request) to check the Kuzzle server is started.
+
+#### Ready endpoint
+
+Kuzzle exposes a readiness endpoint.
+
+This endpoint is accessible with the route `GET /_ready`.
+
+```bash
+curl "http://localhost:7512/_ready"
+```
+
+This route does not require any authentication. It returns a `200` status code if the server is running and ready to accept new incoming requests.
+It returns a `503` status code if:
+- The Kuzzle server state is one of the following:
+  - Node starting procedure has not finished yet.
+  - Node is shutting down.
+  - The cluster does not have enough nodes to be considered as healthy.
+- The Kuzzle server is overloaded (meaning the number of requests in the queue is above the [configured threshold](https://github.com/kuzzleio/kuzzle/blob/c33f0dcb904b01941c0967450dc52848ba3456d7/.kuzzlerc.sample.jsonc#L92)).
+
+This is useful when Kuzzle is deployed inside a Kubernetes cluster and you want to configure a [`readinessProbe`](https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/#define-readiness-probes) to check the Kuzzle server is ready to accept new incoming requests.
 
 ---
 
