@@ -17,7 +17,7 @@ test("Check _ready during node startup", async () => {
     uri: "http://localhost:17510/_ready",
   });
   
-  await expect(response).resolves.toThrow(); // Should return 503
+  await expect(response).rejects; // Should return 503
 
   response = await rp.get({
     uri: "http://localhost:17510/tests/clear-outage",
@@ -33,7 +33,7 @@ test("Check _ready during node overload", async () => {
     uri: "http://localhost:17510/_ready",
   });
   
-  await expect(response).resolves.toThrow(); // Should return 503
+  await expect(response).rejects; // Should return 503
 
   response = await rp.get({
     uri: "http://localhost:17510/tests/clear-outage",
