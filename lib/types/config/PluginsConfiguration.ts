@@ -79,7 +79,7 @@ export type PluginsConfiguration = {
    * Logger plugin configuration.
    * @deprecated use server.logs
    */
-  "kuzzle-plugin-logger": {
+  "kuzzle-plugin-logger"?: {
     /**
      * Services declaration
      */
