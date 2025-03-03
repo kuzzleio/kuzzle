@@ -77,15 +77,6 @@ const defaultConfig: KuzzleConfiguration = {
       pipesBufferSize: 50000,
       include: ["kuzzle-plugin-auth-passport-local"],
     },
-    "kuzzle-plugin-logger": {
-      services: {
-        stdout: {
-          level: "info",
-          addDate: true,
-          dateFormat: "YYYY-MM-DD HH-mm-ss",
-        },
-      },
-    },
     "kuzzle-plugin-auth-passport-local": {
       algorithm: "sha512",
       stretching: true,
@@ -203,9 +194,18 @@ const defaultConfig: KuzzleConfiguration = {
 
   server: {
     logs: {
+      transport: {
+        targets: [
+          {
+            preset: "stdout",
+          },
+        ],
+      },
+    },
+    accessLogs: {
       transports: [
         {
-          transport: "console",
+          preset: "console",
           level: "info",
           stderrLevels: [],
           silent: true,
