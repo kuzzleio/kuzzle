@@ -69,6 +69,19 @@ Feature: Collection Controller
       | createdAt | { "type": "date" }    |
       | updatedAt | { "type": "date" }    |
 
+
+  # collection:getSettings =====================================================
+  
+  Scenario: Get collection settings
+    Given an index "nyc-open-data"
+    And I "create" the collection "nyc-open-data":"green-taxi" with:
+      | mappings | { "dynamic": "strict", "properties": { "name": { "type": "keyword" } } } |
+    When I successfully execute the action "collection":"getSettings" with args:
+      | index      | "nyc-open-data" |
+      | collection | "green-taxi"    |
+    Then I should receive a result matching:
+      | number_of_shards | "1" |
+
   # collection:delete ==========================================================
 
   Scenario: Delete a collection
