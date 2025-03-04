@@ -193,7 +193,7 @@ const defaultConfig: KuzzleConfiguration = {
   },
 
   server: {
-    logs: {
+    appLogs: {
       transport: {
         targets: [
           {
@@ -202,7 +202,7 @@ const defaultConfig: KuzzleConfiguration = {
         ],
       },
     },
-    accessLogs: {
+    logs: {
       transports: [
         {
           preset: "console",

@@ -22,9 +22,9 @@ export type ServerConfiguration = {
   /**
    * Configuration section for Kuzzle logs.
    */
-  logs: Omit<KuzzleLoggerConfig, "getMergingObject">;
+  appLogs: Omit<KuzzleLoggerConfig, "getMergingObject">;
 
-  accessLogs: {
+  logs: {
     /**
     * An array of Winston transports configurations to output access
     * logs.
