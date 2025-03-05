@@ -31,7 +31,7 @@ export type PluginsConfiguration = {
      * Edit this list to deactivate one or more of those plugins.
      * NOTE: this list does not control plugins installed manually.
      *
-     * @default ["kuzzle-plugin-logger","kuzzle-plugin-auth-passport-local"]
+     * @default ["kuzzle-plugin-auth-passport-local"]
      */
     include: string[];
 
@@ -76,23 +76,16 @@ export type PluginsConfiguration = {
   };
 
   /**
-   * Default logger plugin configuration.
-   *
-   * This plugin use Winston to transport the logs.
-   *
-   * @see https://github.com/kuzzleio/kuzzle-plugin-logger
+   * Logger plugin configuration.
+   * @deprecated use server.logs
    */
-  "kuzzle-plugin-logger": {
+  "kuzzle-plugin-logger"?: {
     /**
-     * Winston transport services declaration
+     * Services declaration
      */
     services: {
       /**
        * Print logs to STDOUT
-       *
-       * @default
-       *
-       * @see https://github.com/winstonjs/winston/blob/master/docs/transports.md#console-transport
        */
       stdout: {
         /**
