@@ -1,3 +1,17 @@
+## [2.41.0](https://github.com/kuzzleio/kuzzle/compare/v2.40.1...v2.41.0) (2025-03-05)
+
+
+### Features
+
+* add a new unauthenticated `/_ready` HTTP endpoint ([#2592](https://github.com/kuzzleio/kuzzle/issues/2592)) ([52d54fa](https://github.com/kuzzleio/kuzzle/commit/52d54fa9ce10ec50fab46f9ca44dc01e46893e64))
+* collection getSettings ([#2588](https://github.com/kuzzleio/kuzzle/issues/2588)) ([da75cbc](https://github.com/kuzzleio/kuzzle/commit/da75cbc011adb6abd6a6db295f7355d9dc088e85))
+
+
+### Bug Fixes
+
+* add a getter for started property and a setter, create _started private property ([aacee11](https://github.com/kuzzleio/kuzzle/commit/aacee11ce3598a324ebc774bb624614ed50314bf))
+* update es version to avoid anyController error ([6d594dd](https://github.com/kuzzleio/kuzzle/commit/6d594ddb9a454b404af4c5c8f85d264c9029ba59))
+
 ## [2.40.1](https://github.com/kuzzleio/kuzzle/compare/v2.40.0...v2.40.1) (2025-02-11)
 
 
