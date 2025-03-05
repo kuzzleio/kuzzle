@@ -490,6 +490,30 @@ app.controller.register("tests", {
         });
       },
     },
+    simulateOutage: {
+      http: [{ verb: "get", path: "/tests/simulate-outage" }],
+      handler: async (request: KuzzleRequest) => {
+        const outageType = request.getString("type");
+
+        switch (outageType) {
+          case "overload":
+            global.kuzzle.funnel.overloaded = true;
+            break;
+          case "nodeNotStarted":
+            global.kuzzle.state = 1;
+            break;
+          default:
+            break;
+        }
+      },
+    },
+    clearOutage: {
+      http: [{ verb: "get", path: "/tests/clear-outage" }],
+      handler: async () => {
+        global.kuzzle.funnel.overloaded = false;
+        global.kuzzle.state = 2;
+      },
+    },
   },
 });
 

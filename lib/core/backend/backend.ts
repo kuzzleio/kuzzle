@@ -76,8 +76,7 @@ export class Backend {
   private _kuzzle: any;
   private _name: string;
   private _sdk: EmbeddedSDK;
-
-  protected started = false;
+  private _started: boolean;
 
   protected _pipes = {};
   protected _hooks = {};
@@ -429,6 +428,14 @@ export class Backend {
       init: () => {},
       pipes: this._pipes,
     };
+  }
+
+  get started() {
+    return this._started;
+  }
+
+  protected set started(started: boolean) {
+    this._started = started;
   }
 
   /**
