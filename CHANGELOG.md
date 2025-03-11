@@ -1,3 +1,10 @@
+## [2.42.0](https://github.com/kuzzleio/kuzzle/compare/v2.41.0...v2.42.0) (2025-03-11)
+
+
+### Features
+
+* bump deps ([3c59605](https://github.com/kuzzleio/kuzzle/commit/3c596057ea01e4f0081856de0aa7529753e5c94b))
+
 ## [2.42.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.41.0...v2.42.0-beta.1) (2025-03-11)
 
 
