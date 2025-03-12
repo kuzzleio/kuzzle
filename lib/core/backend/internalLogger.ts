@@ -24,6 +24,13 @@ import { ApplicationManager } from "./index";
 
 export class InternalLogger extends ApplicationManager {
   /**
+   * Logs a trace message
+   */
+  trace(message: any): void {
+    this._log("trace", message);
+  }
+
+  /**
    * Logs an debug message
    */
   debug(message: any): void {
@@ -52,12 +59,33 @@ export class InternalLogger extends ApplicationManager {
   }
 
   /**
+   * Logs a fatal message
+   */
+  fatal(message: any): void {
+    this._log("fatal", message);
+  }
+
+  /**
    * Logs a verbose message
    *
    * @deprecated Use InternalLogger.debug instead.
    */
   verbose(message: any): void {
     this._log("verbose", message);
+  }
+
+  /**
+   * Change the log level
+   */
+  level(level: string): void {
+    if (!this._application.started) {
+      // eslint-disable-next-line no-console
+      console.log(
+        "InternalLogger.level() is not available before the application is started",
+      );
+    } else {
+      this._kuzzle.log.level = level;
+    }
   }
 
   private _log(level: string, message: any) {

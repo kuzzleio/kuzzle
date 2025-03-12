@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import Kuzzle from "../../kuzzle/kuzzle";
 import { Backend } from "./index";
 
 export class ApplicationManager {
@@ -30,7 +31,7 @@ export class ApplicationManager {
     });
   }
 
-  protected get _kuzzle() {
+  protected get _kuzzle(): Kuzzle {
     return this._application._kuzzle;
   }
 }
