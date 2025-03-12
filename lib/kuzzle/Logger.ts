@@ -95,6 +95,10 @@ export class Logger extends KuzzleLogger {
         "[DEPRECATED] The plugins.kuzzle-plugin-logger configuration is deprecated, use server.logs instead.",
       );
     }
+
+    global.kuzzle.onPipe("kuzzle:shutdown", async () => {
+      await this.flush();
+    });
   }
 
   /**
