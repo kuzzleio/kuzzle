@@ -75,11 +75,11 @@ This property is an instance of the [BackendImport](/core/2/framework/classes/ba
 
 ## `log`
 
-This property is an instance of the [BackendLog](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.
+This property is an instance of the [InternalLogger](/core/2/framework/classes/internal-logger) class that allows to log messages using Kuzzle's internal logger.
 
-| Type                                                               | Description         |
-| ------------------------------------------------------------------ | ------------------- |
-| <pre>[BackendLog](/core/2/framework/classes/internal-logger)</pre> | BackendLog instance |
+| Type                                                                   | Description             |
+| ---------------------------------------------------------------------- | ----------------------- |
+| <pre>[InternalLogger](/core/2/framework/classes/internal-logger)</pre> | InternalLogger instance |
 
 See also the [Internal Logger](/core/2/guides/advanced/internal-logger) guide.
 
