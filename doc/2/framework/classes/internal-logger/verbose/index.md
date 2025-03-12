@@ -8,6 +8,10 @@ description: InternalLogger.verbose method
 
 # `verbose()`
 
+<DeprecatedBadge version="2.43.0" />
+
+**Use [debug](/core/2/framework/classes/internal-logger/debug) instead.**
+
 Logs a verbose message.
 
 ::: info
@@ -21,7 +25,7 @@ verbose(message: any): void
 <br/>
 
 | Argument  | Type           | Description    |
-|-----------|----------------|----------------|
+| --------- | -------------- | -------------- |
 | `message` | <pre>any</pre> | Message to log |
 
 ## Usage

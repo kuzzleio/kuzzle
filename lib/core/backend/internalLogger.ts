@@ -53,6 +53,8 @@ export class InternalLogger extends ApplicationManager {
 
   /**
    * Logs a verbose message
+   *
+   * @deprecated Use InternalLogger.debug instead.
    */
   verbose(message: any): void {
     this._log("verbose", message);
