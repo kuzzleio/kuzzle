@@ -194,6 +194,7 @@ const defaultConfig: KuzzleConfiguration = {
 
   server: {
     appLogs: {
+      level: "info",
       transport: {
         targets: [
           {
