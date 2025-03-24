@@ -141,20 +141,7 @@
       "initTimeout": 10000,
       "maxConcurrentPipes": 50,
       "pipesBufferSize": 50000,
-      "include": [
-        "kuzzle-plugin-auth-passport-local"
-      ]
-    },
-    // plugin logger configuration.
-    // see https://github.com/kuzzleio/kuzzle-plugin-logger
-    "kuzzle-plugin-logger": {
-      "services": {
-        "stdout": {
-          "level": "info",
-          "addDate": true,
-          "dateFormat": "YYYY-MM-DD HH-mm-ss"
-        }
-      }
+      "include": ["kuzzle-plugin-auth-passport-local"]
     },
     // [Kuzzle Plugin Auth Passport Local]
     //   * algorithm
@@ -226,9 +213,7 @@
     // [restrictedProfileIds]
     // The profileIds applied to a user created with the API action
     // "security:createRestrictedUser"
-    "restrictedProfileIds": [
-      "default"
-    ],
+    "restrictedProfileIds": ["default"],
     // [jwt]
     // configuration for the npm package jsonwebtoken
     // (see https://github.com/auth0/node-jsonwebtoken)
@@ -377,6 +362,23 @@
     "maxRequestSize": "1mb",
     "port": 7512,
     "strictSdkVersion": true,
+    // [appLogs]
+    // Configuration section for Kuzzle application logs
+    //   * level:
+    //       The log level to use initially.
+    //   * transport:
+    //       The transport to use.
+    //       Please refer to https://docs.kuzzle.io/modules/logger/1/guides/transport-configuration/
+    "appLogs": {
+      "level": "info",
+      "transport": {
+        "targets": [
+          {
+            "preset": "stdout"
+          }
+        ]
+      }
+    },
     // [logs]
     // Configuration section for Kuzzle access logs
     //   * transports:
@@ -788,9 +790,7 @@
     "storageEngine": {
       "majorVersion": "7",
       "backend": "elasticsearch",
-      "aliases": [
-        "storageEngine"
-      ],
+      "aliases": ["storageEngine"],
       "client": {
         "node": "http://localhost:9200"
       },
