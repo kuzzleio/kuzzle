@@ -1747,6 +1747,25 @@ describe("Test: ElasticSearch service", () => {
           "2 documents were successfully updated before an error occured",
       });
     });
+
+    it("should not generate a script if there are no changes", async () => {
+      const requestWithoutChanges = {
+        query,
+        index: alias,
+        refresh: false,
+      };
+
+      await elasticsearch.client.bulkUpdateByQuery(
+        index,
+        collection,
+        query,
+        {},
+      );
+
+      should(elasticsearch.client._client.updateByQuery).be.calledWithMatch(
+        requestWithoutChanges,
+      );
+    });
   });
 
   describe("#deleteByQuery", () => {
