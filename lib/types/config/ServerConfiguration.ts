@@ -1,3 +1,4 @@
+import { KuzzleLoggerConfig } from "kuzzle-logger";
 import { JSONObject } from "../../../index";
 
 export type ServerConfiguration = {
@@ -19,8 +20,10 @@ export type ServerConfiguration = {
   port: number;
 
   /**
-   * Configuration section for Kuzzle access logs.
+   * Configuration section for Kuzzle logs.
    */
+  appLogs: Omit<KuzzleLoggerConfig, "getMergingObject">;
+
   logs: {
     /**
     * An array of Winston transports configurations to output access
