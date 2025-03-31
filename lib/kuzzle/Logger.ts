@@ -20,7 +20,7 @@
  */
 
 import { KuzzleLogger } from "kuzzle-logger";
-import { JSONObject } from "../../";
+import { JSONObject, KuzzleConfiguration } from "../../";
 
 /**
  * The Logger class provides logging functionality for Kuzzle.
@@ -29,16 +29,15 @@ export class Logger extends KuzzleLogger {
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
 
-  constructor() {
-    const config = global.app.config.content.server.appLogs;
-    const deprecatedConfig =
-      global.app.config.content.plugins["kuzzle-plugin-logger"];
+  constructor(kuzzleConfig: KuzzleConfiguration) {
+    const config = kuzzleConfig.server.appLogs;
+    const deprecatedConfig = kuzzleConfig.plugins["kuzzle-plugin-logger"];
 
     const getMergingObject = () => {
       const mergingObject: JSONObject = {};
 
       mergingObject.failsafeMode = Boolean(
-        global.kuzzle.config.plugins.common.failsafeMode,
+        kuzzleConfig.plugins.common.failsafeMode,
       );
 
       if (global.kuzzle.id) {

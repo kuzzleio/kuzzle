@@ -199,7 +199,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     this.config = config;
 
-    this.log = new Logger();
+    this.log = new Logger(config);
 
     this.rootPath = path.resolve(path.join(__dirname, "../.."));
 
