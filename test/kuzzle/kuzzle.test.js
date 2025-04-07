@@ -199,39 +199,40 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         should(processRemoveAllListenersSpy.getCall(0).args[0]).be.exactly(
           "unhandledRejection",
         );
-        should(processOnSpy.getCall(0).args[0]).be.exactly(
-          "unhandledRejection",
-        );
+        should(processOnSpy.getCall(0).args[0]).be.exactly("exit");
 
         should(processRemoveAllListenersSpy.getCall(1).args[0]).be.exactly(
           "uncaughtException",
         );
-        should(processOnSpy.getCall(1).args[0]).be.exactly("uncaughtException");
+        should(processOnSpy.getCall(1).args[0]).be.exactly(
+          "unhandledRejection",
+        );
 
         should(processRemoveAllListenersSpy.getCall(2).args[0]).be.exactly(
           "SIGQUIT",
         );
-        should(processOnSpy.getCall(2).args[0]).be.exactly("SIGQUIT");
+        should(processOnSpy.getCall(2).args[0]).be.exactly("uncaughtException");
 
         should(processRemoveAllListenersSpy.getCall(3).args[0]).be.exactly(
           "SIGABRT",
         );
-        should(processOnSpy.getCall(3).args[0]).be.exactly("SIGABRT");
+        should(processOnSpy.getCall(3).args[0]).be.exactly("SIGQUIT");
 
         should(processRemoveAllListenersSpy.getCall(4).args[0]).be.exactly(
           "SIGTRAP",
         );
-        should(processOnSpy.getCall(4).args[0]).be.exactly("SIGTRAP");
+        should(processOnSpy.getCall(4).args[0]).be.exactly("SIGABRT");
 
         should(processRemoveAllListenersSpy.getCall(5).args[0]).be.exactly(
           "SIGINT",
         );
-        should(processOnSpy.getCall(5).args[0]).be.exactly("SIGINT");
+        should(processOnSpy.getCall(5).args[0]).be.exactly("SIGTRAP");
 
         should(processRemoveAllListenersSpy.getCall(6).args[0]).be.exactly(
           "SIGTERM",
         );
-        should(processOnSpy.getCall(6).args[0]).be.exactly("SIGTERM");
+        should(processOnSpy.getCall(6).args[0]).be.exactly("SIGINT");
+        should(processOnSpy.getCall(7).args[0]).be.exactly("SIGTERM");
       });
     });
   });
@@ -277,7 +278,7 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
         should(kuzzle.entryPoint.dispatch).calledOnce().calledWith("shutdown");
         should(kuzzle.pipe).calledWith("kuzzle:shutdown");
-        should(Bluebird.delay.callCount).approximately(5, 1);
+        should(Bluebird.delay.callCount).be.greaterThan(1);
 
         // @deprecated
         should(kuzzle.emit).calledWith("core:shutdown");

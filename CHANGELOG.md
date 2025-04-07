@@ -1,3 +1,23 @@
+## [2.43.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.42.0...v2.43.0-beta.1) (2025-04-07)
+
+
+### Features
+
+* **core-plugins:** remove kuzzle-plugin-logger from core plugins and mark its config as deprecated ([4c14811](https://github.com/kuzzleio/kuzzle/commit/4c14811a3f3f6d92a43796db211cf61759ceb961))
+* **internallogger:** add function to change log level at runtime ([31f7622](https://github.com/kuzzleio/kuzzle/commit/31f7622cd2dfe41cac2541774ff6e80ededbd3da))
+* **logger:** allow setting initial level from config ([da7ba47](https://github.com/kuzzleio/kuzzle/commit/da7ba47857894aabff7ddab6b067d871ec7b8390))
+* **logger:** flush logs on app shutdown ([9108da4](https://github.com/kuzzleio/kuzzle/commit/9108da47743e5954d7d15af8c6c39599498b00b3))
+* **logger:** implement logger ([57159f4](https://github.com/kuzzleio/kuzzle/commit/57159f46496610ff79383f4313fc2ccb5d603e5e))
+
+
+### Bug Fixes
+
+* Add sudo command for apt install ([002811b](https://github.com/kuzzleio/kuzzle/commit/002811b8232272ddf1437f03d04556f40d42e6b9))
+* **config:** fix config breaking change ([8e0eb04](https://github.com/kuzzleio/kuzzle/commit/8e0eb0466efd91b07183eb2a8dcea4eb617bd622))
+* **elasticsearch:** allow bulk updateByQuery without changes ([8b5df0b](https://github.com/kuzzleio/kuzzle/commit/8b5df0b3d00209dd10d27da19df114b04113e3fb))
+* Fix CI missing update when installing libuwind ([967d89c](https://github.com/kuzzleio/kuzzle/commit/967d89c296d90987148b78c8fd0b7b632e616f0e))
+* **logger:** pass config in constructor instead of accessing it through global ([ab92b9c](https://github.com/kuzzleio/kuzzle/commit/ab92b9c68e39263de94d16b337df21acaa6bcdc7))
+
 ## [2.42.0](https://github.com/kuzzleio/kuzzle/compare/v2.41.0...v2.42.0) (2025-03-11)
 
 
