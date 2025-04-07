@@ -1298,6 +1298,14 @@ export class ES7 {
       refresh?: boolean;
     } = {},
   ) {
+    const esRequest: RequestParams.UpdateByQuery<KRequestBody<JSONObject>> = {
+      body: {
+        query: this._sanitizeSearchBody({ query }).query,
+      },
+      index: this._getAlias(index, collection),
+      refresh,
+    };
+
     const script = {
       params: {},
       source: "",
@@ -1310,14 +1318,9 @@ export class ES7 {
       script.params[key] = value;
     }
 
-    const esRequest: RequestParams.UpdateByQuery<KRequestBody<JSONObject>> = {
-      body: {
-        query: this._sanitizeSearchBody({ query }).query,
-        script,
-      },
-      index: this._getAlias(index, collection),
-      refresh,
-    };
+    if (script.source !== "") {
+      esRequest.body.script = script;
+    }
 
     debug("Bulk Update by query: %o", esRequest);
 

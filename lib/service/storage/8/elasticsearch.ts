@@ -1328,6 +1328,12 @@ export class ES8 {
       refresh?: boolean;
     } = {},
   ) {
+    const esRequest: estypes.UpdateByQueryRequest = {
+      index: this._getAlias(index, collection),
+      query: this._sanitizeSearchBody({ query }).query,
+      refresh,
+    };
+
     const script = {
       params: {},
       source: "",
@@ -1340,12 +1346,9 @@ export class ES8 {
       script.params[key] = value;
     }
 
-    const esRequest: estypes.UpdateByQueryRequest = {
-      index: this._getAlias(index, collection),
-      query: this._sanitizeSearchBody({ query }).query,
-      refresh,
-      script,
-    };
+    if (script.source !== "") {
+      esRequest.script = script;
+    }
 
     debug("Bulk Update by query: %o", esRequest);
 

@@ -7,7 +7,7 @@ meta:
   - name: description
     content: Configure Kuzzle
   - name: keywords
-    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource,  Configuration 
+    content: Kuzzle, Documentation, kuzzle write pluggins, General purpose backend, opensource,  Configuration
 ---
 
 # Configuring Kuzzle
@@ -63,7 +63,7 @@ export kuzzle_services__common='*json:{"defaultInitTimeout":120000, "retryInterv
 Environment variables are particularly handy when running Kuzzle in a **Docker** container. Using **Docker Compose**, they can easily be configured in the `environment` section of the `docker-compose.yml` file. For example, here's how we pass environment variables to Kuzzle in our default docker-compose file:
 
 ```yaml
-version: '3'
+version: "3"
 
 services:
   kuzzle:
@@ -111,12 +111,13 @@ See the [Configuration](/core/2/guides/advanced/configuration) guide for more in
 :::
 
 **Example:** _Change configuration values_
+
 ```js
 // Read a configuration value
 console.log(`Kuzzle will listen on port ${app.config.content.server.port}`);
 
-// Set log level to verbose
-app.config.content.plugins['kuzzle-plugin-logger'].services.stdout.level = 'verbose';
+// Set log level to debug
+app.config.content.server.appLogs.level = "debug";
 
 // Listen to port 4242
 app.config.content.server.port = 4242;

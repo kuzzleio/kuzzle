@@ -59,7 +59,7 @@ import DumpGenerator from "./dumpGenerator";
 import KuzzleEventEmitter from "./event/KuzzleEventEmitter";
 import InternalIndexHandler from "./internalIndexHandler";
 import kuzzleStateEnum from "./kuzzleStateEnum";
-import Logger from "./log";
+import { Logger } from "./Logger";
 import vault from "./vault";
 
 export const BACKEND_IMPORT_KEY = "backend:init:import";
@@ -199,7 +199,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
     this.config = config;
 
-    this.log = new Logger();
+    this.log = new Logger(config);
 
     this.rootPath = path.resolve(path.join(__dirname, "../.."));
 

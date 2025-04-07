@@ -168,6 +168,7 @@ lib/kerror/index.js
 lib/kuzzle/event/KuzzleEventEmitter.js
 lib/kuzzle/index.js
 lib/kuzzle/kuzzle.js
+lib/kuzzle/Logger.js
 lib/model/security/profile.js
 lib/model/security/role.js
 lib/model/security/token.js
