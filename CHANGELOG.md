@@ -1,3 +1,10 @@
+## [2.43.1](https://github.com/kuzzleio/kuzzle/compare/v2.43.0...v2.43.1) (2025-04-08)
+
+
+### Bug Fixes
+
+* pino in depedencies instead of DevDeps ([91f193a](https://github.com/kuzzleio/kuzzle/commit/91f193a8358169bca59815d61342665d960a155a))
+
 ## [2.43.0](https://github.com/kuzzleio/kuzzle/compare/v2.42.0...v2.43.0) (2025-04-07)
 
 
