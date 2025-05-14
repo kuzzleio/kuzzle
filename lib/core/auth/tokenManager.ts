@@ -206,14 +206,23 @@ export class TokenManager {
    * Remove token associated with a connection.
    */
   async removeConnection(connectionId: string) {
-    const managedToken = this.tokensByConnection.get(connectionId);
+    const token = this.tokensByConnection.get(connectionId);
 
-    // Anonymous connection does not have associated token
-    if (!managedToken) {
+    if (token.userId === this.anonymousUserId) {
       return;
     }
 
-    await this.expire(managedToken);
+    this.tokensByConnection.delete(connectionId);
+
+    const idx = ManagedToken.indexFor(token);
+    const searchResult = this.tokens.search({ idx });
+    if (searchResult > -1) {
+      this.deleteByIndex(searchResult);
+    } else {
+      global.kuzzle.log.error(
+        `User "${token.userId}" has no token associated with connection "${connectionId}"`,
+      );
+    }
   }
 
   /**
