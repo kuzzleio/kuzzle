@@ -85,6 +85,8 @@ export class TokenManager {
   private tokensByConnection = new Map<string, ManagedToken>();
   private timer: NodeJS.Timeout = null;
 
+  private logger = global.kuzzle.log.child("auth:tokenManager");
+
   constructor() {
     /*
      * Tokens are sorted by their expiration date
@@ -124,7 +126,7 @@ export class TokenManager {
 
     global.kuzzle.on("connection:remove", (connection) => {
       this.removeConnection(connection.id).catch((err) =>
-        global.kuzzle.log.info(err),
+        this.logger.info(err),
       );
     });
   }
@@ -157,22 +159,33 @@ export class TokenManager {
 
     const idx = ManagedToken.indexFor(token);
     const currentToken = this.tokensByConnection.get(connectionId);
-
     if (currentToken) {
       if (currentToken._id === token._id) {
+        this.logger.trace(
+          `connection "${connectionId}" from user "${token.userId}" already linked to token`,
+        );
+
         return; // Connection and Token already linked
       }
       this.removeConnectionLinkedToToken(connectionId, currentToken);
     }
-    const pos = this.tokens.search({ idx });
 
+    const pos = this.tokens.search({ idx });
     if (pos === -1) {
       this.add(token, new Set([connectionId]));
+
+      this.logger.trace(
+        `connection "${connectionId}" from user "${token.userId}" linked to a new token`,
+      );
     } else {
       const managedToken = this.tokens.array[pos];
       managedToken.connectionIds.add(connectionId);
 
       this.tokensByConnection.set(connectionId, managedToken);
+
+      this.logger.trace(
+        `connection "${connectionId}" from user "${token.userId}" linked to existing token`,
+      );
     }
   }
 
@@ -183,7 +196,17 @@ export class TokenManager {
    * @param connectionId
    */
   unlink(token: Token, connectionId: string) {
-    if (!token || token.userId === this.anonymousUserId) {
+    if (!token) {
+      this.logger.warn(
+        `tried to unlink connection "${connectionId}" with no token`,
+      );
+      return;
+    }
+
+    if (token.userId === this.anonymousUserId) {
+      this.logger.warn(
+        `tried to unlink connection "${connectionId}" from anonymous user`,
+      );
       return;
     }
 
@@ -191,6 +214,9 @@ export class TokenManager {
     const pos = this.tokens.search({ idx });
 
     if (pos === -1) {
+      this.logger.warn(
+        `tried to unlink connection "${connectionId}" with no token associated`,
+      );
       return;
     }
 
@@ -200,29 +226,30 @@ export class TokenManager {
     if (currentToken && currentToken._id === token._id) {
       this.tokensByConnection.delete(connectionId);
     }
+
+    this.logger.trace(
+      `connection "${connectionId}" from user "${token.userId}" unlinked from token`,
+    );
   }
 
   /**
    * Remove token associated with a connection.
    */
   async removeConnection(connectionId: string) {
-    const token = this.tokensByConnection.get(connectionId);
+    const managedToken = this.tokensByConnection.get(connectionId);
 
-    if (token.userId === this.anonymousUserId) {
+    if (!managedToken) {
+      this.logger.warn(
+        `tried to remove connection "${connectionId}" with no token associated`,
+      );
       return;
     }
 
-    this.tokensByConnection.delete(connectionId);
+    this.unlink(managedToken, connectionId);
 
-    const idx = ManagedToken.indexFor(token);
-    const searchResult = this.tokens.search({ idx });
-    if (searchResult > -1) {
-      this.deleteByIndex(searchResult);
-    } else {
-      global.kuzzle.log.error(
-        `User "${token.userId}" has no token associated with connection "${connectionId}"`,
-      );
-    }
+    this.logger.trace(
+      `connection "${connectionId}" from user "${managedToken.userId}" removed and unlinked from token`,
+    );
   }
 
   /**
@@ -235,6 +262,7 @@ export class TokenManager {
    */
   async expire(token: Token) {
     if (token.userId === this.anonymousUserId) {
+      this.logger.warn(`tried to expire an anonymous token`);
       return;
     }
 
@@ -253,6 +281,10 @@ export class TokenManager {
       }
 
       this.deleteByIndex(searchResult);
+
+      this.logger.trace(
+        `token from user "${token.userId}" expired and removed from list`,
+      );
     }
   }
 
@@ -280,6 +312,8 @@ export class TokenManager {
 
       // Delete old token
       this.deleteByIndex(pos);
+
+      this.logger.trace(`token from user ${oldToken.userId} refreshed`);
     }
   }
 
@@ -356,6 +390,12 @@ export class TokenManager {
     if (this.tokens.array[0].idx === orderedToken.idx) {
       this.runTimer();
     }
+
+    this.logger.trace(
+      `token from user ${token.userId} linked to connections ${Array.from(
+        connectionIds,
+      )}`,
+    );
   }
 
   private removeConnectionLinkedToToken(
