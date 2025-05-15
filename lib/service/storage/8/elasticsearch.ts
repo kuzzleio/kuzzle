@@ -3080,6 +3080,8 @@ export class ES8 {
     extractedDocuments: JSONObject[],
     documentsToGet: JSONObject[],
   ) {
+    delete document.body._kuzzle_info;
+
     let extractedDocument;
 
     if (prepareMUpsert) {
