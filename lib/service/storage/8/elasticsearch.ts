@@ -3080,11 +3080,13 @@ export class ES8 {
     extractedDocuments: JSONObject[],
     documentsToGet: JSONObject[],
   ) {
-    delete document.body._kuzzle_info;
-
     let extractedDocument;
 
     if (prepareMUpsert) {
+      if (document.changes !== undefined && document.changes !== null) {
+        delete document.changes._kuzzle_info;
+      }
+
       extractedDocument = {
         _source: {
           // Do not use destructuring, it's 10x slower
@@ -3098,6 +3100,10 @@ export class ES8 {
         },
       };
     } else {
+      if (document.body !== undefined && document.body !== null) {
+        delete document.body._kuzzle_info;
+      }
+
       extractedDocument = {
         // Do not use destructuring, it's 10x slower
         _source: Object.assign({}, metadata, document.body),
