@@ -134,7 +134,8 @@ describe("funnel.executePluginRequest", () => {
       triggerEvents: true,
     });
 
-    return funnel.executePluginRequest(request).then(() => {
+    return funnel.executePluginRequest(request).catch((e) => {
+      should(e.message).be.eql("rejected action");
       should(kuzzle.pipe).calledWith("testme:beforeFail");
       should(kuzzle.pipe).calledWith("testme:errorFail");
       should(kuzzle.pipe).not.calledWith("testme:afterFail");
