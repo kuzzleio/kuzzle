@@ -137,6 +137,7 @@ describe("funnel.executePluginRequest", () => {
     return funnel.executePluginRequest(request).then(() => {
       should(kuzzle.pipe).calledWith("testme:beforeFail");
       should(kuzzle.pipe).calledWith("testme:errorFail");
+      should(kuzzle.pipe).not.calledWith("testme:afterFail");
     });
   });
 });
