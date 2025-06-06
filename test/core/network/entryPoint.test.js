@@ -55,10 +55,6 @@ describe("lib/core/core/network/entryPoint", () => {
   let EntryPoint;
   let entrypoint;
 
-  before(() => {
-    sinon.usingPromise(Bluebird);
-  });
-
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 

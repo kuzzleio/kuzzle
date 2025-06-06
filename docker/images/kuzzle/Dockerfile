@@ -5,7 +5,6 @@ FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS builder
 WORKDIR /app
 
 COPY ./bin bin
-COPY ./config config
 COPY ./lib lib
 COPY ./package.json package.json
 COPY ./package-lock.json package-lock.json
@@ -27,8 +26,7 @@ ENV NODE_ENV=production
 COPY --from=builder /app /app
 
 RUN  set -x \
-     && apt-get update && apt-get install -y \
-     curl \
+     && apt-get update \
      && apt-get clean autoclean \
      && apt-get autoremove --yes
 
