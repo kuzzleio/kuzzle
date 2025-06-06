@@ -98,7 +98,8 @@ async function startKuzzle(options = {}) {
   }
 }
 
-const options = yargs
+const options = yargs()
+  .scriptName("kuzzle")
   .usage("start-kuzzle-server [options]")
   .describe("fixtures", "Import data from file")
   .describe("mappings", "Apply mappings from file")
