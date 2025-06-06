@@ -1,5 +1,5 @@
 x-kuzzle-config: &kuzzle-config
-  image: krunner:22
+  image: kuzzleio/kuzzle-runner:22
   command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
   volumes:
     - ".:/var/app"
