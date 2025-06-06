@@ -20,7 +20,7 @@ RUN npm prune --omit=dev
 RUN rm -rf tsconfig.json index.ts
 
 ################################################################################
-FROM kuzzleio/kuzzle-runner AS minifier
+FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS minifier
 
 ENV NODE_ENV=production
 
