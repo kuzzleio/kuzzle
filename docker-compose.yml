@@ -1,5 +1,5 @@
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/core-dev:2
+  image: krunner:22
   command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
   volumes:
     - ".:/var/app"
@@ -36,8 +36,6 @@ x-kuzzle-config: &kuzzle-config
     - NODE_16_VERSION=16.19.1
     - NODE_18_VERSION=18.17.0
     - NODE_20_VERSION=20.10.0
-    - WITHOUT_KUZZLE # Run only Elasticsearch and Redis
-    - REBUILD # Force a rebuild of npm modules
 
 services:
   node:

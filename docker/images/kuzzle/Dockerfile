@@ -1,27 +1,6 @@
 ################################################################################
-ARG NODE_VERSION="20"
-FROM node:${NODE_VERSION}-bookworm-slim AS builder
-
-RUN set -x \
-     \
-     && apt-get update \
-     && apt-get install -y \
-     bash-completion \
-     build-essential \
-     curl \
-     g++ \
-     gdb \
-     git \
-     gnupg \
-     libfontconfig \
-     libzmq3-dev \
-     python3 \
-     procps \
-     wget \
-     libunwind-dev \
-     && npm install -g kourou \
-     && apt-get clean \
-     && rm -rf /var/lib/apt/lists/*
+ARG NODE_VERSION="22"
+FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS builder
 
 WORKDIR /app
 
@@ -40,10 +19,8 @@ RUN npm prune --omit=dev
 
 RUN rm -rf tsconfig.json index.ts
 
-COPY ./plugins/available/ /app/plugins/available/
-
 ################################################################################
-FROM node:${NODE_VERSION}-bookworm-slim AS minifier
+FROM kuzzleio/kuzzle-runner AS minifier
 
 ENV NODE_ENV=production
 
@@ -60,10 +37,6 @@ FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
-
-RUN set -x \
-     && apt-get update && apt-get install -y \
-     libunwind-dev
 
 COPY --from=minifier /lib /lib
 COPY --from=minifier /usr /usr

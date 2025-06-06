@@ -12,8 +12,6 @@ const {
   NativeController,
 } = require("../../../lib/api/controllers/baseController");
 
-const { BACKEND_IMPORT_KEY } = require("../../../lib/kuzzle/kuzzle");
-
 describe("AdminController", () => {
   let AdminController;
   let adminController;
@@ -104,7 +102,7 @@ describe("AdminController", () => {
       should(kuzzle.internalIndex.createInitialSecurities).be.calledOnce();
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:del",
-        `${BACKEND_IMPORT_KEY}:permissions`,
+        `backend:init:import:permissions`,
       );
 
       sinon.assert.callOrder(
@@ -186,7 +184,7 @@ describe("AdminController", () => {
 
       should(kuzzle.ask).be.calledWith(
         "core:cache:internal:del",
-        `${BACKEND_IMPORT_KEY}:mappings`,
+        `backend:init:import:mappings`,
       );
 
       const mutex = MutexMock.__getLastMutex();
