@@ -52,7 +52,7 @@ Reflect.defineProperty(global, "app", {
   get() {
     if (_app === null) {
       throw new Error(
-        "App instance not found. Are you sure you have already started your application?"
+        "App instance not found. Are you sure you have already started your application?",
       );
     }
 
@@ -61,7 +61,7 @@ Reflect.defineProperty(global, "app", {
   set(value) {
     if (_app !== null) {
       throw new Error(
-        "Cannot build an App instance: another one already exists"
+        "Cannot build an App instance: another one already exists",
       );
     }
 
@@ -264,8 +264,6 @@ export class Backend {
       // Silent if no version can be found
     }
 
-    console.log("Backend", BackendSubscription);
-
     global.app = this;
 
     this.pipe = new BackendPipe(this);
@@ -366,7 +364,7 @@ export class Backend {
   install(
     id: string,
     handler: () => Promise<void>,
-    description?: string
+    description?: string,
   ): void {
     if (this.started) {
       throw runtimeError.get("already_started", "install");
@@ -380,7 +378,7 @@ export class Backend {
         "assert",
         "invalid_type",
         "handler",
-        "function"
+        "function",
       );
     }
     if (description && typeof description !== "string") {
