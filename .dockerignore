@@ -1,19 +1,78 @@
+# Node modules
 **/node_modules
+
+# Dumps and indexes
 dump
 index-dump
+
+# Vagrant
 vagrant/
 Vagrantfile
+
+# Git
 **/.git
+.git/
+
+# CI, IDE, and code coverage
 .ci
 .idea
 .nyc_output
+coverage/
 .sonar
 sonar-project.properties
 
+# Plugins (test/dummy)
 plugins/available/functional-test-plugin
 plugins/enabled/functional-test-plugin
 plugins/enabled/dummy
 
-.git/
-**Dockerfile
+# Dockerfiles
+**/Dockerfile
+
+# Documentation
 doc/
+
+# Optional: logs, markdown, OS files
+*.log
+*.md
+.DS_Store
+Thumbs.db
+# Node modules
+**/node_modules
+
+# Dumps and indexes
+dump
+index-dump
+
+# Vagrant
+vagrant/
+Vagrantfile
+
+# Git
+**/.git
+.git/
+
+# CI, IDE, and code coverage
+.ci
+.idea
+.nyc_output
+coverage/
+.sonar
+sonar-project.properties
+
+# Plugins (test/dummy)
+plugins/available/functional-test-plugin
+plugins/enabled/functional-test-plugin
+plugins/enabled/dummy
+
+# Dockerfiles
+**/Dockerfile
+
+# Documentation
+doc/
+
+# Optional: logs, markdown, OS files
+*.log
+*.md
+.DS_Store
+Thumbs.db

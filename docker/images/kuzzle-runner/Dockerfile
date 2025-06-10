@@ -1,4 +1,4 @@
-ARG NODE_VERSION="20"
+ARG NODE_VERSION="22"
 FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
@@ -18,15 +18,7 @@ RUN set -x \
      build-essential \
      curl \
      g++ \
-     gdb \
      git \
-     gnupg \
-     libfontconfig \
-     libunwind-dev \
-     libzmq3-dev \
-     procps \
      python3 \
-     wget \
-     && npm install -g kourou \
      && apt-get clean \
      && rm -rf /var/lib/apt/lists/*

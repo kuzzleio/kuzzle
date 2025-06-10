@@ -421,8 +421,8 @@ export class HotelClerk {
     }
 
     await Bluebird.map(connectionRooms.roomIds, (roomId: string) =>
-      this.unsubscribe(connectionId, roomId, notify).catch(
-        global.kuzzle.log.error,
+      this.unsubscribe(connectionId, roomId, notify).catch((error) =>
+        global.kuzzle.log.error(error),
       ),
     );
   }

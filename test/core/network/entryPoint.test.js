@@ -7,7 +7,6 @@ const path = require("path");
 const rewire = require("rewire");
 const should = require("should");
 const sinon = require("sinon");
-const Bluebird = require("bluebird");
 const mockrequire = require("mock-require");
 
 const {
@@ -55,10 +54,6 @@ describe("lib/core/core/network/entryPoint", () => {
   let EntryPoint;
   let entrypoint;
 
-  before(() => {
-    sinon.usingPromise(Bluebird);
-  });
-
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
@@ -74,28 +69,6 @@ describe("lib/core/core/network/entryPoint", () => {
     mockrequire(`${network}/protocols/httpwsProtocol`, HttpWebSocketMock);
     mockrequire(`${network}/protocols/mqttProtocol`, MqttMock);
     mockrequire(`${network}/protocols/internalProtocol`, InternalMock);
-
-    // Bluebird.map forces a different context, preventing rewire to mock
-    // "require"
-    mockrequire("bluebird", {
-      all: Bluebird.all,
-      catch: sinon.stub().resolves(),
-      map: (arr, fn) =>
-        Promise.all(
-          arr.map((e) => {
-            let result;
-            try {
-              result = fn(e);
-            } catch (err) {
-              return Promise.reject(err);
-            }
-            return result;
-          }),
-        ),
-      resolve: sinon.stub().resolves(),
-      then: sinon.stub().resolves(),
-      timeout: sinon.stub().resolves(),
-    });
 
     EntryPoint = mockrequire.reRequire(`${network}/entryPoint`);
 
@@ -142,7 +115,7 @@ describe("lib/core/core/network/entryPoint", () => {
       entrypoint.logAccess = sinon.spy();
 
       const request = new Request({});
-      request.setResult({
+      request.response.configure({
         foo: "bar",
       });
 

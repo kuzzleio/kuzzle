@@ -1,3 +1,10 @@
+## [2.43.2-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.43.1...v2.43.2-beta.1) (2025-06-10)
+
+
+### Bug Fixes
+
+* **hotelClerk:** error logging context in unsubscribe method ([ce85842](https://github.com/kuzzleio/kuzzle/commit/ce85842aeb1bf703c974e1b10085a089a684990d))
+
 ## [2.43.1](https://github.com/kuzzleio/kuzzle/compare/v2.43.0...v2.43.1) (2025-04-08)
 
 
