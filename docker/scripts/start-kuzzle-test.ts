@@ -1,8 +1,3 @@
-"use strict";
-
-// Starts a Kuzzle Backend application tailored for development
-// This loads a special plugin dedicated to functional tests
-
 import { omit } from "lodash";
 import should from "should/as-function";
 
@@ -82,7 +77,7 @@ app.pipe.register<EventGenericDocumentInjectMetadata>(
       metadata: metadata,
       defaultMetadata: event.defaultMetadata,
     };
-  }
+  },
 );
 
 // Controller class usage
@@ -115,7 +110,7 @@ app.controller.register("pipes", {
           JSON.stringify({
             payload,
             state,
-          })
+          }),
         );
 
         return null;
@@ -132,7 +127,7 @@ app.controller.register("customSubscription", {
           request.context.connection,
           "lamaral",
           "windsurf",
-          {}
+          {},
         );
 
         return { roomId, channel };
@@ -142,7 +137,7 @@ app.controller.register("customSubscription", {
       handler: async (request: KuzzleRequest) => {
         await app.subscription.remove(
           request.context.connection,
-          request.input.args.roomId
+          request.input.args.roomId,
         );
       },
     },
@@ -165,17 +160,17 @@ function ensureEventDefinitionTypes() {
     "event:foobar",
     async (age: number, name: string) => {
       return age;
-    }
+    },
   );
 
   app.hook.register<EventFoobar>(
     "event:foobar",
-    (age: number, name: string) => {}
+    (age: number, name: string) => {},
   );
 
   app.cluster.on<EventFoobar>(
     "event:foobar",
-    async (age: number, name: string) => {}
+    async (age: number, name: string) => {},
   );
 
   app.cluster.broadcast<EventFoobar>("event:foobar", 30);
@@ -183,7 +178,7 @@ function ensureEventDefinitionTypes() {
   const promise: Promise<number> = app.trigger<EventFoobar>(
     "event:foobar",
     30,
-    "Tuan"
+    "Tuan",
   );
 
   interface PersonContent extends KDocumentContent {
@@ -194,7 +189,7 @@ function ensureEventDefinitionTypes() {
     "generic:document:beforeUpdate",
     async (documents: KDocument<PersonContent>[], request: KuzzleRequest) => {
       return documents;
-    }
+    },
   );
 }
 
@@ -203,12 +198,12 @@ function ensureEventDefinitionTypes() {
  */
 async function ensureQueryDefinitionTypes() {
   type Req = {
-    controller: "engine";
     action: "create";
-    engineId: string;
     body: {
       name: string;
     };
+    controller: "engine";
+    engineId: string;
   };
 
   type Res = {
@@ -216,12 +211,12 @@ async function ensureQueryDefinitionTypes() {
   };
 
   const response = await app.sdk.query<Req, Res>({
-    controller: "engine",
     action: "create",
-    engineId: "test",
     body: {
       name: "test",
     },
+    controller: "engine",
+    engineId: "test",
   });
 
   const age = response.result.age;
@@ -248,7 +243,7 @@ app.pipe.register(
     const convertedPayload = YAML.parse(payload.toString());
 
     return { payload: JSON.stringify(convertedPayload) };
-  }
+  },
 );
 
 // Hook registration and embedded SDK realtime publish
@@ -262,14 +257,14 @@ app.hook.register("custom:event", async (name) => {
 let syncedHello = "World";
 let dynamicPipeId;
 
-app.openApi.definition.components = {}
+app.openApi.definition.components = {};
 app.openApi.definition.components.LogisticObjects = {
   Item: {
-    type: "object",
     properties: {
-      name: { type: "string" },
       age: { type: "integer" },
+      name: { type: "string" },
     },
+    type: "object",
   },
 };
 
@@ -279,14 +274,12 @@ app.controller.register("openapi-test", {
       handler: async () => ({ hello: "world" }),
       http: [
         {
-          verb: "post",
-          path: "/openapi-test/:company/:objectType/:_id",
           openapi: {
             description: "Creates a new Logistic Object",
             parameters: [
               {
-                in: "body",
                 description: "Content of the Logistic Object",
+                in: "body",
                 required: true,
                 schema: {
                   $ref: "#/components/LogisticObjects/Item",
@@ -295,7 +288,6 @@ app.controller.register("openapi-test", {
             ],
             responses: {
               200: {
-                description: "Custom greeting",
                 content: {
                   "application/json": {
                     schema: {
@@ -303,9 +295,12 @@ app.controller.register("openapi-test", {
                     },
                   },
                 },
+                description: "Custom greeting",
               },
             },
           },
+          path: "/openapi-test/:company/:objectType/:_id",
+          verb: "post",
         },
       ],
     },
@@ -362,53 +357,98 @@ app.hook.register(
       request.getIndex(),
       request.getCollection(),
       "generic:document:afterUpdate",
-      {}
+      {},
     );
-  }
+  },
 );
 
 app.controller.register("tests", {
   actions: {
+    clearOutage: {
+      handler: async () => {
+        global.kuzzle.funnel.overloaded = false;
+        global.kuzzle.state = 2;
+      },
+      http: [{ path: "/tests/clear-outage", verb: "get" }],
+    },
     customError: {
       handler: async () => {
         throw app.errors.get("app", "api", "custom", "Tbilisi");
       },
     },
 
-    // Controller registration and http route definition
+    getSyncedHello: {
+      handler: async () => `Hello, ${syncedHello}`,
+      http: [{ path: "/hello", verb: "get" }],
+    },
+
+    mutex: {
+      handler: async () => {
+        const ttl = 5000;
+        const mutex = new Mutex("functionalTestMutexHandler", {
+          timeout: 0,
+          ttl,
+        });
+
+        const locked = await mutex.lock();
+
+        return { locked };
+      },
+      http: [{ path: "/tests/mutex/acquire", verb: "get" }],
+    },
+
+    "register-pipe": {
+      handler: async () => {
+        dynamicPipeId = app.pipe.register(
+          "server:afterNow",
+          async (request) => {
+            request.result.name = "Ugo";
+
+            return request;
+          },
+          { dynamic: true },
+        );
+
+        return dynamicPipeId;
+      },
+    },
+
     sayHello: {
       handler: async (request: KuzzleRequest) => {
         return { greeting: `Hello, ${request.input.args.name}` };
       },
-      http: [{ verb: "post", path: "/hello/:name" }],
+      http: [{ path: "/hello/:name", verb: "post" }],
     },
 
-    getSyncedHello: {
-      handler: async () => `Hello, ${syncedHello}`,
-      http: [{ verb: "get", path: "/hello" }],
-    },
-
-    syncHello: {
+    sendBodyHeaders: {
       handler: async (request: KuzzleRequest) => {
-        syncedHello = request.input.args.name;
-        await app.cluster.broadcast("sync:hello", { name: syncedHello });
-        return "OK";
+        request.response.configure({
+          headers: {
+            alpha: "beta",
+            foo: "bar",
+            "set-cookie": "foo=bar",
+          },
+        });
       },
-      http: [{ verb: "put", path: "/syncHello/:name" }],
+      http: [{ path: "/tests/body/sendeaders", verb: "get" }],
     },
 
-    // Trigger custom event
-    triggerEvent: {
+    simulateOutage: {
       handler: async (request: KuzzleRequest) => {
-        await app.trigger("custom:event", request.input.args.name);
+        const outageType = request.getString("type");
 
-        return { trigger: "custom:event", payload: request.input.args.name };
+        switch (outageType) {
+          case "overload":
+            global.kuzzle.funnel.overloaded = true;
+            break;
+          case "nodeNotStarted":
+            global.kuzzle.state = 1;
+            break;
+          default:
+            break;
+        }
       },
-    },
-
-    // Access Vault secrets
-    vault: {
-      handler: async () => app.vault.secrets,
+      http: [{ path: "/tests/simulate-outage", verb: "get" }],
     },
 
     // Access storage client
@@ -427,92 +467,45 @@ app.controller.register("tests", {
         if (response.body && response2.body) {
           // ES7
           should(omit(response.body, ["_version", "result", "_seq_no"])).match(
-            omit(response2.body, ["_version", "result", "_seq_no"])
+            omit(response2.body, ["_version", "result", "_seq_no"]),
           );
           return response.body;
-        } else {
-          // ES8
-          should(omit(response, ["_version", "result", "_seq_no"])).match(
-            omit(response2, ["_version", "result", "_seq_no"])
-          );
-          return response;
         }
-      },
-      http: [{ verb: "post", path: "/tests/storage-client/:index" }],
-    },
 
-    // Mutex class
-    mutex: {
-      handler: async (request: KuzzleRequest) => {
-        const ttl = 5000;
-        const mutex = new Mutex("functionalTestMutexHandler", {
-          timeout: 0,
-          ttl,
-        });
-
-        const locked = await mutex.lock();
-
-        return { locked };
-      },
-      http: [{ verb: "get", path: "/tests/mutex/acquire" }],
-    },
-
-    // Dynamic pipe registration
-    "register-pipe": {
-      handler: async () => {
-        dynamicPipeId = app.pipe.register(
-          "server:afterNow",
-          async (request) => {
-            request.result.name = "Ugo";
-
-            return request;
-          },
-          { dynamic: true }
+        // ES8
+        should(omit(response, ["_version", "result", "_seq_no"])).match(
+          omit(response2, ["_version", "result", "_seq_no"]),
         );
+        return response;
+      },
+      http: [{ path: "/tests/storage-client/:index", verb: "post" }],
+    },
 
-        return dynamicPipeId;
+    syncHello: {
+      handler: async (request: KuzzleRequest) => {
+        syncedHello = request.input.args.name;
+        await app.cluster.broadcast("sync:hello", { name: syncedHello });
+        return "OK";
+      },
+      http: [{ path: "/syncHello/:name", verb: "put" }],
+    },
+
+    triggerEvent: {
+      handler: async (request: KuzzleRequest) => {
+        await app.trigger("custom:event", request.input.args.name);
+
+        return { payload: request.input.args.name, trigger: "custom:event" };
       },
     },
+
     "unregister-pipe": {
       handler: async () => {
         app.pipe.unregister(dynamicPipeId);
       },
     },
-    sendBodyHeaders: {
-      http: [{ verb: "get", path: "/tests/body/sendeaders" }],
-      handler: async (request: KuzzleRequest) => {
-        request.response.configure({
-          headers: {
-            "set-cookie": "foo=bar",
-            foo: "bar",
-            alpha: "beta",
-          },
-        });
-      },
-    },
-    simulateOutage: {
-      http: [{ verb: "get", path: "/tests/simulate-outage" }],
-      handler: async (request: KuzzleRequest) => {
-        const outageType = request.getString("type");
 
-        switch (outageType) {
-          case "overload":
-            global.kuzzle.funnel.overloaded = true;
-            break;
-          case "nodeNotStarted":
-            global.kuzzle.state = 1;
-            break;
-          default:
-            break;
-        }
-      },
-    },
-    clearOutage: {
-      http: [{ verb: "get", path: "/tests/clear-outage" }],
-      handler: async () => {
-        global.kuzzle.funnel.overloaded = false;
-        global.kuzzle.state = 2;
-      },
+    vault: {
+      handler: async () => app.vault.secrets,
     },
   },
 });
@@ -542,6 +535,6 @@ loadAdditionalPlugins()
     });
   })
   .catch((error) => {
-    console.error(error);
+    app.log.error(error.message);
     process.exit(1);
   });

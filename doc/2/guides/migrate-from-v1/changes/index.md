@@ -225,8 +225,6 @@ To:
 
 Kuzzle images are now built for the two major versions of Kuzzle.  
 
-This includes the `kuzzleio/kuzzle` production image but also the `kuzzleio/plugin-dev` image for plugin developers.  
-
 The `latest` tag will now refer to the latest version of Kuzzle v2.  
 
 We also deploy 2 additional tags that refer respectively to the latest version of Kuzzle v1 and Kuzzle v2:

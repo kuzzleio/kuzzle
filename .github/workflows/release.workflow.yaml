@@ -4,7 +4,7 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
   DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
   ELASTICSEARCH_VERSION: "7.17.26"
-  NODE_VERSION: "20"
+  NODE_VERSION: "22"
 
 on:
   release:
@@ -46,45 +46,6 @@ jobs:
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
 
-  publish-plugin-dev:
-    name: Kuzzle plugin-dev Docker image
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Get current version from package.json
-        shell: bash
-        id: get-version
-        run: |
-          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
-          echo "major-version=$(jq -r .version package.json | cut -d. -f 1)" >> $GITHUB_OUTPUT
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ./docker/images/plugin-dev/Dockerfile
-          push: true
-          build-args: NODE_VERSION=${{ env.NODE_VERSION }}
-          platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/plugin-dev:${{ steps.get-version.outputs.major-version }},kuzzleio/plugin-dev:latest,kuzzleio/plugin-dev:${{ steps.get-version.outputs.version }}
-
   publish-kuzzle-core:
     name: Kuzzle core Docker image
     runs-on: ubuntu-24.04
@@ -123,38 +84,6 @@ jobs:
           build-args: NODE_VERSION=${{ env.NODE_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
           tags: kuzzleio/kuzzle:${{ steps.get-version.outputs.major-version }},kuzzleio/kuzzle:latest,kuzzleio/kuzzle:${{ steps.get-version.outputs.version }}
-
-  publish-core-dev:
-    name: Kuzzle core-dev Docker image
-    runs-on: ubuntu-24.04
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        id: buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to DockerHub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: ./docker/images/core-dev
-          file: ./docker/images/core-dev/Dockerfile
-          push: true
-          build-args: NODE_VERSION=${{ env.NODE_VERSION }}
-          platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/core-dev:2,kuzzleio/core-dev:latest
 
   publish-elasticsearch:
     name: Elasticsearch Docker image
