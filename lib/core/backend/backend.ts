@@ -24,11 +24,7 @@ import fs from "fs";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import {
-  BackendSubscription,
-  EventDefinition,
-  JSONObject,
-} from "../../../index";
+import { EventDefinition, JSONObject } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -42,6 +38,7 @@ import {
   BackendOpenApi,
   InternalLogger,
   BackendErrors,
+  BackendSubscription,
 } from "./index";
 
 const assertionError = kerror.wrap("plugin", "assert");

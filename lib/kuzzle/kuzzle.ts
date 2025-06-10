@@ -62,8 +62,6 @@ import kuzzleStateEnum from "./kuzzleStateEnum";
 import { Logger } from "./Logger";
 import vault from "./vault";
 
-export const BACKEND_IMPORT_KEY = "backend:init:import";
-
 let _kuzzle = null;
 
 Reflect.defineProperty(global, "kuzzle", {
@@ -612,7 +610,7 @@ class Kuzzle extends KuzzleEventEmitter {
       if (
         await this.ask(
           "core:cache:internal:get",
-          `${BACKEND_IMPORT_KEY}:${importType}`,
+          `backend:init:import:${importType}`,
         )
       ) {
         return;
@@ -655,11 +653,11 @@ class Kuzzle extends KuzzleEventEmitter {
         {
           hash: importPayloadHash,
         },
-        { id: `${BACKEND_IMPORT_KEY}:${type}` },
+        { id: `backend:init:import:${type}` },
       );
       await this.ask(
         "core:cache:internal:store",
-        `${BACKEND_IMPORT_KEY}:${type}`,
+        `backend:init:import:${type}`,
         importPayloadHash,
       );
     } else if (existingRedisHash && !existingESHash) {
@@ -671,7 +669,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       const redisCache = await this.ask(
         "core:cache:internal:get",
-        `${BACKEND_IMPORT_KEY}:${type}`,
+        `backend:init:import:${type}`,
       );
 
       await this.ask(
@@ -681,7 +679,7 @@ class Kuzzle extends KuzzleEventEmitter {
         {
           hash: redisCache,
         },
-        { id: `${BACKEND_IMPORT_KEY}:${type}` },
+        { id: `backend:init:import:${type}` },
       );
     } else if (!existingRedisHash && existingESHash) {
       // If the import is initialized in the ES but not in the redis cache
@@ -694,12 +692,12 @@ class Kuzzle extends KuzzleEventEmitter {
         "core:storage:private:document:get",
         "kuzzle",
         "imports",
-        `${BACKEND_IMPORT_KEY}:${type}`,
+        `backend:init:import:${type}`,
       );
 
       await this.ask(
         "core:cache:internal:store",
-        `${BACKEND_IMPORT_KEY}:${type}`,
+        `backend:init:import:${type}`,
         esDocument._source.hash,
       );
     }
@@ -748,14 +746,14 @@ class Kuzzle extends KuzzleEventEmitter {
 
         const existingRedisHash = await this.ask(
           "core:cache:internal:get",
-          `${BACKEND_IMPORT_KEY}:${type}`,
+          `backend:init:import:${type}`,
         );
 
         const existingESHash = await this.ask(
           "core:storage:private:document:exist",
           "kuzzle",
           "imports",
-          `${BACKEND_IMPORT_KEY}:${type}`,
+          `backend:init:import:${type}`,
         );
 
         let initialized = false;
@@ -769,7 +767,7 @@ class Kuzzle extends KuzzleEventEmitter {
             "core:storage:private:document:get",
             "kuzzle",
             "imports",
-            `${BACKEND_IMPORT_KEY}:${type}`,
+            `backend:init:import:${type}`,
           );
           initialized = esDocument._source.hash === importPayloadHash;
         }
