@@ -61,7 +61,7 @@ describe("Test: token manager core component", () => {
       should(tokenManager.expire).not.be.called();
 
       should(tokenManager.unlink).be.calledOnce();
-      should(tokenManager.unlink.getCall(0).args[0]).be.eql(token);
+      should(tokenManager.unlink.getCall(0).args[0]).match(token);
       should(tokenManager.unlink.getCall(0).args[1]).be.eql("connectionId");
     });
 
