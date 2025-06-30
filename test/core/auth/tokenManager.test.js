@@ -61,7 +61,17 @@ describe("Test: token manager core component", () => {
       should(tokenManager.expire).not.be.called();
 
       should(tokenManager.unlink).be.calledOnce();
-      should(tokenManager.unlink.getCall(0).args[0]).match(token);
+      should(tokenManager.unlink.getCall(0).args[0]).match({
+        _id: token._id,
+        expiresAt: token.expiresAt,
+        ttl: null,
+        userId: token.userId,
+        jwt: token.jwt,
+        refreshed: false,
+        singleUse: false,
+        connectionIds: new Set(["connectionId"]),
+        idx: `${token.expiresAt};${token._id}`,
+      });
       should(tokenManager.unlink.getCall(0).args[1]).be.eql("connectionId");
     });
 
