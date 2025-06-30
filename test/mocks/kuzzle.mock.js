@@ -77,7 +77,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       debug: sinon.stub(),
       verbose: sinon.stub(),
       trace: sinon.stub(),
-      child: {
+      child: sinon.stub().returns({
         error: sinon.stub(),
         warn: sinon.stub(),
         info: sinon.stub(),
@@ -85,7 +85,7 @@ class KuzzleMock extends KuzzleEventEmitter {
         debug: sinon.stub(),
         verbose: sinon.stub(),
         trace: sinon.stub(),
-      },
+      }),
     };
 
     this.koncorde = {
