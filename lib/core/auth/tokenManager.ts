@@ -85,7 +85,7 @@ export class TokenManager {
   private tokensByConnection = new Map<string, ManagedToken>();
   private timer: NodeJS.Timeout = null;
 
-  private logger = global.kuzzle.log.child("auth:tokenManager");
+  private readonly logger = global.kuzzle.log.child("auth:tokenManager");
 
   constructor() {
     /*
