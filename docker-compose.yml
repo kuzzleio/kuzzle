@@ -1,9 +1,8 @@
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/kuzzle-runner:22
-  command: sh -c 'chmod 755 /run-dev.sh && /run-dev.sh'
+  command: sh -c 'chmod 755 /var/app/docker/scripts/run-dev.sh && /var/app/docker/scripts/run-dev.sh'
   volumes:
     - ".:/var/app"
-    - "./docker/scripts/run-dev.sh:/run-dev.sh"
   cap_add:
     - SYS_PTRACE
   ulimits:
