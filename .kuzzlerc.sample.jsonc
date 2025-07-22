@@ -1070,6 +1070,12 @@
   //       The type of IP address to use.
   //       If no suitable IP address can be found, the node will refuse to
   //       start.
+  //       This is mandatory when deploying on Cloud providers such as AWS/Azure and so on,
+  //       as they provide both public and private IPs, and Kuzzle needs to know
+  //       which one to use to communicate with other nodes.
+  //       For example, known configurations are:
+  //         * "public": for providers like Scaleway, OVH
+  //         * "private": for providers like AWS, Azure, GCP, DigitalOcean
   //       Accepted values:
   //         * 'public': will target only public IPs
   //         * 'private': will target only private IPs (private addresses,
