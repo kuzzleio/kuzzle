@@ -1,3 +1,20 @@
+## [2.44.0](https://github.com/kuzzleio/kuzzle/compare/v2.43.2...v2.44.0) (2025-07-24)
+
+
+### Features
+
+* **kuzzle.mock:** add child logger stub to KuzzleMock class ([8300582](https://github.com/kuzzleio/kuzzle/commit/83005825d3721dbd3c5f1ed368142a09e4da6906))
+* **kuzzle.mock:** enhance child logger stub with additional log levels ([d30063f](https://github.com/kuzzleio/kuzzle/commit/d30063faba2c4cc65a1aec2c39595ea79d2e969a))
+* qol around docker compose ([70eba27](https://github.com/kuzzleio/kuzzle/commit/70eba27b35e99c6942a35672eddc01102cb649c8))
+* **token-manager:** enhance logging for token management operations ([f27b702](https://github.com/kuzzleio/kuzzle/commit/f27b70279acc5baabd72563ab722851b55e2cf7f))
+* **token-manager:** first attempt at fixing concurrency ([6e8760c](https://github.com/kuzzleio/kuzzle/commit/6e8760c1c4bb8651af70eaf36a1635963d80b795))
+
+
+### Bug Fixes
+
+* **kuzzle.mock:** correct child logger stub implementation to return an object ([8dac44b](https://github.com/kuzzleio/kuzzle/commit/8dac44b3af5786b858aff5b7b945a1247d825cef))
+* **logger:** namespace property prefix ([deddf2c](https://github.com/kuzzleio/kuzzle/commit/deddf2c70902d3891dd12d785ccc2768a96aca6d))
+
 ## [2.44.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.43.2...v2.44.0-beta.1) (2025-07-24)
 
 
