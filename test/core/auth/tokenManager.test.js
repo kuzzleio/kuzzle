@@ -50,13 +50,40 @@ describe("Test: token manager core component", () => {
   });
 
   describe("#removeConnection", () => {
-    it("should expire the token if it exists", async () => {
+    it("should unlink the connection from the token and not expire it", async () => {
       sinon.stub(tokenManager, "expire").resolves();
+      sinon.stub(tokenManager, "unlink").resolves();
+
       tokenManager.link(token, "connectionId");
 
       await tokenManager.removeConnection("connectionId");
 
-      should(tokenManager.expire.getCall(0).args[0]._id).be.eql(token._id);
+      should(tokenManager.expire).not.be.called();
+
+      should(tokenManager.unlink).be.calledOnce();
+      should(tokenManager.unlink.getCall(0).args[0]).match({
+        _id: token._id,
+        expiresAt: token.expiresAt,
+        ttl: null,
+        userId: token.userId,
+        jwt: token.jwt,
+        refreshed: false,
+        singleUse: false,
+        connectionIds: new Set(["connectionId"]),
+        idx: `${token.expiresAt};${token._id}`,
+      });
+      should(tokenManager.unlink.getCall(0).args[1]).be.eql("connectionId");
+    });
+
+    it("should not ask 'core:realtime:connection:remove'", async () => {
+      tokenManager.link(token, "connectionId");
+
+      await tokenManager.removeConnection("connectionId");
+
+      should(kuzzle.ask).not.be.calledWith(
+        "core:realtime:connection:remove",
+        "connectionId",
+      );
     });
   });
 

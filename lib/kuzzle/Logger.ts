@@ -36,6 +36,8 @@ export class Logger extends KuzzleLogger {
     const getMergingObject = () => {
       const mergingObject: JSONObject = {};
 
+      mergingObject.namespace = "kuzzle";
+
       mergingObject.failsafeMode = Boolean(
         kuzzleConfig.plugins.common.failsafeMode,
       );
