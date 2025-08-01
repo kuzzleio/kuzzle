@@ -63,7 +63,7 @@ services:
       - "17512:7512"
 
   redis:
-    image: redis:6
+    image: redis:7
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7
