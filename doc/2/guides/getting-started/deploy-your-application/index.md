@@ -101,7 +101,7 @@ services:
       - NODE_ENV=production
 
   redis:
-    image: redis:6
+    image: redis:7
     command: redis-server --appendonly yes
     restart: always
     volumes:

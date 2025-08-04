@@ -51,7 +51,7 @@ services:
       start_period: 1m
 
   redis:
-    image: redis:6
+    image: redis:7
     ports:
       - "6379:6379"
     healthcheck:
