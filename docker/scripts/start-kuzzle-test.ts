@@ -533,6 +533,9 @@ loadAdditionalPlugins()
     await app.cluster.on("sync:hello", (payload) => {
       syncedHello = payload.name;
     });
+    const childLogger = app.logger.child("toto");
+
+    childLogger.info("hello world");
   })
   .catch((error) => {
     app.log.error(error.message);

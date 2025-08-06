@@ -40,6 +40,9 @@ import {
   BackendErrors,
   BackendSubscription,
 } from "./index";
+import { Logger } from "../../kuzzle/Logger";
+
+import { loadConfig } from "../../config/index.js";
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
@@ -167,6 +170,7 @@ export class Backend {
 
   /**
    * InternalLogger
+   * @deprecated Use app.logger instead.
    *
    * @method debug
    * @method info
@@ -175,6 +179,11 @@ export class Backend {
    * @method verbose
    */
   public log: InternalLogger;
+
+  /**
+   * Logger instance (pino)
+   */
+  public logger: Logger;
 
   /**
    * Storage manager
@@ -331,6 +340,7 @@ export class Backend {
     this._sdk = new EmbeddedSDK();
 
     this.started = true;
+    this.logger = new Logger(this._kuzzle.config);
   }
 
   /**

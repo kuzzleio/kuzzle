@@ -30,6 +30,7 @@ export class Logger extends KuzzleLogger {
   private warnedForVerboseDeprecation = false;
 
   constructor(kuzzleConfig: KuzzleConfiguration) {
+    console.log(kuzzleConfig);
     const config = kuzzleConfig.server.appLogs;
     const deprecatedConfig = kuzzleConfig.plugins["kuzzle-plugin-logger"];
 
