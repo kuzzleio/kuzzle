@@ -1,7 +1,5 @@
 "use strict";
 
-const util = require("util");
-
 const should = require("should");
 const mockrequire = require("mock-require");
 
@@ -34,13 +32,11 @@ describe("Backend", () => {
         application.log.error("error");
         application.log.verbose({ info: "verbose" });
 
-        should(global.kuzzle.log.debug).be.calledWith(util.inspect("debug"));
-        should(global.kuzzle.log.info).be.calledWith(util.inspect("info"));
-        should(global.kuzzle.log.warn).be.calledWith(util.inspect("warn"));
-        should(global.kuzzle.log.error).be.calledWith(util.inspect("error"));
-        should(global.kuzzle.log.verbose).be.calledWith(
-          util.inspect({ info: "verbose" }),
-        );
+        should(global.kuzzle.log.debug).be.calledWith("debug");
+        should(global.kuzzle.log.info).be.calledWith("info");
+        should(global.kuzzle.log.warn).be.calledWith("warn");
+        should(global.kuzzle.log.error).be.calledWith("error");
+        should(global.kuzzle.log.verbose).be.calledWith({ info: "verbose" });
       });
     });
   });
