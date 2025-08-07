@@ -297,7 +297,7 @@ export class Backend {
     }
 
     this._kuzzle = new Kuzzle(this.config.content);
-    this.log = this._kuzzle.log.child(`app:${this.name}`);
+    this.log = this._kuzzle.log.child(`app`);
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
 
