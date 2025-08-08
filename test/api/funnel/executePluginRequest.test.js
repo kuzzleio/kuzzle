@@ -126,4 +126,19 @@ describe("funnel.executePluginRequest", () => {
       should(kuzzle.pipe).not.calledWith("testme:afterSucceed");
     });
   });
+
+  it("should catch an error and trigger error pipe if triggerEvent enabled", async () => {
+    const request = new Request({
+      action: "fail",
+      controller: "testme",
+      triggerEvents: true,
+    });
+
+    return funnel.executePluginRequest(request).catch((e) => {
+      should(e.message).be.eql("rejected action");
+      should(kuzzle.pipe).calledWith("testme:beforeFail");
+      should(kuzzle.pipe).calledWith("testme:errorFail");
+      should(kuzzle.pipe).not.calledWith("testme:afterFail");
+    });
+  });
 });
