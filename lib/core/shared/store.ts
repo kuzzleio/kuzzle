@@ -61,6 +61,8 @@ export class Store {
   protected index: string;
   protected scope: storeScopeEnum;
 
+  private readonly logger = global.kuzzle.log.child("core:shared:store");
+
   constructor(index: string, scope: storeScopeEnum) {
     this.index = index;
     this.scope = scope;
@@ -216,7 +218,7 @@ export class Store {
                 existingSettings.number_of_shards,
               );
             }
-            global.kuzzle.log.warn(
+            this.logger.warn(
               `Attempt to recreate an existing collection ${collection} of index ${this.index} of scope ${this.scope} with non matching static setting : number_of_shards at ${config.settings.number_of_shards} while existing one is at ${existingSettings.number_of_shards}`,
             );
           }

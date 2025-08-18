@@ -38,6 +38,7 @@ import { Token } from "../../model/security/token";
 
 export class AuthController extends NativeController {
   private anonymousId: string;
+  private readonly logger = global.kuzzle.log.child("api:controllers:auth");
 
   /**
    * @param {Kuzzle} kuzzle
@@ -518,7 +519,7 @@ export class AuthController extends NativeController {
       },
     );
 
-    global.kuzzle.log.info(
+    this.logger.info(
       `[SECURITY] ${SecurityController.userOrSdk(userId)} applied action "${
         request.input.action
       }" on user "${userId}."`,

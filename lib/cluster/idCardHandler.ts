@@ -63,6 +63,8 @@ export class IdCard {
    */
   public topology: Set<string>;
 
+  private readonly logger = global.kuzzle.log.child("cluster:id-card");
+
   constructor({ id, ip, birthdate, topology }: SerializedIdCard) {
     this.id = id;
     this.ip = ip;
@@ -241,7 +243,7 @@ export class ClusterIdCardHandler {
       try {
         await this.save();
       } catch (error) {
-        global.kuzzle.log.error(
+        this.logger.error(
           `An error occurred while refreshing the ID card during WorkerThread startup: ${error}`,
         );
       }
