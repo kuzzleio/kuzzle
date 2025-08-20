@@ -70,7 +70,7 @@ describe("core/network/protocols/websocket", () => {
       await should(httpWs.init(entryPoint));
 
       should(httpWs.server.ws).not.called();
-      should(kuzzle.log.warn).calledWith(
+      should(httpWs.logger.warn).calledWith(
         "[websocket] no configuration found for websocket: disabling it",
       );
     });
@@ -86,7 +86,7 @@ describe("core/network/protocols/websocket", () => {
           idleTimeout: 60,
         });
 
-        should(kuzzle.log.warn).calledWith(
+        should(httpWs.logger.warn).calledWith(
           '[websocket] The "idleTimeout" parameter can neither be deactivated or be set with a value lower than 1000. Defaulted to 60000.',
         );
       }
@@ -101,7 +101,7 @@ describe("core/network/protocols/websocket", () => {
 
       await httpWs.init(entryPoint);
 
-      should(kuzzle.log.warn).calledWith(
+      should(httpWs.logger.warn).calledWith(
         '[websocket] The "heartbeat" parameter has been deprecated and is now ignored. The "idleTimeout" parameter should now be configured instead.',
       );
     });

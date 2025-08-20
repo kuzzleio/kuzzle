@@ -1504,7 +1504,7 @@ describe("Plugin", () => {
       await kuzzle.pipe("foo:bar");
 
       should(fooStub).be.calledOnce();
-      should(kuzzle.log.warn).calledWithMatch(
+      should(pluginsManager.logger.warn).calledWithMatch(
         /\[test-plugin\] pipe for event 'foo:bar' is slow \(\d+ms\)/,
       );
     });

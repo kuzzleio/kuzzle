@@ -141,7 +141,7 @@ describe("Test: validation initialization", () => {
       return validation.curateSpecification().then(() => {
         should(validation.rawConfiguration).be.eql(configurationMock);
         should(validation.specification).be.deepEqual({});
-        should(kuzzle.log.error.callCount).be.eql(6);
+        should(validation.logger.error.callCount).be.eql(6);
       });
     });
   });
@@ -676,7 +676,7 @@ describe("Test: validation initialization", () => {
       ).throw("an error");
 
       should(curateFieldSpecificationStub.callCount).be.eql(1);
-      should(kuzzle.log.error).calledOnce();
+      should(validation.logger.error).calledOnce();
     });
 
     it("should return an error array if one of the field curation returns an error in verbose mode", () => {
@@ -717,7 +717,7 @@ describe("Test: validation initialization", () => {
       should(response.errors[1]).be.eql("error two");
       should(response.errors[2]).be.eql("error three");
       should(curateFieldSpecificationStub.callCount).be.eql(3);
-      should(kuzzle.log.error.callCount).be.eql(3);
+      should(validation.logger.error.callCount).be.eql(3);
     });
   });
 

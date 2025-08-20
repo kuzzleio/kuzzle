@@ -122,7 +122,7 @@ describe("#AccessLogger", () => {
 
       should(accessLogger.isActive).be.false();
       should(workerArgs).be.null();
-      should(kuzzle.log.error).calledWith(
+      should(accessLogger.logger.error).calledWith(
         'Failed to initialize logger transport "ohnoes": unsupported transport. Skipped.',
       );
     });

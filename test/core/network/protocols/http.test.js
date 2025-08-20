@@ -79,7 +79,7 @@ describe("core/network/protocols/http", () => {
       await should(httpWs.init(entryPoint));
 
       should(httpWs.server.any).not.called();
-      should(kuzzle.log.warn).calledWith(
+      should(httpWs.logger.warn).calledWith(
         "[http] no configuration found for http: disabling it",
       );
     });

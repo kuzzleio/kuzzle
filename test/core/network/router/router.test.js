@@ -47,7 +47,7 @@ describe("Test: router", () => {
       const context = new RequestContext({ connection: { protocol } });
       router.newConnection(context);
 
-      should(kuzzle.log.error)
+      should(router.logger.error)
         .calledOnce()
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
@@ -56,7 +56,7 @@ describe("Test: router", () => {
       const context = new RequestContext({ connection: { id: connectionId } });
       router.newConnection(context);
 
-      should(kuzzle.log.error)
+      should(router.logger.error)
         .calledOnce()
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
@@ -86,7 +86,7 @@ describe("Test: router", () => {
 
       should(realtimeDisconnectStub).not.be.called();
       should(kuzzle.statistics.dropConnection).not.be.called();
-      should(kuzzle.log.error)
+      should(router.logger.error)
         .calledOnce()
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
@@ -96,7 +96,7 @@ describe("Test: router", () => {
       router.connections.set(connectionId, context);
       router.removeConnection(context);
 
-      should(kuzzle.log.error)
+      should(router.logger.error)
         .calledOnce()
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });
@@ -106,7 +106,7 @@ describe("Test: router", () => {
       router.connections.set(connectionId, context);
       router.removeConnection(context);
 
-      should(kuzzle.log.error)
+      should(router.logger.error)
         .calledOnce()
         .calledWith(sinon.match.instanceOf(PluginImplementationError));
     });

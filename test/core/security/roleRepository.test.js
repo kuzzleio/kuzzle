@@ -646,7 +646,7 @@ describe("Test: security/roleRepository", () => {
 
       roleRepository.checkRolePluginsRights(role, { force: true });
 
-      should(kuzzle.log.warn).be.calledWith(
+      should(roleRepository.logger.warn).be.calledWith(
         'The role "test" gives access to the non-existing controller "invalid_controller".',
       );
     });
@@ -670,7 +670,7 @@ describe("Test: security/roleRepository", () => {
         forceWarn: true,
       });
 
-      should(kuzzle.log.warn).be.calledWith(
+      should(roleRepository.logger.warn).be.calledWith(
         'The role "test" gives access to the non-existing controller "invalid_controller".',
       );
     });
@@ -711,7 +711,7 @@ describe("Test: security/roleRepository", () => {
 
       roleRepository.checkRolePluginsRights(role, { force: true });
 
-      should(kuzzle.log.warn).be.calledWith(
+      should(roleRepository.logger.warn).be.calledWith(
         'The role "test" gives access to the non-existing action "iDontExist" for the controller "foobar".',
       );
     });

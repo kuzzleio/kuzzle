@@ -778,7 +778,7 @@ describe("#Cluster Node", () => {
       should(node.command.broadcastHandshake).not.called();
       should(node.fullState.loadFullState).not.called();
 
-      should(kuzzle.log.error).calledWithMatch(
+      should(node.logger.error).calledWithMatch(
         /Another node share the same IP address as this one \(2.3.4.2\): baz/,
       );
       should(kuzzle.shutdown).calledOnce();
@@ -869,7 +869,7 @@ describe("#Cluster Node", () => {
       should(node.idCardHandler.addNode).calledWith("baz");
       should(node.idCardHandler.addNode).calledWith("qux");
 
-      should(kuzzle.log.warn).calledWithMatch(/Retrying/);
+      should(node.logger.warn).calledWithMatch(/Retrying/);
     });
 
     it("should abort and shutdown if unable to get a fullstate", async () => {
@@ -893,8 +893,8 @@ describe("#Cluster Node", () => {
       should(node.command.broadcastHandshake).not.called();
       should(node.fullState.loadFullState).not.called();
 
-      should(kuzzle.log.warn).calledWithMatch(/Retrying/);
-      should(kuzzle.log.error).calledWithMatch(/network split detected/);
+      should(node.logger.warn).calledWithMatch(/Retrying/);
+      should(node.logger.error).calledWithMatch(/network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -957,7 +957,7 @@ describe("#Cluster Node", () => {
 
       await new Promise((resolve) => setTimeout(resolve, 50));
 
-      should(kuzzle.log.error).calledWithMatch(/timed out/);
+      should(node.logger.error).calledWithMatch(/timed out/);
       should(kuzzle.shutdown).calledOnce();
     });
   });
@@ -985,7 +985,7 @@ describe("#Cluster Node", () => {
       ).be.fulfilledWith(true);
 
       should(kuzzle.state).eql(kuzzleStateEnum.RUNNING);
-      should(kuzzle.log.warn).calledWithMatch(
+      should(node.logger.warn).calledWithMatch(
         /Minimum number of nodes reached/,
       );
     });
@@ -1008,8 +1008,8 @@ describe("#Cluster Node", () => {
 
       await node.evictSelf("foo", error);
 
-      should(kuzzle.log.error).calledWithMatch(/foo/);
-      should(kuzzle.log.error).calledWith(error.stack);
+      should(node.logger.error).calledWithMatch(/foo/);
+      should(node.logger.error).calledWith(error.stack);
 
       should(node.publisher.sendNodeEvicted)
         .calledOnce()
@@ -1036,7 +1036,7 @@ describe("#Cluster Node", () => {
     it("should broadcast a node eviction to all other nodes", async () => {
       await node.evictNode("bar", { broadcast: true, reason: "because" });
 
-      should(kuzzle.log.warn).calledWith(
+      should(node.logger.warn).calledWith(
         '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
@@ -1058,7 +1058,7 @@ describe("#Cluster Node", () => {
     it("should evict a node without broadcasting if not asked to", async () => {
       await node.evictNode("bar", { reason: "because" });
 
-      should(kuzzle.log.warn).calledWith(
+      should(node.logger.warn).calledWith(
         '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
@@ -1079,7 +1079,7 @@ describe("#Cluster Node", () => {
 
       await node.evictNode("bar", { reason: "because" });
 
-      should(kuzzle.log.warn).calledWith(
+      should(node.logger.warn).calledWith(
         '[CLUSTER] Node "bar" evicted. Reason: because',
       );
       should(node.activity[0]).match({
@@ -1093,7 +1093,7 @@ describe("#Cluster Node", () => {
       should(node.remoteNodes).not.have.key("bar");
       should(node.publisher.sendNodeEvicted).not.called();
       should(kuzzle.state).eql(kuzzleStateEnum.NOT_ENOUGH_NODES);
-      should(kuzzle.log.warn).calledWithMatch(/Not enough nodes active/);
+      should(node.logger.warn).calledWithMatch(/Not enough nodes active/);
     });
 
     it("should do nothing if the node is unknown", async () => {
@@ -1135,7 +1135,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1149,7 +1149,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1164,7 +1164,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1181,7 +1181,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1196,7 +1196,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1212,7 +1212,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 
@@ -1228,7 +1228,7 @@ describe("#Cluster Node", () => {
 
       await node.enforceClusterConsistency();
 
-      should(kuzzle.log.error).calledWithMatch(/Network split detected/);
+      should(node.logger.error).calledWithMatch(/Network split detected/);
       should(kuzzle.shutdown).calledOnce();
     });
 

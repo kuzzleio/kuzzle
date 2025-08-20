@@ -140,6 +140,6 @@ describe("Test: hotelClerk.removeConnection", () => {
 
     await hotelClerk.removeConnection(connectionId);
 
-    should(kuzzle.log.error).be.calledWith(error);
+    should(hotelClerk.logger.error).be.calledWith(error);
   });
 });
