@@ -121,8 +121,6 @@ interface EmbeddedRealtime extends RealtimeController {
 export class EmbeddedSDK extends Kuzzle {
   realtime: EmbeddedRealtime;
 
-  private readonly logger = global.kuzzle.log.child("core:shared:embeddedSdk");
-
   constructor() {
     // FunnelProtocol is not technically a valid SDK protocol
     super(new FunnelProtocol() as any, { autoResubscribe: false });
@@ -190,7 +188,7 @@ export class EmbeddedSDK extends Kuzzle {
       request.action,
     ]);
     if (warning) {
-      this.logger.warn(warning);
+      global.kuzzle.log.warn(warning);
     }
 
     return super.query(request, options);
