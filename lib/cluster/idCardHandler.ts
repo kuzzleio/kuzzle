@@ -63,8 +63,6 @@ export class IdCard {
    */
   public topology: Set<string>;
 
-  private readonly logger = global.kuzzle.log.child("cluster:id-card");
-
   constructor({ id, ip, birthdate, topology }: SerializedIdCard) {
     this.id = id;
     this.ip = ip;
@@ -144,6 +142,8 @@ export class ClusterIdCardHandler {
    * cluster
    */
   private disposed = false;
+
+  private readonly logger = global.kuzzle.log.child("cluster:id-card");
 
   constructor(node: any) {
     this.node = node;
