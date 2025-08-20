@@ -102,7 +102,9 @@ export class ES7 {
   public scrollTTL: number;
   public _config: any;
 
-  private readonly logger = global.kuzzle.log.child("service:storage:elasticsearch:7");
+  private readonly logger = global.kuzzle.log.child(
+    "service:storage:elasticsearch:7",
+  );
 
   constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     this._config = config;

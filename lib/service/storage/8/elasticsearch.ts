@@ -104,7 +104,9 @@ export class ES8 {
   public scrollTTL: number;
   public _config: any;
 
-  private readonly logger = global.kuzzle.log.child("service:storage:elasticsearch:8");
+  private readonly logger = global.kuzzle.log.child(
+    "service:storage:elasticsearch:8",
+  );
 
   constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     this._config = config;

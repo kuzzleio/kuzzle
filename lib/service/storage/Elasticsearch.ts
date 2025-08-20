@@ -9,7 +9,9 @@ import { storeScopeEnum } from "../../core/storage/storeScopeEnum";
 
 export class Elasticsearch extends Service {
   public client: any;
-  private readonly logger = global.kuzzle.log.child("service:storage:elasticsearch");
+  private readonly logger = global.kuzzle.log.child(
+    "service:storage:elasticsearch",
+  );
 
   constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     super("elasticsearch", config);
