@@ -36,10 +36,10 @@ import {
   BackendStorage,
   BackendVault,
   BackendOpenApi,
-  InternalLogger,
   BackendErrors,
   BackendSubscription,
 } from "./index";
+import { Logger } from "../../kuzzle/Logger";
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
@@ -174,7 +174,7 @@ export class Backend {
    * @method error
    * @method verbose
    */
-  public log: InternalLogger;
+  public log: Logger;
 
   /**
    * Storage manager
@@ -274,7 +274,6 @@ export class Backend {
     this.plugin = new BackendPlugin(this);
     this.storage = new BackendStorage(this);
     this.import = new BackendImport(this);
-    this.log = new InternalLogger(this);
     this.cluster = new BackendCluster();
     this.openApi = new BackendOpenApi(this);
     this.errors = new BackendErrors(this);
@@ -298,7 +297,7 @@ export class Backend {
     }
 
     this._kuzzle = new Kuzzle(this.config.content);
-
+    this.log = this._kuzzle.log.child(`app`);
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
 

@@ -92,6 +92,8 @@ export class HotelClerk {
    */
   private koncorde: Koncorde;
 
+  private readonly logger = global.kuzzle.log.child("core:realtime:hotelClerk");
+
   constructor(realtimeModule: any) {
     this.module = realtimeModule;
 
@@ -191,7 +193,7 @@ export class HotelClerk {
      */
     global.kuzzle.on("connection:remove", (connection) => {
       this.removeConnection(connection.id).catch((err) =>
-        global.kuzzle.log.info(err),
+        this.logger.info(err),
       );
     });
   }
@@ -422,7 +424,7 @@ export class HotelClerk {
 
     await Bluebird.map(connectionRooms.roomIds, (roomId: string) =>
       this.unsubscribe(connectionId, roomId, notify).catch((error) =>
-        global.kuzzle.log.error(error),
+        this.logger.error(error),
       ),
     );
   }
@@ -532,7 +534,7 @@ export class HotelClerk {
     const room = this.rooms.get(roomId);
 
     if (!room) {
-      global.kuzzle.log.error(`Cannot remove room "${roomId}": room not found`);
+      this.logger.error(`Cannot remove room "${roomId}": room not found`);
       throw realtimeError.get("room_not_found", roomId);
     }
 

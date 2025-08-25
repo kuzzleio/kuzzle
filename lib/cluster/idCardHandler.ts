@@ -143,6 +143,8 @@ export class ClusterIdCardHandler {
    */
   private disposed = false;
 
+  private readonly logger = global.kuzzle.log.child("cluster:id-card");
+
   constructor(node: any) {
     this.node = node;
     this.ip = node.ip;
@@ -241,7 +243,7 @@ export class ClusterIdCardHandler {
       try {
         await this.save();
       } catch (error) {
-        global.kuzzle.log.error(
+        this.logger.error(
           `An error occurred while refreshing the ID card during WorkerThread startup: ${error}`,
         );
       }

@@ -245,7 +245,7 @@ describe("lib/core/core/network/entryPoint", () => {
       should(entrypoint.protocols.get("protocol").joinChannel)
         .be.calledOnce()
         .be.calledWith("channel", "connectionId");
-      should(kuzzle.log.error).be.calledWith(
+      should(entrypoint.logger.error).be.calledWith(
         "[join] protocol protocol failed: test",
       );
     });
@@ -286,7 +286,7 @@ describe("lib/core/core/network/entryPoint", () => {
       should(entrypoint.protocols.get("protocol").leaveChannel)
         .be.calledOnce()
         .be.calledWith("channel", "connectionId");
-      should(kuzzle.log.error).be.calledWith(
+      should(entrypoint.logger.error).be.calledWith(
         "[leave channel] protocol protocol failed: test",
       );
     });
@@ -469,7 +469,7 @@ describe("lib/core/core/network/entryPoint", () => {
         .be.calledOnce()
         .be.calledWith("data");
 
-      should(kuzzle.log.error).be.calledOnce();
+      should(entrypoint.logger.error).be.calledOnce();
     });
   });
 
@@ -505,7 +505,7 @@ describe("lib/core/core/network/entryPoint", () => {
         content: "data",
       });
 
-      should(kuzzle.log.error).be.calledOnce();
+      should(entrypoint.logger.error).be.calledOnce();
     });
   });
 });

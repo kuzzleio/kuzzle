@@ -102,6 +102,10 @@ export class ES7 {
   public scrollTTL: number;
   public _config: any;
 
+  private readonly logger = global.kuzzle.log.child(
+    "service:storage:elasticsearch:7",
+  );
+
   constructor(config: any, scope = storeScopeEnum.PUBLIC) {
     this._config = config;
     this._scope = scope;
@@ -165,7 +169,7 @@ export class ES7 {
       global.NODE_ENV !== "development" &&
       this._config.commonMapping.dynamic === "true"
     ) {
-      global.kuzzle.log.warn(
+      this.logger.warn(
         [
           "Your dynamic mapping policy is set to 'true' for new fields.",
           "Elasticsearch will try to automatically infer mapping for new fields, and those cannot be changed afterward.",
@@ -3650,7 +3654,7 @@ export class ES7 {
 
     esState = esStateEnum.AWAITING;
 
-    global.kuzzle.log.info("[ℹ] Trying to connect to Elasticsearch...");
+    this.logger.info("[ℹ] Trying to connect to Elasticsearch...");
 
     while (esState !== esStateEnum.OK) {
       try {
@@ -3660,10 +3664,10 @@ export class ES7 {
         });
 
         if (health.body.number_of_pending_tasks === 0) {
-          global.kuzzle.log.info("[✔] Elasticsearch is ready");
+          this.logger.info("[✔] Elasticsearch is ready");
           esState = esStateEnum.OK;
         } else {
-          global.kuzzle.log.info(
+          this.logger.info(
             `[ℹ] Still waiting for Elasticsearch: ${health.body.number_of_pending_tasks} cluster tasks remaining`,
           );
           await Bluebird.delay(1000);

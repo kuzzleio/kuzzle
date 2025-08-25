@@ -54,7 +54,7 @@ describe("funnel.executePluginRequest", () => {
     const callback = () => {
       setTimeout(() => {
         try {
-          should(kuzzle.log.error).be.calledOnce();
+          should(funnel.logger.error).be.calledOnce();
           should(kuzzle.dump).be.called();
           done();
         } catch (e) {
