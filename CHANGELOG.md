@@ -1,3 +1,17 @@
+## [2.45.0](https://github.com/kuzzleio/kuzzle/compare/v2.44.0...v2.45.0) (2025-08-25)
+
+
+### Features
+
+* **funnel:** trigger success/error events with trigger events ([2fc501f](https://github.com/kuzzleio/kuzzle/commit/2fc501f716499a208483b8a44791fd518f8d48df))
+* update to redis:7 ([f8ee151](https://github.com/kuzzleio/kuzzle/commit/f8ee151f14c6c47a41c024fa79d70c891c765969))
+* use the Kuzzle logger on the Application ([#2616](https://github.com/kuzzleio/kuzzle/issues/2616)) ([d30652e](https://github.com/kuzzleio/kuzzle/commit/d30652e89d4cb789ca5dff5d51b49c604c5c20d1))
+
+
+### Bug Fixes
+
+* **funnel:** handle errors for trigger events same way as base requests ([8bc9ca2](https://github.com/kuzzleio/kuzzle/commit/8bc9ca283969b6c104bc3709a4e5e838117273f2))
+
 ## [2.44.0](https://github.com/kuzzleio/kuzzle/compare/v2.43.2...v2.44.0) (2025-07-24)
 
 
