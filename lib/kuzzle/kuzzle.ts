@@ -48,7 +48,6 @@ import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { Mutex } from "../util/mutex";
-import { NameGenerator } from "../util/name-generator";
 import {
   ImportConfig,
   InstallationConfig,
@@ -254,7 +253,7 @@ class Kuzzle extends KuzzleEventEmitter {
       await new SecurityModule().init();
 
       // This will init the cluster module if enabled
-      this.id = await this.initKuzzleNode();
+      await this.initKuzzleNode();
 
       this.vault = vault.load(options.vaultKey, options.secretsFile);
 
@@ -331,19 +330,14 @@ class Kuzzle extends KuzzleEventEmitter {
    *
    * This will init the cluster if it's enabled.
    */
-  private async initKuzzleNode(): Promise<string> {
-    let id;
-
+  private async initKuzzleNode(): Promise<void> {
     if (this.config.cluster.enabled) {
-      id = await new Cluster().init();
+      await new Cluster().init();
 
       this.log.info("[✔] Cluster initialized");
     } else {
-      id = NameGenerator.generateRandomName({ prefix: "knode" });
       this.log.info("[X] Cluster disabled: single node mode.");
     }
-
-    return id;
   }
 
   /**
@@ -372,6 +366,10 @@ class Kuzzle extends KuzzleEventEmitter {
     }
 
     this.log.info("Halted.");
+
+    // flush both application and Kuzzle core loggers before leaving (Could happen even if some core/application components are not initialized)
+    await this?.log?.flush?.();
+    await this?.pluginsManager?.application?.log?.flush?.();
 
     process.exit(0);
   }
