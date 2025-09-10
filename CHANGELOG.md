@@ -1,3 +1,10 @@
+## [2.46.0](https://github.com/kuzzleio/kuzzle/compare/v2.45.0...v2.46.0) (2025-09-10)
+
+
+### Features
+
+* **log:** allow Kuzzle application devs to use the logger before the application startup ([#2617](https://github.com/kuzzleio/kuzzle/issues/2617)) ([9067241](https://github.com/kuzzleio/kuzzle/commit/906724108d503c4a2e9b19351b6e3937910329ec))
+
 ## [2.45.0](https://github.com/kuzzleio/kuzzle/compare/v2.44.0...v2.45.0) (2025-08-25)
 
 
