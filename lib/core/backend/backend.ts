@@ -220,7 +220,7 @@ export class Backend {
    */
   public _support: JSONObject = {};
 
-  private nodeId: string;
+  private readonly nodeId: string;
 
   /**
    * Instantiates a new Kuzzle application
