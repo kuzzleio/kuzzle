@@ -59,13 +59,6 @@ describe("Backend", () => {
 
       should(application.nodeId).be.a.String();
     });
-
-    it("should throw an error if the application is not started", () => {
-      should(() => {
-        /* eslint-disable-next-line no-unused-expressions */
-        application.nodeId;
-      }).throwError({ id: "plugin.runtime.unavailable_before_start" });
-    });
   });
 
   describe("#start", () => {

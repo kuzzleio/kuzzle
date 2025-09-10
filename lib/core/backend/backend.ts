@@ -24,7 +24,7 @@ import fs from "fs";
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { EventDefinition, JSONObject } from "../../../index";
+import { EventDefinition, JSONObject, NameGenerator } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,
@@ -220,6 +220,8 @@ export class Backend {
    */
   public _support: JSONObject = {};
 
+  private nodeId: string;
+
   /**
    * Instantiates a new Kuzzle application
    *
@@ -239,12 +241,23 @@ export class Backend {
 
     this._name = name;
 
+    this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
+
     Reflect.defineProperty(this, "_kuzzle", {
       writable: true,
     });
 
     Reflect.defineProperty(this, "_sdk", {
       writable: true,
+    });
+
+    Reflect.defineProperty(global, "nodeId", {
+      get: () => {
+        return this.nodeId;
+      },
+      set: () => {
+        throw new Error("nodeId is read-only");
+      },
     });
 
     /**
@@ -278,6 +291,7 @@ export class Backend {
     this.openApi = new BackendOpenApi(this);
     this.errors = new BackendErrors(this);
     this.subscription = new BackendSubscription(this);
+    this.log = new Logger(this.config.content, "kuzzle:app");
 
     this.kerror = kerror;
 
@@ -297,7 +311,6 @@ export class Backend {
     }
 
     this._kuzzle = new Kuzzle(this.config.content);
-    this.log = this._kuzzle.log.child(`app`);
     for (const plugin of this.config.content.plugins.common.include) {
       const { default: PluginClass } = await import(plugin);
 
@@ -403,17 +416,6 @@ export class Backend {
     }
 
     return this._sdk;
-  }
-
-  /**
-   * Cluster node ID
-   */
-  get nodeId(): string {
-    if (!this.started) {
-      throw runtimeError.get("unavailable_before_start", "nodeId");
-    }
-
-    return this._kuzzle.id;
   }
 
   private get _instanceProxy() {
