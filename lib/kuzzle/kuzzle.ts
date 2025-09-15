@@ -309,7 +309,7 @@ class Kuzzle extends KuzzleEventEmitter {
       await this.pipe("kuzzle:state:ready");
 
       this.log.info(
-        `[✔] Kuzzle ${this.version} is ready (node name: ${this.id})`,
+        `[✔] Kuzzle ${this.version} is ready (node name: ${global.nodeId})`,
       );
 
       // @deprecated
