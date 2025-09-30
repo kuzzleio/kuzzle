@@ -56,6 +56,7 @@ import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import { Store } from "../shared/store";
 import { storeScopeEnum } from "../storage/storeScopeEnum";
 import PluginRepository from "./pluginRepository";
+import { KuzzleLogger } from "kuzzle-logger/dist";
 
 const contextError = kerror.wrap("plugin", "context");
 
@@ -229,6 +230,11 @@ export class PluginContext {
   public secrets: JSONObject;
 
   /**
+   * Logger instance
+   */
+  public logger: KuzzleLogger;
+
+  /**
    * Internal Logger
    */
   public log: {
@@ -327,15 +333,17 @@ export class PluginContext {
 
     Object.freeze(this.constructors);
 
-    /* context.log ======================================================== */
+    this.logger = global.kuzzle.log.child(`${pluginName}`);
 
+    /* context.log ======================================================== */
+    // @deprecated backward compatibility only
     this.log = {
-      debug: (msg) => global.kuzzle.log.debug(`[${pluginName}] ${msg}`),
-      error: (msg) => global.kuzzle.log.error(`[${pluginName}] ${msg}`),
-      info: (msg) => global.kuzzle.log.info(`[${pluginName}] ${msg}`),
-      silly: (msg) => global.kuzzle.log.silly(`[${pluginName}] ${msg}`),
-      verbose: (msg) => global.kuzzle.log.verbose(`[${pluginName}] ${msg}`),
-      warn: (msg) => global.kuzzle.log.warn(`[${pluginName}] ${msg}`),
+      debug: (msg) => this.logger.debug(`[${pluginName}] ${msg}`),
+      error: (msg) => this.logger.error(`[${pluginName}] ${msg}`),
+      info: (msg) => this.logger.info(`[${pluginName}] ${msg}`),
+      silly: (msg) => this.logger.trace(`[${pluginName}] ${msg}`),
+      verbose: (msg) => this.logger.trace(`[${pluginName}] ${msg}`),
+      warn: (msg) => this.logger.warn(`[${pluginName}] ${msg}`),
     };
 
     Object.freeze(this.log);
