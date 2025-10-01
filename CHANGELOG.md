@@ -1,3 +1,17 @@
+## [2.47.0](https://github.com/kuzzleio/kuzzle/compare/v2.46.0...v2.47.0) (2025-09-16)
+
+
+### Features
+
+* be able to use `propsToLabels` option when using loki logger preset ([#2619](https://github.com/kuzzleio/kuzzle/issues/2619)) ([0da8fbf](https://github.com/kuzzleio/kuzzle/commit/0da8fbf4d6d0fd4872ef1a142e2b94abc0d86c22))
+
+## [2.46.0](https://github.com/kuzzleio/kuzzle/compare/v2.45.0...v2.46.0) (2025-09-10)
+
+
+### Features
+
+* **log:** allow Kuzzle application devs to use the logger before the application startup ([#2617](https://github.com/kuzzleio/kuzzle/issues/2617)) ([9067241](https://github.com/kuzzleio/kuzzle/commit/906724108d503c4a2e9b19351b6e3937910329ec))
+
 ## [2.45.0](https://github.com/kuzzleio/kuzzle/compare/v2.44.0...v2.45.0) (2025-08-25)
 
 

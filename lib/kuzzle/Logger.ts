@@ -29,21 +29,25 @@ export class Logger extends KuzzleLogger {
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
 
-  constructor(kuzzleConfig: KuzzleConfiguration) {
+  constructor(kuzzleConfig: KuzzleConfiguration, namespace: string = "kuzzle") {
     const config = kuzzleConfig.server.appLogs;
     const deprecatedConfig = kuzzleConfig.plugins["kuzzle-plugin-logger"];
 
     const getMergingObject = () => {
       const mergingObject: JSONObject = {};
 
-      mergingObject.namespace = "kuzzle";
+      mergingObject.namespace = namespace;
 
       mergingObject.failsafeMode = Boolean(
         kuzzleConfig.plugins.common.failsafeMode,
       );
 
-      if (global.kuzzle.id) {
-        mergingObject.nodeId = global.kuzzle.id;
+      if (global.nodeId) {
+        mergingObject.nodeId = global.nodeId;
+      }
+
+      if (namespace !== "kuzzle") {
+        return mergingObject;
       }
 
       if (
@@ -96,10 +100,6 @@ export class Logger extends KuzzleLogger {
         "[DEPRECATED] The plugins.kuzzle-plugin-logger configuration is deprecated, use server.logs instead.",
       );
     }
-
-    global.kuzzle.onPipe("kuzzle:shutdown", async () => {
-      await this.flush();
-    });
   }
 
   /**
