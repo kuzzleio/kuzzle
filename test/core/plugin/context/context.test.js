@@ -258,12 +258,22 @@ describe("Plugin Context", () => {
     });
 
     it("should expose the right accessors", () => {
+      const pinoLevelMap = {
+        silly: "trace",
+        verbose: "trace",
+        info: "info",
+        debug: "debug",
+        warn: "warn",
+        error: "error",
+      };
+
       for (const level of ["verbose", "info", "debug", "warn", "error"]) {
         should(context.log[level]).be.an.instanceOf(Function);
+        should(context.logger[pinoLevelMap[level]]).be.an.instanceOf(Function);
 
         context.log[level]("test");
 
-        should(kuzzle.log[level])
+        should(context.logger[pinoLevelMap[level]])
           .calledOnce()
           .calledWithExactly("[pluginName] test");
       }
@@ -285,7 +295,7 @@ describe("Plugin Context", () => {
 
       process.nextTick(() => {
         try {
-          should(kuzzle.log.info)
+          should(context.logger.info)
             .be.calledOnce()
             .be.calledWith("[pluginName] foobar");
 
