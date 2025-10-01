@@ -333,7 +333,7 @@ export class PluginContext {
 
     Object.freeze(this.constructors);
 
-    this.logger = global.kuzzle.log.child(`${pluginName}`);
+    this.logger = globalThis.kuzzle.log.child(`${pluginName}`);
 
     /* context.log ======================================================== */
     // @deprecated backward compatibility only
