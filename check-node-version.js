@@ -13,5 +13,6 @@ if (!semver.satisfies(nodeVersion, version)) {
     "\x1b[31m%s\x1b[0m",
     `Required node version ${version} not satisfied with current version ${nodeVersion}`,
   );
+
   process.exit(1);
 }
