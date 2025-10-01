@@ -1,3 +1,10 @@
+## [2.46.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.45.0...v2.46.0-beta.1) (2025-10-01)
+
+
+### Features
+
+* release ([b37b780](https://github.com/kuzzleio/kuzzle/commit/b37b7807657db04ba3aee8b414832f41be4d5b42))
+
 ## [2.47.0](https://github.com/kuzzleio/kuzzle/compare/v2.46.0...v2.47.0) (2025-09-16)
 
 
