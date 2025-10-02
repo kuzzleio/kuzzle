@@ -1,3 +1,25 @@
+## [2.48.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.48.0-beta.1...v2.48.0-beta.2) (2025-10-02)
+
+
+### Bug Fixes
+
+* **tokenManager:** change log level to trace ([#2625](https://github.com/kuzzleio/kuzzle/issues/2625)) ([a91eeb2](https://github.com/kuzzleio/kuzzle/commit/a91eeb2c2b9e4bf0b9dc8cb8d0ce7a5f8d841325))
+
+## [2.48.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.47.0...v2.48.0-beta.1) (2025-10-02)
+
+
+### Features
+
+* kuzzle is compatible with redis-8 7 6 and 5 ([87e283e](https://github.com/kuzzleio/kuzzle/commit/87e283e913e526c96998243fdd6d57ef4a4715ad))
+* **logger:** create logger child instances for plugins  ([#2621](https://github.com/kuzzleio/kuzzle/issues/2621)) ([05a8e57](https://github.com/kuzzleio/kuzzle/commit/05a8e57b96c94e638820ea3654e5c668c6c7cd28))
+* update secrets usage in ci ([b6c5fe7](https://github.com/kuzzleio/kuzzle/commit/b6c5fe72fa606a4eda1841515b16171a2c645120))
+
+
+### Bug Fixes
+
+* **elasticsearch:** do not allow user to provide _kuzzle_info for M operations ([#2607](https://github.com/kuzzleio/kuzzle/issues/2607)) ([b6adb34](https://github.com/kuzzleio/kuzzle/commit/b6adb3461a213afddcc6f7c2fc92252c5204fc12))
+* revert uuid upgrade, because of ESM compat ([dbe582a](https://github.com/kuzzleio/kuzzle/commit/dbe582a241fe9d85b21c856a47a26f2d9dd6c498))
+
 ## [2.47.0](https://github.com/kuzzleio/kuzzle/compare/v2.46.0...v2.47.0) (2025-09-16)
 
 

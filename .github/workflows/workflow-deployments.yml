@@ -21,6 +21,16 @@ on:
         default: "22"
         type: string
 
+    secrets:
+      ACCESS_TOKEN_CI:
+        required: true
+      SEMANTIC_RELEASE_GHP:
+        required: true
+      NPM_TOKEN:
+        required: true
+      SEMANTIC_RELEASE_SLACK_WEBHOOK:
+        required: true
+
   workflow_dispatch:
     inputs:
       doc_deploy:

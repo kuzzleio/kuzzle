@@ -195,7 +195,11 @@ jobs:
     name: Deployment Workflow
     needs: [cluster-monkey-tests, prepare-matrix]
     uses: ./.github/workflows/workflow-deployments.yml
-    secrets: inherit
+    secrets:
+      ACCESS_TOKEN_CI: ${{ secrets.ACCESS_TOKEN_CI }}
+      SEMANTIC_RELEASE_GHP: ${{ secrets.SEMANTIC_RELEASE_GHP }}
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
     with:
       node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
       node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
