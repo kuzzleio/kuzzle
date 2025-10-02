@@ -197,14 +197,14 @@ export class TokenManager {
    */
   unlink(token: Token, connectionId: string) {
     if (!token) {
-      this.logger.warn(
+      this.logger.trace(
         `tried to unlink connection "${connectionId}" with no token`,
       );
       return;
     }
 
     if (token.userId === this.anonymousUserId) {
-      this.logger.warn(
+      this.logger.trace(
         `tried to unlink connection "${connectionId}" from anonymous user`,
       );
       return;
@@ -214,7 +214,7 @@ export class TokenManager {
     const pos = this.tokens.search({ idx });
 
     if (pos === -1) {
-      this.logger.warn(
+      this.logger.trace(
         `tried to unlink connection "${connectionId}" with no token associated`,
       );
       return;
@@ -239,7 +239,7 @@ export class TokenManager {
     const managedToken = this.tokensByConnection.get(connectionId);
 
     if (!managedToken) {
-      this.logger.warn(
+      this.logger.trace(
         `tried to remove connection "${connectionId}" with no token associated`,
       );
       return;
@@ -262,7 +262,7 @@ export class TokenManager {
    */
   async expire(token: Token) {
     if (token.userId === this.anonymousUserId) {
-      this.logger.warn(`tried to expire an anonymous token`);
+      this.logger.trace(`tried to expire an anonymous token`);
       return;
     }
 
