@@ -342,7 +342,7 @@ describe("document:mCreate", () => {
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
   });
 
-  test("It should let user add their own metadata to the document", async () => {
+  test("It should not let user add their own metadata to the document", async () => {
     const response = await kuzzle.document.mCreate(
       index,
       collection,
@@ -363,7 +363,7 @@ describe("document:mCreate", () => {
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.objectContaining({
+      expect.not.objectContaining({
         author: "foo",
         createdAt: 42,
         updatedAt: null,
@@ -385,7 +385,7 @@ describe("document:mCreateOrReplace", () => {
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
   });
 
-  test("It should let user add their own metadata to the document", async () => {
+  test("It should not let user add their own metadata to the document", async () => {
     const response = await kuzzle.document.mCreateOrReplace(
       index,
       collection,
@@ -407,7 +407,7 @@ describe("document:mCreateOrReplace", () => {
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.objectContaining({
+      expect.not.objectContaining({
         author: "foo",
         createdAt: 42,
         updatedAt: null,
@@ -437,7 +437,7 @@ describe("document:mReplace", () => {
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
   });
 
-  test("It should let user add their own metadata to the document", async () => {
+  test("It should not let user add their own metadata to the document", async () => {
     await kuzzle.document.createOrReplace(
       index,
       collection,
@@ -467,7 +467,7 @@ describe("document:mReplace", () => {
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.objectContaining({
+      expect.not.objectContaining({
         author: "foo",
         createdAt: 42,
         updatedAt: null,
@@ -572,7 +572,7 @@ describe("document:mUpsert", () => {
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
   });
 
-  test("It should let user add their own metadata to the document", async () => {
+  test("It should not let user add their own metadata to the document", async () => {
     const response = await kuzzle.document.mUpsert(
       index,
       collection,
@@ -597,7 +597,7 @@ describe("document:mUpsert", () => {
 
     // @ts-ignore
     expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.objectContaining({
+      expect.not.objectContaining({
         author: "foo",
         createdAt: 42,
         updatedAt: null,
@@ -635,7 +635,7 @@ describe("document:updateByQuery", () => {
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
   });
 
-  test("It should let user add their own metadata to the document", async () => {
+  test("It should not let user add their own metadata to the document", async () => {
     await kuzzle.document.createOrReplace(
       index,
       collection,
@@ -661,7 +661,7 @@ describe("document:updateByQuery", () => {
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.objectContaining({
+      expect.not.objectContaining({
         author: "foo",
         createdAt: 42,
         updatedAt: null,
