@@ -1,3 +1,10 @@
+## [2.48.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.48.0-beta.1...v2.48.0-beta.2) (2025-10-02)
+
+
+### Bug Fixes
+
+* **tokenManager:** change log level to trace ([#2625](https://github.com/kuzzleio/kuzzle/issues/2625)) ([a91eeb2](https://github.com/kuzzleio/kuzzle/commit/a91eeb2c2b9e4bf0b9dc8cb8d0ce7a5f8d841325))
+
 ## [2.48.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.47.0...v2.48.0-beta.1) (2025-10-02)
 
 
