@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 100
-title: Migrate to Elasticsearch 8 | Elasticsearch | Guide | Core
+title: Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
     content: Migrate your Kuzzle project from Elasticsearch 7 to Elasticsearch 8
@@ -82,7 +82,7 @@ services:
       start_period: 1m
 
   redis:
-    image: redis:7
+    image: redis:8
     ports:
       - '6379:6379'
     healthcheck:
@@ -92,7 +92,7 @@ services:
       retries: 30
 
   elasticsearch:
-    image: elasticsearch:8.11.3
+    image: elasticsearch:8.17.3
     container_name: kuzzle_elasticsearch
     environment:
       - xpack.security.enabled=false
@@ -115,7 +115,10 @@ services:
 
 Or you can run `kourou app:scaffold sandbox` to create a new Kuzzle project with a `docker-compose.yml` file that uses Elasticsearch 8.
 
-## Inside a kuberenetes cluster
+## Inside a Kuberenetes cluster
+
+> Note: This is a configuration used by the [bitnami](https://artifacthub.io/packages/helm/bitnami/elasticsearch) image of Elasticsearch  
+> The version used is [**21.4.4**](https://artifacthub.io/packages/helm/bitnami/elasticsearch/21.4.4)
 
 While running Kuzzle inside a Kubernetes cluster, you can use the following configuration to run Kuzzle with Elasticsearch 8:
 
