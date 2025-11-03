@@ -40,9 +40,18 @@ services:
   node:
     <<: *kuzzle-config
     ports:
-      - "7512-7599:7512" # Kuzzle API port
-      - "1883-1899:1883" # Kuzzle MQTT port
-      - "9229-9299:9229" # Debug port
+      # Uncomment lines under if you want to use
+      # docker compose up --scale node=10
+
+      # - "7512-7599:7512" # Kuzzle API port
+      # - "1883-1899:1883" # Kuzzle MQTT port
+      # - "9229-9299:9229" # Debug port
+
+      # Or let this 3 lines below
+      # It will let you use kourou w/o any custom config
+      - "7512:7512" # Kuzzle API port
+      - "1883:1883" # Kuzzle MQTT port
+      - "9229:9229" # Debug port
     healthcheck:
       test: ["CMD", "curl", "-f", "http://node:7512/_healthcheck"]
       timeout: 1s
