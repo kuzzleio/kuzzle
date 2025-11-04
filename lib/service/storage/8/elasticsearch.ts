@@ -3000,7 +3000,7 @@ export class ES8 {
    * Extracts, injects metadata and validates documents contained
    * in a Request
    *
-   * Used by mCreate, mUpdate, mUpsert, mReplace and mCreateOrReplace
+   * Used by mCreate, mUpdate, mUpsert, mReplace, mCreateOrReplace and mWrite
    *
    * @param  {Object[]} documents - Documents
    * @param  {Object} metadata - Kuzzle metadata
@@ -3085,7 +3085,6 @@ export class ES8 {
     documentsToGet: JSONObject[],
   ) {
     let extractedDocument;
-
     if (prepareMUpsert) {
       if (document.changes !== undefined && document.changes !== null) {
         delete document.changes._kuzzle_info;
@@ -3104,10 +3103,6 @@ export class ES8 {
         },
       };
     } else {
-      if (document.body !== undefined && document.body !== null) {
-        delete document.body._kuzzle_info;
-      }
-
       extractedDocument = {
         // Do not use destructuring, it's 10x slower
         _source: Object.assign({}, metadata, document.body),
