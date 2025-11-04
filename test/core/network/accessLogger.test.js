@@ -182,14 +182,15 @@ describe("#AccessLogger", () => {
       ];
 
       await accessLogger.init();
-      global.nodeId = "test-nodeId";
-      accessLogger.log("connection", fakeRequest, { nodeId: "test-nodeId" });
+      accessLogger.log("connection", fakeRequest, "extra");
 
       should(postMessage)
         .calledOnce()
         .calledWithMatch({
           connection: "connection",
-          extra: { nodeId: "test-nodeId" },
+          extra: "extra",
+          namespace: "kuzzle:accessLogs",
+          nodeId: global.kuzzle.id,
           request: {
             data: "data",
             options: {
