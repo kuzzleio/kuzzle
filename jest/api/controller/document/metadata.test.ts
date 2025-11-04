@@ -26,7 +26,7 @@ describe("document:create", () => {
       collection,
       { foo: "bar" },
       undefined,
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
@@ -35,7 +35,7 @@ describe("document:create", () => {
     expect(response._source._kuzzle_info).toEqual(
       expect.not.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 
@@ -53,7 +53,7 @@ describe("document:create", () => {
         },
       },
       undefined,
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response._source._kuzzle_info).toEqual(
@@ -62,7 +62,7 @@ describe("document:create", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 
@@ -72,14 +72,14 @@ describe("document:create", () => {
       collection,
       { foo: "bar", addCustomMetadata: true },
       undefined,
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toEqual(
       expect.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 });
@@ -91,7 +91,7 @@ describe("document:createOrReplace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
@@ -100,7 +100,7 @@ describe("document:createOrReplace", () => {
     expect(response._source._kuzzle_info).toEqual(
       expect.not.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 
@@ -118,7 +118,7 @@ describe("document:createOrReplace", () => {
           updater: null,
         },
       },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response._source._kuzzle_info).toEqual(
@@ -127,7 +127,7 @@ describe("document:createOrReplace", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 
@@ -137,14 +137,14 @@ describe("document:createOrReplace", () => {
       collection,
       "test",
       { foo: "bar", addCustomMetadata: true },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toEqual(
       expect.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 });
@@ -156,7 +156,7 @@ describe("document:update", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.update(
@@ -164,7 +164,7 @@ describe("document:update", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
@@ -177,7 +177,7 @@ describe("document:update", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.update(
@@ -193,7 +193,7 @@ describe("document:update", () => {
           updater: null,
         },
       },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     expect(response._source._kuzzle_info).toEqual(
@@ -202,7 +202,7 @@ describe("document:update", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 
@@ -212,14 +212,14 @@ describe("document:update", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(createResponse._source._kuzzle_info).toEqual(
       expect.not.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
 
     const response = await kuzzle.document.update(
@@ -227,14 +227,14 @@ describe("document:update", () => {
       collection,
       "test",
       { foo: "bar", addCustomMetadata: true },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toEqual(
       expect.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 });
@@ -246,7 +246,7 @@ describe("document:replace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.replace(
@@ -254,7 +254,7 @@ describe("document:replace", () => {
       collection,
       "test",
       { foo: "baz" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
@@ -267,7 +267,7 @@ describe("document:replace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.replace(
@@ -283,7 +283,7 @@ describe("document:replace", () => {
           updater: null,
         },
       },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
@@ -293,7 +293,7 @@ describe("document:replace", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 
@@ -303,14 +303,14 @@ describe("document:replace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(createResponse._source._kuzzle_info).toEqual(
       expect.not.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
 
     const response = await kuzzle.document.replace(
@@ -318,14 +318,14 @@ describe("document:replace", () => {
       collection,
       "test",
       { foo: "bar", addCustomMetadata: true },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toEqual(
       expect.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 });
@@ -336,7 +336,7 @@ describe("document:mCreate", () => {
       index,
       collection,
       [{ body: { foo: "bar" } }],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
@@ -359,7 +359,7 @@ describe("document:mCreate", () => {
           },
         },
       ],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
@@ -368,7 +368,7 @@ describe("document:mCreate", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 });
@@ -379,7 +379,7 @@ describe("document:mCreateOrReplace", () => {
       index,
       collection,
       [{ _id: "test", body: { foo: "bar" } }],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
@@ -403,7 +403,7 @@ describe("document:mCreateOrReplace", () => {
           },
         },
       ],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
@@ -412,7 +412,7 @@ describe("document:mCreateOrReplace", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 });
@@ -424,14 +424,14 @@ describe("document:mReplace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.mReplace(
       index,
       collection,
       [{ _id: "test", body: { foo: "bar" } }],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toBeDefined();
@@ -443,7 +443,7 @@ describe("document:mReplace", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.mReplace(
@@ -463,7 +463,7 @@ describe("document:mReplace", () => {
           },
         },
       ],
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     expect(response.successes[0]._source._kuzzle_info).toEqual(
@@ -472,7 +472,7 @@ describe("document:mReplace", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 });
@@ -484,7 +484,7 @@ describe("document:upsert", () => {
       collection,
       "test",
       { foo: "baz" },
-      { refresh: "wait_for", default: { foo: "bar" }, source: true }
+      { refresh: "wait_for", default: { foo: "bar" }, source: true },
     );
 
     // @ts-ignore
@@ -506,7 +506,7 @@ describe("document:upsert", () => {
           updater: null,
         },
       },
-      { refresh: "wait_for", default: { foo: "bar" }, source: true }
+      { refresh: "wait_for", default: { foo: "bar" }, source: true },
     );
 
     // @ts-ignore
@@ -516,7 +516,7 @@ describe("document:upsert", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 
@@ -526,14 +526,14 @@ describe("document:upsert", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     // @ts-ignore
     expect(createResponse._source._kuzzle_info).toEqual(
       expect.not.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
 
     const response = await kuzzle.document.upsert(
@@ -541,14 +541,14 @@ describe("document:upsert", () => {
       collection,
       "test",
       { foo: "bar", addCustomMetadata: true },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
     expect(response._source._kuzzle_info).toEqual(
       expect.objectContaining({
         customMetadata: "customized",
-      })
+      }),
     );
   });
 });
@@ -565,7 +565,7 @@ describe("document:mUpsert", () => {
           default: { foo: "bar" },
         },
       ],
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
@@ -592,7 +592,7 @@ describe("document:mUpsert", () => {
           default: { foo: "bar" },
         },
       ],
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
@@ -602,7 +602,7 @@ describe("document:mUpsert", () => {
         createdAt: 42,
         updatedAt: null,
         updater: null,
-      })
+      }),
     );
   });
 });
@@ -620,7 +620,7 @@ describe("document:updateByQuery", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.updateByQuery(
@@ -628,7 +628,7 @@ describe("document:updateByQuery", () => {
       collection,
       {},
       { foo: "baz" },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
     // @ts-ignore
@@ -641,7 +641,7 @@ describe("document:updateByQuery", () => {
       collection,
       "test",
       { foo: "bar" },
-      { refresh: "wait_for" }
+      { refresh: "wait_for" },
     );
 
     const response = await kuzzle.document.updateByQuery(
@@ -651,22 +651,25 @@ describe("document:updateByQuery", () => {
       {
         foo: "bar",
         _kuzzle_info: {
-          author: "foo",
-          createdAt: 42,
+          author: "custom author",
+          createdAt: 12,
           updatedAt: null,
           updater: null,
         },
       },
-      { refresh: "wait_for", source: true }
+      { refresh: "wait_for", source: true },
     );
 
-    expect(response.successes[0]._source._kuzzle_info).toEqual(
-      expect.not.objectContaining({
-        author: "foo",
-        createdAt: 42,
-        updatedAt: null,
-        updater: null,
-      })
-    );
+    expect(response.successes[0]._source._kuzzle_info).not.toMatchObject({
+      author: "custom author",
+      createdAt: 12,
+    });
+    const doc = await kuzzle.document.get(index, collection, "test");
+    expect(doc._source._kuzzle_info).not.toMatchObject({
+      author: "custom author",
+      createdAt: 12,
+      updatedAt: null,
+      updater: null,
+    });
   });
 });
