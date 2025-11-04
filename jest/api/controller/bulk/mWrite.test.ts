@@ -1,34 +1,34 @@
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));
-const index = "food";
+const index = "garden";
 const collection = "fruits";
 const documentId = "test-document";
 
 beforeAll(async () => {
   await kuzzle.connect();
 
-  if (await kuzzle.index.exists(index)) {
-    await kuzzle.index.delete(index);
+  if (!(await kuzzle.index.exists(index))) {
+    await kuzzle.index.create(index);
   }
-
-  await kuzzle.index.create(index);
-  await kuzzle.collection.create(index, collection, {
-    mappings: {
-      properties: {
-        value: {
-          type: "keyword",
-        },
-        field: {
-          properties: {
-            path: {
-              type: "keyword",
+  if (!(await kuzzle.collection.exists(index, collection))) {
+    await kuzzle.collection.create(index, collection, {
+      mappings: {
+        properties: {
+          value: {
+            type: "keyword",
+          },
+          field: {
+            properties: {
+              path: {
+                type: "keyword",
+              },
             },
           },
         },
       },
-    },
-  });
+    });
+  }
 });
 
 afterAll(async () => {
