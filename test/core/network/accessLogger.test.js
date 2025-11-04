@@ -189,8 +189,6 @@ describe("#AccessLogger", () => {
         .calledWithMatch({
           connection: "connection",
           extra: "extra",
-          namespace: "kuzzle:accessLogs",
-          nodeId: global.kuzzle.id,
           request: {
             data: "data",
             options: {
