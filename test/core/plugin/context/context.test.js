@@ -357,7 +357,7 @@ describe("Plugin Context", () => {
     });
 
     it("should expose a Kuzzle node id accessor", () => {
-      should(context.accessors.nodeId).be.exactly(global.kuzzle.id);
+      should(context.accessors.nodeId).be.exactly(global.nodeId);
     });
 
     describe("#accessors.subscription functions", () => {
