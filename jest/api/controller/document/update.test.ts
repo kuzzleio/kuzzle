@@ -80,7 +80,7 @@ describe("update", () => {
     });
   });
 
-  it("It should thorw if not exists", async () => {
+  it("It should throw if not exists", async () => {
     const update = kuzzle.document.update(
       index,
       collection,
