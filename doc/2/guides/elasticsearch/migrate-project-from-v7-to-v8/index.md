@@ -2,7 +2,7 @@
 code: false
 type: page
 order: 200
-title: Elasticsearch 8 | Elasticsearch | Guide | Core
+title: Migrate to Elasticsearch 8 | Elasticsearch | Guide | Core
 meta:
   - name: description
     content: Configure Kuzzle to use Elasticsearch 8
@@ -33,18 +33,32 @@ Conduct a dry run in a development environment to spot potential issues and esti
 
 ### Migration Methods
 
-Theire are 2 strategies to upgrade Elasticsearch in a production environment:
-1. Re-indexing
-	* Step 1: Create a new cluster running Elasticsearch 8.x.
-	* Step 2: Take a snapshot of your data in the current 7.x cluster.
-	* Step 3: Restore the snapshot into the new 8.x cluster.
-1. Rolling Upgrade
-	* Step 1: Disable Shard Allocation.
-	* Step 2: Stop and upgrade a single Elasticsearch node.
-	* Step 3: Enable Shard Allocation and allow the node to join the cluster and the cluster to re-balance.
-	* Step 4: Repeat for each node in the cluster.
+There are multiple strategies to upgrade Elasticsearch in a production environment:
 
-After you have migrated your data:
+#### Re-indexing
+
+* Step 1: Create a new cluster running Elasticsearch 8.x.
+* Step 2: Take a snapshot of your data in the current 7.x cluster.
+* Step 3: Restore the snapshot into the new 8.x cluster.
+
+#### Using kourou
+
+* Step 1: Use `kourou es:migrate --src http://localhost:50011 --dest ./backup --esVersion 7`
+* Step 2: Use `kourou es:migrate --src ./backup --dest http://localhost:50011 --reset --esVersion 8` 
+
+
+> Note: This method will let you modify specifications of indexes (shards / replicas)
+
+#### Rolling Upgrade
+
+* Step 1: Disable Shard Allocation.
+* Step 2: Stop and upgrade a single Elasticsearch node.
+* Step 3: Enable Shard Allocation and allow the node to join the cluster and the cluster to re-balance.
+* Step 4: Repeat for each node in the cluster.
+
+
+#### After you have migrated your data:
+
 1. Post Upgrade Checks
 	* Run the health and stats APIs to ensure the health of your newly upgraded cluster.
 	* Update your clients and integrations to the latest version that's compatible with Elasticsearch 8.x, if not done already.

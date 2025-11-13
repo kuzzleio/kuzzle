@@ -39,6 +39,10 @@ describe("#AccessLogger", () => {
       parentPort,
       workerData,
     });
+
+    mockRequire("pino", {
+      transport: sinon.stub(),
+    });
   });
 
   after(() => {
@@ -104,7 +108,7 @@ describe("#AccessLogger", () => {
       should(workerData).match({
         anonymousUserId: "-1",
         config: kuzzle.config.server,
-        kuzzleId: kuzzle.id,
+        kuzzleId: global.nodeId,
       });
     });
 
@@ -178,7 +182,6 @@ describe("#AccessLogger", () => {
       ];
 
       await accessLogger.init();
-
       accessLogger.log("connection", fakeRequest, "extra");
 
       should(postMessage)
@@ -223,31 +226,15 @@ describe("#AccessLogger", () => {
   describe("#AccessLoggerWorker", () => {
     let AccessLoggerWorker;
     let accessLoggerWorker;
-    const winstonTransportConsole = sinon.stub();
-    const winstonTransportFile = sinon.stub();
-    const winstonTransportElasticsearch = sinon.stub();
-    const winstonTransportSyslog = sinon.stub();
-    const winstonFormatMock = {
-      simple: sinon.stub().returns("format.simple"),
-      json: sinon.stub().returns("format.json"),
-      colorize: sinon.stub().returns("format.colorize"),
-      timestamp: sinon.stub().returns("format.timestamp"),
-      prettyPrint: sinon.stub().returns("format.prettyPrint"),
-    };
     const logger = { info: sinon.stub() };
+    const pinoTransportMock = sinon.stub();
+    const pinoMock = sinon.stub().returns(logger);
 
     before(() => {
-      mockRequire("winston", {
-        createLogger: sinon.stub().returns(logger),
-        transports: {
-          Console: winstonTransportConsole,
-          File: winstonTransportFile,
-        },
-        format: winstonFormatMock,
+      mockRequire("pino", {
+        transport: pinoTransportMock,
+        pino: pinoMock,
       });
-      mockRequire("winston-elasticsearch", winstonTransportElasticsearch);
-      mockRequire("winston-syslog", winstonTransportSyslog);
-
       ({ AccessLoggerWorker } = mockRequire.reRequire(
         "../../../lib/core/network/accessLogger",
       ));
@@ -274,36 +261,14 @@ describe("#AccessLogger", () => {
     });
 
     afterEach(() => {
-      for (const stub of [
-        "prettyPrint",
-        "simple",
-        "json",
-        "colorize",
-        "timestamp",
-      ]) {
-        winstonFormatMock[stub].resetHistory();
-      }
-
-      winstonTransportConsole.reset();
-      winstonTransportElasticsearch.reset();
-      winstonTransportFile.reset();
-      winstonTransportSyslog.reset();
       logger.info.reset();
+      pinoTransportMock.reset();
+      pinoMock.reset();
     });
 
     describe("#initTransport", () => {
       it("should support all available transports", () => {
-        accessLoggerWorker.config.logs.transports = [
-          {
-            level: "level",
-            silent: true,
-            colorize: true,
-            timestamp: true,
-            prettyPrint: true,
-            depth: "depth",
-            format: "simple",
-          },
-        ];
+        accessLoggerWorker.config.logs.transports = [];
 
         for (let i = 0; i < 3; i++) {
           accessLoggerWorker.config.logs.transports.push(
@@ -312,143 +277,73 @@ describe("#AccessLogger", () => {
         }
 
         Object.assign(accessLoggerWorker.config.logs.transports[0], {
-          humanReadableUnhandledException: "humanReadableUnhandledException",
           transport: "console",
         });
 
         Object.assign(accessLoggerWorker.config.logs.transports[1], {
-          eol: "eol",
-          filename: "filename",
-          logstash: "logstash",
-          maxFiles: "maxFiles",
-          maxRetries: "maxRetries",
-          maxSize: "maxSize",
-          tailable: "tailable",
+          options: {
+            append: true,
+            destination: "filename",
+            mkdir: true,
+          },
           transport: "file",
-          zippedArchive: "zippedArchive",
         });
 
         Object.assign(accessLoggerWorker.config.logs.transports[2], {
-          clientOpts: "clientOpts",
-          ensureMappingTemplate: "ensureMappingTemplate",
-          flushInterval: "flushInterval",
-          index: "index",
-          indexPrefix: "indexPrefix",
-          indexSuffixPattern: "indexSuffixPattern",
-          mappingTemplate: "mappingTemplate",
-          messageType: "messageType",
+          options: {},
           transport: "elasticsearch",
         });
 
-        Object.assign(accessLoggerWorker.config.logs.transports[3], {
-          app_name: "app_name",
-          eol: "eol",
-          facility: "facility",
-          host: "host",
-          localhost: "localhost",
-          path: "path",
-          pid: "pid",
-          port: "port",
-          protocol: "protocol",
-          transport: "syslog",
-          type: "type",
-        });
-
         accessLoggerWorker.initTransport();
 
-        should(winstonTransportConsole)
+        const expectedTransports = {
+          targets: [
+            {
+              level: "info",
+              options: {
+                destination: 1,
+              },
+              target: "pino/file",
+            },
+            {
+              level: "info",
+              options: {
+                append: true,
+                destination: "filename",
+                mkdir: true,
+              },
+              target: "pino/file",
+            },
+            {
+              level: "info",
+              options: {},
+              target: "pino-elasticsearch",
+            },
+          ],
+        };
+
+        should(pinoTransportMock)
           .be.calledOnce()
-          .be.calledWithMatch({
-            colorize: "format.colorize",
-            depth: "depth",
-            format: "format.simple",
-            humanReadableUnhandledException: "humanReadableUnhandledException",
-            level: "level",
-            prettyPrint: "format.prettyPrint",
-            silent: true,
-            stderrLevels: ["error", "debug"],
-            timestamp: "format.timestamp",
-          });
-
-        should(winstonFormatMock.colorize).calledOnce();
-        should(winstonFormatMock.timestamp).calledOnce();
-        should(winstonFormatMock.prettyPrint).calledOnce();
-        should(winstonFormatMock.simple).calledOnce();
-        // default format, so it should be called 3 times
-        // (we used the "simple" format for the 1st transport)
-        should(winstonFormatMock.json.callCount).be.eql(3);
-      });
-
-      it("should ignore badly configured transports", () => {
-        const config = [
-          {
-            colorize: "colorize",
-            depth: "depth",
-            json: "json",
-            level: "level",
-            prettyPrint: "prettyPrint",
-            showLevel: "showLevel",
-            silent: "silent",
-            stringify: "stringify",
-            timestamp: "timestamp",
-          },
-        ];
-
-        accessLoggerWorker.config.logs.transports = [Object.assign({}, config)];
-        accessLoggerWorker.config.logs.transports.push(
-          Object.assign({}, config),
-        );
-
-        Object.assign(accessLoggerWorker.config.logs.transports[0], {
-          clientOpts: "clientOpts",
-          ensureMappingTemplate: "ensureMappingTemplate",
-          flushInterval: "flushInterval",
-          index: "index",
-          indexPrefix: "indexPrefix",
-          indexSuffixPattern: "indexSuffixPattern",
-          mappingTemplate: "mappingTemplate",
-          messageType: "messageType",
-          transport: "foobar",
-        });
-
-        Object.assign(accessLoggerWorker.config.logs.transports[1], {
-          app_name: "app_name",
-          eol: "eol",
-          facility: "facility",
-          host: "host",
-          localhost: "localhost",
-          path: "path",
-          pid: "pid",
-          port: "port",
-          protocol: "protocol",
-          transport: "syslog",
-          type: "type",
-        });
-
-        accessLoggerWorker.initTransport();
-
-        should(winstonTransportSyslog).be.calledOnce().be.calledWithMatch({
-          app_name: "app_name",
-          eol: "eol",
-          facility: "facility",
-          host: "host",
-          localhost: "localhost",
-          path: "path",
-          pid: "pid",
-          port: "port",
-          protocol: "protocol",
-          type: "type",
-        });
+          .be.calledWithMatch(expectedTransports);
+        should(pinoMock).be.calledOnce();
       });
     });
 
     describe("#logAccess", () => {
       beforeEach(() => {
+        accessLoggerWorker.config.logs.transports = [
+          {
+            transport: "console",
+            level: "info",
+            stderrLevels: [],
+            silent: false,
+          },
+        ];
+
+        accessLoggerWorker.initTransport();
         accessLoggerWorker.logger = {
           info: sinon.spy(),
         };
-
-        accessLoggerWorker.initTransport();
       });
 
       it('should forward the params to the logger when using "logstash" format output', () => {
@@ -460,7 +355,6 @@ describe("#AccessLogger", () => {
         request.setError(error);
 
         accessLoggerWorker.config.logs.accessLogFormat = "logstash";
-
         accessLoggerWorker.logAccess(connection, request);
 
         should(accessLoggerWorker.logger.info)
@@ -469,6 +363,8 @@ describe("#AccessLogger", () => {
             connection,
             error: error,
             extra: null,
+            namespace: "kuzzle:accessLogs",
+            nodeId: global.kuzzle.id,
             request: request.input,
             status: 444,
           });
@@ -507,6 +403,10 @@ describe("#AccessLogger", () => {
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
           .be.calledWithMatch(
+            {
+              namespace: "kuzzle:accessLogs",
+              nodeId: global.kuzzle.id,
+            },
             /^1\.1\.1\.1 - admin \[\d\d\/[A-Z][a-z]{2}\/\d{4}:\d\d:\d\d:\d\d [+-]\d{4}] "METHOD url HTTP\/1\.1" 444 327 "http:\/\/referer.com" "user agent"$/,
           );
       });
@@ -532,6 +432,10 @@ describe("#AccessLogger", () => {
         should(accessLoggerWorker.logger.info)
           .be.calledOnce()
           .be.calledWithMatch(
+            {
+              namespace: "kuzzle:accessLogs",
+              nodeId: global.kuzzle.id,
+            },
             /^ip - foobar \[\d{2}\/\w{3}\/\d{4}:\d{2}:\d{2}:\d{2} [+-]\d{4}] "DO \/controller\/action\/index\/collection WEBSOCKET" 102 339 - -$/,
           );
       });

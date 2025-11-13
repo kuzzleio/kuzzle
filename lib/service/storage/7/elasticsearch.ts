@@ -3104,10 +3104,6 @@ export class ES7 {
         },
       };
     } else {
-      if (document.body !== undefined && document.body !== null) {
-        delete document.body._kuzzle_info;
-      }
-
       extractedDocument = {
         // Do not use destructuring, it's 10x slower
         _source: Object.assign({}, metadata, document.body),

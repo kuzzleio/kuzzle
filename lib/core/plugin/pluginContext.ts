@@ -353,7 +353,7 @@ export class PluginContext {
     this.accessors = {
       cluster: new BackendCluster(),
       execute: (request, callback) => execute(request, callback),
-      nodeId: global.kuzzle.id,
+      nodeId: global.nodeId,
       sdk: new EmbeddedSDK(),
       storage: {
         bootstrap: (collections) => pluginStore.init(collections),
