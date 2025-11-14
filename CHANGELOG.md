@@ -1,3 +1,10 @@
+## [2.49.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.49.0-beta.1...v2.49.0-beta.2) (2025-11-14)
+
+
+### Bug Fixes
+
+* **accesslogger:** prevent error when conf options not set ([#2635](https://github.com/kuzzleio/kuzzle/issues/2635)) ([158436a](https://github.com/kuzzleio/kuzzle/commit/158436a6521b47932eab7cff1b474a68c3fd2c11))
+
 ## [2.49.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.48.0...v2.49.0-beta.1) (2025-11-13)
 
 
