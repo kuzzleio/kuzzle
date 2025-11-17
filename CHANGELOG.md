@@ -1,3 +1,19 @@
+## [2.49.0](https://github.com/kuzzleio/kuzzle/compare/v2.48.0...v2.49.0) (2025-11-17)
+
+
+### Features
+
+* **accessLogger:** replace winston by pino ([#2630](https://github.com/kuzzleio/kuzzle/issues/2630)) ([9c06ce3](https://github.com/kuzzleio/kuzzle/commit/9c06ce3886593196970deed38e90a2575ff71b7e))
+
+
+### Bug Fixes
+
+* **mWrite test:** do not delete index on start ([58e58be](https://github.com/kuzzleio/kuzzle/commit/58e58be6cae5a4d577ff89fd7f9e9e034ea64fd3))
+* **mWrite:** do not remove custom kuzzleInfo from mWrite ([40f0131](https://github.com/kuzzleio/kuzzle/commit/40f01311b30634c8d5e1a9398a00c74872685c64))
+* **plugin:** use global.nodeId to fill the plugin context accessors.nodeId ([0bc3314](https://github.com/kuzzleio/kuzzle/commit/0bc3314b54065a793b27b215967fac3d284ed7e0))
+* **updateByQuery:** kuzinfo updated after updateByQuery ([caacf9b](https://github.com/kuzzleio/kuzzle/commit/caacf9b0613a5d4b33ce1fcd99f04ea71e632502))
+* **updateByQuery:** no need to add kuzzleinfo to changes, it is updated later ([969d160](https://github.com/kuzzleio/kuzzle/commit/969d160c8d6e96ff85e0755ba3c82453608c093a))
+
 <<<<<<< HEAD
 =======
 ## [2.48.0](https://github.com/kuzzleio/kuzzle/compare/v2.47.0...v2.48.0) (2025-10-02)
