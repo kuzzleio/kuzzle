@@ -157,11 +157,11 @@ jobs:
       - name: Publish SBOM to Dependency-Track
         uses: DependencyTrack/gh-upload-sbom@v3
         with:
-          serverHostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
-          apiKey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
-          projectName: 'Kuzzle Backend'
+          serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
+          apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
+          projectname: 'Kuzzle Backend'
           project: '61327139-8d88-4907-9252-1ad45cc8d456'
-          projectVersion: '${{ steps.get-version.outputs.version }}'
-          bomFilename: "./bom.xml"
-          autoCreate: true
+          projectversion: '${{ steps.get-version.outputs.version }}'
+          bomfilename: "./bom.xml"
+          autocreate: true
 
