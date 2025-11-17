@@ -1,4 +1,4 @@
-name: Documentation and NPM package
+name: Manual Refresh SBOM
 
 on:
   workflow_call:
