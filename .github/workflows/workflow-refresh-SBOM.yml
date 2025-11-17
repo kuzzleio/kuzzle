@@ -48,6 +48,9 @@ jobs:
         with:
           serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
           apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
-          project: '61327139-8d88-4907-9252-1ad45cc8d456' # Id of the "Kuzzle Backend" project
+          projectname: 'Kuzzle Backend'
+          project: '61327139-8d88-4907-9252-1ad45cc8d456'
           projectversion: '${{ steps.get-version.outputs.version }}'
           bomfilename: "./bom.xml"
+          autocreate: true
+
