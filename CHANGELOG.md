@@ -1,3 +1,10 @@
+## [2.49.1](https://github.com/kuzzleio/kuzzle/compare/v2.49.0...v2.49.1) (2025-11-18)
+
+
+### Bug Fixes
+
+* **accessLogger:** fix missing file transport acceslogger config scenario ([88a3459](https://github.com/kuzzleio/kuzzle/commit/88a3459fb7ae38c7b107cf79cd7e3468fd983286))
+
 ## [2.49.0](https://github.com/kuzzleio/kuzzle/compare/v2.48.0...v2.49.0) (2025-11-17)
 
 
