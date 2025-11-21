@@ -1,3 +1,5 @@
+import { beforeAll, afterAll, describe, expect, afterEach, beforeEach, it } from "vitest";
+
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));

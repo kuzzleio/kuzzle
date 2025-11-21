@@ -1,3 +1,4 @@
+import { expect, test } from "vitest";
 import http from "http";
 
 test("Check healthcheck result", () => {
@@ -19,6 +20,6 @@ test("Check healthcheck result", () => {
         const parsedData = JSON.parse(rawData);
         expect(parsedData.status).toEqual(200);
       });
-    }
+    },
   );
 });

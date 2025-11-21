@@ -135,3 +135,13 @@ lib/types/DebugModule.js
 lib/util/time.js
 lib/util/async.js
 lib/util/esRequest.js
+lib/api/controllers/adminController.js
+lib/core/auth/formatProcessing.js
+lib/core/auth/passportResponse.js
+lib/core/auth/passportWrapper.js
+lib/types/controllers/Controller.js
+lib/types/controllers/ControllerDefinition.js
+lib/types/controllers/ControllerRights.js
+lib/types/controllers/adminControlller.type.js
+lib/types/controllers/authController.type.js
+lib/types/core/auth/formatProcessing.type.js

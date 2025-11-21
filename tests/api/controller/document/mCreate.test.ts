@@ -1,3 +1,4 @@
+import { beforeAll, afterAll, describe, expect, afterEach, it } from "vitest";
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));
@@ -57,7 +58,7 @@ describe("mCreate", () => {
       ],
       {
         refresh: "wait_for",
-      }
+      },
     );
 
     expect(mCreateResult.successes.length).toEqual(1);
@@ -84,7 +85,7 @@ describe("mCreate", () => {
       ],
       {
         refresh: "wait_for",
-      }
+      },
     );
 
     expect(mCreateResult.successes.length).toEqual(1);
@@ -102,7 +103,7 @@ describe("mCreate", () => {
       ],
       {
         refresh: "wait_for",
-      }
+      },
     );
 
     expect(mCreateResult.successes.length).toEqual(0);
@@ -136,7 +137,7 @@ describe("mCreate", () => {
       ],
       {
         refresh: "wait_for",
-      }
+      },
     );
 
     expect(mCreateResult.successes.length).toEqual(2);
@@ -166,7 +167,7 @@ describe("mCreate", () => {
       ],
       {
         refresh: "wait_for",
-      }
+      },
     );
 
     expect(mCreateResult.successes.length).toEqual(1);

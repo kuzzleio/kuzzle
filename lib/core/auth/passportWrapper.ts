@@ -19,19 +19,23 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import passport, {
+  AuthenticateCallback,
+  AuthenticateOptions,
+  Strategy,
+} from "passport";
 
-const Bluebird = require("bluebird");
-const passport = require("passport");
-
-const { KuzzleError } = require("../../kerror/errors");
-const kerror = require("../../kerror");
-const PassportResponse = require("./passportResponse");
+import { KuzzleError } from "../../kerror/errors";
+import * as kerror from "../../kerror";
+import PassportResponse from "./passportResponse";
 
 /**
  * @class PassportWrapper
  */
-class PassportWrapper {
+export default class PassportWrapper {
+  public options: Record<string, AuthenticateOptions>;
+
   constructor() {
     this.options = {};
   }
@@ -41,7 +45,7 @@ class PassportWrapper {
    * @param strategyName
    * @returns {Promise.<*>}
    */
-  authenticate(request, strategyName) {
+  authenticate(request: any, strategyName: string): Promise<unknown> {
     const response = new PassportResponse();
 
     return new Bluebird((resolve, reject) => {
@@ -52,7 +56,7 @@ class PassportWrapper {
       // (Proof: HTTP redirection unit test)
       response.addEndListener(() => resolve(response));
 
-      const authCB = (err, user, info) => {
+      const authCB: AuthenticateCallback = (err, user, info) => {
         if (err !== null) {
           if (err instanceof KuzzleError) {
             reject(err);
@@ -63,14 +67,12 @@ class PassportWrapper {
                 "plugin",
                 "runtime",
                 "unexpected_error",
-                err.message,
+                (err as Error).message,
               ),
             );
           }
         } else if (!user) {
-          reject(
-            kerror.get("plugin", "strategy", "missing_user", info.message),
-          );
+          reject(kerror.get("plugin", "strategy", "missing_user", info));
         } else {
           resolve(user);
         }
@@ -92,7 +94,7 @@ class PassportWrapper {
               "plugin",
               "runtime",
               "unexpected_error",
-              e.message,
+              (e as Error).message,
             ),
           );
         }
@@ -107,7 +109,7 @@ class PassportWrapper {
    * @param {object} strategy - instantiated strategy object
    * @param {object} opts - options to provide to authenticate with the strategy
    */
-  use(name, strategy, opts = {}) {
+  use(name: string, strategy: Strategy, opts: AuthenticateOptions = {}): void {
     passport.use(name, strategy);
     this.options[name] = opts;
   }
@@ -117,10 +119,8 @@ class PassportWrapper {
    *
    * @param  {string} name - name of the strategy to unregister
    */
-  unuse(name) {
+  unuse(name: string): void {
     passport.unuse(name);
     delete this.options[name];
   }
 }
-
-module.exports = PassportWrapper;

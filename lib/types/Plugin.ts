@@ -20,7 +20,7 @@
  */
 
 import { PluginContext } from "../core/plugin/pluginContext";
-import { ControllerDefinition } from "./ControllerDefinition";
+import { ControllerDefinition } from "./controllers/ControllerDefinition";
 import { PluginManifest } from "./PluginManifest";
 import { StrategyDefinition } from "./StrategyDefinition";
 import { PipeEventHandler, HookEventHandler } from "./EventHandler";

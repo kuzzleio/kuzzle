@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-"use strict";
+import { OutgoingHttpHeaders } from "http";
 
 /*
 HTTP Response Mockup to emulate response objects for Passport Authentication
@@ -30,19 +30,23 @@ HTTP Response Mockup to emulate response objects for Passport Authentication
 /**
  * @class PassportResponse
  */
-class PassportResponse {
+export default class PassportResponse {
+  public headers: OutgoingHttpHeaders;
+  public statusCode: number;
+  private onEndListener: (() => void) | null;
+
   constructor() {
     this.headers = {};
     this.statusCode = 200;
     this.onEndListener = null;
   }
 
-  setHeader(field, value) {
+  setHeader(field: string, value: number | string | string[]): void {
     this.headers[field] = value;
   }
 
-  end(statusCode) {
-    if (statusCode) {
+  end(statusCode?: number): void {
+    if (typeof statusCode === "number") {
       this.statusCode = statusCode;
     }
     if (typeof this.onEndListener === "function") {
@@ -50,13 +54,11 @@ class PassportResponse {
     }
   }
 
-  getHeader(key) {
+  getHeader(key: string): OutgoingHttpHeaders[string] {
     return this.headers[key];
   }
 
-  addEndListener(listener) {
+  addEndListener(listener: () => void): void {
     this.onEndListener = listener;
   }
 }
-
-module.exports = PassportResponse;
