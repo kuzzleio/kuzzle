@@ -87,6 +87,7 @@
     "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.17.20",
     "@types/mocha": "10.0.10",
+    "@types/passport": "1.0.17",
     "async": "3.2.6",
     "chokidar": "4.0.3",
     "cucumber": "6.0.7",

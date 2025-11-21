@@ -19,37 +19,35 @@
  * limitations under the License.
  */
 
-"use strict";
+import { Profile } from "../../model/security/profile";
+import { Role } from "../../model/security/role";
+import { User } from "../../model/security/user";
 
-module.exports = {
-  /**
-   * Serializes role and transforms it into a POJO
-   *
-   * @param {Role} role
-   * @returns {object}
-   */
-  serializeProfile: (profile) => {
-    const { _id, ..._source } = profile;
+import type { Serialized } from "../../types/core/auth/formatProcessing.type";
 
-    return { _id, _source };
-  },
-
+const formatProcessing = {
   /**
    * Serializes profile and transforms it into a POJO
    *
    * @param {Profile} profile
+   * @returns {object}
+   */
+  serializeProfile(profile: Profile): Serialized<Profile> {
+    const { _id, ..._source } = profile;
+
+    return { _id, _source: _source as Record<string, any> };
+  },
+
+  /**
+   * Serializes role and transforms it into a POJO
+   *
+   * @param {Role} role
    * @returns {Object}
    */
-  serializeRole: (role) => {
-    const _source = {};
+  serializeRole(role: Role & { restrictedTo?: unknown }): Serialized<Role> {
+    const { _id, ..._source } = role;
 
-    Object.keys(role).forEach((key) => {
-      if (key !== "_id" && key !== "restrictedTo") {
-        _source[key] = role[key];
-      }
-    });
-
-    return { _id: role._id, _source };
+    return { _id, _source: _source as Record<string, any> };
   },
 
   /**
@@ -58,9 +56,11 @@ module.exports = {
    * @param {User} user
    * @returns {Object}
    */
-  serializeUser: (user) => {
+  serializeUser(user: User): Serialized<User> {
     const { _id, ..._source } = user;
 
-    return { _id, _source };
+    return { _id, _source: _source as Record<string, any> };
   },
 };
+
+export default formatProcessing;

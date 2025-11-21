@@ -18,19 +18,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Bluebird from "bluebird";
 
-"use strict";
-
-const Bluebird = require("bluebird");
-
-const kerror = require("../../kerror");
-const { NativeController } = require("./baseController");
-const { Mutex } = require("../../util/mutex");
+import * as kerror from "../../kerror";
+import { NativeController } from "./baseController";
+import { Mutex } from "../../util/mutex";
+import { KuzzleRequest } from "../request";
+import { ResetSecurityResult } from "../../types/controllers/adminControlller.type";
 
 /**
  * @class AdminController
  */
-class AdminController extends NativeController {
+export class AdminController extends NativeController {
+  protected shuttingDown: boolean;
+  protected logger: any;
+
   constructor() {
     super([
       "dump",
@@ -55,7 +57,7 @@ class AdminController extends NativeController {
   /**
    * Reset Redis cache
    */
-  async resetCache(request) {
+  async resetCache(request: KuzzleRequest) {
     const database = request.getString("database");
 
     // @todo allow only memoryStorage
@@ -85,7 +87,7 @@ class AdminController extends NativeController {
       );
     }
 
-    const result = {};
+    const result: ResetSecurityResult = {};
 
     try {
       const options = { refresh: "wait_for" };
@@ -147,8 +149,8 @@ class AdminController extends NativeController {
    * Generate a dump
    * Kuzzle will throw a PreconditionError if a dump is already running
    */
-  dump(request) {
-    const waitForRefresh = request.input.args.refresh === "wait_for";
+  dump(request: KuzzleRequest) {
+    const waitForRefresh = request.getRefresh("wait_for");
     const suffix = request.getString("suffix", "manual-api-action");
 
     const promise = global.kuzzle.dump(suffix);
@@ -174,7 +176,7 @@ class AdminController extends NativeController {
     return { acknowledge: true };
   }
 
-  loadFixtures(request) {
+  loadFixtures(request: KuzzleRequest) {
     const fixtures = request.getBody();
     const refresh = request.getRefresh("wait_for");
 
@@ -183,7 +185,7 @@ class AdminController extends NativeController {
     });
   }
 
-  loadMappings(request) {
+  loadMappings(request: KuzzleRequest) {
     const mappings = request.getBody();
 
     return this._waitForAction(
@@ -194,7 +196,7 @@ class AdminController extends NativeController {
     );
   }
 
-  async loadSecurities(request) {
+  async loadSecurities(request: KuzzleRequest) {
     const permissions = request.getBody();
     const user = request.getUser();
     const onExistingUsers = request.input.args.onExistingUsers;
@@ -211,7 +213,10 @@ class AdminController extends NativeController {
     return this._waitForAction(waitForRefresh, promise);
   }
 
-  _waitForAction(waitForRefresh, promise) {
+  _waitForAction(
+    waitForRefresh: string,
+    promise: Promise<any>,
+  ): Promise<{ acknowledge: boolean }> {
     const result = { acknowledge: true };
 
     if (waitForRefresh === "false") {

@@ -36,8 +36,10 @@ import SecurityController from "./securityController";
 import { JSONObject } from "kuzzle-sdk";
 import { Token } from "../../model/security/token";
 
+import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
+
 export class AuthController extends NativeController {
-  private anonymousId: string;
+  private anonymousId: string | null = null;
   private readonly logger = global.kuzzle.log.child("api:controllers:auth");
 
   /**
@@ -66,8 +68,6 @@ export class AuthController extends NativeController {
       "updateSelf",
       "validateMyCredentials",
     ]);
-
-    this.anonymousId = null;
   }
 
   /**
@@ -76,7 +76,7 @@ export class AuthController extends NativeController {
    *
    * @returns {Promise}
    */
-  async init() {
+  async init(): Promise<any> {
     const anonymous = await global.kuzzle.ask(
       "core:security:user:anonymous:get",
     );
@@ -116,7 +116,7 @@ export class AuthController extends NativeController {
   /**
    * Checks if an API action can be executed by the current user
    */
-  async checkRights(request) {
+  async checkRights(request: KuzzleRequest) {
     const requestPayload = request.getBody();
 
     if (typeof requestPayload.controller !== "string") {
@@ -142,7 +142,7 @@ export class AuthController extends NativeController {
    * Creates a new API key for the user
    * @param {KuzzleRequest} request
    */
-  async createApiKey(request) {
+  async createApiKey(request: KuzzleRequest) {
     const expiresIn = request.input.args.expiresIn || -1;
     const refresh = request.getRefresh("wait_for");
     const apiKeyId = request.getId({ ifMissing: "generate" });
@@ -162,7 +162,7 @@ export class AuthController extends NativeController {
   /**
    * Search in the user API keys
    */
-  async searchApiKeys(request) {
+  async searchApiKeys(request: KuzzleRequest) {
     let query = request.getBody({});
     const { from, size } = request.getSearchParams();
     const lang = request.getLangParam();
@@ -193,7 +193,7 @@ export class AuthController extends NativeController {
   /**
    * Deletes an API key
    */
-  async deleteApiKey(request) {
+  async deleteApiKey(request: KuzzleRequest) {
     const apiKeyId = request.getId();
     const refresh = request.getRefresh();
 
@@ -210,7 +210,7 @@ export class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<object>}
    */
-  async logout(request) {
+  async logout(request: KuzzleRequest): Promise<object> {
     if (
       !global.kuzzle.config.http.cookieAuthentication ||
       !request.getBoolean("cookieAuth")
@@ -267,7 +267,7 @@ export class AuthController extends NativeController {
   }
 
   // Used to send the Token using different ways when in cookieAuth mode. (DRY)
-  async _sendToken(token, request) {
+  async _sendToken(token: Token, request: KuzzleRequest): Promise<Token> {
     // Only if the support of Browser Cookie as Authentication Token is enabled
     // otherwise we should send a normal response because
     // even if the SDK / Browser can handle the cookie,
@@ -290,20 +290,9 @@ export class AuthController extends NativeController {
           }),
         },
       });
-
-      return {
-        _id: token.userId,
-        expiresAt: token.expiresAt,
-        ttl: token.ttl,
-      };
     }
 
-    return {
-      _id: token.userId,
-      expiresAt: token.expiresAt,
-      jwt: token.jwt,
-      ttl: token.ttl,
-    };
+    return token;
   }
 
   /**
@@ -313,7 +302,7 @@ export class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<Token>}
    */
-  async login(request) {
+  async login(request: KuzzleRequest): Promise<Token> {
     const strategy = request.getString("strategy");
     const passportRequest: any = new IncomingMessage(null);
 
@@ -330,7 +319,6 @@ export class AuthController extends NativeController {
 
     for (const h of Object.keys(passportRequest.headers)) {
       passportRequest.rawHeaders.push(h);
-      passportRequest.rawHeaders.push(passportRequest.headers[h]);
     }
     passportRequest.original = request;
 
@@ -411,10 +399,13 @@ export class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<Object>}
    */
-  getCurrentUser(request) {
-    const userId = request.context.token.userId,
-      formattedUser = formatProcessing.serializeUser(request.context.user),
-      promises = [];
+  async getCurrentUser(request: KuzzleRequest): Promise<object> {
+    const promises = [];
+    const userId = request.context.token.userId;
+    const formattedUser: GetCurrentUserResponse = {
+      ...formatProcessing.serializeUser(request.context.user),
+      strategies: [],
+    };
 
     if (this.anonymousId === userId) {
       promises.push(Bluebird.resolve([]));
@@ -433,13 +424,13 @@ export class AuthController extends NativeController {
       }
     }
 
-    return Bluebird.all(promises).then((strategies) => {
-      if (strategies.length > 0) {
-        formattedUser.strategies = strategies.filter((item) => item !== null);
-      }
+    const strategies = await Bluebird.all(promises);
 
-      return formattedUser;
-    });
+    if (strategies.length > 0) {
+      formattedUser.strategies = strategies.filter((item) => item !== null);
+    }
+
+    return formattedUser;
   }
 
   /**
@@ -448,9 +439,9 @@ export class AuthController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<object>}
    */
-  getMyRights(request) {
+  getMyRights(request: KuzzleRequest): Promise<object> {
     return request.context.user
-      .getRights(global.kuzzle)
+      .getRights()
       .then((rights) =>
         Object.keys(rights).reduce(
           (array, item) => array.concat(rights[item]),

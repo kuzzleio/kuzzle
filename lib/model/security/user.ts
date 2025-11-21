@@ -33,6 +33,8 @@ import { Target } from "../../types";
 export class User {
   public _id: string;
   public profileIds: string[];
+  // TODO modify this type to reflect the real type
+  public strategies: any;
 
   constructor() {
     this._id = null;
