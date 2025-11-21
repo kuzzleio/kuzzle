@@ -1,3 +1,4 @@
+import { beforeAll, afterAll, describe, it, expect, afterEach } from "vitest";
 import { Kuzzle, WebSocket } from "kuzzle-sdk";
 
 const kuzzle = new Kuzzle(new WebSocket("localhost"));
@@ -60,7 +61,7 @@ describe("koncorde query", () => {
         },
         {
           lang: "koncorde",
-        }
+        },
       );
 
       expect(result.hits.length).toEqual(1);
@@ -85,7 +86,7 @@ describe("koncorde query", () => {
         },
         {
           lang: "koncorde",
-        }
+        },
       );
 
       expect(result.hits.length).toEqual(0);
@@ -110,7 +111,7 @@ describe("koncorde query", () => {
         },
         {
           lang: "koncorde",
-        }
+        },
       );
 
       expect(result.hits.length).toEqual(1);
@@ -135,7 +136,7 @@ describe("koncorde query", () => {
         },
         {
           lang: "koncorde",
-        }
+        },
       );
 
       expect(result.hits.length).toEqual(0);

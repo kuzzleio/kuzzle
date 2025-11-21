@@ -20,13 +20,15 @@
     "skipDefaultLibCheck": true,
     "types": [
       "node",
-      "jest"
+      "vitest"
     ]
   },
   "rootDir": "lib/",
   "include": [
     "lib/**/*.ts",
     "index.ts",
-    "docker/scripts/*.ts"
+    "docker/scripts/*.ts",
+    "vitest.config.ts",
+    "tests"
   ]
 }
