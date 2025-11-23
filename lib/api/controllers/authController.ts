@@ -319,7 +319,9 @@ export class AuthController extends NativeController {
 
     for (const h of Object.keys(passportRequest.headers)) {
       passportRequest.rawHeaders.push(h);
+      passportRequest.rawHeaders.push(passportRequest.headers[h]);
     }
+
     passportRequest.original = request;
 
     if (!has(global.kuzzle.pluginsManager.strategies, strategy)) {
