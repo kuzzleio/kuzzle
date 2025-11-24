@@ -1,5 +1,4 @@
 Feature: Document Controller
-
   # document:create ============================================================
 
   Scenario: Rejected document because of strict mapping
@@ -11,10 +10,8 @@ Feature: Document Controller
       | collection | "strict-taxi"         |
       | body       | { "name": "lehuong" } |
     Then I should receive an error matching:
-      | id      | "services.storage.strict_mapping_rejection"                                                                        |
-      | message | "Cannot create document. Field \"name\" is not present in collection \"nyc-open-data:strict-taxi\" strict mapping" |
-
-
+      | id      | "services.storage.strict_mapping_rejection"                                                                            |
+      | message | "Cannot create document. Field \\"name\\" is not present in collection \\"nyc-open-data:strict-taxi\\" strict mapping" |
   # document:search ============================================================
 
   @mappings
@@ -213,8 +210,7 @@ Feature: Document Controller
       | "document-1" |
       | "document-3" |
 
-  @not-http
-  @mappings
+  @not-http @mappings
   Scenario: Search on multiple index and collections
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the following multiple documents:
@@ -256,14 +252,14 @@ Feature: Document Controller
       | _id          | index           | collection    |
       | "document-3" | "mtp-open-data" | "green-taxi"  |
       | "document-1" | "nyc-open-data" | "yellow-taxi" |
-
   # document:deleteFields ===========================================================
+
   @mappings
   Scenario: Delete fields of a document returning the document without the specified fields
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the document "document-1" with content:
       | name | "document-1" |
-      | age  | 42           |
+      | age  |           42 |
     When I successfully execute the action "document":"deleteFields" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
@@ -275,7 +271,6 @@ Feature: Document Controller
       | _source | { "age": 42 } |
     And The document "document-1" content match:
       | age | 42 |
-
   # document:exists ============================================================
 
   @mappings
@@ -290,7 +285,6 @@ Feature: Document Controller
       | "document-1" |
     And I refresh the collection
     Then The document "document-1" should not exist
-
   # document:mExists ============================================================
 
   @mappings
@@ -364,11 +358,9 @@ Feature: Document Controller
       | body       | { ids: [ "document-1", "document-42" ] } |
     Then I should receive an error matching:
       | id | "api.process.incomplete_multiple_request" |
-
   # document:export ============================================================
 
-  @mappings
-  @http
+  @mappings @http
   Scenario: Verify exported documents in format jsonl
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
@@ -380,12 +372,11 @@ Feature: Document Controller
     And I refresh the collection
     When I export the collection "nyc-open-data":"yellow-taxi" in the format "jsonl"
     Then the streamed data should be equal to:
-      | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                          |
-      | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document1","age":42}}  |
-      | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\d+,"updatedAt":null,"updater":null},"name":"document2","age":666}} |
+      | {"collection":"yellow-taxi","index":"nyc-open-data","type":"collection"}                                                                           |
+      | {"_id":"document-1","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\\d+,"updatedAt":null,"updater":null},"name":"document1","age":42}}  |
+      | {"_id":"document-2","body":{"_kuzzle_info":{"author":"test-admin","createdAt":\\d+,"updatedAt":null,"updater":null},"name":"document2","age":666}} |
 
-  @mappings
-  @http
+  @mappings @http
   Scenario: Verify exported documents in format csv
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
@@ -408,8 +399,7 @@ Feature: Document Controller
       | _id,age,name             |
       | document-2,666,document2 |
 
-  @mappings
-  @http
+  @mappings @http
   Scenario: Verify exported documents in format csv with specified fields
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
@@ -426,8 +416,7 @@ Feature: Document Controller
       | document-1,42,document1  |
       | document-2,666,document2 |
 
-  @mappings
-  @http
+  @mappings @http
   Scenario: Verify exported documents in format csv with renamed fields
     Given an existing collection "nyc-open-data":"yellow-taxi"
     Then The document "document-1" should not exist
@@ -444,7 +433,6 @@ Feature: Document Controller
       | id,cityAge,documentName  |
       | document-1,42,document1  |
       | document-2,666,document2 |
-
   # document:mCreate ===========================================================
 
   @mappings
@@ -456,8 +444,8 @@ Feature: Document Controller
       | -            | { "name": "document2" } |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
-      | "document-1" | { "name": "document1" } | 201    | "created" |
-      | -            | { "name": "document2" } | 201    | "created" |
+      | "document-1" | { "name": "document1" } |    201 | "created" |
+      | -            | { "name": "document2" } |    201 | "created" |
     And I should receive a empty "errors" array
     And I refresh the collection
     And I count 2 documents
@@ -477,16 +465,15 @@ Feature: Document Controller
       | -            | "not a body"            |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
-      | "document-2" | { "name": "document2" } | 201    | "created" |
+      | "document-2" | { "name": "document2" } |    201 | "created" |
     And I should receive a "errors" array of objects matching:
       | reason                            | status | document                                                 |
-      | "document body must be an object" | 400    | { "body": "not a body" }                                 |
-      | "document already exists"         | 400    | { "_id": "document-1", "body": { "name": "replaced1" } } |
+      | "document body must be an object" |    400 | { "body": "not a body" }                                 |
+      | "document already exists"         |    400 | { "_id": "document-1", "body": { "name": "replaced1" } } |
     And The document "document-1" content match:
       | name | "document1" |
     And The document "document-2" content match:
       | name | "document2" |
-
   # document:createOrReplace ==================================================
 
   @mappings
@@ -525,7 +512,6 @@ Feature: Document Controller
     And I count 1 documents
     And The document "document-1" content match:
       | name | "replaced1" |
-
   # document:mCreateOrReplace ==================================================
 
   @mappings
@@ -537,10 +523,10 @@ Feature: Document Controller
       | -            | "not a body"            |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    |
-      | "document-1" | { "name": "document1" } | 201    | "created" |
+      | "document-1" | { "name": "document1" } |    201 | "created" |
     And I should receive a "errors" array of objects matching:
       | reason                            | status | document                 |
-      | "document body must be an object" | 400    | { "body": "not a body" } |
+      | "document body must be an object" |    400 | { "body": "not a body" } |
     And The document "document-1" content match:
       | name | "document1" |
 
@@ -557,7 +543,7 @@ Feature: Document Controller
       | source     | true                                                                          |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status | result    | created |
-      | "document-1" | { "name": "replaced1" } | 200    | "updated" | false   |
+      | "document-1" | { "name": "replaced1" } |    200 | "updated" | false   |
     And I should receive a empty "errors" array
     And I refresh the collection
     And I count 1 documents
@@ -577,16 +563,16 @@ Feature: Document Controller
       | source     | "false"                                                                       |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source       | status | result    | created |
-      | "document-1" | "_UNDEFINED_" | 200    | "updated" | false   |
+      | "document-1" | "_UNDEFINED_" |    200 | "updated" | false   |
     And I should receive a empty "errors" array
-
   # document:update ===========================================================
+
   @mappings
   Scenario: Update document with and without returning updated document
     Given an existing collection "nyc-open-data":"yellow-taxi"
     And I "create" the document "document-1" with content:
       | name | "document-1" |
-      | age  | 42           |
+      | age  |           42 |
     When I successfully execute the action "document":"update" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
@@ -598,7 +584,7 @@ Feature: Document Controller
       | _source | { "name": "updated1", "age": 42 } |
     And The document "document-1" content match:
       | name | "updated1" |
-      | age  | 42         |
+      | age  |         42 |
     When I successfully execute the action "document":"update" with args:
       | index      | "nyc-open-data"        |
       | collection | "yellow-taxi"          |
@@ -609,9 +595,7 @@ Feature: Document Controller
       | _id | "document-1" |
     And The document "document-1" content match:
       | name | "updated2" |
-      | age  | 42         |
-
-
+      | age  |         42 |
   # document:mUpdate ===========================================================
 
   @mappings
@@ -627,15 +611,15 @@ Feature: Document Controller
       | "document-2" | { "age": 21 }          |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                            | _version | status |
-      | "document-1" | { "name": "updated1", "age": 42 }  | 2        | 200    |
-      | "document-2" | { "name": "document2", "age": 21 } | 2        | 200    |
+      | "document-1" | { "name": "updated1", "age": 42 }  |        2 |    200 |
+      | "document-2" | { "name": "document2", "age": 21 } |        2 |    200 |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
       | name | "updated1" |
-      | age  | 42         |
+      | age  |         42 |
     And The document "document-2" content match:
       | name | "document2" |
-      | age  | 21          |
+      | age  |          21 |
 
   @mappings
   Scenario: Update multiple documents with errors
@@ -652,18 +636,17 @@ Feature: Document Controller
       | "document-2"  | "not a body"           |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                           | status |
-      | "document-1" | { "name": "updated1", "age": 42 } | 200    |
+      | "document-1" | { "name": "updated1", "age": 42 } |    200 |
     And I should receive a "errors" array of objects matching:
       | reason                            | status | document                                                 |
-      | "document body must be an object" | 400    | { "_id": "document-2", "body": "not a body" }            |
-      | "document _id must be a string"   | 400    | { "body": { "name": "updated1" } }                       |
-      | "document not found"              | 404    | { "_id": "document-42", "body": { "name": "updated1" } } |
+      | "document body must be an object" |    400 | { "_id": "document-2", "body": "not a body" }            |
+      | "document _id must be a string"   |    400 | { "body": { "name": "updated1" } }                       |
+      | "document not found"              |    404 | { "_id": "document-42", "body": { "name": "updated1" } } |
     And The document "document-1" content match:
       | name | "updated1" |
-      | age  | 42         |
+      | age  |         42 |
     And The document "document-2" content match:
       | name | "document2" |
-
   # document:mUpsert ===========================================================
 
   @mappings
@@ -678,15 +661,15 @@ Feature: Document Controller
       | "document-2" | { "age": 21 }          | { "name": "created2" } |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                           | _version | status | created |
-      | "document-1" | { "name": "updated1", "age": 42 } | 2        | 200    | false   |
-      | "document-2" | { "name": "created2", "age": 21 } | 1        | 201    | true    |
+      | "document-1" | { "name": "updated1", "age": 42 } |        2 |    200 | false   |
+      | "document-2" | { "name": "created2", "age": 21 } |        1 |    201 | true    |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
       | name | "updated1" |
-      | age  | 42         |
+      | age  |         42 |
     And The document "document-2" content match:
       | name | "created2" |
-      | age  | 21         |
+      | age  |         21 |
 
   @mappings
   Scenario: Upsert multiple documents with errors
@@ -703,20 +686,19 @@ Feature: Document Controller
       | "document-2"  | "not an object"         | -                       |
     Then I should receive a "successes" array of objects matching:
       | _id           | _source                 | _version | status | created |
-      | "document-42" | { "name": "created42" } | 1        | 201    | true    |
+      | "document-42" | { "name": "created42" } |        1 |    201 | true    |
     And I should receive a "errors" array of objects matching:
       | reason                               | status | document                                                   |
-      | "document _id must be a string"      | 400    | { "changes": { "name": "updated0" } }                      |
-      | "document default must be an object" | 400    | { "_id": "document-1", "changes": { "name": "updated1" } } |
-      | "document changes must be an object" | 400    | { "_id": "document-2", "changes": "not an object" }        |
+      | "document _id must be a string"      |    400 | { "changes": { "name": "updated0" } }                      |
+      | "document default must be an object" |    400 | { "_id": "document-1", "changes": { "name": "updated1" } } |
+      | "document changes must be an object" |    400 | { "_id": "document-2", "changes": "not an object" }        |
     And The document "document-1" content match:
       | name | "document1" |
-      | age  | 42          |
+      | age  |          42 |
     And The document "document-2" content match:
       | name | "document2" |
     And The document "document-42" content match:
       | name | "created42" |
-
   # document:mReplace ==========================================================
 
   @mappings
@@ -732,8 +714,8 @@ Feature: Document Controller
       | "document-2" | { "name": "replaced2" } |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status |
-      | "document-1" | { "name": "replaced1" } | 200    |
-      | "document-2" | { "name": "replaced2" } | 200    |
+      | "document-1" | { "name": "replaced1" } |    200 |
+      | "document-2" | { "name": "replaced2" } |    200 |
     And I should receive a empty "errors" array
     And The document "document-1" content match:
       | name | "replaced1" |
@@ -755,19 +737,17 @@ Feature: Document Controller
       | "document-1"  | "not a body"            |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 | status |
-      | "document-2" | { "name": "replaced2" } | 200    |
+      | "document-2" | { "name": "replaced2" } |    200 |
     And I should receive a "errors" array of objects matching:
       | reason                            | status | document                                                  |
-      | "document _id must be a string"   | 400    | { "body": { "name": "replaced1" } }                       |
-      | "document body must be an object" | 400    | { "_id": "document-1", "body": "not a body" }             |
-      | "document not found"              | 404    | { "_id": "document-42", "body": { "name": "replaced1" } } |
+      | "document _id must be a string"   |    400 | { "body": { "name": "replaced1" } }                       |
+      | "document body must be an object" |    400 | { "_id": "document-1", "body": "not a body" }             |
+      | "document not found"              |    404 | { "_id": "document-42", "body": { "name": "replaced1" } } |
     And The document "document-1" content match:
       | name | "document1" |
-      | age  | 42          |
+      | age  |          42 |
     And The document "document-2" content match:
       | name | "replaced2" |
-
-
   # document:mDelete ===========================================================
 
   @mappings
@@ -798,18 +778,17 @@ Feature: Document Controller
       | "document-3" | { "name": "document3" } |
     When I "mDelete" the following document ids:
       | "document-1"  |
-      | 214284        |
+      |        214284 |
       | "document-42" |
     Then I should receive a "successes" array matching:
       | "document-1" |
     And I should receive a "errors" array of objects matching:
       | reason                          | status | _id           |
-      | "document _id must be a string" | 400    | 214284        |
-      | "document not found"            | 404    | "document-42" |
+      | "document _id must be a string" |    400 |        214284 |
+      | "document not found"            |    404 | "document-42" |
     And The document "document-1" should not exist
     And The document "document-2" should exist
     And The document "document-3" should exist
-
   # document:mGet ==============================================================
 
   @mappings
@@ -837,7 +816,6 @@ Feature: Document Controller
       | "document-2" | { "name": "document2" } |
     And I should receive a empty "errors" array
 
-
   @mappings
   Scenario: Get multiple documents with errors
     Given an existing collection "nyc-open-data":"yellow-taxi"
@@ -848,7 +826,7 @@ Feature: Document Controller
       | "document-3" | { "name": "document3" } |
     When I "mGet" the following document ids:
       | "document-1"  |
-      | 214284        |
+      |        214284 |
       | "document-42" |
     Then I should receive a "successes" array of objects matching:
       | _id          | _source                 |
@@ -871,7 +849,6 @@ Feature: Document Controller
       | body       | { ids: [ "document-1", "document-42" ] } |
     Then I should receive an error matching:
       | id | "api.process.incomplete_multiple_request" |
-
   # document:count =============================================================
 
   @mappings
@@ -903,7 +880,6 @@ Feature: Document Controller
       | lang       | "koncorde"                                       |
     Then I should receive a result matching:
       | count | 2 |
-
   # document:delete ============================================================
 
   @mappings
@@ -1016,7 +992,6 @@ Feature: Document Controller
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
 
-
   @mappings
   Scenario: UpdateByQuery with Koncorde filters
     Given an existing collection "nyc-open-data":"yellow-taxi"
@@ -1043,7 +1018,6 @@ Feature: Document Controller
       | _id          | _source                                                     |
       | "document-1" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
-
   # document:upsert ============================================================
 
   @mappings
@@ -1058,7 +1032,7 @@ Feature: Document Controller
     Then I should receive a result matching:
       | _id      | "document-1"                                      |
       | _source  | { "name": "document-1", "age": 42, "foo": "bar" } |
-      | _version | 1                                                 |
+      | _version |                                                 1 |
       | created  | true                                              |
     When I successfully execute the action "document":"upsert" with args:
       | index      | "nyc-open-data"                                                        |
@@ -1069,11 +1043,11 @@ Feature: Document Controller
     Then I should receive a result matching:
       | _id      | "document-1"                                    |
       | _source  | { "name": "updated1", "age": 42, "foo": "bar" } |
-      | _version | 2                                               |
+      | _version |                                               2 |
       | created  | false                                           |
     And The document "document-1" content match:
       | name | "updated1" |
-      | age  | 42         |
+      | age  |         42 |
       | foo  | "bar"      |
     When I successfully execute the action "document":"upsert" with args:
       | index      | "nyc-open-data"                       |
@@ -1083,9 +1057,187 @@ Feature: Document Controller
       | source     | false                                 |
     Then I should receive a result matching:
       | _id      | "document-1" |
-      | _version | 3            |
+      | _version |            3 |
       | created  | false        |
     And The document "document-1" content match:
       | name | "updated2" |
-      | age  | 42         |
+      | age  |         42 |
       | foo  | "bar"      |
+
+  @mappings
+  Scenario: mCreate only creates documents that do not exist
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"mCreate" with args:
+      | index      | "nyc-open-data"                                                                                         |
+      | collection | "yellow-taxi"                                                                                           |
+      | body       | { "documents": [ { "_id": "A", "body": { "value": "A" } }, { "_id": "C", "body": { "value": "C" } } ] } |
+      | refresh    | "wait_for"                                                                                              |
+    Then I should receive a "successes" array containing 2 elements
+    And I should receive a empty "errors" array
+    When I successfully execute the action "document":"mCreate" with args:
+      | index      | "nyc-open-data"                                                                                                                                       |
+      | collection | "yellow-taxi"                                                                                                                                         |
+      | body       | { "documents": [ { "_id": "A", "body": { "value": "FOO" } }, { "_id": "B", "body": { "value": "B" } }, { "_id": "C", "body": { "value": "FOO" } } ] } |
+      | refresh    | "wait_for"                                                                                                                                            |
+    Then I should receive a "successes" array containing 1 elements
+    And I should receive a "errors" array containing 2 elements
+    When I "mGet" the following document ids:
+      | "A" |
+      | "B" |
+      | "C" |
+    Then I should receive a "successes" array of objects matching:
+      | _id | _source          |
+      | "A" | { "value": "A" } |
+      | "B" | { "value": "B" } |
+      | "C" | { "value": "C" } |
+  # document metadata =========================================================
+
+  @mappings
+  Scenario: Metadata is injected on create and user provided values are ignored
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"create" with args:
+      | index      | "nyc-open-data"  |
+      | collection | "yellow-taxi"    |
+      | _id        | "meta-create-1"  |
+      | body       | { "foo": "bar" } |
+      | refresh    | "wait_for"       |
+    Then I should receive a result matching:
+      | _source | { "foo": "bar", "_kuzzle_info": { "author": /.+/, "createdAt": "_NUMBER_", "updatedAt": null, "customMetadata": "_UNDEFINED_" } } |
+    When I successfully execute the action "document":"create" with args:
+      | index      | "nyc-open-data"                                                                                            |
+      | collection | "yellow-taxi"                                                                                              |
+      | _id        | "meta-create-2"                                                                                            |
+      | body       | { "foo": "baz", "_kuzzle_info": { "author": "foo", "createdAt": 42, "updatedAt": null, "updater": null } } |
+      | refresh    | "wait_for"                                                                                                 |
+    Then The document "meta-create-2" content match:
+      | foo                         | "baz"         |
+      | _kuzzle_info.author         | /^(?!foo$).+/ |
+      | _kuzzle_info.customMetadata | "_UNDEFINED_" |
+      | _kuzzle_info.createdAt      | "_NUMBER_"    |
+
+  @mappings
+  Scenario: Custom metadata can be injected through pipes
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"create" with args:
+      | index      | "nyc-open-data"                             |
+      | collection | "yellow-taxi"                               |
+      | _id        | "meta-custom-create"                        |
+      | body       | { "foo": "bar", "addCustomMetadata": true } |
+      | refresh    | "wait_for"                                  |
+    Then The document "meta-custom-create" content match:
+      | foo                         | "bar"        |
+      | _kuzzle_info.customMetadata | "customized" |
+    When I successfully execute the action "document":"upsert" with args:
+      | index      | "nyc-open-data"                                                                         |
+      | collection | "yellow-taxi"                                                                           |
+      | _id        | "meta-custom-upsert"                                                                    |
+      | body       | { "changes": { "foo": "baz", "addCustomMetadata": true }, "default": { "foo": "bar" } } |
+      | source     | true                                                                                    |
+      | refresh    | "wait_for"                                                                              |
+    Then I should receive a result matching:
+      | _source | { "foo": "baz", "_kuzzle_info": { "customMetadata": "customized", "author": /.+/ } } |
+
+  @mappings
+  Scenario: Metadata is refreshed when updating or replacing documents
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the document "meta-update" with content:
+      | foo | "bar" |
+    When I successfully execute the action "document":"update" with args:
+      | index      | "nyc-open-data"  |
+      | collection | "yellow-taxi"    |
+      | _id        | "meta-update"    |
+      | body       | { "foo": "baz" } |
+      | source     | true             |
+      | refresh    | "wait_for"       |
+    Then I should receive a result matching:
+      | _source | { "foo": "baz", "_kuzzle_info": { "updatedAt": "_NUMBER_", "author": /.+/ } } |
+    When I successfully execute the action "document":"replace" with args:
+      | index      | "nyc-open-data"                                                                           |
+      | collection | "yellow-taxi"                                                                             |
+      | _id        | "meta-update"                                                                             |
+      | body       | { "foo": "qux", "_kuzzle_info": { "author": "foo", "createdAt": 42, "updatedAt": null } } |
+      | refresh    | "wait_for"                                                                                |
+    Then The document "meta-update" content match:
+      | foo                         | "qux"         |
+      | _kuzzle_info.author         | /^(?!foo$).+/ |
+      | _kuzzle_info.createdAt      | "_NUMBER_"    |
+      | _kuzzle_info.customMetadata | "_UNDEFINED_" |
+
+  @mappings
+  Scenario: Multi write operations inject metadata and ignore user payload
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    When I successfully execute the action "document":"mCreateOrReplace" with args:
+      | index      | "nyc-open-data"                                                         |
+      | collection | "yellow-taxi"                                                           |
+      | body       | { "documents": [ { "_id": "meta-bulk-1", "body": { "foo": "bar" } } ] } |
+      | refresh    | "wait_for"                                                              |
+      | source     | true                                                                    |
+    Then The property "successes[0]._source._kuzzle_info" of the result should match:
+      | author    | /.+/       |
+      | createdAt | "_NUMBER_" |
+    When I successfully execute the action "document":"mUpsert" with args:
+      | index      | "nyc-open-data"                                                                                                                              |
+      | collection | "yellow-taxi"                                                                                                                                |
+      | body       | { "documents": [ { "_id": "meta-bulk-1", "changes": { "foo": "baz", "_kuzzle_info": { "author": "foo" } }, "default": { "foo": "bar" } } ] } |
+      | refresh    | "wait_for"                                                                                                                                   |
+      | source     | true                                                                                                                                         |
+    Then The property "successes[0]._source" of the result should match:
+      | foo                    | "baz"         |
+      | _kuzzle_info.author    | /^(?!foo$).+/ |
+      | _kuzzle_info.updatedAt | "_NUMBER_"    |
+
+  @mappings
+  Scenario: Search with Koncorde exists filter and bracket syntax
+    Given an existing collection "nyc-open-data":"yellow-taxi"
+    And I "create" the document "exists-1" with content:
+      | foo        | "bar"               |
+      | field.path | [ "ALPHA", "BETA" ] |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {
+        "exists": { "field": "foo" }
+      }
+      """
+    And with the following search options:
+      """
+      { "lang": "koncorde" }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 1 elements
+    When I search documents with the following query:
+      """
+      {
+        "exists": { "field": "name" }
+      }
+      """
+    And with the following search options:
+      """
+      { "lang": "koncorde" }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 0 elements
+    When I search documents with the following query:
+      """
+      {
+        "exists": { "field": "field.path[\\"BETA\\"]" }
+      }
+      """
+    And with the following search options:
+      """
+      { "lang": "koncorde" }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 1 elements
+    When I search documents with the following query:
+      """
+      {
+        "exists": { "field": "field.path[\\"GAMMA\\"]" }
+      }
+      """
+    And with the following search options:
+      """
+      { "lang": "koncorde" }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 0 elements

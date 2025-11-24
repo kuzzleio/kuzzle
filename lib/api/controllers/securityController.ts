@@ -18,27 +18,30 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import Bluebird from "bluebird";
+import { isEmpty, isNil } from "lodash";
+import { v4 as uuidv4 } from "uuid";
 
-"use strict";
-
-const { isEmpty, isNil } = require("lodash");
-const Bluebird = require("bluebird");
-const { v4: uuidv4 } = require("uuid");
-
-const { KuzzleError, BadRequestError } = require("../../kerror/errors");
-const { Request } = require("../request");
-const { NativeController } = require("./baseController");
-const formatProcessing = require("../../core/auth/formatProcessing");
-const ApiKey = require("../../model/storage/apiKey");
-const kerror = require("../../kerror");
-const { has } = require("../../util/safeObject");
-const { NameGenerator } = require("../../util/name-generator");
+import { BadRequestError, KuzzleError } from "../../kerror/errors";
+import { KuzzleRequest, Request } from "../request";
+import { NativeController } from "./baseController";
+import formatProcessing from "../../core/auth/formatProcessing";
+import ApiKey from "../../model/storage/apiKey";
+import * as kerror from "../../kerror";
+import { has } from "../../util/safeObject";
+import { NameGenerator } from "../../util/name-generator";
 
 /**
  * @class SecurityController
  */
-class SecurityController extends NativeController {
-  static userOrSdk(userId) {
+export class SecurityController extends NativeController {
+  protected readonly subdomain: string;
+  protected readonly securityCollections: string[];
+  protected getStrategyMethod: any;
+  protected readonly logger: any;
+  protected anonymousId: string | null = null;
+
+  static userOrSdk(userId: string | null) {
     return userId === null ? "EmbeddedSDK" : `User "${userId}"`;
   }
 
@@ -116,7 +119,7 @@ class SecurityController extends NativeController {
   /**
    * Checks if an API action can be executed by a user
    */
-  async checkRights(request) {
+  async checkRights(request: KuzzleRequest) {
     const userId = request.getString("userId");
     const requestPayload = request.getBody();
 
@@ -139,7 +142,7 @@ class SecurityController extends NativeController {
   /**
    * Creates a new API key for a user
    */
-  async createApiKey(request) {
+  async createApiKey(request: KuzzleRequest) {
     const expiresIn = request.input.args.expiresIn || -1;
     const refresh = request.getRefresh("wait_for");
     const userId = request.getString("userId");
@@ -167,7 +170,7 @@ class SecurityController extends NativeController {
   /**
    * Search in an user API keys
    */
-  async searchApiKeys(request) {
+  async searchApiKeys(request: KuzzleRequest) {
     const userId = request.getString("userId");
     let query = request.getBody({});
     const { from, size, scrollTTL } = request.getSearchParams();
@@ -201,7 +204,7 @@ class SecurityController extends NativeController {
   /**
    * Deletes an user API key
    */
-  async deleteApiKey(request) {
+  async deleteApiKey(request: KuzzleRequest) {
     const userId = request.getString("userId");
     const apiKeyId = request.getId();
     const refresh = request.getRefresh("wait_for");
@@ -232,7 +235,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  async updateRoleMapping(request) {
+  async updateRoleMapping(request: KuzzleRequest) {
     const mappings = request.getBody();
 
     return global.kuzzle.internalIndex.updateMapping("roles", mappings);
@@ -280,7 +283,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  async updateUserMapping(request) {
+  async updateUserMapping(request: KuzzleRequest) {
     const mappings = request.getBody();
 
     return global.kuzzle.internalIndex.updateMapping("users", mappings);
@@ -292,7 +295,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getRole(request) {
+  async getRole(request: KuzzleRequest) {
     const id = request.getId();
 
     const role = await this.ask("core:security:role:get", id);
@@ -306,7 +309,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async mGetRoles(request) {
+  async mGetRoles(request: KuzzleRequest) {
     const ids = request.getBodyArray("ids");
     const roles = await this.ask("core:security:role:mGet", ids);
 
@@ -319,7 +322,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  async refresh(request) {
+  async refresh(request: KuzzleRequest) {
     const collection = request.getCollection();
 
     if (!this.securityCollections.includes(collection)) {
@@ -343,7 +346,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async searchRoles(request) {
+  async searchRoles(request: KuzzleRequest) {
     const from = request.getInteger("from", 0);
     const size = this._getSearchPageSize(request);
     const lang = request.getLangParam();
@@ -380,7 +383,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createOrReplaceRole(request) {
+  async createOrReplaceRole(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const userId = request.getKuid();
@@ -410,7 +413,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createRole(request) {
+  async createRole(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const userId = request.getKuid();
@@ -435,7 +438,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteRole(request) {
+  async deleteRole(request: KuzzleRequest) {
     const id = request.getId();
 
     await this.ask("core:security:role:delete", id, {
@@ -459,7 +462,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getProfile(request) {
+  async getProfile(request: KuzzleRequest) {
     const id = request.getId();
 
     const profile = await this.ask("core:security:profile:get", id);
@@ -473,7 +476,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async mGetProfiles(request) {
+  async mGetProfiles(request: KuzzleRequest) {
     const ids = request.getBodyArray("ids");
 
     const profiles = await this.ask("core:security:profile:mGet", ids);
@@ -493,7 +496,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createOrReplaceProfile(request) {
+  async createOrReplaceProfile(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -527,7 +530,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createProfile(request) {
+  async createProfile(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -561,7 +564,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteProfile(request) {
+  async deleteProfile(request: KuzzleRequest) {
     const id = request.getId();
     const userId = request.getKuid();
     const options = {
@@ -588,7 +591,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async searchProfiles(request) {
+  async searchProfiles(request: KuzzleRequest) {
     const size = this._getSearchPageSize(request);
     const { from, scrollTTL, searchBody } = request.getSearchParams();
     const lang = request.getLangParam();
@@ -641,7 +644,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getUser(request) {
+  async getUser(request: KuzzleRequest) {
     const id = request.getId();
     const user = await this.ask("core:security:user:get", id);
 
@@ -654,7 +657,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async mGetUsers(request) {
+  async mGetUsers(request: KuzzleRequest) {
     let ids;
 
     if (
@@ -679,7 +682,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getProfileRights(request) {
+  async getProfileRights(request: KuzzleRequest) {
     const id = request.getId();
 
     const profile = await this.ask("core:security:profile:get", id);
@@ -701,7 +704,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getUserRights(request) {
+  async getUserRights(request: KuzzleRequest) {
     const id = request.getId();
 
     const user = await this.ask("core:security:user:get", id);
@@ -723,7 +726,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getUserStrategies(request) {
+  async getUserStrategies(request: KuzzleRequest) {
     const userId = request.getId();
     const checkPromises = [];
 
@@ -762,7 +765,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async searchUsers(request) {
+  async searchUsers(request: KuzzleRequest) {
     const size = this._getSearchPageSize(request);
     const { from, scrollTTL, searchBody } = request.getSearchParams();
     const lang = request.getLangParam();
@@ -790,7 +793,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async searchUsersByCredentials(request) {
+  async searchUsersByCredentials(request: KuzzleRequest) {
     const strategy = request.getString("strategy");
     const lang = request.getLangParam();
     const { from, size, searchBody } = request.getSearchParams();
@@ -824,7 +827,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteUser(request) {
+  async deleteUser(request: KuzzleRequest) {
     const id = request.getId();
     const options = { refresh: request.getRefresh("wait_for") };
 
@@ -845,7 +848,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createUser(request) {
+  async createUser(request: KuzzleRequest) {
     const content = request.getBodyObject("content");
     const profileIds = request.getBodyArray("content.profileIds");
     const humanReadableId = request.getString("kuid", "human") !== "uuid";
@@ -859,7 +862,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createRestrictedUser(request) {
+  async createRestrictedUser(request: KuzzleRequest) {
     const content = request.getBodyObject("content", {});
     const humanReadableId = request.getString("kuid", "human") !== "uuid";
 
@@ -886,7 +889,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async updateUser(request) {
+  async updateUser(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -904,7 +907,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  async upsertUser(request) {
+  async upsertUser(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBodyObject("content");
     const userId = request.getKuid();
@@ -933,7 +936,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async replaceUser(request) {
+  async replaceUser(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const profileIds = request.getBodyArray("profileIds");
@@ -962,7 +965,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async updateProfile(request) {
+  async updateProfile(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const userId = request.getKuid();
@@ -988,7 +991,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async updateRole(request) {
+  async updateRole(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const userId = request.getKuid();
@@ -1015,7 +1018,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createFirstAdmin(request) {
+  async createFirstAdmin(request: KuzzleRequest) {
     const adminExists = await global.kuzzle.ask(
       "core:security:user:admin:exist",
     );
@@ -1100,7 +1103,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async scrollUsers(request) {
+  async scrollUsers(request: KuzzleRequest) {
     const id = request.getString("scrollId");
     const ttl = request.getScrollTTLParam();
 
@@ -1117,7 +1120,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async scrollProfiles(request) {
+  async scrollProfiles(request: KuzzleRequest) {
     const id = request.getString("scrollId");
     const ttl = request.getScrollTTLParam();
 
@@ -1132,7 +1135,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createCredentials(request) {
+  async createCredentials(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const strategy = request.getString("strategy");
@@ -1160,7 +1163,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async updateCredentials(request) {
+  async updateCredentials(request: KuzzleRequest) {
     const id = request.getId();
     const body = request.getBody();
     const strategy = request.getString("strategy");
@@ -1189,7 +1192,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async hasCredentials(request) {
+  async hasCredentials(request: KuzzleRequest) {
     const id = request.getId();
     const strategy = request.getString("strategy");
 
@@ -1204,7 +1207,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async validateCredentials(request) {
+  async validateCredentials(request: KuzzleRequest) {
     const strategy = request.getString("strategy");
 
     this.assertIsStrategyRegistered(strategy);
@@ -1224,7 +1227,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteCredentials(request) {
+  async deleteCredentials(request: KuzzleRequest) {
     const id = request.getId();
     const strategy = request.getString("strategy");
 
@@ -1247,7 +1250,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getCredentials(request) {
+  async getCredentials(request: KuzzleRequest) {
     const id = request.getId();
     const strategy = request.getString("strategy");
 
@@ -1266,7 +1269,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getCredentialsById(request) {
+  async getCredentialsById(request: KuzzleRequest) {
     const id = request.getId();
     const strategy = request.getString("strategy");
 
@@ -1285,7 +1288,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getCredentialFields(request) {
+  async getCredentialFields(request: KuzzleRequest) {
     const strategy = request.getString("strategy");
 
     this.assertIsStrategyRegistered(strategy);
@@ -1311,7 +1314,7 @@ class SecurityController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<null>}
    */
-  async revokeTokens(request) {
+  async revokeTokens(request: KuzzleRequest) {
     const id = request.getId();
 
     await this.ask("core:security:token:deleteByKuid", id);
@@ -1325,7 +1328,7 @@ class SecurityController extends NativeController {
    * @returns {Promise.<Array.<string>>}
    * @private
    */
-  async _mDelete(type, request) {
+  async _mDelete(type: string, request: KuzzleRequest) {
     const ids = request.getBodyArray("ids");
     const refresh = request.getRefresh("wait_for");
 
@@ -1371,7 +1374,13 @@ class SecurityController extends NativeController {
    * @returns {Promise}
    * @private
    */
-  async _changeUser(request, id, content, userId, profileIds) {
+  async _changeUser(
+    request: KuzzleRequest,
+    id: string,
+    content: any,
+    userId: string | null,
+    profileIds: string[] | null,
+  ) {
     const updated = await this.ask(
       "core:security:user:update",
       id,
@@ -1399,10 +1408,10 @@ class SecurityController extends NativeController {
    * @private
    */
   async _persistUser(
-    request,
-    profileIds,
-    content,
-    { humanReadableId = true } = {},
+    request: KuzzleRequest,
+    profileIds: string[],
+    content: any,
+    { humanReadableId = true }: { humanReadableId?: boolean } = {},
   ) {
     const credentials = request.getBodyObject("credentials", {});
     const strategies = Object.keys(credentials);
@@ -1556,7 +1565,7 @@ class SecurityController extends NativeController {
    * @param {number} limit
    * @throws
    */
-  _getSearchPageSize(request) {
+  _getSearchPageSize(request: KuzzleRequest) {
     const size = request.getInteger(
       "size",
       global.kuzzle.config.limits.documentsFetchCount,
@@ -1568,4 +1577,5 @@ class SecurityController extends NativeController {
   }
 }
 
+export default SecurityController;
 module.exports = SecurityController;

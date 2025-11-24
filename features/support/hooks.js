@@ -31,25 +31,30 @@ async function resetSecurityDefault(sdk) {
 // Common hooks ================================================================
 
 BeforeAll({ timeout: 10 * 1000 }, async function () {
-  const world = new World({});
+  try {
+    const world = new World({});
 
-  console.log(
-    `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`,
-  );
+    console.log(
+      `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`,
+    );
 
-  await world.sdk.connect();
+    await world.sdk.connect();
 
-  console.log("Loading default permissions..");
+    console.log("Loading default permissions..");
 
-  await world.sdk.query({
-    action: "loadSecurities",
-    body: testPermissions,
-    controller: "admin",
-    onExistingUsers: "overwrite",
-    refresh: "wait_for",
-  });
+    await world.sdk.query({
+      action: "loadSecurities",
+      body: testPermissions,
+      controller: "admin",
+      onExistingUsers: "overwrite",
+      refresh: "wait_for",
+    });
 
-  world.sdk.disconnect();
+    world.sdk.disconnect();
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
 });
 
 Before({ timeout: 10 * 1000 }, async function () {

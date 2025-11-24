@@ -25,7 +25,7 @@ import { User } from "../../model/security/user";
 
 import type { Serialized } from "../../types/core/auth/formatProcessing.type";
 
-const formatProcessing = {
+export default {
   /**
    * Serializes profile and transforms it into a POJO
    *
@@ -62,5 +62,3 @@ const formatProcessing = {
     return { _id, _source: _source as Record<string, any> };
   },
 };
-
-export default formatProcessing;
