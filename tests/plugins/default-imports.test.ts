@@ -1,3 +1,5 @@
+import { expect, describe, beforeAll, afterAll, it } from "vitest";
+
 import { useSdk } from "../helpers/useSdk";
 
 describe("Default loading of plugin's imports", () => {
@@ -12,21 +14,23 @@ describe("Default loading of plugin's imports", () => {
   });
 
   it("shoud load roles and collections", async () => {
-    const role = await sdk.security.getRole('imported-role');
+    const role = await sdk.security.getRole("imported-role");
 
     expect(role.controllers).toMatchObject({
       auth: {
         actions: {
           login: true,
-        }
-      }
+        },
+      },
     });
 
-    const collection = await sdk.collection.getMapping('imported-index', 'imported-collection');
+    const collection = await sdk.collection.getMapping(
+      "imported-index",
+      "imported-collection",
+    );
 
     expect(collection.properties).toMatchObject({
-      name: { type: 'keyword' }
+      name: { type: "keyword" },
     });
   });
 });
-
