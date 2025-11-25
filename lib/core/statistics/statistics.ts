@@ -19,22 +19,50 @@
  * limitations under the License.
  */
 
-"use strict";
+import { Request, RequestContext } from "../../api/request";
+import * as kerror from "../../kerror";
+import { Logger } from "../../kuzzle/Logger";
 
-const errorApiAssert = require("../../kerror").wrap("api", "assert");
-const errorStats = require("../../kerror").wrap("services", "stats");
+const errorApiAssert = kerror.wrap("api", "assert");
+const errorStats = kerror.wrap("services", "stats");
+
+type StatsMaps = {
+  completedRequests: Map<string, number>;
+  connections: Map<string, number>;
+  failedRequests: Map<string, number>;
+  ongoingRequests: Map<string, number>;
+};
+
+type SerializableStats = {
+  completedRequests: Record<string, number>;
+  connections: Record<string, number>;
+  failedRequests: Record<string, number>;
+  ongoingRequests: Record<string, number>;
+};
+
+type StatsFrame = SerializableStats & { timestamp: number };
+type StatsResponse = { hits: StatsFrame[]; total: number };
+type LastStatsResponse = StatsFrame | (StatsMaps & { timestamp: number });
 
 /**
  * @class Statistics
  * @param {Kuzzle} kuzzle
  */
-class Statistics {
-  constructor() {
-    // uses '{' and '}' to force all statistics frames to be stored on 1 redis
-    // node
-    // (see https://redis.io/topics/cluster-spec#keys-distribution-model)
-    this.cacheKeyPrefix = "{stats/}";
+export default class Statistics {
+  // braces force all stats keys onto a single Redis slot in cluster mode
+  private cacheKeyPrefix = "{stats/}";
 
+  public enabled: boolean;
+  public ttl: number;
+  public interval: number;
+  public lastFrame: number | null;
+  public timer: NodeJS.Timeout | null;
+
+  public currentStats: StatsMaps;
+
+  private readonly logger: Logger;
+
+  constructor() {
     this.enabled = global.kuzzle.config.stats.enabled;
     this.ttl = global.kuzzle.config.stats.ttl * 1000;
     this.interval = global.kuzzle.config.stats.statsInterval * 1000;
@@ -42,10 +70,10 @@ class Statistics {
     this.timer = null;
 
     this.currentStats = {
-      completedRequests: new Map(),
-      connections: new Map(),
-      failedRequests: new Map(),
-      ongoingRequests: new Map(),
+      completedRequests: new Map<string, number>(),
+      connections: new Map<string, number>(),
+      failedRequests: new Map<string, number>(),
+      ongoingRequests: new Map<string, number>(),
     };
 
     this.logger = global.kuzzle.log.child("core:statistics");
@@ -56,25 +84,20 @@ class Statistics {
    *
    * @param {Request} request
    */
-  startRequest(request) {
+  startRequest(request?: Request): void {
     if (!this.enabled) {
       return;
     }
 
-    const protocol = request && request.context.connection.protocol;
+    const protocol = request?.context.connection.protocol;
 
     if (!protocol) {
       return;
     }
 
-    if (!this.currentStats.ongoingRequests.has(protocol)) {
-      this.currentStats.ongoingRequests.set(protocol, 1);
-    } else {
-      this.currentStats.ongoingRequests.set(
-        protocol,
-        this.currentStats.ongoingRequests.get(protocol) + 1,
-      );
-    }
+    const ongoing = this.currentStats.ongoingRequests;
+
+    ongoing.set(protocol, (ongoing.get(protocol) || 0) + 1);
   }
 
   /**
@@ -82,30 +105,25 @@ class Statistics {
    *
    * @param {Request} request
    */
-  completedRequest(request) {
+  completedRequest(request?: Request): void {
     if (!this.enabled) {
       return;
     }
 
-    const protocol = request && request.context.connection.protocol;
+    const protocol = request?.context.connection.protocol;
 
     if (!protocol) {
       return;
     }
 
-    this.currentStats.ongoingRequests.set(
-      protocol,
-      this.currentStats.ongoingRequests.get(protocol) - 1,
-    );
+    const ongoing = this.currentStats.ongoingRequests;
+    const currentOngoing = ongoing.get(protocol) || 0;
 
-    if (!this.currentStats.completedRequests.has(protocol)) {
-      this.currentStats.completedRequests.set(protocol, 1);
-    } else {
-      this.currentStats.completedRequests.set(
-        protocol,
-        this.currentStats.completedRequests.get(protocol) + 1,
-      );
-    }
+    ongoing.set(protocol, currentOngoing - 1);
+
+    const completed = this.currentStats.completedRequests;
+
+    completed.set(protocol, (completed.get(protocol) || 0) + 1);
   }
 
   /**
@@ -113,30 +131,25 @@ class Statistics {
    *
    * @param {Request} request
    */
-  failedRequest(request) {
+  failedRequest(request?: Request): void {
     if (!this.enabled) {
       return;
     }
 
-    const protocol = request && request.context.connection.protocol;
+    const protocol = request?.context.connection.protocol;
 
     if (!protocol) {
       return;
     }
 
-    this.currentStats.ongoingRequests.set(
-      protocol,
-      this.currentStats.ongoingRequests.get(protocol) - 1,
-    );
+    const ongoing = this.currentStats.ongoingRequests;
+    const currentOngoing = ongoing.get(protocol) || 0;
 
-    if (!this.currentStats.failedRequests.has(protocol)) {
-      this.currentStats.failedRequests.set(protocol, 1);
-    } else {
-      this.currentStats.failedRequests.set(
-        protocol,
-        this.currentStats.failedRequests.get(protocol) + 1,
-      );
-    }
+    ongoing.set(protocol, currentOngoing - 1);
+
+    const failed = this.currentStats.failedRequests;
+
+    failed.set(protocol, (failed.get(protocol) || 0) + 1);
   }
 
   /**
@@ -144,26 +157,20 @@ class Statistics {
    *
    * @param {RequestContext} requestContext
    */
-  newConnection(requestContext) {
+  newConnection(requestContext: RequestContext): void {
     if (!this.enabled) {
       return;
     }
 
-    if (!requestContext.connection.protocol) {
+    const protocol = requestContext.connection.protocol;
+
+    if (!protocol) {
       return;
     }
 
-    if (
-      !this.currentStats.connections.has(requestContext.connection.protocol)
-    ) {
-      this.currentStats.connections.set(requestContext.connection.protocol, 1);
-    } else {
-      this.currentStats.connections.set(
-        requestContext.connection.protocol,
-        this.currentStats.connections.get(requestContext.connection.protocol) +
-          1,
-      );
-    }
+    const connections = this.currentStats.connections;
+
+    connections.set(protocol, (connections.get(protocol) || 0) + 1);
   }
 
   /**
@@ -171,26 +178,28 @@ class Statistics {
    *
    * @param {RequestContext} requestContext
    */
-  dropConnection(requestContext) {
+  dropConnection(requestContext: RequestContext): void {
     if (!this.enabled) {
       return;
     }
 
-    if (!requestContext.connection.protocol) {
+    const protocol = requestContext.connection.protocol;
+
+    if (!protocol) {
       return;
     }
 
-    if (
-      this.currentStats.connections.get(requestContext.connection.protocol) ===
-      1
-    ) {
-      this.currentStats.connections.delete(requestContext.connection.protocol);
+    const connections = this.currentStats.connections;
+    const currentConnections = connections.get(protocol);
+
+    if (currentConnections === undefined) {
+      return;
+    }
+
+    if (currentConnections === 1) {
+      connections.delete(protocol);
     } else {
-      this.currentStats.connections.set(
-        requestContext.connection.protocol,
-        this.currentStats.connections.get(requestContext.connection.protocol) -
-          1,
-      );
+      connections.set(protocol, currentConnections - 1);
     }
   }
 
@@ -199,13 +208,13 @@ class Statistics {
    *
    * @returns {Promise}
    */
-  async getLastStats() {
+  async getLastStats(): Promise<LastStatsResponse> {
     if (!this.enabled) {
       throw errorStats.get("not_available");
     }
 
-    const frame = Object.assign(
-      { timestamp: new Date().getTime() },
+    const frame: LastStatsResponse = Object.assign(
+      { timestamp: Date.now() },
       this.currentStats,
     );
 
@@ -218,7 +227,7 @@ class Statistics {
       this.cacheKeyPrefix + this.lastFrame,
     );
 
-    return Object.assign(frame, JSON.parse(last));
+    return Object.assign(frame, JSON.parse(last)) as LastStatsResponse;
   }
 
   /**
@@ -227,26 +236,26 @@ class Statistics {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async getStats(request) {
+  async getStats(request?: Request): Promise<StatsResponse> {
     if (!this.enabled) {
       throw errorStats.get("not_available");
     }
 
-    const response = {
+    const response: StatsResponse = {
       hits: [],
-      total: null,
+      total: 0,
     };
-    const currentDate = new Date().getTime();
-    let startTime;
-    let stopTime;
+    const currentDate = Date.now();
+    let startTime: number | undefined;
+    let stopTime: number | undefined;
 
-    if (request && request.input.args && request.input.args.startTime) {
+    if (request?.input.args?.startTime) {
       startTime = isNaN(request.input.args.startTime)
         ? new Date(request.input.args.startTime).getTime()
         : request.input.args.startTime;
     }
 
-    if (request && request.input.args && request.input.args.stopTime) {
+    if (request?.input.args?.stopTime) {
       stopTime = isNaN(request.input.args.stopTime)
         ? new Date(request.input.args.stopTime).getTime()
         : request.input.args.stopTime;
@@ -276,9 +285,7 @@ class Statistics {
 
     if (!this.lastFrame) {
       if (!stopTime || stopTime >= currentDate) {
-        response.hits.push(
-          Object.assign({ timestamp: new Date(currentDate).getTime() }, stats),
-        );
+        response.hits.push(Object.assign({ timestamp: currentDate }, stats));
       }
 
       response.total = response.hits.length;
@@ -291,6 +298,8 @@ class Statistics {
       `${this.cacheKeyPrefix}*`,
     );
 
+    const regex = new RegExp(`^${this.cacheKeyPrefix}`);
+
     // Statistics keys are timestamp.
     // Ordering them guarantees stats frames to be returned in the right order
     const values = await global.kuzzle.ask(
@@ -299,9 +308,7 @@ class Statistics {
     );
 
     values.forEach((v, idx) => {
-      const regex = new RegExp(`^${this.cacheKeyPrefix}`);
-      const frameDate = new Date(Number(frames[idx].replace(regex, "")));
-      const frameDateTime = frameDate.getTime();
+      const frameDateTime = Number(frames[idx].replace(regex, ""));
 
       if (
         (!startTime || startTime <= frameDateTime) &&
@@ -309,8 +316,8 @@ class Statistics {
       ) {
         response.hits.push(
           Object.assign(JSON.parse(v), {
-            timestamp: new Date(frameDateTime).getTime(),
-          }),
+            timestamp: frameDateTime,
+          }) as StatsFrame,
         );
       }
     });
@@ -325,14 +332,14 @@ class Statistics {
    *
    * @returns {Promise<Object>}
    */
-  getAllStats() {
+  getAllStats(): Promise<StatsResponse> {
     return this.getStats();
   }
 
   /**
    * Init statistics component
    */
-  init() {
+  init(): void {
     if (!this.enabled) {
       return;
     }
@@ -345,12 +352,12 @@ class Statistics {
       }
     }, this.interval);
 
-    global.kuzzle.on("core:cache:internal:flushdb", () => {
+    global.kuzzle.on("core:cache:internal:flushdb", (): void => {
       this.lastFrame = null;
     });
   }
 
-  async writeStats() {
+  async writeStats(): Promise<void> {
     if (!this.enabled) {
       return;
     }
@@ -358,8 +365,8 @@ class Statistics {
     const stats = JSON.stringify(this.currentStats);
 
     this.lastFrame = Date.now();
-    this.currentStats.completedRequests = new Map();
-    this.currentStats.failedRequests = new Map();
+    this.currentStats.completedRequests = new Map<string, number>();
+    this.currentStats.failedRequests = new Map<string, number>();
 
     await global.kuzzle.ask(
       "core:cache:internal:store",
@@ -369,5 +376,3 @@ class Statistics {
     );
   }
 }
-
-module.exports = Statistics;

@@ -49,15 +49,15 @@ async function startKuzzle(options = {}) {
       .map((x) => x.trim().replace(/(^")|("$)/g, ""));
 
     for (const additionalPlugin of additionalPlugins) {
-      const PluginClass = require(`../plugins/available/${additionalPlugin}`);
+      const PluginClass = require(`./plugins/available/${additionalPlugin}`);
       const manifest = require(
-        `../plugins/available/${additionalPlugin}/manifest.json`,
+        `./plugins/available/${additionalPlugin}/manifest.json`,
       );
       const plugin = new PluginClass();
 
       try {
         plugin.version = require(
-          `../plugins/available/${additionalPlugin}/package.json`,
+          `./plugins/available/${additionalPlugin}/package.json`,
         ).version;
       } catch (e) {
         // ignore
@@ -67,11 +67,11 @@ async function startKuzzle(options = {}) {
     }
   }
 
-  app._support.mappings = loadJson(options.mappings);
+  app.import.mappings = loadJson(options.mappings);
 
-  app._support.fixtures = loadJson(options.fixtures);
+  app.import.fixtures = loadJson(options.fixtures);
 
-  app._support.securities = loadJson(options.securities);
+  app.import.securities = loadJson(options.securities);
 
   app.vault.key = options.vaultKey;
 

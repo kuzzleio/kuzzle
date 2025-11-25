@@ -20,7 +20,7 @@
  */
 
 import { KuzzleLogger } from "kuzzle-logger";
-import { JSONObject, KuzzleConfiguration } from "../../";
+import { JSONObject, KuzzleConfiguration, KuzzleRequest } from "../../";
 
 /**
  * The Logger class provides logging functionality for Kuzzle.
@@ -28,6 +28,7 @@ import { JSONObject, KuzzleConfiguration } from "../../";
 export class Logger extends KuzzleLogger {
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
+  private configuration: KuzzleConfiguration;
 
   constructor(kuzzleConfig: KuzzleConfiguration, namespace: string = "kuzzle") {
     const config = kuzzleConfig.server.appLogs;
@@ -54,7 +55,10 @@ export class Logger extends KuzzleLogger {
         global.kuzzle.asyncStore?.exists() &&
         global.kuzzle.asyncStore?.has("REQUEST")
       ) {
-        const request = global.kuzzle.asyncStore.get("REQUEST");
+        const request = global.kuzzle.asyncStore.get(
+          "REQUEST",
+        ) as KuzzleRequest;
+
         mergingObject.requestId = request.id;
       }
 
@@ -100,6 +104,8 @@ export class Logger extends KuzzleLogger {
         "[DEPRECATED] The plugins.kuzzle-plugin-logger configuration is deprecated, use server.logs instead.",
       );
     }
+
+    this.configuration = kuzzleConfig;
   }
 
   /**
@@ -140,5 +146,9 @@ export class Logger extends KuzzleLogger {
 
   setLevel(level: string) {
     this.level = level;
+  }
+
+  child(namespace: string): Logger {
+    return new Logger(this.configuration, namespace);
   }
 }

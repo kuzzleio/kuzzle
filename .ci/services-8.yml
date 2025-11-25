@@ -22,17 +22,9 @@ services:
       - "7512:7512"
 
   redis:
-    image: redis:7
+    image: redis:8
 
   elasticsearch:
-    image: elasticsearch:8.11.3
-    environment:
-      - xpack.security.enabled=false
-      - action.destructive_requires_name=false
-      - cluster.name=kuzzle
-      - node.name=alyx
-      - discovery.type=single-node
-      - ingest.geoip.downloader.enabled=false
-      - indices.id_field_data.enabled=true
+    image: docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
     ports:
       - '9200:9200'

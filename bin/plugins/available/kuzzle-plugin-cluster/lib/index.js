@@ -32,7 +32,7 @@ class LegacyCluster {
 
   init(config, context) {
     context.log.warn(
-      "The cluster plugin is deprecated and can be safely removed: this plugin now only prevents breaking changes by adding the previously exposed API actions, and converts the old cluster configuration to the new version"
+      "The cluster plugin is deprecated and can be safely removed: this plugin now only prevents breaking changes by adding the previously exposed API actions, and converts the old cluster configuration to the new version",
     );
 
     const clusterConfig = global.kuzzle.config.cluster;
@@ -48,7 +48,7 @@ class LegacyCluster {
         if (config.bindings.pub) {
           const { ipv6, port } = resolveBinding(
             config.bindings.pub,
-            clusterConfig.ports.sync
+            clusterConfig.ports.sync,
           );
 
           if (ipv6) {
@@ -61,7 +61,7 @@ class LegacyCluster {
         if (config.bindings.router) {
           const { ipv6, port } = resolveBinding(
             config.bindings.router,
-            clusterConfig.ports.command
+            clusterConfig.ports.command,
           );
 
           if (family !== "ipv6" && ipv6) {
@@ -142,7 +142,7 @@ class LegacyCluster {
     };
 
     result.current = convertToOldStatus(
-      status.nodes.find((node) => node.id === global.kuzzle.id)
+      status.nodes.find((node) => node.id === global.kuzzle.id),
     );
 
     result.pool = status.nodes

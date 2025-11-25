@@ -1,25 +1,48 @@
 import { omit } from "lodash";
 import should from "should/as-function";
-
 import { PassThrough } from "stream";
 import YAML from "yaml";
-import functionalFixtures from "../../features/fixtures/imports.json";
-import {
-  Backend,
-  EventGenericDocumentBeforeUpdate,
-  HttpStream,
-  KDocument,
-  KDocumentContent,
-  KuzzleRequest,
-  Mutex,
-} from "../../index";
-import { HttpMessage } from "../../lib/types/HttpMessage";
-import { EventGenericDocumentInjectMetadata } from "../../lib/types/events/EventGenericDocument";
-import { FunctionalTestsController } from "./functional-tests-controller";
+
+import functionalFixtures from "./features/fixtures/imports.json";
+import { Backend, Controller, HttpStream, KuzzleRequest, Mutex } from "./index";
+
+class FunctionalTestsController extends Controller {
+  constructor(app: Backend) {
+    super(app);
+
+    this.definition = {
+      actions: {
+        byeWorld: {
+          handler: this.byeWorld,
+        },
+        helloWorld: {
+          handler: this.helloWorld,
+        },
+        postHelloWorld: {
+          handler: this.postHelloWorld,
+          http: [{ path: "functional-tests/hello-world", verb: "post" }],
+        },
+      },
+    };
+  }
+
+  async helloWorld(request: KuzzleRequest) {
+    return { greeting: `Hello, ${request.input.args.name}` };
+  }
+
+  async byeWorld() {
+    // ensure the "app" property is usable
+    return this.app.sdk.document.create("test", "test", { message: "bye" });
+  }
+
+  async postHelloWorld(request: KuzzleRequest) {
+    return { greeting: `Hello, ${request.getBodyString("name")}` };
+  }
+}
 
 const app = new Backend("functional-tests-app");
 
-async function loadAdditionalPlugins() {
+async function loadAdditionalPlugins(): Promise<void> {
   const additionalPluginsIndex = process.argv.indexOf("--enable-plugins");
   const additionalPlugins =
     additionalPluginsIndex > -1
@@ -27,19 +50,19 @@ async function loadAdditionalPlugins() {
       : [];
 
   for (const name of additionalPlugins) {
-    const path = `../../plugins/available/${name}`;
+    const path = `./bin/plugins/available/${name}`;
     const { default: Plugin } = await import(path);
 
-    let manifest = null;
+    let manifest: { name?: string } | null = null;
 
     try {
       manifest = require(`${path}/manifest.json`);
-    } catch (e) {
+    } catch {
       // do nothing
     }
 
     const options =
-      manifest !== null ? { manifest, name: manifest.name } : null;
+      manifest !== null ? { manifest, name: manifest.name ?? name } : undefined;
 
     app.plugin.use(new Plugin(), options);
   }
@@ -56,29 +79,26 @@ if (!process.env.CI) {
   });
 }
 
-app.pipe.register<EventGenericDocumentInjectMetadata>(
-  "generic:document:injectMetadata",
-  async (event) => {
-    const metadata = {
-      ...event.metadata,
-    };
+app.pipe.register("generic:document:injectMetadata", async (event: any) => {
+  const metadata = {
+    ...event.metadata,
+  };
 
-    if (
-      event.request.getBody().addCustomMetadata ||
-      (event.request.getController() === "document" &&
-        event.request.getAction() === "upsert" &&
-        event.request.getBodyObject("changes", {}).addCustomMetadata)
-    ) {
-      metadata.customMetadata = "customized";
-    }
+  if (
+    event.request.getBody().addCustomMetadata ||
+    (event.request.getController() === "document" &&
+      event.request.getAction() === "upsert" &&
+      event.request.getBodyObject("changes", {}).addCustomMetadata)
+  ) {
+    metadata.customMetadata = "customized";
+  }
 
-    return {
-      request: event.request,
-      metadata: metadata,
-      defaultMetadata: event.defaultMetadata,
-    };
-  },
-);
+  return {
+    defaultMetadata: event.defaultMetadata,
+    metadata: metadata,
+    request: event.request,
+  };
+});
 
 // Controller class usage
 app.controller.use(new FunctionalTestsController(app));
@@ -88,7 +108,7 @@ app.controller.register("pipes", {
   actions: {
     deactivateAll: {
       handler: async () => {
-        const names: any = await app.sdk.ms.keys("app:pipes:*");
+        const names = await app.sdk.ms.keys("app:pipes:*");
 
         for (const name of names) {
           const pipe = JSON.parse(await app.sdk.ms.get(name));
@@ -144,86 +164,8 @@ app.controller.register("customSubscription", {
   },
 });
 
-/* Actual code for tests start here */
-
-/**
- * This function is never call but simply ensure the correctness of types definition
- */
-function ensureEventDefinitionTypes() {
-  type EventFoobar = {
-    name: "event:foobar";
-
-    args: [number, string];
-  };
-
-  app.pipe.register<EventFoobar>(
-    "event:foobar",
-    async (age: number, name: string) => {
-      return age;
-    },
-  );
-
-  app.hook.register<EventFoobar>(
-    "event:foobar",
-    (age: number, name: string) => {},
-  );
-
-  app.cluster.on<EventFoobar>(
-    "event:foobar",
-    async (age: number, name: string) => {},
-  );
-
-  app.cluster.broadcast<EventFoobar>("event:foobar", 30);
-
-  const promise: Promise<number> = app.trigger<EventFoobar>(
-    "event:foobar",
-    30,
-    "Tuan",
-  );
-
-  interface PersonContent extends KDocumentContent {
-    name: string;
-  }
-
-  app.pipe.register<EventGenericDocumentBeforeUpdate<PersonContent>>(
-    "generic:document:beforeUpdate",
-    async (documents: KDocument<PersonContent>[], request: KuzzleRequest) => {
-      return documents;
-    },
-  );
-}
-
-/**
- * This function is never call but simply ensure the correctness of types definition
- */
-async function ensureQueryDefinitionTypes() {
-  type Req = {
-    action: "create";
-    body: {
-      name: string;
-    };
-    controller: "engine";
-    engineId: string;
-  };
-
-  type Res = {
-    age: number;
-  };
-
-  const response = await app.sdk.query<Req, Res>({
-    action: "create",
-    body: {
-      name: "test",
-    },
-    controller: "engine",
-    engineId: "test",
-  });
-
-  const age = response.result.age;
-}
-
 // Pipe registration
-app.pipe.register("server:afterNow", async (request) => {
+app.pipe.register("server:afterNow", async (request: KuzzleRequest) => {
   const pipe = JSON.parse(await app.sdk.ms.get("app:pipes:server:afterNow"));
 
   if (pipe && pipe.state !== "off") {
@@ -235,7 +177,7 @@ app.pipe.register("server:afterNow", async (request) => {
 
 app.pipe.register(
   "protocol:http:beforeParsingPayload",
-  async ({ message, payload }: { message: HttpMessage; payload: Buffer }) => {
+  async ({ message, payload }: { message: any; payload: Buffer }) => {
     if (message.headers["content-type"] !== "application/x-yaml") {
       return { payload };
     }
@@ -247,7 +189,7 @@ app.pipe.register(
 );
 
 // Hook registration and embedded SDK realtime publish
-app.hook.register("custom:event", async (name) => {
+app.hook.register("custom:event", async (name: string) => {
   await app.sdk.realtime.publish("app-functional-test", "hooks", {
     event: "custom:event",
     name,
@@ -255,7 +197,7 @@ app.hook.register("custom:event", async (name) => {
 });
 
 let syncedHello = "World";
-let dynamicPipeId;
+let dynamicPipeId: any;
 
 app.openApi.definition.components = {};
 app.openApi.definition.components.LogisticObjects = {
@@ -364,13 +306,6 @@ app.hook.register(
 
 app.controller.register("tests", {
   actions: {
-    clearOutage: {
-      handler: async () => {
-        global.kuzzle.funnel.overloaded = false;
-        global.kuzzle.state = 2;
-      },
-      http: [{ path: "/tests/clear-outage", verb: "get" }],
-    },
     customError: {
       handler: async () => {
         throw app.errors.get("app", "api", "custom", "Tbilisi");
@@ -401,7 +336,7 @@ app.controller.register("tests", {
       handler: async () => {
         dynamicPipeId = app.pipe.register(
           "server:afterNow",
-          async (request) => {
+          async (request: KuzzleRequest) => {
             request.result.name = "Ugo";
 
             return request;
@@ -431,24 +366,6 @@ app.controller.register("tests", {
         });
       },
       http: [{ path: "/tests/body/sendeaders", verb: "get" }],
-    },
-
-    simulateOutage: {
-      handler: async (request: KuzzleRequest) => {
-        const outageType = request.getString("type");
-
-        switch (outageType) {
-          case "overload":
-            global.kuzzle.funnel.overloaded = true;
-            break;
-          case "nodeNotStarted":
-            global.kuzzle.state = 1;
-            break;
-          default:
-            break;
-        }
-      },
-      http: [{ path: "/tests/simulate-outage", verb: "get" }],
     },
 
     // Access storage client

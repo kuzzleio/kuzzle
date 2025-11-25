@@ -1,6 +1,6 @@
 x-kuzzle-config: &kuzzle-config
   image: kuzzleio/kuzzle-runner:22
-  command: sh -c 'chmod 755 /var/app/docker/scripts/run-dev.sh && /var/app/docker/scripts/run-dev.sh'
+  command: npm run dev
   volumes:
     - ".:/var/app"
   cap_add:

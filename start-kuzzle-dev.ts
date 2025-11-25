@@ -1,5 +1,5 @@
 // Starts a Kuzzle Backend application tailored for development
-import { Backend } from "../../index";
+import { Backend } from "./index";
 
 const app = new Backend("development-app");
 

@@ -19,94 +19,68 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "assert";
+import { AsyncLocalStorage } from "async_hooks";
 
-const assert = require("assert");
-const { AsyncLocalStorage } = require("async_hooks");
+type Store = Map<string, unknown>;
+type RunCallback = () => void;
 
-class AsyncStore {
+interface AsyncStoreInterface {
+  run(callback: RunCallback): void;
+  exists(): boolean;
+  set<T>(key: string, value: T): void;
+  get<T>(key: string): T | undefined;
+  has(key: string): boolean;
+}
+
+export default class AsyncStore implements AsyncStoreInterface {
+  public _asyncLocalStorage: AsyncLocalStorage<Store>;
+
   constructor() {
-    this._asyncLocalStorage = new AsyncLocalStorage();
+    this._asyncLocalStorage = new AsyncLocalStorage<Store>();
   }
 
   /**
    * Run the provided method with an async store context
-   *
-   * @param {Function} callback
    */
-  run(callback) {
-    this._asyncLocalStorage.run(new Map(), callback);
+  run(callback: RunCallback): void {
+    this._asyncLocalStorage.run(new Map<string, unknown>(), callback);
   }
 
   /**
    * Returns true if an async store exists
    * for the current asynchronous context
    */
-  exists() {
+  exists(): boolean {
     return Boolean(this._asyncLocalStorage.getStore());
   }
 
   /**
    * Sets a value in the current async store
-   *
-   * @param {String} key
-   * @param {any} value
    */
-  set(key, value) {
-    return this._getStore().set(key, value);
+  set<T>(key: string, value: T): void {
+    this._getStore().set(key, value);
   }
 
   /**
    * Gets a value from the current async store
-   *
-   * @param {String} key
-   *
-   * @returns {any} value
    */
-  get(key) {
-    return this._getStore().get(key);
+  get<T>(key: string): T | undefined {
+    return this._getStore().get(key) as T | undefined;
   }
 
   /**
    * Checks if a value exists in the current async store
-   *
-   * @param {String} key
-   *
-   * @returns {Boolean}
    */
-  has(key) {
+  has(key: string): boolean {
     return this._getStore().has(key);
   }
 
-  _getStore() {
+  private _getStore(): Store {
     const store = this._asyncLocalStorage.getStore();
 
     assert(Boolean(store), "Associated AsyncStore is not set");
 
     return store;
   }
-}
-
-class AsyncStoreStub {
-  constructor() {}
-
-  run(callback) {
-    callback();
-  }
-
-  exists() {
-    return false;
-  }
-
-  set() {}
-
-  get() {}
-
-  has() {}
-}
-
-if (process.version >= "v12.18.1") {
-  module.exports = AsyncStore;
-} else {
-  module.exports = AsyncStoreStub;
 }

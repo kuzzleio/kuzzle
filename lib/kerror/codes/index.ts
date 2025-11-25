@@ -19,32 +19,60 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "assert";
 
-const assert = require("assert");
+import * as errors from "../errors";
+import { ErrorDefinition } from "../../types/errors/ErrorDefinition";
+import { has, isPlainObject } from "../../util/safeObject";
+import api from "./2-api.json";
+import cluster from "./8-cluster.json";
+import core from "./0-core.json";
+import network from "./3-network.json";
+import plugin from "./4-plugin.json";
+import protocol from "./6-protocol.json";
+import security from "./7-security.json";
+import services from "./1-services.json";
+import validation from "./5-validation.json";
 
-const errors = require("../errors");
-const { has, isPlainObject } = require("../../util/safeObject");
-
-// codes
-const domains = {
-  api: require("./2-api"),
-  cluster: require("./8-cluster.json"),
-  core: require("./0-core"),
-  network: require("./3-network"),
-  plugin: require("./4-plugin"),
-  protocol: require("./6-protocol"),
-  security: require("./7-security"),
-  services: require("./1-services"),
-  validation: require("./5-validation"),
+type ErrorEntry = Omit<ErrorDefinition, "description"> & {
+  description?: string;
+  deprecated?: string;
 };
 
-/** Check the format of the error codes files
- *  @param {object} - error config file domain
- */
+type SubDomain = {
+  code: number;
+  errors: Record<string, ErrorEntry>;
+};
 
-function checkErrors(subdomain, domain, options) {
-  const codes = new Set();
+type Domain = {
+  code: number;
+  subDomains: Record<string, SubDomain>;
+};
+
+export type Domains = Record<string, Domain>;
+
+type CheckOptions = {
+  plugin?: boolean;
+};
+
+const domains: Domains = {
+  api: api as Domain,
+  cluster: cluster as Domain,
+  core: core as Domain,
+  network: network as Domain,
+  plugin: plugin as Domain,
+  protocol: protocol as Domain,
+  security: security as Domain,
+  services: services as Domain,
+  validation: validation as Domain,
+};
+
+function checkErrors(
+  subdomain: SubDomain,
+  domain: Domain,
+  options: CheckOptions,
+): void {
+  const codes = new Set<number>();
 
   for (const [name, error] of Object.entries(subdomain.errors)) {
     assert(
@@ -85,10 +113,9 @@ function checkErrors(subdomain, domain, options) {
     );
     assert(
       has(errors, error.class),
-      `Error configuration file : Field 'class' must target a known KuzzleError object (domain: ${domain.code}, subdomain: ${subdomain.code}, error: ${name}), '${name.class}' does not exist.`,
+      `Error configuration file : Field 'class' must target a known KuzzleError object (domain: ${domain.code}, subdomain: ${subdomain.code}, error: ${name}), '${error.class}' does not exist.`,
     );
 
-    // plugin errors aren't required to have descriptions
     if (!options.plugin) {
       assert(
         typeof error.description === "string" && error.description.length > 0,
@@ -105,13 +132,12 @@ function checkErrors(subdomain, domain, options) {
   }
 }
 
-function checkSubdomains(domain, options) {
-  const subdomainCodes = new Set();
+function checkSubdomains(domain: Domain, options: CheckOptions): void {
+  const subdomainCodes = new Set<number>();
 
   for (const subdomainName of Object.keys(domain.subDomains)) {
     const subdomain = domain.subDomains[subdomainName];
 
-    // Subdomain code for plugins is not required and is automatically set to 0
     if (!options.plugin) {
       assert(
         has(subdomain, "code"),
@@ -134,7 +160,6 @@ function checkSubdomains(domain, options) {
       `Error configuration file : code ${subdomain.code} for subdomain '${subdomainName}' is not unique (domain: ${domain.code}).`,
     );
 
-    // We don't allow duplicates, except for defaulted plugin subdomain codes
     if (!options.plugin || subdomain.code > 0) {
       subdomainCodes.add(subdomain.code);
     }
@@ -152,8 +177,11 @@ function checkSubdomains(domain, options) {
   }
 }
 
-function checkDomains(errorCodesFiles, options = { plugin: false }) {
-  const domainCodes = new Set();
+function checkDomains(
+  errorCodesFiles: Domains,
+  options: CheckOptions = { plugin: false },
+): void {
+  const domainCodes = new Set<number>();
 
   for (const domainName of Object.keys(errorCodesFiles)) {
     const domain = errorCodesFiles[domainName];
@@ -190,8 +218,10 @@ function checkDomains(errorCodesFiles, options = { plugin: false }) {
   }
 }
 
-function loadPluginsErrors(pluginManifest, pluginCode) {
-  // @todo this should be in its own, independant domain
+function loadPluginsErrors(
+  pluginManifest: { errors: Record<string, ErrorEntry>; name: string },
+  pluginCode: number,
+): void {
   domains.plugin.subDomains[pluginManifest.name] = {
     code: pluginCode,
     errors: pluginManifest.errors,
@@ -201,8 +231,4 @@ function loadPluginsErrors(pluginManifest, pluginCode) {
 
 checkDomains(domains);
 
-module.exports = {
-  checkDomains,
-  domains,
-  loadPluginsErrors,
-};
+export { checkDomains, domains, loadPluginsErrors };

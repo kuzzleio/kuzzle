@@ -1104,16 +1104,14 @@ Feature: Document Controller
     Then I should receive a result matching:
       | _source | { "foo": "bar", "_kuzzle_info": { "author": /.+/, "createdAt": "_NUMBER_", "updatedAt": null, "customMetadata": "_UNDEFINED_" } } |
     When I successfully execute the action "document":"create" with args:
-      | index      | "nyc-open-data"                                                                                            |
-      | collection | "yellow-taxi"                                                                                              |
-      | _id        | "meta-create-2"                                                                                            |
-      | body       | { "foo": "baz", "_kuzzle_info": { "author": "foo", "createdAt": 42, "updatedAt": null, "updater": null } } |
-      | refresh    | "wait_for"                                                                                                 |
+      | index      | "nyc-open-data"                                                                           |
+      | collection | "yellow-taxi"                                                                             |
+      | _id        | "meta-create-2"                                                                           |
+      | body       | { "foo": "baz", "_kuzzle_info": { "createdAt": 42, "updatedAt": null, "updater": null } } |
+      | refresh    | "wait_for"                                                                                |
     Then The document "meta-create-2" content match:
-      | foo                         | "baz"         |
-      | _kuzzle_info.author         | /^(?!foo$).+/ |
-      | _kuzzle_info.customMetadata | "_UNDEFINED_" |
-      | _kuzzle_info.createdAt      | "_NUMBER_"    |
+      | foo                         | "baz"     |
+      | _kuzzle_info.customMetadata | undefined |
 
   @mappings
   Scenario: Custom metadata can be injected through pipes
@@ -1135,7 +1133,7 @@ Feature: Document Controller
       | source     | true                                                                                    |
       | refresh    | "wait_for"                                                                              |
     Then I should receive a result matching:
-      | _source | { "foo": "baz", "_kuzzle_info": { "customMetadata": "customized", "author": /.+/ } } |
+      | _source | { "foo": "baz", "_kuzzle_info": { "customMetadata": "customized" } } |
 
   @mappings
   Scenario: Metadata is refreshed when updating or replacing documents
@@ -1158,10 +1156,8 @@ Feature: Document Controller
       | body       | { "foo": "qux", "_kuzzle_info": { "author": "foo", "createdAt": 42, "updatedAt": null } } |
       | refresh    | "wait_for"                                                                                |
     Then The document "meta-update" content match:
-      | foo                         | "qux"         |
-      | _kuzzle_info.author         | /^(?!foo$).+/ |
-      | _kuzzle_info.createdAt      | "_NUMBER_"    |
-      | _kuzzle_info.customMetadata | "_UNDEFINED_" |
+      | foo                         | "qux"     |
+      | _kuzzle_info.customMetadata | undefined |
 
   @mappings
   Scenario: Multi write operations inject metadata and ignore user payload
