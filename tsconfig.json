@@ -22,7 +22,8 @@
     "skipDefaultLibCheck": true,
     "types": [
       "node",
-      "vitest"
+      "vitest",
+      "@cucumber/cucumber"
     ]
   },
   "rootDir": "lib/",
@@ -31,6 +32,8 @@
     "lib/**/*.js",
     "lib/**/*.json",
     "index.ts",
+    "features/**/*.ts",
+    "features-legacy/**/*.ts",
     "bin/check-node-version.js",
     "bin/copy-protobuf.js",
     "bin/start-kuzzle-server.js",

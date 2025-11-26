@@ -1,8 +1,6 @@
-"use strict";
-
-const _ = require("lodash");
-const should = require("should");
-const { Then } = require("cucumber");
+import _ from "lodash";
+import should from "should";
+import { Then } from "@cucumber/cucumber";
 
 Then(
   /I (try to )?create a (strict )?profile "(.*?)" with the following policies:/,
@@ -13,7 +11,7 @@ Then(
     this.props.error = null;
 
     for (const [roleId, restrictedTo] of Object.entries(data)) {
-      policies.push({ roleId, restrictedTo });
+      policies.push({ restrictedTo, roleId });
     }
 
     try {
@@ -24,10 +22,10 @@ Then(
       } else {
         // @todo replace sdk.query once createProfile handles the new "strict" option
         this.props.result = await this.sdk.query({
-          controller: "security",
-          action: "createProfile",
           _id: profileId,
+          action: "createProfile",
           body: { policies },
+          controller: "security",
           strict: true,
         });
       }
@@ -78,6 +76,8 @@ Then(
 
     const result = await this.sdk.security.searchRoles(controller);
 
+    result.hits.sort((a, b) => a._id.localeCompare(b._id));
+
     this.props.result = result;
   },
 );
@@ -87,6 +87,7 @@ Then(
   async function (count, dataTable) {
     const data = this.parseObject(dataTable);
     const roleIds = [];
+
     for (const role of Object.values(data.ids)) {
       roleIds.push(role);
     }
@@ -124,8 +125,8 @@ Then(
       content,
       credentials: {
         local: {
-          username: userId,
           password: "password",
+          username: userId,
         },
       },
     };
@@ -221,7 +222,9 @@ Then(
 Then(
   "I am able to mGet users with the following ids:",
   async function (dataTable) {
-    const userIds = _.flatten(dataTable.rawTable).map(JSON.parse);
+    const userIds = _.flatten(dataTable.rawTable).map((obj: any) =>
+      JSON.parse(obj),
+    );
     this.props.result = await this.sdk.security.mGetUsers(userIds);
   },
 );

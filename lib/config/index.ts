@@ -19,28 +19,28 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "assert";
 
-const assert = require("assert");
+import rc from "rc";
+import defaultConfig from "./default.config";
+import packageJson from "../../package.json";
+import { wrap } from "../kerror";
+import { isPlainObject } from "../util/safeObject";
+import bytes from "../util/bytes";
 
-const rc = require("rc");
-const defaultConfig = require("./default.config");
-const packageJson = require("../../package.json");
-const kerror = require("../kerror").wrap("core", "configuration");
-const { isPlainObject } = require("../util/safeObject");
-const bytes = require("../util/bytes");
+const wrapped = wrap("core", "configuration");
 
 /**
  * Loads, interprets and checks configuration files
  * @returns {object}
  */
-function loadConfig() {
-  let config;
+export function loadConfig() {
+  let config: any;
 
   try {
-    config = rc("kuzzle", defaultConfig.default);
+    config = rc("kuzzle", defaultConfig);
   } catch (e) {
-    throw kerror.get("cannot_parse", e.message);
+    throw wrapped.get("cannot_parse", e.message);
   }
 
   config = unstringify(config);
@@ -94,7 +94,7 @@ function unstringify(cfg) {
           try {
             cfg[k] = JSON.parse(cfg[k].replace(/^\*json:/, ""));
           } catch (e) {
-            throw kerror.get(
+            throw wrapped.get(
               "cannot_parse",
               `the key "${k}" does not contain a valid stringified JSON (${cfg[k]})`,
             );
@@ -139,12 +139,12 @@ function checkLimitsConfig(cfg) {
   ];
 
   if (!isPlainObject(cfg.limits)) {
-    throw kerror.get("invalid_type", "limits", "object");
+    throw wrapped.get("invalid_type", "limits", "object");
   }
 
   for (const opt of limits) {
     if (typeof cfg.limits[opt] !== "number") {
-      throw kerror.get("invalid_type", `limits.${opt}`, "number");
+      throw wrapped.get("invalid_type", `limits.${opt}`, "number");
     }
 
     if (
@@ -152,12 +152,12 @@ function checkLimitsConfig(cfg) {
       (cfg.limits[opt] === 0 && !canBeZero.includes(opt))
     ) {
       const allowed = `>= ${canBeZero.includes(opt) ? "0" : "1"}`;
-      throw kerror.get("out_of_range", `limits.${opt}`, allowed);
+      throw wrapped.get("out_of_range", `limits.${opt}`, allowed);
     }
   }
 
   if (cfg.limits.concurrentRequests >= cfg.limits.requestsBufferSize) {
-    throw kerror.get(
+    throw wrapped.get(
       "out_of_range",
       "limits.concurrentRequests",
       'lower than "limits.requestsBufferSize"',
@@ -168,7 +168,7 @@ function checkLimitsConfig(cfg) {
     cfg.limits.requestsBufferWarningThreshold < cfg.limits.concurrentRequests ||
     cfg.limits.requestsBufferWarningThreshold > cfg.limits.requestsBufferSize
   ) {
-    throw kerror.get(
+    throw wrapped.get(
       "out_of_range",
       "limits.requestsBufferWarningThreshold",
       "[limits.concurrentRequests, limits.requestsBufferSize]",
@@ -329,11 +329,14 @@ function preprocessHttpOptions(config) {
 }
 
 function preprocessProtocolsOptions(config) {
-  const protocols = config.server.protocols;
+  const protocols: any = config.server.protocols;
 
   config.internal.notifiableProtocols = [];
 
-  for (const [protocolName, protocolConfig] of Object.entries(protocols)) {
+  for (const [protocolName, protocolConfig] of Object.entries(protocols) as [
+    string,
+    any,
+  ][]) {
     if (protocolConfig.enabled && protocolConfig.realtimeNotifications) {
       config.internal.notifiableProtocols.push(protocolName);
     }
@@ -347,5 +350,3 @@ function preprocessRedisOptions(redisConfig) {
     redisConfig.options = { db: redisConfig.database, ...redisConfig.options };
   }
 }
-
-module.exports = { loadConfig };

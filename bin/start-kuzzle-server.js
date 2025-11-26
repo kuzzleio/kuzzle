@@ -86,13 +86,13 @@ async function startKuzzle(options = {}) {
   });
 
   if (admins.length === 0) {
-    console.log(
+    app.log(
       "[!] [WARNING] There is no administrator user yet: everyone has administrator rights.",
     );
-    console.log(
+    app.log(
       "[ℹ]  You can use the CLI or the admin console to create the first administrator user.",
     );
-    console.log(
+    app.log(
       "    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/",
     );
   }

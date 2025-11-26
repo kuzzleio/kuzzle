@@ -1,15 +1,13 @@
-"use strict";
-
-const should = require("should");
-const _ = require("lodash");
-const { Given } = require("cucumber");
+import should from "should";
+import _ from "lodash";
+import { Given } from "@cucumber/cucumber";
 
 Given(
   "I'm logged in Kuzzle as user {string} with password {string}",
   async function (username, password) {
     this.props.result = await this.sdk.auth.login("local", {
-      username,
       password,
+      username,
     });
   },
 );

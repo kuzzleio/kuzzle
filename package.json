@@ -11,12 +11,12 @@
     "preinstall": "node ./bin/check-node-version.js",
     "prepublishOnly": "npm run build",
     "prettier": "prettier ./lib ./test ./features --write",
-    "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http",
+    "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http --config cucumber.config.cjs",
     "test:functional:legacy:http": "cucumber-js --format progress-bar --profile http ./features-legacy",
     "test:functional:legacy:mqtt": "cucumber-js --format progress-bar --profile mqtt ./features-legacy",
     "test:functional:legacy:websocket": "cucumber-js --format progress-bar --profile websocket ./features-legacy",
     "test:functional:vitest": "vitest run --fileParallelism false --coverage --bail=1",
-    "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket",
+    "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
     "test:lint": "eslint ./lib ./test ./bin ./features",
     "test:unit": "npx mocha --exit",
     "test": "npm run build && npm run --silent test:lint && npm run test:functional"
@@ -73,12 +73,14 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
+    "@cucumber/cucumber": "^12.2.0",
     "@types/bluebird": "3.5.42",
     "@types/cookie": "1.0.0",
     "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.17.21",
     "@types/mocha": "10.0.10",
     "@types/passport": "1.0.17",
+    "@vitest/coverage-v8": "4.0.13",
     "async": "3.2.6",
     "chokidar": "4.0.3",
     "cucumber": "6.0.7",
@@ -87,7 +89,6 @@
     "mocha": "11.7.5",
     "mock-require": "3.0.3",
     "mqtt": "5.14.1",
-    "nyc": "17.1.0",
     "request": "2.88.2",
     "request-promise": "4.2.6",
     "rewire": "5.0.0",
@@ -99,9 +100,8 @@
     "ts-node": "10.9.2",
     "tsx": "4.20.6",
     "typescript": "5.4.5",
-    "yaml": "2.8.1",
-    "@vitest/coverage-v8": "4.0.13",
-    "vitest": "4.0.13"
+    "vitest": "4.0.13",
+    "yaml": "2.8.1"
   },
   "engines": {
     "node": ">=18.0.0 <23.0.0"

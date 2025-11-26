@@ -24,13 +24,6 @@ docker compose -f $YML_FILE down -v
 echo "Installing dependencies..."
 docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
 
-if [ "$REBUILD" == "true" ];
-then
-  docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm rebuild
-fi
-
-docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm run build
-
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
 trap 'docker compose -f $YML_FILE logs' err

@@ -28,7 +28,6 @@ import { JSONObject, KuzzleConfiguration, KuzzleRequest } from "../../";
 export class Logger extends KuzzleLogger {
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
-  private configuration: KuzzleConfiguration;
 
   constructor(kuzzleConfig: KuzzleConfiguration, namespace: string = "kuzzle") {
     const config = kuzzleConfig.server.appLogs;
@@ -104,8 +103,6 @@ export class Logger extends KuzzleLogger {
         "[DEPRECATED] The plugins.kuzzle-plugin-logger configuration is deprecated, use server.logs instead.",
       );
     }
-
-    this.configuration = kuzzleConfig;
   }
 
   /**
@@ -149,6 +146,7 @@ export class Logger extends KuzzleLogger {
   }
 
   child(namespace: string): Logger {
-    return new Logger(this.configuration, namespace);
+    // TODO, this is fishy we will probably need to properly remove the "as Logger"
+    return super.child(namespace) as Logger;
   }
 }

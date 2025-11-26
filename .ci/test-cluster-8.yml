@@ -64,8 +64,10 @@ services:
 
   redis:
     image: redis:8
-
+  
   elasticsearch:
     image: docker.io/bitnamilegacy/elasticsearch:8.17.1-debian-12-r6
+    environment:
+      - indices.id_field_data.enabled=true
     ports:
       - '9200:9200'

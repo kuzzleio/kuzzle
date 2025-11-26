@@ -1,12 +1,13 @@
-"use strict";
+import assert from "assert";
 
-const assert = require("assert");
+import requestPromise from "request-promise";
+import _ from "lodash";
+import { Then } from "@cucumber/cucumber";
+import Bluebird from "bluebird";
 
-const requestPromise = require("request-promise");
-const _ = require("lodash");
+// TODO should is deprecated it needs to be removed
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const should = require("should");
-const { Then } = require("cucumber");
-const Bluebird = require("bluebird");
 
 Then(
   /I (successfully )?execute the action "(.*?)":"(.*?)" with args:$/,
@@ -14,7 +15,7 @@ Then(
     const args = this.parseObject(dataTable);
 
     try {
-      const response = await this.sdk.query({ controller, action, ...args });
+      const response = await this.sdk.query({ action, controller, ...args });
 
       this.props.result = response.result;
       this.props.response = response;
@@ -34,7 +35,7 @@ Then(
     const body = JSON.parse(bodyRaw);
 
     try {
-      const response = await this.sdk.query({ controller, action, body });
+      const response = await this.sdk.query({ action, body, controller });
 
       this.props.result = response.result;
       this.props.response = response;
@@ -52,7 +53,7 @@ Then(
   /I (successfully )?execute the action "(.*?)":"(.*?)"$/,
   async function (expectSuccess, controller, action) {
     try {
-      const response = await this.sdk.query({ controller, action });
+      const response = await this.sdk.query({ action, controller });
 
       this.props.result = response.result;
       this.props.response = response;
@@ -71,7 +72,7 @@ Then(
   function (name, objects, dataTable) {
     const expected = objects
       ? this.parseObjectArray(dataTable)
-      : _.flatten(dataTable.rawTable).map(JSON.parse);
+      : _.flatten(dataTable.rawTable).map((obj: any) => JSON.parse(obj));
     const result = name ? this.props.result[name] : this.props.result;
 
     should(result.length).be.eql(
@@ -242,15 +243,15 @@ Then(
     const body = this.parseObject(dataTable);
 
     const options = {
-      url: `http://${this._host}:${this._port}/_query`,
-      json: true,
-      resolveWithFullResponse: true,
-      method,
       body: {
         jwt: this.sdk.jwt,
         ...body,
       },
       headers: body.headers,
+      json: true,
+      method,
+      resolveWithFullResponse: true,
+      url: `http://${this._host}:${this._port}/_query`,
     };
 
     body.headers = undefined;

@@ -1,8 +1,6 @@
-"use strict";
-
-const should = require("should");
-const { Given, Then, When } = require("cucumber");
-const ws = require("ws");
+import should from "should";
+import { Given, Then, When } from "@cucumber/cucumber";
+import ws from "ws";
 
 Given("I open a new local websocket connection", function () {
   return new Promise((resolve) => {
@@ -12,7 +10,7 @@ Given("I open a new local websocket connection", function () {
       this.props.response = this.props.result;
     });
     this.props.client.on("open", () => {
-      return resolve();
+      return resolve(true);
     });
   });
 });
@@ -29,7 +27,7 @@ Then("I wait to receive a websocket response from Kuzzle", function () {
     const interval = setInterval(() => {
       if (this.props.result) {
         clearInterval(interval);
-        return resolve();
+        return resolve(true);
       }
     }, 200);
   });

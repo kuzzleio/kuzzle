@@ -1,6 +1,4 @@
-"use strict";
-
-const { Given } = require("cucumber");
+import { Given } from "@cucumber/cucumber";
 
 Given(
   "I {string} the {string} pipe on {string} with the following changes:",
@@ -9,11 +7,11 @@ Given(
       kind === "plugin" ? "functional-test-plugin/pipes" : "pipes";
     const payload = this.parseObject(dataTable);
     const request = {
-      controller,
       action: "manage",
-      state,
-      event,
       body: payload,
+      controller,
+      event,
+      state,
     };
 
     await this.sdk.query(request);
@@ -27,10 +25,10 @@ Given(
       kind === "plugin" ? "functional-test-plugin/pipes" : "pipes";
 
     await this.sdk.query({
-      controller,
       action: "manage",
-      state,
+      controller,
       event,
+      state,
     });
   },
 );

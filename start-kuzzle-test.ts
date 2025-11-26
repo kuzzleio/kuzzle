@@ -1,13 +1,22 @@
 import { omit } from "lodash";
 import should from "should/as-function";
+
 import { PassThrough } from "stream";
 import YAML from "yaml";
-
 import functionalFixtures from "./features/fixtures/imports.json";
-import { Backend, Controller, HttpStream, KuzzleRequest, Mutex } from "./index";
+import {
+  Controller,
+  Request,
+  Backend,
+  HttpStream,
+  KuzzleRequest,
+  Mutex,
+} from "./index";
+import { HttpMessage } from "./lib/types/HttpMessage";
+import { EventGenericDocumentInjectMetadata } from "./lib/types/events/EventGenericDocument";
 
 class FunctionalTestsController extends Controller {
-  constructor(app: Backend) {
+  constructor(app) {
     super(app);
 
     this.definition = {
@@ -26,7 +35,7 @@ class FunctionalTestsController extends Controller {
     };
   }
 
-  async helloWorld(request: KuzzleRequest) {
+  async helloWorld(request: Request) {
     return { greeting: `Hello, ${request.input.args.name}` };
   }
 
@@ -35,14 +44,14 @@ class FunctionalTestsController extends Controller {
     return this.app.sdk.document.create("test", "test", { message: "bye" });
   }
 
-  async postHelloWorld(request: KuzzleRequest) {
+  async postHelloWorld(request: Request) {
     return { greeting: `Hello, ${request.getBodyString("name")}` };
   }
 }
 
 const app = new Backend("functional-tests-app");
 
-async function loadAdditionalPlugins(): Promise<void> {
+async function loadAdditionalPlugins() {
   const additionalPluginsIndex = process.argv.indexOf("--enable-plugins");
   const additionalPlugins =
     additionalPluginsIndex > -1
@@ -53,16 +62,16 @@ async function loadAdditionalPlugins(): Promise<void> {
     const path = `./bin/plugins/available/${name}`;
     const { default: Plugin } = await import(path);
 
-    let manifest: { name?: string } | null = null;
+    let manifest = null;
 
     try {
       manifest = require(`${path}/manifest.json`);
-    } catch {
+    } catch (e) {
       // do nothing
     }
 
     const options =
-      manifest !== null ? { manifest, name: manifest.name ?? name } : undefined;
+      manifest !== null ? { manifest, name: manifest.name } : null;
 
     app.plugin.use(new Plugin(), options);
   }
@@ -79,26 +88,29 @@ if (!process.env.CI) {
   });
 }
 
-app.pipe.register("generic:document:injectMetadata", async (event: any) => {
-  const metadata = {
-    ...event.metadata,
-  };
+app.pipe.register<EventGenericDocumentInjectMetadata>(
+  "generic:document:injectMetadata",
+  async (event) => {
+    const metadata = {
+      ...event.metadata,
+    };
 
-  if (
-    event.request.getBody().addCustomMetadata ||
-    (event.request.getController() === "document" &&
-      event.request.getAction() === "upsert" &&
-      event.request.getBodyObject("changes", {}).addCustomMetadata)
-  ) {
-    metadata.customMetadata = "customized";
-  }
+    if (
+      event.request.getBody().addCustomMetadata ||
+      (event.request.getController() === "document" &&
+        event.request.getAction() === "upsert" &&
+        event.request.getBodyObject("changes", {}).addCustomMetadata)
+    ) {
+      metadata.customMetadata = "customized";
+    }
 
-  return {
-    defaultMetadata: event.defaultMetadata,
-    metadata: metadata,
-    request: event.request,
-  };
-});
+    return {
+      defaultMetadata: event.defaultMetadata,
+      metadata: metadata,
+      request: event.request,
+    };
+  },
+);
 
 // Controller class usage
 app.controller.use(new FunctionalTestsController(app));
@@ -108,7 +120,7 @@ app.controller.register("pipes", {
   actions: {
     deactivateAll: {
       handler: async () => {
-        const names = await app.sdk.ms.keys("app:pipes:*");
+        const names: any = await app.sdk.ms.keys("app:pipes:*");
 
         for (const name of names) {
           const pipe = JSON.parse(await app.sdk.ms.get(name));
@@ -150,7 +162,7 @@ app.controller.register("customSubscription", {
           {},
         );
 
-        return { roomId, channel };
+        return { channel, roomId };
       },
     },
     unsubscribe: {
@@ -165,7 +177,7 @@ app.controller.register("customSubscription", {
 });
 
 // Pipe registration
-app.pipe.register("server:afterNow", async (request: KuzzleRequest) => {
+app.pipe.register("server:afterNow", async (request) => {
   const pipe = JSON.parse(await app.sdk.ms.get("app:pipes:server:afterNow"));
 
   if (pipe && pipe.state !== "off") {
@@ -177,7 +189,7 @@ app.pipe.register("server:afterNow", async (request: KuzzleRequest) => {
 
 app.pipe.register(
   "protocol:http:beforeParsingPayload",
-  async ({ message, payload }: { message: any; payload: Buffer }) => {
+  async ({ message, payload }: { message: HttpMessage; payload: Buffer }) => {
     if (message.headers["content-type"] !== "application/x-yaml") {
       return { payload };
     }
@@ -189,7 +201,7 @@ app.pipe.register(
 );
 
 // Hook registration and embedded SDK realtime publish
-app.hook.register("custom:event", async (name: string) => {
+app.hook.register("custom:event", async (name) => {
   await app.sdk.realtime.publish("app-functional-test", "hooks", {
     event: "custom:event",
     name,
@@ -197,7 +209,7 @@ app.hook.register("custom:event", async (name: string) => {
 });
 
 let syncedHello = "World";
-let dynamicPipeId: any;
+let dynamicPipeId;
 
 app.openApi.definition.components = {};
 app.openApi.definition.components.LogisticObjects = {
@@ -262,8 +274,8 @@ app.controller.register("stream-test", {
       },
       http: [
         {
-          verb: "get",
           path: "/stream-test/download-chunked",
+          verb: "get",
         },
       ],
     },
@@ -278,8 +290,8 @@ app.controller.register("stream-test", {
       },
       http: [
         {
-          verb: "get",
           path: "/stream-test/download-fixed",
+          verb: "get",
         },
       ],
     },
@@ -306,6 +318,13 @@ app.hook.register(
 
 app.controller.register("tests", {
   actions: {
+    clearOutage: {
+      handler: async () => {
+        global.kuzzle.funnel.overloaded = false;
+        global.kuzzle.state = 2;
+      },
+      http: [{ path: "/tests/clear-outage", verb: "get" }],
+    },
     customError: {
       handler: async () => {
         throw app.errors.get("app", "api", "custom", "Tbilisi");
@@ -336,7 +355,7 @@ app.controller.register("tests", {
       handler: async () => {
         dynamicPipeId = app.pipe.register(
           "server:afterNow",
-          async (request: KuzzleRequest) => {
+          async (request) => {
             request.result.name = "Ugo";
 
             return request;
@@ -366,6 +385,24 @@ app.controller.register("tests", {
         });
       },
       http: [{ path: "/tests/body/sendeaders", verb: "get" }],
+    },
+
+    simulateOutage: {
+      handler: async (request: KuzzleRequest) => {
+        const outageType = request.getString("type");
+
+        switch (outageType) {
+          case "overload":
+            global.kuzzle.funnel.overloaded = true;
+            break;
+          case "nodeNotStarted":
+            global.kuzzle.state = 1;
+            break;
+          default:
+            break;
+        }
+      },
+      http: [{ path: "/tests/simulate-outage", verb: "get" }],
     },
 
     // Access storage client

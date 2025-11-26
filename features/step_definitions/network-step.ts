@@ -1,10 +1,8 @@
-"use strict";
+import http from "http";
+import should from "should";
+import requestPromise from "request-promise";
 
-const http = require("http");
-const should = require("should");
-const requestPromise = require("request-promise");
-
-const { Then, When } = require("cucumber");
+import { Then, When } from "@cucumber/cucumber";
 
 function normalizeHeaders(headers = {}) {
   const normalized = {};
@@ -22,19 +20,19 @@ async function sendRawRequest(world, { method, path, port, headers = {} }) {
 
     const req = http.request(
       {
-        hostname: world.host,
-        port,
-        path,
-        method,
         headers,
+        hostname: world.host,
+        method,
+        path,
+        port,
       },
       (res) => {
         res.on("data", (chunk) => chunks.push(chunk));
         res.on("end", () => {
           resolve({
-            statusCode: res.statusCode,
-            headers: normalizeHeaders(res.headers),
             body: Buffer.concat(chunks).toString(),
+            headers: normalizeHeaders(res.headers),
+            statusCode: res.statusCode,
           });
         });
       },
@@ -45,7 +43,10 @@ async function sendRawRequest(world, { method, path, port, headers = {} }) {
   });
 }
 
-async function sendHttpRequest(world, { method, url, headers = {}, body }) {
+async function sendHttpRequest(
+  world,
+  { method, url, headers = {}, body }: any,
+) {
   const requestHeaders = { ...headers };
 
   if (
@@ -57,18 +58,18 @@ async function sendHttpRequest(world, { method, url, headers = {}, body }) {
   }
 
   const response = await requestPromise({
-    method,
-    uri: url,
     body,
     headers: requestHeaders,
+    method,
     resolveWithFullResponse: true,
     simple: false,
+    uri: url,
   });
 
   return {
-    statusCode: response.statusCode,
-    headers: normalizeHeaders(response.headers),
     body: response.body,
+    headers: normalizeHeaders(response.headers),
+    statusCode: response.statusCode,
   };
 }
 
@@ -89,10 +90,10 @@ When(
     const headers = this.parseObject(dataTable);
 
     this.props.httpResponse = await sendRawRequest(this, {
+      headers,
       method,
       path,
       port,
-      headers,
     });
   },
 );
@@ -110,10 +111,10 @@ When(
     const headers = this.parseObject(dataTable);
 
     this.props.httpResponse = await sendHttpRequest(this, {
+      body,
+      headers,
       method,
       url,
-      headers,
-      body,
     });
   },
 );

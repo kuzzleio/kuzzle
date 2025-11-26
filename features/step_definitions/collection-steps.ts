@@ -1,7 +1,5 @@
-"use strict";
-
-const { Then, Given } = require("cucumber"),
-  should = require("should");
+import { Then, Given } from "@cucumber/cucumber";
+import should from "should";
 
 Given("a collection {string}:{string}", async function (index, collection) {
   this.props.result = await this.sdk.collection.create(index, collection);
@@ -40,11 +38,11 @@ Then(
       // @todo remove the condition when collection.update is available in sdk
       if (action === "update") {
         this.props.result = await this.sdk.query({
-          controller: "collection",
           action: "create",
-          index,
-          collection,
           body: { mappings, settings },
+          collection,
+          controller: "collection",
+          index,
         });
       } else {
         this.props.result = await this.sdk.collection[action](

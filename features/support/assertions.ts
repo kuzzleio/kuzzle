@@ -1,11 +1,12 @@
-"use strict";
+import _ from "lodash";
 
-const _ = require("lodash");
+// TODO should is deprecated it needs to be removed
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const should = require("should");
 
 should.Assertion.add(
   "matchObject",
-  function (expected) {
+  function (expected: any) {
     this.params = { operator: "match object" };
 
     for (const [keyPath, expectedValue] of Object.entries(expected)) {

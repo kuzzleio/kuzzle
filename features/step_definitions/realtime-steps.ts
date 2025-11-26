@@ -1,7 +1,8 @@
-"use strict";
+import { Then } from "@cucumber/cucumber";
 
+// TODO should is deprecated it needs to be removed
+// eslint-disable-next-line @typescript-eslint/no-var-requires
 const should = require("should");
-const { Then } = require("cucumber");
 
 Then(
   "I subscribe to {string}:{string} notifications",
@@ -14,7 +15,7 @@ Then(
       index,
       collection,
       {},
-      (notification) => {
+      (notification: any) => {
         this.props.subscriptions[`${index}:${collection}`].notifications.push(
           notification,
         );
@@ -22,8 +23,8 @@ Then(
     );
 
     this.props.subscriptions[`${index}:${collection}`] = {
-      unsubscribe: () => this.sdk.realtime.unsubscribe(roomId),
       notifications: [],
+      unsubscribe: () => this.sdk.realtime.unsubscribe(roomId),
     };
   },
 );
@@ -33,12 +34,12 @@ Then("I unsubscribe from the current room via the plugin", async function () {
   const connectionId = this.props.result.connectionId;
 
   const response = await this.sdk.query({
-    controller: "functional-test-plugin/accessors",
     action: "unregisterSubscription",
     body: {
-      roomId,
       connectionId,
+      roomId,
     },
+    controller: "functional-test-plugin/accessors",
   });
 
   this.props.result = response.result;

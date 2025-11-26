@@ -1216,7 +1216,7 @@ Feature: Document Controller
     When I search documents with the following query:
       """
       {
-        "exists": { "field": "field.path[\\"BETA\\"]" }
+        "exists": { "field": "field.path[\"BETA\"]" }
       }
       """
     And with the following search options:
@@ -1228,7 +1228,7 @@ Feature: Document Controller
     When I search documents with the following query:
       """
       {
-        "exists": { "field": "field.path[\\"GAMMA\\"]" }
+        "exists": { "field": "field.path[\"GAMMA\"]" }
       }
       """
     And with the following search options:

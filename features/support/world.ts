@@ -1,22 +1,31 @@
-"use strict";
+import {
+  IWorldOptions,
+  setDefaultTimeout,
+  setWorldConstructor,
+  World,
+} from "@cucumber/cucumber";
+import { Kuzzle, WebSocket, Http } from "kuzzle-sdk";
 
-const { setDefaultTimeout, setWorldConstructor } = require("cucumber");
-const { Kuzzle, WebSocket, Http } = require("kuzzle-sdk");
+import { loadConfig } from "../../lib/config";
 
-const config = require("../../lib/config");
+import "./assertions";
 
-require("./assertions");
+export default class KuzzleWorld extends World {
+  private _sdk: Kuzzle;
+  private _host: string;
+  private _port: string;
+  private _protocol: string;
+  public readonly kuzzleConfig: ReturnType<typeof loadConfig>;
+  public readonly props: Record<string, any>;
 
-class KuzzleWorld {
-  constructor(attach, parameters) {
-    this.attach = attach.attach;
-    this.parameters = parameters;
+  constructor(options: IWorldOptions) {
+    super(options);
 
     this._host = process.env.KUZZLE_HOST || "localhost";
     this._port = process.env.KUZZLE_PORT || "7512";
     this._protocol = process.env.KUZZLE_PROTOCOL || "websocket";
 
-    this.kuzzleConfig = config.loadConfig();
+    this.kuzzleConfig = loadConfig();
 
     // Intermediate steps should store values inside this object
     this.props = {};
@@ -85,15 +94,15 @@ class KuzzleWorld {
    *
    * @param options.port Used to connect the SDK to a specific node of the cluster
    */
-  getSDK({ port } = {}) {
-    let protocol;
+  getSDK({ port } = { port: this.port }) {
+    let protocol: any;
 
     switch (this.protocol) {
       case "http":
-        protocol = new Http(this.host, { port: port || this.port });
+        protocol = new Http(this.host, { port: Number(port) });
         break;
       case "websocket":
-        protocol = new WebSocket(this.host, { port: port || this.port });
+        protocol = new WebSocket(this.host, { port: Number(port) });
         break;
       default:
         throw new Error(`Unknown protocol "${this.protocol}".`);
@@ -164,5 +173,3 @@ class KuzzleWorld {
 
 setWorldConstructor(KuzzleWorld);
 setDefaultTimeout(30000);
-
-module.exports = KuzzleWorld;

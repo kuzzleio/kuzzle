@@ -1,7 +1,5 @@
-"use strict";
-
-const { When, Then } = require("cucumber"),
-  should = require("should");
+import { When, Then } from "@cucumber/cucumber";
+import should from "should";
 
 const actionName = (action) => Object.keys(action)[0];
 const actionBody = (action) => action[actionName(action)];
@@ -44,12 +42,12 @@ Then(
     const query = JSON.parse(rawQuery);
 
     const request = {
-      controller: "bulk",
       action: "deleteByQuery",
-      index: this.props.index,
-      collection: this.props.collection,
-      refresh: "wait_for",
       body: { query },
+      collection: this.props.collection,
+      controller: "bulk",
+      index: this.props.index,
+      refresh: "wait_for",
     };
 
     const { result } = await this.sdk.query(request);

@@ -1,12 +1,12 @@
-"use strict";
+import { After, Before, BeforeAll } from "@cucumber/cucumber";
 
-const { After, Before, BeforeAll } = require("cucumber"),
-  testMappings = require("../fixtures/mappings"),
-  testPermissions = require("../fixtures/permissions"),
-  testFixtures = require("../fixtures/fixtures"),
-  World = require("./world");
+import { EmbeddedSDK } from "../../lib/core/shared/sdk/embeddedSdk";
+import testMappings from "../fixtures/mappings";
+import testPermissions from "../fixtures/permissions";
+import testFixtures from "../fixtures/fixtures";
+import World from "./world";
 
-async function resetSecurityDefault(sdk) {
+async function resetSecurityDefault(sdk: EmbeddedSDK) {
   await sdk.query({
     action: "resetSecurity",
     controller: "admin",
@@ -32,7 +32,7 @@ async function resetSecurityDefault(sdk) {
 
 BeforeAll({ timeout: 10 * 1000 }, async function () {
   try {
-    const world = new World({});
+    const world = new World({} as any);
 
     console.log(
       `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`,

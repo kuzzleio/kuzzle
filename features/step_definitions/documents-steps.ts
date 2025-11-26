@@ -1,9 +1,7 @@
-"use strict";
-
-const http = require("http"),
-  _ = require("lodash"),
-  should = require("should"),
-  { Given, Then } = require("cucumber");
+import http from "http";
+import _ from "lodash";
+import should from "should";
+import { Given, Then } from "@cucumber/cucumber";
 
 Given(
   /I can( not)? create the following document:/,
@@ -63,11 +61,11 @@ Then(
     const documents = this.parseObjectArray(dataTable);
 
     const response = await this.sdk.query({
-      controller: "document",
       action,
-      index: this.props.index,
-      collection: this.props.collection,
       body: { documents },
+      collection: this.props.collection,
+      controller: "document",
+      index: this.props.index,
     });
 
     this.props.result = response.result;
@@ -147,9 +145,11 @@ Then(
   /I "(.*?)" the following document ids( with verb "(.*?)")?:/,
   async function (action, verb, dataTable) {
     const options = verb
-      ? { verb, refresh: "wait_for" }
+      ? { refresh: "wait_for", verb }
       : { refresh: "wait_for" };
-    const ids = _.flatten(dataTable.rawTable).map(JSON.parse);
+    const ids = _.flatten(dataTable.rawTable).map((obj: any) =>
+      JSON.parse(obj),
+    );
 
     this.props.result = await this.sdk.document[action](
       this.props.index,
@@ -208,9 +208,9 @@ Then("I execute the multisearch query:", async function (dataTable) {
   // in the SDK's SearchResults class
   const response = await this.sdk.query({
     action: "search",
-    targets,
     body: this.props.searchBody,
     controller: "document",
+    targets,
     ...this.props.searchOptions,
   });
 
@@ -235,13 +235,13 @@ Then("I scroll to the next page", async function () {
 });
 
 Then('I execute the search query with verb "GET"', async function () {
-  const request = {
+  const request: any = {
     action: "search",
+    collection: this.props.collection,
     controller: "document",
     index: this.props.index,
-    collection: this.props.collection,
   };
-  const options = {};
+  const options: any = {};
 
   if (this.kuzzleConfig.PROTOCOL === "http") {
     request.searchBody = JSON.stringify(this.props.searchBody);
@@ -268,12 +268,12 @@ Then(
       const req = http.request(
         {
           hostname: this.host,
-          port: this.port,
-          path: `/${index}/${collection}/_export?format=${format}&size=1`,
           method: "GET",
+          path: `/${index}/${collection}/_export?format=${format}&size=1`,
+          port: this.port,
         },
         (response) => {
-          let data = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -316,12 +316,12 @@ Then(
       const req = http.request(
         {
           hostname: this.host,
-          port: this.port,
-          path,
           method: "GET",
+          path,
+          port: this.port,
         },
         (response) => {
-          let data = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
@@ -346,18 +346,18 @@ Then(
   "I export the collection {string}:{string} in the format {string} with POST:",
   async function (index, collection, format, dataTable) {
     const options = this.parseObject(dataTable);
-    let path = `/${index}/${collection}/_export?format=${format}&size=1`;
+    const path = `/${index}/${collection}/_export?format=${format}&size=1`;
 
     this.props.result = await new Promise((resolve, reject) => {
       const req = http.request(
         {
           hostname: this.host,
-          port: this.port,
-          path,
           method: "POST",
+          path,
+          port: this.port,
         },
         (response) => {
-          let data = [];
+          const data = [];
 
           response.on("data", (chunk) => {
             data.push(chunk.toString());
