@@ -23,7 +23,7 @@ jobs:
         run: |
           echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
           echo "es-matrix={\"es-version\": [\"$ELASTICSEARCH_MAINTENANCE_VERSION\", \"$ELASTICSEARCH_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
-          echo "test-set={\"test-set\":[\"jest\", \"http\", \"websocket\", \"legacy:mqtt\", \"legacy:http\", \"legacy:websocket\"]}" >> $GITHUB_OUTPUT
+          echo "test-set={\"test-set\":[\"http\", \"websocket\", \"mqtt\", \"legacy:mqtt\", \"legacy:http\", \"legacy:websocket\"]}" >> $GITHUB_OUTPUT
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       es-matrix: ${{ steps.set-matrix.outputs.es-matrix }}
@@ -89,6 +89,7 @@ jobs:
     strategy:
       matrix:
         node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        test-suits: ['mocha', 'vitest']
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -105,8 +106,11 @@ jobs:
 
       - name: Unit test using Node ${{ matrix.node-version }}
         uses: ./.github/actions/unit-tests
+        with:
+          suit: ${{ matrix.test-suits }}
         env:
           NODE_VERSION: ${{ matrix.node-version }}
+          
 
   build-and-run-kuzzle:
     needs: [lint, prepare-matrix]

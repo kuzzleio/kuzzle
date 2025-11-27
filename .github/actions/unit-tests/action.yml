@@ -1,6 +1,11 @@
 name: Unit Tests
 description: Run Node.js unit tests
 
+inputs:
+  suit:
+    description: Test suite to run
+    required: true
+
 runs:
   using: "composite"
   steps:
@@ -10,5 +15,5 @@ runs:
     - run: npm run build
       shell: bash
 
-    - run: npm run test:unit
+    - run: npm run test:unit:${{ inputs.suit }}
       shell: bash

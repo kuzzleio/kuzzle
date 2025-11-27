@@ -95,3 +95,57 @@ Feature: Bulk Controller
       | "document-2" | { "name": "Tirion Fordring" }                               |
       | "document-3" | { "name": "Tirion Fordring" }                               |
       | "document-4" | { "name": "Sylvanas Windrunner", "title": "The liberator" } |
+
+
+  Scenario: Bulk mWrite replaces and creates documents
+    Given a collection "garden":"fruits"
+    And I "create" the following multiple documents:
+      | _id             | body                                                      |
+      | "test-document" | { "value": "strawberry", "field": { "path": "forever" } } |
+    When I successfully execute the action "bulk":"mWrite" with args:
+      | index      | "garden"                                                                                                                                              |
+      | collection | "fruits"                                                                                                                                              |
+      | refresh    | "wait_for"                                                                                                                                            |
+      | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" } } }, { "_id": "new-document", "body": { "value": "raspberry", "field": { "path": "sometimes" } } } ] } |
+    Then I should receive a "successes" array of objects matching:
+      | _id             | _source                                                         |
+      | "test-document" | { "value": "blueberry", "field": { "path": "never" } }          |
+      | "new-document"  | { "value": "raspberry", "field": { "path": "sometimes" } }      |
+    And I should receive a empty "errors" array
+    When I "mGet" the following document ids:
+      | "test-document" |
+    Then I should receive a "successes" array of objects matching:
+      | _id             | _source                                                |
+      | "test-document" | { "value": "blueberry", "field": { "path": "never" } } |
+
+  Scenario: Bulk mWrite does not inject kuzzle metadata
+    Given a collection "garden":"fruits"
+    And I "create" the following multiple documents:
+      | _id             | body                                                      |
+      | "test-document" | { "value": "strawberry", "field": { "path": "forever" } } |
+    When I successfully execute the action "bulk":"mWrite" with args:
+      | index      | "garden"                                                                                                              |
+      | collection | "fruits"                                                                                                              |
+      | refresh    | "wait_for"                                                                                                            |
+      | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" } } } ] } |
+    And I "mGet" the following document ids:
+      | "test-document" |
+    Then I should receive a "successes" array of objects matching:
+      | _id             | _source                                                                           |
+      | "test-document" | { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": "_UNDEFINED_" } |
+
+  Scenario: Bulk mWrite allows custom kuzzle metadata
+    Given a collection "garden":"fruits"
+    And I "create" the following multiple documents:
+      | _id             | body                                                      |
+      | "test-document" | { "value": "strawberry", "field": { "path": "forever" } } |
+    When I successfully execute the action "bulk":"mWrite" with args:
+      | index      | "garden"                                                                                                                    |
+      | collection | "fruits"                                                                                                                    |
+      | refresh    | "wait_for"                                                                                                                  |
+      | body       | { "documents": [ { "_id": "test-document", "body": { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": { "author": "custom-author" } } } ] } |
+    And I "mGet" the following document ids:
+      | "test-document" |
+    Then I should receive a "successes" array of objects matching:
+      | _id             | _source                                                                                                       |
+      | "test-document" | { "value": "blueberry", "field": { "path": "never" }, "_kuzzle_info": { "author": "custom-author" } } |

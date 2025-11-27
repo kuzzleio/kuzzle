@@ -20,7 +20,7 @@
  */
 
 import { KuzzleLogger } from "kuzzle-logger";
-import { JSONObject, KuzzleConfiguration } from "../../";
+import { JSONObject, KuzzleConfiguration, KuzzleRequest } from "../../";
 
 /**
  * The Logger class provides logging functionality for Kuzzle.
@@ -54,7 +54,10 @@ export class Logger extends KuzzleLogger {
         global.kuzzle.asyncStore?.exists() &&
         global.kuzzle.asyncStore?.has("REQUEST")
       ) {
-        const request = global.kuzzle.asyncStore.get("REQUEST");
+        const request = global.kuzzle.asyncStore.get(
+          "REQUEST",
+        ) as KuzzleRequest;
+
         mergingObject.requestId = request.id;
       }
 
@@ -140,5 +143,10 @@ export class Logger extends KuzzleLogger {
 
   setLevel(level: string) {
     this.level = level;
+  }
+
+  child(namespace: string): Logger {
+    // TODO, this is fishy we will probably need to properly remove the "as Logger"
+    return super.child(namespace) as Logger;
   }
 }

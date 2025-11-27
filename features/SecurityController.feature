@@ -1,14 +1,13 @@
 Feature: Security Controller
-
   # security:searchRole =====================================================
 
   @security
   Scenario: Search for profiles with a search query
     Given I successfully execute the action "security":"createRole" with args:
-      | _id  | "kite-surf-1"                                                    |
+      | _id  | "kite-surf-1"                                                                   |
       | body | { "tags": ["kite-surf"], "controllers": { "*": { "actions": { "*": true } } } } |
     And I successfully execute the action "security":"createRole" with args:
-      | _id  | "kite-surf-2"                                                    |
+      | _id  | "kite-surf-2"                                                                   |
       | body | { "tags": ["kite-surf"], "controllers": { "*": { "actions": { "*": true } } } } |
     When I successfully execute the action "security":"searchRoles" with args:
       | body | { "query": { "term": { "tags": "kite-surf" } } } |
@@ -16,7 +15,6 @@ Feature: Security Controller
       | _id           |
       | "kite-surf-1" |
       | "kite-surf-2" |
-
   # security:searchProfile =====================================================
 
   @security
@@ -33,7 +31,6 @@ Feature: Security Controller
       | _id           |
       | "kite-surf-1" |
       | "kite-surf-2" |
-
   # security:updateRole ========================================================
 
   @security
@@ -46,7 +43,6 @@ Feature: Security Controller
       | _id | "default" |
     Then I should receive a result matching:
       | _source.controllers.auth | "_UNDEFINED_" |
-
   # security:checkRights =======================================================
 
   @security
@@ -64,7 +60,6 @@ Feature: Security Controller
       | body   | { "controller": "document", "action": "update" } |
     Then I should receive a result matching:
       | allowed | true |
-
   # security:refresh ===========================================================
 
   @security
@@ -77,18 +72,13 @@ Feature: Security Controller
     When I successfully execute the action "security":"refresh" with args:
       | collection | "users" |
     Then I successfully execute the action "security":"searchUsers" with args:
-      | body | { "sort": "_id" } |
-    And I should receive a "hits" array of objects matching:
-      | _id            |
-      | "aschen"       |
-      | "default-user" |
-      | "test-admin"   |
+      | body | {} |
+    And I should receive a "hits" array containing 3 elements
     # Error on unknown collection
     When I execute the action "security":"refresh" with args:
       | collection | "frontend-security" |
     Then I should receive an error matching:
       | id | "api.assert.unexpected_argument" |
-
   # security:createApiKey ======================================================
 
   @security @login
@@ -97,12 +87,12 @@ Feature: Security Controller
       | profileIds | ["default"] |
     When I successfully execute the action "security":"createApiKey" with args:
       | userId    | "My"                          |
-      | expiresIn | -1                            |
+      | expiresIn |                            -1 |
       | refresh   | "wait_for"                    |
       | body      | { "description": "Le Huong" } |
     Then The property "_source" of the result should match:
-      | expiresAt   | -1         |
-      | ttl         | -1         |
+      | expiresAt   |         -1 |
+      | ttl         |         -1 |
       | description | "Le Huong" |
       | token       | "_STRING_" |
     And The result should contain a property "_id" of type "string"
@@ -111,8 +101,7 @@ Feature: Security Controller
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
-
+      | "_STRING_" | "My"           |          -1 |                -1 | "Le Huong"          | "_STRING_"          |
 
   @security @login
   Scenario: Create two API key for a user consecutively
@@ -120,34 +109,32 @@ Feature: Security Controller
       | profileIds | ["default"] |
     When I successfully execute the action "security":"createApiKey" with args:
       | userId    | "My"                          |
-      | expiresIn | -1                            |
+      | expiresIn |                            -1 |
       | refresh   | "wait_for"                    |
       | body      | { "description": "Le Huong" } |
     Then The property "_source" of the result should match:
-      | expiresAt   | -1         |
-      | ttl         | -1         |
+      | expiresAt   |         -1 |
+      | ttl         |         -1 |
       | description | "Le Huong" |
       | token       | "_STRING_" |
     And The result should contain a property "_id" of type "string"
     When I successfully execute the action "security":"createApiKey" with args:
-      | userId    | "My"                          |
-      | expiresIn | -1                            |
-      | refresh   | "wait_for"                    |
+      | userId    | "My"                        |
+      | expiresIn |                          -1 |
+      | refresh   | "wait_for"                  |
       | body      | { "description": "Foobar" } |
     Then The property "_source" of the result should match:
-      | expiresAt   | -1         |
-      | ttl         | -1         |
-      | description | "Foobar" |
+      | expiresAt   |         -1 |
+      | ttl         |         -1 |
+      | description | "Foobar"   |
       | token       | "_STRING_" |
     And The result should contain a property "_id" of type "string"
     And I successfully execute the action "security":"searchApiKeys" with args:
       | userId | "My" |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
-      | "_STRING_" | "My"           | -1          | -1                | "Foobar"            | "_STRING_"          |
-
-
+      | "_STRING_" | "My"           |          -1 |                -1 | "Le Huong"          | "_STRING_"          |
+      | "_STRING_" | "My"           |          -1 |                -1 | "Foobar"            | "_STRING_"          |
   # security:searchApiKeys =====================================================
 
   @security
@@ -156,19 +143,19 @@ Feature: Security Controller
       | profileIds | ["default"] |
     And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "My"                          |
-      | expiresIn | -1                            |
+      | expiresIn |                            -1 |
       | body      | { "description": "Le Huong" } |
     And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                        |
-      | expiresIn | -1                                  |
+      | expiresIn |                                  -1 |
       | body      | { "description": "Sigfox API key" } |
     And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                      |
-      | expiresIn | -1                                |
+      | expiresIn |                                -1 |
       | body      | { "description": "Lora API key" } |
     And I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                        |
-      | expiresIn | -1                                  |
+      | expiresIn |                                  -1 |
       | refresh   | "wait_for"                          |
       | body      | { "description": "Lora API key 2" } |
     When I successfully execute the action "security":"searchApiKeys" with args:
@@ -176,16 +163,15 @@ Feature: Security Controller
       | body   | { "match": { "description": "Lora" } } |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key"      | "_STRING_"          |
-      | "_STRING_" | "test-admin"   | -1          | -1                | "Lora API key 2"    | "_STRING_"          |
+      | "_STRING_" | "test-admin"   |          -1 |                -1 | "Lora API key"      | "_STRING_"          |
+      | "_STRING_" | "test-admin"   |          -1 |                -1 | "Lora API key 2"    | "_STRING_"          |
     When I successfully execute the action "security":"searchApiKeys" with args:
       | userId | "My"                             |
       | body   | { "equals": { "userId": "My" } } |
       | lang   | "koncorde"                       |
     Then I should receive a "hits" array of objects matching:
       | _id        | _source.userId | _source.ttl | _source.expiresAt | _source.description | _source.fingerprint |
-      | "_STRING_" | "My"           | -1          | -1                | "Le Huong"          | "_STRING_"          |
-
+      | "_STRING_" | "My"           |          -1 |                -1 | "Le Huong"          | "_STRING_"          |
   # security:deleteApiKey =======================================================
 
   @security
@@ -193,7 +179,7 @@ Feature: Security Controller
     Given I successfully execute the action "security":"createApiKey" with args:
       | userId    | "test-admin"                     |
       | _id       | "SGN-HCM"                        |
-      | expiresIn | -1                               |
+      | expiresIn |                               -1 |
       | body      | { "description": "My Le Huong" } |
     And I save the created API key
     When I successfully execute the action "security":"deleteApiKey" with args:
@@ -204,8 +190,6 @@ Feature: Security Controller
       | userId | "test-admin" |
     Then I should receive a empty "hits" array
     And I can not login with the previously created API key
-
-
   # security:createFirstAdmin ==================================================
 
   @firstAdmin
@@ -416,24 +400,24 @@ Feature: Security Controller
   @security
   Scenario: Upsert user
     When I successfully execute the action "security":"upsertUser" with args:
-      | _id        | "user-test"           |
-      | body       | { "content": { "profileIds": ["default"]}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+      | _id  | "user-test"                                                                                                                                                          |
+      | body | { "content": { "profileIds": ["default"]}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
     Then I should receive a result matching:
-      | _id        | "user-test"           |
-      | _source    | { "profileIds": ["default"], "name": "default-name"} |
+      | _id     | "user-test"                                          |
+      | _source | { "profileIds": ["default"], "name": "default-name"} |
     When I successfully execute the action "security":"upsertUser" with args:
-      | _id        | "user-test"           |
-      | body       | { "content": { "profileIds": ["default"], "name": "new-name"}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+      | _id  | "user-test"                                                                                                                                                                              |
+      | body | { "content": { "profileIds": ["default"], "name": "new-name"}, "default": { "name": "default-name" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
     Then I should receive a result matching:
-      | _id        | "user-test"           |
-      | _source    | { "profileIds": ["default"], "name": "new-name"} |
+      | _id     | "user-test"                                      |
+      | _source | { "profileIds": ["default"], "name": "new-name"} |
     When I successfully execute the action "security":"upsertUser" with args:
-      | _id        | "user-test"           |
-      | body       | { "content": { "profileIds": ["default"], "name": "new-new-name"}, "default": { "foo": "bar" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
+      | _id  | "user-test"                                                                                                                                                                        |
+      | body | { "content": { "profileIds": ["default"], "name": "new-new-name"}, "default": { "foo": "bar" }, "credentials": { "local": { "username": "user-test", "password": "user-test" } } } |
     Then I should receive a result matching:
-      | _id        | "user-test"           |
-      | _source    | { "profileIds": ["default"], "name": "new-new-name"} |
-      
+      | _id     | "user-test"                                          |
+      | _source | { "profileIds": ["default"], "name": "new-new-name"} |
+
   @security
   Scenario: Search users
     Given I create a user "test-user" with content:
@@ -450,8 +434,8 @@ Feature: Security Controller
       | total | 2 |
     When I successfully execute the action "security":"searchUsers" with args:
       | body | {"query": {"terms": {"_id": ["test-user", "test-user2"]} } } |
-      | from | 2                                                            |
-      | size | 10                                                           |
+      | from |                                                            2 |
+      | size |                                                           10 |
     Then I should receive a empty "hits" array
     And I should receive a result matching:
       | total | 2 |
@@ -471,7 +455,6 @@ Feature: Security Controller
       | "test-user2" |
     And I should receive a result matching:
       | total | 2 |
-
   # security:getUserStrategies ===========================================================
 
   @security

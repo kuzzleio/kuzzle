@@ -24,10 +24,11 @@ import { format } from "util";
 import _ from "lodash";
 import { JSONObject } from "kuzzle-sdk";
 
+import type { Domains } from "./codes";
 import { domains as internalDomains } from "./codes";
 import * as errors from "./errors";
 import { KuzzleError } from "./errors";
-import { ErrorDefinition, ErrorDomains } from "../types";
+import { ErrorDefinition } from "../types";
 
 /**
  * Gets this file name in the exact same format than the one printed in the
@@ -55,7 +56,7 @@ function _getCurrentFileName() {
  * @param  options - Last param can be additional options { message }
  */
 export function rawGet(
-  domains: ErrorDomains,
+  domains: Domains,
   domain: string,
   subdomain: string,
   error: string,
@@ -166,7 +167,7 @@ function cleanStackTrace(error: KuzzleError): void {
  * @param  placeholders - Placeholders value to inject in error message
  */
 export function rawReject(
-  domains: ErrorDomains,
+  domains: Domains,
   domain: string,
   subdomain: string,
   error: string,
@@ -189,7 +190,7 @@ export function rawReject(
  * @param  placeholders - Placeholders value to inject in error message
  */
 export function rawGetFrom(
-  domains: ErrorDomains,
+  domains: Domains,
   source: Error,
   domain: string,
   subdomain: string,
@@ -221,11 +222,7 @@ export function rawGetFrom(
 /**
  * Wrap error functions with the provided domain and subdomain.
  */
-export function rawWrap(
-  domains: ErrorDomains,
-  domain: string,
-  subdomain: string,
-) {
+export function rawWrap(domains: Domains, domain: string, subdomain: string) {
   return {
     get: (error, ...placeholders) =>
       rawGet(domains, domain, subdomain, error, ...placeholders),

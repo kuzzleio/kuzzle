@@ -22,10 +22,11 @@
 import { KuzzleError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
 import { ApplicationManager, Backend } from "./index";
-import { CustomErrorDefinition, ErrorDomains } from "../../types";
+import type { Domains } from "../../kerror/codes";
+import { CustomErrorDefinition } from "../../types";
 
 export class BackendErrors extends ApplicationManager {
-  private domains: ErrorDomains = {};
+  private domains: Domains = {};
 
   constructor(application: Backend) {
     super(application);
@@ -54,23 +55,22 @@ export class BackendErrors extends ApplicationManager {
     name: string,
     definition: CustomErrorDefinition,
   ) {
-    if (!this.domains[domain]) {
-      this.domains[domain] = {
+    const domainEntry =
+      this.domains[domain] ||
+      (this.domains[domain] = {
         code: Object.keys(this.domains).length,
         subDomains: {},
-      };
-    }
+      });
 
-    if (!this.domains[domain].subDomains[subDomain]) {
-      this.domains[domain].subDomains[subDomain] = {
-        code: Object.keys(this.domains[domain].subDomains).length,
+    const subDomainEntry =
+      domainEntry.subDomains[subDomain] ||
+      (domainEntry.subDomains[subDomain] = {
+        code: Object.keys(domainEntry.subDomains).length,
         errors: {},
-      };
-    }
+      });
 
-    this.domains[domain].subDomains[subDomain].errors[name] = {
-      code: Object.keys(this.domains[domain].subDomains[subDomain].errors)
-        .length,
+    subDomainEntry.errors[name] = {
+      code: Object.keys(subDomainEntry.errors).length,
       ...definition,
     };
   }
