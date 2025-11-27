@@ -36,12 +36,31 @@ const websocketConfig = {
   },
 };
 
+/** @type {import('@cucumber/cucumber').IConfiguration} */
+const defaultLegacyConfig = {
+  failFast: true,
+  paths: ["features-legacy/**/*.feature"],
+  publishQuiet: true,
+  require: [
+    "features-legacy/support/**/*.ts",
+    "features-legacy/step_definitions/**/*.ts",
+  ],
+  requireModule: ["ts-node/register"],
+};
+
 module.exports = {
   default: defaultConfig,
+
+  defaultLegacy: defaultLegacyConfig,
 
   http: {
     ...httpConfig,
     ...defaultConfig,
+  },
+
+  httpLegacy: {
+    ...httpConfig,
+    ...defaultLegacyConfig,
   },
 
   mqtt: {
@@ -49,8 +68,18 @@ module.exports = {
     ...defaultConfig,
   },
 
+  mqttLegacy: {
+    ...mqttConfig,
+    ...defaultLegacyConfig,
+  },
+
   websocket: {
     ...websocketConfig,
     ...defaultConfig,
+  },
+
+  websocketLegacy: {
+    ...websocketConfig,
+    ...defaultLegacyConfig,
   },
 };

@@ -19,19 +19,19 @@ Feature: Kuzzle functional tests
   Scenario: Bulk mWrite
     When I create a collection "kuzzle-test-index":"kuzzle-collection-test"
     When I use bulk:mWrite action with
-    """
-    {
-      "documents": [
-        { "body": { "name": "Maedhros" } },
-        { "body": { "name": "Maglor" } },
-        { "body": { "name": "Celegorm" } },
-        { "body": { "name": "Caranthis" } },
-        { "body": { "name": "Curufin" } },
-        { "body": { "name": "Amrod" } },
-        { "body": { "name": "Amras" } }
-      ]
-    }
-    """
+      """
+      {
+        "documents": [
+          { "body": { "name": "Maedhros" } },
+          { "body": { "name": "Maglor" } },
+          { "body": { "name": "Celegorm" } },
+          { "body": { "name": "Caranthis" } },
+          { "body": { "name": "Curufin" } },
+          { "body": { "name": "Amrod" } },
+          { "body": { "name": "Amras" } }
+        ]
+      }
+      """
     Then I count 7 documents
     And The documents does not have kuzzle metadata
 
@@ -190,8 +190,7 @@ Feature: Kuzzle functional tests
     And The notification should have a "_source" member
     And The notification should have volatile
 
-  @security
-  @realtime
+  @security @realtime
   Scenario: Notification subscription on metadata
     Given I create a user "useradmin" with id "useradmin-id"
     When I log in as useradmin:testpwd expiring in 1h
@@ -532,8 +531,7 @@ Feature: Kuzzle functional tests
     Then I write the document "documentGrace"
     And I should receive a document notification with field action equal to "create"
 
-  @resetDatabase
-  @security
+  @resetDatabase @security
   Scenario: user permissions
     Given I create a new role "role1" with id "role1"
     And I create a new role "role2" with id "role2"
@@ -1133,12 +1131,6 @@ Feature: Kuzzle functional tests
       { "_id": "#prefix#hash", "body": { "field": "foo", "value": "bar2" }}
       """
     Then The ms result should match the json 0
-   # redis 3.2+ only
-   # When I call the hstrlen method of the memory storage with arguments
-   #    """
-   #    { "_id": "#prefix#hash", "body": { "field": "foo" }}
-   #    """
-   # Then The ms result should match the json 3
     When I call the hvals method of the memory storage with arguments
       """
       { "_id": "#prefix#hash" }
@@ -1577,7 +1569,6 @@ Feature: Kuzzle functional tests
 
   @redis
   Scenario: memory storage - hyperloglog
-
     Given I call the pfadd method of the memory storage with arguments
       """
       {
@@ -1673,7 +1664,7 @@ Feature: Kuzzle functional tests
         "args": { "members": ["Palermo", "Catania"] }
       }
       """
-    Then The ms result should match the json [["13.36138933897018433","38.11555639549629859"],["15.08726745843887329","37.50266842333162032"]]
+    Then The ms result should match the json [["13.361389338970184","38.1155563954963"],["15.087267458438873","37.50266842333162"]]
     When I call the georadius method of the memory storage with arguments
       """
       {
@@ -1702,26 +1693,26 @@ Feature: Kuzzle functional tests
       """
     Then The ms result should match the json ["Agrigento", "Palermo"]
 
-@redis
-Scenario: memory storage - transactions
+  @redis
+  Scenario: memory storage - transactions
     When I call the mexecute method of the memory storage with arguments
-    """
-    { "body": {
-        "actions": [
-            { "action": "set", "args": { "_id": "list:a", "body": { "value": 1, "ex": 100, "nx": true } } },
-            { "action": "get", "args": { "_id": "list:a" } },
-            { "action": "del", "args": { "body": { "keys": ["list:a"] } } }
-        ]
-    }}
-    """
-Then The ms result should match the json [[null,"OK"],[null,"1"],[null,1]]
-When I call the mexecute method of the memory storage with arguments
-"""
-{ "body": {
-    "actions": []
-}}
-"""
-Then The ms result should match the json []
+      """
+      { "body": {
+          "actions": [
+              { "action": "set", "args": { "_id": "list:a", "body": { "value": 1, "ex": 100, "nx": true } } },
+              { "action": "get", "args": { "_id": "list:a" } },
+              { "action": "del", "args": { "body": { "keys": ["list:a"] } } }
+          ]
+      }}
+      """
+    Then The ms result should match the json [[null,"OK"],[null,"1"],[null,1]]
+    When I call the mexecute method of the memory storage with arguments
+      """
+      { "body": {
+          "actions": []
+      }}
+      """
+    Then The ms result should match the json []
 
   @validation
   Scenario: Validation - getSpecification & updateSpecification
@@ -1732,7 +1723,6 @@ Then The ms result should match the json []
     Then I put a valid specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
     And There is no error message
     And There is a specification for index "kuzzle-test-index" and collection "kuzzle-collection-test"
-
 
   @validation
   Scenario: Validation - validateSpecification
@@ -1793,56 +1783,56 @@ Then The ms result should match the json []
 
   Scenario: Load Fixtures
     When I load the fixtures
-    """
-    {
-      "kuzzle-test-index": {
-        "kuzzle-collection-test": [
-          {"create": {"_id": "foo"}},
-          {}
-        ]
-      },
-      "kuzzle-test-index-alt": {
-        "kuzzle-collection-test": [
-          {"create": {"_id": "bar"}},
-          {}
-        ]
+      """
+      {
+        "kuzzle-test-index": {
+          "kuzzle-collection-test": [
+            {"create": {"_id": "foo"}},
+            {}
+          ]
+        },
+        "kuzzle-test-index-alt": {
+          "kuzzle-collection-test": [
+            {"create": {"_id": "bar"}},
+            {}
+          ]
+        }
       }
-    }
-    """
+      """
     Then I find a document with "foo" in field "_id" in index "kuzzle-test-index"
     And I find a document with "bar" in field "_id" in index "kuzzle-test-index-alt"
 
   Scenario: Load Securities
     When I load the securities
-    """
-    {
-      "roles": {
-        "#prefix#fakeRole": {
-          "controllers": {
-            "*": {
-              "actions": {
-                "*" : true
+      """
+      {
+        "roles": {
+          "#prefix#fakeRole": {
+            "controllers": {
+              "*": {
+                "actions": {
+                  "*" : true
+                }
               }
             }
           }
-        }
-      },
-      "profiles": {
-        "#prefix#fakeProfile": {
-          "policies": [
-            {"roleId": "#prefix#fakeRole"}
-          ]
-        }
-      },
-      "users": {
-        "#prefix#fakeUser": {
-          "content": {
-            "profileIds": ["#prefix#fakeProfile"]
+        },
+        "profiles": {
+          "#prefix#fakeProfile": {
+            "policies": [
+              {"roleId": "#prefix#fakeRole"}
+            ]
+          }
+        },
+        "users": {
+          "#prefix#fakeUser": {
+            "content": {
+              "profileIds": ["#prefix#fakeProfile"]
+            }
           }
         }
       }
-    }
-    """
+      """
     # the following tests assume the prefix #prefix# automatically
     Then I'm able to find a role with id "fakeRole"
     And I'm able to find the profile with id "fakeProfile"

@@ -11,15 +11,15 @@
     "preinstall": "node ./bin/check-node-version.js",
     "prepublishOnly": "npm run build",
     "prettier": "prettier ./lib ./test ./features --write",
+    "test:functional:legacy:http": "cucumber-js --format progress-bar --profile httpLegacy --config cucumber.config.cjs",
+    "test:functional:legacy:mqtt": "cucumber-js --format progress-bar --profile mqttLegacy --config cucumber.config.cjs",
+    "test:functional:legacy:websocket": "cucumber-js --format progress-bar --profile websocketLegacy --config cucumber.config.cjs",
     "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http --config cucumber.config.cjs",
-    "test:functional:legacy:http": "cucumber-js --format progress-bar --profile http ./features-legacy",
-    "test:functional:legacy:mqtt": "cucumber-js --format progress-bar --profile mqtt ./features-legacy",
-    "test:functional:legacy:websocket": "cucumber-js --format progress-bar --profile websocket ./features-legacy",
-    "test:functional:vitest": "vitest run --fileParallelism false --coverage --bail=1",
+    "test:functional:mqtt": "KUZZLE_PROTOCOL=mqtt cucumber-js --profile mqtt --config cucumber.config.cjs",
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
-    "test:lint": "eslint ./lib ./test ./bin ./features",
-    "test:unit": "npx mocha --exit",
-    "test": "npm run build && npm run --silent test:lint && npm run test:functional"
+    "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1",
+    "test:unit:mocha": "npx mocha --exit",
+    "test:lint": "eslint ./lib ./test ./bin ./features"
   },
   "directories": {
     "lib": "lib"
