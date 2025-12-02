@@ -1518,7 +1518,7 @@ export default class SecurityController extends NativeController {
     }
 
     try {
-      this.ask("core:security:user:delete", id, { refresh: "false" });
+      await this.ask("core:security:user:delete", id, { refresh: "false" });
     } catch (e) {
       this.logger.error(`User rollback error: ${e}`);
     }

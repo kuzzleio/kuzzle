@@ -15,5 +15,13 @@ runs:
     - run: npm run build
       shell: bash
 
-    - run: npm run test:unit:${{ inputs.suit }}
-      shell: bash
+    - shell: bash
+      env:
+        SUIT: ${{ inputs.suit }}
+      run: |
+        if [[ "${SUIT}" != "vitest" && "${SUIT}" != "mocha" ]]; then
+          echo "Invalid suite: ${SUIT}" >&2
+          exit 1
+        fi
+
+        npm run "test:unit:${SUIT}"
