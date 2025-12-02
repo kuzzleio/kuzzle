@@ -163,7 +163,7 @@ function resolveBinding(hostConfig, defaultPort) {
   const parsed = url.parse(hostConfig, false, true);
   let family = "ipv4";
 
-  let host = parsed.hostname;
+  const host = parsed.hostname;
 
   if (!/^\[.+\]/.test(parsed.host)) {
     const tmp = host.split(":");
