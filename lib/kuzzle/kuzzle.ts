@@ -836,6 +836,11 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   registerSignalHandlers() {
     process.removeAllListeners("unhandledRejection");
+
+    process.on("exit", () => {
+      this.shutdown();
+    });
+
     process.on("unhandledRejection", (reason, promise) => {
       if (reason !== undefined) {
         if (reason instanceof Error) {

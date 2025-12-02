@@ -56,7 +56,7 @@ export default class PassportWrapper {
       // (Proof: HTTP redirection unit test)
       response.addEndListener(() => resolve(response));
 
-      const authCB: AuthenticateCallback = (err, user, info) => {
+      const authCB: AuthenticateCallback = (err, user, info: any) => {
         if (err !== null) {
           if (err instanceof KuzzleError) {
             reject(err);
@@ -72,7 +72,9 @@ export default class PassportWrapper {
             );
           }
         } else if (!user) {
-          reject(kerror.get("plugin", "strategy", "missing_user", info));
+          reject(
+            kerror.get("plugin", "strategy", "missing_user", info.message),
+          );
         } else {
           resolve(user);
         }

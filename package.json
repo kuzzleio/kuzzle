@@ -18,7 +18,7 @@
     "test:functional:mqtt": "KUZZLE_PROTOCOL=mqtt cucumber-js --profile mqtt --config cucumber.config.cjs",
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1",
-    "test:unit:mocha": "npx mocha --exit",
+    "test:unit:mocha": "mocha --exit",
     "test:lint": "eslint ./lib ./test ./bin ./features"
   },
   "directories": {
@@ -73,23 +73,18 @@
     "url": "git://github.com/kuzzleio/kuzzle.git"
   },
   "devDependencies": {
-    "@cucumber/cucumber": "^12.2.0",
+    "@cucumber/cucumber": "12.2.0",
     "@types/bluebird": "3.5.42",
     "@types/cookie": "1.0.0",
-    "@types/js-yaml": "4.0.9",
     "@types/lodash": "4.17.21",
     "@types/mocha": "10.0.10",
     "@types/passport": "1.0.17",
     "@vitest/coverage-v8": "4.0.13",
     "async": "3.2.6",
-    "chokidar": "4.0.3",
-    "cucumber": "6.0.7",
-    "cz-conventional-changelog": "3.3.0",
     "eslint-plugin-kuzzle": "0.0.15",
     "mocha": "11.7.5",
     "mock-require": "3.0.3",
     "mqtt": "5.14.1",
-    "request": "2.88.2",
     "request-promise": "4.2.6",
     "rewire": "5.0.0",
     "semantic-release-config-kuzzle": "1.1.2",

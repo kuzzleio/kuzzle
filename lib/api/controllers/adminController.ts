@@ -29,7 +29,7 @@ import { ResetSecurityResult } from "../../types/controllers/adminControlller.ty
 /**
  * @class AdminController
  */
-export class AdminController extends NativeController {
+export default class AdminController extends NativeController {
   protected shuttingDown: boolean;
   protected logger: any;
 
@@ -230,5 +230,3 @@ export class AdminController extends NativeController {
     return promise.then(() => result);
   }
 }
-
-module.exports = AdminController;

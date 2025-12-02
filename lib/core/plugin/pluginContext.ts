@@ -20,6 +20,7 @@
  */
 
 import Bluebird from "bluebird";
+import _ from "lodash";
 import { Koncorde } from "../shared/KoncordeWrapper";
 import { JSONObject } from "kuzzle-sdk";
 
@@ -413,7 +414,7 @@ function execute(request: KuzzleRequest, callback) {
 
   const promback = new Promback(callback);
 
-  if (!request) {
+  if (!request || _.isEmpty(request)) {
     return promback.reject(contextError.get("missing_request"));
   }
 

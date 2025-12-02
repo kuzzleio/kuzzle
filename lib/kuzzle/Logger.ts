@@ -26,6 +26,12 @@ import { JSONObject, KuzzleConfiguration, KuzzleRequest } from "../../";
  * The Logger class provides logging functionality for Kuzzle.
  */
 export class Logger extends KuzzleLogger {
+  /**
+   * Shared pino instance to avoid spawning a transport worker for every
+   * Logger instance (pino.transport adds a process "exit" listener).
+   */
+  private static basePino: any;
+
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
 
@@ -64,39 +70,55 @@ export class Logger extends KuzzleLogger {
       return mergingObject;
     };
 
-    super(
-      deprecatedConfig?.services
-        ? {
-            getMergingObject,
-            serviceName: "kuzzle",
-            transport: {
-              targets: Object.entries(deprecatedConfig.services).map(
-                ([serviceName, serviceConfig]) => {
-                  if (serviceName === "stdout") {
-                    let level = serviceConfig.level || "info";
+    const hasSharedPino = Logger.basePino !== undefined;
 
-                    if (level === "silly") {
-                      level = "trace";
-                    }
+    let loggerConfig: any;
 
-                    if (level === "verbose") {
-                      level = "debug";
-                    }
+    if (hasSharedPino) {
+      loggerConfig = { getMergingObject, skipPinoInstance: true };
+    } else if (deprecatedConfig?.services) {
+      loggerConfig = {
+        getMergingObject,
+        serviceName: "kuzzle",
+        transport: {
+          targets: Object.entries(deprecatedConfig.services).map(
+            ([serviceName, serviceConfig]) => {
+              if (serviceName === "stdout") {
+                let level = serviceConfig.level || "info";
 
-                    return {
-                      level,
-                      preset: "stdout",
-                    };
-                  }
-                },
-              ),
+                if (level === "silly") {
+                  level = "trace";
+                }
+
+                if (level === "verbose") {
+                  level = "debug";
+                }
+
+                return {
+                  level,
+                  preset: "stdout",
+                };
+              }
             },
-          }
-        : {
-            ...config,
-            getMergingObject,
-          },
-    );
+          ),
+        },
+      };
+    } else {
+      loggerConfig = {
+        ...config,
+        getMergingObject,
+      };
+    }
+
+    super(loggerConfig);
+
+    if (hasSharedPino) {
+      // Reuse the shared pino instance to avoid stacking process exit listeners
+      // added by pino.transport when spawning its worker thread.
+      this.pino = Logger.basePino.child({});
+    } else {
+      Logger.basePino = this.pino;
+    }
 
     if (deprecatedConfig) {
       this.warn(

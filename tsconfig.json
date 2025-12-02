@@ -28,15 +28,33 @@
   },
   "rootDir": "lib/",
   "include": [
+    // Kuzzle core files
     "lib/**/*.ts",
     "lib/**/*.js",
     "lib/**/*.json",
     "index.ts",
+
+    // Functional tests
     "features/**/*.ts",
     "features-legacy/**/*.ts",
-    "bin/check-node-version.js",
+
+    // Unit tests vitest
+    "tests/**/*.ts",
+    "tests/**/*.js",
+    "tests/**/*.json",
+
+    // Unit tests mocha
+    "test/**/*.ts",
+    "test/**/*.js",
+    "test/**/*.json",
+
+    // Binaries
     "bin/copy-protobuf.js",
+    "bin/check-node-version.js",
     "bin/start-kuzzle-server.js",
-    "start-kuzzle-test.ts"
+
+    // development files
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts"
   ]
 }

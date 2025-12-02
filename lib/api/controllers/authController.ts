@@ -38,7 +38,7 @@ import { Token } from "../../model/security/token";
 
 import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
 
-export class AuthController extends NativeController {
+export default class AuthController extends NativeController {
   private anonymousId: string | null = null;
   private readonly logger = global.kuzzle.log.child("api:controllers:auth");
 
@@ -292,7 +292,22 @@ export class AuthController extends NativeController {
       });
     }
 
-    return token;
+    const tokenResponse: any = {
+      _id: token.userId,
+      expiresAt: token.expiresAt,
+      ttl: token.ttl,
+    };
+
+    if (
+      !(
+        global.kuzzle.config.http.cookieAuthentication &&
+        request.getBoolean("cookieAuth")
+      )
+    ) {
+      tokenResponse.jwt = token.jwt;
+    }
+
+    return tokenResponse;
   }
 
   /**
@@ -719,5 +734,3 @@ function wrapPluginError(error) {
 
   throw error;
 }
-
-module.exports = AuthController;
