@@ -63,7 +63,7 @@
     "semver": "7.7.3",
     "sorted-array": "2.0.4",
     "uuid": "13.0.0",
-    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.51.0.tar.gz",
+    "uWebSockets.js": "https://github.com/uNetworking/uWebSockets.js/archive/refs/tags/v20.56.0.tar.gz",
     "validator": "13.15.23",
     "yargs": "18.0.0",
     "zeromq": "6.5.0"
