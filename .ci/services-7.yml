@@ -3,7 +3,6 @@ services:
     build:
       dockerfile: ./docker/images/${KUZZLE_IMAGE}/Dockerfile
       context: ..
-    command: ["kuzzle", "start"]
     cap_add:
       - SYS_PTRACE
     ulimits:
