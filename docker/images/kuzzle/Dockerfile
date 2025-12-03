@@ -1,15 +1,8 @@
 ################################################################################
-ARG NODE_VERSION="22"
-
-FROM node:${NODE_VERSION}-bookworm-slim AS builder
+ARG NODE_VERSION="24"
+FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS builder
 
 WORKDIR /app
-
-# Install build dependencies for native modules
-RUN apt-get update \
- && apt-get install -y --no-install-recommends \
-      build-essential python3 ca-certificates \
- && rm -rf /var/lib/apt/lists/*
 
 COPY ./bin bin
 COPY ./lib lib
@@ -23,19 +16,30 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 ################################################################################
-FROM node:${NODE_VERSION}-bookworm-slim AS runtime
+FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS minifier
+
+ENV NODE_ENV=production
+
+COPY --from=builder /app /app
+
+RUN  set -x \
+     && apt-get update \
+     && apt-get clean autoclean \
+     && apt-get autoremove --yes
+
+################################################################################
+FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
 
 WORKDIR /var/app
 
-# Only copy what you actually need
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
-COPY --from=builder /app/dist .
-COPY --from=builder /app/bin ./bin
-COPY --from=builder /app/lib ./lib
+COPY --from=minifier /lib /lib
+COPY --from=minifier /usr /usr
+COPY --from=minifier /app/node_modules ./node_modules
+COPY --from=minifier /app/package*.json ./
+COPY --from=minifier /app/dist .
 
 ENV NODE_ENV=production
 
