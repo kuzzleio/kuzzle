@@ -28,7 +28,7 @@ RUN  set -x \
      && apt-get autoremove --yes
 
 ################################################################################
-FROM node:${NODE_VERSION}-bookworm-slim
+FROM node:${NODE_VERSION}-trixie-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
