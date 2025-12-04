@@ -297,7 +297,7 @@ export default class AuthController extends NativeController {
           }),
         },
       });
-      tokenResponse.jwt = undefined;
+      delete tokenResponse.jwt;
     }
 
     return tokenResponse;
