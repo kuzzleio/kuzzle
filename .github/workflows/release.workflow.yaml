@@ -116,3 +116,37 @@ jobs:
           build-args: ELASTICSEARCH_VERSION=${{ env.ELASTICSEARCH_VERSION }}
           platforms: ${{ env.DOCKER_PLATFORMS_ELASTICSEARCH }}
           tags: kuzzleio/elasticsearch:${{ env.ELASTICSEARCH_VERSION }},kuzzleio/elasticsearch:7, kuzzleio/elasticsearch:latest
+
+  publish-sbom-to-dtrack:
+    name: Publish SBOM to Dependency-Track
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - run: npm install
+      - name: Create SBOM with CycloneDX
+        run: npx @cyclonedx/cyclonedx-npm -o bom.xml --of=XML
+      
+      - name: Get the current project version from package.json
+        id: get-version
+        run: |
+          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+
+      - name: Publish SBOM to Dependency-Track
+        uses: DependencyTrack/gh-upload-sbom@v3
+        with:
+          serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
+          apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
+          projectname: 'Kuzzle Backend'
+          projectversion: '${{ steps.get-version.outputs.version }}'
+          bomfilename: "./bom.xml"
+          autocreate: true
