@@ -34,13 +34,7 @@ BeforeAll({ timeout: 10 * 1000 }, async function () {
   try {
     const world = new World({} as any);
 
-    console.log(
-      `Start tests with ${world.protocol.toLocaleUpperCase()} protocol.`,
-    );
-
     await world.sdk.connect();
-
-    console.log("Loading default permissions..");
 
     await world.sdk.query({
       action: "loadSecurities",
@@ -52,7 +46,7 @@ BeforeAll({ timeout: 10 * 1000 }, async function () {
 
     world.sdk.disconnect();
   } catch (error) {
-    console.log(error);
+    console.error(error);
     throw error;
   }
 });

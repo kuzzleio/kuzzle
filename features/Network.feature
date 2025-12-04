@@ -18,7 +18,7 @@ Feature: Network
 
   @network @http
   Scenario: Accepts additional content types
-    When I send a HTTP "POST" request to "http://localhost:17510/_/functional-tests/hello-world" with headers and body:
+    When I send a HTTP "POST" request to "http://localhost:17510/_/functional-tests/hello-world" with headers:
       | Content-Type | "application/x-yaml" |
     Then The HTTP response JSON should match:
       | result | { "greeting": "Hello, Martial" } |

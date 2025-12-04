@@ -190,7 +190,9 @@ app.pipe.register("server:afterNow", async (request) => {
 app.pipe.register(
   "protocol:http:beforeParsingPayload",
   async ({ message, payload }: { message: HttpMessage; payload: Buffer }) => {
-    if (message.headers["content-type"] !== "application/x-yaml") {
+    const contentType = (message.headers["content-type"] || "").toLowerCase();
+
+    if (!contentType.includes("application/x-yaml")) {
       return { payload };
     }
 

@@ -1,5 +1,5 @@
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-22}
+  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-24}
   command: >
     bash -c "
       node -r ts-node/register/transpile-only ./start-kuzzle-test.ts --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
@@ -27,7 +27,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_limits__loginsPerSecond=50
     - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
     - NODE_ENV=development
-    - NODE_VERSION=${NODE_VERSION:-22}
+    - NODE_VERSION=${NODE_VERSION:-24}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
     # cluster

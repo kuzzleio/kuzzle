@@ -268,6 +268,13 @@ export default class AuthController extends NativeController {
 
   // Used to send the Token using different ways when in cookieAuth mode. (DRY)
   async _sendToken(token: Token, request: KuzzleRequest): Promise<Token> {
+    const tokenResponse: any = {
+      _id: token.userId,
+      expiresAt: token.expiresAt,
+      jwt: token.jwt,
+      ttl: token.ttl,
+    };
+
     // Only if the support of Browser Cookie as Authentication Token is enabled
     // otherwise we should send a normal response because
     // even if the SDK / Browser can handle the cookie,
@@ -290,21 +297,7 @@ export default class AuthController extends NativeController {
           }),
         },
       });
-    }
-
-    const tokenResponse: any = {
-      _id: token.userId,
-      expiresAt: token.expiresAt,
-      ttl: token.ttl,
-    };
-
-    if (
-      !(
-        global.kuzzle.config.http.cookieAuthentication &&
-        request.getBoolean("cookieAuth")
-      )
-    ) {
-      tokenResponse.jwt = token.jwt;
+      tokenResponse.jwt = undefined;
     }
 
     return tokenResponse;

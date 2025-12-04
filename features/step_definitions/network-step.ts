@@ -1,4 +1,5 @@
 import http from "http";
+import YAML from "yaml";
 import should from "should";
 import requestPromise from "request-promise";
 
@@ -106,12 +107,12 @@ When(
 );
 
 When(
-  "I send a HTTP {string} request to {string} with headers and body:",
-  async function (method, url, dataTable, body) {
+  "I send a HTTP {string} request to {string} with headers:",
+  async function (method, url, dataTable) {
     const headers = this.parseObject(dataTable);
-
+    const postData = YAML.stringify({ name: "Martial" });
     this.props.httpResponse = await sendHttpRequest(this, {
-      body,
+      body: postData,
       headers,
       method,
       url,
