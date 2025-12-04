@@ -1,40 +1,11 @@
 name: Tests
 
 on:
-  push:
-    branches:
-      - master
-      - beta
   pull_request:
 
-env:
-  NODE_LTS_MAINTENANCE_VERSION: "20"
-  NODE_LTS_ACTIVE_VERSION: "22"
-  NODE_LTS_CURRENT_VERSION: "24"
-  ELASTICSEARCH_MAINTENANCE_VERSION: "7"
-  ELASTICSEARCH_ACTIVE_VERSION: "8"
-
 jobs:
-  prepare-matrix:
-    name: Forge Node LTS Matrix
-    runs-on: ubuntu-24.04
-    steps:
-      - id: set-matrix
-        run: |
-          echo "matrix={\"node-version\": [\"$NODE_LTS_MAINTENANCE_VERSION\", \"$NODE_LTS_ACTIVE_VERSION\", \"$NODE_LTS_CURRENT_VERSION\"]}" >> $GITHUB_OUTPUT
-          echo "es-matrix={\"es-version\": [\"$ELASTICSEARCH_MAINTENANCE_VERSION\", \"$ELASTICSEARCH_ACTIVE_VERSION\"]}" >> $GITHUB_OUTPUT
-          echo "test-set={\"test-set\":[\"http\", \"websocket\", \"mqtt\", \"legacy:mqtt\", \"legacy:http\", \"legacy:websocket\"]}" >> $GITHUB_OUTPUT
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-      es-matrix: ${{ steps.set-matrix.outputs.es-matrix }}
-      test-set: ${{ steps.set-matrix.outputs.test-set }}
-      node_lts_maintenance_version: ${{ env.NODE_LTS_MAINTENANCE_VERSION }}
-      node_lts_active_version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
-      node_lts_current_version: ${{ env.NODE_LTS_CURRENT_VERSION }}
-
   error-codes-check:
     name: Documentation - Error codes check
-    needs: [prepare-matrix]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -58,10 +29,9 @@ jobs:
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04
-    needs: [prepare-matrix]
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
+        node-version: [20, 22, 24]
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -85,11 +55,11 @@ jobs:
 
   unit-tests:
     name: Unit Tests
-    needs: [lint, prepare-matrix]
+    needs: [lint]
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-        test-suits: ['mocha', 'vitest']
+        node-version: [20, 22, 24]
+        test-suits: ["mocha", "vitest"]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -110,16 +80,15 @@ jobs:
           suit: ${{ matrix.test-suits }}
         env:
           NODE_VERSION: ${{ matrix.node-version }}
-          
 
   build-and-run-kuzzle:
-    needs: [lint, prepare-matrix]
+    needs: [lint]
     name: Build and Run
     runs-on: ubuntu-24.04
     strategy:
       matrix:
         kuzzle-image: ["kuzzle"]
-        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
+        es-version: [7, 8]
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -135,12 +104,19 @@ jobs:
 
   functional-tests:
     name: Functional tests
-    needs: [unit-tests, prepare-matrix]
+    needs: [unit-tests]
     strategy:
       matrix:
-        test-set: ${{ fromJson(needs.prepare-matrix.outputs.test-set).test-set }}
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
+        test-set:
+          [
+            "http",
+            "websocket",
+            "legacy:mqtt",
+            "legacy:http",
+            "legacy:websocket",
+          ]
+        node-version: [20, 22, 24]
+        es-version: [7, 8]
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout project
@@ -164,12 +140,12 @@ jobs:
 
   cluster-monkey-tests:
     name: Cluster Monkey Tests
-    needs: [functional-tests, build-and-run-kuzzle, prepare-matrix]
+    needs: [functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: ${{ fromJson(needs.prepare-matrix.outputs.matrix).node-version }}
-        es-version: ${{ fromJson(needs.prepare-matrix.outputs.es-matrix).es-version }}
+        node-version: [20, 22, 24]
+        es-version: [7, 8]
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -194,17 +170,3 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           es-version: ${{matrix.es-version}}
-
-  deploy-workflow:
-    name: Deployment Workflow
-    needs: [cluster-monkey-tests, prepare-matrix]
-    uses: ./.github/workflows/workflow-deployments.yml
-    secrets:
-      ACCESS_TOKEN_CI: ${{ secrets.ACCESS_TOKEN_CI }}
-      SEMANTIC_RELEASE_GHP: ${{ secrets.SEMANTIC_RELEASE_GHP }}
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
-    with:
-      node_lts_maintenance_version: ${{ needs.prepare-matrix.outputs.node_lts_maintenance_version }}
-      node_lts_active_version: ${{ needs.prepare-matrix.outputs.node_lts_active_version }}
-      node_lts_current_version: ${{ needs.prepare-matrix.outputs.node_lts_current_version }}

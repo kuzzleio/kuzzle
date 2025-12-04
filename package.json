@@ -15,7 +15,6 @@
     "test:functional:legacy:mqtt": "cucumber-js --format progress-bar --profile mqttLegacy --config cucumber.config.cjs",
     "test:functional:legacy:websocket": "cucumber-js --format progress-bar --profile websocketLegacy --config cucumber.config.cjs",
     "test:functional:http": "KUZZLE_PROTOCOL=http cucumber-js --profile http --config cucumber.config.cjs",
-    "test:functional:mqtt": "KUZZLE_PROTOCOL=mqtt cucumber-js --profile mqtt --config cucumber.config.cjs",
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1 --passWithNoTests",
     "test:unit:mocha": "mocha --exit",
