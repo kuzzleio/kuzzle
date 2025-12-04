@@ -1,5 +1,5 @@
-ARG NODE_VERSION="22"
-FROM node:${NODE_VERSION}-bookworm-slim
+ARG NODE_VERSION="24"
+FROM node:${NODE_VERSION}-trixie-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your in-development Kuzzle application with ease"

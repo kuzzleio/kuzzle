@@ -137,7 +137,7 @@ export class EmbeddedSDK extends Kuzzle {
       throw contextError.get("invalid_user");
     }
 
-    return new ImpersonatedSDK(user._id, options) as EmbeddedSDK;
+    return new ImpersonatedSDK(user._id, options) as unknown as EmbeddedSDK;
   }
 
   /**

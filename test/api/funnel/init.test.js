@@ -36,7 +36,9 @@ describe("funnel.init", () => {
 
     should(funnel.rateLimiter.init).calledOnce();
     should(funnel.controllers.size).be.eql(13);
-    should(funnel.controllers.get("auth")).be.instanceOf(AuthController);
+    should(funnel.controllers.get("auth")).be.instanceOf(
+      AuthController.default,
+    );
     should(funnel.controllers.get("bulk")).be.instanceOf(BulkController);
     should(funnel.controllers.get("cluster")).be.instanceOf(ClusterController);
     should(funnel.controllers.get("collection")).be.instanceOf(
@@ -55,9 +57,11 @@ describe("funnel.init", () => {
       RealtimeController,
     );
     should(funnel.controllers.get("security")).be.instanceOf(
-      SecurityController,
+      SecurityController.default,
     );
     should(funnel.controllers.get("server")).be.instanceOf(ServerController);
-    should(funnel.controllers.get("admin")).be.instanceOf(AdminController);
+    should(funnel.controllers.get("admin")).be.instanceOf(
+      AdminController.default,
+    );
   });
 });

@@ -4,7 +4,7 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
   DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
   ELASTICSEARCH_VERSION: "7.17.26"
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
 
 on:
   release:
@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: [18, 20, 22]
+        node-version: [20, 22, 24]
     steps:
       - uses: actions/checkout@v4
 

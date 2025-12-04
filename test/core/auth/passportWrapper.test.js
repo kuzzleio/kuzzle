@@ -28,7 +28,7 @@ describe("Test the passport Wrapper", () => {
       "../../../lib/core/auth/passportWrapper",
     );
 
-    passportWrapper = new PassportWrapper();
+    passportWrapper = new PassportWrapper.default();
   });
 
   afterEach(() => {
@@ -127,11 +127,11 @@ describe("Test the passport Wrapper", () => {
     PassportWrapper = mockrequire.reRequire(
       "../../../lib/core/auth/passportWrapper",
     );
-    passportWrapper = new PassportWrapper();
+    passportWrapper = new PassportWrapper.default();
     passportWrapper.use(new MockupStrategy("mockup", stub));
 
     return passportWrapper.authenticate("foobar", "mockup").then((response) => {
-      should(response).be.an.instanceOf(PassportResponse);
+      should(response).be.an.instanceOf(PassportResponse.default);
       should(response.statusCode).be.equal(302);
       should(response.getHeader("Location")).be.equal("http://example.org");
       should(stub).not.be.called();

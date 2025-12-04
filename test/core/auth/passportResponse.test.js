@@ -8,7 +8,7 @@ describe("passportResponse tests", () => {
   var passportResponse;
 
   before(() => {
-    passportResponse = new PassportResponse();
+    passportResponse = new PassportResponse.default();
   });
 
   it("should set the header correctly", () => {

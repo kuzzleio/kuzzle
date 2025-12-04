@@ -2,7 +2,7 @@
 
 This image is meant to be used in production environment.
 
-This image is based on `node:20-bookworm-slim` and it contains Kuzzle code and dependencies.
+This image is based on `node:24-trixie-slim` and it contains Kuzzle code and dependencies.
 
 ## Usage
 
@@ -10,7 +10,7 @@ You should use this image as a base build your own application:
 
 ```dockerfile
 # Build image
-FROM node:20-bookworm-slim as builder
+FROM node:24-trixie-slim as builder
 
 ADD . /your-plugin-name
 

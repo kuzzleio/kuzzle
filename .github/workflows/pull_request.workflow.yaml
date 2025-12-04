@@ -1,0 +1,171 @@
+name: Tests
+
+on: [pull_request]
+
+jobs:
+  error-codes-check:
+    name: Documentation - Error codes check
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test error codes
+        run: ./.ci/scripts/check-error-codes-documentation.sh
+
+  lint:
+    name: Lint - Node.js
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      - name: ESLint
+        run: npm run test:lint
+        shell: bash
+
+  unit-tests:
+    name: Unit Tests
+    needs: [lint]
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+        test-suits: ["mocha", "vitest"]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Unit test using Node ${{ matrix.node-version }}
+        uses: ./.github/actions/unit-tests
+        with:
+          suit: ${{ matrix.test-suits }}
+        env:
+          NODE_VERSION: ${{ matrix.node-version }}
+
+  build-and-run-kuzzle:
+    needs: [lint]
+    name: Build and Run
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        kuzzle-image: ["kuzzle"]
+        es-version: [7, 8]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Test to run Kuzzle image
+        uses: ./.github/actions/build-and-run-kuzzle
+        with:
+          kuzzle-image: ${{ matrix.kuzzle-image }}
+          es-version: ${{ matrix.es-version }}
+
+  functional-tests:
+    name: Functional tests
+    needs: [unit-tests]
+    strategy:
+      matrix:
+        test-set:
+          [
+            "http",
+            "websocket",
+            "legacy:mqtt",
+            "legacy:http",
+            "legacy:websocket",
+          ]
+        node-version: [20, 22, 24]
+        es-version: [7, 8]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Test suit ${{ matrix.test-set }}
+        uses: ./.github/actions/functional-tests
+        with:
+          test-set: test:functional:${{ matrix.test-set }}
+          node-version: ${{ matrix.node-version }}
+          es-version: ${{ matrix.es-version }}
+
+  cluster-monkey-tests:
+    name: Cluster Monkey Tests
+    needs: [functional-tests, build-and-run-kuzzle]
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+        es-version: [7, 8]
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Cloning Monkey Tester
+        uses: actions/checkout@v4
+        with:
+          repository: kuzzleio/kuzzle-monkey-tests
+          path: "kuzzle-monkey-tests"
+
+      - name: Node version ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Monkey testing
+        uses: ./.github/actions/monkey-tests
+        with:
+          node-version: ${{ matrix.node-version }}
+          es-version: ${{matrix.es-version}}

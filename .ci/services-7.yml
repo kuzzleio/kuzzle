@@ -3,7 +3,6 @@ services:
     build:
       dockerfile: ./docker/images/${KUZZLE_IMAGE}/Dockerfile
       context: ..
-    command: ["kuzzle", "start"]
     cap_add:
       - SYS_PTRACE
     ulimits:
@@ -22,7 +21,7 @@ services:
       - "7512:7512"
 
   redis:
-    image: redis:7
+    image: redis:8
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

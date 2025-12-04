@@ -58,8 +58,8 @@ export class Store {
   public updateCollection: (...args: any[]) => Promise<any>;
   public updateMapping: (...args: any[]) => Promise<any>;
 
-  protected index: string;
-  protected scope: storeScopeEnum;
+  public index: string;
+  public scope: storeScopeEnum;
 
   private readonly logger = global.kuzzle.log.child("core:shared:store");
 
