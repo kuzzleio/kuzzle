@@ -1,6 +1,5 @@
 ################################################################################
-ARG NODE_VERSION="24"
-FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS builder
+FROM kuzzleio/kuzzle-runner:24 AS builder
 
 WORKDIR /app
 
@@ -16,7 +15,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 ################################################################################
-FROM kuzzleio/kuzzle-runner:${NODE_VERSION} AS minifier
+FROM kuzzleio/kuzzle-runner:24 AS minifier
 
 ENV NODE_ENV=production
 
@@ -28,7 +27,7 @@ RUN  set -x \
      && apt-get autoremove --yes
 
 ################################################################################
-FROM node:${NODE_VERSION}-trixie-slim
+FROM node:24-trixie-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your Kuzzle backend in production mode"
