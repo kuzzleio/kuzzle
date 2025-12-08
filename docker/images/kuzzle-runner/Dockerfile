@@ -1,5 +1,5 @@
 ARG NODE_VERSION="24"
-FROM node:${NODE_VERSION}-trixie-slim
+FROM node:${NODE_VERSION}-${DOCKER_IMAGE}-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your in-development Kuzzle application with ease"
