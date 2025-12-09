@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: [20, 22]
+        node-version: [18, 20, 22]
     steps:
       - uses: actions/checkout@v4
 
@@ -40,22 +40,20 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./docker/images/kuzzle-runner
-          file: ./docker/images/kuzzle-runner/Dockerfile
+          context: ./docker/images/kuzzle-runner/bookworm
+          file: ./docker/images/kuzzle-runner/bookworm/Dockerfile
           push: true
           build-args: |
             NODE_VERSION=${{ matrix.node-version }}
-            DOCKER_IMAGE=bookworm
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
+          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }},kuzzleio/kuzzle-runner:${{ matrix.node-version }}-bookworm-slim
 
   publish-runner-trixie:
-    # For uWebsocket that need to use a newer version of GLIBC, we use trixie here
     name: Kuzzle runner Docker image
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        node-version: [24]
+        node-version: [18, 20, 22, 24]
     steps:
       - uses: actions/checkout@v4
 
@@ -77,14 +75,13 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./docker/images/kuzzle-runner
-          file: ./docker/images/kuzzle-runner/Dockerfile
+          context: ./docker/images/kuzzle-runner/trixie
+          file: ./docker/images/kuzzle-runner/trixie/Dockerfile
           push: true
           build-args: |
             NODE_VERSION=${{ matrix.node-version }}
-            DOCKER_IMAGE=trixie
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
+          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}-trixie-slim
 
   publish-kuzzle-core:
     name: Kuzzle core Docker image

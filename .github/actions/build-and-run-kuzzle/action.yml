@@ -8,10 +8,6 @@ inputs:
   es-version:
     description: Elasticsearch version to use
     required: true
-  docker_image:
-    description: Docker image to use (from debian)
-    required: false
-    default: trixie
   node_version:
     description: NodeJS version to use
     required: false
@@ -33,7 +29,6 @@ runs:
       run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
-        export DOCKER_IMAGE=${{ inputs.docker_image }}
         export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then
@@ -52,7 +47,6 @@ runs:
       run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
-        export DOCKER_IMAGE=${{ inputs.docker_image }}
         export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then
@@ -76,7 +70,6 @@ runs:
       run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
-        export DOCKER_IMAGE=${{ inputs.docker_image }}
         export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then

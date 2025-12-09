@@ -1,7 +1,7 @@
 ARG NODE_VERSION="24"
 ARG DOCKER_IMAGE="trixie"
 
-FROM node:${NODE_VERSION}-${DOCKER_IMAGE}-slim
+FROM node:${NODE_VERSION}-bookworm-slim
 
 LABEL io.kuzzle.vendor="Kuzzle <support@kuzzle.io>"
 LABEL description="Run your in-development Kuzzle application with ease"
