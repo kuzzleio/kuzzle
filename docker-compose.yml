@@ -1,5 +1,5 @@
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/kuzzle-runner:22
+  image: kuzzleio/kuzzle-runner:24-trixie-slim
   command: npm run dev
   volumes:
     - ".:/var/app"

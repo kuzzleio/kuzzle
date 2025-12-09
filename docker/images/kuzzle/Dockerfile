@@ -1,5 +1,5 @@
 ################################################################################
-FROM kuzzleio/kuzzle-runner:24 AS builder
+FROM kuzzleio/kuzzle-runner:24-trixie-slim AS builder
 
 WORKDIR /app
 
@@ -15,7 +15,7 @@ RUN npm run build
 RUN npm prune --omit=dev
 
 ################################################################################
-FROM kuzzleio/kuzzle-runner:24 AS minifier
+FROM kuzzleio/kuzzle-runner:24-trixie-slim AS minifier
 
 ENV NODE_ENV=production
 

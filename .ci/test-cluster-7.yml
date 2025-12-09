@@ -1,5 +1,5 @@
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-24}
+  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-24}-trixie-slim
   command: >
     bash -c "
       node -r ts-node/register/transpile-only ./start-kuzzle-test.ts --enable-plugins kuzzle-plugin-cluster,functional-test-plugin

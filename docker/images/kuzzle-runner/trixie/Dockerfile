@@ -1,5 +1,4 @@
 ARG NODE_VERSION="24"
-ARG DOCKER_IMAGE="trixie"
 
 FROM node:${NODE_VERSION}-trixie-slim
 
