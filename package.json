@@ -19,6 +19,8 @@
     "test:unit:mocha": "mocha --exit",
     "test:lint": "eslint ./lib ./test ./bin ./features"
   },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "directories": {
     "lib": "lib"
   },
