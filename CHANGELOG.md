@@ -1,3 +1,9 @@
+## [2.50.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.4...v2.50.0-beta.5) (2025-12-16)
+
+### Bug Fixes
+
+* add main and types entries in packa ([4f8be51](https://github.com/kuzzleio/kuzzle/commit/4f8be5154d8303f504f113d836460235de96c446))
+
 ## [2.50.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.3...v2.50.0-beta.4) (2025-12-16)
 
 ### Bug Fixes
