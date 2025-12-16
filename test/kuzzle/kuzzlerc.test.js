@@ -6,7 +6,7 @@ const fs = require("fs");
 describe(".kuzzlerc.sample.jsonc", () => {
   it("should be able to load the kuzzlerc sample file without errors", () => {
     const content = fs.readFileSync(
-      `${__dirname}/../../.kuzzlerc.sample.jsonc`,
+      `${__dirname}/../../../.kuzzlerc.sample.jsonc`,
     );
     const stripped = stripJson(content.toString());
 

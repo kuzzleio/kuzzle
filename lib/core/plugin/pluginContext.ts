@@ -20,15 +20,11 @@
  */
 
 import Bluebird from "bluebird";
+import _ from "lodash";
 import { Koncorde } from "../shared/KoncordeWrapper";
 import { JSONObject } from "kuzzle-sdk";
 
-import {
-  KuzzleRequest,
-  Request,
-  RequestContext,
-  RequestInput,
-} from "../../../index";
+import { KuzzleRequest, RequestContext, RequestInput } from "../../../index";
 
 import * as kerror from "../../kerror";
 import {
@@ -409,7 +405,7 @@ export class PluginContext {
  * @param {KuzzleRequest} request
  * @param {Function} [callback]
  */
-function execute(request, callback) {
+function execute(request: KuzzleRequest, callback) {
   if (callback && typeof callback !== "function") {
     const error = contextError.get("invalid_callback", typeof callback);
     global.kuzzle.log.error(error);
@@ -418,10 +414,7 @@ function execute(request, callback) {
 
   const promback = new Promback(callback);
 
-  if (
-    !request ||
-    (!(request instanceof KuzzleRequest) && !(request instanceof Request))
-  ) {
+  if (!request || _.isEmpty(request)) {
     return promback.reject(contextError.get("missing_request"));
   }
 

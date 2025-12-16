@@ -40,9 +40,9 @@ import Router from "../core/network/router";
 import PluginsManager from "../core/plugin/pluginsManager";
 import RealtimeModule from "../core/realtime";
 import SecurityModule from "../core/security";
-import Statistics from "../core/statistics";
+import Statistics from "../core/statistics/statistics";
 import StorageEngine from "../core/storage/storageEngine";
-import Validation from "../core/validation";
+import Validation from "../core/validation/validation";
 import * as kerror from "../kerror";
 import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
@@ -99,7 +99,7 @@ type ImportStatus = {
 
 class Kuzzle extends KuzzleEventEmitter {
   public config: KuzzleConfiguration;
-  private _state: typeof kuzzleStateEnum = kuzzleStateEnum.STARTING;
+  private _state: number = kuzzleStateEnum.STARTING;
   public log: Logger;
   private rootPath: string;
   /**
@@ -134,7 +134,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Validation core component
    */
-  public validation: typeof Validation;
+  public validation: Validation;
 
   /**
    * Dump generator
@@ -144,7 +144,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Vault component (will be initialized after bootstrap)
    */
-  public vault: typeof vault;
+  public vault: any;
 
   /**
    * AsyncLocalStorage wrapper
@@ -819,11 +819,11 @@ class Kuzzle extends KuzzleEventEmitter {
     );
   }
 
-  get state(): typeof kuzzleStateEnum {
+  get state(): kuzzleStateEnum {
     return this._state;
   }
 
-  set state(value: typeof kuzzleStateEnum) {
+  set state(value: kuzzleStateEnum) {
     this._state = value;
     this.emit("kuzzle:state:change", value);
   }
@@ -836,6 +836,11 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   registerSignalHandlers() {
     process.removeAllListeners("unhandledRejection");
+
+    process.on("exit", () => {
+      this.shutdown();
+    });
+
     process.on("unhandledRejection", (reason, promise) => {
       if (reason !== undefined) {
         if (reason instanceof Error) {

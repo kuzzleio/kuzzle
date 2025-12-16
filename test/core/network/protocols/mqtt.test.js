@@ -6,7 +6,6 @@ const should = require("should");
 const sinon = require("sinon");
 
 const { BadRequestError } = require("../../../../index");
-const errorMatcher = require("../../../util/errorMatcher");
 
 const KuzzleMock = require("../../../mocks/kuzzle.mock");
 const EntryPointMock = require("../../../mocks/entrypoint.mock");
@@ -389,28 +388,18 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
           client,
         );
 
-        // NodeJS < 20
-        const matcher1 = errorMatcher.fromMessage(
-          "network",
-          "mqtt",
-          "unexpected_error",
-          "Unexpected token i in JSON at position 0",
-        );
-
-        // NodeJS >= 20
-        const matcher2 = errorMatcher.fromMessage(
-          "network",
-          "mqtt",
-          "unexpected_error",
-          "Unexpected token 'i', \"invalid\" is not valid JSON",
-        );
+        const matcher = sinon.match((response) => {
+          return (
+            response &&
+            response.content &&
+            response.content.error &&
+            response.content.error.id === "network.mqtt.unexpected_error"
+          );
+        });
 
         should(protocol._respond)
           .be.calledOnce()
-          .be.calledWith(
-            client,
-            sinon.match(matcher1).or(sinon.match(matcher2)),
-          );
+          .be.calledWith(client, matcher);
 
         protocol._respond.resetHistory();
       }

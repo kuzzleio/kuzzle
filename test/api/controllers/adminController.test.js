@@ -32,7 +32,7 @@ describe("AdminController", () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    adminController = new AdminController();
+    adminController = new AdminController.default();
 
     request = new Request({ controller: "admin" });
 
@@ -228,7 +228,7 @@ describe("AdminController", () => {
     });
 
     it("should throw an error if shutdown is in progress", async () => {
-      adminController = new AdminController();
+      adminController = new AdminController.default();
       adminController.shuttingDown = true;
 
       await should(adminController.shutdown(request)).rejectedWith(

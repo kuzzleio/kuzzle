@@ -60,7 +60,8 @@ generic
   ✔ Cleaning up
 
  [✔] Scaffolding complete!
- [✔] Use cd playground && docker compose up -d to start your Kuzzle stack.
+ [✔] Use docker compose --rm --no-deps run npm install.
+ [✔] Use docker compose up -d to start your Kuzzle stack.
 ```
 
 This will create the following files and directories:
@@ -79,7 +80,7 @@ This will create the following files and directories:
 │       ├── kourou.env
 │       └── kuzzlerc
 ├── ergol.config.json
-├── jest.config.ts
+├── vitest.config.ts
 ├── lib
 │   ├── MyApplication.ts
 │   └── modules

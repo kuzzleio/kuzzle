@@ -23,7 +23,7 @@ describe("AsyncStore", () => {
 
       AsyncStore = mockRequire.reRequire("../../lib/util/asyncStore");
 
-      asyncStore = new AsyncStore();
+      asyncStore = new AsyncStore.default();
     });
 
     describe("#run", () => {
@@ -81,7 +81,7 @@ describe("AsyncStore", () => {
     beforeEach(() => {
       AsyncStore = require("../../lib/util/asyncStore");
 
-      asyncStore = new AsyncStore();
+      asyncStore = new AsyncStore.default();
     });
 
     // Prior to Node 12.18.1

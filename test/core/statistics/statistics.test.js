@@ -36,7 +36,7 @@ describe("Test: statistics core component", () => {
     });
 
     kuzzle = new Kuzzle();
-    stats = new Statistics();
+    stats = new Statistics.default();
     stats.enabled = true;
   });
 

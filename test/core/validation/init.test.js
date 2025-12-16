@@ -21,7 +21,9 @@ describe("Test: validation initialization", () => {
 
     kuzzle = new KuzzleMock();
 
-    Validation = mockRequire.reRequire("../../../lib/core/validation");
+    Validation = mockRequire.reRequire(
+      "../../../lib/core/validation/validation",
+    );
     validation = new Validation();
   });
 
@@ -62,7 +64,9 @@ describe("Test: validation initialization", () => {
       );
     });
 
-    Validation = mockRequire.reRequire("../../../lib/core/validation");
+    Validation = mockRequire.reRequire(
+      "../../../lib/core/validation/validation",
+    );
     validation = new Validation();
 
     validation.addType = addTypeStub;

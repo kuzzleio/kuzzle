@@ -4,7 +4,7 @@ env:
   DOCKER_PLATFORMS: "linux/amd64,linux/arm64"
   DOCKER_PLATFORMS_ELASTICSEARCH: "linux/amd64,linux/arm64"
   ELASTICSEARCH_VERSION: "7.17.26"
-  NODE_VERSION: "22"
+  NODE_VERSION: "24"
 
 on:
   release:
@@ -12,7 +12,8 @@ on:
       - released
 
 jobs:
-  publish-runner:
+  # For retro compat we use bookworm here
+  publish-runner-bookworm:
     name: Kuzzle runner Docker image
     runs-on: ubuntu-24.04
     strategy:
@@ -39,12 +40,48 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./docker/images/kuzzle-runner
-          file: ./docker/images/kuzzle-runner/Dockerfile
+          context: ./docker/images/kuzzle-runner/bookworm
+          file: ./docker/images/kuzzle-runner/bookworm/Dockerfile
           push: true
-          build-args: NODE_VERSION=${{ matrix.node-version }}
+          build-args: |
+            NODE_VERSION=${{ matrix.node-version }}
           platforms: ${{ env.DOCKER_PLATFORMS }}
-          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}
+          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }},kuzzleio/kuzzle-runner:${{ matrix.node-version }}-bookworm-slim
+
+  publish-runner-trixie:
+    name: Kuzzle runner Docker image
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        node-version: [20, 22, 24]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./docker/images/kuzzle-runner/trixie
+          file: ./docker/images/kuzzle-runner/trixie/Dockerfile
+          push: true
+          build-args: |
+            NODE_VERSION=${{ matrix.node-version }}
+          platforms: ${{ env.DOCKER_PLATFORMS }}
+          tags: kuzzleio/kuzzle-runner:${{ matrix.node-version }}-trixie-slim
 
   publish-kuzzle-core:
     name: Kuzzle core Docker image

@@ -1,0 +1,232 @@
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import Bluebird from "bluebird";
+
+import * as kerror from "../../kerror";
+import { NativeController } from "./baseController";
+import { Mutex } from "../../util/mutex";
+import { KuzzleRequest } from "../request";
+import { ResetSecurityResult } from "../../types/controllers/adminControlller.type";
+
+/**
+ * @class AdminController
+ */
+export default class AdminController extends NativeController {
+  protected shuttingDown: boolean;
+  protected logger: any;
+
+  constructor() {
+    super([
+      "dump",
+      "loadFixtures",
+      "loadMappings",
+      "loadSecurities",
+      "refreshIndexCache",
+      "resetCache",
+      "resetDatabase",
+      "resetSecurity",
+      "shutdown",
+    ]);
+
+    this.shuttingDown = false;
+    this.logger = global.kuzzle.log.child("api:controllers:admin");
+  }
+
+  async refreshIndexCache() {
+    await global.kuzzle.ask("core:storage:public:cache:refresh");
+  }
+
+  /**
+   * Reset Redis cache
+   */
+  async resetCache(request: KuzzleRequest) {
+    const database = request.getString("database");
+
+    // @todo allow only memoryStorage
+    if (database === "internalCache") {
+      await this.ask("core:cache:internal:flushdb");
+    } else if (database === "memoryStorage") {
+      await this.ask("core:cache:public:flushdb");
+    } else {
+      throw kerror.get("services", "cache", "database_not_found", database);
+    }
+
+    return { acknowledge: true };
+  }
+
+  /**
+   * Reset all roles, profiles and users
+   */
+  async resetSecurity() {
+    const mutex = new Mutex("resetSecurity", { timeout: 0 });
+
+    if (!(await mutex.lock())) {
+      throw kerror.get(
+        "api",
+        "process",
+        "action_locked",
+        "Kuzzle is already reseting roles, profiles and users.",
+      );
+    }
+
+    const result: ResetSecurityResult = {};
+
+    try {
+      const options = { refresh: "wait_for" };
+
+      result.deletedUsers = await this.ask(
+        "core:security:user:truncate",
+        options,
+      );
+      result.deletedProfiles = await this.ask(
+        "core:security:profile:truncate",
+        options,
+      );
+      result.deletedRoles = await this.ask(
+        "core:security:role:truncate",
+        options,
+      );
+
+      await global.kuzzle.internalIndex.createInitialSecurities();
+
+      await this.ask(
+        "core:cache:internal:del",
+        `backend:init:import:permissions`,
+      );
+    } finally {
+      await mutex.unlock();
+    }
+
+    return result;
+  }
+
+  /**
+   * Reset all indexes created by users
+   */
+  async resetDatabase() {
+    const mutex = new Mutex("resetDatabase", { timeout: 0 });
+
+    if (!(await mutex.lock())) {
+      throw kerror.get(
+        "api",
+        "process",
+        "action_locked",
+        "Kuzzle is already reseting all indexes.",
+      );
+    }
+
+    try {
+      const indexes = await this.ask("core:storage:public:index:list");
+      await this.ask("core:storage:public:index:mDelete", indexes);
+
+      await this.ask("core:cache:internal:del", `backend:init:import:mappings`);
+
+      return { acknowledge: true };
+    } finally {
+      await mutex.unlock();
+    }
+  }
+
+  /**
+   * Generate a dump
+   * Kuzzle will throw a PreconditionError if a dump is already running
+   */
+  dump(request: KuzzleRequest) {
+    const waitForRefresh = request.getRefresh("wait_for");
+    const suffix = request.getString("suffix", "manual-api-action");
+
+    const promise = global.kuzzle.dump(suffix);
+
+    return this._waitForAction(waitForRefresh, promise);
+  }
+
+  /**
+   * Shutdown Kuzzle
+   */
+  async shutdown() {
+    if (this.shuttingDown) {
+      throw kerror.get(
+        "api",
+        "process",
+        "action_locked",
+        "Kuzzle is already shutting down.",
+      );
+    }
+
+    global.kuzzle.shutdown();
+
+    return { acknowledge: true };
+  }
+
+  loadFixtures(request: KuzzleRequest) {
+    const fixtures = request.getBody();
+    const refresh = request.getRefresh("wait_for");
+
+    return global.kuzzle.ask("core:storage:public:document:import", fixtures, {
+      refresh,
+    });
+  }
+
+  loadMappings(request: KuzzleRequest) {
+    const mappings = request.getBody();
+
+    return this._waitForAction(
+      request.getRefresh("wait_for"),
+      global.kuzzle.ask("core:storage:public:mappings:import", mappings, {
+        rawMappings: true,
+      }),
+    );
+  }
+
+  async loadSecurities(request: KuzzleRequest) {
+    const permissions = request.getBody();
+    const user = request.getUser();
+    const onExistingUsers = request.input.args.onExistingUsers;
+    const force = request.getBoolean("force");
+    const waitForRefresh = request.getRefresh("wait_for");
+
+    const promise = this.ask("core:security:load", permissions, {
+      force,
+      onExistingUsers,
+      refresh: waitForRefresh,
+      user,
+    });
+
+    return this._waitForAction(waitForRefresh, promise);
+  }
+
+  _waitForAction(
+    waitForRefresh: string,
+    promise: Promise<any>,
+  ): Promise<{ acknowledge: boolean }> {
+    const result = { acknowledge: true };
+
+    if (waitForRefresh === "false") {
+      // Attaching an error handler to the provided promise to prevent
+      // uncaught rejections
+      promise.catch((err) => this.logger.error(err));
+
+      return Bluebird.resolve(result);
+    }
+
+    return promise.then(() => result);
+  }
+}

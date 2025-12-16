@@ -208,3 +208,41 @@ Feature: Collection Controller
     | index | "nyc-open-data" |
     | collection | "green-taxi" |
     Then The result should be "false"
+
+  Scenario: Reindex a collection after updating mappings
+    Given an index "nyc-open-data"
+    And I "create" the collection "nyc-open-data":"green-taxi" with:
+      | mappings | { "dynamic": "false", "properties": { "name": { "type": "keyword" } } } |
+    And I "create" the following multiple documents:
+      | _id          | body                         |
+      | "document-1" | { "age": 42, "name": "Bob" } |
+    And I refresh the collection
+    When I search documents with the following query:
+      """
+      {
+        "range": {
+          "age": {
+            "gte": 40
+          }
+        }
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 0 elements
+    When I successfully execute the action "collection":"update" with args:
+      | index      | "nyc-open-data"                                                          |
+      | collection | "green-taxi"                                                             |
+      | body       | { "mappings": { "properties": { "age": { "type": "long" } } }, "reindexCollection": true } |
+    And I wait 2000 milliseconds
+    And I search documents with the following query:
+      """
+      {
+        "range": {
+          "age": {
+            "gte": 40
+          }
+        }
+      }
+      """
+    And I execute the search query
+    Then I should receive a "hits" array containing 1 elements

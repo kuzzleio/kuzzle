@@ -386,13 +386,16 @@ export class TokenRepository extends ObjectRepository<Token> {
   async _verifyApiKey(decoded, token: string) {
     const fingerprint = sha256(token);
 
-    const userApiKeys = await ApiKey.search({
-      query: {
-        term: {
-          userId: decoded._id,
+    const userApiKeys: any = await ApiKey.search(
+      {
+        query: {
+          term: {
+            userId: decoded._id,
+          },
         },
       },
-    });
+      {},
+    );
 
     const targetApiKey = userApiKeys?.find(
       (apiKey) => apiKey.fingerprint === fingerprint,
@@ -402,7 +405,7 @@ export class TokenRepository extends ObjectRepository<Token> {
       throw securityError.get("invalid");
     }
 
-    const apiKey = await ApiKey.load(decoded._id, targetApiKey._id);
+    const apiKey: any = await ApiKey.load(decoded._id, targetApiKey._id);
 
     const userToken = new Token({
       _id: `${decoded._id}#${token}`,
