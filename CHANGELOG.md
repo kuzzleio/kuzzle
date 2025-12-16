@@ -1,3 +1,9 @@
+## [2.50.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.3...v2.50.0-beta.4) (2025-12-16)
+
+### Bug Fixes
+
+* remove the script in preinstall ([edce3d7](https://github.com/kuzzleio/kuzzle/commit/edce3d7293a4f2e7e8c6df037ee29b8536f4cd1b))
+
 ## [2.50.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.2...v2.50.0-beta.3) (2025-12-16)
 
 ### Bug Fixes
