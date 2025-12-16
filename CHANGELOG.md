@@ -1,3 +1,10 @@
+## [2.50.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.6...v2.50.0-beta.7) (2025-12-16)
+
+### Bug Fixes
+
+* build ([6d51c6d](https://github.com/kuzzleio/kuzzle/commit/6d51c6dc6bbb389faea981dc8322e4516086055a))
+* package-lock.json update, along side kuzzle-sdk ([94dd59b](https://github.com/kuzzleio/kuzzle/commit/94dd59bf79728aaa2e487f03e5288be516c429ee))
+
 ## [2.50.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.5...v2.50.0-beta.6) (2025-12-16)
 
 ### Bug Fixes

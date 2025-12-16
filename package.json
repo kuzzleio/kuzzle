@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.50.0-beta.6",
+  "version": "2.50.0-beta.7",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
     "build": "rm -Rf ./dist && tsc && node ./bin/copy-protobuf.js",
