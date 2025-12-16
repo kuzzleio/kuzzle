@@ -53,7 +53,6 @@ jobs:
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
-          scope: "@kuzzleio"
 
       - name: Install depedencies
         run: npm ci
@@ -64,7 +63,6 @@ jobs:
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GHP }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           SEMANTIC_RELEASE_NPM_PUBLISH: "true"
           SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
         run: npx semantic-release
