@@ -50,7 +50,6 @@
 
     // Binaries
     "bin/copy-protobuf.js",
-    "bin/check-node-version.js",
     "bin/start-kuzzle-server.js",
 
     // development files
