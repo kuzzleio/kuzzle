@@ -24,7 +24,7 @@ describe("Test: security controller - users", () => {
   beforeEach(() => {
     kuzzle = new KuzzleMock();
 
-    securityController = new SecurityController();
+    securityController = new SecurityController.default();
     securityController.anonymousId = "-1";
     request = new Request({ controller: "security" }, { user: new User() });
 

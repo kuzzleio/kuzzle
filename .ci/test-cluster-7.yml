@@ -1,8 +1,8 @@
 x-kuzzle-config: &kuzzle-config
-  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-20}
-  command: > 
+  image: kuzzleio/kuzzle-runner:${NODE_VERSION:-24}-trixie-slim
+  command: >
     bash -c "
-      node ./docker/scripts/start-kuzzle-test.js --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
+      node -r ts-node/register/transpile-only ./start-kuzzle-test.ts --enable-plugins kuzzle-plugin-cluster,functional-test-plugin
     "
   volumes:
     - "..:/var/app"
@@ -27,7 +27,7 @@ x-kuzzle-config: &kuzzle-config
     - kuzzle_limits__loginsPerSecond=50
     - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
     - NODE_ENV=development
-    - NODE_VERSION=${NODE_VERSION:-20}
+    - NODE_VERSION=${NODE_VERSION:-24}
     - DEBUG=none
     - SECRETS_FILE_PREFIX=/var/app/
     # cluster
@@ -63,7 +63,7 @@ services:
       - "17512:7512"
 
   redis:
-    image: redis:7
+    image: redis:8
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

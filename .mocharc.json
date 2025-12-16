@@ -3,6 +3,7 @@
   "recursive": true,
   "slow": 2000,
   "timeout": 10000,
-  "require": ["should-sinon", "ts-node/register"],
-  "file": ["./test/restore-sinon.js"]
+  "require": ["should-sinon"],
+  "spec": ["./dist/test/**/*.test.js"],
+  "file": ["./dist/test/restore-sinon.js"]
 }

@@ -1,0 +1,126 @@
+#!/usr/bin/env node
+
+/*
+ * Kuzzle, a backend software, self-hostable and ready to use
+ * to power modern apps
+ *
+ * Copyright 2015-2022 Kuzzle
+ * mailto: support AT kuzzle.io
+ * website: http://kuzzle.io
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+"use strict";
+
+/* eslint-disable no-console */
+
+const fs = require("fs");
+
+const yargs = require("yargs");
+
+const { Backend } = require("../index");
+
+function loadJson(path) {
+  if (!path) {
+    return {};
+  }
+
+  return JSON.parse(fs.readFileSync(path, "utf8"));
+}
+
+async function startKuzzle(options = {}) {
+  const app = new Backend("kuzzle");
+
+  if (options.enablePlugins) {
+    const additionalPlugins = options.enablePlugins
+      .trim()
+      .split(",")
+      .map((x) => x.trim().replace(/(^")|("$)/g, ""));
+
+    for (const additionalPlugin of additionalPlugins) {
+      const PluginClass = require(`./plugins/available/${additionalPlugin}`);
+      const manifest = require(
+        `./plugins/available/${additionalPlugin}/manifest.json`,
+      );
+      const plugin = new PluginClass();
+
+      try {
+        plugin.version = require(
+          `./plugins/available/${additionalPlugin}/package.json`,
+        ).version;
+      } catch (e) {
+        // ignore
+      }
+
+      app.plugin.use(plugin, { manifest, name: manifest.name });
+    }
+  }
+
+  app.import.mappings = loadJson(options.mappings);
+
+  app.import.fixtures = loadJson(options.fixtures);
+
+  app.import.securities = loadJson(options.securities);
+
+  app.vault.key = options.vaultKey;
+
+  app.vault.file = options.secretsFile;
+
+  app.version = "1.0.0";
+
+  await app.start();
+
+  const { total: admins } = await app.sdk.security.searchUsers({
+    query: { term: { profileIds: "admin" } },
+  });
+
+  if (admins.length === 0) {
+    app.log(
+      "[!] [WARNING] There is no administrator user yet: everyone has administrator rights.",
+    );
+    app.log(
+      "[ℹ]  You can use the CLI or the admin console to create the first administrator user.",
+    );
+    app.log(
+      "    For more information: https://docs.kuzzle.io/core/2/guides/essentials/security/",
+    );
+  }
+}
+
+const options = yargs()
+  .scriptName("kuzzle")
+  .usage("start-kuzzle-server [options]")
+  .describe("fixtures", "Import data from file")
+  .describe("mappings", "Apply mappings from file")
+  .describe("securities", "Import roles, profiles and users from file")
+  .describe("vault-key", "Vault key used to decrypt secrets")
+  .describe("secrets-file", "Output file to write decrypted secrets")
+  .describe(
+    "enable-plugins",
+    'Enable plugins from "plugins/available" directory',
+  ).argv;
+
+const run = async () => {
+  try {
+    await startKuzzle(options);
+  } catch (error) {
+    console.error(`[x] [ERROR] ${error.stack}`);
+    process.exit(1);
+  }
+};
+
+run();
+
+// Used for tests only
+module.exports = startKuzzle;

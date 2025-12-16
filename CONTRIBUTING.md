@@ -117,7 +117,8 @@ Finally, run the command `docker compose up` to start your Kuzzle stack.
 ### Unit tests
 
 ```bash
-npm run test:unit
+npm run test:unit:vitest
+npm run test:unit:mocha
 ```
 
 ### Functional tests

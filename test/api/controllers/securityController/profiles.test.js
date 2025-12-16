@@ -34,7 +34,7 @@ describe("Test: security controller - profiles", () => {
         },
       },
     });
-    securityController = new SecurityController();
+    securityController = new SecurityController.default();
 
     fakeProfile = new Profile();
     fakeProfile._id = "fakeProfile";
