@@ -8,7 +8,6 @@
     "cucumber": "cucumber.js --fail-fast",
     "dev": "tsx watch start-kuzzle-dev.ts",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
-    "preinstall": "node ./bin/check-node-version.js",
     "prepublishOnly": "npm run build",
     "prettier": "prettier ./lib ./test ./features --write",
     "test:functional:legacy:http": "cucumber-js --format progress-bar --profile httpLegacy --config cucumber.config.cjs",
