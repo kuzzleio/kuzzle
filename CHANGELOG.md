@@ -1,3 +1,20 @@
+## [2.50.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.49.1...v2.50.0-beta.1) (2025-12-16)
+
+
+### Features
+
+* nodejs 24 in actions ([723488c](https://github.com/kuzzleio/kuzzle/commit/723488c1c4f7647c46cbd26ba82a71952ccbba9e))
+* nodejs 24 support ([f420b17](https://github.com/kuzzleio/kuzzle/commit/f420b171e8dab9afcbf57f2ca732d90ef4b1f99b))
+* typescript updates ([a8256ca](https://github.com/kuzzleio/kuzzle/commit/a8256ca0b3e0790ae72ccbf4a2bc5cdd56d76b23))
+
+
+### Bug Fixes
+
+* _id sort on searchRoles not allowed with es8 ([f8d5c3e](https://github.com/kuzzleio/kuzzle/commit/f8d5c3e0a06870be3f65a083c077cb668c0e5da3))
+* remove version 18 from trixoe ([01f9d53](https://github.com/kuzzleio/kuzzle/commit/01f9d5343db4b095881e1bfcdcde437f2a58084d))
+* runner ci ([538428c](https://github.com/kuzzleio/kuzzle/commit/538428c1f897c1b636ff3383e02bd0d155f0dd97))
+* runner image, wasn't build for arm ([5f25b9d](https://github.com/kuzzleio/kuzzle/commit/5f25b9d530a4a31f9cb6d577095f77d9fb801939))
+
 ## [2.49.1](https://github.com/kuzzleio/kuzzle/compare/v2.49.0...v2.49.1) (2025-11-18)
 
 
