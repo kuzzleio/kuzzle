@@ -41,6 +41,7 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      id-token: write
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -54,21 +55,21 @@ jobs:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
 
-      - name: Install depedencies
+      - name: Install dependencies
         run: npm ci
-
-      - name: Build depedencies
+    
+      - name: Build
         run: npm run build
 
       - name: Release
         env:
-          GITHUB_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GHP }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SEMANTIC_RELEASE_NPM_PUBLISH: "true"
           SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
         run: npx semantic-release
 
   publish-sbom-to-dtrack:
-    needs: [npm-deploy]
+    needs: [npm-deploy, doc-deploy]
     name: Publish SBOM to Dependency-Track
     runs-on: ubuntu-24.04
     steps:
