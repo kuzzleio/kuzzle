@@ -1,3 +1,9 @@
+## [2.50.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.5...v2.50.0-beta.6) (2025-12-16)
+
+### Bug Fixes
+
+* modify github token to allow workflow to be triggered sequantialy ([3c4dce9](https://github.com/kuzzleio/kuzzle/commit/3c4dce919913bd18c2ab4f29ebd1f4da55e37e5f))
+
 ## [2.50.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.4...v2.50.0-beta.5) (2025-12-16)
 
 ### Bug Fixes
