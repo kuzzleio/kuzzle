@@ -1,3 +1,10 @@
+## [2.50.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.2...v2.50.0-beta.3) (2025-12-16)
+
+### Bug Fixes
+
+* add proper permission to release id-token ([e5e5749](https://github.com/kuzzleio/kuzzle/commit/e5e5749de32043652a69e9bb0d5164446c978507))
+* removed the token used for npm, use trusted publisher system instead ([fcb0f06](https://github.com/kuzzleio/kuzzle/commit/fcb0f0640587db61d46065e716b347d0a089724e))
+
 ## [2.50.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.1...v2.50.0-beta.2) (2025-12-16)
 
 ### Features
