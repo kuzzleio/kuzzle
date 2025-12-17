@@ -1,3 +1,9 @@
+## [2.50.0-beta.9](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.8...v2.50.0-beta.9) (2025-12-17)
+
+### Bug Fixes
+
+* sonarcloud update ([bc084f7](https://github.com/kuzzleio/kuzzle/commit/bc084f7047597ef4d4a46a2980e02b4e18ff3a0c))
+
 ## [2.50.0-beta.8](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.7...v2.50.0-beta.8) (2025-12-17)
 
 ### Bug Fixes
