@@ -67,38 +67,3 @@ jobs:
           SEMANTIC_RELEASE_NPM_PUBLISH: "true"
           SEMANTIC_RELEASE_SLACK_WEBHOOK: ${{ secrets.SEMANTIC_RELEASE_SLACK_WEBHOOK }}
         run: npx semantic-release
-
-  publish-sbom-to-dtrack:
-    needs: [npm-deploy, doc-deploy]
-    name: Publish SBOM to Dependency-Track
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout project
-        uses: actions/checkout@v4
-
-      - name: Install additional libraries
-        uses: ./.github/actions/install-packages
-
-      - name: Node version ${{ inputs.node_lts_current_version }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ inputs.node_lts_current_version }}
-
-      - run: npm install
-      - name: Create SBOM with CycloneDX
-        run: npx @cyclonedx/cyclonedx-npm -o bom.xml --of=XML
-
-      - name: Get the current project version from package.json
-        id: get-version
-        run: |
-          echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
-
-      - name: Publish SBOM to Dependency-Track
-        uses: DependencyTrack/gh-upload-sbom@v3
-        with:
-          serverhostname: ${{ secrets.DEPENDENCYTRACK_HOSTNAME }}
-          apikey: ${{ secrets.DEPENDENCYTRACK_APIKEY }}
-          projectname: "Kuzzle Backend"
-          projectversion: "${{ steps.get-version.outputs.version }}"
-          bomfilename: "./bom.xml"
-          autocreate: true
