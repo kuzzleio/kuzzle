@@ -1,3 +1,9 @@
+## [2.50.0-beta.8](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.7...v2.50.0-beta.8) (2025-12-17)
+
+### Bug Fixes
+
+* publish sbom after release to let semantic push ([34d6424](https://github.com/kuzzleio/kuzzle/commit/34d6424f20648edf103214b5ce3fc6728c7eacc9))
+
 ## [2.50.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.6...v2.50.0-beta.7) (2025-12-16)
 
 ### Bug Fixes
