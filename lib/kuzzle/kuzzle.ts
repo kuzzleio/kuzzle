@@ -257,7 +257,7 @@ class Kuzzle extends KuzzleEventEmitter {
 
       this.vault = vault.load(options.vaultKey, options.secretsFile);
 
-      await this.validation.init();
+      this.validation.init();
 
       await this.tokenManager.init();
 
