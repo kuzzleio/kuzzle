@@ -80,7 +80,7 @@ services:
       - NODE_ENV=production
 
   redis:
-    image: redis:7
+    image: redis:8
 
   elasticsearch:
     image: kuzzleio/elasticsearch:7

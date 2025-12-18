@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-export * from "./Controller";
-export * from "./ControllerDefinition";
-export * from "./ControllerRights";
+export * from "./controllers/Controller";
+export * from "./controllers/ControllerDefinition";
+export * from "./controllers/ControllerRights";
 export * from "./Deprecation";
 export * from "./EventHandler";
 export * from "./Global";

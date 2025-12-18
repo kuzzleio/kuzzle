@@ -1,3 +1,70 @@
+## [2.50.0-beta.9](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.8...v2.50.0-beta.9) (2025-12-17)
+
+### Bug Fixes
+
+* sonarcloud update ([bc084f7](https://github.com/kuzzleio/kuzzle/commit/bc084f7047597ef4d4a46a2980e02b4e18ff3a0c))
+
+## [2.50.0-beta.8](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.7...v2.50.0-beta.8) (2025-12-17)
+
+### Bug Fixes
+
+* publish sbom after release to let semantic push ([34d6424](https://github.com/kuzzleio/kuzzle/commit/34d6424f20648edf103214b5ce3fc6728c7eacc9))
+
+## [2.50.0-beta.7](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.6...v2.50.0-beta.7) (2025-12-16)
+
+### Bug Fixes
+
+* build ([6d51c6d](https://github.com/kuzzleio/kuzzle/commit/6d51c6dc6bbb389faea981dc8322e4516086055a))
+* package-lock.json update, along side kuzzle-sdk ([94dd59b](https://github.com/kuzzleio/kuzzle/commit/94dd59bf79728aaa2e487f03e5288be516c429ee))
+
+## [2.50.0-beta.6](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.5...v2.50.0-beta.6) (2025-12-16)
+
+### Bug Fixes
+
+* modify github token to allow workflow to be triggered sequantialy ([3c4dce9](https://github.com/kuzzleio/kuzzle/commit/3c4dce919913bd18c2ab4f29ebd1f4da55e37e5f))
+
+## [2.50.0-beta.5](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.4...v2.50.0-beta.5) (2025-12-16)
+
+### Bug Fixes
+
+* add main and types entries in packa ([4f8be51](https://github.com/kuzzleio/kuzzle/commit/4f8be5154d8303f504f113d836460235de96c446))
+
+## [2.50.0-beta.4](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.3...v2.50.0-beta.4) (2025-12-16)
+
+### Bug Fixes
+
+* remove the script in preinstall ([edce3d7](https://github.com/kuzzleio/kuzzle/commit/edce3d7293a4f2e7e8c6df037ee29b8536f4cd1b))
+
+## [2.50.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.2...v2.50.0-beta.3) (2025-12-16)
+
+### Bug Fixes
+
+* add proper permission to release id-token ([e5e5749](https://github.com/kuzzleio/kuzzle/commit/e5e5749de32043652a69e9bb0d5164446c978507))
+* removed the token used for npm, use trusted publisher system instead ([fcb0f06](https://github.com/kuzzleio/kuzzle/commit/fcb0f0640587db61d46065e716b347d0a089724e))
+
+## [2.50.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.0-beta.1...v2.50.0-beta.2) (2025-12-16)
+
+### Features
+
+* bump deps ([b796f0b](https://github.com/kuzzleio/kuzzle/commit/b796f0bd214667b3e18cf4bbe36c0ce4e1f68b43))
+
+## [2.50.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.49.1...v2.50.0-beta.1) (2025-12-16)
+
+
+### Features
+
+* nodejs 24 in actions ([723488c](https://github.com/kuzzleio/kuzzle/commit/723488c1c4f7647c46cbd26ba82a71952ccbba9e))
+* nodejs 24 support ([f420b17](https://github.com/kuzzleio/kuzzle/commit/f420b171e8dab9afcbf57f2ca732d90ef4b1f99b))
+* typescript updates ([a8256ca](https://github.com/kuzzleio/kuzzle/commit/a8256ca0b3e0790ae72ccbf4a2bc5cdd56d76b23))
+
+
+### Bug Fixes
+
+* _id sort on searchRoles not allowed with es8 ([f8d5c3e](https://github.com/kuzzleio/kuzzle/commit/f8d5c3e0a06870be3f65a083c077cb668c0e5da3))
+* remove version 18 from trixoe ([01f9d53](https://github.com/kuzzleio/kuzzle/commit/01f9d5343db4b095881e1bfcdcde437f2a58084d))
+* runner ci ([538428c](https://github.com/kuzzleio/kuzzle/commit/538428c1f897c1b636ff3383e02bd0d155f0dd97))
+* runner image, wasn't build for arm ([5f25b9d](https://github.com/kuzzleio/kuzzle/commit/5f25b9d530a4a31f9cb6d577095f77d9fb801939))
+
 ## [2.49.1](https://github.com/kuzzleio/kuzzle/compare/v2.49.0...v2.49.1) (2025-11-18)
 
 

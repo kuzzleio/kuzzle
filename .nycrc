@@ -1,5 +1,0 @@
-{
-  "include": ["lib/**/*.js"],
-  "cache": true,
-  "all": true
-}

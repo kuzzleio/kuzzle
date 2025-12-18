@@ -8,6 +8,10 @@ inputs:
   es-version:
     description: Elasticsearch version to use
     required: true
+  node_version:
+    description: NodeJS version to use
+    required: false
+    default: 24
 
 runs:
   using: "composite"
@@ -21,9 +25,11 @@ runs:
     - run: npm prune --omit=dev
       shell: bash
 
-    - run: |
+    - name: Docker compose up
+      run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
+        export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then
             YML_FILE='./.ci/services-7.yml'
@@ -37,9 +43,11 @@ runs:
         docker compose -f $YML_FILE up -d
       shell: bash
 
-    - run: |
+    - name: Checking that docker compose launch
+      run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
+        export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then
             YML_FILE='./.ci/services-7.yml'
@@ -58,9 +66,11 @@ runs:
         trap - err
       shell: bash
 
-    - run: |
+    - name: Down docker compose stack
+      run: |
         export KUZZLE_IMAGE=${{ inputs.kuzzle-image }}
         export ES_VERSION=${{ inputs.es-version }}
+        export NODE_VERSION=${{ inputs.node_version }}
 
         if [ "$ES_VERSION" == "7" ]; then
             YML_FILE='./.ci/services-7.yml'

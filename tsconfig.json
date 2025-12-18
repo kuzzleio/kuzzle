@@ -1,10 +1,12 @@
 {
   "compilerOptions": {
+    "outDir": "dist",
     "noUncheckedIndexedAccess": true,
     "declaration": true,
     "listEmittedFiles": true,
     "module": "commonjs",
     "target": "es2020",
+    "allowJs": true,
     "moduleResolution": "node",
     "sourceMap": true,
     "baseUrl": ".",
@@ -20,13 +22,36 @@
     "skipDefaultLibCheck": true,
     "types": [
       "node",
-      "jest"
+      "vitest",
+      "@cucumber/cucumber"
     ]
   },
   "rootDir": "lib/",
   "include": [
+    // Kuzzle core files
     "lib/**/*.ts",
+    "lib/**/*.js",
+    "lib/**/*.json",
     "index.ts",
-    "docker/scripts/*.ts"
+    // Functional tests
+    "features/**/*.ts",
+    "features-legacy/**/*.ts",
+    // Unit tests vitest
+    "tests/**/*.ts",
+    "tests/**/*.js",
+    "tests/**/*.json",
+    // Unit tests mocha
+    "test/**/*.ts",
+    "test/**/*.js",
+    "test/**/*.json",
+    // Binaries
+    "bin/copy-protobuf.js",
+    "bin/start-kuzzle-server.js",
+    // development files
+    "start-kuzzle-test.ts",
+    "start-kuzzle-dev.ts"
+  ],
+  "exclude": [
+    "dist"
   ]
 }

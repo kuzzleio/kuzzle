@@ -25,7 +25,7 @@ import { binarySearch } from "../../util/array";
 import {
   ControllerRight,
   ControllerRights,
-} from "../../types/ControllerRights";
+} from "../../types/controllers/ControllerRights";
 import { KuzzleRequest } from "../../../index";
 import { OptimizedPolicyRestrictions } from "../../types/PolicyRestrictions";
 

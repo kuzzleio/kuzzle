@@ -22,7 +22,7 @@ describe("Test: security controller - credentials", () => {
 
   beforeEach(() => {
     kuzzle = new KuzzleMock();
-    securityController = new SecurityController();
+    securityController = new SecurityController.default();
     kuzzle.pluginsManager.listStrategies.returns(["someStrategy"]);
   });
 

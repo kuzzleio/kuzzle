@@ -37,7 +37,6 @@ import assert from "assert";
 import Bluebird from "bluebird";
 import ms from "ms";
 import semver from "semver";
-import debug from "../../../util/debug";
 
 import { storeScopeEnum } from "../../../core/storage/storeScopeEnum";
 import * as kerror from "../../../kerror";
@@ -49,8 +48,6 @@ import { assertIsObject } from "../../../util/requestAssertions";
 import { isPlainObject } from "../../../util/safeObject";
 import { QueryTranslator } from "../commons/queryTranslator";
 import ESWrapper from "./esWrapper";
-
-debug("kuzzle:services:elasticsearch");
 
 const SCROLL_CACHE_PREFIX = "_docscroll_";
 
@@ -324,7 +321,7 @@ export class ES7 {
     const cacheKey =
       SCROLL_CACHE_PREFIX + global.kuzzle.hash(esRequest.scroll_id);
 
-    debug("Scroll: %o", esRequest);
+    this.logger.debug("Scroll: %o", esRequest);
 
     if (_scrollTTL) {
       const scrollDuration = ms(_scrollTTL);
@@ -356,7 +353,10 @@ export class ES7 {
       scrollInfo.fetched += body.hits.hits.length;
 
       if (scrollInfo.fetched >= body.hits.total.value) {
-        debug("Last scroll page fetched: deleting scroll %s", body._scroll_id);
+        this.logger.debug(
+          "Last scroll page fetched: deleting scroll %s",
+          body._scroll_id,
+        );
         await global.kuzzle.ask("core:cache:internal:del", cacheKey);
         await this.clearScroll(body._scroll_id);
       } else {
@@ -449,7 +449,7 @@ export class ES7 {
       }
     }
 
-    debug("Search: %j", esRequest);
+    this.logger.debug("Search: %j", esRequest);
 
     try {
       const { body } = await this._client.search(esRequest);
@@ -611,7 +611,7 @@ export class ES7 {
       return kerror.reject("services", "storage", "search_as_an_id");
     }
 
-    debug("Get document: %o", esRequest);
+    this.logger.debug("Get document: %o", esRequest);
 
     try {
       const { body } = await this._client.get(esRequest);
@@ -651,7 +651,7 @@ export class ES7 {
       },
     };
 
-    debug("Multi-get documents: %o", esRequest);
+    this.logger.debug("Multi-get documents: %o", esRequest);
 
     let body;
 
@@ -694,7 +694,7 @@ export class ES7 {
       index: this._getAlias(index, collection),
     };
 
-    debug("Count: %o", esRequest);
+    this.logger.debug("Count: %o", esRequest);
 
     try {
       const { body } = await this._client.count(esRequest);
@@ -754,7 +754,7 @@ export class ES7 {
       };
     }
 
-    debug("Create document: %o", esRequest);
+    this.logger.debug("Create document: %o", esRequest);
 
     try {
       const { body } = await this._client.index(esRequest);
@@ -815,7 +815,7 @@ export class ES7 {
       };
     }
 
-    debug("Create or replace document: %o", esRequest);
+    this.logger.debug("Create or replace document: %o", esRequest);
 
     try {
       const { body } = await this._client.index(esRequest);
@@ -880,7 +880,7 @@ export class ES7 {
       };
     }
 
-    debug("Update document: %o", esRequest);
+    this.logger.debug("Update document: %o", esRequest);
 
     try {
       const { body } = await this._client.update(esRequest);
@@ -956,7 +956,7 @@ export class ES7 {
       };
     }
 
-    debug("Upsert document: %o", esRequest);
+    this.logger.debug("Upsert document: %o", esRequest);
 
     try {
       const { body } = await this._client.update(esRequest);
@@ -1033,7 +1033,7 @@ export class ES7 {
         );
       }
 
-      debug("Replace document: %o", esRequest);
+      this.logger.debug("Replace document: %o", esRequest);
 
       const { body } = await this._client.index(esRequest);
 
@@ -1075,7 +1075,7 @@ export class ES7 {
 
     assertWellFormedRefresh(esRequest);
 
-    debug("Delete document: %o", esRequest);
+    this.logger.debug("Delete document: %o", esRequest);
 
     try {
       await this._client.delete(esRequest);
@@ -1133,7 +1133,7 @@ export class ES7 {
         documents = await this._getAllDocumentsFromQuery(esRequest);
       }
 
-      debug("Delete by query: %o", esRequest);
+      this.logger.debug("Delete by query: %o", esRequest);
 
       esRequest.refresh = refresh === "wait_for" ? true : refresh;
 
@@ -1184,7 +1184,7 @@ export class ES7 {
     };
 
     try {
-      debug("DeleteFields document: %o", esRequest);
+      this.logger.debug("DeleteFields document: %o", esRequest);
       const { body } = await this._client.get(esRequest);
 
       for (const field of fields) {
@@ -1262,7 +1262,7 @@ export class ES7 {
         document.body = changes;
       }
 
-      debug("Update by query: %o", esRequest);
+      this.logger.debug("Update by query: %o", esRequest);
 
       const { errors, items } = await this.mUpdate(
         index,
@@ -1317,7 +1317,7 @@ export class ES7 {
 
     const flatChanges = extractFields(changes, { alsoExtractValues: true });
 
-    for (const { key, value } of flatChanges) {
+    for (const { key, value } of flatChanges as any) {
       script.source += `ctx._source.${key} = params['${key}'];`;
       script.params[key] = value;
     }
@@ -1326,7 +1326,7 @@ export class ES7 {
       esRequest.body.script = script;
     }
 
-    debug("Bulk Update by query: %o", esRequest);
+    this.logger.debug("Bulk Update by query: %o", esRequest);
 
     let response;
 
@@ -1600,7 +1600,7 @@ export class ES7 {
       index: indice,
     };
 
-    debug("Get settings: %o", esRequest);
+    this.logger.debug("Get settings: %o", esRequest);
 
     try {
       const { body } = await this._client.indices.getSettings(esRequest);
@@ -1634,7 +1634,7 @@ export class ES7 {
       index: indice,
     };
 
-    debug("Get mapping: %o", esRequest);
+    this.logger.debug("Get mapping: %o", esRequest);
 
     try {
       const { body } = await this._client.indices.getMapping(esRequest);
@@ -1761,7 +1761,7 @@ export class ES7 {
       wait_for_completion: false,
     };
 
-    debug("UpdateByQuery: %o", esRequest);
+    this.logger.debug("UpdateByQuery: %o", esRequest);
 
     try {
       await this._client.updateByQuery(esRequest);
@@ -1803,7 +1803,7 @@ export class ES7 {
       properties: mappings.properties,
     };
 
-    debug("Update mapping: %o", esRequest);
+    this.logger.debug("Update mapping: %o", esRequest);
 
     try {
       await this._client.indices.putMapping(esRequest);
@@ -2187,7 +2187,7 @@ export class ES7 {
         return [];
       }
 
-      debug("Delete indexes: %o", esRequest);
+      this.logger.debug("Delete indexes: %o", esRequest);
 
       await this._client.indices.delete(esRequest);
     } catch (error) {
@@ -2291,7 +2291,7 @@ export class ES7 {
       index: this._getAlias(index, collection),
     };
 
-    debug("mExists: %o", esRequest);
+    this.logger.debug("mExists: %o", esRequest);
 
     let body;
 
@@ -3594,7 +3594,7 @@ export class ES7 {
    */
   async clearScroll(id?: string) {
     if (id) {
-      debug("clearing scroll: %s", id);
+      this.logger.debug("clearing scroll: %s", id);
       await this._client.clearScroll({ scroll_id: id });
     }
   }
