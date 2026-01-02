@@ -1,3 +1,10 @@
+## [2.50.1-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.1-beta.1...v2.50.1-beta.2) (2026-01-02)
+
+### Bug Fixes
+
+* an issue with user typings ([ebef54a](https://github.com/kuzzleio/kuzzle/commit/ebef54a6dc019f48ec3eab3a0fcb70022fe18825))
+* conflicting user class between kuzzle and sdk-javascript ([ee92777](https://github.com/kuzzleio/kuzzle/commit/ee92777326b90ff0b83bf8da7420d3ba875bb5ca))
+
 ## [2.50.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.50.0...v2.50.1-beta.1) (2026-01-02)
 
 ### Bug Fixes
