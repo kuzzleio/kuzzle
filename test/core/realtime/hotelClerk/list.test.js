@@ -101,8 +101,6 @@ describe("Test: hotelClerk.list", () => {
 
     const response = await hotelClerk.list(user);
 
-    console.log(response);
-
     should(response).match({
       index: {
         collection: {

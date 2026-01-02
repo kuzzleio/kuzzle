@@ -395,10 +395,14 @@ export class HotelClerk {
 
       const toRemove: string[] = [];
 
-      for (const collection of Object.keys(collections)) {
+      const collectionNames = Object.keys(collections);
+
+      // Iterate from the end so we process the most recently added collections first
+      for (let i = collectionNames.length - 1; i >= 0; i--) {
+        const collection = collectionNames[i];
         isAllowedRequest.input.resource.collection = collection;
 
-        if (!user.isActionAllowed(isAllowedRequest)) {
+        if (!(await user.isActionAllowed(isAllowedRequest))) {
           toRemove.push(collection);
         }
       }
