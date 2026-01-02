@@ -1,4 +1,4 @@
-import { JSONObject } from "../..";
+import { JSONObject } from "kuzzle-sdk";
 import { ClientConnection } from "./ClientConnection";
 
 export interface HttpMessage {

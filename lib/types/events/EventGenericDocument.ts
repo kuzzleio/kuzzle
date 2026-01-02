@@ -1,9 +1,6 @@
-import {
-  KuzzleRequest,
-  KDocument,
-  JSONObject,
-  PipeEventHandler,
-} from "../../../";
+import { KDocument, JSONObject } from "kuzzle-sdk";
+
+import { KuzzleRequest, PipeEventHandler } from "../../../index";
 
 /**
  * Events with documents only having the `_id`

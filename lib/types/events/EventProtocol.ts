@@ -1,4 +1,5 @@
-import { JSONObject, PipeEventHandler } from "../../../";
+import { JSONObject } from "kuzzle-sdk";
+import { PipeEventHandler } from "../../../index";
 import { ClientConnection } from "../ClientConnection";
 import { HttpMessage } from "../HttpMessage";
 
