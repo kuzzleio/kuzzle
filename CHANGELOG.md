@@ -1,3 +1,9 @@
+## [2.50.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.1...v2.50.2) (2026-01-02)
+
+### Bug Fixes
+
+* user.isActionAllowed in hotel clerc ([fa71948](https://github.com/kuzzleio/kuzzle/commit/fa719486ddb2473ca64cbf4cd0b75a10d2a08bd9))
+
 ## [2.50.1](https://github.com/kuzzleio/kuzzle/compare/v2.50.0...v2.50.1) (2026-01-02)
 
 ### Bug Fixes
