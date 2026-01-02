@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
+import { JSONObject } from "kuzzle-sdk";
 import { PluginContext } from "../core/plugin/pluginContext";
 import { ControllerDefinition } from "./controllers/ControllerDefinition";
 import { PluginManifest } from "./PluginManifest";
 import { StrategyDefinition } from "./StrategyDefinition";
 import { PipeEventHandler, HookEventHandler } from "./EventHandler";
-import { JSONObject } from "../../index";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
 import { ImportConfig } from "./Kuzzle";

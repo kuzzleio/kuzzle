@@ -1185,7 +1185,9 @@ export default class SecurityController extends NativeController {
       )} applied action "${request.input.action}" on user "${id}."`,
     );
 
-    return updateMethod(request, body, id, strategy);
+    const response = await updateMethod(request, body, id, strategy);
+
+    return response;
   }
 
   /**

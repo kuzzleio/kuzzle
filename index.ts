@@ -16,8 +16,6 @@ export * from "./lib/util/Inflector";
 
 export { NameGenerator } from "./lib/util/name-generator";
 
-export * from "kuzzle-sdk";
-
 export * from "./lib/core/shared/KoncordeWrapper";
 
 export * from "./lib/core/shared/ObjectRepository";

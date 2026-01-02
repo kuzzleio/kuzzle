@@ -19,8 +19,9 @@
  * limitations under the License.
  */
 
+import { JSONObject } from "kuzzle-sdk";
+
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
-import { JSONObject } from "../../../index";
 import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
