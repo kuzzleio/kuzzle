@@ -395,10 +395,11 @@ export class HotelClerk {
 
       const toRemove = await Bluebird.filter(
         Object.keys(collections),
-        (collection) => {
+        async (collection) => {
           isAllowedRequest.input.resource.collection = collection;
+          const result = await user.isActionAllowed(isAllowedRequest);
 
-          return !user.isActionAllowed(isAllowedRequest);
+          return !result;
         },
       );
 
