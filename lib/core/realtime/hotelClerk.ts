@@ -393,15 +393,15 @@ export class HotelClerk {
     for (const [index, collections] of Object.entries(fullStateRooms)) {
       isAllowedRequest.input.resource.index = index;
 
-      const toRemove = await Bluebird.filter(
-        Object.keys(collections),
-        async (collection) => {
-          isAllowedRequest.input.resource.collection = collection;
-          const result = await user.isActionAllowed(isAllowedRequest);
+      const toRemove: string[] = [];
 
-          return !result;
-        },
-      );
+      for (const collection of Object.keys(collections)) {
+        isAllowedRequest.input.resource.collection = collection;
+
+        if (!user.isActionAllowed(isAllowedRequest)) {
+          toRemove.push(collection);
+        }
+      }
 
       for (const collection of toRemove) {
         delete fullStateRooms[index][collection];
