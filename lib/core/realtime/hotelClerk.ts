@@ -31,11 +31,12 @@ import {
   getCollections,
   toKoncordeIndex,
 } from "../../util/koncordeCompat";
-import { User, RoomList } from "../../types";
+import { RoomList } from "../../types";
 import { Channel } from "./channel";
 import { ConnectionRooms } from "./connectionRooms";
 import { Room } from "./room";
 import { Subscription } from "./subscription";
+import { User } from "../../model/security/user";
 
 const realtimeError = kerror.wrap("core", "realtime");
 
@@ -394,10 +395,11 @@ export class HotelClerk {
 
       const toRemove = await Bluebird.filter(
         Object.keys(collections),
-        (collection) => {
+        async (collection) => {
           isAllowedRequest.input.resource.collection = collection;
+          const result = await user.isActionAllowed(isAllowedRequest);
 
-          return !user.isActionAllowed(isAllowedRequest);
+          return !result;
         },
       );
 

@@ -1,4 +1,4 @@
-import { JSONObject } from "../../../index";
+import { JSONObject } from "kuzzle-sdk";
 
 import { PasswordPolicy } from "../index";
 

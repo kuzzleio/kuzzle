@@ -19,12 +19,13 @@
  * limitations under the License.
  */
 
-import fs from "fs";
+import fs from "node:fs";
+import { JSONObject } from "kuzzle-sdk";
 
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { EventDefinition, JSONObject, NameGenerator } from "../../../index";
+import { EventDefinition, NameGenerator } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,

@@ -1,8 +1,9 @@
-import ndjson from "ndjson";
-import { JSONObject } from "../../index";
+import { JSONObject } from "kuzzle-sdk";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
-import stream from "stream";
+import ndjson from "ndjson";
+import stream from "node:stream";
+
 import * as kerror from "../kerror";
 import { BufferedPassThrough } from "./bufferedPassThrough";
 import { HttpStream } from "../types";
@@ -60,17 +61,19 @@ function flattenStep(
  * @returns
  */
 export function extractMappingFields(mapping: JSONObject) {
-  const newMapping = {};
+  const newMapping: JSONObject = {};
 
   if (mapping.properties) {
     return extractMappingFields(mapping.properties);
   }
 
   for (const key of Object.keys(mapping)) {
-    if (isObject(mapping[key]) && mapping[key].type) {
-      newMapping[key] = mapping[key].type;
-    } else if (isObject(mapping[key])) {
-      newMapping[key] = extractMappingFields(mapping[key]);
+    const property: JSONObject = mapping[key];
+
+    if (isObject(property) && property.type) {
+      newMapping[key] = property.type;
+    } else if (isObject(property)) {
+      newMapping[key] = extractMappingFields(property);
     }
   }
 

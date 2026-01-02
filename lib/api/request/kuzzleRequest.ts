@@ -31,7 +31,7 @@ import { RequestResponse } from "./requestResponse";
 import { RequestContext } from "./requestContext";
 import { KuzzleError, InternalError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
-import { Deprecation, User, HttpStream } from "../../types";
+import { Deprecation, HttpStream } from "../../types";
 import * as assert from "../../util/assertType";
 
 const assertionError = kerror.wrap("api", "assert");
@@ -833,7 +833,7 @@ export class KuzzleRequest {
    * Returns the current user kuid
    */
   getKuid(): string | null {
-    if (this.context && this.context.user && this.context.user._id) {
+    if (this.context?.user?._id) {
       return this.context.user._id;
     }
 
@@ -843,8 +843,8 @@ export class KuzzleRequest {
   /**
    * Returns the current user
    */
-  getUser(): User | null {
-    if (this.context && this.context.user) {
+  getUser() {
+    if (this.context?.user) {
       return this.context.user;
     }
 
