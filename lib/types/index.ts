@@ -36,7 +36,6 @@ export * from "./ProfileDefinition";
 export * from "./RoleDefinition";
 export * from "./Target";
 export * from "./Token";
-export * from "./User";
 export * from "./config/DumpConfiguration";
 export * from "./config/HttpConfiguration";
 export * from "./config/KuzzleConfiguration";

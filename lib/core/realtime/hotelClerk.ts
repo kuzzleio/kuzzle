@@ -31,11 +31,12 @@ import {
   getCollections,
   toKoncordeIndex,
 } from "../../util/koncordeCompat";
-import { User, RoomList } from "../../types";
+import { RoomList } from "../../types";
 import { Channel } from "./channel";
 import { ConnectionRooms } from "./connectionRooms";
 import { Room } from "./room";
 import { Subscription } from "./subscription";
+import { User } from "../../model/security/user";
 
 const realtimeError = kerror.wrap("core", "realtime");
 
