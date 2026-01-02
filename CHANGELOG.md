@@ -1,3 +1,9 @@
+## [2.50.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.2...v2.50.3) (2026-01-02)
+
+### Bug Fixes
+
+* user.isActionAllowed now await properly ([0045fe4](https://github.com/kuzzleio/kuzzle/commit/0045fe42d784e946bf5db7c7268ee507b28ba566))
+
 ## [2.50.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.1...v2.50.2) (2026-01-02)
 
 ### Bug Fixes
