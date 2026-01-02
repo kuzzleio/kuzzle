@@ -19,9 +19,10 @@
  * limitations under the License.
  */
 
+import { JSONObject } from "kuzzle-sdk";
+
 import { Inflector } from "../../util/Inflector";
 import * as kerror from "../../kerror";
-import { JSONObject } from "../../../index";
 import { Plugin } from "../../types";
 import { ApplicationManager } from "./index";
 import didYouMean from "../../util/didYouMean";

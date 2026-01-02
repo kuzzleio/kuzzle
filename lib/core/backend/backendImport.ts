@@ -19,9 +19,10 @@
  * limitations under the License.
  */
 
+import { JSONObject } from "kuzzle-sdk";
+
 import * as kerror from "../../kerror";
 import { ApplicationManager } from "./index";
-import { JSONObject } from "../../../index";
 import { isPlainObject } from "../../../lib/util/safeObject";
 
 const assertionError = kerror.wrap("validation", "assert");

@@ -18,10 +18,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import { JSONObject } from "kuzzle-sdk";
 
 import vault from "../../kuzzle/vault";
 import * as kerror from "../../kerror";
-import { JSONObject } from "../../../index";
+
 import { ApplicationManager } from "./index";
 
 const runtimeError = kerror.wrap("plugin", "runtime");

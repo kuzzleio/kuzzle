@@ -20,9 +20,9 @@
  */
 
 import _ from "lodash";
+import { JSONObject } from "kuzzle-sdk";
 
 import { Inflector } from "../../util/Inflector";
-import { JSONObject } from "../../../index";
 
 const routeUrlMatch = /:([^/]*)/g;
 
