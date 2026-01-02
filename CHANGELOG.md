@@ -1,3 +1,13 @@
+## [2.50.1](https://github.com/kuzzleio/kuzzle/compare/v2.50.0...v2.50.1) (2026-01-02)
+
+### Bug Fixes
+
+* an issue with user typings ([ebef54a](https://github.com/kuzzleio/kuzzle/commit/ebef54a6dc019f48ec3eab3a0fcb70022fe18825))
+* await a to isActionAllowed ([dafc313](https://github.com/kuzzleio/kuzzle/commit/dafc31363cdf000a02c2829b0b249e4d0cb40af6))
+* conflicting user class between kuzzle and sdk-javascript ([ee92777](https://github.com/kuzzleio/kuzzle/commit/ee92777326b90ff0b83bf8da7420d3ba875bb5ca))
+* import with new version of sdk ([0622b77](https://github.com/kuzzleio/kuzzle/commit/0622b7710504e04fe99297ce0be1ef02d17cf779))
+* keep the await at boudfunction ([8f83127](https://github.com/kuzzleio/kuzzle/commit/8f83127e439919c667a451746323f0789ece5f7d))
+
 ## [2.50.1-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.1-beta.2...v2.50.1-beta.3) (2026-01-02)
 
 ### Bug Fixes
