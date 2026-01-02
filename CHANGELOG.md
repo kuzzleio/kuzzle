@@ -1,3 +1,10 @@
+## [2.50.1-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.50.0...v2.50.1-beta.1) (2026-01-02)
+
+### Bug Fixes
+
+* import with new version of sdk ([0622b77](https://github.com/kuzzleio/kuzzle/commit/0622b7710504e04fe99297ce0be1ef02d17cf779))
+* keep the await at boudfunction ([8f83127](https://github.com/kuzzleio/kuzzle/commit/8f83127e439919c667a451746323f0789ece5f7d))
+
 ## [2.50.0](https://github.com/kuzzleio/kuzzle/compare/v2.49.1...v2.50.0) (2025-12-18)
 
 ### Features
