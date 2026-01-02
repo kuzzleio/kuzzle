@@ -1,3 +1,9 @@
+## [2.50.1-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.50.1-beta.2...v2.50.1-beta.3) (2026-01-02)
+
+### Bug Fixes
+
+* await a to isActionAllowed ([dafc313](https://github.com/kuzzleio/kuzzle/commit/dafc31363cdf000a02c2829b0b249e4d0cb40af6))
+
 ## [2.50.1-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.50.1-beta.1...v2.50.1-beta.2) (2026-01-02)
 
 ### Bug Fixes
