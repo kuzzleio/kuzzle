@@ -51,6 +51,7 @@ export type StrategyDefinition = {
       getById?: string;
       getInfo?: string;
       search?: string;
+      refreshToken?: string;
       update: string;
       validate: string;
       verify: string;

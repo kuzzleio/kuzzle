@@ -18,7 +18,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import { IncomingMessage } from "http";
+import { IncomingMessage } from "node:http";
+import jwt from "jsonwebtoken";
 import * as Cookie from "cookie";
 
 import Bluebird from "bluebird";
@@ -38,9 +39,11 @@ import { Token } from "../../model/security/token";
 
 import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
 
+const securityError = kerror.wrap("security", "token");
+
 export default class AuthController extends NativeController {
   private anonymousId: string | null = null;
-  private readonly logger = global.kuzzle.log.child("api:controllers:auth");
+  private readonly logger = globalThis.kuzzle.log.child("api:controllers:auth");
 
   /**
    * @param {Kuzzle} kuzzle
@@ -77,7 +80,7 @@ export default class AuthController extends NativeController {
    * @returns {Promise}
    */
   async init(): Promise<any> {
-    const anonymous = await global.kuzzle.ask(
+    const anonymous = await globalThis.kuzzle.ask(
       "core:security:user:anonymous:get",
     );
     this.anonymousId = anonymous._id;
@@ -212,19 +215,19 @@ export default class AuthController extends NativeController {
    */
   async logout(request: KuzzleRequest): Promise<object> {
     if (
-      !global.kuzzle.config.http.cookieAuthentication ||
+      !globalThis.kuzzle.config.http.cookieAuthentication ||
       !request.getBoolean("cookieAuth")
     ) {
       this.assertIsAuthenticated(request);
     }
 
     if (
-      global.kuzzle.config.internal.notifiableProtocols.includes(
+      globalThis.kuzzle.config.internal.notifiableProtocols.includes(
         request.context.connection.protocol,
       )
     ) {
       // Unlink connection so the connection will not be notified when the token expires.
-      global.kuzzle.tokenManager.unlink(
+      globalThis.kuzzle.tokenManager.unlink(
         request.context.token,
         request.context.connection.id,
       );
@@ -232,7 +235,7 @@ export default class AuthController extends NativeController {
 
     if (request.context.user._id !== this.anonymousId) {
       if (request.getBoolean("global")) {
-        await global.kuzzle.ask(
+        await globalThis.kuzzle.ask(
           "core:security:token:deleteByKuid",
           request.getKuid(),
           { keepApiKeys: true },
@@ -241,7 +244,7 @@ export default class AuthController extends NativeController {
         request.context.token &&
         request.context.token.type !== "apiKey"
       ) {
-        await global.kuzzle.ask(
+        await globalThis.kuzzle.ask(
           "core:security:token:delete",
           request.context.token,
         );
@@ -249,7 +252,7 @@ export default class AuthController extends NativeController {
     }
 
     if (
-      global.kuzzle.config.http.cookieAuthentication &&
+      globalThis.kuzzle.config.http.cookieAuthentication &&
       request.getBoolean("cookieAuth")
     ) {
       request.response.configure({
@@ -280,7 +283,7 @@ export default class AuthController extends NativeController {
     // even if the SDK / Browser can handle the cookie,
     // Kuzzle would not be capable of doing anything with it
     if (
-      global.kuzzle.config.http.cookieAuthentication &&
+      globalThis.kuzzle.config.http.cookieAuthentication &&
       request.getBoolean("cookieAuth")
     ) {
       // Here we are not sending auth token when cookieAuth is set to true
@@ -332,11 +335,11 @@ export default class AuthController extends NativeController {
 
     passportRequest.original = request;
 
-    if (!has(global.kuzzle.pluginsManager.strategies, strategy)) {
+    if (!has(globalThis.kuzzle.pluginsManager.strategies, strategy)) {
       throw kerror.get("security", "credentials", "unknown_strategy", strategy);
     }
 
-    const content = await global.kuzzle.passport.authenticate(
+    const content = await globalThis.kuzzle.passport.authenticate(
       passportRequest,
       strategy,
     );
@@ -363,7 +366,7 @@ export default class AuthController extends NativeController {
       options.expiresIn = request.input.args.expiresIn;
     }
 
-    const existingToken = global.kuzzle.tokenManager.getConnectedUserToken(
+    const existingToken = globalThis.kuzzle.tokenManager.getConnectedUserToken(
       authResponse.content._id,
       request.context.connection.id,
     );
@@ -388,16 +391,16 @@ export default class AuthController extends NativeController {
     );
 
     if (existingToken) {
-      global.kuzzle.tokenManager.refresh(existingToken, token);
+      globalThis.kuzzle.tokenManager.refresh(existingToken, token);
     }
 
     if (
-      global.kuzzle.config.internal.notifiableProtocols.includes(
+      globalThis.kuzzle.config.internal.notifiableProtocols.includes(
         request.context.connection.protocol,
       )
     ) {
       // Link the connection with the token, this way the connection can be notified when the token has expired.
-      global.kuzzle.tokenManager.link(token, request.context.connection.id);
+      globalThis.kuzzle.tokenManager.link(token, request.context.connection.id);
     }
 
     return this._sendToken(token, request);
@@ -420,8 +423,8 @@ export default class AuthController extends NativeController {
     if (this.anonymousId === userId) {
       promises.push(Bluebird.resolve([]));
     } else {
-      for (const strategy of global.kuzzle.pluginsManager.listStrategies()) {
-        const existsMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+      for (const strategy of globalThis.kuzzle.pluginsManager.listStrategies()) {
+        const existsMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
           strategy,
           "exists",
         );
@@ -471,7 +474,7 @@ export default class AuthController extends NativeController {
     let token = "";
 
     if (
-      global.kuzzle.config.http.cookieAuthentication &&
+      globalThis.kuzzle.config.http.cookieAuthentication &&
       request.getBoolean("cookieAuth")
     ) {
       token = request.input.jwt;
@@ -535,7 +538,7 @@ export default class AuthController extends NativeController {
    * @returns {Promise.<string[]>}
    */
   getStrategies() {
-    return Bluebird.resolve(global.kuzzle.pluginsManager.listStrategies());
+    return Bluebird.resolve(globalThis.kuzzle.pluginsManager.listStrategies());
   }
 
   /**
@@ -551,11 +554,11 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    const createMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const createMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
         strategy,
         "create",
       ),
-      validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+      validateMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
         strategy,
         "validate",
       );
@@ -578,11 +581,11 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    const updateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const updateMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
         request.input.args.strategy,
         "update",
       ),
-      validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+      validateMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
         request.input.args.strategy,
         "validate",
       );
@@ -604,7 +607,7 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    const existsMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const existsMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
       "exists",
     );
@@ -627,7 +630,7 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    const validateMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const validateMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
       "validate",
     );
@@ -649,7 +652,7 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    const deleteMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const deleteMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
       "delete",
     );
@@ -671,11 +674,13 @@ export default class AuthController extends NativeController {
 
     this.assertIsStrategyRegistered(strategy);
 
-    if (!global.kuzzle.pluginsManager.hasStrategyMethod(strategy, "getInfo")) {
+    if (
+      !globalThis.kuzzle.pluginsManager.hasStrategyMethod(strategy, "getInfo")
+    ) {
       return Bluebird.resolve({});
     }
 
-    const getInfoMethod = global.kuzzle.pluginsManager.getStrategyMethod(
+    const getInfoMethod = globalThis.kuzzle.pluginsManager.getStrategyMethod(
       strategy,
       "getInfo",
     );
@@ -690,6 +695,36 @@ export default class AuthController extends NativeController {
    */
   async refreshToken(request) {
     this.assertIsAuthenticated(request);
+    const strategy = request.input.args?.strategy;
+
+    if (request.input.args?.strategy) {
+      try {
+        const refreshTokenMethod =
+          globalThis.kuzzle.pluginsManager.getStrategyMethod(
+            strategy,
+            "refreshToken",
+          );
+
+        await refreshTokenMethod(request);
+      } catch (err) {
+        /**
+         * Every strategies does not implement a standard way of returning errors.
+         * Which mean we cannot properly catch any errors in the catch block.
+         * Meaning if we arrive here, the refresh token did not work as planned
+         * We can safely ensure that the user refresh token is not active anymore
+         */
+        this.logger.error(
+          `Error while refreshing the token with the strategy ${strategy} with ERROR: ${err}`,
+        );
+
+        // Adding some debug information to better known our target here.
+        this.logger.debug(
+          `Error when refreshing token with request: ${JSON.stringify(request)}`,
+        );
+
+        throw securityError.get("refresh_forbidden", request.context.token.jwt);
+      }
+    }
 
     const token = await this.ask(
       "core:security:token:refresh",
