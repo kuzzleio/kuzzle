@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 import { IncomingMessage } from "node:http";
-import jwt from "jsonwebtoken";
 import * as Cookie from "cookie";
 
 import Bluebird from "bluebird";
