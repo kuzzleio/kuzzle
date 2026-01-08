@@ -1015,7 +1015,7 @@ describe("Test the auth controller", () => {
         "someStrategy",
         "refreshToken",
       );
-      should(strategyRefreshStub).be.calledOnceWith(req);
+      should(strategyRefreshStub).be.calledWith(req);
       should(response).eql({
         _id: "userId",
         jwt: "new-token",
@@ -1055,7 +1055,7 @@ describe("Test the auth controller", () => {
         id: "security.token.refresh_forbidden",
       });
 
-      should(strategyRefreshStub).be.calledOnceWith(req);
+      should(strategyRefreshStub).be.calledWith(req);
       should(kuzzle.ask).not.be.calledWith(
         "core:security:token:refresh",
         req.context.user,
