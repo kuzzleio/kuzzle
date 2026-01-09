@@ -1,3 +1,9 @@
+## [2.51.0](https://github.com/kuzzleio/kuzzle/compare/v2.50.3...v2.51.0) (2026-01-09)
+
+### Features
+
+* add strategy handling for refreshtoken in the auth controller ([9c2a34f](https://github.com/kuzzleio/kuzzle/commit/9c2a34f7d0de00c97901f6cd7ee38fb053c67f4d))
+
 ## [2.51.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.50.3...v2.51.0-beta.1) (2026-01-09)
 
 ### Features
