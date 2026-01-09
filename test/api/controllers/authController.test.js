@@ -982,6 +982,88 @@ describe("Test the auth controller", () => {
       ).rejectedWith(UnauthorizedError, { id: "security.rights.unauthorized" });
     });
 
+    it("should execute the strategy refresh method when provided", async () => {
+      const strategyRefreshStub = sinon.stub().resolves();
+      const newToken = {
+        _id: "_id",
+        jwt: "new-token",
+        userId: "userId",
+        ttl: "ttl",
+        expiresAt: 42,
+      };
+      const req = new Request(
+        { expiresIn: "42h", strategy: "someStrategy" },
+        {
+          token: {
+            userId: "user",
+            _id: "_id",
+            jwt: "jwt",
+            refreshed: false,
+          },
+          user: {
+            _id: "user",
+          },
+        },
+      );
+
+      kuzzle.pluginsManager.getStrategyMethod.returns(strategyRefreshStub);
+      kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
+
+      const response = await authController.refreshToken(req);
+
+      should(kuzzle.pluginsManager.getStrategyMethod).be.calledWith(
+        "someStrategy",
+        "refreshToken",
+      );
+      should(strategyRefreshStub).be.calledWith(req);
+      should(response).eql({
+        _id: "userId",
+        jwt: "new-token",
+        expiresAt: 42,
+        ttl: "ttl",
+      });
+      should(kuzzle.ask).calledWith(
+        "core:security:token:refresh",
+        req.context.user,
+        req.context.token,
+        req.input.args.expiresIn,
+      );
+    });
+
+    it("should reject if the strategy refresh fails", async () => {
+      const strategyRefreshStub = sinon
+        .stub()
+        .rejects(new Error("strategy refresh failed"));
+      const req = new Request(
+        { strategy: "someStrategy" },
+        {
+          token: {
+            userId: "user",
+            _id: "_id",
+            jwt: "jwt",
+            refreshed: false,
+          },
+          user: {
+            _id: "user",
+          },
+        },
+      );
+
+      kuzzle.pluginsManager.getStrategyMethod.returns(strategyRefreshStub);
+
+      await should(authController.refreshToken(req)).be.rejectedWith({
+        id: "security.token.refresh_forbidden",
+      });
+
+      should(strategyRefreshStub).be.calledWith(req);
+      should(kuzzle.ask).not.be.calledWith(
+        "core:security:token:refresh",
+        req.context.user,
+        req.context.token,
+        req.input.args.expiresIn,
+      );
+    });
+
     it("should provide a new jwt and expire the current one ", async () => {
       const newToken = {
         _id: "_id",
