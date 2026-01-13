@@ -61,6 +61,17 @@ describe("Test: kuzzle/dumpGenerator", () => {
     });
   });
 
+  it("should reject with an error if a suffix path is outside of config dump folder", async () => {
+    dumpGenerator._dump = true;
+
+    await should(dumpGenerator.dump("test/../../../../dumpe-me")).rejectedWith(
+      PreconditionError,
+      {
+        id: "api.process.invalid_path",
+      },
+    );
+  });
+
   it("should generate dump files", async () => {
     const baseDumpPath = `/tmp/${new Date().getFullYear()}-${suffix}`;
 
