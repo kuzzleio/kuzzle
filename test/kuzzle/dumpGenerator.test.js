@@ -5,7 +5,7 @@ const rewire = require("rewire");
 const sinon = require("sinon");
 const should = require("should");
 
-const { PreconditionError } = require("../../index");
+const { PreconditionError, BadRequestError } = require("../../index");
 const KuzzleMock = require("../mocks/kuzzle.mock");
 const FsMock = require("../mocks/fs.mock");
 
@@ -65,9 +65,10 @@ describe("Test: kuzzle/dumpGenerator", () => {
     dumpGenerator._dump = true;
 
     await should(dumpGenerator.dump("test/../../../../dumpe-me")).rejectedWith(
-      PreconditionError,
+      BadRequestError,
       {
-        id: "api.process.invalid_path",
+        message:
+          "Dump path '../../dumpe-me' is outside of designated dump directory 'dump/'",
       },
     );
   });
