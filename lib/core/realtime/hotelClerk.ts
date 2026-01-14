@@ -321,7 +321,7 @@ export class HotelClerk {
    * filters will be fetched from the cluster.
    */
   async join(request: KuzzleRequest): Promise<{ channel; roomId }> {
-    const roomId = request.input.body.roomId;
+    const roomId = (request.input.body as JSONObject).roomId;
 
     if (!this.rooms.has(roomId)) {
       const normalized: NormalizedFilter = await global.kuzzle.ask(
