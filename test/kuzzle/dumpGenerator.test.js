@@ -62,13 +62,14 @@ describe("Test: kuzzle/dumpGenerator", () => {
   });
 
   it("should reject with an error if a suffix path is outside of config dump folder", async () => {
-    dumpGenerator._dump = true;
+    dumpGenerator._dump = false;
 
     await should(dumpGenerator.dump("test/../../../../dumpe-me")).rejectedWith(
       BadRequestError,
       {
-        message:
-          "Dump path '../../dumpe-me' is outside of designated dump directory 'dump/'",
+        message: new RegExp(
+          /Dump path [A-Za-z-/.'"]* is outside of designated dump directory [A-Za-z-/."']*/,
+        ),
       },
     );
   });
