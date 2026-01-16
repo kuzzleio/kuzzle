@@ -1,3 +1,9 @@
+## [2.52.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.51.0...v2.52.0-beta.1) (2026-01-16)
+
+### Features
+
+* expiresin property in refresh token when a strategy is specified ([b11584f](https://github.com/kuzzleio/kuzzle/commit/b11584fb59df195e18be09fe68e67e302f567198))
+
 ## [2.51.0](https://github.com/kuzzleio/kuzzle/compare/v2.50.3...v2.51.0) (2026-01-09)
 
 ### Features
