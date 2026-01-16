@@ -2,7 +2,6 @@
 
 const should = require("should");
 const { RequestInput } = require("../../../lib/api/request/requestInput");
-const { it } = require("node:test");
 
 describe("#RequestInput", () => {
   it("should defaults to null all properties", () => {
