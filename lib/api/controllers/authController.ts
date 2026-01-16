@@ -695,8 +695,14 @@ export default class AuthController extends NativeController {
   async refreshToken(request) {
     this.assertIsAuthenticated(request);
     const strategy = request.input.args?.strategy;
+    let expiresIn = request.input.args?.expiresIn;
 
-    if (request.input.args?.strategy) {
+    if (strategy && strategy !== "local") {
+      /**
+       * Local strategy is a specific one that is meant to end the core of kuzzle
+       * For now we avoid entering here if someone mistakenly specify the "local" strategy
+       * // TODO remove this && strategy !== "local" condition once we properly removed the auth local plugin
+       */
       try {
         const refreshTokenMethod =
           globalThis.kuzzle.pluginsManager.getStrategyMethod(
@@ -704,7 +710,9 @@ export default class AuthController extends NativeController {
             "refreshToken",
           );
 
-        await refreshTokenMethod(request);
+        const result = await refreshTokenMethod(request);
+
+        expiresIn = result?.expiresIn || expiresIn;
       } catch (err) {
         /**
          * Every strategies does not implement a standard way of returning errors.
@@ -729,7 +737,7 @@ export default class AuthController extends NativeController {
       "core:security:token:refresh",
       request.context.user,
       request.context.token,
-      request.input.args.expiresIn,
+      expiresIn,
     );
 
     return this._sendToken(token, request);

@@ -1064,6 +1064,44 @@ describe("Test the auth controller", () => {
       );
     });
 
+    it("should use expiresIn returned by strategy refresh method", async () => {
+      const strategyRefreshStub = sinon.stub().resolves({ expiresIn: "1h" });
+      const newToken = {
+        _id: "_id",
+        jwt: "new-token",
+        userId: "userId",
+        ttl: "ttl",
+        expiresAt: 42,
+      };
+      const req = new Request(
+        { expiresIn: "42h", strategy: "someStrategy" },
+        {
+          token: {
+            userId: "user",
+            _id: "_id",
+            jwt: "jwt",
+            refreshed: false,
+          },
+          user: {
+            _id: "user",
+          },
+        },
+      );
+
+      kuzzle.pluginsManager.getStrategyMethod.returns(strategyRefreshStub);
+      kuzzle.ask.withArgs("core:security:token:refresh").resolves(newToken);
+
+      await authController.refreshToken(req);
+
+      should(strategyRefreshStub).be.calledWith(req);
+      should(kuzzle.ask).calledWith(
+        "core:security:token:refresh",
+        req.context.user,
+        req.context.token,
+        "1h",
+      );
+    });
+
     it("should provide a new jwt and expire the current one ", async () => {
       const newToken = {
         _id: "_id",
