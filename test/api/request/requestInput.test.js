@@ -78,7 +78,7 @@ describe("#RequestInput", () => {
 
   it("should throw if an invalid data parameter is provided", () => {
     // testing object-only parameters
-    ["volatile", "body"].forEach((k) => {
+    ["volatile"].forEach((k) => {
       should(function () {
         new RequestInput({ [k]: [] });
       }).throw(`Attribute ${k} must be of type "object"`);
@@ -91,6 +91,18 @@ describe("#RequestInput", () => {
       should(function () {
         new RequestInput({ [k]: "foobar" });
       }).throw(`Attribute ${k} must be of type "object"`);
+    });
+
+    ["body"].forEach((k) => {
+      should(function () {
+        new RequestInput({ [k]: 123 });
+      }).throw(`Attribute ${k} must be of type "object" or "array"`);
+      should(function () {
+        new RequestInput({ [k]: false });
+      }).throw(`Attribute ${k} must be of type "object" or "array"`);
+      should(function () {
+        new RequestInput({ [k]: "foobar" });
+      }).throw(`Attribute ${k} must be of type "object" or "array"`);
     });
 
     // testing string-only parameters
@@ -132,5 +144,15 @@ describe("#RequestInput", () => {
     input.action = "bar";
 
     should(input.action).eql("foo");
+  });
+
+  it("should accept both array and object for body property", () => {
+    let input = new RequestInput({ body: { some: "content" } });
+
+    should(input.body).be.deepEqual({ some: "content" });
+
+    input = new RequestInput({ body: [1, 2, 3] });
+
+    should(input.body).be.deepEqual([1, 2, 3]);
   });
 });

@@ -21,6 +21,7 @@
 import Bluebird from "bluebird";
 import { isEmpty, isNil } from "lodash";
 import { v4 as uuidv4 } from "uuid";
+import { JSONObject } from "kuzzle-sdk";
 
 import { BadRequestError, KuzzleError } from "../../kerror/errors";
 import { KuzzleRequest, Request } from "../request";
@@ -662,8 +663,8 @@ export default class SecurityController extends NativeController {
 
     if (
       request.input.body &&
-      request.input.body.ids &&
-      Object.keys(request.input.body.ids).length
+      (request.input.body as JSONObject).ids &&
+      Object.keys((request.input.body as JSONObject).ids).length
     ) {
       ids = request.getBodyArray("ids");
     } else {
