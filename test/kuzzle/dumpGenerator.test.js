@@ -5,7 +5,7 @@ const rewire = require("rewire");
 const sinon = require("sinon");
 const should = require("should");
 
-const { PreconditionError } = require("../../index");
+const { PreconditionError, BadRequestError } = require("../../index");
 const KuzzleMock = require("../mocks/kuzzle.mock");
 const FsMock = require("../mocks/fs.mock");
 
@@ -59,6 +59,19 @@ describe("Test: kuzzle/dumpGenerator", () => {
     await should(dumpGenerator.dump(suffix)).rejectedWith(PreconditionError, {
       id: "api.process.action_locked",
     });
+  });
+
+  it("should reject with an error if a suffix path is outside of config dump folder", async () => {
+    dumpGenerator._dump = false;
+
+    await should(dumpGenerator.dump("test/../../../../dumpe-me")).rejectedWith(
+      BadRequestError,
+      {
+        message: new RegExp(
+          /Dump path [A-Za-z-/.'"]* is outside of designated dump directory [A-Za-z-/."']*/,
+        ),
+      },
+    );
   });
 
   it("should generate dump files", async () => {
