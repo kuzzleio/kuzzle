@@ -290,12 +290,12 @@ export class RequestInput {
    *   body         <== that
    *  }
    */
-  get body(): JSONObject | null {
+  get body(): JSONObject | Array<any> | null {
     return this[_body];
   }
 
-  set body(obj: JSONObject) {
-    this[_body] = assert.assertObject("body", obj);
+  set body(obj: JSONObject | Array<any>) {
+    this[_body] = assert.assertArrayOrObject("body", obj);
   }
 
   /**
