@@ -1,3 +1,13 @@
+## [2.53.0](https://github.com/kuzzleio/kuzzle/compare/v2.52.0...v2.53.0) (2026-03-02)
+
+### Features
+
+* **requestInput:** allow to receive array request body ([#2648](https://github.com/kuzzleio/kuzzle/issues/2648)) ([4cefbdc](https://github.com/kuzzleio/kuzzle/commit/4cefbdcd62828d63a255ea2f6dd3da347b3cc14a))
+
+### Bug Fixes
+
+* **dumpGenerator:** throw if dump path outside of the configured dump folder ([#2647](https://github.com/kuzzleio/kuzzle/issues/2647)) ([6b343d9](https://github.com/kuzzleio/kuzzle/commit/6b343d96cfc659609ff465b5b60959ab7bccfc72))
+
 ## [2.53.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.52.0...v2.53.0-beta.1) (2026-01-29)
 
 ### Features
