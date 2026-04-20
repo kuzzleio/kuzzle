@@ -544,7 +544,7 @@ export class HotelClerk {
       throw realtimeError.get("room_not_found", roomId);
     }
 
-    for (const channel of Object.keys(room.channels)) {
+    for (const channel of room.channels.keys()) {
       global.kuzzle.entryPoint.leaveChannel(channel, connectionId);
     }
 
