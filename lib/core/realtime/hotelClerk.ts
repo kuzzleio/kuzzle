@@ -321,7 +321,7 @@ export class HotelClerk {
    * filters will be fetched from the cluster.
    */
   async join(request: KuzzleRequest): Promise<{ channel; roomId }> {
-    const roomId = (request.input.body as JSONObject).roomId;
+    const roomId = request.input.body.roomId;
 
     if (!this.rooms.has(roomId)) {
       const normalized: NormalizedFilter = await global.kuzzle.ask(
@@ -544,7 +544,7 @@ export class HotelClerk {
       throw realtimeError.get("room_not_found", roomId);
     }
 
-    for (const channel of Object.keys(room.channels)) {
+    for (const channel of room.channels.keys()) {
       global.kuzzle.entryPoint.leaveChannel(channel, connectionId);
     }
 
