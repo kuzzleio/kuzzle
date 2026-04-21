@@ -660,11 +660,7 @@ export default class SecurityController extends NativeController {
   async mGetUsers(request: KuzzleRequest) {
     let ids;
 
-    if (
-      request.input.body &&
-      request.input.body.ids &&
-      Object.keys(request.input.body.ids).length
-    ) {
+    if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
       ids = request.getBodyArray("ids");
     } else {
       // @deprecated Should be replaced with request.getArray('ids')
