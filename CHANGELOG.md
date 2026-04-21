@@ -1,3 +1,14 @@
+## [2.54.0](https://github.com/kuzzleio/kuzzle/compare/v2.53.0...v2.54.0) (2026-04-21)
+
+### Features
+
+* use github app token when releasing a new version ([9f24eb5](https://github.com/kuzzleio/kuzzle/commit/9f24eb5b4b575500c790e14b94a14b5333010be9))
+
+### Bug Fixes
+
+* issue with cleanup ([fb29e97](https://github.com/kuzzleio/kuzzle/commit/fb29e978f4eb83973c85906f6f8f23feafd4f4ea))
+* **requestInput:** body type ([#2654](https://github.com/kuzzleio/kuzzle/issues/2654)) ([b3cc5f1](https://github.com/kuzzleio/kuzzle/commit/b3cc5f175cd0cf6d15d0802c77187bf5d2eaf422))
+
 ## [2.54.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.53.0...v2.54.0-beta.1) (2026-04-21)
 
 ### Features
