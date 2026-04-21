@@ -290,7 +290,7 @@ export class RequestInput {
    *   body         <== that
    *  }
    */
-  get body(): JSONObject | Array<any> | null {
+  get body(): JSONObject | null {
     return this[_body];
   }
 
