@@ -4,7 +4,7 @@
   "version": "2.54.2",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
-    "build": "rm -Rf ./dist && tsc && node ./bin/copy-protobuf.js",
+    "build": "rm -Rf ./dist && tsc && node ./bin/copy-binaries.js",
     "cucumber": "cucumber.js --fail-fast",
     "dev": "tsx watch start-kuzzle-dev.ts",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
@@ -106,7 +106,7 @@
   "license": "Apache-2.0",
   "files": [
     "dist/bin/start-kuzzle-server",
-    "dist/bin/copy-protobuf.js",
+    "dist/bin/copy-binaries.js",
     "dist/index.d.ts",
     "dist/index.js",
     "dist/lib/**/*.d.ts",
