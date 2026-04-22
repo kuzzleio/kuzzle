@@ -1,3 +1,15 @@
+## [2.54.3](https://github.com/kuzzleio/kuzzle/compare/v2.54.2...v2.54.3) (2026-04-22)
+
+### Bug Fixes
+
+* copy binaries ([bb04618](https://github.com/kuzzleio/kuzzle/commit/bb04618d1fbe75236bc9ea30f159170553289be2))
+
+## [2.54.2](https://github.com/kuzzleio/kuzzle/compare/v2.54.1...v2.54.2) (2026-04-22)
+
+### Bug Fixes
+
+* add proper permission to start-kuzzle-server file ([2afe3b7](https://github.com/kuzzleio/kuzzle/commit/2afe3b7377584905b1f469aa7216de023f82e269))
+
 ## [2.54.1](https://github.com/kuzzleio/kuzzle/compare/v2.54.0...v2.54.1) (2026-04-22)
 
 ### Bug Fixes
