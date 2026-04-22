@@ -46,7 +46,7 @@
     "test/**/*.json",
     // Binaries
     "bin/copy-protobuf.js",
-    "bin/start-kuzzle-server.js",
+    "bin/start-kuzzle-server",
     // development files
     "start-kuzzle-test.ts",
     "start-kuzzle-dev.ts"

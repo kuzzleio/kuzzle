@@ -29,6 +29,10 @@ const fs = require("fs");
 
 const yargs = require("yargs");
 
+/**
+ * When builded this file is reachable the bin folder
+ * Leave it this way on build
+ */
 const { Backend } = require("../index");
 
 function loadJson(path) {

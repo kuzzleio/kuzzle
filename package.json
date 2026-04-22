@@ -105,7 +105,7 @@
   "engineStrict": true,
   "license": "Apache-2.0",
   "files": [
-    "dist/bin/start-kuzzle-server.js",
+    "dist/bin/start-kuzzle-server",
     "dist/bin/copy-protobuf.js",
     "dist/index.d.ts",
     "dist/index.js",
