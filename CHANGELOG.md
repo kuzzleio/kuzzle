@@ -1,3 +1,9 @@
+## [2.54.3](https://github.com/kuzzleio/kuzzle/compare/v2.54.2...v2.54.3) (2026-04-22)
+
+### Bug Fixes
+
+* copy binaries ([bb04618](https://github.com/kuzzleio/kuzzle/commit/bb04618d1fbe75236bc9ea30f159170553289be2))
+
 ## [2.54.2](https://github.com/kuzzleio/kuzzle/compare/v2.54.1...v2.54.2) (2026-04-22)
 
 ### Bug Fixes
