@@ -1,7 +1,7 @@
 {
   "name": "kuzzle",
   "author": "The Kuzzle Team <support@kuzzle.io>",
-  "version": "2.54.0",
+  "version": "2.54.1",
   "description": "Kuzzle is an open-source solution that handles all the data management through a secured API, with a large choice of protocols.",
   "scripts": {
     "build": "rm -Rf ./dist && tsc && node ./bin/copy-protobuf.js",
@@ -105,7 +105,7 @@
   "engineStrict": true,
   "license": "Apache-2.0",
   "files": [
-    "dist/bin/check-node-version.js",
+    "dist/bin/start-kuzzle-server.js",
     "dist/bin/copy-protobuf.js",
     "dist/index.d.ts",
     "dist/index.js",

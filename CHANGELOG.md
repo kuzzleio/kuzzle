@@ -1,3 +1,9 @@
+## [2.54.1](https://github.com/kuzzleio/kuzzle/compare/v2.54.0...v2.54.1) (2026-04-22)
+
+### Bug Fixes
+
+* missing start-kuzzle-server file in published artefact ([99a1088](https://github.com/kuzzleio/kuzzle/commit/99a1088c147a8fbaac5093bbb8907e977a8b2468))
+
 ## [2.54.0](https://github.com/kuzzleio/kuzzle/compare/v2.53.0...v2.54.0) (2026-04-21)
 
 ### Features
