@@ -42,4 +42,4 @@ COPY --from=minifier /app/dist .
 
 ENV NODE_ENV=production
 
-CMD ["node", "./bin/start-kuzzle-server.js"]
+CMD ["node", "./bin/start-kuzzle-server"]
