@@ -1,3 +1,9 @@
+## [2.54.4](https://github.com/kuzzleio/kuzzle/compare/v2.54.3...v2.54.4) (2026-04-29)
+
+### Bug Fixes
+
+* dockerfile cmd issue ([795e7dc](https://github.com/kuzzleio/kuzzle/commit/795e7dc168ccdf4f584d7a1d78fdc0e26eba9858))
+
 ## [2.54.3](https://github.com/kuzzleio/kuzzle/compare/v2.54.2...v2.54.3) (2026-04-22)
 
 ### Bug Fixes
