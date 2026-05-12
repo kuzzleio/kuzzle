@@ -51,6 +51,7 @@ export default class SecurityController extends NativeController {
       "createApiKey",
       "createCredentials",
       "createFirstAdmin",
+      "restrictDefaultRights",
       "createOrReplaceProfile",
       "createOrReplaceRole",
       "createProfile",
@@ -1042,16 +1043,7 @@ export default class SecurityController extends NativeController {
     });
 
     if (reset) {
-      for (const type of ["role", "profile"]) {
-        await Bluebird.map(
-          Object.entries(global.kuzzle.config.security.standard[`${type}s`]),
-          ([name, value]) =>
-            this.ask(`core:security:${type}:createOrReplace`, name, value, {
-              refresh: "wait_for",
-              userId,
-            }),
-        );
-      }
+      this.restrictDefaultRights(request);
     }
 
     this.logger.info(
@@ -1061,6 +1053,32 @@ export default class SecurityController extends NativeController {
     );
 
     return user;
+  }
+
+  /**
+   * Restricted rights are applied to the `anonymous` and `default` roles
+   * (by default, these roles don't have any restriction).
+   *
+   * The default permissions can be found in the default configuration
+   * and can be modified in the `kuzzlerc`.
+   */
+  async restrictDefaultRights(request: KuzzleRequest) {
+    const userId = request.getKuid();
+
+    for (const type of ["role", "profile"]) {
+      await Bluebird.map(
+        Object.entries(global.kuzzle.config.security.standard[`${type}s`]),
+        ([name, value]) =>
+          this.ask(`core:security:${type}:createOrReplace`, name, value, {
+            refresh: "wait_for",
+            userId,
+          }),
+      );
+    }
+
+    this.logger.info(
+      `[SECURITY] ${SecurityController.userOrSdk(userId)} restricted rights of the default roles.`,
+    );
   }
 
   /**
