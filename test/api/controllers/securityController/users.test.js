@@ -1355,20 +1355,16 @@ describe("Test: security controller - users", () => {
     let createOrReplaceProfileStub;
 
     beforeEach(() => {
-      sinon.stub(securityController, "_persistUser");
-      sinon.stub(securityController, "restrictDefaultRights");
-
       request.input.args._id = "test";
 
       createOrReplaceRoleStub = kuzzle.ask.withArgs(createOrReplaceRoleEvent);
-
       createOrReplaceProfileStub = kuzzle.ask.withArgs(
         createOrReplaceProfileEvent,
       );
     });
 
     it("should reset roles & profiles", async () => {
-      await securityController.restrictDefaultRights();
+      await securityController.restrictDefaultRights(request);
 
       const config = kuzzle.config.security.standard;
 
