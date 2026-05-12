@@ -1307,6 +1307,7 @@ describe("Test: security controller - users", () => {
 
     beforeEach(() => {
       sinon.stub(securityController, "_persistUser");
+      sinon.stub(securityController, "restrictDefaultRights");
 
       request.input.args._id = "test";
 
@@ -1340,6 +1341,7 @@ describe("Test: security controller - users", () => {
         .calledOnce()
         .calledWithMatch(request, ["admin"], request.input.body.content);
 
+      should(securityController.restrictDefaultRights).not.called();
       should(createOrReplaceRoleStub).not.called();
       should(createOrReplaceProfileStub).not.called();
     });
@@ -1353,25 +1355,9 @@ describe("Test: security controller - users", () => {
         .calledOnce()
         .calledWithMatch(request, ["admin"], {});
 
-      const config = kuzzle.config.security.standard;
-
-      for (const [key, content] of Object.entries(config.roles)) {
-        should(createOrReplaceRoleStub).calledWithMatch(
-          createOrReplaceRoleEvent,
-          key,
-          content,
-          { refresh: "wait_for", userId: request.context.user._id },
-        );
-      }
-
-      for (const [key, content] of Object.entries(config.profiles)) {
-        should(createOrReplaceProfileStub).calledWithMatch(
-          createOrReplaceProfileEvent,
-          key,
-          content,
-          { refresh: "wait_for", userId: request.context.user._id },
-        );
-      }
+      should(securityController.restrictDefaultRights)
+        .calledOnce()
+        .calledWithMatch(request);
     });
   });
 });
