@@ -1043,7 +1043,7 @@ export default class SecurityController extends NativeController {
     });
 
     if (reset) {
-      this.restrictDefaultRights(request);
+      await this.restrictDefaultRights(request);
     }
 
     this.logger.info(
