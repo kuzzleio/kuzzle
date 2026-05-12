@@ -68,8 +68,9 @@ Body:
 ### Optional:
 
 - `_id`: specify the administror [kuid](/core/2/guides/main-concepts/authentication#kuzzle-user-identifier-kuid), instead of letting Kuzzle generate a random identifier.
-- `reset` (boolean): if true, restricted rights are applied to the `anonymous` and `default` roles (by default, these roles don't have any restriction).
+- `reset` (boolean): if true, restricted rights are applied to the `anonymous` and `default` roles (by default, these roles don't have any restriction). This is the same as calling [`restrictDefaultRights`](../restrict-default-rights/index.md) after this call.
 - `kuid`: if set to `human`, Kuzzle will generate a human readable id, otherwise if set to `uuid` Kuzzle will generate a standard uuid (default: `"human"`)
+
 ---
 
 ## Body properties
