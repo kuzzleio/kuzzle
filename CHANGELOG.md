@@ -1,3 +1,9 @@
+## [2.55.0](https://github.com/kuzzleio/kuzzle/compare/v2.54.4...v2.55.0) (2026-05-20)
+
+### Features
+
+* **security:** add restrictDefaultRights endpoint ([#2657](https://github.com/kuzzleio/kuzzle/issues/2657)) ([e1df33a](https://github.com/kuzzleio/kuzzle/commit/e1df33a3919ade1dc1fa66418b1bdec71a935415))
+
 ## [2.54.4](https://github.com/kuzzleio/kuzzle/compare/v2.54.3...v2.54.4) (2026-04-29)
 
 ### Bug Fixes
