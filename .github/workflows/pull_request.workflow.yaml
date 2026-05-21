@@ -52,6 +52,25 @@ jobs:
         run: npm run test:lint
         shell: bash
 
+  sonarqube:
+    runs-on: ubuntu-24.04
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Disabling shallow clones is recommended for improving the relevancy of reporting
+          fetch-depth: 0
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          client-id: ${{ vars.KUZZLE_BOT_APP_ID }}
+          private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }} # Required for PR decoration
+
   unit-tests:
     name: Unit Tests
     needs: [lint]
@@ -103,7 +122,7 @@ jobs:
 
   functional-tests:
     name: Functional tests
-    needs: [unit-tests]
+    needs: [sonarqube, unit-tests]
     strategy:
       matrix:
         test-set:
