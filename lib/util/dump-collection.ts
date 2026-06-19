@@ -129,7 +129,7 @@ abstract class AbstractDumper {
     }
 
     if (query.collapse) {
-      global.kuzzle.log
+      globalThis.kuzzle.log
         .child("CSV-dump")
         .warn(
           "The 'collapse' option is not compatible with scrolling. Disabling scroll.",
