@@ -124,7 +124,6 @@ abstract class AbstractDumper {
       size: 1000,
     },
   ) {
-
     if (!writeStream) {
       throw kerror.get("api", "assert", "missing_argument", "writeStream");
     }
