@@ -19,15 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import Redis from "../../service/cache/redis";
+import { Logger } from "../../kuzzle/Logger";
 
-const Bluebird = require("bluebird");
+export default class CacheEngine {
+  public public: Redis;
+  public internal: Redis;
+  private logger: Logger;
 
-const Redis = require("../../service/cache/redis");
-
-class CacheEngine {
   constructor() {
     const config = global.kuzzle.config.services;
+
+    global.cacheEngine = this;
 
     this.public = new Redis(config.memoryStorage, "public_adapter");
     this.internal = new Redis(config.internalCache, "internal_adapter");
@@ -37,11 +40,9 @@ class CacheEngine {
 
   /**
    * Initializes the redis clients
-   *
-   * @returns {Promise}
    */
-  async init() {
-    await Bluebird.all([this.public.init(), this.internal.init()]);
+  async init(): Promise<void> {
+    await Promise.all([this.public.init(), this.internal.init()]);
 
     this.registerInternalEvents();
     this.registerPublicEvents();
@@ -274,5 +275,3 @@ class CacheEngine {
     );
   }
 }
-
-module.exports = CacheEngine;
