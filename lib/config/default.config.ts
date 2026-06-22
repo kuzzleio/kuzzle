@@ -313,7 +313,6 @@ const defaultConfig: KuzzleConfiguration = {
         collections: {
           users: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -326,7 +325,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           profiles: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -351,7 +349,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           roles: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -368,7 +365,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           validations: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -385,7 +381,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           config: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -396,7 +391,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           "api-keys": {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -414,7 +408,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           installations: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },
@@ -429,7 +422,6 @@ const defaultConfig: KuzzleConfiguration = {
           },
           imports: {
             settings: {
-              // @deprecated : replace undefined by 1
               number_of_shards: undefined,
               number_of_replicas: undefined,
             },

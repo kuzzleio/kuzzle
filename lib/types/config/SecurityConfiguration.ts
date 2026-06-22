@@ -75,7 +75,7 @@ export type SecurityConfiguration = {
      *
      * @default null
      */
-    secret: string | Buffer;
+    secret: string | Buffer | null;
   };
 
   apiKey: {
