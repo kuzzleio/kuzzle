@@ -121,11 +121,20 @@ abstract class AbstractDumper {
       fieldsName: {},
       scroll: "5s",
       separator: ",",
-      size: 10,
+      size: 1000,
     },
   ) {
     if (!writeStream) {
       throw kerror.get("api", "assert", "missing_argument", "writeStream");
+    }
+
+    if (query.collapse) {
+      globalThis.kuzzle.log
+        .child("CSV-dump")
+        .warn(
+          "The 'collapse' option is not compatible with scrolling. Disabling scroll.",
+        );
+      delete this.options.scroll;
     }
   }
 
