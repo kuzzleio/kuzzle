@@ -434,6 +434,60 @@ describe("DocumentController", () => {
         },
       );
     });
+
+    it("should reject unsupported protocols", async () => {
+      request.context.connection.protocol = "mqtt";
+
+      await should(documentController.export(request)).be.rejectedWith(
+        "api.assert.unsupported_protocol",
+      );
+    });
+
+    it("should translate koncorde queries before exporting", async () => {
+      request.input.args.lang = "koncorde";
+      documentController.translateKoncorde = sinon
+        .stub()
+        .resolves({ match: { title: "book" } });
+
+      await documentController.export(request);
+
+      should(documentController.translateKoncorde).be.calledWith({
+        term: { category: "books" },
+      });
+      should(kuzzle.ask).be.calledWith(
+        "core:storage:public:document:export",
+        index,
+        collection,
+        {
+          query: { match: { title: "book" } },
+          collapse: {
+            field: "category",
+          },
+        },
+        "jsonl",
+        [],
+        {
+          fieldsName: {},
+          lang: "koncorde",
+          scroll: "5s",
+          separator: ",",
+          size: undefined,
+        },
+      );
+    });
+
+    it("should configure csv exports with the csv content type", async () => {
+      request.input.args.format = "csv";
+
+      await documentController.export(request);
+
+      should(request.response.configure).be.calledWith({
+        headers: {
+          "Content-Disposition": `attachment; filename="${index}-${collection}.csv"`,
+          "Content-Type": "text/csv",
+        },
+      });
+    });
   });
 
   describe("#mGet", () => {
