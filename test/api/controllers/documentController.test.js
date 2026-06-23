@@ -437,6 +437,32 @@ describe("DocumentController", () => {
       );
     });
 
+    it("should not forward collapse when it is not provided", async () => {
+      request.input.body = {
+        query: {
+          term: { category: "books" },
+        },
+      };
+
+      const response = await documentController.export(request);
+
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
+
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
+        index,
+        collection,
+        {
+          query: {
+            term: { category: "books" },
+          },
+        },
+      );
+
+      should(kuzzle.ask.firstCall.args[3]).not.have.property("collapse");
+    });
+
     it("should reject unsupported protocols", async () => {
       request.context.connection.protocol = "mqtt";
 
