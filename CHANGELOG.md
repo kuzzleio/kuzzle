@@ -1,3 +1,15 @@
+## [2.56.0](https://github.com/kuzzleio/kuzzle/compare/v2.55.0...v2.56.0) (2026-06-23)
+
+### Features
+
+* **csv-export:** added support for collapse ([cbc0aee](https://github.com/kuzzleio/kuzzle/commit/cbc0aeee5378b3c0dd8a7bd797a6208da0aecd20))
+
+### Bug Fixes
+
+* codex reported issues ([99d3dad](https://github.com/kuzzleio/kuzzle/commit/99d3dadd947868b9ea3fbfb1a31cc55e159fabef))
+* **documentController:** fixing collapse property missing a default value ([de812a8](https://github.com/kuzzleio/kuzzle/commit/de812a82831ea8bf2a637d7ef744b19b055831f1))
+* kuzzle imports indices was not properly following defaultSettings ([e128a3c](https://github.com/kuzzleio/kuzzle/commit/e128a3c40de592ee99e6f937e87bf14bc0ba6e73))
+
 ## [2.56.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.56.0-beta.2...v2.56.0-beta.3) (2026-06-23)
 
 ### Bug Fixes
