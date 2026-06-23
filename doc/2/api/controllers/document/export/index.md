@@ -145,7 +145,8 @@ Following arguments are available: `query`, `fields` and `fieldsName`.
 An empty body matches all documents in the queried collection.
 
 ::: info
-Only the following fields are available in the top level of the search body: `collapse`, `explain`, `fields`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`
+Only the following fields are available in the top level of the search body: `collapse`, `explain`, `fields`, `from`, `highlight`, `query`, `search_timeout`, `size`, `sort`, `_name`, `_source`, `_source_excludes`, `_source_includes`.
+`collapse` is forwarded to the underlying search body, but it cannot be combined with `scroll` because of an Elasticsearch limitation.
 :::
 
 ::: warning

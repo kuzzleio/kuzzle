@@ -393,6 +393,49 @@ describe("DocumentController", () => {
     });
   });
 
+  describe("#export", () => {
+    beforeEach(() => {
+      kuzzle.ask.withArgs("core:storage:public:document:export").resolves({
+        body: "stream",
+      });
+      request.input.body = {
+        collapse: {
+          field: "category",
+        },
+        query: {
+          term: { category: "books" },
+        },
+      };
+    });
+
+    it("should forward collapse to the dumper search body", async () => {
+      await documentController.export(request);
+
+      should(kuzzle.ask).be.calledWith(
+        "core:storage:public:document:export",
+        index,
+        collection,
+        {
+          query: {
+            term: { category: "books" },
+          },
+          collapse: {
+            field: "category",
+          },
+        },
+        "jsonl",
+        [],
+        {
+          fieldsName: {},
+          lang: "elasticsearch",
+          scroll: "5s",
+          separator: ",",
+          size: undefined,
+        },
+      );
+    });
+  });
+
   describe("#mGet", () => {
     beforeEach(() => {
       request.input.body = {
