@@ -393,6 +393,128 @@ describe("DocumentController", () => {
     });
   });
 
+  describe("#export", () => {
+    beforeEach(() => {
+      kuzzle.ask.withArgs("core:storage:public:document:search").resolves({
+        hits: [],
+        body: "stream",
+        scrollId: null,
+      });
+      request.context.connection.protocol = "http";
+      request.input.body = {
+        collapse: {
+          field: "category",
+        },
+        query: {
+          term: { category: "books" },
+        },
+      };
+    });
+
+    it("should forward collapse to the dumper search body", async () => {
+      const response = await documentController.export(request);
+
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
+
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
+        index,
+        collection,
+        {
+          query: {
+            term: { category: "books" },
+          },
+          collapse: {
+            field: "category",
+          },
+        },
+        {
+          lang: "elasticsearch",
+          scroll: undefined,
+          size: 10,
+        },
+      );
+    });
+
+    it("should not forward collapse when it is not provided", async () => {
+      request.input.body = {
+        query: {
+          term: { category: "books" },
+        },
+      };
+
+      const response = await documentController.export(request);
+
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
+
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
+        index,
+        collection,
+        {
+          query: {
+            term: { category: "books" },
+          },
+        },
+      );
+
+      should(kuzzle.ask.firstCall.args[3]).not.have.property("collapse");
+    });
+
+    it("should reject unsupported protocols", async () => {
+      request.context.connection.protocol = "mqtt";
+
+      await should(documentController.export(request)).be.rejectedWith(
+        'The protocol "mqtt" is not supported by the API action "document:export".',
+      );
+    });
+
+    it("should translate koncorde queries before exporting", async () => {
+      request.input.args.lang = "koncorde";
+      documentController.translateKoncorde = sinon
+        .stub()
+        .resolves({ match: { title: "book" } });
+
+      const response = await documentController.export(request);
+
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
+
+      should(documentController.translateKoncorde).be.calledWith({
+        term: { category: "books" },
+      });
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
+        index,
+        collection,
+        {
+          query: { match: { title: "book" } },
+          collapse: {
+            field: "category",
+          },
+        },
+        {
+          lang: "koncorde",
+          scroll: undefined,
+          size: 10,
+        },
+      );
+    });
+
+    it("should configure csv exports with the csv content type", async () => {
+      request.input.args.format = "csv";
+
+      await documentController.export(request);
+
+      should(request.response.headers).match({
+        "Content-Disposition": `attachment; filename="${index}-${collection}.csv"`,
+        "Content-Type": "text/csv",
+      });
+    });
+  });
+
   describe("#mGet", () => {
     beforeEach(() => {
       request.input.body = {

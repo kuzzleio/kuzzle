@@ -239,11 +239,19 @@ describe("/lib/kuzzle/kuzzle.js", () => {
 
   describe("#generateId", () => {
     it("should not initialize the cluster if disabled", async () => {
-      kuzzle.config.cluster.enabled = false;
+      const stubbedKuzzle = Kuzzle.__with__({
+        vault_1: { default: { load: () => ({}) } },
+      });
 
-      await kuzzle.start(application, {});
+      await stubbedKuzzle(async () => {
+        kuzzle = _mockKuzzle(Kuzzle);
+        kuzzle._waitForImportToFinish = sinon.stub().resolves();
+        kuzzle.config.cluster.enabled = false;
 
-      should(clusterModuleInitStub).not.be.called();
+        await kuzzle.start(application, {});
+
+        should(clusterModuleInitStub).not.be.called();
+      });
     });
   });
 

@@ -52,6 +52,49 @@ jobs:
         run: npm run test:lint
         shell: bash
 
+  sonarqube:
+    runs-on: ubuntu-24.04
+    if: github.event.pull_request.head.repo.fork == false
+    needs: [lint]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Disabling shallow clones is recommended for improving the relevancy of reporting
+          fetch-depth: 0
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build
+        run: npm run build
+        shell: bash
+
+      - name: Mocha coverage
+        run: npm run test:unit:mocha:coverage
+        shell: bash
+
+      - uses: actions/create-github-app-token@v3
+        id: app-token
+        with:
+          app-id: ${{ vars.KUZZLE_BOT_APP_ID }}
+          private-key: ${{ secrets.KUZZLE_BOT_PRIVATE_KEY }}
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v7.0.0
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }} # Required for PR decoration
+
   unit-tests:
     name: Unit Tests
     needs: [lint]
@@ -103,7 +146,7 @@ jobs:
 
   functional-tests:
     name: Functional tests
-    needs: [unit-tests]
+    needs: [sonarqube, unit-tests]
     strategy:
       matrix:
         test-set:
