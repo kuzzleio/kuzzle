@@ -62,6 +62,27 @@ jobs:
           # Disabling shallow clones is recommended for improving the relevancy of reporting
           fetch-depth: 0
 
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build
+        run: npm run build
+        shell: bash
+
+      - name: Mocha coverage
+        run: npm run test:unit:mocha:coverage
+        shell: bash
+
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
