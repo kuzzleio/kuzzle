@@ -68,6 +68,17 @@ describe("lib/config/index.js", () => {
       should(rcMock).calledOnce().calledWith("kuzzle", defaultConfig.default);
     });
 
+    it("should use storage engine default settings for the imports collection", () => {
+      config.loadConfig();
+
+      const importsSettings =
+        defaultConfig.default.services.storageEngine.internalIndex.collections
+          .imports.settings;
+
+      should(importsSettings.number_of_shards).be.undefined();
+      should(importsSettings.number_of_replicas).be.undefined();
+    });
+
     it("should return an intelligible error when unable to parse the configuration file", () => {
       const err = new Error("foo");
       rcMock.throws(err);

@@ -119,12 +119,12 @@ export type StorageEngineElasticsearch = {
     /**
      * @default 1
      */
-    number_of_shards: number;
+    number_of_shards: number | undefined;
 
     /**
      * @default 1
      */
-    number_of_replicas: number;
+    number_of_replicas: number | undefined;
   };
 
   internalIndex: {
@@ -139,12 +139,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -175,12 +175,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -208,12 +208,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -233,12 +233,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -258,12 +258,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -277,12 +277,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -303,12 +303,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
@@ -325,12 +325,12 @@ export type StorageEngineElasticsearch = {
           /**
            * @default 1
            */
-          number_of_shards: number;
+          number_of_shards: number | undefined;
 
           /**
            * @default 1
            */
-          number_of_replicas: number;
+          number_of_replicas: number | undefined;
         };
 
         mappings: {
