@@ -395,8 +395,10 @@ describe("DocumentController", () => {
 
   describe("#export", () => {
     beforeEach(() => {
-      kuzzle.ask.withArgs("core:storage:public:document:export").resolves({
+      kuzzle.ask.withArgs("core:storage:public:document:search").resolves({
+        hits: [],
         body: "stream",
+        scrollId: null,
       });
       request.context.connection.protocol = "http";
       request.input.body = {
@@ -410,10 +412,13 @@ describe("DocumentController", () => {
     });
 
     it("should forward collapse to the dumper search body", async () => {
-      await documentController.export(request);
+      const response = await documentController.export(request);
 
-      should(kuzzle.ask).be.calledWith(
-        "core:storage:public:document:export",
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
+
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
         index,
         collection,
         {
@@ -424,14 +429,10 @@ describe("DocumentController", () => {
             field: "category",
           },
         },
-        "jsonl",
-        [],
         {
-          fieldsName: {},
           lang: "elasticsearch",
-          scroll: "5s",
-          separator: ",",
-          size: undefined,
+          scroll: undefined,
+          size: 10,
         },
       );
     });
@@ -450,13 +451,16 @@ describe("DocumentController", () => {
         .stub()
         .resolves({ match: { title: "book" } });
 
-      await documentController.export(request);
+      const response = await documentController.export(request);
+
+      response.stream.resume();
+      await new Promise((resolve) => response.stream.on("end", resolve));
 
       should(documentController.translateKoncorde).be.calledWith({
         term: { category: "books" },
       });
-      should(kuzzle.ask).be.calledWith(
-        "core:storage:public:document:export",
+      should(kuzzle.ask).be.calledWithMatch(
+        "core:storage:public:document:search",
         index,
         collection,
         {
@@ -465,14 +469,10 @@ describe("DocumentController", () => {
             field: "category",
           },
         },
-        "jsonl",
-        [],
         {
-          fieldsName: {},
           lang: "koncorde",
-          scroll: "5s",
-          separator: ",",
-          size: undefined,
+          scroll: undefined,
+          size: 10,
         },
       );
     });
@@ -482,11 +482,9 @@ describe("DocumentController", () => {
 
       await documentController.export(request);
 
-      should(request.response.configure).be.calledWith({
-        headers: {
-          "Content-Disposition": `attachment; filename="${index}-${collection}.csv"`,
-          "Content-Type": "text/csv",
-        },
+      should(request.response.headers).match({
+        "Content-Disposition": `attachment; filename="${index}-${collection}.csv"`,
+        "Content-Type": "text/csv",
       });
     });
   });
