@@ -1,3 +1,9 @@
+## [2.56.0-beta.3](https://github.com/kuzzleio/kuzzle/compare/v2.56.0-beta.2...v2.56.0-beta.3) (2026-06-23)
+
+### Bug Fixes
+
+* **documentController:** fixing collapse property missing a default value ([de812a8](https://github.com/kuzzleio/kuzzle/commit/de812a82831ea8bf2a637d7ef744b19b055831f1))
+
 ## [2.56.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.56.0-beta.1...v2.56.0-beta.2) (2026-06-23)
 
 ### Bug Fixes
