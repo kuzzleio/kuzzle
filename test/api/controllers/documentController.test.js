@@ -398,6 +398,7 @@ describe("DocumentController", () => {
       kuzzle.ask.withArgs("core:storage:public:document:export").resolves({
         body: "stream",
       });
+      request.context.connection.protocol = "http";
       request.input.body = {
         collapse: {
           field: "category",
@@ -439,7 +440,7 @@ describe("DocumentController", () => {
       request.context.connection.protocol = "mqtt";
 
       await should(documentController.export(request)).be.rejectedWith(
-        "api.assert.unsupported_protocol",
+        'The protocol "mqtt" is not supported by the API action "document:export".',
       );
     });
 
