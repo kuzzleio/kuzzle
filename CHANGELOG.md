@@ -1,3 +1,9 @@
+## [2.56.0-beta.2](https://github.com/kuzzleio/kuzzle/compare/v2.56.0-beta.1...v2.56.0-beta.2) (2026-06-23)
+
+### Bug Fixes
+
+* codex reported issues ([99d3dad](https://github.com/kuzzleio/kuzzle/commit/99d3dadd947868b9ea3fbfb1a31cc55e159fabef))
+
 ## [2.56.0-beta.1](https://github.com/kuzzleio/kuzzle/compare/v2.55.0...v2.56.0-beta.1) (2026-06-23)
 
 ### Features
