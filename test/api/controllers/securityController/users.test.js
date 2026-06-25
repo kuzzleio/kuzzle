@@ -1262,8 +1262,16 @@ describe("Test: security controller - users", () => {
   });
 
   describe("#revokeTokens", () => {
+    let ApiKey;
+
     beforeEach(() => {
+      ApiKey = require("../../../../lib/model/storage/apiKey");
+      sinon.stub(ApiKey, "deleteByUser").resolves();
       request.input.args._id = "test";
+    });
+
+    afterEach(() => {
+      ApiKey.deleteByUser.restore();
     });
 
     it("should revoke all tokens related to a given user", async () => {
@@ -1272,6 +1280,11 @@ describe("Test: security controller - users", () => {
       should(kuzzle.ask).calledWithMatch(
         "core:security:token:deleteByKuid",
         request.input.args._id,
+      );
+
+      should(ApiKey.deleteByUser).calledWithMatch(
+        { _id: request.input.args._id },
+        { refresh: "wait_for" },
       );
     });
 
