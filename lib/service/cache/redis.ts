@@ -263,4 +263,4 @@ class Redis extends Service {
   }
 }
 
-export default Redis;
+export = Redis;

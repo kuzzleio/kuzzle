@@ -8,7 +8,7 @@ const KuzzleMock = require("../../mocks/kuzzle.mock");
 const RedisClientMock = require("../../mocks/service/redisClient.mock");
 const RedisClusterClientMock = require("../../mocks/service/redisClusterClient.mock");
 
-const Redis = rewire("../../../lib/service/cache/redis").default;
+const Redis = rewire("../../../lib/service/cache/redis");
 
 describe("Redis", () => {
   let redis;

@@ -22,7 +22,7 @@
 import Redis from "../../service/cache/redis";
 import { Logger } from "../../kuzzle/Logger";
 
-export default class CacheEngine {
+class CacheEngine {
   public public: Redis;
   public internal: Redis;
   private logger: Logger;
@@ -275,3 +275,5 @@ export default class CacheEngine {
     );
   }
 }
+
+export = CacheEngine;

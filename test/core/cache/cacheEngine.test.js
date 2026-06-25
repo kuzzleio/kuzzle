@@ -6,7 +6,7 @@ const should = require("should");
 const KuzzleMock = require("../../mocks/kuzzle.mock");
 const RedisClientMock = require("../../mocks/service/redisClient.mock");
 
-const CacheEngine = require("../../../lib/core/cache/cacheEngine").default;
+const CacheEngine = require("../../../lib/core/cache/cacheEngine");
 
 describe("CacheEngine", () => {
   let cacheEngine;
