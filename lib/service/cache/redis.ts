@@ -46,9 +46,9 @@ class Redis extends Service {
     this.commands = {} as IORedis;
     this.adapterName = name;
 
-    this.logger = global.kuzzle.log.child // It means we're in the main Kuzzle process
-      ? global.kuzzle.log.child("services:cache:redis")
-      : global.kuzzle.log;
+    this.logger = globalThis.kuzzle.log.child // It means we're in the main Kuzzle process
+      ? globalThis.kuzzle.log.child("services:cache:redis")
+      : globalThis.kuzzle.log;
   }
 
   /**
@@ -58,7 +58,7 @@ class Redis extends Service {
    * @returns {Promise}
    */
   override _initSequence(): Promise<void> {
-    const config = JSON.parse(JSON.stringify(this._config));
+    const config = structuredClone(this._config);
 
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
@@ -89,7 +89,7 @@ class Redis extends Service {
 
     this.client.on("error", (error: Error) => {
       if (this.connected) {
-        global.kuzzle.log.error(
+        globalThis.kuzzle.log.error(
           `Redis service seem to be down, see original error for more info:\n${error.message}`,
         );
       }
@@ -102,7 +102,7 @@ class Redis extends Service {
       this.client.once("ready", async () => {
         await this.client.client(
           "SETNAME",
-          `${this.adapterName}/${global.kuzzle.id}`,
+          `${this.adapterName}/${globalThis.kuzzle.id}`,
         );
         resolve();
       });
@@ -138,7 +138,7 @@ class Redis extends Service {
    */
   override async info(): Promise<any> {
     const result = await this.commands.info();
-    const arr = result.replace(/\r\n/g, "\n").split("\n");
+    const arr = result.replaceAll("\r\n", "\n").split("\n");
     const info: Record<string, string> = {};
 
     for (const elt of arr) {

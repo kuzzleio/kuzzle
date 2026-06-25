@@ -21,11 +21,11 @@ export async function withLock<T>(
   config: MutexConfig = {},
 ): Promise<T> {
   const store = context.getStore();
-  if (store !== undefined && store.acquiredLocks.has(key)) {
+  if (store?.acquiredLocks.has(key)) {
     return callback();
   }
 
-  const client = global.cacheEngine.internal.client;
+  const client = globalThis.cacheEngine.internal.client;
   const adapter = new IoredisAdapter(client);
 
   const lock = createLock({
