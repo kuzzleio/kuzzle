@@ -1332,8 +1332,11 @@ export default class SecurityController extends NativeController {
    */
   async revokeTokens(request: KuzzleRequest) {
     const id = request.getId();
+    const refresh = request.getRefresh("wait_for");
 
     await this.ask("core:security:token:deleteByKuid", id);
+
+    await ApiKey.deleteByUser({ _id: id } as any, { refresh });
 
     return null;
   }
