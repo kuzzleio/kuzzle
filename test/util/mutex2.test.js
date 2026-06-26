@@ -191,7 +191,7 @@ describe("#mutex2 (withLock)", () => {
   });
 
   it("should throw if globalThis.cacheEngine is not set", async () => {
-    delete global.cacheEngine;
+    global.cacheEngine = null;
 
     await should(withLock("no-cache", async () => "nope")).be.rejectedWith(
       TypeError,
