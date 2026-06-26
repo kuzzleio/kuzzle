@@ -9,7 +9,6 @@ interface MutexContext {
 const context = new AsyncLocalStorage<MutexContext>();
 
 export interface MutexConfig {
-  timeout?: number;
   retryAttempts?: number;
   retryDelay?: number;
   ttl?: number;
