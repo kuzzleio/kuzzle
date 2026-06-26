@@ -19,29 +19,30 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const Bluebird = require("bluebird");
-
-const Redis = require("../../service/cache/redis");
+import Redis from "../../service/cache/redis";
+import { Logger } from "../../kuzzle/Logger";
 
 class CacheEngine {
+  public public: Redis;
+  public internal: Redis;
+  private readonly logger: Logger;
+
   constructor() {
-    const config = global.kuzzle.config.services;
+    const config = globalThis.kuzzle.config.services;
+
+    globalThis.cacheEngine = this;
 
     this.public = new Redis(config.memoryStorage, "public_adapter");
     this.internal = new Redis(config.internalCache, "internal_adapter");
 
-    this.logger = global.kuzzle.log.child("core:cache:cacheEngine");
+    this.logger = globalThis.kuzzle.log.child("core:cache:cacheEngine");
   }
 
   /**
    * Initializes the redis clients
-   *
-   * @returns {Promise}
    */
-  async init() {
-    await Bluebird.all([this.public.init(), this.internal.init()]);
+  async init(): Promise<void> {
+    await Promise.all([this.public.init(), this.internal.init()]);
 
     this.registerInternalEvents();
     this.registerPublicEvents();
@@ -54,7 +55,7 @@ class CacheEngine {
      * Deletes on or multiple keys
      * @param  {string|Array.<string>} keys
      */
-    global.kuzzle.onAsk("core:cache:internal:del", (keys) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:del", (keys) =>
       this.internal.commands.del(keys),
     );
 
@@ -63,14 +64,14 @@ class CacheEngine {
      * @param {string} key
      * @param {number} ttl (in seconds)
      */
-    global.kuzzle.onAsk("core:cache:internal:expire", (key, ttl) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:expire", (key, ttl) =>
       this.internal.commands.expire(key, ttl),
     );
 
     /**
      * Wipes the database clean
      */
-    global.kuzzle.onAsk("core:cache:internal:flushdb", () =>
+    globalThis.kuzzle.onAsk("core:cache:internal:flushdb", () =>
       this.internal.commands.flushdb(),
     );
 
@@ -78,7 +79,7 @@ class CacheEngine {
      * Returns basic information about the internal cache service
      * @returns {Promise.<Object>}
      */
-    global.kuzzle.onAsk("core:cache:internal:info:get", () =>
+    globalThis.kuzzle.onAsk("core:cache:internal:info:get", () =>
       this.internal.info(),
     );
 
@@ -87,7 +88,7 @@ class CacheEngine {
      * @param {string} key
      * @return {string}
      */
-    global.kuzzle.onAsk("core:cache:internal:get", (key) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:get", (key) =>
       this.internal.commands.get(key),
     );
 
@@ -96,7 +97,7 @@ class CacheEngine {
      * @param  {Array.<string>} ids
      * @return {Array.<string|null>}
      */
-    global.kuzzle.onAsk("core:cache:internal:mget", (keys) => {
+    globalThis.kuzzle.onAsk("core:cache:internal:mget", (keys) => {
       // redis throws an error if trying to mget without arguments
       if (keys.length === 0) {
         return [];
@@ -109,7 +110,7 @@ class CacheEngine {
      * Makes a key persistent (disable its expiration delay, if there is one)
      * @param {string} key
      */
-    global.kuzzle.onAsk("core:cache:internal:persist", (key) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:persist", (key) =>
       this.internal.commands.persist(key),
     );
 
@@ -118,7 +119,7 @@ class CacheEngine {
      * @param {string} key
      * @param {number} ttl (in milliseconds)
      */
-    global.kuzzle.onAsk("core:cache:internal:pexpire", (key, ttl) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:pexpire", (key, ttl) =>
       this.internal.commands.pexpire(key, ttl),
     );
 
@@ -126,7 +127,7 @@ class CacheEngine {
      * Fetches all keys matching the provided pattern
      * @param {string} pattern
      */
-    global.kuzzle.onAsk("core:cache:internal:searchKeys", (pattern) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:searchKeys", (pattern) =>
       this.internal.searchKeys(pattern),
     );
 
@@ -139,7 +140,7 @@ class CacheEngine {
      * @param {number} keys -- number of keys
      * @param {string} script
      */
-    global.kuzzle.onAsk(
+    globalThis.kuzzle.onAsk(
       "core:cache:internal:script:define",
       (name, keys, script) => {
         return this.internal.client.defineCommand(name, {
@@ -156,8 +157,9 @@ class CacheEngine {
      * @param {...string} args -- script arguments
      * @return {*} script result (if any)
      */
-    global.kuzzle.onAsk("core:cache:internal:script:execute", (name, ...args) =>
-      this.internal.client[name](...args),
+    globalThis.kuzzle.onAsk(
+      "core:cache:internal:script:execute",
+      (name, ...args) => this.internal.client[name](...args),
     );
 
     /**
@@ -175,7 +177,7 @@ class CacheEngine {
      * @param {{ttl: number, onlyIfNew: boolean}} [opts]
      * @returns {Promise.<boolean>} true if the key was set, false otherwise
      */
-    global.kuzzle.onAsk("core:cache:internal:store", (key, value, opts) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:store", (key, value, opts) =>
       this.internal.store(key, value, opts),
     );
 
@@ -184,7 +186,7 @@ class CacheEngine {
      * @param {string} command
      * @param {Array} args -- command arguments
      */
-    global.kuzzle.onAsk("core:cache:internal:execute", (command, ...args) =>
+    globalThis.kuzzle.onAsk("core:cache:internal:execute", (command, ...args) =>
       this.internal.exec(command, ...args),
     );
   }
@@ -194,7 +196,7 @@ class CacheEngine {
      * Deletes on or multiple keys
      * @param  {string|Array.<string>} keys
      */
-    global.kuzzle.onAsk("core:cache:public:del", (keys) =>
+    globalThis.kuzzle.onAsk("core:cache:public:del", (keys) =>
       this.public.commands.del(keys),
     );
 
@@ -203,7 +205,7 @@ class CacheEngine {
      * @param {string} command
      * @param {Array} args -- command arguments
      */
-    global.kuzzle.onAsk("core:cache:public:execute", (command, ...args) =>
+    globalThis.kuzzle.onAsk("core:cache:public:execute", (command, ...args) =>
       this.public.exec(command, ...args),
     );
 
@@ -212,14 +214,14 @@ class CacheEngine {
      * @param {string} key
      * @param {number} ttl (in seconds)
      */
-    global.kuzzle.onAsk("core:cache:public:expire", (key, ttl) =>
+    globalThis.kuzzle.onAsk("core:cache:public:expire", (key, ttl) =>
       this.public.commands.expire(key, ttl),
     );
 
     /**
      * Wipes the database clean
      */
-    global.kuzzle.onAsk("core:cache:public:flushdb", () =>
+    globalThis.kuzzle.onAsk("core:cache:public:flushdb", () =>
       this.public.commands.flushdb(),
     );
 
@@ -227,14 +229,16 @@ class CacheEngine {
      * Returns basic information about the internal cache service
      * @returns {Promise.<Object>}
      */
-    global.kuzzle.onAsk("core:cache:public:info:get", () => this.public.info());
+    globalThis.kuzzle.onAsk("core:cache:public:info:get", () =>
+      this.public.info(),
+    );
 
     /**
      * Fetches a single value
      * @param {string} key
      * @return {string}
      */
-    global.kuzzle.onAsk("core:cache:public:get", (key) =>
+    globalThis.kuzzle.onAsk("core:cache:public:get", (key) =>
       this.public.commands.get(key),
     );
 
@@ -242,7 +246,7 @@ class CacheEngine {
      * Executes multiple cache commands in one go, as a single transaction
      * @param {Array} commands to execute
      */
-    global.kuzzle.onAsk("core:cache:public:mExecute", (commands) =>
+    globalThis.kuzzle.onAsk("core:cache:public:mExecute", (commands) =>
       this.public.mExecute(commands),
     );
 
@@ -250,7 +254,7 @@ class CacheEngine {
      * Makes a key persistent (disable its expiration delay, if there is one)
      * @param {string} key
      */
-    global.kuzzle.onAsk("core:cache:public:persist", (key) =>
+    globalThis.kuzzle.onAsk("core:cache:public:persist", (key) =>
       this.public.commands.persist(key),
     );
 
@@ -269,10 +273,10 @@ class CacheEngine {
      * @param {{ttl: number, onlyIfNew: boolean}} [opts]
      * @returns {Promise.<boolean>} true if the key was set, false otherwise
      */
-    global.kuzzle.onAsk("core:cache:public:store", (key, value, opts) =>
+    globalThis.kuzzle.onAsk("core:cache:public:store", (key, value, opts) =>
       this.public.store(key, value, opts),
     );
   }
 }
 
-module.exports = CacheEngine;
+export = CacheEngine;

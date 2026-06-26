@@ -1,5 +1,6 @@
 import { Backend } from "../core/backend";
 import { Kuzzle } from "../kuzzle";
+import CacheEngine from "../core/cache/cacheEngine";
 
 /**
  * This file contains global type declarations for Kuzzle.
@@ -12,6 +13,7 @@ import { Kuzzle } from "../kuzzle";
 declare global {
   var app: Backend;
   var kuzzle: Kuzzle;
+  var cacheEngine: CacheEngine;
   var NODE_ENV: string;
 }
 

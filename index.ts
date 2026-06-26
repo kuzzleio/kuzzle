@@ -11,6 +11,7 @@ export * from "./lib/api/request";
 export * from "./lib/kerror/errors";
 
 export * from "./lib/util/mutex";
+export * from "./lib/util/mutex2";
 
 export * from "./lib/util/Inflector";
 
