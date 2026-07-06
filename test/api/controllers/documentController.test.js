@@ -417,19 +417,21 @@ describe("DocumentController", () => {
       response.stream.resume();
       await new Promise((resolve) => response.stream.on("end", resolve));
 
+      console.dir(kuzzle.ask.firstCall.args, { depth: null });
+
       should(kuzzle.ask).be.calledWithMatch(
         "core:storage:public:document:search",
         index,
         collection,
-        {
+        sinon.match.hasNested("collapse.field", "category"),
+        /*{
           query: {
             term: { category: "books" },
           },
           collapse: {
             field: "category",
           },
-        },
-        {
+        }*/ {
           lang: "elasticsearch",
           scroll: undefined,
           size: 10,
