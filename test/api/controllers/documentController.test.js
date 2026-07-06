@@ -417,6 +417,7 @@ describe("DocumentController", () => {
       response.stream.resume();
       await new Promise((resolve) => response.stream.on("end", resolve));
 
+      //eslint-disable-next-line no-console
       console.dir(kuzzle.ask.firstCall.args, { depth: null });
 
       should(kuzzle.ask).be.calledWithMatch(
