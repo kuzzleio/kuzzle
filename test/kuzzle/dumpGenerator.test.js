@@ -68,7 +68,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
       BadRequestError,
       {
         message: new RegExp(
-          /Dump path [A-Za-z-/.'"]* is outside of designated dump directory [A-Za-z-/."']*/,
+          /Invalid suffix [A-Za-z-/.'"]*. Suffix must be alphanumeric and can contain '-' and '_'. Max length is 64 characters.*/,
         ),
       },
     );
