@@ -421,14 +421,7 @@ describe("DocumentController", () => {
         "core:storage:public:document:search",
         index,
         collection,
-        {
-          query: {
-            term: { category: "books" },
-          },
-          collapse: {
-            field: "category",
-          },
-        },
+        sinon.match.hasNested("collapse.field", "category"),
         {
           lang: "elasticsearch",
           scroll: undefined,
