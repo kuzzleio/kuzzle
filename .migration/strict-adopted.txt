@@ -44,3 +44,10 @@ lib/types/realtime/RoomList.ts
 lib/types/shared/StoreCollectionsDefinition.ts
 lib/types/storage/7/Elasticsearch.ts
 lib/types/storage/8/Elasticsearch.ts
+
+# Sprint 1 — lib/util (warm-up, 2026-07-12)
+lib/util/bytes.ts
+lib/util/extractFields.ts
+lib/util/memoize.ts
+lib/util/safeObject.ts
+lib/util/wildcard.ts
