@@ -224,8 +224,8 @@ Two actions, complementary to the strict ratchet:
 | Sprint | Target | JS files | Risk | Net |
 |--------|--------|----------|------|-----|
 | **0 — Tooling & prerequisites** | 3 CI ratchets (JS / mocha / explicit-any), `tsconfig.strict.json`, baselines; **bound the `kuzzle-sdk` pin** + a snapshot test of the exported surface; process docs | — | Low | — |
-| **1 — Warm-up** | `bin/` | 17 | Low | Server startup |
-| **2 — Utilities** | `lib/util` | 12 | Low | Unit tests |
+| **1 — Warm-up** | `lib/util` (leaf, tested) | 12 | Low | Unit tests |
+| **2 — Real bin/ & cleanup** | Delete `bin/.upgrades` + `bin/.lib` (dead code, separate PR); convert `copy-binaries.js` + entrypoints; `bin/plugins` fixtures handled separately | ~5 | Low/medium | Startup + functional |
 | **3 — Models & services** | `lib/model`, `lib/service` | ~7 | Low/medium | Unit + functional |
 | **4 — API** | `lib/api` (incl. controllers, `funnel.js`) | 13 | Medium | Functional (cucumber) |
 | **5 — Core (I)** | `lib/core`: storage, security, realtime | ~20 | Medium/high | Functional |
@@ -238,6 +238,8 @@ Two actions, complementary to the strict ratchet:
 > Sprints 5–7 run **under the net of the cucumber functional tests** (already TS): that is the main guarantee against regressions on the core.
 
 > **Strict cost centres (audit):** the real cost of `strictNullChecks` does **not** fall on the already-migrated TS, but on the **big files still in JS** (`funnel.js`, `httpwsProtocol.js`, `node.js`, `validation.js`). Corollary: the low `: any` count of `lib/cluster` is **misleading** — it's not-yet-converted JS, not already-clean code. Budget sprints 4, 6 and 7 accordingly (these are the real hardening cost centres).
+
+> **`bin/` scope adjustment (finding 2026-07-12):** the initial "bin/ = 17 files" count was misleading. In reality `bin/.upgrades/**` + `bin/.lib/colorOutput.js` (~12 files) are **dead code** (unreferenced since 2023, no npm `bin` field) → **to be deleted** (separate PR), not migrated; `bin/plugins/available/*` are **test fixtures** loaded as JS at runtime by the functional tests → to be handled separately with care. Only `copy-binaries.js` and `start-kuzzle-server` are real entrypoints. **The warm-up (Sprint 1) is therefore carried by `lib/util`** (12 leaf tested files). The JS ratchet only targets production code (`lib/` + real bin entrypoints).
 
 ### 6.5 Conversion standards (per file)
 
