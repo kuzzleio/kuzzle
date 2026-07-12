@@ -52,6 +52,38 @@ jobs:
         run: npm run test:lint
         shell: bash
 
+  migration-ratchets:
+    name: TS migration - ratchets & strict
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      # Ratchets: the .js / mocha / explicit-any counts may only decrease.
+      # See adrs/ADR-0001-migration-typescript.md §6 and scripts/ratchet.sh.
+      - name: Migration ratchets (js / mocha / any)
+        run: npm run ratchet
+        shell: bash
+
+      # Strict type-check: fails only on files listed in
+      # .migration/strict-adopted.txt (see scripts/strict-check.sh).
+      - name: Strict type-check (adopted files)
+        run: npm run test:strict
+        shell: bash
+
   sonarqube:
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork == false
