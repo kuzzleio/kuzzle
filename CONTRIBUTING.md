@@ -2,12 +2,42 @@
 
 Here are a few rules and guidelines to follow if you want to contribute to Kuzzle and, more importantly, if you want to see your pull requests accepted by Kuzzle team.
 
+## Language
+
+All work in this repository is in **English**: source code, comments, identifiers, documentation (including ADRs and this guide), commit messages and pull requests. This keeps the project accessible to its international community of contributors.
+
 ## Coding style
 
 We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-style.php) rules, except for these ones:
 
 * Semicolons at the end of lines
 * 'Comma first' rule is not followed
+
+## TypeScript migration
+
+Kuzzle is being migrated from JavaScript to TypeScript incrementally (see
+[`adrs/ADR-0001-migration-typescript.md`](adrs/ADR-0001-migration-typescript.md)).
+While the migration is in progress, a few ratcheted rules apply, enforced in CI by
+the `migration-ratchets` job:
+
+* **No new `.js` under `lib/` or `bin/`** — write new code in TypeScript. The `.js`
+  file count may only decrease.
+* **New unit tests in vitest + TypeScript** — the legacy Mocha suite is frozen; its
+  spec count may only decrease.
+* **No new explicit `any`** in `lib/**/*.ts` — the count may only decrease
+  (`@typescript-eslint/no-explicit-any` is on as a warning).
+* When a file passes `strict`, add it to `.migration/strict-adopted.txt`
+  (`npm run test:strict -- --candidates` lists the ready ones).
+
+Run the gates locally before pushing:
+
+```bash
+npm run ratchet       # js / mocha / any counts (must not increase)
+npm run test:strict   # strict type-check on adopted files
+```
+
+If you legitimately reduce a count, update its baseline in the same PR — e.g.
+`npm run ratchet:js -- --update` (idem `:mocha`, `:any`) — then commit `.migration/`.
 
 ## Guidelines
 
