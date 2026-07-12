@@ -10,6 +10,10 @@
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
     "prepublishOnly": "npm run build",
     "prettier": "prettier ./lib ./test ./features --write",
+    "ratchet": "npm run ratchet:js && npm run ratchet:mocha && npm run ratchet:any",
+    "ratchet:any": "bash scripts/ratchet.sh any",
+    "ratchet:js": "bash scripts/ratchet.sh js",
+    "ratchet:mocha": "bash scripts/ratchet.sh mocha",
     "test:functional:legacy:http": "cucumber-js --format progress-bar --profile httpLegacy --config cucumber.config.cjs",
     "test:functional:legacy:mqtt": "cucumber-js --format progress-bar --profile mqttLegacy --config cucumber.config.cjs",
     "test:functional:legacy:websocket": "cucumber-js --format progress-bar --profile websocketLegacy --config cucumber.config.cjs",
@@ -18,7 +22,8 @@
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1 --passWithNoTests",
     "test:unit:mocha": "mocha --exit",
     "test:unit:mocha:coverage": "c8 --reporter=lcov --report-dir=coverage mocha --exit",
-    "test:lint": "eslint ./lib ./test ./bin ./features"
+    "test:lint": "eslint ./lib ./test ./bin ./features",
+    "test:strict": "bash scripts/strict-check.sh"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

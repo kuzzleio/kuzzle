@@ -1,0 +1,46 @@
+# Files adopted in STRICT mode — see adrs/ADR-0001 §6.2 and scripts/strict-check.sh.
+# A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
+# 'npm run test:strict -- --candidates' lists files that are already clean.
+# Seeded 2026-07-12: lib/types files already clean under strict.
+
+lib/types/ClientConnection.ts
+lib/types/Deprecation.ts
+lib/types/EventHandler.ts
+lib/types/HttpMessage.ts
+lib/types/HttpStream.ts
+lib/types/Kuzzle.ts
+lib/types/KuzzleDocument.ts
+lib/types/OpenApiDefinition.ts
+lib/types/PasswordPolicy.ts
+lib/types/PluginManifest.ts
+lib/types/Policy.ts
+lib/types/PolicyRestrictions.ts
+lib/types/ProfileDefinition.ts
+lib/types/RoleDefinition.ts
+lib/types/StrategyDefinition.ts
+lib/types/Target.ts
+lib/types/Token.ts
+lib/types/config/DumpConfiguration.ts
+lib/types/config/HttpConfiguration.ts
+lib/types/config/KuzzleConfiguration.ts
+lib/types/config/LimitsConfiguration.ts
+lib/types/config/SecurityConfiguration.ts
+lib/types/config/ServerConfiguration.ts
+lib/types/config/ServicesConfiguration.ts
+lib/types/config/internalCache/InternalCacheRedisConfiguration.ts
+lib/types/config/publicCache/PublicCacheRedisConfiguration.ts
+lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.ts
+lib/types/controllers/ControllerDefinition.ts
+lib/types/controllers/ControllerRights.ts
+lib/types/controllers/authController.type.ts
+lib/types/core/auth/formatProcessing.type.ts
+lib/types/errors/ErrorDefinition.ts
+lib/types/errors/ErrorDomains.ts
+lib/types/events/EventProtocol.ts
+lib/types/index.ts
+lib/types/realtime/RealtimeScope.ts
+lib/types/realtime/RealtimeUsers.ts
+lib/types/realtime/RoomList.ts
+lib/types/shared/StoreCollectionsDefinition.ts
+lib/types/storage/7/Elasticsearch.ts
+lib/types/storage/8/Elasticsearch.ts

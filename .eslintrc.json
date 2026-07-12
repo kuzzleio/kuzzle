@@ -11,7 +11,10 @@
   "overrides": [
     {
       "files": ["*.ts"],
-      "extends": ["plugin:kuzzle/typescript"]
+      "extends": ["plugin:kuzzle/typescript"],
+      "rules": {
+        "@typescript-eslint/no-explicit-any": "warn"
+      }
     }
   ]
 }
