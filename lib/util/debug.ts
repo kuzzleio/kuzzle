@@ -32,7 +32,10 @@ debug.formatters.a = (value) => {
     return `\n${util.inspect(value, inspectOpts)}`;
   }
 
-  return util.inspect(value, inspectOpts).replace(/\s*\n\s*/g, " ");
+  // Collapse each newline (and the horizontal whitespace around it) into a
+  // single space. `[^\S\n]*` (whitespace except newline) avoids the
+  // super-linear backtracking of `\s*\n\s*`, where `\s*` also matches `\n`.
+  return util.inspect(value, inspectOpts).replace(/[^\S\n]*\n\s*/g, " ");
 };
 
 debug.formatArgs = () => {};

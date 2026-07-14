@@ -24,7 +24,7 @@ import Bluebird from "bluebird";
 type PrombackCallback<T> = (error: unknown, result?: T) => void;
 
 class Promback<T = unknown> {
-  private _callback: PrombackCallback<T> | null;
+  private readonly _callback: PrombackCallback<T> | null;
   private _resolve: ((result: T) => void) | null;
   private _reject: ((error: unknown) => void) | null;
 
