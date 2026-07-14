@@ -24,7 +24,7 @@ import * as kerror from "../../kerror";
 import { NativeController } from "./baseController";
 import { Mutex } from "../../util/mutex";
 import { KuzzleRequest } from "../request";
-import { ResetSecurityResult } from "../../types/controllers/adminControlller.type";
+import { ResetSecurityResult } from "../../types/controllers/adminController.type";
 
 /**
  * @class AdminController
