@@ -7,6 +7,62 @@
 
 ---
 
+## Progress & cold-start — updated 2026-07-12
+
+> Living section (maintained by the `/wrapup` skill). **Read this first** to resume the effort in a fresh context.
+
+### Progress table
+
+| Item | Status | PR |
+|------|--------|----|
+| Type quick wins (filename typo, barrel, bound `kuzzle-sdk` pin) | ✅ | #2668 |
+| Sprint 0 — tooling (3 ratchets, progressive strict, ESLint) + CI | ✅ | #2669 |
+| ADR + type-debt register | ✅ | #2669 |
+| Sprint 1 — `lib/util` warm-up (5 / 12 files) | 🟦 | #2670 |
+| Remove dead code `bin/.upgrades` + `bin/.lib` | ✅ | #2671 |
+| `/wrapup` skill | ✅ | #2672 |
+| Sprint 1 — remaining 7 `lib/util` files | ⬜ | — |
+| Sprints 2 → 10 (real bin, api, core, cluster, final strict, tests) | ⬜ | see §6.4 |
+
+Counters (baselines in `.migration/`): **js = 93**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
+
+### Cold start
+
+**Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint) and the first conversion sprint (`lib/util`) is half done. Everything lives on a stack of not-yet-merged branches based on `2-dev`.
+
+**Branch & PR topology** (= recommended merge order):
+
+```
+2-dev
+ ├─ #2668  chore/ts-type-debt-quickwins           (independent)
+ ├─ #2672  chore/wrapup-skill                      (independent)
+ └─ #2669  chore/ts-migration-sprint0-tooling      → merge first
+     └─ #2670  chore/ts-migration-sprint1-util     → then
+         └─ #2671  chore/ts-rm-dead-upgrade-scripts  → then
+             └─ chore/ts-migration-wrapup (this section) → last
+```
+
+Merge in stack order; GitHub retargets each child PR onto `2-dev` after its parent merges.
+
+**Next actions:**
+1. Review / merge the stack (#2669 → #2670 → #2671 → wrapup) + the two independent PRs (#2668, #2672).
+2. Finish Sprint 1: convert the 7 remaining `lib/util` files (`debug`, `deprecate`, `promback`, `stackTrace`, `didYouMean`, `assertType`, `requestAssertions`). `didYouMean` touches `global.NODE_ENV` (already typed in `Global.ts`).
+3. Continue with Sprints 2 → 10 (§6.4).
+
+**Key commands:**
+
+```bash
+npm run ratchet                     # js / mocha / any (must not increase)
+npm run test:strict                 # strict on adopted files
+npm run test:strict -- --candidates # clean files not yet adopted
+npm run ratchet:js -- --update      # after a reduction: update the baseline
+npx tsc --noEmit                    # full type-check; npm run build = tsc + copy-binaries
+```
+
+**Conversion convention:** `export =` for a single export (preserves `require()` / default import), named exports for an object module; never `any` / `@ts-ignore` / `!` to "make it pass"; reuse `lib/types`. Details in §6.5.
+
+---
+
 ## 1. Context
 
 Kuzzle is a mature codebase (v2.56.0, Node ≥20 <25) whose TypeScript migration is **already underway but unfinished and uneven**. Analysing the current state shows this is not *one* migration but **three intertwined efforts**, which explains why it stalls:
