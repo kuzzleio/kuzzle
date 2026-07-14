@@ -19,66 +19,81 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as kerror from "../kerror";
 
-const Bluebird = require("bluebird");
+interface ServiceConfig {
+  initTimeout?: number;
+  [key: string]: unknown;
+}
 
-const kerror = require("../kerror");
+interface ServiceInfo {
+  type: string;
+  version: string;
+}
 
 /**
  * Services base class
- *
  */
-class Service {
-  constructor(name, config) {
+class Service<
+  TConfig extends ServiceConfig = ServiceConfig,
+  TInfo extends ServiceInfo = ServiceInfo,
+> {
+  protected readonly _name: string;
+  protected readonly _config: TConfig;
+  private readonly _initTimeout: number;
+
+  constructor(name: string, config: TConfig) {
     this._name = name;
     this._config = config;
     this._initTimeout =
       config.initTimeout ||
-      global.kuzzle.config.services.common.defaultInitTimeout;
+      globalThis.kuzzle.config.services.common.defaultInitTimeout;
   }
 
-  get config() {
+  get config(): TConfig {
     return this._config;
   }
 
-  get name() {
+  get name(): string {
     return this._name;
   }
 
   /**
    * Call _initSequence to initialize the service
    * and throw an error if timeout exceed
-   *
-   * @returns {Promise}
    */
-  init() {
-    return Bluebird.resolve(this._initSequence())
-      .timeout(this._initTimeout)
-      .catch((e) => {
-        if (e instanceof Bluebird.TimeoutError) {
-          throw kerror.get("core", "fatal", "service_timeout", this._name);
-        }
+  init(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      const timer = setTimeout(() => {
+        reject(kerror.get("core", "fatal", "service_timeout", this._name));
+      }, this._initTimeout);
 
-        throw e;
-      });
+      this._initSequence().then(
+        () => {
+          clearTimeout(timer);
+          resolve();
+        },
+        (error: Error) => {
+          clearTimeout(timer);
+          reject(error);
+        },
+      );
+    });
   }
 
   /**
    * @abstract
-   * @returns {Promise}
    */
-  _initSequence() {
+  _initSequence(): Promise<void> {
     throw new Error("Not implemented");
   }
 
   /**
    * @abstract
-   * @returns {Promise}
    */
-  info() {
+  info(): Promise<TInfo> {
     throw new Error("Not implemented");
   }
 }
 
-module.exports = Service;
+export = Service;

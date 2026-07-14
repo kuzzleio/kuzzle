@@ -30,8 +30,6 @@ class CacheEngine {
   constructor() {
     const config = globalThis.kuzzle.config.services;
 
-    globalThis.cacheEngine = this;
-
     this.public = new Redis(config.memoryStorage, "public_adapter");
     this.internal = new Redis(config.internalCache, "internal_adapter");
 
@@ -188,6 +186,17 @@ class CacheEngine {
      */
     globalThis.kuzzle.onAsk("core:cache:internal:execute", (command, ...args) =>
       this.internal.exec(command, ...args),
+    );
+
+    /**
+     * Returns the raw ioredis client used by the internal cache.
+     * Meant for utilities that need direct access to the client (e.g.
+     * distributed locks) instead of the higher level cache commands above.
+     * @returns {IORedis|IORedis.Cluster}
+     */
+    globalThis.kuzzle.onAsk(
+      "core:cache:internal:client:get",
+      () => this.internal.client,
     );
   }
 

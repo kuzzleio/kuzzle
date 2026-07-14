@@ -1,3 +1,5 @@
+import { DNSLookupFunction } from "ioredis";
+
 export type InternalCacheConfiguration = {
   /**
    * The cache service relies on Redis sample settings for Redis service (see also https://github.com/luin/ioredis)
@@ -79,6 +81,12 @@ export type InternalCacheConfiguration = {
      * @default true
      */
     enableReadyCheck: boolean;
+
+    /**
+     * Only set when `overrideDnsLookup` is enabled: skips DNS validation for
+     * TLS certificates (needed to connect to an AWS ElastiCache cluster).
+     */
+    dnsLookup?: DNSLookupFunction;
   };
 
   /**
@@ -97,6 +105,13 @@ export type InternalCacheConfiguration = {
      */
     port: number;
   };
+
+  /**
+   * List of master nodes of a Redis cluster. When set, the client connects
+   * in cluster mode instead of connecting to the single `node` above.
+   */
+  nodes?: Array<{ host: string; port: number }>;
+
   /**
    * * (optional) options:
    *    Redis specific options compatible with IORedis.
@@ -114,4 +129,11 @@ export type InternalCacheConfiguration = {
    * @default false
    */
   overrideDnsLookup: boolean;
+
+  /**
+   * Interval in ms between keep-alive pings sent to the Redis server.
+   *
+   * @default 0
+   */
+  pingKeepAlive?: number;
 };

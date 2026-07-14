@@ -4,14 +4,56 @@ const sinon = require("sinon");
 const should = require("should");
 const mockRequire = require("mock-require");
 
+const KuzzleMock = require("../mocks/kuzzle.mock");
+
+/**
+ * Builds a fake `ExtendedAbortSignal`-like object whose abort state can be
+ * driven from the test, without depending on the real redlock-universal
+ * implementation.
+ */
+function createFakeSignal() {
+  const target = new EventTarget();
+  let aborted = false;
+  let error;
+
+  return {
+    signal: {
+      get aborted() {
+        return aborted;
+      },
+      get error() {
+        return error;
+      },
+      addEventListener: (...args) => target.addEventListener(...args),
+      removeEventListener: (...args) => target.removeEventListener(...args),
+    },
+    abort(err) {
+      aborted = true;
+      error = err;
+      target.dispatchEvent(new Event("abort"));
+    },
+  };
+}
+
 describe("#mutex2 (withLock)", () => {
   let withLock;
+  let MutexLockLostError;
+  let kuzzle;
+  let fakeClient;
   let fakeLockInstance;
+  let fakeSignal;
   let createLockStub;
 
   beforeEach(() => {
+    kuzzle = new KuzzleMock();
+
+    fakeClient = { fake: true };
+    kuzzle.ask.withArgs("core:cache:internal:client:get").resolves(fakeClient);
+
+    fakeSignal = createFakeSignal();
+
     fakeLockInstance = {
-      using: sinon.stub().callsFake((routine) => routine()),
+      using: sinon.stub().callsFake((routine) => routine(fakeSignal.signal)),
     };
 
     createLockStub = sinon.stub().returns(fakeLockInstance);
@@ -21,17 +63,13 @@ describe("#mutex2 (withLock)", () => {
       IoredisAdapter: sinon.stub().callsFake((client) => ({ client })),
     });
 
-    global.cacheEngine = {
-      internal: { client: { fake: true } },
-      public: { client: { fake: true } },
-    };
-
-    ({ withLock } = mockRequire.reRequire("../../lib/util/mutex2"));
+    ({ withLock, MutexLockLostError } = mockRequire.reRequire(
+      "../../lib/util/mutex2",
+    ));
   });
 
   afterEach(() => {
     mockRequire.stopAll();
-    delete global.cacheEngine;
   });
 
   it("should acquire a lock and execute the callback", async () => {
@@ -40,6 +78,12 @@ describe("#mutex2 (withLock)", () => {
     should(result).eql("done");
     should(createLockStub).be.calledOnce();
     should(createLockStub.firstCall.args[0]).have.property("key", "resource:1");
+  });
+
+  it("should fetch the cache client via the ask event", async () => {
+    await withLock("resource:1", async () => "done");
+
+    should(kuzzle.ask).calledWith("core:cache:internal:client:get");
   });
 
   it("should forward the callback return value", async () => {
@@ -190,11 +234,65 @@ describe("#mutex2 (withLock)", () => {
     should(result).eql(0);
   });
 
-  it("should throw if globalThis.cacheEngine is not set", async () => {
-    global.cacheEngine = null;
+  it("should propagate errors when the cache client cannot be retrieved", async () => {
+    kuzzle.ask
+      .withArgs("core:cache:internal:client:get")
+      .rejects(new Error("cache not initialized"));
 
     await should(withLock("no-cache", async () => "nope")).be.rejectedWith(
-      TypeError,
+      "cache not initialized",
     );
+  });
+
+  describe("lock loss handling", () => {
+    it("should reject immediately if the lock is already lost when the callback starts", async () => {
+      fakeSignal.abort(new Error("extension-failed"));
+
+      await should(
+        withLock("already-lost", async () => "should-not-reach"),
+      ).be.rejectedWith(MutexLockLostError, {
+        message: /extension-failed/,
+      });
+    });
+
+    it("should reject with MutexLockLostError if the lock is lost while the callback is running", async () => {
+      const promise = withLock("lost-mid-flight", () => {
+        fakeSignal.abort(new Error("extension-failed"));
+
+        // never resolves on its own: only the abort should settle the
+        // returned promise
+        return new Promise(() => {});
+      });
+
+      await should(promise).be.rejectedWith(MutexLockLostError, {
+        message: /extension-failed/,
+      });
+    });
+
+    it("should not reject if the callback settles before any abort occurs", async () => {
+      const result = await withLock("no-abort", async () => "completed");
+
+      should(result).eql("completed");
+    });
+
+    it("should ignore a late abort once the callback already resolved", async () => {
+      let callbackDone;
+      const callbackDonePromise = new Promise((resolve) => {
+        callbackDone = resolve;
+      });
+
+      const promise = withLock("late-abort", async () => {
+        callbackDone();
+        return "resolved-first";
+      });
+
+      await callbackDonePromise;
+      const result = await promise;
+
+      // aborting after the callback already settled must be a no-op
+      fakeSignal.abort(new Error("too-late"));
+
+      should(result).eql("resolved-first");
+    });
   });
 });

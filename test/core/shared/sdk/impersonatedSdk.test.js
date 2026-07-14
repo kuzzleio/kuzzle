@@ -8,6 +8,7 @@ const rewire = require("rewire");
 describe("ImpersonatedSDK", () => {
   let ImpersonatedSdk;
   let impersonatedSdk;
+  let revertGlobal;
   const impersonatedUserId = "alyx";
 
   const fakeNativeControllers = {
@@ -28,7 +29,11 @@ describe("ImpersonatedSDK", () => {
 
     mockrequire.reRequire("../../../../lib/core/shared/sdk/impersonatedSdk");
     ImpersonatedSdk = rewire("../../../../lib/core/shared/sdk/impersonatedSdk");
-    ImpersonatedSdk.__set__({
+    // __set__ rewrites the module-global `global` binding via eval, which
+    // (since it's not shadowed locally) actually mutates the real Node
+    // `global` object for the whole process. It must be reverted, otherwise
+    // it leaks into every test that runs afterwards.
+    revertGlobal = ImpersonatedSdk.__set__({
       global: {
         app: {
           sdk: fakeInjectedSdk,
@@ -40,6 +45,7 @@ describe("ImpersonatedSDK", () => {
   });
 
   afterEach(() => {
+    revertGlobal();
     mockrequire.stopAll();
   });
 

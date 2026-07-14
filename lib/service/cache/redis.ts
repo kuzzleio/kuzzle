@@ -24,7 +24,30 @@ import { Redis as IORedis, Cluster as IOCluster } from "ioredis";
 import Service from "../service";
 
 import { wrap } from "../../kerror";
+import { Logger } from "../../kuzzle/Logger";
+import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
+import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
+
 const kerror = wrap("services", "cache");
+
+type RedisServiceConfig =
+  | PublicCacheRedisConfiguration
+  | InternalCacheConfiguration;
+
+interface RedisInfo {
+  memoryPeak: string;
+  memoryUsed: string;
+  mode: string;
+  type: "redis";
+  version: string;
+}
+
+/**
+ * Commands are attached dynamically onto `this.commands` in `setCommands()`,
+ * so accessing them by name requires stepping outside of `IORedis`'s own
+ * (statically known) command signatures.
+ */
+type DynamicCommands = Record<string, (...args: unknown[]) => Promise<unknown>>;
 
 /**
  * @class Redis
@@ -32,14 +55,14 @@ const kerror = wrap("services", "cache");
  * @param {object} config
  * @property service
  */
-class Redis extends Service {
+class Redis extends Service<RedisServiceConfig, RedisInfo> {
   public connected: boolean;
   public client!: IORedis | IOCluster; // Will be assigned in the initSequence
   public commands: IORedis;
   public adapterName: string;
-  public logger: any;
+  public logger: Logger;
 
-  constructor(config: any, name: string) {
+  constructor(config: RedisServiceConfig, name: string) {
     super("redis", config);
 
     this.connected = false;
@@ -63,10 +86,8 @@ class Redis extends Service {
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     if (config.overrideDnsLookup) {
-      config.clusterOptions.dnsLookup = (
-        address: string,
-        callback: (err: any, address: string) => void,
-      ) => callback(null, address);
+      config.clusterOptions.dnsLookup = (address, callback) =>
+        callback(null, address);
     }
 
     config.options = config.options || {};
@@ -120,12 +141,14 @@ class Redis extends Service {
     const commandsList = this.client.getBuiltinCommands();
 
     for (const command of commandsList) {
-      (this.commands as any)[command] = async (...args: any[]) => {
+      (this.commands as unknown as DynamicCommands)[command] = async (
+        ...args: unknown[]
+      ) => {
         if (!this.connected) {
           throw kerror.get("notconnected");
         }
 
-        return (this.client as any)[command](...args);
+        return (this.client as unknown as DynamicCommands)[command](...args);
       };
     }
   }
@@ -136,7 +159,7 @@ class Redis extends Service {
    *
    * @returns {Promise} service informations
    */
-  override async info(): Promise<any> {
+  override async info(): Promise<RedisInfo> {
     const result = await this.commands.info();
     const arr = result.replaceAll("\r\n", "\n").split("\n");
     const info: Record<string, string> = {};
@@ -173,7 +196,7 @@ class Redis extends Service {
   async searchKeys(pattern: string): Promise<string[]> {
     if (this.client instanceof IOCluster) {
       const keys = await Promise.all(
-        this.client.nodes("master").map((node: any) => {
+        this.client.nodes("master").map((node) => {
           return this._searchNodeKeys(node, pattern);
         }),
       );
@@ -189,7 +212,9 @@ class Redis extends Service {
    *
    * @returns {Promise}
    */
-  async mExecute(commands: any[]): Promise<any> {
+  async mExecute(
+    commands: unknown[][],
+  ): Promise<[Error | null, unknown][] | null> {
     if (!Array.isArray(commands) || commands.length === 0) {
       return [];
     }
@@ -197,7 +222,7 @@ class Redis extends Service {
     return this.client.multi(commands).exec();
   }
 
-  _searchNodeKeys(node: any, pattern: string): Promise<string[]> {
+  _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
     return new Promise((resolve) => {
       let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
@@ -212,12 +237,12 @@ class Redis extends Service {
     });
   }
 
-  _buildClient(options: any): IORedis {
-    return new IORedis({ ...(this as any)._config.node, ...options });
+  _buildClient(options: Record<string, unknown>): IORedis {
+    return new IORedis({ ...this._config.node, ...options });
   }
 
-  _buildClusterClient(options: any): IOCluster {
-    return new IORedis.Cluster((this as any)._config.nodes, options);
+  _buildClusterClient(options: Record<string, unknown>): IOCluster {
+    return new IORedis.Cluster(this._config.nodes ?? [], options);
   }
 
   /**
@@ -237,7 +262,7 @@ class Redis extends Service {
     value: string,
     { onlyIfNew = false, ttl = 0 }: { onlyIfNew?: boolean; ttl?: number } = {},
   ): Promise<boolean> {
-    const command: any[] = [key, value];
+    const command: unknown[] = [key, value];
 
     if (onlyIfNew) {
       command.push("NX");
@@ -247,7 +272,9 @@ class Redis extends Service {
       command.push("PX", ttl);
     }
 
-    const result = await (this.commands as any).set(...command);
+    const result = await (this.commands as unknown as DynamicCommands).set(
+      ...command,
+    );
 
     return result === "OK";
   }
@@ -258,8 +285,8 @@ class Redis extends Service {
    * @param  {Array} args
    * @return {Promise.<*>}
    */
-  exec(command: string, ...args: any[]): Promise<any> {
-    return (this.commands as any)[command](...args);
+  exec(command: string, ...args: unknown[]): Promise<unknown> {
+    return (this.commands as unknown as DynamicCommands)[command](...args);
   }
 }
 

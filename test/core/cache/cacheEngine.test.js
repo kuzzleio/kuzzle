@@ -88,6 +88,9 @@ describe("CacheEngine", () => {
         "bar",
       );
       should(cacheEngine.internal.client.name).calledWith("foo", "bar");
+
+      const client = await kuzzle.ask("core:cache:internal:client:get");
+      should(client).be.eql(cacheEngine.internal.client);
     });
 
     it('should register "cache:public" events', async () => {

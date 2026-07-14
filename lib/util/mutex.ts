@@ -84,7 +84,7 @@ export interface MutexOptions {
  * Redis servers, then this class needs to implement redlock to properly handle
  * synchronization between servers (see https://redis.io/topics/distlock)
  *
- * @deprecated Use withLock from Mutex2 instead
+ * @deprecated Use the {@link withLock} function from "./mutex2" instead
  */
 export class Mutex {
   readonly resource: string;
