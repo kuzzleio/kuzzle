@@ -19,29 +19,38 @@
  * limitations under the License.
  */
 
-"use strict";
+import { isPlainObject } from "./safeObject";
 
-const { isPlainObject } = require("./safeObject");
+interface ExtractedField {
+  key: string;
+  value: unknown;
+}
 
 /**
  * Extract nested fields of an object in a flat array.
  * Example: { field : { 1: "nested", 2: "nested" } } => [ 'field.1', 'field.2' ]
  *
- * @param {Object} document - Document to extract fields from
- * @param {Object} options - alsoExtractValues (false), fieldsToIgnore ( [ ] )
+ * @param document - Document to extract fields from
+ * @param options - alsoExtractValues (false), fieldsToIgnore ( [ ] )
  *
- * @returns { Array<String> | Array<{ key: String, value: any }> }
+ * @returns Array of field paths, or of { key, value } pairs when alsoExtractValues is true
  */
 function extractFields(
-  document,
-  { fieldsToIgnore = [], alsoExtractValues = false } = {},
-  { path = null, extractedFields = [] } = {},
-) {
+  document: Record<string, unknown>,
+  {
+    fieldsToIgnore = [],
+    alsoExtractValues = false,
+  }: { fieldsToIgnore?: string[]; alsoExtractValues?: boolean } = {},
+  {
+    path = null,
+    extractedFields = [],
+  }: {
+    path?: string | null;
+    extractedFields?: Array<string | ExtractedField>;
+  } = {},
+): Array<string | ExtractedField> {
   for (const [key, value] of Object.entries(document)) {
-    if (
-      fieldsToIgnore.length &&
-      fieldsToIgnore.find((keyToIgnore) => keyToIgnore === key)
-    ) {
+    if (fieldsToIgnore.includes(key)) {
       continue;
     }
 
@@ -49,7 +58,7 @@ function extractFields(
 
     if (isPlainObject(value)) {
       extractFields(
-        value,
+        value as Record<string, unknown>,
         { alsoExtractValues, fieldsToIgnore },
         { extractedFields, path: currentPath },
       );
@@ -63,4 +72,4 @@ function extractFields(
   return extractedFields;
 }
 
-module.exports = extractFields;
+export = extractFields;

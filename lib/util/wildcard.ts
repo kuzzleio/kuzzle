@@ -19,11 +19,9 @@
  * limitations under the License.
  */
 
-"use strict";
+import escapeRegExp from "lodash/escapeRegExp";
 
-const _ = require("lodash");
-
-function match(pattern, list) {
+export function match(pattern: string, list: string[]): string[] {
   // Match everything
   if (pattern === "*") {
     return list;
@@ -38,7 +36,7 @@ function match(pattern, list) {
       (patternPart, index, array) =>
         patternPart !== "" || index === 0 || index === array.length - 1,
     )
-    .map((patternPart) => _.escapeRegExp(patternPart)) // escape special regex characters
+    .map((patternPart) => escapeRegExp(patternPart)) // escape special regex characters
     .join(".*");
 
   // Match everything
@@ -51,5 +49,3 @@ function match(pattern, list) {
   // Keep only matching elements
   return list.filter((item) => !regex.test(item));
 }
-
-module.exports = { match };

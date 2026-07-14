@@ -159,7 +159,7 @@ class KuzzleEventEmitter extends EventEmitter {
    * @warning Critical section of code
    */
   emit(event: string | symbol, ...args: any[]): boolean {
-    const events = getWildcardEvents(event);
+    const events = getWildcardEvents(event as string);
     debug('Triggering event "%s" with data: %o', event, args);
 
     if (events.length === 0) {
@@ -205,7 +205,7 @@ class KuzzleEventEmitter extends EventEmitter {
       callback = payload.pop();
     }
 
-    const events = getWildcardEvents(event);
+    const events = getWildcardEvents(event as string);
     const funcs = [];
 
     for (const element of events) {
@@ -260,7 +260,7 @@ class KuzzleEventEmitter extends EventEmitter {
 
     const response = await fn(...args);
 
-    for (const ev of getWildcardEvents(event)) {
+    for (const ev of getWildcardEvents(event as string)) {
       super.emit(ev, {
         args,
         response,
@@ -292,7 +292,7 @@ class KuzzleEventEmitter extends EventEmitter {
 
     const response = fn(...args);
 
-    for (const ev of getWildcardEvents(event)) {
+    for (const ev of getWildcardEvents(event as string)) {
       super.emit(ev, {
         args,
         response,

@@ -19,24 +19,20 @@
  * limitations under the License.
  */
 
-"use strict";
-
 // Simple utility functions for safe (and fast) object manipulations
 
-function has(o, prop) {
-  return Object.prototype.hasOwnProperty.call(o, prop);
+export function has(o: unknown, prop: PropertyKey): boolean {
+  return Object.hasOwn(o as object, prop);
 }
 
-function get(o, prop) {
+export function get(o: unknown, prop: PropertyKey): unknown {
   if (has(o, prop)) {
-    return o[prop];
+    return (o as Record<PropertyKey, unknown>)[prop];
   }
 
   return undefined;
 }
 
-function isPlainObject(o) {
+export function isPlainObject(o: unknown): boolean {
   return Object.prototype.toString.call(o) === "[object Object]";
 }
-
-module.exports = { get, has, isPlainObject };

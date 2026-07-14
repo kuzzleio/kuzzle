@@ -19,10 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+interface Memoized<Args extends unknown[], Result> {
+  (...args: Args): Result;
+  fn: (...args: Args) => Result;
+  cache: Map<unknown, Result>;
+  resolver: ((args: Args) => unknown) | null;
+}
 
-function memoize(fn, resolver = null) {
-  const memoized = (...args) => {
+function memoize<Args extends unknown[], Result>(
+  fn: (...args: Args) => Result,
+  resolver: ((args: Args) => unknown) | null = null,
+): Memoized<Args, Result> {
+  const memoized = ((...args: Args): Result => {
     const key = memoized.resolver !== null ? memoized.resolver(args) : args[0];
 
     let result = memoized.cache.get(key);
@@ -33,7 +41,7 @@ function memoize(fn, resolver = null) {
     }
 
     return result;
-  };
+  }) as Memoized<Args, Result>;
 
   memoized.fn = fn;
   memoized.cache = new Map();
@@ -42,4 +50,4 @@ function memoize(fn, resolver = null) {
   return memoized;
 }
 
-module.exports = memoize;
+export = memoize;
