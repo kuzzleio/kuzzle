@@ -19,8 +19,6 @@
  * limitations under the License.
  */
 
-import * as util from "util";
-
 import "../types/Global";
 
 const MARKER = ">";
@@ -73,13 +71,13 @@ interface SerializedRequestResponse {
 export function removeStacktrace<T extends Error | SerializedRequestResponse>(
   data: T,
 ): T {
-  if (util.types.isNativeError(data)) {
+  if (data instanceof Error) {
     if (global.NODE_ENV !== "development") {
       data.stack = undefined;
     } else {
       data.stack = data.stack.split("\n").map(hilightUserCode).join("\n");
     }
-  } else if (data && data.content && data.content.error) {
+  } else if (data?.content?.error) {
     // @todo v3: stack should be removed only for "production" env
     if (global.NODE_ENV !== "development") {
       data.content.error.stack = undefined;

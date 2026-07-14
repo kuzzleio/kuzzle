@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import * as util from "util";
+import * as util from "node:util";
 
 import debug from "debug";
 
@@ -32,10 +32,12 @@ debug.formatters.a = (value) => {
     return `\n${util.inspect(value, inspectOpts)}`;
   }
 
-  // Collapse each newline (and the horizontal whitespace around it) into a
-  // single space. `[^\S\n]*` (whitespace except newline) avoids the
-  // super-linear backtracking of `\s*\n\s*`, where `\s*` also matches `\n`.
-  return util.inspect(value, inspectOpts).replace(/[^\S\n]*\n\s*/g, " ");
+  // Collapse whitespace runs that contain a newline into a single space,
+  // leaving newline-free whitespace untouched. A single `\s+` scan with a
+  // predicate avoids the super-linear backtracking of `\s*\n\s*`.
+  return util
+    .inspect(value, inspectOpts)
+    .replace(/\s+/g, (match) => (match.includes("\n") ? " " : match));
 };
 
 debug.formatArgs = () => {};

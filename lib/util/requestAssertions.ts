@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import _ from "lodash";
+import isNil from "lodash/isNil";
 
 import type { KuzzleRequest } from "../api/request";
 import * as kerror from "../kerror";
@@ -31,7 +31,7 @@ export function assertArgsHasAttribute(
   request: KuzzleRequest,
   attribute: string,
 ): void {
-  if (_.isNil(get(request.input.args, attribute))) {
+  if (isNil(get(request.input.args, attribute))) {
     throw assertionError.get("missing_argument", attribute);
   }
 }
@@ -74,7 +74,7 @@ export function assertBodyHasAttribute(
   request: KuzzleRequest,
   attribute: string,
 ): void {
-  if (_.isNil(get(request.input.body, attribute))) {
+  if (isNil(get(request.input.body, attribute))) {
     throw assertionError.get("missing_argument", `body.${attribute}`);
   }
 }
@@ -83,7 +83,7 @@ export function assertBodyHasNotAttribute(
   request: KuzzleRequest,
   attribute: string,
 ): void {
-  if (!_.isNil(get(request.input.body, attribute))) {
+  if (!isNil(get(request.input.body, attribute))) {
     throw assertionError.get("forbidden_argument", `body.${attribute}`);
   }
 }
@@ -92,7 +92,7 @@ export function assertBodyHasNotAttribute(
  * Note: Assumes content exists
  */
 export function assertHasBody(request: KuzzleRequest): void {
-  if (_.isNil(request.input.body)) {
+  if (isNil(request.input.body)) {
     throw assertionError.get("body_required");
   }
 }
