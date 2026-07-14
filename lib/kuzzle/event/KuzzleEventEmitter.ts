@@ -219,7 +219,7 @@ class KuzzleEventEmitter extends EventEmitter {
     }
 
     // Create a context for the emitPluginPipe callback
-    const promback = new Promback(callback);
+    const promback = new Promback<TEventDefinition["args"][0]>(callback);
     const callbackContext = {
       events,
       instance: this,

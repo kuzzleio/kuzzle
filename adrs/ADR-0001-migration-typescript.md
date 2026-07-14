@@ -7,7 +7,7 @@
 
 ---
 
-## Progress & cold-start — updated 2026-07-12
+## Progress & cold-start — updated 2026-07-14
 
 > Living section (maintained by the `/wrapup` skill). **Read this first** to resume the effort in a fresh context.
 
@@ -18,36 +18,26 @@
 | Type quick wins (filename typo, barrel, bound `kuzzle-sdk` pin) | ✅ | #2668 |
 | Sprint 0 — tooling (3 ratchets, progressive strict, ESLint) + CI | ✅ | #2669 |
 | ADR + type-debt register | ✅ | #2669 |
-| Sprint 1 — `lib/util` warm-up (5 / 12 files) | 🟦 | #2670 |
+| Sprint 1 — `lib/util` warm-up (5 / 12 files) | ✅ | #2670 |
 | Remove dead code `bin/.upgrades` + `bin/.lib` | ✅ | #2671 |
 | `/wrapup` skill | ✅ | #2672 |
-| Sprint 1 — remaining 7 `lib/util` files | ⬜ | — |
+| Sprint 1 — remaining 7 `lib/util` files (`lib/util` now 100% TS) | ✅ | #2674 |
 | Sprints 2 → 10 (real bin, api, core, cluster, final strict, tests) | ⬜ | see §6.4 |
 
-Counters (baselines in `.migration/`): **js = 93**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
+Counters (baselines in `.migration/`): **js = 86**, **mocha = 151**, **any = 200**; **strict adopted = 51**.
 
 ### Cold start
 
-**Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint) and the first conversion sprint (`lib/util`) is half done. Everything lives on a stack of not-yet-merged branches based on `2-dev`.
-
-**Branch & PR topology** (= recommended merge order):
-
-```
-2-dev
- ├─ #2668  chore/ts-type-debt-quickwins           (independent)
- ├─ #2672  chore/wrapup-skill                      (independent)
- └─ #2669  chore/ts-migration-sprint0-tooling      → merge first
-     └─ #2670  chore/ts-migration-sprint1-util     → then
-         └─ #2671  chore/ts-rm-dead-upgrade-scripts  → then
-             └─ chore/ts-migration-wrapup (this section) → last
-```
-
-Merge in stack order; GitHub retargets each child PR onto `2-dev` after its parent merges.
+**Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint) and **Sprint 1 is complete — `lib/util` is now 100% TS**. The whole Sprint-0/1 stack (#2668 → #2673) has been **merged into `2-dev`**; the migration now advances one layer-PR at a time off `2-dev`.
 
 **Next actions:**
-1. Review / merge the stack (#2669 → #2670 → #2671 → wrapup) + the two independent PRs (#2668, #2672).
-2. Finish Sprint 1: convert the 7 remaining `lib/util` files (`debug`, `deprecate`, `promback`, `stackTrace`, `didYouMean`, `assertType`, `requestAssertions`). `didYouMean` touches `global.NODE_ENV` (already typed in `Global.ts`).
-3. Continue with Sprints 2 → 10 (§6.4).
+1. **Sprint 3 — models & services** (`lib/model` 3 files, `lib/service` 4 files): low-risk leaves under the functional-test net, and they unlock `lib/api`. *(Or Sprint 2 — real `bin/` entrypoints `copy-binaries.js` + `start-kuzzle-server`, also low-risk.)*
+2. Then Sprint 4 (`lib/api`, incl. `funnel.js`), Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
+3. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, any must not rise), decrement `.migration/js-baseline.txt`, run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
+
+**Remaining JS by layer** (86 total = 82 `lib/` + 4 `bin/`): `core` 50 · `api` 13 · `kuzzle` 6 · `cluster` 6 · `service` 4 · `model` 3 · `bin` 4.
+
+> **Conversion gotcha learned in Sprint 1:** files whose Mocha spec uses `rewire`/`__set__` on a required module (e.g. `didYouMean`) must keep the compiled variable name — use `import x = require("mod")`, not `import x from "mod"`. Typing a previously-`any` export (e.g. `Promback`) can break inferring consumers: make it **generic** (`Promback<T>`) and annotate the call sites rather than reintroducing `any`.
 
 **Key commands:**
 

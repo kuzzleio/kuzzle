@@ -19,22 +19,35 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as util from "util";
 
-const didYouMean = require("didyoumean");
+import debug from "debug";
 
-function printDidYouMean(...args) {
-  if (global.NODE_ENV !== "development") {
-    return "";
+import "../types/Global";
+
+debug.formatters.a = (value) => {
+  const inspectOpts = debug.inspectOpts;
+
+  if (inspectOpts.expand) {
+    return `\n${util.inspect(value, inspectOpts)}`;
   }
 
-  const result = didYouMean(...args);
+  return util.inspect(value, inspectOpts).replace(/\s*\n\s*/g, " ");
+};
 
-  if (!result) {
-    return "";
-  }
+debug.formatArgs = () => {};
 
-  return ` Did you mean "${result}"?`;
+function createDebug(namespace: string) {
+  const myDebug = debug(namespace);
+
+  myDebug.log = (...args) => {
+    if (!["debug", "trace"].includes(global.kuzzle.log.level)) {
+      global.kuzzle.log.level = "debug";
+    }
+    global.kuzzle.log.debug({ namespace }, ...args);
+  };
+
+  return myDebug;
 }
 
-module.exports = printDidYouMean;
+export = createDebug;

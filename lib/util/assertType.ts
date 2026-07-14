@@ -19,20 +19,20 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { BadRequestError } = require("../kerror/errors");
+import { BadRequestError } from "../kerror/errors";
 
 /**
  * Throws if the provided data is not an object.
  * Returns the unmodified data if validated
  *
  * @throws
- * @param {string} attr - tested attribute name
- * @param {*} data
- * @return {object}
+ * @param attr - tested attribute name
+ * @param data
  */
-function assertObject(attr, data) {
+export function assertObject(
+  attr: string,
+  data: unknown,
+): Record<string, unknown> | null {
   if (data === null || data === undefined) {
     return null;
   }
@@ -41,7 +41,7 @@ function assertObject(attr, data) {
     throw new BadRequestError(`Attribute ${attr} must be of type "object"`);
   }
 
-  return data;
+  return data as Record<string, unknown>;
 }
 
 /**
@@ -49,11 +49,13 @@ function assertObject(attr, data) {
  * Returns the unmodified data if validated
  *
  * @throws
- * @param {string} attr - tested attribute name
- * @param {*} data
- * @return {object|array}
+ * @param attr - tested attribute name
+ * @param data
  */
-function assertArrayOrObject(attr, data) {
+export function assertArrayOrObject(
+  attr: string,
+  data: unknown,
+): object | null {
   if (data === null || data === undefined) {
     return null;
   }
@@ -73,11 +75,14 @@ function assertArrayOrObject(attr, data) {
  * Returns a clone of the provided array if valid
  *
  * @throws
- * @param {string} attr - tested attribute name
- * @param {*} data
- * @return {array}
+ * @param attr - tested attribute name
+ * @param data
  */
-function assertArray(attr, data, type) {
+export function assertArray(
+  attr: string,
+  data: unknown,
+  type: string,
+): unknown[] {
   if (data === null || data === undefined) {
     return [];
   }
@@ -86,7 +91,7 @@ function assertArray(attr, data, type) {
     throw new BadRequestError(`Attribute ${attr} must be of type "array"`);
   }
 
-  const clone = [];
+  const clone: unknown[] = [];
 
   for (const d of data) {
     if (d !== undefined && d !== null) {
@@ -108,11 +113,10 @@ function assertArray(attr, data, type) {
  * Returns the unmodified data if validated
  *
  * @throws
- * @param {string} attr - tested attribute name
- * @param {*} data
- * @return {null|string}
+ * @param attr - tested attribute name
+ * @param data
  */
-function assertString(attr, data) {
+export function assertString(attr: string, data: unknown): string | null {
   if (data === null || data === undefined) {
     return null;
   }
@@ -129,22 +133,13 @@ function assertString(attr, data) {
  * Returns the unmodified data if validated
  *
  * @throws
- * @param {string} attr - tested attribute name
- * @param {*} data
- * @return {number}
+ * @param attr - tested attribute name
+ * @param data
  */
-function assertInteger(attr, data) {
+export function assertInteger(attr: string, data: unknown): number {
   if (!Number.isInteger(data)) {
     throw new BadRequestError(`Attribute ${attr} must be an integer`);
   }
 
-  return data;
+  return data as number;
 }
-
-module.exports = {
-  assertArray,
-  assertArrayOrObject,
-  assertInteger,
-  assertObject,
-  assertString,
-};
