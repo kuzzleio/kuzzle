@@ -1,0 +1,15 @@
+{
+  // STRICT compilation of all production code — see adrs/ADR-0001 §6.2.
+  //
+  // NB: strict cannot be isolated to a subset via `include` — tsc pulls the whole
+  // import graph into the program and checks all of it. So we compile all of lib/ in
+  // strict, and it is `scripts/strict-check.sh` that only FAILS on the files listed in
+  // `.migration/strict-adopted.txt` (a growing list). A file joins the list once it
+  // passes strict cleanly; the ratchet then guarantees it never regresses. Final state:
+  // the list covers all of lib/, then flip `strict` in tsconfig.json and delete this file.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "strict": true
+  },
+  "include": ["lib/**/*.ts", "index.ts"]
+}
