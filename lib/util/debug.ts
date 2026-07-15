@@ -19,10 +19,11 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as util from "node:util";
 
-const debug = require("debug");
-const util = require("util");
+import debug from "debug";
+
+import "../types/Global";
 
 debug.formatters.a = (value) => {
   const inspectOpts = debug.inspectOpts;
@@ -31,13 +32,19 @@ debug.formatters.a = (value) => {
     return `\n${util.inspect(value, inspectOpts)}`;
   }
 
-  return util.inspect(value, inspectOpts).replace(/\s*\n\s*/g, " ");
+  // Collapse whitespace runs that contain a newline into a single space,
+  // leaving newline-free whitespace untouched. A single `\s+` scan with a
+  // predicate avoids the super-linear backtracking of `\s*\n\s*`.
+  return util
+    .inspect(value, inspectOpts)
+    .replace(/\s+/g, (match) => (match.includes("\n") ? " " : match));
 };
 
 debug.formatArgs = () => {};
 
-function createDebug(namespace) {
+function createDebug(namespace: string) {
   const myDebug = debug(namespace);
+
   myDebug.log = (...args) => {
     if (!["debug", "trace"].includes(global.kuzzle.log.level)) {
       global.kuzzle.log.level = "debug";
@@ -48,4 +55,4 @@ function createDebug(namespace) {
   return myDebug;
 }
 
-module.exports = createDebug;
+export = createDebug;

@@ -18,12 +18,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-"use strict";
 
-const Bluebird = require("bluebird");
+import Bluebird from "bluebird";
 
-class Promback {
-  constructor(callback = null) {
+type PrombackCallback<T> = (error: unknown, result?: T) => void;
+
+class Promback<T = unknown> {
+  private readonly _callback: PrombackCallback<T> | null;
+  private _resolve: ((result: T) => void) | null;
+  private _reject: ((error: unknown) => void) | null;
+
+  public deferred: Bluebird<T> | null;
+  public isPromise: boolean;
+
+  constructor(callback: PrombackCallback<T> | null = null) {
     this._callback = callback;
     this._resolve = null;
     this._reject = null;
@@ -31,14 +39,14 @@ class Promback {
     this.isPromise = this._callback === null;
 
     if (this.isPromise) {
-      this.deferred = new Bluebird((res, rej) => {
+      this.deferred = new Bluebird<T>((res, rej) => {
         this._resolve = res;
         this._reject = rej;
       });
     }
   }
 
-  resolve(result) {
+  resolve(result?: T) {
     if (this.isPromise) {
       this._resolve(result);
     } else {
@@ -48,7 +56,7 @@ class Promback {
     return this.deferred;
   }
 
-  reject(error) {
+  reject(error?: unknown) {
     if (this.isPromise) {
       this._reject(error);
     } else {
@@ -63,4 +71,4 @@ class Promback {
   }
 }
 
-module.exports = Promback;
+export = Promback;

@@ -412,7 +412,7 @@ function execute(request: KuzzleRequest, callback) {
     return Bluebird.reject(error);
   }
 
-  const promback = new Promback(callback);
+  const promback = new Promback<KuzzleRequest>(callback);
 
   if (!request || _.isEmpty(request)) {
     return promback.reject(contextError.get("missing_request"));

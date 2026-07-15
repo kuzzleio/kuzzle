@@ -19,26 +19,44 @@
  * limitations under the License.
  */
 
-"use strict";
+import "../types/Global";
 
-const deprecationWarning = (logger, ...args) => {
+interface DeprecationLogger {
+  warn: (...args: unknown[]) => void;
+}
+
+type Deprecations = Record<string, string | { message?: string } | null>;
+
+const deprecationWarning = (
+  logger: DeprecationLogger,
+  ...args: unknown[]
+): void => {
   if (global.NODE_ENV === "development") {
     logger.warn("DEPRECATION WARNING");
     logger.warn(...args);
   }
 };
 
-const warnIfDeprecated = (logger, deprecations, member) => {
+const warnIfDeprecated = (
+  logger: DeprecationLogger,
+  deprecations: Deprecations,
+  member: PropertyKey,
+): void => {
   const deprecatedProperty = Object.keys(deprecations).find(
-      (deprecated) => deprecated === member,
-    ),
-    alternative = deprecations[deprecatedProperty];
+    (deprecated) => deprecated === member,
+  );
 
   if (!deprecatedProperty) {
     return;
   }
 
-  if (alternative && typeof alternative.message === "string") {
+  const alternative = deprecations[deprecatedProperty];
+
+  if (
+    alternative &&
+    typeof alternative === "object" &&
+    typeof alternative.message === "string"
+  ) {
     deprecationWarning(logger, alternative.message);
   } else if (typeof alternative === "string") {
     deprecationWarning(
@@ -53,7 +71,11 @@ const warnIfDeprecated = (logger, deprecations, member) => {
   }
 };
 
-const deprecateProperties = (logger, target, deprecations = {}) => {
+export const deprecateProperties = <T extends object>(
+  logger: DeprecationLogger,
+  target: T,
+  deprecations: Deprecations = {},
+): T => {
   if (global.NODE_ENV !== "development") {
     return target;
   }
@@ -75,8 +97,4 @@ const deprecateProperties = (logger, target, deprecations = {}) => {
       return Reflect.set(object, key, ...rest);
     },
   });
-};
-
-module.exports = {
-  deprecateProperties,
 };

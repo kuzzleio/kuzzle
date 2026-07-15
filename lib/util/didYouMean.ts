@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-"use strict";
+import didYouMean = require("didyoumean");
 
-const didYouMean = require("didyoumean");
+import "../types/Global";
 
-function printDidYouMean(...args) {
+function printDidYouMean(...args: unknown[]): string {
   if (global.NODE_ENV !== "development") {
     return "";
   }
@@ -37,4 +37,4 @@ function printDidYouMean(...args) {
   return ` Did you mean "${result}"?`;
 }
 
-module.exports = printDidYouMean;
+export = printDidYouMean;

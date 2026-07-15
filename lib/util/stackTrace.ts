@@ -19,9 +19,7 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const util = require("util");
+import "../types/Global";
 
 const MARKER = ">";
 const PADDING = "  ";
@@ -36,7 +34,7 @@ const PADDING = "  ";
  * >>>>  at init (/home/aschen/projets/app/test.ts:8:3)
  *       at Module._compile (internal/modules/cjs/loader.js:1133:30)
  */
-function hilightUserCode(line) {
+export function hilightUserCode(line: string): string {
   // ignore first line (error message) or already enhanced
   if (!line.includes(" at ") || line.startsWith(MARKER)) {
     return line;
@@ -56,21 +54,30 @@ function hilightUserCode(line) {
   return MARKER + line;
 }
 
+interface SerializedRequestResponse {
+  content?: {
+    error?: {
+      stack?: string;
+    };
+  };
+}
+
 /**
  * utility method: must be invoked by all protocols to remove stack traces
  * from payloads before sending them
- * @param  {Error|Object} data - expected: plain error object or serialized
- *                               request response
- * @returns {*} return the data minus the stack trace
+ * @param data - expected: plain error object or serialized request response
+ * @returns return the data minus the stack trace
  */
-function removeStacktrace(data) {
-  if (util.types.isNativeError(data)) {
+export function removeStacktrace<T extends Error | SerializedRequestResponse>(
+  data: T,
+): T {
+  if (data instanceof Error) {
     if (global.NODE_ENV !== "development") {
       data.stack = undefined;
     } else {
       data.stack = data.stack.split("\n").map(hilightUserCode).join("\n");
     }
-  } else if (data && data.content && data.content.error) {
+  } else if (data?.content?.error) {
     // @todo v3: stack should be removed only for "production" env
     if (global.NODE_ENV !== "development") {
       data.content.error.stack = undefined;
@@ -83,8 +90,3 @@ function removeStacktrace(data) {
 
   return data;
 }
-
-module.exports = {
-  hilightUserCode,
-  removeStacktrace,
-};
