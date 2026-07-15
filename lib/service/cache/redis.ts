@@ -21,7 +21,7 @@
 
 import { flatten, uniq } from "lodash";
 import Bluebird from "bluebird";
-import IORedis, { Cluster } from "ioredis";
+import IORedis, { Cluster, RedisCommander } from "ioredis";
 
 import * as kerrorLib from "../../kerror";
 import Service from "../service";
@@ -61,7 +61,9 @@ interface RedisInfo {
 class Redis extends Service<RedisServiceConfig, RedisInfo> {
   public connected = false;
   public client: RedisClient | null = null;
-  public commands: Record<string, DynamicCommand> = {};
+  // Populated by setCommands() once the client is built; empty until then,
+  // exactly like the plain object this field held before.
+  public commands: RedisCommander = {} as RedisCommander;
   public adapterName: string;
   private pingIntervalID: ReturnType<typeof setInterval> | null = null;
   private logger: Logger;
@@ -170,15 +172,22 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   setCommands(): void {
     const commandsList = this.client.getBuiltinCommands();
 
+    // Command names are only known at runtime (from getBuiltinCommands()),
+    // so this dispatch table can't be built against RedisCommander's named
+    // members directly -- this is the one place that bridges the two. Both
+    // this list and RedisCommander are generated from the same upstream
+    // ioredis command set, so the cast reflects a real guarantee, not a
+    // hand-wave.
+    const commands = this.commands as unknown as Record<string, DynamicCommand>;
+    const client = this.client as unknown as Record<string, DynamicCommand>;
+
     for (const command of commandsList) {
-      this.commands[command] = async (...args: unknown[]) => {
+      commands[command] = async (...args: unknown[]) => {
         if (!this.connected) {
           throw cacheError.get("notconnected");
         }
 
-        return (this.client as unknown as Record<string, DynamicCommand>)[
-          command
-        ](...args);
+        return client[command](...args);
       };
     }
   }
@@ -188,8 +197,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * @override
    */
   async info(): Promise<RedisInfo> {
-    // The Redis INFO command always returns a bulk string
-    const result = (await this.commands.info()) as string;
+    const result = await this.commands.info();
     const arr = result.replace(/\r\n/g, "\n").split("\n");
     const info: Record<string, string> = {};
 
@@ -287,7 +295,12 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
       command.push("PX", ttl);
     }
 
-    const result = await this.commands.set(...command);
+    // The flag combination is built dynamically above, so it can't match a
+    // single RedisCommander.set(...) overload (which expects a fixed
+    // positional tuple per combination) -- same escape hatch as setCommands().
+    const result = await (this.commands.set as unknown as DynamicCommand)(
+      ...command,
+    );
 
     return result === "OK";
   }
@@ -296,7 +309,12 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * Executes a client command
    */
   exec(command: string, ...args: unknown[]): Promise<unknown> {
-    return this.commands[command](...args);
+    // command is an arbitrary name chosen at runtime by this method's own
+    // caller (see its ask-handler callers in cacheEngine.js) -- same
+    // escape hatch as setCommands().
+    return (this.commands as unknown as Record<string, DynamicCommand>)[
+      command
+    ](...args);
   }
 }
 
