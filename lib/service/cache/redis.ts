@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-import { flatten, uniq } from "lodash";
 import Bluebird from "bluebird";
 import IORedis, { Cluster, RedisCommander } from "ioredis";
 
@@ -66,7 +65,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   public commands: RedisCommander = {} as RedisCommander;
   public adapterName: string;
   private pingIntervalID: ReturnType<typeof setInterval> | null = null;
-  private logger: Logger;
+  private readonly logger: Logger;
 
   constructor(config: RedisServiceConfig, name: string) {
     super("redis", config);
@@ -83,7 +82,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * flush it to make sure we start from a clean state
    */
   protected _initSequence(): Promise<void> {
-    const config = JSON.parse(JSON.stringify(this._config));
+    const config = structuredClone(this._config);
 
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
@@ -198,7 +197,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    */
   async info(): Promise<RedisInfo> {
     const result = await this.commands.info();
-    const arr = result.replace(/\r\n/g, "\n").split("\n");
+    const arr = result.replaceAll("\r\n", "\n").split("\n");
     const info: Record<string, string> = {};
 
     for (const rawItem of arr) {

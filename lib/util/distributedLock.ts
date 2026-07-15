@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { AsyncLocalStorage } from "async_hooks";
+import { AsyncLocalStorage } from "node:async_hooks";
 
 import { createLock, IoredisAdapter } from "redlock-universal";
 import type { ExtendedAbortSignal, RedisAdapter } from "redlock-universal";
