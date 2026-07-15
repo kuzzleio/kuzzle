@@ -19,41 +19,48 @@
  * limitations under the License.
  */
 
+import { flatten, uniq } from "lodash";
 import Bluebird from "bluebird";
-import { Redis as IORedis, Cluster } from "ioredis";
-import type { RedisOptions, ClusterOptions } from "ioredis";
-import { JSONObject } from "kuzzle-sdk";
+import IORedis, { Cluster } from "ioredis";
 
-import * as kerror from "../../kerror";
+import * as kerrorLib from "../../kerror";
 import Service from "../service";
+import "../../types/Global";
+import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
+import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
 
-const cacheError = kerror.wrap("services", "cache");
+const kerror = kerrorLib.wrap("services", "cache");
 
-/**
- * A single-command forwarder, bound to a Redis command name.
- */
-type RedisCommand = (...args: unknown[]) => Promise<unknown>;
+type RedisClient = IORedis | Cluster;
+
+type RedisServiceConfig =
+  | InternalCacheConfiguration
+  | PublicCacheRedisConfiguration;
+
+interface RedisInfo {
+  memoryPeak: string;
+  memoryUsed: string;
+  mode: string;
+  type: "redis";
+  version: string;
+}
 
 /**
  * @class Redis
  * @extends Service
  */
-class Redis extends Service {
-  public connected: boolean;
-  public client: IORedis | Cluster | null;
-  public commands: Record<string, RedisCommand>;
+class Redis extends Service<RedisServiceConfig, RedisInfo> {
+  public connected = false;
+  public client: RedisClient | null = null;
+  public commands: Record<string, (...args: any[]) => Promise<any>> = {};
   public adapterName: string;
-  public pingIntervalID: NodeJS.Timeout | null;
-  public logger: unknown;
+  private pingIntervalID: ReturnType<typeof setInterval> | null = null;
+  private logger: any;
 
-  constructor(config: JSONObject, name?: string) {
+  constructor(config: RedisServiceConfig, name: string) {
     super("redis", config);
 
-    this.connected = false;
-    this.client = null;
-    this.commands = {};
     this.adapterName = name;
-    this.pingIntervalID = null;
 
     this.logger = global.kuzzle.log.child // It means we're in the main Kuzzle process
       ? global.kuzzle.log.child("services:cache:redis")
@@ -64,14 +71,16 @@ class Redis extends Service {
    * Initialize the redis client, select the service associated database and
    * flush it to make sure we start from a clean state
    */
-  _initSequence(): Promise<void> {
-    const config = structuredClone(this._config);
+  protected _initSequence(): Promise<void> {
+    const config = JSON.parse(JSON.stringify(this._config));
 
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
     if (config.overrideDnsLookup) {
-      config.clusterOptions.dnsLookup = (address, callback) =>
-        callback(null, address);
+      config.clusterOptions.dnsLookup = (
+        address: string,
+        callback: (err: Error | null, address: string) => void,
+      ) => callback(null, address);
     }
 
     if (config.nodes) {
@@ -121,7 +130,7 @@ class Redis extends Service {
    * Setup a ping interval to keep the connection alive
    * Every 60 seconds a ping is sent to Redis
    */
-  _setupKeepAlive(delay: number): void {
+  private _setupKeepAlive(delay: number) {
     this.client.on("ready", async () => {
       await this._ping();
       this.pingIntervalID = setInterval(this._ping.bind(this), delay);
@@ -136,7 +145,7 @@ class Redis extends Service {
   /**
    * Ping Redis
    */
-  async _ping(): Promise<void> {
+  private async _ping() {
     try {
       await this.client.ping();
     } catch (error) {
@@ -153,14 +162,12 @@ class Redis extends Service {
     const commandsList = this.client.getBuiltinCommands();
 
     for (const command of commandsList) {
-      this.commands[command] = async (...args: unknown[]) => {
+      this.commands[command] = async (...args: any[]) => {
         if (!this.connected) {
           throw cacheError.get("notconnected");
         }
 
-        return (this.client as unknown as Record<string, RedisCommand>)[
-          command
-        ](...args);
+        return (this.client as any)[command](...args);
       };
     }
   }
@@ -169,12 +176,12 @@ class Redis extends Service {
    * Return some basic information about this service
    * @override
    */
-  async info(): Promise<JSONObject> {
-    const result = (await this.commands.info()) as string;
-    const arr = result.replaceAll("\r\n", "\n").split("\n");
+  async info(): Promise<RedisInfo> {
+    const result = await this.commands.info();
+    const arr = result.replace(/\r\n/g, "\n").split("\n");
     const info: Record<string, string> = {};
 
-    arr.forEach((item) => {
+    arr.forEach((item: string) => {
       item = item.trim();
       if (item.length > 0 && !item.startsWith("#")) {
         const keyValuePair = item.split(":");
@@ -197,9 +204,6 @@ class Redis extends Service {
    * /!\ We don't use `keys` to avoid blocking Redis if using a big dataset
    * cf: http://redis.io/commands/keys
    *     and http://redis.io/commands/scan
-   *
-   * @param pattern
-   * @returns promise resolving to an array of keys
    */
   async searchKeys(pattern: string): Promise<string[]> {
     if (this.client instanceof Cluster) {
@@ -216,7 +220,7 @@ class Redis extends Service {
   /**
    * Executes multiple client commands in a single action
    */
-  mExecute(commands: unknown[]): Promise<unknown> {
+  mExecute(commands: any[]): Promise<any> {
     if (!Array.isArray(commands) || commands.length === 0) {
       return Bluebird.resolve([]);
     }
@@ -224,8 +228,8 @@ class Redis extends Service {
     return this.client.multi(commands as unknown[][]).exec();
   }
 
-  _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
-    return new Bluebird<string[]>((resolve) => {
+  private _searchNodeKeys(node: any, pattern: string): Promise<string[]> {
+    return new Bluebird((resolve) => {
       let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
 
@@ -239,11 +243,11 @@ class Redis extends Service {
     });
   }
 
-  _buildClient(options: RedisOptions): IORedis {
+  private _buildClient(options: Record<string, unknown>): IORedis {
     return new IORedis({ ...this._config.node, ...options });
   }
 
-  _buildClusterClient(options: ClusterOptions): Cluster {
+  private _buildClusterClient(options: Record<string, unknown>): Cluster {
     return new Cluster(this._config.nodes, options);
   }
 
@@ -253,11 +257,6 @@ class Redis extends Service {
    * Options:
    *   - onlyIfNew: if true, set the NX option
    *   - ttl: if true, set the PX option
-   *
-   * @param key
-   * @param value
-   * @param options
-   * @returns true if the key was set, false otherwise
    */
   async store(
     key: string,
@@ -282,7 +281,7 @@ class Redis extends Service {
   /**
    * Executes a client command
    */
-  exec(command: string, ...args: unknown[]): Promise<unknown> {
+  exec(command: string, ...args: any[]): Promise<any> {
     return this.commands[command](...args);
   }
 }

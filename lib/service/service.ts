@@ -20,27 +20,29 @@
  */
 
 import Bluebird from "bluebird";
-import { JSONObject } from "kuzzle-sdk";
 
 import * as kerror from "../kerror";
+import "../types/Global";
 
 /**
  * Services base class
  */
-class Service {
+abstract class Service<TConfig = unknown, TInfo = unknown> {
   protected _name: string;
-  protected _config: JSONObject;
+  protected _config: TConfig;
   protected _initTimeout: number;
 
-  constructor(name: string, config: JSONObject) {
+  constructor(name: string, config: TConfig) {
     this._name = name;
     this._config = config;
+
+    const { initTimeout } = (config ?? {}) as { initTimeout?: number };
+
     this._initTimeout =
-      config.initTimeout ||
-      global.kuzzle.config.services.common.defaultInitTimeout;
+      initTimeout || global.kuzzle.config.services.common.defaultInitTimeout;
   }
 
-  get config(): JSONObject {
+  get config(): TConfig {
     return this._config;
   }
 
@@ -52,29 +54,26 @@ class Service {
    * Call _initSequence to initialize the service
    * and throw an error if timeout exceed
    */
-  init(): Promise<void> {
-    return Bluebird.resolve(this._initSequence())
-      .timeout(this._initTimeout)
-      .catch((e) => {
-        if (e instanceof Bluebird.TimeoutError) {
-          throw kerror.get("core", "fatal", "service_timeout", this._name);
-        }
+  async init(): Promise<void> {
+    try {
+      await Bluebird.resolve(this._initSequence()).timeout(this._initTimeout);
+    } catch (e) {
+      if (e instanceof Bluebird.TimeoutError) {
+        throw kerror.get("core", "fatal", "service_timeout", this._name);
+      }
 
-        throw e;
-      });
+      throw e;
+    }
   }
 
-  /**
-   * @abstract
-   */
-  _initSequence(): Promise<void> {
-    throw new Error("Not implemented");
-  }
+  protected abstract _initSequence(): Promise<void>;
 
   /**
+   * Return some basic information about this service
+   *
    * @abstract
    */
-  info(): Promise<JSONObject> {
+  info(): Promise<TInfo> {
     throw new Error("Not implemented");
   }
 }

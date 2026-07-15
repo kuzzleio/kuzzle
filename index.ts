@@ -12,6 +12,8 @@ export * from "./lib/kerror/errors";
 
 export * from "./lib/util/mutex";
 
+export * from "./lib/util/distributedLock";
+
 export * from "./lib/util/Inflector";
 
 export { NameGenerator } from "./lib/util/name-generator";
