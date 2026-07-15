@@ -16,7 +16,7 @@ We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-
 ## TypeScript migration
 
 Kuzzle is being migrated from JavaScript to TypeScript incrementally (see
-[`adrs/ADR-0001-migration-typescript.md`](adrs/ADR-0001-migration-typescript.md)).
+[`docs/adr-001/ADR-0001-migration-typescript.md`](docs/adr-001/ADR-0001-migration-typescript.md)).
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
 

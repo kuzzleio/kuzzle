@@ -31,7 +31,7 @@ Counters (baselines in `.migration/`): **js = 79**, **mocha = 151**, **any = 200
 
 **Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS, merged into `2-dev`) and **Sprint 3 done** (`lib/model` + `lib/service` now 100% TS — PR #2676). The migration advances one layer-PR at a time off `2-dev`.
 
-**Open PRs (both → `2-dev`, independent):** #2675 (ADR docs relocation `adrs/` → `docs/adr-001/`) · #2676 (Sprint 3 — models & services). Both edit this Progress section, so whichever merges **second** needs a trivial conflict resolution here.
+**Doc location (2026-07-15):** the ADR and its register were moved from `adrs/` to `docs/adr-001/` (`git mv`, history preserved; all references updated); ADRs now live under `docs/adr-<n>/`.
 
 **Next actions:**
 1. **Sprint 4 — `lib/api`** (13 files, incl. controllers + `funnel.js`), now unblocked by Sprint 3, under the cucumber net. *(Sprint 2 — real `bin/` entrypoints — is deprioritized for now.)*
@@ -80,20 +80,20 @@ The largest files in the repo are still in JS and concentrate the risk:
 
 | File | LOC | Role |
 |------|-----|------|
-| [`lib/api/httpRoutes.js`](../lib/api/httpRoutes.js) | 1554 | HTTP routes table |
-| [`lib/core/network/protocols/httpwsProtocol.js`](../lib/core/network/protocols/httpwsProtocol.js) | 1254 | HTTP/WS protocol (uWebSockets) |
-| [`lib/core/plugin/pluginsManager.js`](../lib/core/plugin/pluginsManager.js) | 1244 | Plugin management |
-| [`lib/cluster/node.js`](../lib/cluster/node.js) | 1203 | Cluster node |
-| [`lib/core/validation/validation.js`](../lib/core/validation/validation.js) | 1180 | Document validation |
-| [`lib/api/controllers/documentController.js`](../lib/api/controllers/documentController.js) | 1165 | Document controller |
-| [`lib/api/funnel.js`](../lib/api/funnel.js) | 1143 | API request routing/execution |
+| [`lib/api/httpRoutes.js`](../../lib/api/httpRoutes.js) | 1554 | HTTP routes table |
+| [`lib/core/network/protocols/httpwsProtocol.js`](../../lib/core/network/protocols/httpwsProtocol.js) | 1254 | HTTP/WS protocol (uWebSockets) |
+| [`lib/core/plugin/pluginsManager.js`](../../lib/core/plugin/pluginsManager.js) | 1244 | Plugin management |
+| [`lib/cluster/node.js`](../../lib/cluster/node.js) | 1203 | Cluster node |
+| [`lib/core/validation/validation.js`](../../lib/core/validation/validation.js) | 1180 | Document validation |
+| [`lib/api/controllers/documentController.js`](../../lib/api/controllers/documentController.js) | 1165 | Document controller |
+| [`lib/api/funnel.js`](../../lib/api/funnel.js) | 1143 | API request routing/execution |
 
 ### Constraints and forces at play
 
 - **`allowJs: true`** is enabled: JS and TS coexist natively in the `tsc` build. **0 hard `require('./x.js')` imports** in the existing TS → interop is clean, file-by-file conversion does not break import chains.
 - **Existing safety net:** functional tests (cucumber) are already in TS and cover the critical paths — they protect refactors of the big files.
 - **Double test debt:** the language migration is *blocked by* the runner question. Converting a Mocha test to `.ts` without moving it to vitest only shifts the debt.
-- **No prior ADR convention:** this document initialises the `adrs/` folder at the repo root (distinct from `doc/`, reserved for the Kuzzle documentation tool).
+- **No prior ADR convention:** this document initialises the ADR practice for the repo, stored under `docs/adr-<n>/` (distinct from `doc/`, reserved for the Kuzzle documentation tool).
 - **Why finish now?** A durable hybrid state costs more than either extreme: double tooling (Mocha + vitest), partial typing that gives a false sense of safety, confusing onboarding — and the remaining files are exactly the most critical ones (hence the riskiest to leave untyped).
 
 ---
@@ -238,9 +238,9 @@ Keep `tsconfig.json` in its current mode for the build; add a `tsconfig.strict.j
 > ⚠️ **You cannot isolate strict to a subset via `include`** — tsc pulls the entire import graph into the program and checks all of it. Empirical finding (2026-07-12): a `tsconfig.strict.json` with `include: ["lib/types/**/*.ts"]` still reports **1164 errors**, all located in the *imported* files (services, controllers, core…), not in `lib/types`. The progressive scope is therefore managed **by filtering tsc output**, not via `include`.
 
 **Shipped mechanism (Sprint 0):**
-- [`tsconfig.strict.json`](../tsconfig.strict.json): `extends` the base config + `strict: true`, `include` = all of `lib/` + `index.ts`.
-- [`.migration/strict-adopted.txt`](../.migration/strict-adopted.txt): a **growing list** of files that MUST pass strict (seeded with the **41 already-clean `lib/types` files**).
-- [`scripts/strict-check.sh`](../scripts/strict-check.sh) (`npm run test:strict`): compiles in strict but **only fails** on errors located in an adopted file. Harden a file → add it to the list → it is guaranteed forever. `npm run test:strict -- --candidates` lists clean files not yet adopted (**35 at start**).
+- [`tsconfig.strict.json`](../../tsconfig.strict.json): `extends` the base config + `strict: true`, `include` = all of `lib/` + `index.ts`.
+- [`.migration/strict-adopted.txt`](../../.migration/strict-adopted.txt): a **growing list** of files that MUST pass strict (seeded with the **41 already-clean `lib/types` files**).
+- [`scripts/strict-check.sh`](../../scripts/strict-check.sh) (`npm run test:strict`): compiles in strict but **only fails** on errors located in an adopted file. Harden a file → add it to the list → it is guaranteed forever. `npm run test:strict -- --candidates` lists clean files not yet adopted (**35 at start**).
 - **Final goal:** the list covers all of `lib/`, then flip `strict` in `tsconfig.json` and remove this machinery.
 
 Recommended flag activation order (least to most painful), if you prefer to enable flags one by one rather than by file list:
@@ -256,7 +256,7 @@ Two actions, complementary to the strict ratchet:
 1. **Re-enable the rule** via a local override (the `*.ts` block of `.eslintrc.json`) — or by bumping `eslint-plugin-kuzzle` — first as `warn` so as not to block immediately.
 2. **3rd CI ratchet** `no-explicit-any` as *baseline-and-decrement* (same mechanics as the JS ratchet): the number of explicit `any` may only decrease.
 
-**Shipped implementation (Sprint 0):** the three count ratchets (JS, mocha, any) are a single parameterised script [`scripts/ratchet.sh`](../scripts/ratchet.sh) `<js|mocha|any>`, exposed via `npm run ratchet` (all three) and `npm run ratchet:{js,mocha,any}`. Baselines in [`.migration/`](../.migration/): `js=111`, `mocha=151`, `any=200`. A metric may only decrease; any improvement must update its baseline in the same PR (`npm run ratchet:any -- --update`).
+**Shipped implementation (Sprint 0):** the three count ratchets (JS, mocha, any) are a single parameterised script [`scripts/ratchet.sh`](../../scripts/ratchet.sh) `<js|mocha|any>`, exposed via `npm run ratchet` (all three) and `npm run ratchet:{js,mocha,any}`. Baselines in [`.migration/`](../../.migration/): `js=111`, `mocha=151`, `any=200`. A metric may only decrease; any improvement must update its baseline in the same PR (`npm run ratchet:any -- --update`).
 
 > **Priority targets (measured concentration):** `lib/core` holds ~48% of the `any`, and **4 files** — `core/shared/store.ts`, `core/plugin/pluginContext.ts`, `service/storage/7/elasticsearch.ts`, `service/storage/8/elasticsearch.ts` — concentrate ~40% of the `: any` and ~55% of the `as any`. Handling them first clears most of the debt. Most of this `any` is **recoverable** (lazy); the genuinely justified `any` is confined to the Elasticsearch client boundary.
 

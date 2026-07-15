@@ -73,7 +73,7 @@ jobs:
         shell: bash
 
       # Ratchets: the .js / mocha / explicit-any counts may only decrease.
-      # See adrs/ADR-0001-migration-typescript.md §6 and scripts/ratchet.sh.
+      # See docs/adr-001/ADR-0001-migration-typescript.md §6 and scripts/ratchet.sh.
       - name: Migration ratchets (js / mocha / any)
         run: npm run ratchet
         shell: bash
