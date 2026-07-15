@@ -7,7 +7,7 @@
 
 ---
 
-## Progress & cold-start — updated 2026-07-14
+## Progress & cold-start — updated 2026-07-15
 
 > Living section (maintained by the `/wrapup` skill). **Read this first** to resume the effort in a fresh context.
 
@@ -22,20 +22,21 @@
 | Remove dead code `bin/.upgrades` + `bin/.lib` | ✅ | #2671 |
 | `/wrapup` skill | ✅ | #2672 |
 | Sprint 1 — remaining 7 `lib/util` files (`lib/util` now 100% TS) | ✅ | #2674 |
-| Sprints 2 → 10 (real bin, api, core, cluster, final strict, tests) | ⬜ | see §6.4 |
+| Sprint 3 — models & services (`lib/model` 3 + `lib/service` 4 files) | ✅ | #2676 |
+| Sprints 4 → 10 (api, core, cluster, kuzzle, final strict, tests); Sprint 2 `bin/` deprioritized | ⬜ | see §6.4 |
 
-Counters (baselines in `.migration/`): **js = 86**, **mocha = 151**, **any = 200**; **strict adopted = 51**.
+Counters (baselines in `.migration/`): **js = 79**, **mocha = 151**, **any = 200**; **strict adopted = 51**.
 
 ### Cold start
 
-**Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint) and **Sprint 1 is complete — `lib/util` is now 100% TS**. The whole Sprint-0/1 stack (#2668 → #2673) has been **merged into `2-dev`**; the migration now advances one layer-PR at a time off `2-dev`.
+**Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS, merged into `2-dev`) and **Sprint 3 done** (`lib/model` + `lib/service` now 100% TS — PR #2676). The migration advances one layer-PR at a time off `2-dev`.
 
 **Next actions:**
-1. **Sprint 3 — models & services** (`lib/model` 3 files, `lib/service` 4 files): low-risk leaves under the functional-test net, and they unlock `lib/api`. *(Or Sprint 2 — real `bin/` entrypoints `copy-binaries.js` + `start-kuzzle-server`, also low-risk.)*
-2. Then Sprint 4 (`lib/api`, incl. `funnel.js`), Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
+1. **Sprint 4 — `lib/api`** (13 files, incl. controllers + `funnel.js`), now unblocked by Sprint 3, under the cucumber net. *(Sprint 2 — real `bin/` entrypoints — is deprioritized for now.)*
+2. Then Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
 3. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, any must not rise), decrement `.migration/js-baseline.txt`, run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
 
-**Remaining JS by layer** (86 total = 82 `lib/` + 4 `bin/`): `core` 50 · `api` 13 · `kuzzle` 6 · `cluster` 6 · `service` 4 · `model` 3 · `bin` 4.
+**Remaining JS by layer** (79 total = 75 `lib/` + 4 `bin/`): `core` 50 · `api` 13 · `kuzzle` 6 · `cluster` 6 · `bin` 4.
 
 > **Conversion gotcha learned in Sprint 1:** files whose Mocha spec uses `rewire`/`__set__` on a required module (e.g. `didYouMean`) must keep the compiled variable name — use `import x = require("mod")`, not `import x from "mod"`. Typing a previously-`any` export (e.g. `Promback`) can break inferring consumers: make it **generic** (`Promback<T>`) and annotate the call sites rather than reintroducing `any`.
 
