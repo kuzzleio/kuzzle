@@ -285,8 +285,6 @@
 * **updateByQuery:** kuzinfo updated after updateByQuery ([caacf9b](https://github.com/kuzzleio/kuzzle/commit/caacf9b0613a5d4b33ce1fcd99f04ea71e632502))
 * **updateByQuery:** no need to add kuzzleinfo to changes, it is updated later ([969d160](https://github.com/kuzzleio/kuzzle/commit/969d160c8d6e96ff85e0755ba3c82453608c093a))
 
-<<<<<<< HEAD
-=======
 ## [2.48.0](https://github.com/kuzzleio/kuzzle/compare/v2.47.0...v2.48.0) (2025-10-02)
 
 
@@ -325,7 +323,6 @@
 * **elasticsearch:** do not allow user to provide _kuzzle_info for M operations ([#2607](https://github.com/kuzzleio/kuzzle/issues/2607)) ([b6adb34](https://github.com/kuzzleio/kuzzle/commit/b6adb3461a213afddcc6f7c2fc92252c5204fc12))
 * revert uuid upgrade, because of ESM compat ([dbe582a](https://github.com/kuzzleio/kuzzle/commit/dbe582a241fe9d85b21c856a47a26f2d9dd6c498))
 
->>>>>>> master
 ## [2.47.0](https://github.com/kuzzleio/kuzzle/compare/v2.46.0...v2.47.0) (2025-09-16)
 
 
