@@ -39,12 +39,11 @@ interface StorageDocument {
 }
 
 class BaseModel {
-  __id: string | null;
+  __id: string | null = null;
   __source: JSONObject;
   declare __persisted: boolean;
 
   constructor(_source: JSONObject = {}, _id: string | null = null) {
-    this.__id = null;
     this.__source = {};
 
     Reflect.defineProperty(this, "__persisted", {

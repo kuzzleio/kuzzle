@@ -19,7 +19,6 @@
  * limitations under the License.
  */
 
-import { flatten, uniq } from "lodash";
 import Bluebird from "bluebird";
 import { Redis as IORedis, Cluster } from "ioredis";
 import type { RedisOptions, ClusterOptions } from "ioredis";
@@ -66,7 +65,7 @@ class Redis extends Service {
    * flush it to make sure we start from a clean state
    */
   _initSequence(): Promise<void> {
-    const config = JSON.parse(JSON.stringify(this._config));
+    const config = structuredClone(this._config);
 
     // Only way to connect to AWS ELastiCache
     // https://github.com/luin/ioredis#special-note-aws-elasticache-clusters-with-tls
@@ -172,7 +171,7 @@ class Redis extends Service {
    */
   async info(): Promise<JSONObject> {
     const result = (await this.commands.info()) as string;
-    const arr = result.replace(/\r\n/g, "\n").split("\n");
+    const arr = result.replaceAll("\r\n", "\n").split("\n");
     const info: Record<string, string> = {};
 
     arr.forEach((item) => {
@@ -208,7 +207,7 @@ class Redis extends Service {
         return this._searchNodeKeys(node, pattern);
       });
 
-      return uniq(flatten(keys));
+      return [...new Set(keys.flat())];
     }
 
     return this._searchNodeKeys(this.client, pattern);
@@ -235,7 +234,7 @@ class Redis extends Service {
       });
 
       stream.on("end", () => {
-        resolve(uniq(keys));
+        resolve([...new Set(keys)]);
       });
     });
   }

@@ -22,7 +22,7 @@
 /* eslint sort-keys: 0 */
 
 import Bluebird from "bluebird";
-import _ from "lodash";
+import get from "lodash/get";
 import { Client, errors as esErrors } from "sdk-es8";
 import { JSONObject } from "kuzzle-sdk";
 
@@ -115,7 +115,7 @@ const errorMessagesMapping: ESErrorMapping[] = [
   },
   {
     // [index_not_found_exception] no such index, with { resource.type=index_or_alias & resource.id=foso & index=foso }
-    regex: /^no such index \[([%&])(.*)\.(.*)\]$/,
+    regex: /^no such index \[([%&])([^\]]*)\.([^.\]]*)\]$/,
     subcode: "unknown_collection",
     getPlaceholders: (esError, matches) => [matches[2], matches[3]],
   },
@@ -201,7 +201,7 @@ class ESWrapper {
     if (error instanceof esErrors.NoLivingConnectionsError) {
       throw kerror.get("not_connected");
     }
-    const message = _.get(error, "meta.body.error.reason", error.message);
+    const message = get(error, "meta.body.error.reason", error.message);
 
     // Try to match a known elasticsearch error
     for (const betterError of errorMessagesMapping) {
@@ -263,7 +263,7 @@ class ESWrapper {
       return kerror.get("not_found", error.meta.body._id, index, collection);
     }
 
-    if (error.meta.body && error.meta.body.error) {
+    if (error.meta.body?.error) {
       errorMessage = error.meta.body.error
         ? `${error.meta.body.error.reason}: ${error.meta.body.error["resource.id"]}`
         : `${error.message}: ${error.body._id}`;
@@ -277,7 +277,7 @@ class ESWrapper {
   _handleBadRequestError(error: JSONObject, message: string): KuzzleError {
     let errorMessage = message;
 
-    if (error.meta.body && error.meta.body.error) {
+    if (error.meta.body?.error) {
       errorMessage = error.meta.body.error.root_cause
         ? error.meta.body.error.root_cause[0].reason
         : error.meta.body.error.reason;
@@ -285,7 +285,7 @@ class ESWrapper {
       // empty query throws exception with ES 7
       if (
         error.meta.body.error.type === "parsing_exception" &&
-        _.get(error, "meta.body.error.caused_by.type") ===
+        get(error, "meta.body.error.caused_by.type") ===
           "illegal_argument_exception"
       ) {
         errorMessage = error.meta.body.error.caused_by.reason;
@@ -294,7 +294,7 @@ class ESWrapper {
 
     debug(
       'unhandled "BadRequest" elasticsearch error: %a',
-      _.get(error, "meta.body.error.reason", error.message),
+      get(error, "meta.body.error.reason", error.message),
     );
 
     return kerror.get("unexpected_bad_request", errorMessage);
@@ -303,7 +303,7 @@ class ESWrapper {
   _handleUnknownError(error: JSONObject, message: string): KuzzleError {
     debug(
       "unhandled elasticsearch error (unhandled type: %s): %o",
-      _.get(error, "error.meta.statusCode", "<no status code>"),
+      get(error, "error.meta.statusCode", "<no status code>"),
       error,
     );
 
