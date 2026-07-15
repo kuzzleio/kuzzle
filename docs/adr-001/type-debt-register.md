@@ -201,7 +201,9 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-07-12** — Quick wins delivered in PR #2668 (3 isolated commits, `tsc --noEmit` green at each step): TD-06, TD-04 + partial TD-05, partial TD-01.
 - **2026-07-12** — ADR + register committed on the migration branch. Sprint 0 tooling delivered in PR #2669: 3 count ratchets (js/mocha/any), `strict-check.sh` + adopted list (41 files), ESLint `no-explicit-any` re-enabled, CI job wired. TD-03 ✅, TD-02 🟦.
 - **2026-07-12** — Sprint 1 (warm-up) delivered in PR #2670: 5 `lib/util` modules (safeObject, bytes, wildcard, memoize, extractFields) converted JS→TS; JS baseline 111→106; strict 41→46 adopted files; tsc + build + unit tests (7/7) green. `bin/` scope adjusted (see ADR §6.4): `.upgrades` to be deleted (separate PR).
+- **2026-07-14** — Sprint 1 finished in PR #2674 (merged into `2-dev`): the remaining 7 `lib/util` files converted → `lib/util` is now 100% TS. Counters: js=86, mocha=151, any=200, strict adopted=51.
 - **2026-07-15** — Sprint 3 delivered in PR #2676: `lib/model` (baseModel, apiKey, rights) + `lib/service` (service, redis, esWrapper 7/8) converted JS→TS → both layers now 100% TS. JS baseline 86→79; `any` unchanged (200), no `@ts-ignore` (one documented `@ts-expect-error` for `ApiKey.load`'s static-signature divergence). tsc clean; full mocha suite (3025) green in Docker. Sprint 2 (`bin/`) deprioritized.
+- **2026-07-15** — ADR docs relocated from `adrs/` to `docs/adr-001/` (`git mv`, history preserved); all references updated (CONTRIBUTING, CI workflow, `scripts/`, `tsconfig.strict.json`, `/wrapup` skill). New convention: ADRs live under `docs/adr-<n>/`.
 
 ---
 

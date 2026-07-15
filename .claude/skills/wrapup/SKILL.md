@@ -37,7 +37,7 @@ say so and move on.
 
 ## 3. Maintain the governing ADR (if one exists)
 
-If the work is governed by an ADR (e.g. `adrs/ADR-*.md`), keep two **living**
+If the work is governed by an ADR (e.g. `docs/adr-*/ADR-*.md`), keep two **living**
 sections up to date:
 
 ### 3a. Progress table
@@ -73,6 +73,6 @@ next session) can find it immediately.
 
 ---
 
-> Reference implementation in this repo: `adrs/ADR-0001-migration-typescript.md`
+> Reference implementation in this repo: `docs/adr-001/ADR-0001-migration-typescript.md`
 > maintains exactly this pattern — a progress table and a "cold start" section —
 > for the ongoing TypeScript migration.

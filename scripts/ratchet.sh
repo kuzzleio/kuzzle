@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# TypeScript-migration ratchets — see adrs/ADR-0001-migration-typescript.md (§6.1, §6.2, §6.3).
+# TypeScript-migration ratchets — see docs/adr-001/ADR-0001-migration-typescript.md (§6.1, §6.2, §6.3).
 #
 # A tracked metric may only DECREASE. The baseline file (.migration/*-baseline.txt)
 # records the EXACT current value; every migration PR that improves a metric must
