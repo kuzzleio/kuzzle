@@ -25,6 +25,7 @@ import IORedis, { Cluster } from "ioredis";
 
 import * as kerrorLib from "../../kerror";
 import Service from "../service";
+import { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
 import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
@@ -32,6 +33,14 @@ import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/Pu
 const kerror = kerrorLib.wrap("services", "cache");
 
 type RedisClient = IORedis | Cluster;
+
+/**
+ * Built-in Redis command names are only known at runtime (via
+ * `getBuiltinCommands()`), so the dispatch table below can't be typed more
+ * precisely than "some async function" without hardcoding every command's
+ * individual signature.
+ */
+type DynamicCommand = (...args: unknown[]) => Promise<unknown>;
 
 type RedisServiceConfig =
   | InternalCacheConfiguration
@@ -52,10 +61,10 @@ interface RedisInfo {
 class Redis extends Service<RedisServiceConfig, RedisInfo> {
   public connected = false;
   public client: RedisClient | null = null;
-  public commands: Record<string, (...args: any[]) => Promise<any>> = {};
+  public commands: Record<string, DynamicCommand> = {};
   public adapterName: string;
   private pingIntervalID: ReturnType<typeof setInterval> | null = null;
-  private logger: any;
+  private logger: Logger;
 
   constructor(config: RedisServiceConfig, name: string) {
     super("redis", config);
@@ -162,12 +171,14 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     const commandsList = this.client.getBuiltinCommands();
 
     for (const command of commandsList) {
-      this.commands[command] = async (...args: any[]) => {
+      this.commands[command] = async (...args: unknown[]) => {
         if (!this.connected) {
           throw cacheError.get("notconnected");
         }
 
-        return (this.client as any)[command](...args);
+        return (this.client as unknown as Record<string, DynamicCommand>)[
+          command
+        ](...args);
       };
     }
   }
@@ -177,17 +188,18 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
    * @override
    */
   async info(): Promise<RedisInfo> {
-    const result = await this.commands.info();
+    // The Redis INFO command always returns a bulk string
+    const result = (await this.commands.info()) as string;
     const arr = result.replace(/\r\n/g, "\n").split("\n");
     const info: Record<string, string> = {};
 
-    arr.forEach((item: string) => {
-      item = item.trim();
+    for (const rawItem of arr) {
+      const item = rawItem.trim();
       if (item.length > 0 && !item.startsWith("#")) {
         const keyValuePair = item.split(":");
         info[keyValuePair[0]] = keyValuePair[1];
       }
-    });
+    }
 
     return {
       memoryPeak: info.used_memory_peak_human,
@@ -220,7 +232,9 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   /**
    * Executes multiple client commands in a single action
    */
-  mExecute(commands: any[]): Promise<any> {
+  mExecute(
+    commands: unknown[][],
+  ): Promise<[error: Error | null, result: unknown][] | null> {
     if (!Array.isArray(commands) || commands.length === 0) {
       return Bluebird.resolve([]);
     }
@@ -228,7 +242,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     return this.client.multi(commands as unknown[][]).exec();
   }
 
-  private _searchNodeKeys(node: any, pattern: string): Promise<string[]> {
+  private _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
     return new Bluebird((resolve) => {
       let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
@@ -281,7 +295,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   /**
    * Executes a client command
    */
-  exec(command: string, ...args: any[]): Promise<any> {
+  exec(command: string, ...args: unknown[]): Promise<unknown> {
     return this.commands[command](...args);
   }
 }
