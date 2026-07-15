@@ -31,6 +31,8 @@ Counters (baselines in `.migration/`): **js = 79**, **mocha = 151**, **any = 200
 
 **Where we are:** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS, merged into `2-dev`) and **Sprint 3 done** (`lib/model` + `lib/service` now 100% TS — PR #2676). The migration advances one layer-PR at a time off `2-dev`.
 
+**Open PRs (both → `2-dev`, independent):** #2675 (ADR docs relocation `adrs/` → `docs/adr-001/`) · #2676 (Sprint 3 — models & services). Both edit this Progress section, so whichever merges **second** needs a trivial conflict resolution here.
+
 **Next actions:**
 1. **Sprint 4 — `lib/api`** (13 files, incl. controllers + `funnel.js`), now unblocked by Sprint 3, under the cucumber net. *(Sprint 2 — real `bin/` entrypoints — is deprioritized for now.)*
 2. Then Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
