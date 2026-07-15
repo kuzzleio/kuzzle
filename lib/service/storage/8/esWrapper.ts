@@ -21,19 +21,29 @@
 
 /* eslint sort-keys: 0 */
 
-"use strict";
+import Bluebird from "bluebird";
+import _ from "lodash";
+import { Client, errors as esErrors } from "sdk-es8";
+import { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
-const _ = require("lodash");
-const es = require("sdk-es7");
+import { KuzzleError } from "../../../kerror/errors";
+import createDebug from "../../../util/debug";
+import { wrap } from "../../../kerror";
 
-const { KuzzleError } = require("../../../kerror/errors");
-const debug = require("../../../util/debug")(
-  "kuzzle:services:storage:ESCommon",
-);
-const kerror = require("../../../kerror").wrap("services", "storage");
+const debug = createDebug("kuzzle:services:storage:ESCommon");
+const kerror = wrap("services", "storage");
 
-const errorMessagesMapping = [
+interface ESErrorMapping {
+  regex: RegExp;
+  subcode?: string;
+  subCode?: string;
+  getPlaceholders: (
+    esError: JSONObject,
+    matches: RegExpMatchArray,
+  ) => Array<string | undefined>;
+}
+
+const errorMessagesMapping: ESErrorMapping[] = [
   {
     regex:
       /^\[es_rejected_execution_exception] rejected execution .*? on EsThreadPoolExecutor\[(.*?), .*$/,
@@ -135,9 +145,9 @@ const errorMessagesMapping = [
     getPlaceholders: (esError, matches) => [matches[1]],
   },
   {
-    // mapping set to strict, dynamic introduction of [lehuong] within [_doc] is not allowed
+    // [_doc] mapping set to strict, dynamic introduction of [lehuong] within [_doc] is not allowed
     regex:
-      /^mapping set to strict, dynamic introduction of \[(.+)\] within \[.+\] is not allowed/,
+      /^\[(.+)\] mapping set to strict, dynamic introduction of \[(.+)\] within \[.+\] is not allowed/,
     subcode: "strict_mapping_rejection",
     getPlaceholders: (esError, matches) => {
       // "/%26index.collection/_doc"
@@ -147,7 +157,7 @@ const errorMessagesMapping = [
       // keep only "collection"
       const collection = esPath.substr(esPath.indexOf(".") + 1).split("/")[0];
 
-      return [matches[1], index, collection];
+      return [matches[2], index, collection];
     },
   },
   {
@@ -165,17 +175,18 @@ const errorMessagesMapping = [
 ];
 
 class ESWrapper {
-  constructor(client) {
+  public client: Client;
+
+  constructor(client: Client) {
     this.client = client;
   }
 
   /**
    * Transforms raw ES errors into a normalized Kuzzle version
    *
-   * @param {Error} error
-   * @returns {KuzzleError}
+   * @param error
    */
-  formatESError(error) {
+  formatESError(error: JSONObject): KuzzleError {
     if (error instanceof KuzzleError) {
       return error;
     }
@@ -187,7 +198,7 @@ class ESWrapper {
       stack: error.stack,
     });
 
-    if (error instanceof es.errors.NoLivingConnectionsError) {
+    if (error instanceof esErrors.NoLivingConnectionsError) {
       throw kerror.get("not_connected");
     }
     const message = _.get(error, "meta.body.error.reason", error.message);
@@ -221,17 +232,17 @@ class ESWrapper {
     return this._handleUnknownError(error, message);
   }
 
-  reject(error) {
+  reject(error: JSONObject): Promise<never> {
     return Bluebird.reject(this.formatESError(error));
   }
 
-  _handleConflictError(error, message) {
+  _handleConflictError(error: JSONObject, message: string): KuzzleError {
     debug('unhandled "Conflict" elasticsearch error: %a', error);
 
     return kerror.get("unexpected_error", message);
   }
 
-  _handleNotFoundError(error, message) {
+  _handleNotFoundError(error: JSONObject, message: string): KuzzleError {
     let errorMessage = message;
 
     if (!error.body._index) {
@@ -263,7 +274,7 @@ class ESWrapper {
     return kerror.get("unexpected_not_found", errorMessage);
   }
 
-  _handleBadRequestError(error, message) {
+  _handleBadRequestError(error: JSONObject, message: string): KuzzleError {
     let errorMessage = message;
 
     if (error.meta.body && error.meta.body.error) {
@@ -289,7 +300,7 @@ class ESWrapper {
     return kerror.get("unexpected_bad_request", errorMessage);
   }
 
-  _handleUnknownError(error, message) {
+  _handleUnknownError(error: JSONObject, message: string): KuzzleError {
     debug(
       "unhandled elasticsearch error (unhandled type: %s): %o",
       _.get(error, "error.meta.statusCode", "<no status code>"),
@@ -300,4 +311,4 @@ class ESWrapper {
   }
 }
 
-module.exports = ESWrapper;
+export = ESWrapper;

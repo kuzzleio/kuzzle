@@ -19,18 +19,20 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
-
-const kerror = require("../kerror");
+import * as kerror from "../kerror";
 
 /**
  * Services base class
- *
  */
 class Service {
-  constructor(name, config) {
+  protected _name: string;
+  protected _config: JSONObject;
+  protected _initTimeout: number;
+
+  constructor(name: string, config: JSONObject) {
     this._name = name;
     this._config = config;
     this._initTimeout =
@@ -38,21 +40,19 @@ class Service {
       global.kuzzle.config.services.common.defaultInitTimeout;
   }
 
-  get config() {
+  get config(): JSONObject {
     return this._config;
   }
 
-  get name() {
+  get name(): string {
     return this._name;
   }
 
   /**
    * Call _initSequence to initialize the service
    * and throw an error if timeout exceed
-   *
-   * @returns {Promise}
    */
-  init() {
+  init(): Promise<void> {
     return Bluebird.resolve(this._initSequence())
       .timeout(this._initTimeout)
       .catch((e) => {
@@ -66,19 +66,17 @@ class Service {
 
   /**
    * @abstract
-   * @returns {Promise}
    */
-  _initSequence() {
+  _initSequence(): Promise<void> {
     throw new Error("Not implemented");
   }
 
   /**
    * @abstract
-   * @returns {Promise}
    */
-  info() {
+  info(): Promise<JSONObject> {
     throw new Error("Not implemented");
   }
 }
 
-module.exports = Service;
+export = Service;

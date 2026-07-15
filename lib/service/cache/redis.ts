@@ -19,23 +19,35 @@
  * limitations under the License.
  */
 
-"use strict";
+import { flatten, uniq } from "lodash";
+import Bluebird from "bluebird";
+import { Redis as IORedis, Cluster } from "ioredis";
+import type { RedisOptions, ClusterOptions } from "ioredis";
+import { JSONObject } from "kuzzle-sdk";
 
-const { flatten, uniq } = require("lodash");
-const Bluebird = require("bluebird");
-const IORedis = require("ioredis");
+import * as kerror from "../../kerror";
+import Service from "../service";
 
-const kerror = require("../../kerror").wrap("services", "cache");
-const Service = require("../service");
+const cacheError = kerror.wrap("services", "cache");
+
+/**
+ * A single-command forwarder, bound to a Redis command name.
+ */
+type RedisCommand = (...args: unknown[]) => Promise<unknown>;
 
 /**
  * @class Redis
  * @extends Service
- * @param {object} config
- * @property service
  */
 class Redis extends Service {
-  constructor(config, name) {
+  public connected: boolean;
+  public client: IORedis | Cluster | null;
+  public commands: Record<string, RedisCommand>;
+  public adapterName: string;
+  public pingIntervalID: NodeJS.Timeout | null;
+  public logger: unknown;
+
+  constructor(config: JSONObject, name?: string) {
     super("redis", config);
 
     this.connected = false;
@@ -52,10 +64,8 @@ class Redis extends Service {
   /**
    * Initialize the redis client, select the service associated database and
    * flush it to make sure we start from a clean state
-   *
-   * @returns {Promise}
    */
-  _initSequence() {
+  _initSequence(): Promise<void> {
     const config = JSON.parse(JSON.stringify(this._config));
 
     // Only way to connect to AWS ELastiCache
@@ -93,7 +103,7 @@ class Redis extends Service {
       this._setupKeepAlive(config.pingKeepAlive);
     }
 
-    return new Bluebird((resolve, reject) => {
+    return new Bluebird<void>((resolve, reject) => {
       this.client.once("ready", async () => {
         await this.client.client(
           "SETNAME",
@@ -112,7 +122,7 @@ class Redis extends Service {
    * Setup a ping interval to keep the connection alive
    * Every 60 seconds a ping is sent to Redis
    */
-  _setupKeepAlive(delay) {
+  _setupKeepAlive(delay: number): void {
     this.client.on("ready", async () => {
       await this._ping();
       this.pingIntervalID = setInterval(this._ping.bind(this), delay);
@@ -127,7 +137,7 @@ class Redis extends Service {
   /**
    * Ping Redis
    */
-  async _ping() {
+  async _ping(): Promise<void> {
     try {
       await this.client.ping();
     } catch (error) {
@@ -140,16 +150,18 @@ class Redis extends Service {
   /**
    * Initializes the Redis commands list, and add transformers when necessary
    */
-  setCommands() {
+  setCommands(): void {
     const commandsList = this.client.getBuiltinCommands();
 
     for (const command of commandsList) {
-      this.commands[command] = async (...args) => {
+      this.commands[command] = async (...args: unknown[]) => {
         if (!this.connected) {
-          throw kerror.get("notconnected");
+          throw cacheError.get("notconnected");
         }
 
-        return this.client[command](...args);
+        return (this.client as unknown as Record<string, RedisCommand>)[
+          command
+        ](...args);
       };
     }
   }
@@ -157,13 +169,11 @@ class Redis extends Service {
   /**
    * Return some basic information about this service
    * @override
-   *
-   * @returns {Promise} service informations
    */
-  async info() {
-    const result = await this.commands.info();
+  async info(): Promise<JSONObject> {
+    const result = (await this.commands.info()) as string;
     const arr = result.replace(/\r\n/g, "\n").split("\n");
-    const info = {};
+    const info: Record<string, string> = {};
 
     arr.forEach((item) => {
       item = item.trim();
@@ -190,10 +200,10 @@ class Redis extends Service {
    *     and http://redis.io/commands/scan
    *
    * @param pattern
-   * @returns {Promise.<string[]>} promise resolving to an array of keys
+   * @returns promise resolving to an array of keys
    */
-  async searchKeys(pattern) {
-    if (this.client instanceof IORedis.Cluster) {
+  async searchKeys(pattern: string): Promise<string[]> {
+    if (this.client instanceof Cluster) {
       const keys = await Bluebird.map(this.client.nodes("master"), (node) => {
         return this._searchNodeKeys(node, pattern);
       });
@@ -206,23 +216,21 @@ class Redis extends Service {
 
   /**
    * Executes multiple client commands in a single action
-   *
-   * @returns {Promise}
    */
-  mExecute(commands) {
+  mExecute(commands: unknown[]): Promise<unknown> {
     if (!Array.isArray(commands) || commands.length === 0) {
       return Bluebird.resolve([]);
     }
 
-    return this.client.multi(commands).exec();
+    return this.client.multi(commands as unknown[][]).exec();
   }
 
-  _searchNodeKeys(node, pattern) {
-    return new Bluebird((resolve) => {
-      let keys = [];
+  _searchNodeKeys(node: IORedis, pattern: string): Promise<string[]> {
+    return new Bluebird<string[]>((resolve) => {
+      let keys: string[] = [];
       const stream = node.scanStream({ match: pattern });
 
-      stream.on("data", (resultKeys) => {
+      stream.on("data", (resultKeys: string[]) => {
         keys = keys.concat(resultKeys);
       });
 
@@ -232,12 +240,12 @@ class Redis extends Service {
     });
   }
 
-  _buildClient(options) {
+  _buildClient(options: RedisOptions): IORedis {
     return new IORedis({ ...this._config.node, ...options });
   }
 
-  _buildClusterClient(options) {
-    return new IORedis.Cluster(this._config.nodes, options);
+  _buildClusterClient(options: ClusterOptions): Cluster {
+    return new Cluster(this._config.nodes, options);
   }
 
   /**
@@ -247,13 +255,17 @@ class Redis extends Service {
    *   - onlyIfNew: if true, set the NX option
    *   - ttl: if true, set the PX option
    *
-   * @param  {string} key
-   * @param  {string} value
-   * @param  {{onlyIfNew: boolean, ttl: number}} [options]
-   * @return {boolean} true if the key was set, false otherwise
+   * @param key
+   * @param value
+   * @param options
+   * @returns true if the key was set, false otherwise
    */
-  async store(key, value, { onlyIfNew = false, ttl = 0 } = {}) {
-    const command = [key, value];
+  async store(
+    key: string,
+    value: string,
+    { onlyIfNew = false, ttl = 0 }: { onlyIfNew?: boolean; ttl?: number } = {},
+  ): Promise<boolean> {
+    const command: Array<string | number> = [key, value];
 
     if (onlyIfNew) {
       command.push("NX");
@@ -270,13 +282,10 @@ class Redis extends Service {
 
   /**
    * Executes a client command
-   * @param  {string} command
-   * @param  {Array} args
-   * @return {Promise.<*>}
    */
-  exec(command, ...args) {
+  exec(command: string, ...args: unknown[]): Promise<unknown> {
     return this.commands[command](...args);
   }
 }
 
-module.exports = Redis;
+export = Redis;

@@ -19,22 +19,47 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { sha256 } = require("../../util/crypto");
-const debug = require("../../util/debug")("models:storage:apiKey");
-const kerror = require("../../kerror");
-const BaseModel = require("./baseModel");
+import { sha256 } from "../../util/crypto";
+import createDebug from "../../util/debug";
+import * as kerror from "../../kerror";
+import BaseModel from "./baseModel";
+import type { User } from "../security/user";
 
+const debug = createDebug("models:storage:apiKey");
+
+interface ApiKeyCreateOptions {
+  creatorId?: string | null;
+  apiKeyId?: string | null;
+  refresh?: boolean | string;
+  bypassMaxTTL?: boolean;
+}
+
+/*
+ * ApiKey.load(userId, id) intentionally takes an extra ownership argument that
+ * BaseModel.load(id) does not, so the two static sides are deliberately not
+ * structurally compatible. This is an accepted, pre-existing design divergence
+ * (ApiKey scopes a load to its owner); the conversion changes no runtime
+ * behaviour.
+ */
+// @ts-expect-error -- intentional static-signature divergence of load() vs BaseModel (TS2417)
 class ApiKey extends BaseModel {
-  constructor(_source, _id = null) {
+  declare userId: string;
+  declare description: string;
+  declare expiresAt: number;
+  declare ttl: number | string;
+  declare token: string;
+  declare fingerprint: string;
+
+  constructor(_source: JSONObject, _id: string | null = null) {
     super(_source, _id);
   }
 
   /**
    * @override
    */
-  async _afterDelete() {
+  async _afterDelete(): Promise<void> {
     const token = await global.kuzzle.ask(
       "core:security:token:get",
       this.userId,
@@ -46,7 +71,10 @@ class ApiKey extends BaseModel {
     }
   }
 
-  serialize({ includeToken = false } = {}) {
+  serialize({ includeToken = false }: { includeToken?: boolean } = {}): {
+    _id: string | null;
+    _source: JSONObject;
+  } {
     const serialized = super.serialize();
 
     if (!includeToken && this.token) {
@@ -61,14 +89,14 @@ class ApiKey extends BaseModel {
   /**
    * @override
    */
-  static get collection() {
+  static get collection(): string {
     return "api-keys";
   }
 
   /**
    * @override
    */
-  static get fields() {
+  static get fields(): string[] {
     return [
       "userId",
       "description",
@@ -82,19 +110,22 @@ class ApiKey extends BaseModel {
   /**
    * Creates a new API key for an user
    *
-   * @param {User} user
-   * @param {String} expiresIn - API key expiration date in ms format
-   * @param {String} description
-   * @param {Object} options - creatorId (null), apiKeyId (null), refresh (null), bypassMaxTTL (false)
-   *
-   * @returns {Promise<ApiKey>}
+   * @param user
+   * @param expiresIn - API key expiration date in ms format
+   * @param description
+   * @param options - creatorId (null), apiKeyId (null), refresh (null), bypassMaxTTL (false)
    */
   static async create(
-    user,
-    expiresIn,
-    description,
-    { creatorId = null, apiKeyId = null, refresh, bypassMaxTTL = false } = {},
-  ) {
+    user: User,
+    expiresIn: number | string,
+    description: string,
+    {
+      creatorId = null,
+      apiKeyId = null,
+      refresh,
+      bypassMaxTTL = false,
+    }: ApiKeyCreateOptions = {},
+  ): Promise<ApiKey> {
     const token = await global.kuzzle.ask("core:security:token:create", user, {
       bypassMaxTTL,
       expiresIn,
@@ -122,13 +153,11 @@ class ApiKey extends BaseModel {
   /**
    * Loads an user API key from the database
    *
-   * @param {String} userId - User ID
-   * @param {String} id - API key ID
-   *
-   * @returns {Promise<ApiKey>}
+   * @param userId - User ID
+   * @param id - API key ID
    */
-  static async load(userId, id) {
-    const apiKey = await super.load(id);
+  static async load(userId: string, id: string): Promise<ApiKey> {
+    const apiKey = (await super.load(id)) as ApiKey;
 
     if (userId !== apiKey.userId) {
       throw kerror.get("services", "storage", "not_found", id, {
@@ -142,12 +171,13 @@ class ApiKey extends BaseModel {
   /**
    * Deletes API keys for an user
    *
-   * @param {User} user
-   * @param {Object} options - refresh (null)
-   *
-   * @returns {Promise}
+   * @param user
+   * @param options - refresh (null)
    */
-  static deleteByUser(user, { refresh } = {}) {
+  static deleteByUser(
+    user: User,
+    { refresh }: { refresh?: boolean | string } = {},
+  ): Promise<void> {
     debug("Delete ApiKeys for user %a", user);
     return this.deleteByQuery({ term: { userId: user._id } }, { refresh });
   }
@@ -155,4 +185,4 @@ class ApiKey extends BaseModel {
 
 BaseModel.register(ApiKey);
 
-module.exports = ApiKey;
+export = ApiKey;

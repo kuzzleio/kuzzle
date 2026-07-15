@@ -19,23 +19,26 @@
  * limitations under the License.
  */
 
-"use strict";
+interface PolicyRight {
+  value?: string | boolean;
+}
 
-function isAllowed(obj) {
-  return obj && (obj.value === "allowed" || obj.value === true);
+function isAllowed(right: PolicyRight | undefined | null): boolean {
+  return Boolean(right && (right.value === "allowed" || right.value === true));
 }
 
 /**
  * Merge function for policies rights
- * @param {Object} prev existing policies rights
- * @param {Object} cur new policies rights to merge
  *
- * @returns {Object} the merged policies rights
+ * @param prev existing policies rights
+ * @param cur new policies rights to merge
+ *
+ * @returns the merged policies rights
  */
-function merge(prev, cur) {
+function merge(prev: PolicyRight | undefined, cur: PolicyRight): PolicyRight {
   cur.value = isAllowed(cur) || isAllowed(prev) ? "allowed" : "denied";
 
   return cur;
 }
 
-module.exports = { merge };
+export = { merge };

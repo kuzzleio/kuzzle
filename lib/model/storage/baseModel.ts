@@ -19,12 +19,31 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
+/**
+ * Minimal shape of a model class handled by {@link BaseModel.register}.
+ */
+interface RegisterableModel {
+  fields: string[];
+  prototype: object;
+}
+
+/**
+ * Plain document shape as stored/returned by the internal index.
+ */
+interface StorageDocument {
+  _id: string;
+  _source: JSONObject;
+}
 
 class BaseModel {
-  constructor(_source = {}, _id = null) {
+  __id: string | null;
+  __source: JSONObject;
+  declare __persisted: boolean;
+
+  constructor(_source: JSONObject = {}, _id: string | null = null) {
     this.__id = null;
     this.__source = {};
 
@@ -42,9 +61,9 @@ class BaseModel {
   /**
    * Register a new model
    *
-   * @param {Model} ModelClass
+   * @param ModelClass
    */
-  static register(ModelClass) {
+  static register(ModelClass: RegisterableModel): void {
     if (this !== BaseModel) {
       throw new Error("Incorrect usage of BaseModel.register");
     }
@@ -69,14 +88,18 @@ class BaseModel {
    *  - use update if the instance already exists
    *  - use create otherwise
    *
-   * @param {Object} options - userId (null), refresh (undefined)
-   *
-   * @returns {Promise}
+   * @param options - userId (null), refresh (undefined)
    */
-  async save({ userId = null, refresh } = {}) {
+  async save({
+    userId = null,
+    refresh,
+  }: {
+    userId?: string | null;
+    refresh?: boolean | string;
+  } = {}): Promise<void> {
     if (!this.__persisted) {
       const { _id, _source } = await global.kuzzle.internalIndex.create(
-        this.constructor.collection,
+        (this.constructor as typeof BaseModel).collection,
         this._source,
         { id: this._id, refresh, userId },
       );
@@ -86,7 +109,7 @@ class BaseModel {
       this.__persisted = true;
     } else {
       await global.kuzzle.internalIndex.update(
-        this.constructor.collection,
+        (this.constructor as typeof BaseModel).collection,
         this._id,
         this._source,
         { refresh, userId },
@@ -98,17 +121,17 @@ class BaseModel {
    * Delete the current instance from the database.
    *  - call the _afterDelete hook after deletion
    *
-   * @param {Object} options - refresh (undefined)
-   *
-   * @returns {Promise}
+   * @param options - refresh (undefined)
    */
-  async delete({ refresh } = {}) {
+  async delete({
+    refresh,
+  }: { refresh?: boolean | string } = {}): Promise<void> {
     if (!this.__persisted) {
       return;
     }
 
     await global.kuzzle.internalIndex.delete(
-      this.constructor.collection,
+      (this.constructor as typeof BaseModel).collection,
       this._id,
       { refresh },
     );
@@ -120,10 +143,8 @@ class BaseModel {
 
   /**
    * Returns a plain object representing the instance
-   *
-   * @returns {Object} { _id, _source }
    */
-  serialize() {
+  serialize(): { _id: string | null; _source: JSONObject } {
     return {
       _id: this._id,
       _source: this._source,
@@ -134,30 +155,28 @@ class BaseModel {
 
   /**
    * Hook called in the delete method after deletion from the database
-   *
-   * @returns {Promise}
    */
-  async _afterDelete() {
+  async _afterDelete(): Promise<void> {
     return null;
   }
 
   // Getter/Setter =============================================================
 
-  get _id() {
+  get _id(): string | null {
     return this.__id;
   }
 
-  set _id(_id) {
+  set _id(_id: string | null) {
     this.__id = _id;
   }
 
-  get _source() {
+  get _source(): JSONObject {
     return this.__source;
   }
 
-  set _source(_source) {
+  set _source(_source: JSONObject) {
     for (const key of Object.keys(_source)) {
-      if (this.constructor.fields.includes(key)) {
+      if ((this.constructor as typeof BaseModel).fields.includes(key)) {
         this.__source[key] = _source[key];
       }
     }
@@ -168,11 +187,9 @@ class BaseModel {
   /**
    * Loads an instance from the database
    *
-   * @param {String} id
-   *
-   * @returns {BaseModel}
+   * @param id
    */
-  static async load(id) {
+  static async load(id: string): Promise<BaseModel> {
     const result = await global.kuzzle.internalIndex.get(this.collection, id);
 
     return this._instantiateFromDb(result);
@@ -182,12 +199,13 @@ class BaseModel {
    * Deletes all instances matching the given query.
    *  - the instance delete method will be called on each occurence
    *
-   * @param {Object} query - Search query (e.g. { match_all: {} })
-   * @param {Object} options - refresh (undefined)
-   *
-   * @returns {Promise}
+   * @param query - Search query (e.g. { match_all: {} })
+   * @param options - refresh (undefined)
    */
-  static async deleteByQuery(query, { refresh } = {}) {
+  static async deleteByQuery(
+    query: JSONObject,
+    { refresh }: { refresh?: boolean | string } = {},
+  ): Promise<void> {
     const { documents } = await global.kuzzle.internalIndex.deleteByQuery(
       this.collection,
       query,
@@ -195,7 +213,8 @@ class BaseModel {
 
     await Bluebird.map(
       documents,
-      (document) => this._instantiateFromDb(document)._afterDelete(),
+      (document) =>
+        this._instantiateFromDb(document as StorageDocument)._afterDelete(),
       { concurrency: 10 },
     ); // limits the load on storage services
 
@@ -207,12 +226,15 @@ class BaseModel {
   /**
    * Returns instances matching the given query
    *
-   * @param {Object} searchBody
-   * @param {Object} options - from, size, scroll
+   * @param searchBody
+   * @param options - from, size, scroll
    *
-   * @returns {Promise<BaseModel[]>} - Array of instances
+   * @returns Array of instances
    */
-  static async search(searchBody, options) {
+  static async search(
+    searchBody: JSONObject,
+    options?: JSONObject,
+  ): Promise<BaseModel[]> {
     const resp = await global.kuzzle.internalIndex.search(
       this.collection,
       searchBody,
@@ -224,15 +246,18 @@ class BaseModel {
   /**
    * Deletes all instances of the collection
    *
-   * @param {Object} options - refresh (undefined)
-   *
-   * @returns {Promise}
+   * @param options - refresh (undefined)
    */
-  static truncate({ refresh } = {}) {
+  static truncate({
+    refresh,
+  }: { refresh?: boolean | string } = {}): Promise<void> {
     return this.deleteByQuery({ match_all: {} }, { refresh });
   }
   // ? This looks not in use anymore ?
-  static batchExecute(query, callback) {
+  static batchExecute(
+    query: JSONObject,
+    callback: (...args: unknown[]) => unknown,
+  ) {
     return global.kuzzle.internalIndex.mExecute(
       this.collection,
       query,
@@ -243,14 +268,14 @@ class BaseModel {
   /**
    * Must be overriden by children
    */
-  static get collection() {
+  static get collection(): string {
     throw new Error("Model.collection must be defined");
   }
 
   /**
    * Must be overriden by children
    */
-  static get fields() {
+  static get fields(): string[] {
     throw new Error("Model.fields must be defined");
   }
 
@@ -259,11 +284,9 @@ class BaseModel {
   /**
    * Instantiate the model from a document
    *
-   * @param {Object} document - { _id, _source }
-   *
-   * @returns {BaseModel}
+   * @param document - { _id, _source }
    */
-  static _instantiateFromDb({ _id, _source }) {
+  static _instantiateFromDb({ _id, _source }: StorageDocument): BaseModel {
     const model = new this(_source, _id); // NOSONAR
 
     model.__persisted = true;
@@ -272,4 +295,4 @@ class BaseModel {
   }
 }
 
-module.exports = BaseModel;
+export = BaseModel;
