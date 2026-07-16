@@ -29,7 +29,7 @@
 | [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | ⬜ |
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
 
-**Quick wins (handled first, cf. ADR Action Item #8):** TD-01, TD-04, TD-05, TD-06.
+**Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
 ---
 
@@ -42,7 +42,7 @@
 
 - **Today, 0 collisions** (0 `TS2308` diagnostics); the re-export is **intentional** (PR #1800, 2020 — to let plugins import SDK types from `kuzzle`), not a leak.
 - **Reco:** bound it (`>=7.17.1 <8` or `^7.17.1`) + add a **snapshot test** of the set of names exported at the root, to catch in CI any SDK bump that adds/removes/collides a name.
-- **ADR link:** Action Item #3 (Sprint 0 — SDK prerequisite).
+- **ADR link:** step 01 (Sprint 0 — `kuzzle-sdk` pin).
 - **✅ Partially done (2026-07-12, PR #2668):** bound applied (`>=7.17.1 <8.0.0`), package.json + lockfile synced, resolved version unchanged. **Remaining ⬜:** the snapshot test of the exported surface.
 
 ### TD-09
@@ -51,7 +51,7 @@
 `JSONObject` (`Record<PropertyKey, any>` on the SDK side) is imported from `kuzzle-sdk` by **~44 files / ~323 uses**, across every layer (api/request, kerror, core/security, core/realtime, cluster, types/config, util, kuzzle/Logger). Yet the server is the source of truth for the concepts the client SDK mirrors: sourcing the most-used primitive *from* the client is an inversion (conceptual; the import is type-only, erased at compile time).
 
 - **Reco:** `lib/types/JSONObject.ts` (server-owned) + codemod the imports (name/structure unchanged → no call-site edits). Keep the genuine SDK contracts (`RequestPayload`, `KuzzleEventEmitter`, etc., confined to `embeddedSdk.ts`/`funnelProtocol.ts`) imported from the SDK.
-- **ADR link:** Action Item #7 (cross-cutting task).
+- **ADR link:** ADR Open points — own `JSONObject` server-side.
 
 ### TD-10
 **Three divergent `JSONObject` definitions** · 🟡 low · `lib/types/storage/7/Elasticsearch.ts:21`, `lib/types/storage/8/Elasticsearch.ts:48`
@@ -134,8 +134,8 @@ The genuinely *justified* `any`/`Record<…,any>` (ES client boundary) concentra
 **No `strict` + ESLint disables `no-explicit-any`** · 🟠 medium · `tsconfig.json:1`, `eslint-plugin-kuzzle/lib/configs/typescript.js:13-14`
 
 `tsconfig.json` only has `noUncheckedIndexedAccess` (no `strict`/`noImplicitAny`/`strictNullChecks`). The shared ESLint config sets **both `@typescript-eslint/no-explicit-any` AND `explicit-module-boundary-types` to `off`**. Result: neither implicit nor explicit `any` is constrained at the boundaries.
-- **Reco:** incremental strict adoption (ADR §6.2) + local re-enable of `no-explicit-any` (as `warn`).
-- **ADR link:** Action Items #4, #10; §6.2.
+- **Reco:** incremental strict adoption (ADR: Target architecture › Enforcement) + local re-enable of `no-explicit-any` (as `warn`).
+- **ADR link:** Target architecture › Enforcement; final strict flip = step table sprint 9.
 - **🟦 In progress (2026-07-12, PR #2669):** `no-explicit-any` re-enabled as `warn` (`.eslintrc.json`); strict tooled up (`tsconfig.strict.json` + `strict-check.sh`, 41 adopted files). **Remaining:** progressively harden the rest of `lib/` then the final `strict` flip (Sprint 9).
 
 ### TD-03
@@ -143,7 +143,7 @@ The genuinely *justified* `any`/`Record<…,any>` (ES client boundary) concentra
 
 The ADR's strict ratchet would pass *over* the ~200 explicit `any`: "strict:true" would give a false sense of safety (undetected null-safety holes).
 - **Reco:** 3rd CI ratchet `no-explicit-any` as *baseline-and-decrement* (baseline ~200).
-- **ADR link:** §6.2 (dedicated block), Action Item #2.
+- **ADR link:** Target architecture › Enforcement (no-explicit-any ratchet); shipped in step 01.
 - **✅ Done (2026-07-12, PR #2669):** ratchet shipped (`scripts/ratchet.sh any`, baseline 200, `npm run ratchet:any`). The actual *reduction* of the ~200 `any` remains to do (see TD-11/12/13).
 
 ### TD-14
@@ -200,7 +200,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-07-12** — Register initialised from the multi-agent audit.
 - **2026-07-12** — Quick wins delivered in PR #2668 (3 isolated commits, `tsc --noEmit` green at each step): TD-06, TD-04 + partial TD-05, partial TD-01.
 - **2026-07-12** — ADR + register committed on the migration branch. Sprint 0 tooling delivered in PR #2669: 3 count ratchets (js/mocha/any), `strict-check.sh` + adopted list (41 files), ESLint `no-explicit-any` re-enabled, CI job wired. TD-03 ✅, TD-02 🟦.
-- **2026-07-12** — Sprint 1 (warm-up) delivered in PR #2670: 5 `lib/util` modules (safeObject, bytes, wildcard, memoize, extractFields) converted JS→TS; JS baseline 111→106; strict 41→46 adopted files; tsc + build + unit tests (7/7) green. `bin/` scope adjusted (see ADR §6.4): `.upgrades` to be deleted (separate PR).
+- **2026-07-12** — Sprint 1 (warm-up) delivered in PR #2670: 5 `lib/util` modules (safeObject, bytes, wildcard, memoize, extractFields) converted JS→TS; JS baseline 111→106; strict 41→46 adopted files; tsc + build + unit tests (7/7) green. `bin/` scope adjusted (see ADR: Target architecture › Sequencing, and step 03): `.upgrades` to be deleted (separate PR).
 - **2026-07-14** — Sprint 1 finished in PR #2674 (merged into `2-dev`): the remaining 7 `lib/util` files converted → `lib/util` is now 100% TS. Counters: js=86, mocha=151, any=200, strict adopted=51.
 - **2026-07-15** — Sprint 3 delivered in PR #2676: `lib/model` (baseModel, apiKey, rights) + `lib/service` (service, redis, esWrapper 7/8) converted JS→TS → both layers now 100% TS. JS baseline 86→79; `any` unchanged (200), no `@ts-ignore` (one documented `@ts-expect-error` for `ApiKey.load`'s static-signature divergence). tsc clean; full mocha suite (3025) green in Docker. Sprint 2 (`bin/`) deprioritized.
 - **2026-07-15** — ADR docs relocated from `adrs/` to `docs/adr-001/` (`git mv`, history preserved); all references updated (CONTRIBUTING, CI workflow, `scripts/`, `tsconfig.strict.json`, `/wrapup` skill). New convention: ADRs live under `docs/adr-<n>/`.

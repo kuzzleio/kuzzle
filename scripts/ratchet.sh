@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# TypeScript-migration ratchets — see docs/adr-001/ADR-0001-migration-typescript.md (§6.1, §6.2, §6.3).
+# TypeScript-migration ratchets — see docs/adr-001/steps/01-sprint-0-tooling.md.
 #
 # A tracked metric may only DECREASE. The baseline file (.migration/*-baseline.txt)
 # records the EXACT current value; every migration PR that improves a metric must
@@ -31,7 +31,7 @@ case "$metric" in
     label="Mocha specs (test/**/*.test.js)"
     baseline_file=".migration/mocha-baseline.txt"
     current="$(find test -type f -name '*.test.js' | wc -l | tr -d ' ')"
-    hint="Write new unit tests in vitest + TS (ADR §6.3)."
+    hint="Write new unit tests in vitest + TS (ADR-0001 › Tests)."
     ;;
   any)
     label="': any' / 'as any' lines in lib/**/*.ts"

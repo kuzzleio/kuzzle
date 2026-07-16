@@ -1,4 +1,4 @@
-# Files adopted in STRICT mode — see docs/adr-001/ADR-0001 §6.2 and scripts/strict-check.sh.
+# Files adopted in STRICT mode — see docs/adr-001/steps/01-sprint-0-tooling.md and scripts/strict-check.sh.
 # A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
 # 'npm run test:strict -- --candidates' lists files that are already clean.
 # Seeded 2026-07-12: lib/types files already clean under strict.
