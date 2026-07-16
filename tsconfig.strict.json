@@ -1,5 +1,5 @@
 {
-  // STRICT compilation of all production code — see docs/adr-001/ADR-0001 §6.2.
+  // STRICT compilation of all production code — see docs/adr-001/steps/01-sprint-0-tooling.md.
   //
   // NB: strict cannot be isolated to a subset via `include` — tsc pulls the whole
   // import graph into the program and checks all of it. So we compile all of lib/ in

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Progressive strict check — see docs/adr-001/ADR-0001-migration-typescript.md §6.2.
+# Progressive strict check — see docs/adr-001/steps/01-sprint-0-tooling.md.
 #
 # Runs tsc with `strict: true` over all production .ts (tsconfig.strict.json), but only
 # FAILS on strict errors located in files listed in .migration/strict-adopted.txt.
