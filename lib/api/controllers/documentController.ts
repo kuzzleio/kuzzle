@@ -19,17 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const kerror = require("../../kerror");
-const { NativeController } = require("./baseController");
-const actionEnum = require("../../core/realtime/actionEnum");
-const {
+import * as actionEnum from "../../core/realtime/actionEnum";
+import * as kerror from "../../kerror";
+import { dumpCollectionDocuments } from "../../util/dump-collection";
+import {
   assertHasBody,
   assertHasIndexAndCollection,
-} = require("../../util/requestAssertions");
-const extractFields = require("../../util/extractFields");
-const { dumpCollectionDocuments } = require("../../util/dump-collection");
+} from "../../util/requestAssertions";
+import { KuzzleRequest } from "../request";
+import { NativeController } from "./baseController";
+import extractFields = require("../../util/extractFields");
 /**
  * @description actions available on the document Controller (used by generic events)
  * @key actions
@@ -81,7 +82,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async search(request) {
+  async search(request: KuzzleRequest) {
     const { from, size, scrollTTL, searchBody } = request.getSearchParams();
     const index = request.getIndex({ required: false });
     const collection = request.getCollection({ required: false });
@@ -162,7 +163,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async scroll(request) {
+  async scroll(request: KuzzleRequest) {
     const scrollTTL = request.getScrollTTLParam();
     const _scrollId = request.getString("scrollId");
 
@@ -184,7 +185,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Boolean>}
    */
-  exists(request) {
+  exists(request: KuzzleRequest) {
     const id = request.getId();
     const { index, collection } = request.getIndexAndCollection();
 
@@ -199,7 +200,7 @@ class DocumentController extends NativeController {
   /**
    * @param {Request} request
    */
-  async mExists(request) {
+  async mExists(request: KuzzleRequest) {
     let ids;
     if (
       request.input.body &&
@@ -238,7 +239,7 @@ class DocumentController extends NativeController {
     };
   }
 
-  async export(request) {
+  async export(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const { size, scrollTTL } = request.getSearchParams();
     const lang = request.getLangParam();
@@ -247,10 +248,10 @@ class DocumentController extends NativeController {
     const query = request.getObjectFromBodyOrArgs("query", {});
     const sort = request.getObjectFromBodyOrArgs("sort", {});
     const collapse = request.getObjectFromBodyOrArgs("collapse", {});
-    const fields = request.getArrayFromBodyOrArgs("fields", []);
+    const fields = request.getArrayFromBodyOrArgs("fields", []) as string[];
     const fieldsName = request.getObjectFromBodyOrArgs("fieldsName", {});
 
-    const searchBody = { query };
+    const searchBody: JSONObject = { query };
 
     if (Object.keys(collapse).length > 0) {
       searchBody.collapse = collapse;
@@ -306,7 +307,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async get(request) {
+  async get(request: KuzzleRequest) {
     const id = request.getId();
     const { index, collection } = request.getIndexAndCollection();
 
@@ -330,7 +331,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async mGet(request) {
+  async mGet(request: KuzzleRequest) {
     let ids;
     if (
       request.input.body &&
@@ -375,7 +376,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async count(request) {
+  async count(request: KuzzleRequest) {
     const { searchBody } = request.getSearchParams();
     const { index, collection } = request.getIndexAndCollection();
     const lang = request.getLangParam();
@@ -398,7 +399,7 @@ class DocumentController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise<Object>}
    */
-  async create(request) {
+  async create(request: KuzzleRequest) {
     const id = request.getId({ ifMissing: "ignore" });
     const userId = request.getKuid();
     const refresh = request.getRefresh();
@@ -456,7 +457,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mCreate(request) {
+  mCreate(request: KuzzleRequest) {
     return this._mChanges(request, "mCreate", actionEnum.CREATE);
   }
 
@@ -466,7 +467,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createOrReplace(request) {
+  async createOrReplace(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -528,7 +529,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mCreateOrReplace(request) {
+  mCreateOrReplace(request: KuzzleRequest) {
     return this._mChanges(request, "mCreateOrReplace", actionEnum.WRITE);
   }
 
@@ -538,7 +539,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async update(request) {
+  async update(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -619,7 +620,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async upsert(request) {
+  async upsert(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBodyObject("changes");
     const defaultValues = request.getBodyObject("default", {});
@@ -709,7 +710,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mUpdate(request) {
+  mUpdate(request: KuzzleRequest) {
     return this._mChanges(request, "mUpdate", actionEnum.UPDATE);
   }
 
@@ -720,7 +721,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mUpsert(request) {
+  mUpsert(request: KuzzleRequest) {
     return this._mChanges(request, "mUpsert", actionEnum.UPSERT);
   }
 
@@ -730,7 +731,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async replace(request) {
+  async replace(request: KuzzleRequest) {
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -795,7 +796,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  mReplace(request) {
+  mReplace(request: KuzzleRequest) {
     return this._mChanges(request, "mReplace", actionEnum.REPLACE);
   }
 
@@ -805,7 +806,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async delete(request) {
+  async delete(request: KuzzleRequest) {
     const id = request.getId();
     const silent = request.getBoolean("silent");
     const refresh = request.getString("refresh", "false");
@@ -848,7 +849,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async mDelete(request) {
+  async mDelete(request: KuzzleRequest) {
     const ids = request.getBodyArray("ids");
     const strict = request.getBoolean("strict");
     const silent = request.getBoolean("silent");
@@ -896,7 +897,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteByQuery(request) {
+  async deleteByQuery(request: KuzzleRequest) {
     let query = request.getBodyObject("query", {});
     const silent = request.getBoolean("silent");
     const refresh = request.getString("refresh", "false");
@@ -940,7 +941,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async deleteFields(request) {
+  async deleteFields(request: KuzzleRequest) {
     const id = request.getId();
     const fields = request.getBodyArray("fields");
     const userId = request.getKuid();
@@ -986,7 +987,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object}
    */
-  async updateByQuery(request) {
+  async updateByQuery(request: KuzzleRequest) {
     let query = request.getBodyObject("query");
     const changes = request.getBodyObject("changes");
     const silent = request.getBoolean("silent");
@@ -1037,7 +1038,7 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  validate(request) {
+  validate(request: KuzzleRequest) {
     assertHasBody(request);
     assertHasIndexAndCollection(request);
 
@@ -1054,7 +1055,7 @@ class DocumentController extends NativeController {
    * @param  {notifyActionEnum} action performed on the documents
    * @returns {Promise.<Object>} { successes, errors }
    */
-  async _mChanges(request, methodName, action) {
+  async _mChanges(request: KuzzleRequest, methodName: string, action: number) {
     let source = true;
     const userId = request.getKuid();
     const strict = request.getBoolean("strict");
@@ -1083,8 +1084,8 @@ class DocumentController extends NativeController {
       };
     }
 
-    for (let i = 0; i < documents.length; i++) {
-      if (documents[i]._source) {
+    for (const [i, document] of documents.entries()) {
+      if (document._source) {
         throw kerror.get(
           "api",
           "assert",
@@ -1093,8 +1094,8 @@ class DocumentController extends NativeController {
           `documents[${i}].body`,
         );
       }
-      if (documents[i].body?._kuzzle_info !== undefined) {
-        delete documents[i].body._kuzzle_info;
+      if (document.body?._kuzzle_info !== undefined) {
+        delete document.body._kuzzle_info;
       }
     }
 
@@ -1158,8 +1159,8 @@ class DocumentController extends NativeController {
   }
 }
 
-function hasMultiTargets(str) {
+function hasMultiTargets(str: string) {
   return [",", "*", "+"].some((chr) => str.includes(chr)) || str === "_all";
 }
 
-module.exports = DocumentController;
+export = DocumentController;
