@@ -19,11 +19,10 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { NativeController } = require("./baseController");
-const actionEnum = require("../../core/realtime/actionEnum");
-const kerror = require("../../kerror");
+import * as actionEnum from "../../core/realtime/actionEnum";
+import * as kerror from "../../kerror";
+import { KuzzleRequest } from "../request";
+import { NativeController } from "./baseController";
 
 /**
  * @class BulkController
@@ -39,7 +38,7 @@ class BulkController extends NativeController {
    * @param {Request} request
    * @returns {Promise}
    */
-  async import(request) {
+  async import(request: KuzzleRequest) {
     const userId = request.getKuid();
     const { index, collection } = request.getIndexAndCollection();
     const strict = request.getBoolean("strict");
@@ -79,7 +78,7 @@ class BulkController extends NativeController {
   /**
    * Write a document without adding metadata or performing data validation.
    */
-  async write(request) {
+  async write(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const id = request.getId({ ifMissing: "ignore" });
     const content = request.getBody();
@@ -114,7 +113,7 @@ class BulkController extends NativeController {
   /**
    * Write several documents without adding metadata or performing data validation.
    */
-  async mWrite(request) {
+  async mWrite(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const documents = request.getBodyArray("documents");
     const strict = request.getBoolean("strict");
@@ -168,7 +167,7 @@ class BulkController extends NativeController {
    *  - fetching deleted documents
    *  - triggering realtime notifications
    */
-  async deleteByQuery(request) {
+  async deleteByQuery(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const query = request.getBodyObject("query");
     const refresh = request.getRefresh();
@@ -190,7 +189,7 @@ class BulkController extends NativeController {
    *  - Injecting Kuzzle metadata
    *  - Triggering realtime notifications
    */
-  async updateByQuery(request) {
+  async updateByQuery(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const query = request.getBodyObject("query");
     const changes = request.getBodyObject("changes");
@@ -207,4 +206,4 @@ class BulkController extends NativeController {
   }
 }
 
-module.exports = BulkController;
+export = BulkController;

@@ -19,13 +19,29 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const kerror = require("../kerror");
+import * as kerror from "../kerror";
+import { KuzzleRequest } from "./request";
 
 const assertionError = kerror.wrap("api", "assert");
 
-const extractors = [
+interface DocumentExtractorMethods {
+  extractFromRequest: ((request: KuzzleRequest) => JSONObject[]) | null;
+  extractFromResult: (request: KuzzleRequest) => JSONObject[];
+  insertInRequest:
+    | ((documents: JSONObject[], request: KuzzleRequest) => KuzzleRequest)
+    | null;
+  insertInResult: (
+    documents: JSONObject[],
+    request: KuzzleRequest,
+  ) => KuzzleRequest;
+}
+
+const extractorDefinitions: Array<{
+  methods: DocumentExtractorMethods;
+  targets: string[];
+}> = [
   {
     methods: {
       extractFromRequest: (request) => [
@@ -266,7 +282,11 @@ const extractors = [
     },
     targets: ["upsert"],
   },
-].reduce((acc, extractor) => {
+];
+
+const extractors = extractorDefinitions.reduce<{
+  [action: string]: DocumentExtractorMethods;
+}>((acc, extractor) => {
   extractor.targets.forEach((target) => {
     acc[target] = extractor.methods;
   });
@@ -274,7 +294,13 @@ const extractors = [
 }, {});
 
 class DocumentExtractor {
-  constructor(request) {
+  private request: KuzzleRequest;
+  private extractMethod: ((request: KuzzleRequest) => JSONObject[]) | null;
+  private insertMethod:
+    | ((documents: JSONObject[], request: KuzzleRequest) => KuzzleRequest)
+    | null;
+
+  constructor(request: KuzzleRequest) {
     this.request = request;
 
     const extractor = extractors[request.input.action];
@@ -301,9 +327,9 @@ class DocumentExtractor {
     return this.extractMethod(this.request);
   }
 
-  insert(documents) {
+  insert(documents: JSONObject[]) {
     return this.insertMethod(documents, this.request);
   }
 }
 
-module.exports = DocumentExtractor;
+export = DocumentExtractor;

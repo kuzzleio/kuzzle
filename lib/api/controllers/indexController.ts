@@ -19,10 +19,8 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { Request } = require("../request");
-const { NativeController } = require("./baseController");
+import { KuzzleRequest, Request } from "../request";
+import { NativeController } from "./baseController";
 
 /**
  * @class IndexController
@@ -42,7 +40,7 @@ class IndexController extends NativeController {
    *
    * @returns {Promise.<Object>}
    */
-  async mDelete(request) {
+  async mDelete(request: KuzzleRequest) {
     const indexes = request.getBodyArray("indexes", []);
 
     const publicIndexes = await this.ask("core:storage:public:index:list");
@@ -66,7 +64,7 @@ class IndexController extends NativeController {
    *
    * @returns {Promise}
    */
-  async create(request) {
+  async create(request: KuzzleRequest) {
     const index = request.getIndex();
 
     await this.ask("core:storage:public:index:create", index);
@@ -78,7 +76,7 @@ class IndexController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async delete(request) {
+  async delete(request: KuzzleRequest) {
     const index = request.getIndex();
 
     await this.ask("core:storage:public:index:delete", index);
@@ -90,12 +88,15 @@ class IndexController extends NativeController {
    * Lists indexes
    *
    */
-  async list(request) {
+  async list(request: KuzzleRequest) {
     const countCollection = request.getBoolean("countCollection");
 
     const indexes = await this.ask("core:storage:public:index:list");
 
-    const response = {
+    const response: {
+      indexes: string[];
+      collections?: { [index: string]: number };
+    } = {
       indexes,
     };
 
@@ -126,7 +127,7 @@ class IndexController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<boolean>}
    */
-  exists(request) {
+  exists(request: KuzzleRequest) {
     const index = request.getIndex();
 
     return this.ask("core:storage:public:index:exist", index);
@@ -150,7 +151,7 @@ class IndexController extends NativeController {
    * @param {Request} request
    * @param {String[]} publicIndexes - Public indexes list
    */
-  _allowedIndexes(request, publicIndexes) {
+  _allowedIndexes(request: KuzzleRequest, publicIndexes: string[]) {
     if (request.getUser() === null) {
       return publicIndexes;
     }
@@ -176,4 +177,4 @@ class IndexController extends NativeController {
   }
 }
 
-module.exports = IndexController;
+export = IndexController;

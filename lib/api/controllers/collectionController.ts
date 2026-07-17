@@ -19,16 +19,19 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const kerror = require("../../kerror");
-const { isPlainObject } = require("../../util/safeObject");
-const { NativeController } = require("./baseController");
+import * as kerror from "../../kerror";
+import { isPlainObject } from "../../util/safeObject";
+import { KuzzleRequest } from "../request";
+import { NativeController } from "./baseController";
 
 /**
  * @class CollectionController
  */
 class CollectionController extends NativeController {
+  private defaultScrollTTL: string;
+
   constructor() {
     super([
       "create",
@@ -59,7 +62,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async updateMapping(request) {
+  async updateMapping(request: KuzzleRequest) {
     request.addDeprecation(
       "2.1.0",
       'This action has been deprecated since Kuzzle version 2.1.0. This feature might be removed in a future major version. To update a collection, use this API action instead: "collection:update".',
@@ -84,7 +87,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async getMapping(request) {
+  async getMapping(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection(),
       includeKuzzleMeta = request.getBoolean("includeKuzzleMeta");
 
@@ -104,7 +107,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async getSettings(request) {
+  async getSettings(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     return this.ask(
@@ -121,7 +124,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  getSpecifications(request) {
+  getSpecifications(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     return global.kuzzle.internalIndex
@@ -149,7 +152,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async searchSpecifications(request) {
+  async searchSpecifications(request: KuzzleRequest) {
     const { from, size, scrollTTL, searchBody } = request.getSearchParams();
 
     if (!isPlainObject(searchBody)) {
@@ -173,7 +176,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<object>}
    */
-  async scrollSpecifications(request) {
+  async scrollSpecifications(request: KuzzleRequest) {
     const ttl = request.getString("scroll", this.defaultScrollTTL),
       id = request.getString("scrollId");
 
@@ -192,7 +195,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async updateSpecifications(request) {
+  async updateSpecifications(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const specifications = request.getBody();
 
@@ -234,7 +237,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async deleteSpecifications(request) {
+  async deleteSpecifications(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
     const specificationsId = `${index}#${collection}`;
 
@@ -264,7 +267,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  validateSpecifications(request) {
+  validateSpecifications(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection(),
       specifications = request.getBody();
 
@@ -291,7 +294,7 @@ class CollectionController extends NativeController {
    * @param {KuzzleRequest} request
    * @returns {Promise.<Object>}
    */
-  async truncate(request) {
+  async truncate(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     await this.ask(
@@ -309,7 +312,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async list(request) {
+  async list(request: KuzzleRequest) {
     const index = request.getIndex();
     const from = request.getInteger("from", 0);
     const size = request.getInteger("size", 0);
@@ -363,7 +366,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<boolean>}
    */
-  exists(request) {
+  exists(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     return this.ask("core:storage:public:collection:exist", index, collection);
@@ -376,11 +379,11 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async create(request) {
+  async create(request: KuzzleRequest) {
     const body = request.getBody({});
     const { index, collection } = request.getIndexAndCollection();
 
-    let config = {};
+    let config: JSONObject = {};
 
     // @deprecated sending directly the mappings is deprecated since 2.1.0
     if (body.properties || body.dynamic || body._meta) {
@@ -409,7 +412,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  async update(request) {
+  async update(request: KuzzleRequest) {
     const config = request.getBody({}),
       { index, collection } = request.getIndexAndCollection();
 
@@ -429,7 +432,7 @@ class CollectionController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<null>}
    */
-  async refresh(request) {
+  async refresh(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     await this.ask("core:storage:public:collection:refresh", index, collection);
@@ -445,7 +448,7 @@ class CollectionController extends NativeController {
    *
    * @returns {Promise.<null>}
    */
-  async delete(request) {
+  async delete(request: KuzzleRequest) {
     const { index, collection } = request.getIndexAndCollection();
 
     await this.ask("core:storage:public:collection:delete", index, collection);
@@ -499,4 +502,4 @@ class CollectionController extends NativeController {
   }
 }
 
-module.exports = CollectionController;
+export = CollectionController;
