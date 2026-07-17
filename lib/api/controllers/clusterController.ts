@@ -19,9 +19,7 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { NativeController } = require("./baseController");
+import { NativeController } from "./baseController";
 
 class ClusterController extends NativeController {
   constructor() {
@@ -33,4 +31,4 @@ class ClusterController extends NativeController {
   }
 }
 
-module.exports = ClusterController;
+export = ClusterController;

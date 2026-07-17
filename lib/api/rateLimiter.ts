@@ -19,9 +19,13 @@
  * limitations under the License.
  */
 
-"use strict";
+import { KuzzleRequest } from "./request";
 
 class RateLimiter {
+  private readonly loginsPerSecond: number;
+  private frame: { [connectionId: string]: number };
+  private frameResetTimer: NodeJS.Timeout | null;
+
   constructor() {
     this.loginsPerSecond = global.kuzzle.config.limits.loginsPerSecond;
     this.frame = {};
@@ -42,7 +46,7 @@ class RateLimiter {
    * @param  {Request}  request
    * @returns {Boolean}
    */
-  async isAllowed(request) {
+  async isAllowed(request: KuzzleRequest): Promise<boolean> {
     const { controller, action } = request.input;
     let count = 0;
     let limit = -1;
@@ -65,8 +69,8 @@ class RateLimiter {
         profileIds,
       );
 
-      for (let i = 0; i < profiles.length; i++) {
-        const { rateLimit = 0 } = profiles[i];
+      for (const profile of profiles) {
+        const { rateLimit = 0 } = profile;
 
         if (limit === 0 || rateLimit === 0) {
           limit = 0;
@@ -84,4 +88,4 @@ class RateLimiter {
   }
 }
 
-module.exports = RateLimiter;
+export = RateLimiter;

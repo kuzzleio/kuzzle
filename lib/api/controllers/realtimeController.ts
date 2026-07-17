@@ -19,9 +19,8 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { NativeController } = require("./baseController");
+import { NativeController } from "./baseController";
+import { KuzzleRequest } from "../request";
 
 /**
  * @class RealtimeController
@@ -43,7 +42,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async subscribe(request) {
+  async subscribe(request: KuzzleRequest) {
     // assertion checks
     request.getIndexAndCollection();
     request.getBody();
@@ -75,7 +74,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async join(request) {
+  async join(request: KuzzleRequest) {
     // assertion checks
     request.getBodyString("roomId");
 
@@ -86,7 +85,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<String>}
    */
-  async unsubscribe(request) {
+  async unsubscribe(request: KuzzleRequest) {
     const roomId = request.getBodyString("roomId");
 
     await global.kuzzle.ask(
@@ -102,7 +101,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async count(request) {
+  async count(request: KuzzleRequest) {
     const roomId = request.getBodyString("roomId");
 
     return {
@@ -114,7 +113,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  list(request) {
+  list(request: KuzzleRequest) {
     return global.kuzzle.ask("core:realtime:list", request.context.user);
   }
 
@@ -124,7 +123,7 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async publish(request) {
+  async publish(request: KuzzleRequest) {
     // assertion checks
     request.getBody();
     request.getIndexAndCollection();
@@ -147,9 +146,9 @@ class RealtimeController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  validate(request) {
+  validate(request: KuzzleRequest) {
     return global.kuzzle.funnel.controllers.get("document").validate(request);
   }
 }
 
-module.exports = RealtimeController;
+export = RealtimeController;
