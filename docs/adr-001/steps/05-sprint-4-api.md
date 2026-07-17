@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress
 **Date:** 2026-07-17
-**PR(s):** #2679 (PR A)
+**PR(s):** #2679 (PR A) · #2680 (PR B)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -12,8 +12,10 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 ## PR breakdown (13 JS files)
 
 - **PR A — clean controllers + rate limiter (6 files) ✅ (#2679)** — `clusterController`, `realtimeController`, `indexController`, `bulkController`, `collectionController`, `rateLimiter`. JS baseline **79 → 73**.
-- **PR B — document controllers + server (4 files) ⬜** — `documentController`, `memoryStorageController`, `serverController`, `documentExtractor`. Must first resolve the deprecated request-API usage (see gate note) and two cross-layer type fixes for `serverController`.
-- **PR C — dispatch + routing (3 files) ⬜** — `funnel`, `httpRoutes`, `controllers/index` barrel; also removes the `new AdminController.default()` workaround by giving `adminController` an `export =`.
+- **PR B — `documentController` (1 file) ✅ (#2680)** — clean of deprecated APIs; converts without gate friction (one `for-of` fix). JS baseline **73 → 72**.
+- **PR C — `memoryStorageController` (1 file) ⬜** — clean of deprecated APIs; own PR because of its dynamic Redis-command registration + dense module-level helpers.
+- **PR D — `serverController` + `documentExtractor` (2 files) ⬜** — grouped because both need the deprecated request-API migration (`setResult(result, options)` → `response.configure`, `getArrayLegacy`); `serverController` also needs `kuzzle.statistics` made non-private + `config.version` modelled (TD-18).
+- **PR E — dispatch + routing (3 files) ⬜** — `funnel`, `httpRoutes`, `controllers/index` barrel; also removes the `new AdminController.default()` workaround by giving `adminController` an `export =`.
 
 ## What was done (PR A)
 
@@ -29,7 +31,9 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 
 ## SonarCloud gate note (applies to every conversion PR)
 
-A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so pre-existing smells are re-scored against the strict new-code gate (`0 New Issues`). Budget for fixing them in-PR: `readonly` on constructor-only fields (S2933), `for-of` over index loops (S4138), optional chaining (S6582). When the only remaining smells are **deprecated-API usages that can't be removed without changing behaviour**, split that file out rather than suppressing (as done here for `documentExtractor`).
+A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so pre-existing smells *and duplication* are re-scored against the strict new-code gate (`0 New Issues`, `≤ 5% new duplicated lines`). Budget for fixing them in-PR: `readonly` on constructor-only fields (S2933), `for-of` over index loops (S4138), optional chaining (S6582). Two escape hatches for what a conversion must not refactor:
+- **Un-removable deprecated-API usage** → split that file out (as for `documentExtractor` in PR D).
+- **Pre-existing intra-file duplication** → add the file to `sonar.cpd.exclusions` and defer the dedup (as for `documentController` in PR B — its mExists/mGet and createOrReplace/replace pairs blew the 5% new-code duplication gate).
 
 ## Validation (PR A)
 

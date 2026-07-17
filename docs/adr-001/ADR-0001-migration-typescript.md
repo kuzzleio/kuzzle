@@ -101,16 +101,16 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 
 > Living section (maintained by the `wrapup` skill). **Read this to resume** in a fresh context.
 
-**Where we are (2026-07-17):** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS) and **Sprint 3 done** (`lib/model` + `lib/service` 100% TS, PR #2676), both merged into `2-dev`. **Sprint 4 in progress:** PR A (6 clean `lib/api` controllers + `rateLimiter`) is up as [#2679](https://github.com/kuzzleio/kuzzle/pull/2679), pending review. The migration advances one layer-PR at a time off `2-dev`.
+**Where we are (2026-07-17):** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS) and **Sprint 3 done** (`lib/model` + `lib/service` 100% TS, PR #2676), both merged into `2-dev`. **Sprint 4 in progress:** PR A (6 clean `lib/api` controllers + `rateLimiter`) is up as [#2679](https://github.com/kuzzleio/kuzzle/pull/2679); PR B (`documentController`) as [#2680](https://github.com/kuzzleio/kuzzle/pull/2680), stacked on PR A. Both pending review. The migration advances one layer-PR at a time off `2-dev`.
 
-**Counters** (baselines in `.migration/`): **js = 73**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
-**Remaining JS by layer** (73 = 69 `lib/` + 4 `bin/`): `core` 50 · `api` 7 · `kuzzle` 6 · `cluster` 6 · `bin` 4.
+**Counters** (baselines in `.migration/`): **js = 72**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
+**Remaining JS by layer** (72 = 68 `lib/` + 4 `bin/`): `core` 50 · `api` 6 · `kuzzle` 6 · `cluster` 6 · `bin` 4.
 
 **Doc location (2026-07-15):** the ADR and its register moved from `adrs/` to `docs/adr-001/` (`git mv`, history preserved; references updated). ADRs now live under `docs/adr-<n>/`.
 
 **Next actions:**
 
-1. **Sprint 4 — `lib/api` (in progress, [step 05](steps/05-sprint-4-api.md)):** PR A ([#2679](https://github.com/kuzzleio/kuzzle/pull/2679)) done — 6 files, js 79→73. **Next: PR B** — `documentController`, `memoryStorageController`, `serverController`, `documentExtractor`; must migrate the deprecated request APIs (`setResult(result, options)` → `response.configure`, `getArrayLegacy`) that fail Sonar's new-code gate, and `serverController` needs `kuzzle.statistics` made non-private + `config.version` modelled (TD-18). Then **PR C** — `funnel`, `httpRoutes`, `controllers/index` barrel (+ drop the `new AdminController.default()` workaround). *(Sprint 2 — real `bin/` entrypoints — stays deprioritized, see [step 03](steps/03-sprint-2-bin.md).)*
+1. **Sprint 4 — `lib/api` (in progress, [step 05](steps/05-sprint-4-api.md)):** PR A ([#2679](https://github.com/kuzzleio/kuzzle/pull/2679), 6 files) and PR B ([#2680](https://github.com/kuzzleio/kuzzle/pull/2680), `documentController`) done — js 79→72. **Next slices:** `memoryStorageController` (clean, own PR); then `serverController` + `documentExtractor`, which need the deprecated request-API migration (`setResult(result, options)` → `response.configure`, `getArrayLegacy`) **plus** `kuzzle.statistics` made non-private + `config.version` modelled (TD-18); then `funnel`, `httpRoutes`, `controllers/index` barrel (+ drop the `new AdminController.default()` workaround). *(Sprint 2 — real `bin/` entrypoints — stays deprioritized, see [step 03](steps/03-sprint-2-bin.md).)*
 2. Then Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
 3. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, any must not rise), decrement `.migration/js-baseline.txt`, run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
 
@@ -141,7 +141,7 @@ The spine. One row per unit of work; `Detail` links to the frozen/living step fi
 | 02 | Sprint 1 — `lib/util` warm-up (100% TS) | ✅ Done | #2670, #2674 | [detail](steps/02-sprint-1-util.md) |
 | 03 | Sprint 2 — `bin/` cleanup (entrypoints deprioritized) | 🟦 Paused | #2671 | [detail](steps/03-sprint-2-bin.md) |
 | 04 | Sprint 3 — models & services (100% TS) | ✅ Done | #2676 | [detail](steps/04-sprint-3-model-service.md) |
-| 05 | Sprint 4 — `lib/api` (controllers, `funnel`) | 🟦 In progress | #2679 (A) | [detail](steps/05-sprint-4-api.md) |
+| 05 | Sprint 4 — `lib/api` (controllers, `funnel`) | 🟦 In progress | #2679 (A) · #2680 (B) | [detail](steps/05-sprint-4-api.md) |
 | 06 | Sprint 5 — core I (storage, security, realtime) | ⬜ To do | — | — |
 | 07 | Sprint 6 — core II (validation, plugin, network) | ⬜ To do | — | — |
 | 08 | Sprint 7 — `lib/cluster` | ⬜ To do | — | — |
