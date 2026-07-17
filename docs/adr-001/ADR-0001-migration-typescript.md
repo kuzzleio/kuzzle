@@ -101,16 +101,16 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 
 > Living section (maintained by the `wrapup` skill). **Read this to resume** in a fresh context.
 
-**Where we are (2026-07-17):** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS) and **Sprint 3 done** (`lib/model` + `lib/service` 100% TS, PR #2676), both merged into `2-dev`. **Sprint 4 in progress:** PR A (7 clean `lib/api` controllers + helpers) is up as [#2679](https://github.com/kuzzleio/kuzzle/pull/2679), pending review. The migration advances one layer-PR at a time off `2-dev`.
+**Where we are (2026-07-17):** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS) and **Sprint 3 done** (`lib/model` + `lib/service` 100% TS, PR #2676), both merged into `2-dev`. **Sprint 4 in progress:** PR A (6 clean `lib/api` controllers + `rateLimiter`) is up as [#2679](https://github.com/kuzzleio/kuzzle/pull/2679), pending review. The migration advances one layer-PR at a time off `2-dev`.
 
-**Counters** (baselines in `.migration/`): **js = 72**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
-**Remaining JS by layer** (72 = 68 `lib/` + 4 `bin/`): `core` 50 · `api` 6 · `kuzzle` 6 · `cluster` 6 · `bin` 4.
+**Counters** (baselines in `.migration/`): **js = 73**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
+**Remaining JS by layer** (73 = 69 `lib/` + 4 `bin/`): `core` 50 · `api` 7 · `kuzzle` 6 · `cluster` 6 · `bin` 4.
 
 **Doc location (2026-07-15):** the ADR and its register moved from `adrs/` to `docs/adr-001/` (`git mv`, history preserved; references updated). ADRs now live under `docs/adr-<n>/`.
 
 **Next actions:**
 
-1. **Sprint 4 — `lib/api` (in progress, [step 05](steps/05-sprint-4-api.md)):** PR A ([#2679](https://github.com/kuzzleio/kuzzle/pull/2679)) done — 7 clean files, js 79→72. **Next: PR B** — `documentController`, `memoryStorageController`, `serverController` (serverController needs `kuzzle.statistics` made non-private + `config.version` modelled, TD-18). Then **PR C** — `funnel`, `httpRoutes`, `controllers/index` barrel (+ drop the `new AdminController.default()` workaround). *(Sprint 2 — real `bin/` entrypoints — stays deprioritized, see [step 03](steps/03-sprint-2-bin.md).)*
+1. **Sprint 4 — `lib/api` (in progress, [step 05](steps/05-sprint-4-api.md)):** PR A ([#2679](https://github.com/kuzzleio/kuzzle/pull/2679)) done — 6 files, js 79→73. **Next: PR B** — `documentController`, `memoryStorageController`, `serverController`, `documentExtractor`; must migrate the deprecated request APIs (`setResult(result, options)` → `response.configure`, `getArrayLegacy`) that fail Sonar's new-code gate, and `serverController` needs `kuzzle.statistics` made non-private + `config.version` modelled (TD-18). Then **PR C** — `funnel`, `httpRoutes`, `controllers/index` barrel (+ drop the `new AdminController.default()` workaround). *(Sprint 2 — real `bin/` entrypoints — stays deprioritized, see [step 03](steps/03-sprint-2-bin.md).)*
 2. Then Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
 3. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, any must not rise), decrement `.migration/js-baseline.txt`, run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
 
@@ -164,7 +164,7 @@ Canonical "what we decided", one line each. Links point to the step that details
 - **2026-07-15** — **Deprioritize Sprint 2** (`bin/` entrypoints); only the dead-code removal (#2671) shipped, the rest waits behind the `lib/` layers. → [03](steps/03-sprint-2-bin.md)
 - **2026-07-15** — **Relocate ADRs** from `adrs/` to `docs/adr-001/`; the repo convention is now `docs/adr-<n>/`.
 - **2026-07-17** — **Split Sprint 4 into 3 PRs** (A: clean controllers + helpers · B: big controllers + server · C: `funnel`/`httpRoutes`/barrel), leaves → dispatch. → [05](steps/05-sprint-4-api.md)
-- **2026-07-17** — **PR A** (#2679): 7 `lib/api` files → TS (`export =`, no new `any`); js baseline 79 → 72. Companion JSDoc fix in `validation.js` (DOM `Request` → `KuzzleRequest`). → [05](steps/05-sprint-4-api.md)
+- **2026-07-17** — **PR A** (#2679): 6 `lib/api` files → TS (`export =`, no new `any`); js baseline 79 → 73. `documentExtractor` split out to PR B — a `.js`→`.ts` rename makes SonarCloud score the whole file as new code, and its pre-existing deprecated-API calls (`setResult` options / `getArrayLegacy`) then fail the `0 New Issues` gate. Companion JSDoc fix in `validation.js` (DOM `Request` → `KuzzleRequest`). → [05](steps/05-sprint-4-api.md)
 
 ---
 
