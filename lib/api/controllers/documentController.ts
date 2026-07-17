@@ -202,11 +202,7 @@ class DocumentController extends NativeController {
    */
   async mExists(request: KuzzleRequest) {
     let ids;
-    if (
-      request.input.body &&
-      request.input.body.ids &&
-      Object.keys(request.input.body.ids).length
-    ) {
+    if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
       ids = request.getBodyArray("ids");
     } else {
       ids = request.getArray("ids");
@@ -333,11 +329,7 @@ class DocumentController extends NativeController {
    */
   async mGet(request: KuzzleRequest) {
     let ids;
-    if (
-      request.input.body &&
-      request.input.body.ids &&
-      Object.keys(request.input.body.ids).length
-    ) {
+    if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
       ids = request.getBodyArray("ids");
     } else {
       ids = request.getArray("ids");
