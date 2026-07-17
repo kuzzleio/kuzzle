@@ -30,7 +30,7 @@ import { NativeController } from "./baseController";
  * @class CollectionController
  */
 class CollectionController extends NativeController {
-  private defaultScrollTTL: string;
+  private readonly defaultScrollTTL: string;
 
   constructor() {
     super([

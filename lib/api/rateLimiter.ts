@@ -22,7 +22,7 @@
 import { KuzzleRequest } from "./request";
 
 class RateLimiter {
-  private loginsPerSecond: number;
+  private readonly loginsPerSecond: number;
   private frame: { [connectionId: string]: number };
   private frameResetTimer: NodeJS.Timeout | null;
 
@@ -69,8 +69,8 @@ class RateLimiter {
         profileIds,
       );
 
-      for (let i = 0; i < profiles.length; i++) {
-        const { rateLimit = 0 } = profiles[i];
+      for (const profile of profiles) {
+        const { rateLimit = 0 } = profile;
 
         if (limit === 0 || rateLimit === 0) {
           limit = 0;
