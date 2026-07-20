@@ -37,7 +37,7 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 
 ## SonarCloud gate note (applies to every conversion PR)
 
-A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so pre-existing smells *and duplication* are re-scored against the strict new-code gate (`0 New Issues`, `≤ 5% new duplicated lines`). Budget for fixing them in-PR: `readonly` on constructor-only fields (S2933), `for-of` over index loops (S4138), optional chaining (S6582). Two escape hatches for what a conversion must not refactor:
+A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so pre-existing smells *and duplication* are re-scored against the strict new-code gate (`0 New Issues`, `≤ 5% new duplicated lines`). Budget for fixing them in-PR (all behaviour-preserving): `readonly` on constructor-only fields (S2933), `for-of` over index loops (S4138), optional chaining (S6582), `.includes()` instead of `.indexOf() !== -1`, a single `Array#push(...items)` instead of consecutive pushes, and a guard-clause early-return to shave **cognitive complexity** (S3776) — PR C hit the last three. Two escape hatches for what a conversion must not refactor:
 - **Un-removable deprecated-API usage** → split that file out (as for `documentExtractor` in PR D).
 - **Pre-existing intra-file duplication** → add the file to `sonar.cpd.exclusions` and defer the dedup (as for `documentController` in PR B — its mExists/mGet and createOrReplace/replace pairs blew the 5% new-code duplication gate; and `memoryStorageController` in PR C — the `mapping` table + the repeated arg-extraction closures).
 
@@ -55,4 +55,4 @@ A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so
 - Ratchets: **js 72 → 71** (baseline updated), mocha 151, any 200 — all green. `npm run test:strict` green (46 adopted; file **not** adopted — dynamic payloads).
 - Lint: 0 errors (6 non-blocking `array-foreach` warnings, see gotchas).
 - **Full Mocha suite (3025) green in Docker** (`.ci/scripts/docker-test.sh unit mocha`) — includes the rewire-driven spec; `npm run build` runs green inside that pipeline.
-- SonarCloud gate: pre-empted the new-code duplication by adding `memoryStorageController.ts` to `sonar.cpd.exclusions`; no S2933/S4138/S6582 candidates; `.ts` is coverage-excluded. **Real gate to be confirmed on push.**
+- SonarCloud gate: the pre-empted `sonar.cpd.exclusions` entry held (no duplication failure), but the first run flagged **1 New Critical** (S3776 cognitive complexity 16>15 on `extractArgumentsFromRequestForSort`) + **5 New Minor** (`.indexOf()!==-1` ×3 → `.includes()`; consecutive `Array#push()` ×2 → one call). All fixed in-PR (idiomatic rewrites + a guard-clause de-nest of the sort builder), no behaviour change; re-validated (tsc, lint, full mocha 3025). `.ts` is coverage-excluded.

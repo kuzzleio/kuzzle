@@ -715,9 +715,7 @@ function extractArgumentsFromRequestForSet(request: KuzzleRequest) {
   kassert.assertHasBody(request);
 
   if (
-    ["undefined", "boolean", "object"].indexOf(
-      typeof request.input.body.value,
-    ) !== -1
+    ["undefined", "boolean", "object"].includes(typeof request.input.body.value)
   ) {
     throw kerror.get("invalid_type", "value", "string, number");
   }
@@ -760,49 +758,50 @@ function extractArgumentsFromRequestForSort(request: KuzzleRequest) {
 
   kassert.assertHasId(request);
 
-  if (request.input.body) {
-    if (request.input.body.alpha) {
-      args.push("ALPHA");
+  if (!request.input.body) {
+    return args;
+  }
+
+  if (request.input.body.alpha) {
+    args.push("ALPHA");
+  }
+
+  if (request.input.body.direction !== undefined) {
+    const direction = request.input.body.direction.toUpperCase();
+
+    if (!["ASC", "DESC"].includes(direction)) {
+      throw kerror.get("invalid_argument", "direction", '"ASC", "DESC"');
     }
 
-    if (request.input.body.direction !== undefined) {
-      const direction = request.input.body.direction.toUpperCase();
+    args.push(direction);
+  }
 
-      if (["ASC", "DESC"].indexOf(direction) === -1) {
-        throw kerror.get("invalid_argument", "direction", '"ASC", "DESC"');
-      }
+  if (request.input.body.by !== undefined) {
+    args.push("BY", request.input.body.by);
+  }
 
-      args.push(direction);
-    }
+  if (request.input.body.limit !== undefined) {
+    kassert.assertBodyAttributeType(request, "limit", "array");
+    assertInt(request, "limit.offset", request.input.body.limit[0]);
+    assertInt(request, "limit.count", request.input.body.limit[1]);
 
-    if (request.input.body.by !== undefined) {
-      args.push("BY", request.input.body.by);
-    }
+    args.push(
+      "LIMIT",
+      request.input.body.limit[0],
+      request.input.body.limit[1],
+    );
+  }
 
-    if (request.input.body.limit !== undefined) {
-      kassert.assertBodyAttributeType(request, "limit", "array");
-      assertInt(request, "limit.offset", request.input.body.limit[0]);
-      assertInt(request, "limit.count", request.input.body.limit[1]);
+  if (request.input.body.get !== undefined) {
+    kassert.assertBodyAttributeType(request, "get", "array");
 
-      args.push(
-        "LIMIT",
-        request.input.body.limit[0],
-        request.input.body.limit[1],
-      );
-    }
+    request.input.body.get.forEach((pattern) => {
+      args.push("GET", pattern);
+    });
+  }
 
-    if (request.input.body.get !== undefined) {
-      kassert.assertBodyAttributeType(request, "get", "array");
-
-      request.input.body.get.forEach((pattern) => {
-        args.push("GET");
-        args.push(pattern);
-      });
-    }
-
-    if (request.input.body.store !== undefined) {
-      args.push("STORE", request.input.body.store);
-    }
+  if (request.input.body.store !== undefined) {
+    args.push("STORE", request.input.body.store);
   }
 
   return args;
@@ -896,8 +895,7 @@ function extractArgumentsFromRequestForZAdd(request: KuzzleRequest) {
 
     assertFloat(request, "score", element.score);
 
-    args.push(element.score);
-    args.push(element.member);
+    args.push(element.score, element.member);
   });
 
   return args;
@@ -936,7 +934,7 @@ function extractArgumentsFromRequestForZInterstore(request: KuzzleRequest) {
 
     const aggregate = request.input.body.aggregate.toUpperCase();
 
-    if (["SUM", "MIN", "MAX"].indexOf(aggregate) === -1) {
+    if (!["SUM", "MIN", "MAX"].includes(aggregate)) {
       throw kerror.get(
         "invalid_argument",
         "aggregate",
