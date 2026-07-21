@@ -26,8 +26,9 @@
 | [TD-15](#td-15) | 🟡 low | Enforcement | Implicit-any constructors on public request/response classes | S | ⬜ |
 | [TD-16](#td-16) | 🟡 low | Storage | ES7/ES8 copy-paste; ES8 drifted (typed `stats()`/`update()`) | S | ⬜ |
 | [TD-17](#td-17) | 🟡 low | Config | `loadConfig()` returns `any` | XS | ⬜ |
-| [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | ⬜ |
+| [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | 🟦 |
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
+| [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers | S | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -178,12 +179,30 @@ Defeats typing at the config assembly point.
 
 `version: string` (always present at runtime) and `internal.allowAllOrigins: boolean` are absent from the type.
 - **Reco:** add them to `IKuzzleConfiguration`.
+- **🟦 In progress (2026-07-21, PR D):** `version: string` added to `IKuzzleConfiguration` (unblocks `serverController`'s `global.kuzzle.config.version` read). **Remaining ⬜:** `internal.allowAllOrigins: boolean` (only consumed by still-JS `httpwsProtocol`/`funnel`, so deferred to their conversion to avoid touching out-of-scope files).
 
 ### TD-19
 **`any` in otherwise-typed config sections** · 🟡 low · `lib/types/config/KuzzleConfiguration.ts:155`
 
 `internal.hash`, `cluster.interface`, `http.routes`, `storageEngine.client` typed `any`/`JSONObject`.
 - **Reco:** `internal.hash: { seed: Buffer }`, `cluster.interface: string | null`, concrete interfaces (or at least `Record<string, unknown>`) for the others.
+
+---
+
+## Deprecation
+
+### TD-20
+**Deprecated request APIs kept in converted controllers** · 🟡 low · `lib/api/documentExtractor.ts`, `lib/api/controllers/serverController.ts`
+
+Two `@deprecated` `KuzzleRequest` methods are still called by the files converted in Sprint 4 PR D and were **deliberately kept** rather than migrated, because both "replacements" change observable behaviour — out of scope for a conversion PR (ADR rule: *no behaviour change in a conversion*):
+
+- **`request.setResult(result, { status })`** (×7 in `documentExtractor`) — JSDoc says *use `request.response.configure`*, but `configure` only sets headers/status/format, **not the result**; and the `response.result =` setter routes back through `setResult(result)` with no options, which **forces status 200** and would drop a preserved non-200 (e.g. `201` on create) in `funnel.performDocumentAlias`. No clean drop-in exists.
+- **`request.getArrayLegacy(name)`** (×1 `documentExtractor` `ids`, ×1 `serverController` `services`) — JSDoc says *use `getArray`*, but `getArray` **throws `api.assert.invalid_type`** on a non-JSON-array string, whereas `getArrayLegacy` falls back to `value.split(",")`. Swapping breaks HTTP clients passing comma-separated or bare-string values (`?ids=a,b`, `?services=internalCache`).
+
+Kept as-is in PR D with `// NOSONAR` on each call site (a `.js`→`.ts` rename re-scores the whole file as new code, so SonarCloud `typescript:S1874` — "deprecated API should not be used" — would fail the `0 New Issues` gate).
+
+- **Reco:** migrate in a **dedicated behaviour-change PR** (not a conversion): add runtime deprecation warnings, document the breaking change, remove the legacy paths on a major version, then drop the `NOSONAR` markers.
+- **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints.
 
 ---
 
@@ -206,6 +225,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-07-15** — ADR docs relocated from `adrs/` to `docs/adr-001/` (`git mv`, history preserved); all references updated (CONTRIBUTING, CI workflow, `scripts/`, `tsconfig.strict.json`, `/wrapup` skill). New convention: ADRs live under `docs/adr-<n>/`.
 - **2026-07-17** — Sprint 4 (`lib/api`) PR B (#2680): `documentController` → TS (clean of deprecated APIs; only `validation.validate`, unblocked by PR A). js baseline 73 → 72. SonarCloud new-code gate: fixed 2 optional-chain smells (S6582); the file's **pre-existing intra-file CRUD duplication** (mExists/mGet, createOrReplace/replace) exceeded the 5% new-code duplication gate, so it was added to `sonar.cpd.exclusions`. **Deferred debt:** dedup those method pairs in a separate refactor (kept out of the conversion PR per ADR).
 - **2026-07-17** — Sprint 4 (`lib/api`) started, PR A (#2679): 6 files → TS, js baseline 79 → 73. Items surfaced for PR B: (1) **TD-18** (`config.version` unmodelled) + a **`kuzzle.statistics` private-but-accessed-cross-class** visibility bug, both blocking `serverController`; (2) **deprecated request APIs** — `documentExtractor` (and `documentController`) call `request.setResult(result, options)` (`@deprecated` → `response.configure`) and `request.getArrayLegacy` (`@deprecated`); harmless in JS, but a `.js`→`.ts` rename makes SonarCloud score them as *new* code and fail the `0 New Issues` gate, so `documentExtractor` was split out of PR A. Fixed in passing: `validation.js` `validate()` JSDoc pointed at the DOM `Request` instead of `KuzzleRequest`.
+- **2026-07-21** — Sprint 4 (`lib/api`) PR D (#2682): `serverController` + `documentExtractor` → TS. **TD-18** partially closed — `version: string` added to `IKuzzleConfiguration`; `internal.allowAllOrigins` still ⬜ (out-of-scope JS consumers). **TD-20** opened — the two files' `@deprecated` `setResult`/`getArrayLegacy` calls kept for behaviour parity (both replacements change behaviour), `NOSONAR`-marked, real migration deferred to a dedicated PR. Also made `kuzzle.statistics` non-`private` (cross-class access by `serverController`); the "visibility bug" flagged in PR A was in fact just the type not matching the runtime access. js baseline 71 → 69.
 
 ---
 
