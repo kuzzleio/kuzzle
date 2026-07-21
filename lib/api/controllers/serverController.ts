@@ -19,20 +19,35 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as os from "os";
 
-const os = require("os");
-const jsonToYaml = require("json2yaml");
-const packagejson = require("../../../package.json");
+import jsonToYaml = require("json2yaml");
 
-const { NativeController } = require("./baseController");
+import packagejson from "../../../package.json";
 
-const kerror = require("../../kerror");
+import * as kerror from "../../kerror";
+import { KuzzleRequest } from "../request";
+import { NativeController } from "./baseController";
+
+interface ApiActionDefinition {
+  action: string;
+  controller: string;
+  http?: Array<{ path: string; url: string; verb: string }>;
+}
+
+interface ApiRoute {
+  controller: string;
+  action: string;
+  path: string;
+  verb: string;
+}
 
 /**
  * @class ServerController
  */
 class ServerController extends NativeController {
+  private _info: Record<string, { version: string }>;
+
   constructor() {
     super([
       "adminExists",
@@ -79,7 +94,7 @@ class ServerController extends NativeController {
    *
    * @deprecated
    */
-  getStats(request) {
+  getStats(request: KuzzleRequest) {
     return global.kuzzle.statistics.getStats(request);
   }
 
@@ -134,8 +149,8 @@ class ServerController extends NativeController {
   async capabilities() {
     const config = JSON.parse(JSON.stringify(global.kuzzle.config));
     const publicApi = await this.publicApi();
-    const services = {};
-    const plugins = {};
+    const services: Record<string, { backend: string; version: string }> = {};
+    const plugins: Record<string, { version: string }> = {};
 
     for (const plugin of config.plugins.common.include) {
       plugins[plugin] = {
@@ -143,7 +158,9 @@ class ServerController extends NativeController {
       };
     }
 
-    for (const [name, info] of Object.entries(config.services)) {
+    for (const [name, info] of Object.entries<{ backend?: string }>(
+      config.services,
+    )) {
       if (info.backend !== undefined) {
         services[name] = {
           backend: info.backend,
@@ -181,15 +198,18 @@ class ServerController extends NativeController {
   /**
    * @returns {Promise<Object>}
    */
-  async healthCheck(request) {
-    const getServiceUnavailableError = (err) =>
+  async healthCheck(request: KuzzleRequest) {
+    const getServiceUnavailableError = (err: Error) =>
       kerror.get("core", "fatal", "service_unavailable", err);
-    const result = { services: {}, status: "green" };
+    const result: { services: Record<string, string>; status: string } = {
+      services: {},
+      status: "green",
+    };
 
     let services;
     if (typeof request.input.args.services === "string") {
       // @deprecated Should be replaced with request.getArray('services')
-      services = request.getArrayLegacy("services");
+      services = request.getArrayLegacy("services"); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
     }
     if (!services || services.includes("internalCache")) {
       try {
@@ -301,7 +321,7 @@ class ServerController extends NativeController {
     return { ...kuzzleApi, ...pluginsApi };
   }
 
-  async openapi(request) {
+  async openapi(request: KuzzleRequest) {
     const format = request.getString("format", "json");
     const scope = request.getString("scope", "kuzzle");
 
@@ -338,11 +358,17 @@ class ServerController extends NativeController {
     };
   }
 
-  _buildApiDefinition(controllers, httpRoutes) {
-    const apiDefinition = {};
+  _buildApiDefinition(
+    controllers: Map<string, { _actions: string[] }>,
+    httpRoutes: ApiRoute[],
+  ) {
+    const apiDefinition: Record<
+      string,
+      Record<string, ApiActionDefinition>
+    > = {};
 
     for (const [name, controller] of controllers.entries()) {
-      const actionList = {};
+      const actionList: Record<string, ApiActionDefinition> = {};
 
       for (const action of controller._actions) {
         actionList[action] = { action, controller: name };
@@ -378,4 +404,4 @@ class ServerController extends NativeController {
   }
 }
 
-module.exports = ServerController;
+export = ServerController;
