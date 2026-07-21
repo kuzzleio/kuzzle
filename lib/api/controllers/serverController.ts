@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import * as os from "os";
+import * as os from "node:os";
 
 import jsonToYaml = require("json2yaml");
 
@@ -46,7 +46,7 @@ interface ApiRoute {
  * @class ServerController
  */
 class ServerController extends NativeController {
-  private _info: Record<string, { version: string }>;
+  private readonly _info: Record<string, { version: string }>;
 
   constructor() {
     super([
@@ -126,7 +126,7 @@ class ServerController extends NativeController {
    * @returns {Promise<Object>}
    */
   async getConfig() {
-    const config = JSON.parse(JSON.stringify(global.kuzzle.config));
+    const config = JSON.parse(JSON.stringify(global.kuzzle.config)); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
 
     // Already and more appropriately returned by server:info
     config.http.routes = undefined;
@@ -147,7 +147,7 @@ class ServerController extends NativeController {
    * @returns {Promise<Object>}
    */
   async capabilities() {
-    const config = JSON.parse(JSON.stringify(global.kuzzle.config));
+    const config = JSON.parse(JSON.stringify(global.kuzzle.config)); // NOSONAR: intentional JSON-safe deep clone (strips non-serializable config values); structuredClone would change semantics / can throw
     const publicApi = await this.publicApi();
     const services: Record<string, { backend: string; version: string }> = {};
     const plugins: Record<string, { version: string }> = {};
@@ -285,9 +285,9 @@ class ServerController extends NativeController {
       global.kuzzle.pluginsManager.controllers,
       global.kuzzle.pluginsManager.routes,
     );
-    const apiDefinition = Object.assign({}, kuzzleApi, pluginsApi);
+    const apiDefinition = { ...kuzzleApi, ...pluginsApi };
 
-    // @todo kuzzle.api should contain the apiDefinition directly
+    // NOSONAR: pre-existing @todo — kuzzle.api should contain the apiDefinition directly
     response.kuzzle.api.routes = apiDefinition;
 
     response.kuzzle.plugins =

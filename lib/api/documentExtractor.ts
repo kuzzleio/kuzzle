@@ -71,7 +71,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
       extractFromRequest: (request) => [{ _id: request.input.args._id }],
       extractFromResult: (request) => [request.result],
       insertInRequest: (documents, request) => {
-        request.input.args._id = documents[0] && documents[0]._id;
+        request.input.args._id = documents[0]?._id;
         return request;
       },
       insertInResult: (documents, request) => {
@@ -86,8 +86,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
       extractFromRequest: (request) => {
         let ids = [];
         if (
-          request.input.body &&
-          request.input.body.ids &&
+          request.input.body?.ids &&
           Object.keys(request.input.body.ids).length
         ) {
           ids = request.input.body.ids;
@@ -114,8 +113,8 @@ const extractorDefinitions: ExtractorDefinition[] = [
 
         const documents = [];
 
-        for (let it = 0; it < request.result.successes.length; it++) {
-          documents.push({ _id: request.result.successes[it] });
+        for (const success of request.result.successes) {
+          documents.push({ _id: success });
         }
 
         return documents;
@@ -130,16 +129,12 @@ const extractorDefinitions: ExtractorDefinition[] = [
       },
       insertInResult: (documents, request) => {
         if (request.input.action === "mGet") {
-          request.setResult(
-            // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
-            {
-              errors: request.result.errors,
-              successes: documents,
-            },
-            {
-              status: request.status,
-            },
-          );
+          const mResult = {
+            errors: request.result.errors,
+            successes: documents,
+          };
+
+          request.setResult(mResult, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
 
           return request;
         }
@@ -149,8 +144,8 @@ const extractorDefinitions: ExtractorDefinition[] = [
           successes: [],
         };
 
-        for (let it = 0; it < documents.length; it++) {
-          result.successes.push(documents[it]._id);
+        for (const document of documents) {
+          result.successes.push(document._id);
         }
 
         request.setResult(result, { status: request.status }); // NOSONAR: deprecated API kept for behaviour parity, migration tracked in TD-20
@@ -165,9 +160,7 @@ const extractorDefinitions: ExtractorDefinition[] = [
       extractFromRequest: (request) => {
         const documents = [];
 
-        for (let it = 0; it < request.input.body.documents.length; it++) {
-          const document = request.input.body.documents[it];
-
+        for (const document of request.input.body.documents) {
           if (request.input.action === "mUpsert") {
             documents.push({
               _id: document._id,
@@ -251,8 +244,8 @@ const extractorDefinitions: ExtractorDefinition[] = [
       ],
       extractFromResult: (request) => [request.result],
       insertInRequest: (documents, request) => {
-        request.input.args._id = documents[0] && documents[0]._id;
-        request.input.body = documents[0] && documents[0]._source;
+        request.input.args._id = documents[0]?._id;
+        request.input.body = documents[0]?._source;
         return request;
       },
       insertInResult: (documents, request) => {
@@ -298,9 +291,9 @@ const extractors = extractorDefinitions.reduce<
 }, {});
 
 class DocumentExtractor {
-  private request: KuzzleRequest;
-  private extractMethod: ExtractMethod | null;
-  private insertMethod: InsertMethod | null;
+  private readonly request: KuzzleRequest;
+  private readonly extractMethod: ExtractMethod | null;
+  private readonly insertMethod: InsertMethod | null;
 
   constructor(request: KuzzleRequest) {
     this.request = request;
