@@ -21,14 +21,13 @@
 
 /* eslint sort-keys: 0 */
 
-"use strict";
+import { wrap } from "../../kerror";
+import { KuzzleRequest, Request } from "../request";
+import { NativeController } from "./baseController";
+import * as kassert from "../../util/requestAssertions";
+import { isPlainObject, has } from "../../util/safeObject";
 
-const kerror = require("../../kerror").wrap("api", "assert");
-
-const { Request } = require("../request");
-const { NativeController } = require("./baseController");
-const kassert = require("../../util/requestAssertions");
-const { isPlainObject, has } = require("../../util/safeObject");
+const kerror = wrap("api", "assert");
 
 let mapping;
 
@@ -41,9 +40,9 @@ class MemoryStorageController extends NativeController {
 
     initMapping();
 
-    const buildCommandFn = (command) => {
+    const buildCommandFn = (command: string) => {
       if (command === "mexecute") {
-        return async (request) =>
+        return async (request: KuzzleRequest) =>
           global.kuzzle.ask(
             "core:cache:public:mExecute",
             extractArgumentsFromRequest(command, request),
@@ -53,7 +52,7 @@ class MemoryStorageController extends NativeController {
       const largeCommands = ["mset", "mget", "msetnx"];
 
       if (largeCommands.includes(command)) {
-        return async (request) =>
+        return async (request: KuzzleRequest) =>
           global.kuzzle.ask(
             "core:cache:public:execute",
             command,
@@ -61,7 +60,7 @@ class MemoryStorageController extends NativeController {
           );
       }
 
-      return async (request) =>
+      return async (request: KuzzleRequest) =>
         global.kuzzle.ask(
           "core:cache:public:execute",
           command,
@@ -76,7 +75,7 @@ class MemoryStorageController extends NativeController {
   }
 }
 
-module.exports = MemoryStorageController;
+export = MemoryStorageController;
 
 const scanMatchProperty = {
   skip: true,
@@ -631,7 +630,7 @@ function initMapping() {
  * @param {Request} request
  * @returns {*}
  */
-function extractArgumentsFromRequest(command, request) {
+function extractArgumentsFromRequest(command: string, request: KuzzleRequest) {
   let args = [];
 
   // Dealing with exceptions
@@ -709,16 +708,14 @@ function extractArgumentsFromRequest(command, request) {
  * @param {Request} request
  * @returns {*[]}
  */
-function extractArgumentsFromRequestForSet(request) {
+function extractArgumentsFromRequestForSet(request: KuzzleRequest) {
   const args = [request.input.args._id];
 
   kassert.assertHasId(request);
   kassert.assertHasBody(request);
 
   if (
-    ["undefined", "boolean", "object"].indexOf(
-      typeof request.input.body.value,
-    ) !== -1
+    ["undefined", "boolean", "object"].includes(typeof request.input.body.value)
   ) {
     throw kerror.get("invalid_type", "value", "string, number");
   }
@@ -756,54 +753,55 @@ function extractArgumentsFromRequestForSet(request) {
  * @param {Request} request
  * @returns {*[]}
  */
-function extractArgumentsFromRequestForSort(request) {
+function extractArgumentsFromRequestForSort(request: KuzzleRequest) {
   const args = [request.input.args._id];
 
   kassert.assertHasId(request);
 
-  if (request.input.body) {
-    if (request.input.body.alpha) {
-      args.push("ALPHA");
+  if (!request.input.body) {
+    return args;
+  }
+
+  if (request.input.body.alpha) {
+    args.push("ALPHA");
+  }
+
+  if (request.input.body.direction !== undefined) {
+    const direction = request.input.body.direction.toUpperCase();
+
+    if (!["ASC", "DESC"].includes(direction)) {
+      throw kerror.get("invalid_argument", "direction", '"ASC", "DESC"');
     }
 
-    if (request.input.body.direction !== undefined) {
-      const direction = request.input.body.direction.toUpperCase();
+    args.push(direction);
+  }
 
-      if (["ASC", "DESC"].indexOf(direction) === -1) {
-        throw kerror.get("invalid_argument", "direction", '"ASC", "DESC"');
-      }
+  if (request.input.body.by !== undefined) {
+    args.push("BY", request.input.body.by);
+  }
 
-      args.push(direction);
-    }
+  if (request.input.body.limit !== undefined) {
+    kassert.assertBodyAttributeType(request, "limit", "array");
+    assertInt(request, "limit.offset", request.input.body.limit[0]);
+    assertInt(request, "limit.count", request.input.body.limit[1]);
 
-    if (request.input.body.by !== undefined) {
-      args.push("BY", request.input.body.by);
-    }
+    args.push(
+      "LIMIT",
+      request.input.body.limit[0],
+      request.input.body.limit[1],
+    );
+  }
 
-    if (request.input.body.limit !== undefined) {
-      kassert.assertBodyAttributeType(request, "limit", "array");
-      assertInt(request, "limit.offset", request.input.body.limit[0]);
-      assertInt(request, "limit.count", request.input.body.limit[1]);
+  if (request.input.body.get !== undefined) {
+    kassert.assertBodyAttributeType(request, "get", "array");
 
-      args.push(
-        "LIMIT",
-        request.input.body.limit[0],
-        request.input.body.limit[1],
-      );
-    }
+    request.input.body.get.forEach((pattern) => {
+      args.push("GET", pattern);
+    });
+  }
 
-    if (request.input.body.get !== undefined) {
-      kassert.assertBodyAttributeType(request, "get", "array");
-
-      request.input.body.get.forEach((pattern) => {
-        args.push("GET");
-        args.push(pattern);
-      });
-    }
-
-    if (request.input.body.store !== undefined) {
-      args.push("STORE", request.input.body.store);
-    }
+  if (request.input.body.store !== undefined) {
+    args.push("STORE", request.input.body.store);
   }
 
   return args;
@@ -813,7 +811,7 @@ function extractArgumentsFromRequestForSort(request) {
  * @param {Request} request
  * @returns {*[]}
  */
-function extractArgumentsFromRequestForMExecute(request) {
+function extractArgumentsFromRequestForMExecute(request: KuzzleRequest) {
   kassert.assertHasBody(request);
   kassert.assertBodyHasAttribute(request, "actions");
   kassert.assertBodyAttributeType(request, "actions", "array");
@@ -850,7 +848,7 @@ function extractArgumentsFromRequestForMExecute(request) {
  * @param {Request} request
  * @returns {*[]}
  */
-function extractArgumentsFromRequestForZAdd(request) {
+function extractArgumentsFromRequestForZAdd(request: KuzzleRequest) {
   const args = [request.input.args._id];
 
   kassert.assertHasId(request);
@@ -897,8 +895,7 @@ function extractArgumentsFromRequestForZAdd(request) {
 
     assertFloat(request, "score", element.score);
 
-    args.push(element.score);
-    args.push(element.member);
+    args.push(element.score, element.member);
   });
 
   return args;
@@ -908,7 +905,7 @@ function extractArgumentsFromRequestForZAdd(request) {
  * @param {Request} request
  * @returns {*[]}
  */
-function extractArgumentsFromRequestForZInterstore(request) {
+function extractArgumentsFromRequestForZInterstore(request: KuzzleRequest) {
   let args = [request.input.args._id];
 
   kassert.assertHasId(request);
@@ -937,7 +934,7 @@ function extractArgumentsFromRequestForZInterstore(request) {
 
     const aggregate = request.input.body.aggregate.toUpperCase();
 
-    if (["SUM", "MIN", "MAX"].indexOf(aggregate) === -1) {
+    if (!["SUM", "MIN", "MAX"].includes(aggregate)) {
       throw kerror.get(
         "invalid_argument",
         "aggregate",
@@ -960,7 +957,7 @@ function extractArgumentsFromRequestForZInterstore(request) {
  * @param {*} value of the tested parameter
  * @throws
  */
-function assertFloat(request, name, value) {
+function assertFloat(request: KuzzleRequest, name: string, value) {
   // Number.parseXxx computes the 1st member of an array if one is provided
   if (Array.isArray(value) || Number.isNaN(Number.parseFloat(value))) {
     throw kerror.get("invalid_type", name, "number");
@@ -976,7 +973,7 @@ function assertFloat(request, name, value) {
  * @param {*} value of the tested parameter
  * @throws
  */
-function assertInt(request, name, value) {
+function assertInt(request: KuzzleRequest, name: string, value) {
   // Number.parseXxx computes the 1st member of an array if one is provided
   if (Array.isArray(value) || Number.isNaN(Number.parseInt(value))) {
     throw kerror.get("invalid_type", name, "integer");
