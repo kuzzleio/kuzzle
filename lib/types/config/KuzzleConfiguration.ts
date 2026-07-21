@@ -9,6 +9,11 @@ import {
 } from "../index";
 
 export interface IKuzzleConfiguration {
+  /**
+   * Kuzzle version, populated at runtime from `package.json`.
+   */
+  version: string;
+
   realtime: {
     /**
      * @default false

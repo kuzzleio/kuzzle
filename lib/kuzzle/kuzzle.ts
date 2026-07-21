@@ -124,7 +124,7 @@ class Kuzzle extends KuzzleEventEmitter {
   /**
    * Statistics core component
    */
-  private statistics: Statistics;
+  public statistics: Statistics;
 
   /**
    * Network entry point
