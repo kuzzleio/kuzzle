@@ -24,9 +24,12 @@ import IORedis, { Cluster, RedisCommander } from "ioredis";
 
 import Service from "../service";
 import { Logger } from "../../kuzzle/Logger";
+import * as kerrorLib from "../../kerror";
 import "../../types/Global";
 import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
 import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
+
+const kerror = kerrorLib.wrap("services", "cache");
 
 type RedisClient = IORedis | Cluster;
 
@@ -180,7 +183,7 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
     for (const command of commandsList) {
       commands[command] = async (...args: unknown[]) => {
         if (!this.connected) {
-          throw cacheError.get("notconnected");
+          throw kerror.get("notconnected");
         }
 
         return client[command](...args);
