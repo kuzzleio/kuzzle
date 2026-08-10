@@ -399,6 +399,7 @@ const defaultConfig: KuzzleConfiguration = {
               properties: {
                 userId: { type: "keyword" },
                 hash: { type: "keyword" },
+                fingerprint: { type: "keyword" },
                 description: { type: "text" },
                 expiresAt: { type: "long" },
                 ttl: { type: "keyword" },

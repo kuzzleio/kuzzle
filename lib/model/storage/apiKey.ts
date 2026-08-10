@@ -169,6 +169,37 @@ class ApiKey extends BaseModel {
   }
 
   /**
+   * Loads an user API key from the database by its fingerprint
+   *
+   * @param userId - User ID
+   * @param fingerprint - API key fingerprint
+   */
+  static async loadByFingerprint(
+    userId: string,
+    fingerprint: string,
+  ): Promise<ApiKey> {
+    const [apiKey] = await this.search(
+      {
+        query: {
+          bool: {
+            filter: { term: { fingerprint } },
+            must: { term: { userId } },
+          },
+        },
+      },
+      { size: 1 },
+    );
+
+    if (!apiKey) {
+      throw kerror.get("services", "storage", "not_found", fingerprint, {
+        message: `ApiKey with fingerprint "${fingerprint}" not found for user "${userId}".`,
+      });
+    }
+
+    return apiKey as ApiKey;
+  }
+
+  /**
    * Deletes API keys for an user
    *
    * @param user
