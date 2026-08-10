@@ -22,14 +22,11 @@
 import Bluebird from "bluebird";
 import IORedis, { Cluster, RedisCommander } from "ioredis";
 
-import * as kerrorLib from "../../kerror";
 import Service from "../service";
 import { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
 import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
-
-const kerror = kerrorLib.wrap("services", "cache");
 
 type RedisClient = IORedis | Cluster;
 
