@@ -129,6 +129,48 @@ describe("ApiKey", () => {
     });
   });
 
+  describe("ApiKey.loadByFingerprint", () => {
+    afterEach(() => {
+      ApiKey.search.restore();
+    });
+
+    it("should search for the API key by fingerprint scoped to the user", async () => {
+      const apiKey = new ApiKey(
+        { userId: "mylehuong", fingerprint: "the-fingerprint" },
+        "api-key-id",
+      );
+      const searchStub = sinon.stub(ApiKey, "search").resolves([apiKey]);
+
+      const result = await ApiKey.loadByFingerprint(
+        "mylehuong",
+        "the-fingerprint",
+      );
+
+      should(searchStub).be.calledWith(
+        {
+          query: {
+            bool: {
+              filter: { term: { fingerprint: "the-fingerprint" } },
+              must: { term: { userId: "mylehuong" } },
+            },
+          },
+        },
+        { size: 1 },
+      );
+      should(result).be.eql(apiKey);
+    });
+
+    it("should throw a not_found error if no API key matches the fingerprint", async () => {
+      sinon.stub(ApiKey, "search").resolves([]);
+
+      const promise = ApiKey.loadByFingerprint("mylehuong", "unknown-print");
+
+      await should(promise).be.rejectedWith({
+        id: "services.storage.not_found",
+      });
+    });
+  });
+
   describe("ApiKey.deleteByUser", () => {
     it("should call BaseModel.deleteByQuery with the correct query", async () => {
       const user = { _id: "mylehuong" };
