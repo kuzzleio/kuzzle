@@ -255,7 +255,11 @@ class Kuzzle extends KuzzleEventEmitter {
       // This will init the cluster module if enabled
       await this.initKuzzleNode();
 
-      this.vault = vault.load(options.vaultKey, options.secretsFile);
+      this.vault = vault.load(
+        options.vaultKey,
+        options.secretsFile,
+        this.config.vault?.newAlgorithm,
+      );
 
       this.validation.init();
 

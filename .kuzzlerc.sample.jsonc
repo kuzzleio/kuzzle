@@ -1135,5 +1135,15 @@
     "definition": {
       "allowAdditionalActionProperties": false
     }
+  },
+  // [vault]
+  // Secrets vault configuration
+  //   * newAlgorithm:
+  //      Opt-in for the new vault encryption algorithm (AES-256-GCM) instead
+  //      of the legacy one (AES-256-CBC). Leave this option unset (or false)
+  //      to keep using the legacy algorithm, e.g. to stay compatible with
+  //      secrets encrypted before this option existed.
+  "vault": {
+    "newAlgorithm": false
   }
 }

@@ -173,6 +173,19 @@ export interface IKuzzleConfiguration {
       allowAdditionalActionProperties: boolean;
     };
   };
+
+  /**
+   * The vault section lets you configure the secrets vault behavior.
+   */
+  vault: {
+    /**
+     * Opt-in for the new vault encryption algorithm (AES-256-GCM) instead
+     * of the legacy one (AES-256-CBC).
+     *
+     * @default false
+     */
+    newAlgorithm: boolean;
+  };
 }
 
 export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;
