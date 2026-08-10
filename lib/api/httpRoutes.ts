@@ -1359,6 +1359,12 @@ const routes: KuzzleHttpRoute[] = [
   },
   {
     verb: "delete",
+    path: "/users/:userId/api-keys",
+    controller: "security",
+    action: "deleteApiKey",
+  },
+  {
+    verb: "delete",
     path: "/api-keys/:_id",
     controller: "auth",
     action: "deleteApiKey",
