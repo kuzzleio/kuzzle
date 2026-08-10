@@ -1,11 +1,7 @@
-"use strict";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const should = require("should");
-const mockRequire = require("mock-require");
-
-const KuzzleMock = require("../mocks/kuzzle.mock");
-
-const redlockUniversal = require("redlock-universal");
+import * as redlockUniversal from "redlock-universal";
+import type { RedisAdapter } from "redlock-universal";
 
 /**
  * FlakyAdapter simulates lock loss: its extension attempts always fail, as
@@ -13,44 +9,52 @@ const redlockUniversal = require("redlock-universal");
  * exercise the MutexLockLostError path without racing real Redis timing.
  */
 class FlakyAdapter extends redlockUniversal.MemoryAdapter {
-  async atomicExtend(key, _value, minTTL) {
+  async atomicExtend(key: string, _value: string, minTTL: number) {
     return this.interpretAtomicExtensionResult(key, minTTL, [-1, -2]);
   }
 }
 
+const mocks = vi.hoisted(() => {
+  return { currentAdapter: undefined as RedisAdapter | undefined };
+});
+
+// lib/util/distributedLock.ts does `new IoredisAdapter(client)`. Since this
+// replacement is a plain function that explicitly returns an object, `new
+// IoredisAdapter(...)` yields that object instead of a fresh `this`
+// (standard JS constructor-return semantics) -- letting tests swap in a
+// controllable in-memory adapter instead of a real ioredis client, without
+// touching production code.
+vi.mock(import("redlock-universal"), async (importOriginal) => {
+  const actual = await importOriginal();
+
+  return {
+    ...actual,
+    IoredisAdapter: function fakeIoredisAdapter() {
+      return mocks.currentAdapter;
+    } as unknown as typeof actual.IoredisAdapter,
+  };
+});
+
 describe("#distributedLock", () => {
-  let kuzzle;
-  let withLock;
-  let MutexLockLostError;
-  let currentAdapter;
+  let kuzzle: { ask: ReturnType<typeof vi.fn> };
+  let withLock: typeof import("../../lib/util/distributedLock").withLock;
+  let MutexLockLostError: typeof import("../../lib/util/distributedLock").MutexLockLostError;
 
-  beforeEach(() => {
-    kuzzle = new KuzzleMock();
+  beforeEach(async () => {
+    kuzzle = { ask: vi.fn().mockResolvedValue({}) };
+    (globalThis as { kuzzle?: unknown }).kuzzle = kuzzle;
 
-    currentAdapter = new redlockUniversal.MemoryAdapter();
+    mocks.currentAdapter = new redlockUniversal.MemoryAdapter();
 
-    // lib/util/distributedLock.ts does `new IoredisAdapter(client)`. Since
-    // this replacement is a plain function that explicitly returns an
-    // object, `new IoredisAdapter(...)` yields that object instead of a
-    // fresh `this` (standard JS constructor-return semantics) -- letting
-    // tests swap in a controllable in-memory adapter instead of a real
-    // ioredis client, without touching production code.
-    mockRequire("redlock-universal", {
-      ...redlockUniversal,
-      IoredisAdapter: function fakeIoredisAdapter() {
-        return currentAdapter;
-      },
-    });
-
-    kuzzle.ask.withArgs("core:cache:internal:client:get").resolves({});
-
-    ({ withLock, MutexLockLostError } = mockRequire.reRequire(
-      "../../lib/util/distributedLock",
-    ));
+    // Force lib/util/distributedLock.ts to re-evaluate so its module-level
+    // adapter cache starts fresh for every test.
+    vi.resetModules();
+    ({ withLock, MutexLockLostError } =
+      await import("../../lib/util/distributedLock"));
   });
 
   afterEach(() => {
-    mockRequire.stopAll();
+    vi.restoreAllMocks();
   });
 
   describe("#client bridge", () => {
@@ -58,20 +62,18 @@ describe("#distributedLock", () => {
       await withLock("foo", async () => "a");
       await withLock("bar", async () => "b");
 
-      should(kuzzle.ask.callCount).eql(1);
-      should(kuzzle.ask).calledWith("core:cache:internal:client:get");
+      expect(kuzzle.ask).toHaveBeenCalledTimes(1);
+      expect(kuzzle.ask).toHaveBeenCalledWith("core:cache:internal:client:get");
     });
 
     it("does not permanently cache a failed client lookup", async () => {
-      kuzzle.ask
-        .withArgs("core:cache:internal:client:get")
-        .rejects(new Error("boom"));
+      kuzzle.ask.mockRejectedValueOnce(new Error("boom"));
 
-      await should(withLock("foo", async () => "a")).be.rejectedWith("boom");
+      await expect(withLock("foo", async () => "a")).rejects.toThrow("boom");
 
-      kuzzle.ask.withArgs("core:cache:internal:client:get").resolves({});
+      kuzzle.ask.mockResolvedValueOnce({});
 
-      await should(withLock("foo", async () => "a")).be.fulfilledWith("a");
+      await expect(withLock("foo", async () => "a")).resolves.toBe("a");
     });
   });
 
@@ -81,9 +83,9 @@ describe("#distributedLock", () => {
         withLock("foo", async () => "nested"),
       );
 
-      should(result).eql("nested");
+      expect(result).toBe("nested");
       // Only the 1st, outermost call actually needs the client/adapter
-      should(kuzzle.ask.callCount).eql(1);
+      expect(kuzzle.ask).toHaveBeenCalledTimes(1);
     });
 
     it("locks different keys independently, allowing nesting", async () => {
@@ -91,7 +93,7 @@ describe("#distributedLock", () => {
         withLock("bar", async () => "nested-different-key"),
       );
 
-      should(result).eql("nested-different-key");
+      expect(result).toBe("nested-different-key");
     });
 
     it("ignores config on a reentrant call for an already-held key", async () => {
@@ -101,13 +103,13 @@ describe("#distributedLock", () => {
         withLock("foo", async () => "nested-with-config", { ttl: 1 }),
       );
 
-      should(result).eql("nested-with-config");
+      expect(result).toBe("nested-with-config");
     });
   });
 
   describe("#contention", () => {
     it("waits for a held key to be released before proceeding", async () => {
-      const order = [];
+      const order: string[] = [];
 
       const first = withLock(
         "contended",
@@ -133,20 +135,20 @@ describe("#distributedLock", () => {
 
       const [firstResult, secondResult] = await Promise.all([first, second]);
 
-      should(firstResult).eql("first");
-      should(secondResult).eql("second");
-      should(order).eql(["first-start", "first-end", "second-start"]);
+      expect(firstResult).toBe("first");
+      expect(secondResult).toBe("second");
+      expect(order).toEqual(["first-start", "first-end", "second-start"]);
     });
   });
 
   describe("#lock loss", () => {
     it("rejects with MutexLockLostError as soon as the lock is lost mid-callback", async () => {
-      currentAdapter = new FlakyAdapter();
+      mocks.currentAdapter = new FlakyAdapter();
 
       // ttl must stay above ~1250ms: redlock-universal enforces a 1000ms
-      // minimum extension interval, so anything lower makes it attempt
-      // (and, here, fail) extension immediately instead of on a schedule.
-      await should(
+      // minimum extension interval, so anything lower makes it attempt (and,
+      // here, fail) extension immediately instead of on a schedule.
+      await expect(
         withLock(
           "loss-test",
           () =>
@@ -158,7 +160,7 @@ describe("#distributedLock", () => {
             }),
           { retryAttempts: 1, retryDelay: 30, ttl: 1500 },
         ),
-      ).be.rejectedWith(MutexLockLostError);
+      ).rejects.toThrow(MutexLockLostError);
     });
   });
 });
