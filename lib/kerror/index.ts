@@ -40,7 +40,11 @@ function _getCurrentFileName() {
     return _currentFileName;
   }
 
-  _currentFileName = module.filename.substr(process.cwd().length + 1);
+  // `module.filename` is unset in some sandboxed test runtimes (e.g. vitest);
+  // fall back to an empty string, making the stack-trace cleanup a no-op.
+  _currentFileName = module.filename
+    ? module.filename.substring(process.cwd().length + 1)
+    : "";
 
   return _currentFileName;
 }
