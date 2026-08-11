@@ -21,7 +21,9 @@
 
 import { JSONObject } from "kuzzle-sdk";
 
+import type { KuzzleRequest } from "../../api/request";
 import { sha256 } from "../../util/crypto";
+import { has } from "../../util/safeObject";
 import createDebug from "../../util/debug";
 import * as kerror from "../../kerror";
 import BaseModel from "./baseModel";
@@ -197,6 +199,39 @@ class ApiKey extends BaseModel {
     }
 
     return apiKey as ApiKey;
+  }
+
+  /**
+   * Loads a user's API key from a request, identified by its `_id`, its
+   * clear-text `key` or its `fingerprint` (in that order of precedence).
+   *
+   * @param userId - User ID
+   * @param request - Request carrying the `_id`, `key` or `fingerprint` argument
+   */
+  static async loadFromRequest(
+    userId: string,
+    request: KuzzleRequest,
+  ): Promise<ApiKey> {
+    const apiKeyId = request.getId({ ifMissing: "ignore" });
+
+    if (apiKeyId) {
+      return this.load(userId, apiKeyId);
+    }
+
+    if (has(request.input.args, "key")) {
+      return this.loadByFingerprint(userId, sha256(request.getString("key")));
+    }
+
+    if (has(request.input.args, "fingerprint")) {
+      return this.loadByFingerprint(userId, request.getString("fingerprint"));
+    }
+
+    throw kerror.get(
+      "api",
+      "assert",
+      "missing_argument",
+      "_id, key or fingerprint",
+    );
   }
 
   /**
