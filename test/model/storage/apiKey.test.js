@@ -9,6 +9,8 @@ const ClientAdapterMock = require("../../mocks/clientAdapter.mock");
 
 const BaseModel = require("../../../lib/model/storage/baseModel");
 const ApiKey = require("../../../lib/model/storage/apiKey");
+const { Request } = require("../../../index");
+const { sha256 } = require("../../../lib/util/crypto");
 
 describe("ApiKey", () => {
   let StorageEngine;
@@ -167,6 +169,70 @@ describe("ApiKey", () => {
 
       await should(promise).be.rejectedWith({
         id: "services.storage.not_found",
+      });
+    });
+  });
+
+  describe("ApiKey.loadFromRequest", () => {
+    let request;
+    let apiKey;
+
+    beforeEach(() => {
+      request = new Request({ action: "deleteApiKey", controller: "security" });
+      apiKey = new ApiKey({ userId: "mylehuong" }, "api-key-id");
+    });
+
+    afterEach(() => {
+      sinon.restore();
+    });
+
+    it("should load by _id when provided", async () => {
+      request.input.args._id = "api-key-id";
+      const loadStub = sinon.stub(ApiKey, "load").resolves(apiKey);
+      const loadByFingerprintStub = sinon.stub(ApiKey, "loadByFingerprint");
+
+      const result = await ApiKey.loadFromRequest("mylehuong", request);
+
+      should(loadStub).be.calledWith("mylehuong", "api-key-id");
+      should(loadByFingerprintStub).not.be.called();
+      should(result).be.eql(apiKey);
+    });
+
+    it("should load by the hashed key when _id is not provided", async () => {
+      request.input.args.key = "the-clear-text-key";
+      const loadByFingerprintStub = sinon
+        .stub(ApiKey, "loadByFingerprint")
+        .resolves(apiKey);
+
+      const result = await ApiKey.loadFromRequest("mylehuong", request);
+
+      should(loadByFingerprintStub).be.calledWith(
+        "mylehuong",
+        sha256("the-clear-text-key"),
+      );
+      should(result).be.eql(apiKey);
+    });
+
+    it("should load by fingerprint when neither _id nor key are provided", async () => {
+      request.input.args.fingerprint = "the-fingerprint";
+      const loadByFingerprintStub = sinon
+        .stub(ApiKey, "loadByFingerprint")
+        .resolves(apiKey);
+
+      const result = await ApiKey.loadFromRequest("mylehuong", request);
+
+      should(loadByFingerprintStub).be.calledWith(
+        "mylehuong",
+        "the-fingerprint",
+      );
+      should(result).be.eql(apiKey);
+    });
+
+    it("should throw if none of _id, key or fingerprint are provided", async () => {
+      const promise = ApiKey.loadFromRequest("mylehuong", request);
+
+      await should(promise).be.rejectedWith({
+        id: "api.assert.missing_argument",
       });
     });
   });
