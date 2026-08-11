@@ -37,6 +37,7 @@ import { JSONObject } from "kuzzle-sdk";
 import { Token } from "../../model/security/token";
 
 import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
+import { sha256 } from "../../util/crypto";
 
 const securityError = kerror.wrap("security", "token");
 
@@ -196,10 +197,28 @@ export default class AuthController extends NativeController {
    * Deletes an API key
    */
   async deleteApiKey(request: KuzzleRequest) {
-    const apiKeyId = request.getId();
+    const userId = request.context.user._id;
     const refresh = request.getRefresh();
+    const apiKeyId = request.getId({ ifMissing: "ignore" });
 
-    const apiKey = await ApiKey.load(request.context.user._id, apiKeyId);
+    let apiKey: ApiKey;
+
+    if (apiKeyId) {
+      apiKey = await ApiKey.load(userId, apiKeyId);
+    } else if (has(request.input.args, "key")) {
+      const key = request.getString("key");
+      apiKey = await ApiKey.loadByFingerprint(userId, sha256(key));
+    } else if (has(request.input.args, "fingerprint")) {
+      const fingerprint = request.getString("fingerprint");
+      apiKey = await ApiKey.loadByFingerprint(userId, fingerprint);
+    } else {
+      throw kerror.get(
+        "api",
+        "assert",
+        "missing_argument",
+        "_id, key or fingerprint",
+      );
+    }
 
     await apiKey.delete({ refresh });
 
