@@ -196,14 +196,14 @@ export default class AuthController extends NativeController {
    * Deletes an API key
    */
   async deleteApiKey(request: KuzzleRequest) {
-    const apiKeyId = request.getId();
+    const userId = request.context.user._id;
     const refresh = request.getRefresh();
 
-    const apiKey = await ApiKey.load(request.context.user._id, apiKeyId);
+    const apiKey = await ApiKey.loadFromRequest(userId, request);
 
     await apiKey.delete({ refresh });
 
-    return { _id: apiKeyId };
+    return { _id: apiKey._id };
   }
 
   /**

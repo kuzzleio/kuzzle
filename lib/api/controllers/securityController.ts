@@ -203,19 +203,21 @@ export default class SecurityController extends NativeController {
   }
 
   /**
-   * Deletes an user API key
+   * Deletes an user API key.
+   *
+   * The API key to delete can be identified either by its `_id`, by the
+   * clear-text `key` itself, or by the key's `fingerprint`.
    */
   async deleteApiKey(request: KuzzleRequest) {
     const userId = request.getString("userId");
-    const apiKeyId = request.getId();
     const refresh = request.getRefresh("wait_for");
 
-    const apiKey = await ApiKey.load(userId, apiKeyId);
+    const apiKey = await ApiKey.loadFromRequest(userId, request);
 
     await apiKey.delete({ refresh });
 
     return {
-      _id: apiKeyId,
+      _id: apiKey._id,
     };
   }
 
