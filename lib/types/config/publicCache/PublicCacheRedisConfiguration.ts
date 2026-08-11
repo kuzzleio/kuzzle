@@ -1,37 +1,8 @@
-export type PublicCacheRedisConfiguration = {
-  /**
-   * @default 'redis'
-   */
-  backend: "redis";
+import { BaseCacheRedisConfiguration } from "../cache/BaseCacheRedisConfiguration";
 
-  clusterOptions: {
-    /**
-     * @default true
-     */
-    enableReadyCheck: boolean;
-  };
-
+export type PublicCacheRedisConfiguration = BaseCacheRedisConfiguration & {
   /**
    * @default 5
    */
   database: number;
-
-  node: {
-    /**
-     * @default 'localhost'
-     */
-    host: string;
-
-    /**
-     * @default 6379
-     */
-    port: number;
-  };
-
-  options?: Record<string, unknown>;
-
-  /**
-   * @default false
-   */
-  overrideDnsLookup: boolean;
 };

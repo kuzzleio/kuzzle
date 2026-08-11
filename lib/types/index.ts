@@ -48,6 +48,7 @@ export * from "./config/PluginsConfiguration";
 export * from "./config/SecurityConfiguration";
 export * from "./config/ServerConfiguration";
 export * from "./config/ServicesConfiguration";
+export * from "./config/cache/BaseCacheRedisConfiguration";
 export * from "./config/internalCache/InternalCacheRedisConfiguration";
 export * from "./config/publicCache/PublicCacheRedisConfiguration";
 export * from "./config/storageEngine/StorageEngineElasticsearchConfiguration";

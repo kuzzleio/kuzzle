@@ -83,6 +83,12 @@ export interface MutexOptions {
  * If, in the future, Kuzzle is able to support multiple independant
  * Redis servers, then this class needs to implement redlock to properly handle
  * synchronization between servers (see https://redis.io/topics/distlock)
+ *
+ * @deprecated Use `withLock` from `./distributedLock` instead: it supports
+ * real Redlock semantics and reentrancy. Do not mix `Mutex` and `withLock`
+ * on the same resource key — they use incompatible acquisition/TTL formats
+ * and will contend with (though never corrupt) each other's lock on that
+ * key.
  */
 export class Mutex {
   readonly resource: string;
