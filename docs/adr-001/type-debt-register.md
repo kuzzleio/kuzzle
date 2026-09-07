@@ -26,9 +26,10 @@
 | [TD-15](#td-15) | 🟡 low | Enforcement | Implicit-any constructors on public request/response classes | S | ⬜ |
 | [TD-16](#td-16) | 🟡 low | Storage | ES7/ES8 copy-paste; ES8 drifted (typed `stats()`/`update()`) | S | ⬜ |
 | [TD-17](#td-17) | 🟡 low | Config | `loadConfig()` returns `any` | XS | ⬜ |
-| [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | 🟦 |
+| [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | ✅ |
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
 | [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers | S | ⬜ |
+| [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false | XS | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -180,6 +181,7 @@ Defeats typing at the config assembly point.
 `version: string` (always present at runtime) and `internal.allowAllOrigins: boolean` are absent from the type.
 - **Reco:** add them to `IKuzzleConfiguration`.
 - **🟦 In progress (2026-07-21, PR D):** `version: string` added to `IKuzzleConfiguration` (unblocks `serverController`'s `global.kuzzle.config.version` read). **Remaining ⬜:** `internal.allowAllOrigins: boolean` (only consumed by still-JS `httpwsProtocol`/`funnel`, so deferred to their conversion to avoid touching out-of-scope files).
+- **✅ Closed (2026-09-07, PR E2):** `internal.allowAllOrigins: boolean` added to `IKuzzleConfiguration` — `funnel._isOriginAuthorized` reads it, and its conversion is exactly the trigger PR D deferred to. The remaining JS consumer (`httpwsProtocol`) is unaffected (type-only change).
 
 ### TD-19
 **`any` in otherwise-typed config sections** · 🟡 low · `lib/types/config/KuzzleConfiguration.ts:155`
@@ -203,6 +205,21 @@ Kept as-is in PR D with `// NOSONAR` on each call site (a `.js`→`.ts` rename r
 
 - **Reco:** migrate in a **dedicated behaviour-change PR** (not a conversion): add runtime deprecation warnings, document the breaking change, remove the legacy paths on a major version, then drop the `NOSONAR` markers.
 - **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints.
+
+---
+
+## Correctness
+
+### TD-21
+**`_wrapError` guards on the wrong argument** · 🟠 medium · `lib/api/funnel.ts` (`_wrapError`)
+
+`Funnel._wrapError(request, error)` calls `this.isNativeController(request)`, but `isNativeController(controller: string)` does `this.controllers.has(controller)` — it expects a controller **name**. A `KuzzleRequest` is never a key of that map, so the guard is **always false** and *every* non-`KuzzleError` is wrapped into a `PluginImplementationError` (`plugin.runtime.unexpected_error`), native controllers included. The intent was clearly `request.input.controller`.
+
+Latent since the JS version. Surfaced by the Sprint 4 PR E2 conversion, which made the argument mismatch a type error.
+
+- **Kept as-is** (cast `request as unknown as string` + an inline comment): fixing it changes observable behaviour — native-controller internal errors would stop being reported as plugin errors — and the current Mocha specs (`handleProcessRequestError.test.js`, `processRequest.test.js`) assert the wrapped `plugin.runtime.unexpected_error`. A conversion PR must not change behaviour.
+- **Reco:** in a dedicated behaviour-change PR, pass `request.input.controller`, re-baseline the two specs, and drop the cast + comment.
+- **Trigger:** independent of the TS-migration sprints.
 
 ---
 
