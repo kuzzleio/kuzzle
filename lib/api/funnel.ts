@@ -62,7 +62,7 @@ const processError = kerror.wrap("api", "process");
 
 // Actions of the auth controller that does not necessite to verify the token
 // when cookie auth is active
-const SKIP_TOKEN_VERIF_ACTIONS = ["login", "checkToken", "logout"];
+const SKIP_TOKEN_VERIF_ACTIONS = new Set(["login", "checkToken", "logout"]);
 
 type ThrottledFn = (request: KuzzleRequest) => void;
 type ExecuteCallback = (error: Error | null, request: KuzzleRequest) => void;
@@ -95,35 +95,22 @@ type DocumentEventAliases = EventAliases & {
  * @class Funnel
  */
 class Funnel {
-  public overloaded: boolean;
-  public concurrentRequests: number;
-  public controllers: Map<string, NativeController>;
-  public pendingRequestsQueue: Deque<string>;
-  public pendingRequestsById: Map<string, PendingRequest>;
-  public lastOverloadTime: number;
-  public overloadWarned: boolean;
-  public lastWarningTime: number;
-  public rateLimiter: RateLimiter;
-  public lastDumpedErrors: Record<string, number>;
+  public overloaded = false;
+  public concurrentRequests = 0;
+  public controllers: Map<string, NativeController> = new Map();
+  public pendingRequestsQueue: Deque<string> = new Deque();
+  public pendingRequestsById: Map<string, PendingRequest> = new Map();
+  public lastOverloadTime = 0;
+  public overloadWarned = false;
+  public lastWarningTime = 0;
+  public rateLimiter: RateLimiter = new RateLimiter();
+  public lastDumpedErrors: Record<string, number> = {};
+  public sdkCompatibility: Record<string, SdkRequirements> = sdkCompatibility;
   public documentEventAliases: DocumentEventAliases;
-  public sdkCompatibility: Record<string, SdkRequirements>;
   public logger: Logger;
 
   constructor() {
-    this.overloaded = false;
-    this.concurrentRequests = 0;
-    this.controllers = new Map();
-    this.pendingRequestsQueue = new Deque();
-    this.pendingRequestsById = new Map();
-    this.lastOverloadTime = 0;
-    this.overloadWarned = false;
-    this.lastWarningTime = 0;
-    this.rateLimiter = new RateLimiter();
-
-    this.lastDumpedErrors = {};
     this.loadDocumentEventAliases();
-
-    this.sdkCompatibility = sdkCompatibility;
 
     this.logger = global.kuzzle.log.child("api:funnel");
   }
@@ -185,6 +172,35 @@ class Funnel {
   }
 
   /**
+   * Emits the "core:overload" event and logs a warning when the pending-request
+   * queue crosses its warning threshold — rate-limited to once per 500ms.
+   */
+  private _warnOverload() {
+    const now = Date.now();
+
+    if (
+      this.pendingRequestsQueue.length <=
+        global.kuzzle.config.limits.requestsBufferWarningThreshold ||
+      (this.lastWarningTime !== 0 && this.lastWarningTime >= now - 500)
+    ) {
+      return;
+    }
+
+    const overloadPercentage =
+      Math.round(
+        (10000 * this.pendingRequestsQueue.length) /
+          global.kuzzle.config.limits.requestsBufferSize,
+      ) / 100;
+    global.kuzzle.emit("core:overload", overloadPercentage);
+    this.logger.warn(
+      `[!WARNING!] Kuzzle overloaded: ${overloadPercentage}%. Delaying requests...`,
+    );
+
+    this.overloadWarned = true;
+    this.lastWarningTime = now;
+  }
+
+  /**
    * Asks the overload-protection system for an execution slot.
    *
    * Returns immediately true if the request can be
@@ -225,26 +241,7 @@ class Funnel {
     );
 
     if (this.overloaded) {
-      const now = Date.now();
-
-      if (
-        this.pendingRequestsQueue.length >
-          global.kuzzle.config.limits.requestsBufferWarningThreshold &&
-        (this.lastWarningTime === 0 || this.lastWarningTime < now - 500)
-      ) {
-        const overloadPercentage =
-          Math.round(
-            (10000 * this.pendingRequestsQueue.length) /
-              global.kuzzle.config.limits.requestsBufferSize,
-          ) / 100;
-        global.kuzzle.emit("core:overload", overloadPercentage);
-        this.logger.warn(
-          `[!WARNING!] Kuzzle overloaded: ${overloadPercentage}%. Delaying requests...`,
-        );
-
-        this.overloadWarned = true;
-        this.lastWarningTime = now;
-      }
+      this._warnOverload();
     }
 
     if (
@@ -326,7 +323,7 @@ class Funnel {
    * @returns {Number} -1: request delayed, 0: request processing, 1: error
    */
   execute(request: KuzzleRequest, callback: ExecuteCallback) {
-    if (!request.input.controller || !request.input.controller.length) {
+    if (!request.input.controller?.length) {
       callback(
         kerror.get("api", "assert", "missing_argument", "controller"),
         request,
@@ -334,7 +331,7 @@ class Funnel {
       return 1;
     }
 
-    if (!request.input.action || !request.input.action.length) {
+    if (!request.input.action?.length) {
       callback(
         kerror.get("api", "assert", "missing_argument", "action"),
         request,
@@ -389,110 +386,7 @@ class Funnel {
 
     try {
       const executing = this.throttle(
-        (req) => {
-          // if the connection is closed there is no need to execute the request
-          // => discarding it
-          if (!global.kuzzle.router.isConnectionAlive(req.context)) {
-            debug("Client connection dead: dropping request: %a", req.input);
-            callback(processError.get("connection_dropped"), req);
-            return;
-          }
-
-          debug(
-            "Starting request %s:%s [%s]: %j",
-            req.input.controller,
-            req.input.action,
-            req.id,
-            req.input,
-          );
-
-          global.kuzzle.asyncStore.run(() => {
-            global.kuzzle.asyncStore.set("REQUEST", req);
-            global.kuzzle
-              .pipe("request:beforeExecution", req)
-              .then((modifiedRequest) => {
-                let _request;
-
-                return this.checkRights(modifiedRequest)
-                  .then((newModifiedRequest) => {
-                    _request = newModifiedRequest;
-                    return this.rateLimiter.isAllowed(_request);
-                  })
-                  .then((allowed) => {
-                    if (!allowed) {
-                      if (
-                        request.input.controller === "auth" &&
-                        request.input.action === "login"
-                      ) {
-                        throw processError.get("too_many_logins_requests");
-                      }
-                      throw processError.get("too_many_requests");
-                    }
-
-                    return this.processRequest(_request);
-                  })
-                  .then((processResult) => {
-                    debug(
-                      "Request %s successfully executed. Result: %a",
-                      modifiedRequest.id,
-                      processResult,
-                    );
-
-                    return global.kuzzle
-                      .pipe("request:afterExecution", {
-                        request: _request,
-                        result: processResult,
-                        success: true,
-                      })
-                      .then((pipeEvent) => {
-                        callback(null, pipeEvent.result);
-
-                        // disables a bluebird warning in dev. mode triggered when
-                        // a promise is created and not returned
-                        return null;
-                      });
-                  })
-                  .catch((err) => {
-                    debug(
-                      "Error processing request %s: %a",
-                      modifiedRequest.id,
-                      err,
-                    );
-                    return global.kuzzle
-                      .pipe("request:afterExecution", {
-                        error: err,
-                        request: modifiedRequest,
-                        success: false,
-                      })
-                      .then((pipeEvent) =>
-                        this._executeError(
-                          pipeEvent.error,
-                          pipeEvent.request,
-                          true,
-                          callback,
-                        ),
-                      );
-                  });
-              })
-              .catch((err) => {
-                debug("Error processing request %s: %a", req.id, err);
-                return global.kuzzle
-                  .pipe("request:afterExecution", {
-                    error: err,
-                    request: req,
-                    success: false,
-                  })
-                  .then((pipeEvent) =>
-                    this._executeError(
-                      pipeEvent.error,
-                      pipeEvent.request,
-                      true,
-                      callback,
-                    ),
-                  );
-              });
-          });
-        },
+        (req) => this._executeThrottled(req, callback),
         this,
         request,
       );
@@ -503,6 +397,127 @@ class Funnel {
       callback(error, request);
       return 1;
     }
+  }
+
+  /**
+   * Runs a request that has been granted an execution slot by the
+   * overload-protection system. Extracted from `execute` verbatim.
+   *
+   * @param request - the very request `execute` handed to `throttle`
+   */
+  private _executeThrottled(
+    request: KuzzleRequest,
+    callback: ExecuteCallback,
+  ): void {
+    // if the connection is closed there is no need to execute the request
+    // => discarding it
+    if (!global.kuzzle.router.isConnectionAlive(request.context)) {
+      debug("Client connection dead: dropping request: %a", request.input);
+      callback(processError.get("connection_dropped"), request);
+      return;
+    }
+
+    debug(
+      "Starting request %s:%s [%s]: %j",
+      request.input.controller,
+      request.input.action,
+      request.id,
+      request.input,
+    );
+
+    global.kuzzle.asyncStore.run(() => {
+      global.kuzzle.asyncStore.set("REQUEST", request);
+      global.kuzzle
+        .pipe("request:beforeExecution", request)
+        .then((modifiedRequest) =>
+          this._dispatch(request, modifiedRequest, callback),
+        )
+        .catch((err) => {
+          debug("Error processing request %s: %a", request.id, err);
+          return this._reportExecutionError(err, request, callback);
+        });
+    });
+  }
+
+  /**
+   * Rights check -> rate limit -> controller action, then reports the outcome
+   * through `callback`. Extracted from `execute` verbatim.
+   *
+   * @param request - the original request (the rate-limit branch inspects it,
+   *                  not the pipe-modified one)
+   * @param modifiedRequest - the "request:beforeExecution" pipe result
+   */
+  private _dispatch(
+    request: KuzzleRequest,
+    modifiedRequest: KuzzleRequest,
+    callback: ExecuteCallback,
+  ) {
+    let _request: KuzzleRequest;
+
+    return this.checkRights(modifiedRequest)
+      .then((newModifiedRequest) => {
+        _request = newModifiedRequest;
+        return this.rateLimiter.isAllowed(_request);
+      })
+      .then((allowed) => {
+        if (!allowed) {
+          if (
+            request.input.controller === "auth" &&
+            request.input.action === "login"
+          ) {
+            throw processError.get("too_many_logins_requests");
+          }
+          throw processError.get("too_many_requests");
+        }
+
+        return this.processRequest(_request);
+      })
+      .then((processResult) => {
+        debug(
+          "Request %s successfully executed. Result: %a",
+          modifiedRequest.id,
+          processResult,
+        );
+
+        return global.kuzzle
+          .pipe("request:afterExecution", {
+            request: _request,
+            result: processResult,
+            success: true,
+          })
+          .then((pipeEvent) => {
+            callback(null, pipeEvent.result);
+
+            // disables a bluebird warning in dev. mode triggered when
+            // a promise is created and not returned
+            return null;
+          });
+      })
+      .catch((err) => {
+        debug("Error processing request %s: %a", modifiedRequest.id, err);
+        return this._reportExecutionError(err, modifiedRequest, callback);
+      });
+  }
+
+  /**
+   * Fires "request:afterExecution" in failure mode, then reports the (possibly
+   * pipe-rewritten) error through `callback`. Extracted from `execute` verbatim
+   * — both of its catch blocks did exactly this.
+   */
+  private _reportExecutionError(
+    error: Error,
+    request: KuzzleRequest,
+    callback: ExecuteCallback,
+  ) {
+    return global.kuzzle
+      .pipe("request:afterExecution", {
+        error,
+        request,
+        success: false,
+      })
+      .then((pipeEvent) =>
+        this._executeError(pipeEvent.error, pipeEvent.request, true, callback),
+      );
   }
 
   /**
@@ -519,7 +534,7 @@ class Funnel {
         const errorType =
           typeof err === "object" && err.name ? err.name : typeof err;
 
-        if (handledErrors.whitelist.indexOf(errorType) > -1) {
+        if (handledErrors.whitelist.includes(errorType)) {
           const now = Date.now();
 
           // JSON.stringify(new NativeError()) === '{}'
@@ -537,7 +552,7 @@ class Funnel {
             // simplify error message to use it in folder dump name
             let errorMessage = err.message;
 
-            if (errorMessage.indexOf("\n") > -1) {
+            if (errorMessage.includes("\n")) {
               errorMessage = errorMessage.split("\n")[0];
             }
 
@@ -573,42 +588,7 @@ class Funnel {
       throw kerror.get("security", "cookie", "unsupported");
     }
 
-    let skipTokenVerification = false;
-    // When the Support of Cookie as Authentication Token is enabled we check if an auth token cookie is present
-    // When a request is made with cookieAuth set to true
-    // We try to use the auth token cookie if present as auth token
-    // otherwise check for auth token as input
-    if (request.input.headers && has(request.input.headers, "cookie")) {
-      let cookie;
-      try {
-        cookie = Cookie.parse(request.input.headers.cookie);
-      } catch (error) {
-        throw kerror.get("security", "cookie", "invalid");
-      }
-
-      // if cookie is present and not null, and a token is present we should throw because we don't know which one to use
-      if (cookie.authToken && cookie.authToken !== "null") {
-        if (!global.kuzzle.config.http.cookieAuthentication) {
-          throw kerror.get("security", "cookie", "unsupported");
-        }
-
-        if (request.input.jwt) {
-          throw kerror.get(
-            "security",
-            "token",
-            "verification_error",
-            "Both token and cookie are present, could not decide which one to use",
-          );
-        }
-
-        request.input.jwt = cookie.authToken;
-
-        skipTokenVerification =
-          request.getBoolean("cookieAuth") &&
-          request.input.controller === "auth" &&
-          SKIP_TOKEN_VERIF_ACTIONS.includes(request.input.action);
-      }
-    }
+    const skipTokenVerification = this._applyCookieAuthToken(request);
 
     try {
       // If the verification should be skipped, we pass a null token,
@@ -674,6 +654,55 @@ class Funnel {
     return global.kuzzle.pipe("request:onAuthorized", request);
   }
 
+  /**
+   * When cookie authentication is enabled, promotes the request's auth-token
+   * cookie to `request.input.jwt`. Extracted from `checkRights` verbatim.
+   *
+   * @returns whether token verification must be skipped (anonymous check)
+   */
+  private _applyCookieAuthToken(request: KuzzleRequest): boolean {
+    // When the Support of Cookie as Authentication Token is enabled we check if an auth token cookie is present
+    // When a request is made with cookieAuth set to true
+    // We try to use the auth token cookie if present as auth token
+    // otherwise check for auth token as input
+    if (!request.input.headers || !has(request.input.headers, "cookie")) {
+      return false;
+    }
+
+    let cookie;
+    try {
+      cookie = Cookie.parse(request.input.headers.cookie);
+    } catch (error) {
+      throw kerror.get("security", "cookie", "invalid");
+    }
+
+    // if cookie is present and not null, and a token is present we should throw because we don't know which one to use
+    if (!cookie.authToken || cookie.authToken === "null") {
+      return false;
+    }
+
+    if (!global.kuzzle.config.http.cookieAuthentication) {
+      throw kerror.get("security", "cookie", "unsupported");
+    }
+
+    if (request.input.jwt) {
+      throw kerror.get(
+        "security",
+        "token",
+        "verification_error",
+        "Both token and cookie are present, could not decide which one to use",
+      );
+    }
+
+    request.input.jwt = cookie.authToken;
+
+    return (
+      request.getBoolean("cookieAuth") &&
+      request.input.controller === "auth" &&
+      SKIP_TOKEN_VERIF_ACTIONS.has(request.input.action)
+    );
+  }
+
   _isLogin(request: KuzzleRequest) {
     return (
       request.input.controller === "auth" && request.input.action === "login"
@@ -696,6 +725,10 @@ class Funnel {
     let _request = request;
 
     try {
+      // NOSONAR: `_checkSdkVersion` is synchronous, so this `await` only costs
+      // a microtask hop. Removing it is very likely unobservable — but "very
+      // likely" is not the bar for a conversion PR (ADR-0001: no behaviour
+      // change). Drop the `await` in a follow-up.
       await this._checkSdkVersion(_request);
       _request = await global.kuzzle.pipe("request:onExecution", _request);
       _request = await this.performDocumentAlias(_request, "before");
@@ -706,9 +739,8 @@ class Funnel {
 
       const responseData = await doAction(controller, _request);
 
-      _request.setResult(responseData, {
-        status: _request.status === 102 ? 200 : _request.status,
-      });
+      const status = _request.status === 102 ? 200 : _request.status;
+      _request.setResult(responseData, { status }); // NOSONAR: TD-20
 
       if (
         !this.isNativeController(_request.input.controller) &&
@@ -720,7 +752,7 @@ class Funnel {
             JSON.stringify(responseData);
           }
         } catch (e) {
-          _request.setResult(null);
+          _request.setResult(null); // NOSONAR: TD-20
           throw kerror.get("plugin", "controller", "unserializable_response");
         }
       }
@@ -814,7 +846,7 @@ class Funnel {
           error: error,
           request: request,
           result: res,
-          success: error === undefined ? true : false,
+          success: error === undefined,
         });
       }
     }
@@ -960,9 +992,8 @@ class Funnel {
       return;
     }
 
-    const sdkVersion =
-      request.input.volatile && request.input.volatile.sdkVersion;
-    const sdkName = request.input.volatile && request.input.volatile.sdkName;
+    const sdkVersion = request.input.volatile?.sdkVersion;
+    const sdkName = request.input.volatile?.sdkName;
 
     // sdkVersion property is only used by Kuzzle v1 SDKs
     if (sdkVersion) {
@@ -978,8 +1009,8 @@ class Funnel {
     }
 
     const separatorIdx = sdkName.indexOf("@"),
-      name = sdkName.substr(0, separatorIdx),
-      version = sdkName.substr(separatorIdx + 1);
+      name = sdkName.substring(0, separatorIdx),
+      version = sdkName.substring(separatorIdx + 1);
 
     if (name.length === 0 || version.length === 0) {
       return;
