@@ -725,11 +725,11 @@ class Funnel {
     let _request = request;
 
     try {
-      // NOSONAR: `_checkSdkVersion` is synchronous, so this `await` only costs
-      // a microtask hop. Removing it is very likely unobservable — but "very
+      // `_checkSdkVersion` is synchronous, so this `await` only costs a
+      // microtask hop. Removing it is very likely unobservable — but "very
       // likely" is not the bar for a conversion PR (ADR-0001: no behaviour
       // change). Drop the `await` in a follow-up.
-      await this._checkSdkVersion(_request);
+      await this._checkSdkVersion(_request); // NOSONAR
       _request = await global.kuzzle.pipe("request:onExecution", _request);
       _request = await this.performDocumentAlias(_request, "before");
       _request = await global.kuzzle.pipe(
