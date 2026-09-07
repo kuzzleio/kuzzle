@@ -740,7 +740,7 @@ class Funnel {
       const responseData = await doAction(controller, _request);
 
       const status = _request.status === 102 ? 200 : _request.status;
-      _request.setResult(responseData, { status }); // NOSONAR: TD-20
+      _request.setResult(responseData, { status }); // NOSONAR: TD-20 (#2688)
 
       if (
         !this.isNativeController(_request.input.controller) &&
@@ -752,7 +752,7 @@ class Funnel {
             JSON.stringify(responseData);
           }
         } catch (e) {
-          _request.setResult(null); // NOSONAR: TD-20
+          _request.setResult(null); // NOSONAR: TD-20 (#2688)
           throw kerror.get("plugin", "controller", "unserializable_response");
         }
       }
@@ -1118,7 +1118,8 @@ class Funnel {
    * @returns {KuzzleError}
    */
   _wrapError(request: KuzzleRequest, error: Error): Error {
-    // TD-21: `isNativeController` expects a controller NAME, but a whole
+    // TD-21 (https://github.com/kuzzleio/kuzzle/issues/2687):
+    // `isNativeController` expects a controller NAME, but a whole
     // request is passed here — so the guard is always false and every
     // non-KuzzleError gets wrapped as a plugin error, native controllers
     // included. Fixing it changes behaviour (and the specs encode the current

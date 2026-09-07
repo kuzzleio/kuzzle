@@ -28,8 +28,8 @@
 | [TD-17](#td-17) | 🟡 low | Config | `loadConfig()` returns `any` | XS | ⬜ |
 | [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | ✅ |
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
-| [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers | S | ⬜ |
-| [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false | XS | ⬜ |
+| [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers — [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) | S | ⬜ |
+| [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -204,7 +204,8 @@ Two `@deprecated` `KuzzleRequest` methods are still called by the files converte
 Kept as-is in PR D with `// NOSONAR` on each call site (a `.js`→`.ts` rename re-scores the whole file as new code, so SonarCloud `typescript:S1874` — "deprecated API should not be used" — would fail the `0 New Issues` gate).
 
 - **Reco:** migrate in a **dedicated behaviour-change PR** (not a conversion): add runtime deprecation warnings, document the breaking change, remove the legacy paths on a major version, then drop the `NOSONAR` markers.
-- **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints.
+- **Tracked as [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)** (opened 2026-09-07) — the register alone was scheduling nothing.
+- **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints. Note the call-site count **grows with every conversion** (#2686 added 2 in `funnel.ts`); grep `NOSONAR: TD-20`.
 
 ---
 
@@ -219,6 +220,7 @@ Latent since the JS version. Surfaced by the Sprint 4 PR E2 conversion, which ma
 
 - **Kept as-is** (cast `request as unknown as string` + an inline comment): fixing it changes observable behaviour — native-controller internal errors would stop being reported as plugin errors — and the current Mocha specs (`handleProcessRequestError.test.js`, `processRequest.test.js`) assert the wrapped `plugin.runtime.unexpected_error`. A conversion PR must not change behaviour.
 - **Reco:** in a dedicated behaviour-change PR, pass `request.input.controller`, re-baseline the two specs, and drop the cast + comment.
+- **Tracked as [#2687](https://github.com/kuzzleio/kuzzle/issues/2687)** (opened 2026-09-07) — the register alone was scheduling nothing.
 - **Trigger:** independent of the TS-migration sprints.
 
 ---
@@ -244,6 +246,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-07-17** — Sprint 4 (`lib/api`) started, PR A (#2679): 6 files → TS, js baseline 79 → 73. Items surfaced for PR B: (1) **TD-18** (`config.version` unmodelled) + a **`kuzzle.statistics` private-but-accessed-cross-class** visibility bug, both blocking `serverController`; (2) **deprecated request APIs** — `documentExtractor` (and `documentController`) call `request.setResult(result, options)` (`@deprecated` → `response.configure`) and `request.getArrayLegacy` (`@deprecated`); harmless in JS, but a `.js`→`.ts` rename makes SonarCloud score them as *new* code and fail the `0 New Issues` gate, so `documentExtractor` was split out of PR A. Fixed in passing: `validation.js` `validate()` JSDoc pointed at the DOM `Request` instead of `KuzzleRequest`.
 - **2026-07-21** — Sprint 4 (`lib/api`) PR D (#2682): `serverController` + `documentExtractor` → TS. **TD-18** partially closed — `version: string` added to `IKuzzleConfiguration`; `internal.allowAllOrigins` still ⬜ (out-of-scope JS consumers). **TD-20** opened — the two files' `@deprecated` `setResult`/`getArrayLegacy` calls kept for behaviour parity (both replacements change behaviour), `NOSONAR`-marked, real migration deferred to a dedicated PR. Also made `kuzzle.statistics` non-`private` (cross-class access by `serverController`); the "visibility bug" flagged in PR A was in fact just the type not matching the runtime access. js baseline 71 → 69.
 - **2026-09-07** — Sprint 4 (`lib/api`) PR E1 (#2685): `httpRoutes` + `controllers/index` → TS; js baseline 69 → 67. **TD-19 partially prepared, not closed** — the route table now carries a real shape (a module-local `KuzzleHttpRoute` interface: literal-union `verb`, `deprecated?`, `url?`), but `HttpConfiguration.routes` is deliberately **left `any`**: promoting the interface into `lib/types` and typing that field cascades into already-converted files (`serverController.ts` assigns `config.http.routes = undefined` and re-declares its own local `ApiRoute[]`), i.e. a type refactor the conversion standard keeps out of a conversion PR. Whoever picks up TD-19 should start from `KuzzleHttpRoute`. Also standardized `adminController`/`authController`/`securityController` on `export =` — the `export default` shape was the sole reason for the `new XController.default()` workaround in `funnel.js` and 10 spec call sites.
+- **2026-09-07** — Sprint 4 (`lib/api`) **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)): `funnel` → TS; js baseline 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. **TD-18 closed** (`internal.allowAllOrigins` modelled — the half PR D deferred to exactly this conversion). **TD-21 opened** (see above). Both deferred items now have **GitHub issues** ([#2687](https://github.com/kuzzleio/kuzzle/issues/2687) for TD-21, [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) for TD-20): the register is read when someone picks up the ADR, which was scheduling nothing on its own. **Convention going forward: a TD entry that defers real work gets an issue, and the entry links to it.**
 
 ---
 
