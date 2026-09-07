@@ -21,9 +21,27 @@
 
 /* eslint sort-keys: 0 */
 
-"use strict";
+/**
+ * A native Kuzzle HTTP route, as exposed through `config.http.routes`.
+ *
+ * `url` is not declared in the literals below: it is derived from `path` by the
+ * loop at the end of this file, and kept as a (deprecated) alias for it.
+ */
+interface KuzzleHttpRoute {
+  verb: "get" | "post" | "put" | "patch" | "delete";
+  path: string;
+  controller: string;
+  action: string;
+  /** Set when the route is superseded by another one. */
+  deprecated?: {
+    since: string;
+    message: string;
+  };
+  /** Alias of `path`, populated below. */
+  url?: string;
+}
 
-const routes = [
+const routes: KuzzleHttpRoute[] = [
   // GET (idempotent)
   { verb: "get", path: "/_me", controller: "auth", action: "getCurrentUser" },
   {
@@ -1551,4 +1569,4 @@ for (const route of routes) {
   route.url = route.path;
 }
 
-module.exports = routes;
+export = routes;

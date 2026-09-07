@@ -34,7 +34,7 @@ import { NameGenerator } from "../../util/name-generator";
 /**
  * @class SecurityController
  */
-export default class SecurityController extends NativeController {
+class SecurityController extends NativeController {
   protected readonly subdomain: string;
   protected readonly securityCollections: string[];
   protected getStrategyMethod: any;
@@ -1592,3 +1592,5 @@ export default class SecurityController extends NativeController {
     return size;
   }
 }
+
+export = SecurityController;

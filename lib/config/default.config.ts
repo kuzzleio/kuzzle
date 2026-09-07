@@ -1,4 +1,4 @@
-import httpRoutes from "../api/httpRoutes.js";
+import httpRoutes from "../api/httpRoutes";
 import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 
 /* eslint-disable sort-keys */

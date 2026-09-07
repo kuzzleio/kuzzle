@@ -40,7 +40,7 @@ import type { GetCurrentUserResponse } from "../../types/controllers/authControl
 
 const securityError = kerror.wrap("security", "token");
 
-export default class AuthController extends NativeController {
+class AuthController extends NativeController {
   private anonymousId: string | null = null;
   private readonly logger = globalThis.kuzzle.log.child("api:controllers:auth");
 
@@ -769,3 +769,5 @@ function wrapPluginError(error) {
 
   throw error;
 }
+
+export = AuthController;
