@@ -56,6 +56,8 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - `sonar.cpd.exclusions`: the existing `lib/api/httpRoutes.js` entry retargeted to `.ts` (the route table's near-identical 5-line literals are exactly the pre-existing duplication the rename would re-score as new code).
 - **`HttpConfiguration.routes` left as `any`.** Typing it would have been the natural follow-through, but it cascades into `serverController.ts` (which assigns `config.http.routes = undefined` and passes the array to its own local `ApiRoute[]`) — a type refactor of already-converted files, which the conversion standard keeps out of conversion PRs.
 
+- **A `git mv`-less conversion can leave the `.js` behind.** `httpRoutes.ts` was added while `httpRoutes.js` stayed tracked, so both shipped in the same tree. Nothing broke locally — every consumer uses the extensionless specifier (`require("../../lib/api/httpRoutes")`, `import … from "../api/httpRoutes"`), which `allowJs` happily resolves to *either* — but the `js` ratchet counted **68** against a 67 baseline and would have failed CI on the PR. Removed in a follow-up commit; the check is `git ls-files lib/api | grep httpRoutes` (or simply `npm run ratchet:js`) before pushing a conversion.
+
 ## SonarCloud gate note (applies to every conversion PR)
 
 A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so pre-existing smells *and duplication* are re-scored against the strict new-code gate (`0 New Issues`, `≤ 5% new duplicated lines`). Budget for fixing them in-PR (all behaviour-preserving): `readonly` on constructor-only fields (S2933), `for-of` over index loops (S4138), optional chaining (S6582), `.includes()` instead of `.indexOf() !== -1`, a single `Array#push(...items)` instead of consecutive pushes, and a guard-clause early-return to shave **cognitive complexity** (S3776) — PR C hit the last three. Two escape hatches for what a conversion must not refactor:
@@ -85,3 +87,12 @@ A `.js`→`.ts` rename makes SonarCloud treat the **whole file as new code**, so
 - Lint: 0 errors on both files (1 non-blocking `array-foreach` warning in `documentExtractor`'s module-level reduce, deferred like PR C); repo-wide `npm run test:lint` 0 errors.
 - **Full Mocha suite (3025) green in Docker** (`.ci/scripts/docker-test.sh unit mocha`); **vitest green** (no specs) in Docker; `npm run build` runs green inside both pipelines.
 - **SonarCloud Quality Gate GREEN** (on `1d423e526`). First run failed on 3 New Major + 11 New Minor (pre-existing smells re-scored by the rename); all resolved via the behaviour-preserving fixes + `NOSONAR` markers described in the gotchas. `.ts` is coverage-excluded. *(A single `Cluster Monkey Tests` chaos variant flaked once on "not enough nodes connected" — a cluster-formation flake unrelated to the conversion; the first run had all 6 green, and every unit + functional suite is green.)*
+
+## Validation (PR E1)
+
+- `tsc --noEmit` clean.
+- Ratchets: **js 69 → 67** (baseline updated), mocha 151, any 200 — all green. Neither converted file adopted into `.migration/strict-adopted.txt` (46 unchanged): the route table is strict-clean but adopting it buys nothing, and the barrel re-exports still-loose controllers.
+- Lint: 0 errors repo-wide (376 non-blocking `array-foreach` warnings, none in the converted files).
+- **Full Mocha suite (3025) green in Docker** (`.ci/scripts/docker-test.sh unit mocha`); **vitest green** (7/7); `npm run build` runs green inside that pipeline — which also type-checks `features-legacy/**/*.ts`, confirming `import routes from ".../httpRoutes"` still resolves against `export =` via `esModuleInterop`.
+- Error-codes documentation: in sync (`lib/kerror/codes/*.json` untouched). *Note: `pr-preflight`'s error-codes step cannot run on this host — `ts-node` is missing from the partial local `node_modules`, as is the bare `tsc` bin; `npx tsc`, ESLint and the pure-bash ratchets do run.*
+- **Pending:** the real SonarCloud Quality Gate on [#2685](https://github.com/kuzzleio/kuzzle/pull/2685). Budget a gate iteration: the `httpRoutes` rename re-scores 1554 lines as new code (duplication pre-empted via `sonar.cpd.exclusions`, smells not). The first CI run on the branch failed **`TS migration - ratchets & strict`** — that was the leftover `.js` above, fixed.
