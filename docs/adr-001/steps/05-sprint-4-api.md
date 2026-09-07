@@ -1,8 +1,8 @@
 # Step 05 — Sprint 4: API layer (`lib/api`)
 
-**Status:** 🟦 In progress
-**Date:** 2026-07-17
-**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, merged 2026-07-21) · #2685 (PR E1, `chore/ts-migration-sprint4-api-routes`, open 2026-09-07)
+**Status:** 🟦 Closing — every `lib/api` file is converted; PR E2 ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)) open, flip to ✅ on merge
+**Date:** 2026-07-17 → 2026-09-07
+**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, merged 2026-07-21) · #2685 (PR E1, merged 2026-09-07) · [#2686](https://github.com/kuzzleio/kuzzle/pull/2686) (PR E2, `chore/ts-migration-sprint4-funnel`, open 2026-09-07)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -15,8 +15,8 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - **PR B — `documentController` (1 file) ✅ (#2680, merged 2026-07-17)** — clean of deprecated APIs; converts without gate friction (one `for-of` fix). JS baseline **73 → 72**.
 - **PR C — `memoryStorageController` (1 file) ✅ (#2681, merged 2026-07-21)** — clean of deprecated APIs; own PR because of its dynamic Redis-command registration + dense module-level helpers + a `rewire`-driven spec. JS baseline **72 → 71**.
 - **PR D — `serverController` + `documentExtractor` (2 files) ✅ (#2682, merged 2026-07-21)** — grouped because both call the same deprecated request APIs. On conversion these turned out **not** to be behaviour-preservingly migratable ([TD-20](../type-debt-register.md)), so they were **kept as-is** with `// NOSONAR`; the real (breaking) migration is deferred to a dedicated PR. `serverController` also needed `kuzzle.statistics` made non-`private` + `config.version` modelled (TD-18, partial). JS baseline **71 → 69**.
-- **PR E1 — routing table + barrel (2 files) 🟦 ([#2685](https://github.com/kuzzleio/kuzzle/pull/2685), `chore/ts-migration-sprint4-api-routes`, open 2026-09-07)** — `httpRoutes`, `controllers/index` barrel, and the removal of the `new XController.default()` workaround. Split out of PR E so that `httpRoutes`' duplication risk and `funnel`'s `rewire`-driven spec don't share one gate iteration. JS baseline **69 → 67**.
-- **PR E2 — `funnel` (1 file) ⬜** — the dispatch core; its spec (`test/api/funnel/execute.test.js`) drives `rewire(...).__get__("PendingRequest")`, so `PendingRequest` must stay a top-level binding under `export =` (the PR C gotcha).
+- **PR E1 — routing table + barrel (2 files) ✅ ([#2685](https://github.com/kuzzleio/kuzzle/pull/2685), merged 2026-09-07)** — `httpRoutes`, `controllers/index` barrel, and the removal of the `new XController.default()` workaround. Split out of PR E so that `httpRoutes`' duplication risk and `funnel`'s `rewire`-driven spec don't share one gate iteration. JS baseline **69 → 67**.
+- **PR E2 — `funnel` (1 file) 🟦 ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686), `chore/ts-migration-sprint4-funnel`, open 2026-09-07)** — the dispatch core; its spec (`test/api/funnel/execute.test.js`) drives `rewire(...).__get__("PendingRequest")`, so `PendingRequest` must stay a top-level binding under `export =` (the PR C gotcha). JS baseline **67 → 66** — **`lib/api` is now 100% TypeScript**.
 
 ## What was done (PR A)
 
@@ -57,6 +57,47 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - **`HttpConfiguration.routes` left as `any`.** Typing it would have been the natural follow-through, but it cascades into `serverController.ts` (which assigns `config.http.routes = undefined` and passes the array to its own local `ApiRoute[]`) — a type refactor of already-converted files, which the conversion standard keeps out of conversion PRs.
 
 - **A `git mv`-less conversion can leave the `.js` behind.** `httpRoutes.ts` was added while `httpRoutes.js` stayed tracked, so both shipped in the same tree. Nothing broke locally — every consumer uses the extensionless specifier (`require("../../lib/api/httpRoutes")`, `import … from "../api/httpRoutes"`), which `allowJs` happily resolves to *either* — but the `js` ratchet counted **68** against a 67 baseline and would have failed CI on the PR. Removed in a follow-up commit; the check is `git ls-files lib/api | grep httpRoutes` (or simply `npm run ratchet:js`) before pushing a conversion.
+
+## What was done (PR E2)
+
+- `funnel.js` → `.ts` (1143 LOC, the dispatch core) via **`export = Funnel`** — preserves `module.exports = Funnel`, so the 8 Mocha specs under `test/api/funnel/` keep their `require("../../../lib/api/funnel")` + `new Funnel()`.
+- **`rewire` survives (the PR C gotcha, second occurrence).** `test/api/funnel/execute.test.js` does `rewire(".../lib/api/funnel").__get__("PendingRequest")`. rewire operates on the compiled CJS in `dist/`, so `PendingRequest` (a `class`) and the module-level helpers `capitalize` / `doAction` / `satisfiesMajor` (function declarations) were **kept as top-level bindings**, and `export =` emits `module.exports =` with no `__esModule` wrapper. No spec change; verified by the full suite (3025) in Docker.
+- **The controllers barrel is imported with `import apiControllers = require("./controllers")` + destructuring.** PR E1 gave the barrel an `export = { … }` shape, which a **named ES import cannot target** (`TS2497`); the destructuring reproduces the original `const { AdminController, … } = require("./controllers")` exactly. The local binding is named `apiControllers`, not `controllers`, because `getController` shadows that name in a `for…of` (ESLint `@typescript-eslint/no-shadow`).
+- Class fields and every public method signature typed — `KuzzleRequest` throughout, plus module-local `ThrottledFn`, `ExecuteCallback`, `SdkRequirements` and `DocumentEventAliases` (= `EventAliases` + the `mirrorList` the funnel builds at construction). `this.controllers` is `Map<string, NativeController>` and `this.logger` is `Logger`.
+- **`doAction`'s dynamic `controller[request.input.action](request)` is left untouched.** `noImplicitAny` is off repo-wide (`BaseController._addAction` already relies on it with `this[name] = fn`), so the string index needs no cast and no `any`.
+- `loadDocumentEventAliases` rewritten as `for…of` over `Object.entries(documentEventAliases.list)` instead of nested `.forEach` — same semantics, satisfies `noUncheckedIndexedAccess` **without a cast**, and clears two `kuzzle/array-foreach` lint warnings.
+- **No new explicit `any`** (ratchet unchanged at 200). JS baseline **67 → 66**; **`lib/api` contains zero `.js`**.
+
+### Cross-layer type-only fixes (split into their own commit)
+
+Typing the funnel surfaced four gaps in already-converted files. All are type-only (zero runtime change), committed separately so the conversion commit stays a pure rename:
+
+- **`IKuzzleConfiguration.internal.allowAllOrigins: boolean` added — [TD-18](../type-debt-register.md) is now closed.** PR D deferred exactly this half of TD-18 to "the conversion of its JS consumers"; `funnel._isOriginAuthorized` is one of them. The field is derived at startup by `lib/config/index.ts`.
+- **`HttpConfiguration.accessControlAllowOrigin`: `string` → `string | string[] | RegExp[]`.** `lib/config/index.ts` normalizes the raw string to an array and, when `accessControlAllowOriginUseRegExp` is set, maps it to `RegExp[]`; the declared type described only the raw, pre-normalization form. The funnel narrows the union locally with two casts (`as RegExp[]` / `as string[]`) rather than promoting a discriminated config type — the same containment PR E1 applied to `HttpConfiguration.routes`.
+- **`EventAliases.list`: `Record<string, unknown>` → `Record<string, string[]>`** — the `filter()` helper that builds it already returns `Array<string>`.
+- **`serverController._buildApiDefinition(controllers: Map<string, { _actions: Iterable<string> }>)`** (was `string[]`) — `_actions` is a `Set<string>`, and the method only iterates it. The mismatch was invisible while `global.kuzzle.funnel` inferred from JS.
+- **`realtimeController.validate`** narrows `global.kuzzle.funnel.controllers.get("document")` to `DocumentController` via `import type` (no runtime `require` added, no import cycle).
+
+### Type debt opened — TD-21 (a latent bug, kept as-is)
+
+`Funnel._wrapError(request, error)` calls `this.isNativeController(request)`, but `isNativeController(controller: string)` does `this.controllers.has(controller)` — it expects a controller **name**. A `KuzzleRequest` is never a key of that map, so **the guard is always false** and *every* non-`KuzzleError` is wrapped into a `PluginImplementationError` (`plugin.runtime.unexpected_error`), native controllers included. The intent was plainly `request.input.controller`.
+
+Latent since the JS version; the conversion turned the mismatch into a type error, which is how it surfaced. **Behaviour preserved** with an explicit `request as unknown as string` cast plus an inline comment pointing at TD-21 — fixing it changes observable behaviour, and `handleProcessRequestError.test.js` / `processRequest.test.js` assert the current wrapped error. Real fix deferred to a dedicated behaviour-change PR. This is the third time Sprint 4 has found a pre-existing defect that a conversion PR must *not* fix (cf. TD-20, and the `kuzzle.statistics` visibility in PR D).
+
+## Local decisions / gotchas (PR E2)
+
+- **`export =` on a JS module cannot be imported with `import x = require(...)`.** `import kuzzleStateEnum = require("../kuzzle/kuzzleStateEnum")` fails with `TS2497` because the target is still `.js`; the `allowJs` inference gives it an ES-module-ish shape, so it needs a **default import** (`import kuzzleStateEnum from …`) under `esModuleInterop`. The mirror of the barrel problem above — the right import form depends on the *target's* export shape, not on a repo-wide convention.
+- **`require("../config/sdkCompatibility")` resolved to a `.json`.** Converted to `import sdkCompatibility from "../config/sdkCompatibility.json"` — the extension is **required** for `resolveJsonModule`, unlike the `.js` extension PR E1 had to *remove* from `default.config.ts`.
+- **The `NativeController` element type is what cascades.** Typing `this.controllers` as `Map<string, NativeController>` (rather than leaving it `any`) is what surfaced the `serverController` and `realtimeController` fixes above. That is the intended direction — but it is why a conversion of a *hub* file costs more than its own LOC suggest: budget for the consumers it newly type-checks.
+
+## Validation (PR E2)
+
+- `tsc --noEmit` clean; `npm run build` green.
+- Ratchets: **js 67 → 66** (baseline updated), mocha 151, any 200 — all green. `npm run test:strict` green (46 adopted; `funnel.ts` **not** adopted — nullable `request.context.token` / `request.context.user`, dynamic pipe payloads).
+- Lint: 0 errors repo-wide (309 non-blocking `array-foreach`/`no-explicit-any` warnings, none in `funnel.ts`).
+- **Full Mocha suite (3025) green in Docker** (`.ci/scripts/docker-test.sh unit mocha`) — includes the rewire-driven `execute.test.js`; **vitest green (7/7)**; `npm run build` runs green inside both pipelines.
+- Error-codes documentation: in sync (`lib/kerror/codes/*.json` untouched).
+- **Pending:** the SonarCloud Quality Gate on [#2686](https://github.com/kuzzleio/kuzzle/pull/2686). Budget a gate iteration — the rename re-scores 1143 lines as new code. `funnel.ts` was **not** pre-emptively added to `sonar.cpd.exclusions`: its only real duplication is the pair of near-identical `.catch` blocks in `execute` (~15 lines each, ≈2.5% of the file), under the 5% new-code duplication threshold.
 
 ## SonarCloud gate note (applies to every conversion PR)
 
