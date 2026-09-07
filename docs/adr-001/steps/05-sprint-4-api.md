@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress
 **Date:** 2026-07-17
-**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, `chore/ts-migration-sprint4-api-server`, open 2026-07-21)
+**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, merged 2026-07-21) · PR E1 (`chore/ts-migration-sprint4-api-routes`, open 2026-09-07)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -14,8 +14,9 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - **PR A — clean controllers + rate limiter (6 files) ✅ (#2679, merged 2026-07-17)** — `clusterController`, `realtimeController`, `indexController`, `bulkController`, `collectionController`, `rateLimiter`. JS baseline **79 → 73**.
 - **PR B — `documentController` (1 file) ✅ (#2680, merged 2026-07-17)** — clean of deprecated APIs; converts without gate friction (one `for-of` fix). JS baseline **73 → 72**.
 - **PR C — `memoryStorageController` (1 file) ✅ (#2681, merged 2026-07-21)** — clean of deprecated APIs; own PR because of its dynamic Redis-command registration + dense module-level helpers + a `rewire`-driven spec. JS baseline **72 → 71**.
-- **PR D — `serverController` + `documentExtractor` (2 files) ✅ (#2682, open 2026-07-21)** — grouped because both call the same deprecated request APIs. On conversion these turned out **not** to be behaviour-preservingly migratable ([TD-20](../type-debt-register.md)), so they were **kept as-is** with `// NOSONAR`; the real (breaking) migration is deferred to a dedicated PR. `serverController` also needed `kuzzle.statistics` made non-`private` + `config.version` modelled (TD-18, partial). JS baseline **71 → 69**.
-- **PR E — dispatch + routing (3 files) ⬜** — `funnel`, `httpRoutes`, `controllers/index` barrel; also removes the `new AdminController.default()` workaround by giving `adminController` an `export =`.
+- **PR D — `serverController` + `documentExtractor` (2 files) ✅ (#2682, merged 2026-07-21)** — grouped because both call the same deprecated request APIs. On conversion these turned out **not** to be behaviour-preservingly migratable ([TD-20](../type-debt-register.md)), so they were **kept as-is** with `// NOSONAR`; the real (breaking) migration is deferred to a dedicated PR. `serverController` also needed `kuzzle.statistics` made non-`private` + `config.version` modelled (TD-18, partial). JS baseline **71 → 69**.
+- **PR E1 — routing table + barrel (2 files) 🟦 (`chore/ts-migration-sprint4-api-routes`, open 2026-09-07)** — `httpRoutes`, `controllers/index` barrel, and the removal of the `new XController.default()` workaround. Split out of PR E so that `httpRoutes`' duplication risk and `funnel`'s `rewire`-driven spec don't share one gate iteration. JS baseline **69 → 67**.
+- **PR E2 — `funnel` (1 file) ⬜** — the dispatch core; its spec (`test/api/funnel/execute.test.js`) drives `rewire(...).__get__("PendingRequest")`, so `PendingRequest` must stay a top-level binding under `export =` (the PR C gotcha).
 
 ## What was done (PR A)
 
@@ -45,6 +46,15 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - **PR D added no explicit `any` despite dynamic JS-boundary inputs.** `_buildApiDefinition` takes `Map<string, { _actions: string[] }>` + a local `ApiRoute[]`; `config` from `JSON.parse(JSON.stringify(...))` stays `any` at the boundary (justified), and `Object.entries<{ backend?: string }>(config.services)` types the loop variable without a cast.
 - **PR D gate iteration (the rename re-scored both files as new code, as predicted).** First gate run: **3 New Major + 11 New Minor**. Fixed in-PR, all behaviour-preserving: S2933 (`readonly` on ctor-only fields), S6661 (`Object.assign({}, …)` → object spread), S7772 (`node:os`), S4138 (`for-of` over the **3 simple** index loops — the `tmpDocuments[it]` paired-index loop is not flagged and was kept), S6582 (optional chaining). Kept with `// NOSONAR`: the deprecated `setResult`/`getArrayLegacy` (S1874 → TD-20); `JSON.parse(JSON.stringify(config))` (S7784 — an intentional JSON-safe clone, `structuredClone` would change semantics / can throw); a pre-existing `@todo` (S1135).
 - **Prettier vs `NOSONAR` on a multi-line call.** Prettier pushes a trailing `// NOSONAR` onto the next line, where it no longer suppresses the flagged call → S1874 leaked on the multi-line `mGet` `setResult`. Fix: extract the argument to a `const` so the deprecated call **and** its marker fit on one line.
+
+## What was done (PR E1)
+
+- `httpRoutes.js` → `.ts` (1554 LOC, a pure data table) via **`export = routes`** — preserves `module.exports = routes`, so the Mocha spec (`test/core/network/httpRouter/httpRouter.test.js`, which `require`s the compiled module) and `features-legacy/support/api/http.ts` (`import routes from …`, which `esModuleInterop` resolves against `export =`) both keep working. A module-local **`KuzzleHttpRoute`** interface types the table: `verb` as a literal union (`get|post|put|patch|delete` — the five verbs actually present), `controller`/`action`/`path` as `string`, `deprecated?: { since, message }`, and `url?` because it is *not* in the literals — the loop at the end of the file derives it from `path`. **No new explicit `any`**, no behaviour change.
+- `controllers/index.js` → `.ts` (the barrel) via `import X = require("./x")` + **`export = { … }`** — identical CJS shape, so `require("../../../api/controllers")` in `impersonatedSdk.js` and the specs is unaffected. `DebugController` keeps its named import (it is the one controller exported as a named class).
+- **The `new XController.default()` workaround is gone.** `adminController`, `authController` and `securityController` were the three still using `export default class`, which compiles to `exports.default = X` + an `__esModule` marker — hence the `.default()` at every `new` site. All three now end with `export = X`, matching the other ten controllers, so `funnel.js` instantiates `new AuthController()` / `new SecurityController()` / `new AdminController()` and 10 spec call sites drop their `.default`. **Scope note:** the ADR only planned `adminController`; `auth` and `security` were folded in because they are the *same* workaround on the *same* barrel — fixing one of three would have guaranteed a repeat pass.
+- `default.config.ts`: `import httpRoutes from "../api/httpRoutes.js"` → `"../api/httpRoutes"`. Under `moduleResolution: "node"` (node10) TypeScript does **not** rewrite a `.js` specifier to `.ts` — that substitution only exists in the `node16`/`bundler` modes — so the explicit extension would have stopped resolving the moment the file became TS.
+- `sonar.cpd.exclusions`: the existing `lib/api/httpRoutes.js` entry retargeted to `.ts` (the route table's near-identical 5-line literals are exactly the pre-existing duplication the rename would re-score as new code).
+- **`HttpConfiguration.routes` left as `any`.** Typing it would have been the natural follow-through, but it cascades into `serverController.ts` (which assigns `config.http.routes = undefined` and passes the array to its own local `ApiRoute[]`) — a type refactor of already-converted files, which the conversion standard keeps out of conversion PRs.
 
 ## SonarCloud gate note (applies to every conversion PR)
 
