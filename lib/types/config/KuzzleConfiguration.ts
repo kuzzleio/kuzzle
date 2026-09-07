@@ -159,6 +159,12 @@ export interface IKuzzleConfiguration {
   internal: {
     hash: any;
     notifiableProtocols: string[];
+
+    /**
+     * Derived at startup from "http.accessControlAllowOrigin": true when the
+     * configured origins contain the "*" wildcard.
+     */
+    allowAllOrigins: boolean;
   };
 
   validation: Record<string, unknown>;

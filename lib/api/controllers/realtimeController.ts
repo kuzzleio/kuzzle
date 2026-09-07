@@ -21,6 +21,7 @@
 
 import { NativeController } from "./baseController";
 import { KuzzleRequest } from "../request";
+import type DocumentController from "./documentController";
 
 /**
  * @class RealtimeController
@@ -147,7 +148,9 @@ class RealtimeController extends NativeController {
    * @returns {Promise<Object>}
    */
   validate(request: KuzzleRequest) {
-    return global.kuzzle.funnel.controllers.get("document").validate(request);
+    return (
+      global.kuzzle.funnel.controllers.get("document") as DocumentController
+    ).validate(request);
   }
 }
 
