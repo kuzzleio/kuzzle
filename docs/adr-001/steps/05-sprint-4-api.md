@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress
 **Date:** 2026-07-17
-**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, merged 2026-07-21) · PR E1 (`chore/ts-migration-sprint4-api-routes`, open 2026-09-07)
+**PR(s):** #2679 (PR A, merged 2026-07-17) · #2680 (PR B, merged 2026-07-17) · #2681 (PR C, merged 2026-07-21) · #2682 (PR D, merged 2026-07-21) · #2685 (PR E1, `chore/ts-migration-sprint4-api-routes`, open 2026-09-07)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -15,7 +15,7 @@ Convert `lib/api` (controllers + `funnel`, `httpRoutes`, helpers) to TypeScript.
 - **PR B — `documentController` (1 file) ✅ (#2680, merged 2026-07-17)** — clean of deprecated APIs; converts without gate friction (one `for-of` fix). JS baseline **73 → 72**.
 - **PR C — `memoryStorageController` (1 file) ✅ (#2681, merged 2026-07-21)** — clean of deprecated APIs; own PR because of its dynamic Redis-command registration + dense module-level helpers + a `rewire`-driven spec. JS baseline **72 → 71**.
 - **PR D — `serverController` + `documentExtractor` (2 files) ✅ (#2682, merged 2026-07-21)** — grouped because both call the same deprecated request APIs. On conversion these turned out **not** to be behaviour-preservingly migratable ([TD-20](../type-debt-register.md)), so they were **kept as-is** with `// NOSONAR`; the real (breaking) migration is deferred to a dedicated PR. `serverController` also needed `kuzzle.statistics` made non-`private` + `config.version` modelled (TD-18, partial). JS baseline **71 → 69**.
-- **PR E1 — routing table + barrel (2 files) 🟦 (`chore/ts-migration-sprint4-api-routes`, open 2026-09-07)** — `httpRoutes`, `controllers/index` barrel, and the removal of the `new XController.default()` workaround. Split out of PR E so that `httpRoutes`' duplication risk and `funnel`'s `rewire`-driven spec don't share one gate iteration. JS baseline **69 → 67**.
+- **PR E1 — routing table + barrel (2 files) 🟦 ([#2685](https://github.com/kuzzleio/kuzzle/pull/2685), `chore/ts-migration-sprint4-api-routes`, open 2026-09-07)** — `httpRoutes`, `controllers/index` barrel, and the removal of the `new XController.default()` workaround. Split out of PR E so that `httpRoutes`' duplication risk and `funnel`'s `rewire`-driven spec don't share one gate iteration. JS baseline **69 → 67**.
 - **PR E2 — `funnel` (1 file) ⬜** — the dispatch core; its spec (`test/api/funnel/execute.test.js`) drives `rewire(...).__get__("PendingRequest")`, so `PendingRequest` must stay a top-level binding under `export =` (the PR C gotcha).
 
 ## What was done (PR A)
