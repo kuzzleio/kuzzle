@@ -19,14 +19,29 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import Deque from "denque";
+import * as Cookie from "cookie";
+import get from "lodash/get";
 
-const Bluebird = require("bluebird");
-const Deque = require("denque");
-const Cookie = require("cookie");
+import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
+import { KuzzleError } from "../kerror/errors";
+import apiControllers = require("./controllers");
+import {
+  documentEventAliases,
+  EventAliases,
+} from "../config/documentEventAliases";
+import DocumentExtractor = require("./documentExtractor");
+import sdkCompatibility from "../config/sdkCompatibility.json";
+import RateLimiter = require("./rateLimiter");
+import * as kerror from "../kerror";
+import createDebug = require("../util/debug");
+import { has } from "../util/safeObject";
+import { HttpStream } from "../types";
+import { Logger } from "../kuzzle/Logger";
+import { NativeController } from "./controllers/baseController";
+import { KuzzleRequest } from "./request";
 
-const kuzzleStateEnum = require("../kuzzle/kuzzleStateEnum");
-const { KuzzleError } = require("../kerror/errors");
 const {
   AdminController,
   AuthController,
@@ -40,41 +55,60 @@ const {
   RealtimeController,
   SecurityController,
   ServerController,
-} = require("./controllers");
-const { documentEventAliases } = require("../config/documentEventAliases");
-const DocumentExtractor = require("./documentExtractor");
-const sdkCompatibility = require("../config/sdkCompatibility");
-const RateLimiter = require("./rateLimiter");
-const kerror = require("../kerror");
+} = apiControllers;
 
-const debug = require("../util/debug")("kuzzle:funnel");
+const debug = createDebug("kuzzle:funnel");
 const processError = kerror.wrap("api", "process");
-const { has } = require("../util/safeObject");
-const { HttpStream } = require("../types");
-const get = require("lodash/get");
 
 // Actions of the auth controller that does not necessite to verify the token
 // when cookie auth is active
 const SKIP_TOKEN_VERIF_ACTIONS = ["login", "checkToken", "logout"];
 
+type ThrottledFn = (request: KuzzleRequest) => void;
+type ExecuteCallback = (error: Error | null, request: KuzzleRequest) => void;
+
 /**
  * @class PendingRequest
- * @param {Request} request
- * @param {Function} fn
- * @param {Object} context
  */
 class PendingRequest {
-  constructor(request, fn, context) {
+  public request: KuzzleRequest;
+  public fn: ThrottledFn;
+  public context: unknown;
+
+  constructor(request: KuzzleRequest, fn: ThrottledFn, context: unknown) {
     this.request = request;
     this.fn = fn;
     this.context = context;
   }
 }
 
+interface SdkRequirements {
+  min?: number | string;
+  max?: number | string;
+}
+
+type DocumentEventAliases = EventAliases & {
+  mirrorList: Record<string, string>;
+};
+
 /**
  * @class Funnel
  */
 class Funnel {
+  public overloaded: boolean;
+  public concurrentRequests: number;
+  public controllers: Map<string, NativeController>;
+  public pendingRequestsQueue: Deque<string>;
+  public pendingRequestsById: Map<string, PendingRequest>;
+  public lastOverloadTime: number;
+  public overloadWarned: boolean;
+  public lastWarningTime: number;
+  public rateLimiter: RateLimiter;
+  public lastDumpedErrors: Record<string, number>;
+  public documentEventAliases: DocumentEventAliases;
+  public sdkCompatibility: Record<string, SdkRequirements>;
+  public logger: Logger;
+
   constructor() {
     this.overloaded = false;
     this.concurrentRequests = 0;
@@ -138,14 +172,16 @@ class Funnel {
   }
 
   loadDocumentEventAliases() {
-    this.documentEventAliases = documentEventAliases;
+    this.documentEventAliases = documentEventAliases as DocumentEventAliases;
     this.documentEventAliases.mirrorList = {};
 
-    Object.keys(documentEventAliases.list).forEach((alias) => {
-      documentEventAliases.list[alias].forEach((aliasOf) => {
+    for (const [alias, aliasedActions] of Object.entries(
+      documentEventAliases.list,
+    )) {
+      for (const aliasOf of aliasedActions) {
         this.documentEventAliases.mirrorList[aliasOf] = alias;
-      });
-    });
+      }
+    }
   }
 
   /**
@@ -173,7 +209,7 @@ class Funnel {
    * @returns {Boolean} - A boolean telling whether the request has been
    *                      immediately executed or not.
    */
-  throttle(fn, context, request) {
+  throttle(fn: ThrottledFn, context: unknown, request: KuzzleRequest) {
     if (global.kuzzle.state === kuzzleStateEnum.SHUTTING_DOWN) {
       throw processError.get("shutting_down");
     }
@@ -289,7 +325,7 @@ class Funnel {
    * @param {Function} callback
    * @returns {Number} -1: request delayed, 0: request processing, 1: error
    */
-  execute(request, callback) {
+  execute(request: KuzzleRequest, callback: ExecuteCallback) {
     if (!request.input.controller || !request.input.controller.length) {
       callback(
         kerror.get("api", "assert", "missing_argument", "controller"),
@@ -475,7 +511,7 @@ class Funnel {
    *
    * @param {KuzzleError|*} err
    */
-  handleErrorDump(err) {
+  handleErrorDump(err: Error | KuzzleError) {
     const handledErrors = global.kuzzle.config.dump.handledErrors;
 
     if (global.kuzzle.config.dump.enabled && handledErrors.enabled) {
@@ -529,7 +565,7 @@ class Funnel {
    * @param {Request} request
    * @returns {Promise<Request>}
    */
-  async checkRights(request) {
+  async checkRights(request: KuzzleRequest): Promise<KuzzleRequest> {
     if (
       !global.kuzzle.config.http.cookieAuthentication &&
       request.getBoolean("cookieAuth")
@@ -638,7 +674,7 @@ class Funnel {
     return global.kuzzle.pipe("request:onAuthorized", request);
   }
 
-  _isLogin(request) {
+  _isLogin(request: KuzzleRequest) {
     return (
       request.input.controller === "auth" && request.input.action === "login"
     );
@@ -651,7 +687,7 @@ class Funnel {
    * @param {KuzzleRequest} request
    * @returns {Promise}
    */
-  async processRequest(request) {
+  async processRequest(request: KuzzleRequest): Promise<KuzzleRequest> {
     const controller = this.getController(request);
 
     global.kuzzle.statistics.startRequest(request);
@@ -716,7 +752,10 @@ class Funnel {
    *
    * @returns {Promise<KuzzleRequest>}
    */
-  async performDocumentAlias(request, prefix) {
+  async performDocumentAlias(
+    request: KuzzleRequest,
+    prefix: string,
+  ): Promise<KuzzleRequest> {
     const { controller, action } = request.input;
     const mustTrigger =
       controller === "document" &&
@@ -754,7 +793,7 @@ class Funnel {
    * @param {KuzzleRequest} request
    * @returns {Promise}
    */
-  async executePluginRequest(request) {
+  async executePluginRequest(request: KuzzleRequest) {
     if (request.input.triggerEvents) {
       let error;
       let res;
@@ -787,7 +826,11 @@ class Funnel {
     }
   }
 
-  async handleProcessRequestError(modifiedRequest, request, error) {
+  async handleProcessRequestError(
+    modifiedRequest: KuzzleRequest,
+    request: KuzzleRequest,
+    error: Error,
+  ) {
     let _error = this._wrapError(request, error);
     modifiedRequest.setError(_error);
 
@@ -836,7 +879,7 @@ class Funnel {
    * @param {string} prefix - event prefix
    * @returns {string} event name
    */
-  getEventName(request, prefix) {
+  getEventName(request: KuzzleRequest, prefix: string): string {
     const event =
       request.input.controller === "memoryStorage"
         ? "ms"
@@ -861,7 +904,7 @@ class Funnel {
    * @returns {Object} controller object
    * @throws {BadRequestError} If the asked controller or action is unknown
    */
-  getController(request) {
+  getController(request: KuzzleRequest): NativeController {
     for (const controllers of [
       this.controllers,
       global.kuzzle.pluginsManager.controllers,
@@ -889,7 +932,7 @@ class Funnel {
    * @param  {String}  controller
    * @returns {Boolean}
    */
-  isNativeController(controller) {
+  isNativeController(controller: string): boolean {
     return this.controllers.has(controller);
   }
 
@@ -912,7 +955,7 @@ class Funnel {
    *
    * @throws
    */
-  _checkSdkVersion(request) {
+  _checkSdkVersion(request: KuzzleRequest): void {
     if (!global.kuzzle.config.server.strictSdkVersion) {
       return;
     }
@@ -966,7 +1009,12 @@ class Funnel {
    * @returns {null}
    * @private
    */
-  _executeError(error, request, asError, callback) {
+  _executeError(
+    error: Error,
+    request: KuzzleRequest,
+    asError: boolean,
+    callback: ExecuteCallback,
+  ): null {
     request.setError(error);
 
     if (asError) {
@@ -1038,8 +1086,16 @@ class Funnel {
    * @param  {Error} error
    * @returns {KuzzleError}
    */
-  _wrapError(request, error) {
-    if (!this.isNativeController(request) && !(error instanceof KuzzleError)) {
+  _wrapError(request: KuzzleRequest, error: Error): Error {
+    // TD-21: `isNativeController` expects a controller NAME, but a whole
+    // request is passed here — so the guard is always false and every
+    // non-KuzzleError gets wrapped as a plugin error, native controllers
+    // included. Fixing it changes behaviour (and the specs encode the current
+    // one), so the conversion preserves it and casts explicitly.
+    if (
+      !this.isNativeController(request as unknown as string) &&
+      !(error instanceof KuzzleError)
+    ) {
       return kerror.getFrom(
         error,
         "plugin",
@@ -1057,7 +1113,7 @@ class Funnel {
    * @param {string} origin
    * @returns
    */
-  _isOriginAuthorized(origin) {
+  _isOriginAuthorized(origin: string): boolean {
     const httpConfig = global.kuzzle.config.http;
 
     if (!origin) {
@@ -1069,7 +1125,7 @@ class Funnel {
     }
 
     if (httpConfig.accessControlAllowOriginUseRegExp) {
-      for (const re of httpConfig.accessControlAllowOrigin) {
+      for (const re of httpConfig.accessControlAllowOrigin as RegExp[]) {
         if (re.test(origin)) {
           return true;
         }
@@ -1077,7 +1133,7 @@ class Funnel {
       return false;
     }
 
-    return httpConfig.accessControlAllowOrigin.includes(origin);
+    return (httpConfig.accessControlAllowOrigin as string[]).includes(origin);
   }
 }
 
@@ -1085,7 +1141,7 @@ class Funnel {
  * @param {string} string
  * @returns {string}
  */
-function capitalize(string) {
+function capitalize(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
@@ -1100,7 +1156,7 @@ function capitalize(string) {
  * @param  {Request} request
  * @returns {Promise}
  */
-function doAction(controller, request) {
+function doAction(controller: NativeController, request: KuzzleRequest) {
   const ret = controller[request.input.action](request);
 
   if (!ret || typeof ret.then !== "function") {
@@ -1125,7 +1181,10 @@ function doAction(controller, request) {
  *
  * @returns {Boolean}
  */
-function satisfiesMajor(version, requirements) {
+function satisfiesMajor(
+  version: string,
+  requirements: SdkRequirements,
+): boolean {
   let maxRequirement = true,
     minRequirement = true;
 
@@ -1140,4 +1199,4 @@ function satisfiesMajor(version, requirements) {
   return maxRequirement && minRequirement;
 }
 
-module.exports = Funnel;
+export = Funnel;
