@@ -62,7 +62,7 @@ describe("Test the auth controller", () => {
 
     requestcookieAuth.input.headers = { cookie: "authToken=;" };
 
-    authController = new AuthController.default();
+    authController = new AuthController();
 
     return authController.init();
   });
