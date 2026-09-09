@@ -23,12 +23,21 @@ import Bluebird from "bluebird";
 
 type PrombackCallback<T> = (error: unknown, result?: T) => void;
 
+/**
+ * `resolve()` may be called with no argument, and callers do pass a possibly
+ * missing value (`promback.resolve(updated[0])` under
+ * `noUncheckedIndexedAccess`), so the settled value is `T | undefined` — not
+ * `T`. Declaring it honestly is what lets `resolve`/`reject` type-check
+ * without a cast.
+ */
+type PrombackResult<T> = T | undefined;
+
 class Promback<T = unknown> {
   private readonly _callback: PrombackCallback<T> | null;
-  private _resolve: ((result: T) => void) | null;
+  private _resolve: ((result: PrombackResult<T>) => void) | null;
   private _reject: ((error: unknown) => void) | null;
 
-  public deferred: Bluebird<T> | null;
+  public deferred: Bluebird<PrombackResult<T>> | null;
   public isPromise: boolean;
 
   constructor(callback: PrombackCallback<T> | null = null) {
@@ -39,7 +48,7 @@ class Promback<T = unknown> {
     this.isPromise = this._callback === null;
 
     if (this.isPromise) {
-      this.deferred = new Bluebird<T>((res, rej) => {
+      this.deferred = new Bluebird<PrombackResult<T>>((res, rej) => {
         this._resolve = res;
         this._reject = rej;
       });
@@ -47,20 +56,24 @@ class Promback<T = unknown> {
   }
 
   resolve(result?: T) {
-    if (this.isPromise) {
+    // Narrowing on the settler rather than on `isPromise` is equivalent — the
+    // Bluebird executor runs synchronously, so `_resolve` is set if and only
+    // if no callback was given — and it is what makes the two branches
+    // provably non-null.
+    if (this._resolve !== null) {
       this._resolve(result);
     } else {
-      this._callback(null, result);
+      this._callback?.(null, result);
     }
 
     return this.deferred;
   }
 
   reject(error?: unknown) {
-    if (this.isPromise) {
+    if (this._reject !== null) {
       this._reject(error);
     } else {
-      this._callback(error);
+      this._callback?.(error);
     }
 
     return this.deferred;

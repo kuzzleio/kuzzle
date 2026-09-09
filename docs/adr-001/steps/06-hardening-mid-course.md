@@ -1,8 +1,8 @@
 # Step 06 — Mid-course hardening (enforcement before `lib/core`)
 
-**Status:** 🟦 In progress — PR F1 and F2 done, F3 to come
+**Status:** 🟦 In progress — F1, F2 and F3 done; closes once the three land
 **Date:** 2026-09-09 → …
-**PR(s):** F1 = [#2689](https://github.com/kuzzleio/kuzzle/pull/2689) (`chore/ts-migration-hardening-strict`) · F2 = `chore/ts-migration-hardening-coverage` (stacked on F1, closes [#2692](https://github.com/kuzzleio/kuzzle/issues/2692)) · F3 (test debt, to open)
+**PR(s):** F1 = [#2689](https://github.com/kuzzleio/kuzzle/pull/2689) (`chore/ts-migration-hardening-strict`) · F2 = `chore/ts-migration-hardening-coverage` (stacked on F1, closes [#2692](https://github.com/kuzzleio/kuzzle/issues/2692)) · F3 = `chore/ts-migration-hardening-tests` (stacked on F2)
 **Issues opened by the review:** [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) (TD-22) · [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) (TD-23) · [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) (TD-24)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
@@ -99,15 +99,71 @@ The "Coverage on New Code" gate now applies to conversions. Two things follow, a
 1. A conversion PR whose file sits below the gate's new-code threshold **will now fail** where it used to pass silently. That is the point — but it means the F3 rule ("a file with no spec ships one") is no longer optional bookkeeping, it is what keeps conversion PRs green.
 2. `funnel.ts` at 55.7% is a **pre-existing** hole that the gate will not flag (it is no longer new code). It deserves its own spec work regardless.
 
-## What is planned (PR F3 — test debt)
+## What was done (PR F3 — test debt)
 
-- **Decide the vitest spec location** (hub open point): `tests/` mirror, which is already `vitest.config.ts`'s `root`. Record it in `CONTRIBUTING.md` — it blocks every new spec.
-- First vitest specs, **prioritised by F2's measurement rather than by "has a spec file"**: `wildcard.ts` (never loaded by the suite at all), then `debug.ts` (70.7%) and `bytes.ts` (82.5%), then `promback`, `assertType`, `safeObject` (high incidental coverage but no direct spec — cheap to pin down). Small and pure, so they buy real coverage cheaply and install the vitest habit.
-- **Noted for later, out of F3's scope:** `funnel.ts` at **55.7%** is the worst-covered converted file and the one this sprint refactored under gate pressure. It needs dedicated spec work — a PR of its own, sized like a conversion.
-- Fix `promback.ts`'s typing hole under those specs; clear `didYouMean` / `debug` `TS7016` and adopt both into strict.
-- **New conversion rule:** a PR converting a file that has no spec ships a vitest spec for it. This is the only mechanism that makes the mocha counter fall instead of deferring all 151 specs to sprint 10.
+### The vitest spec location is settled
 
-## Validation (PR F2)
+`tests/` mirrors the source tree (`lib/util/bytes.ts` → `tests/util/bytes.test.ts`), discovery is `tests/**/*.{test,spec}.ts`. Recorded in `CONTRIBUTING.md` with a new *Where unit tests live* section — this closes the hub's long-standing open point.
+
+### `lib/util/wildcard.ts` was not untested — it was dead
+
+F2 reported it absent from the coverage report. The reason is not a missing spec: **nothing in the repository imports it.** Zero references across `lib/`, `bin/`, `test/`, `tests/`, `features/`, `index.ts` and the types barrel. `git log` explains it — `a9bebdd0b abort wildcard support for now`: the feature was abandoned and the helper was left behind.
+
+It also carried a latent bug. Its own comment says *"Keep only matching elements"*, and it returns:
+
+```ts
+return list.filter((item) => !regex.test(item));
+```
+
+— i.e. the elements that do **not** match. Identical on `master`, so the conversion preserved it faithfully; it has simply never had a caller to be wrong for.
+
+**Deleted** rather than pinned by a spec: writing a spec would have frozen an inverted filter in code nobody calls. Removed from `.migration/strict-adopted.txt` at the same time. (It is not re-exported by `index.ts` or `lib/types/index.ts`, so it was never part of the `kuzzle` package's supported surface — only reachable by deep-importing `kuzzle/dist/lib/util/wildcard`.)
+
+### Five vitest specs, and `promback`'s typing hole fixed under them
+
+| File | Before (mocha, incidental) | After (vitest) |
+|------|---------------------------|----------------|
+| `lib/util/debug.ts` | 70.7% | **100%** |
+| `lib/util/bytes.ts` | 82.5% | **91.7%** |
+| `lib/util/promback.ts` | 97.3% | **100%** |
+| `lib/util/assertType.ts` | 100% | 100% (now pinned directly) |
+| `lib/util/safeObject.ts` | 100% | 100% (now pinned directly) |
+
+64 vitest tests, up from 7. The specs deliberately pin the **quirks** as well as the happy paths — `bytes("-1kb") === 1024` (the digit scan drops the sign), `bytes("1.5kb") === 1024`, `has(null, "x")` **throwing** rather than returning false despite the module being called `safeObject` (which is exactly why `funnel._isOriginAuthorized` guards with `request.input.headers && has(…)`), and `assertInteger` being the one assertion with no null escape hatch.
+
+**`promback.ts` is now strict-clean and adopted.** Its 5 strict errors came from its own type design, not an external constraint: `resolve(result?: T)` passed `T | undefined` into a `(result: T) => void`, and neither settler was proven non-null. The honest model is that the settled value **is** `T | undefined` — `resolve()` is callable with no argument, and `KuzzleEventEmitter` really does call `promback.resolve(updated[0])`, which is `T | undefined` under `noUncheckedIndexedAccess`. So `deferred` became `Bluebird<T | undefined>`, and the two settle methods now narrow on the settler (`if (this._resolve !== null)`) instead of on `isPromise` — equivalent, because the Bluebird executor runs synchronously, and it is what makes both branches provably non-null. **No cast, no `any`.** Strict errors 1344 → 1339, and `tsc --noEmit` stayed clean: no cascade into the two consumers.
+
+### `didyoumean` / `debug` stay out of strict — the upstream types are wrong
+
+The plan was to clear their `TS7016` ("could not find a declaration file") with `@types/debug` and `@types/didyoumean`. Both exist (4.1.13 / 1.2.3), and both were tried. **Installing them breaks `tsc --noEmit`**, because `@types/debug` is *narrower than the library's runtime*:
+
+- `debug` populates `inspectOpts` from **any** `DEBUG_*` environment variable, so `lib/util/debug.ts` legitimately reads `inspectOpts.expand` (`DEBUG_EXPAND`) — a property the declaration does not have (`TS2339`).
+- The declaration types those values as `number | boolean`, which node's `util.inspect(value, InspectOptions)` will not accept (`TS2769`, twice).
+
+Adopting the typings would therefore mean adding two dependencies **and** three casts, to remove two implicit-any diagnostics — a net loss for a hardening PR. **Reverted**, and recorded as [TD-25](../type-debt-register.md) so the next person does not repeat the experiment.
+
+### The mocha counter did not move — on purpose
+
+All five specced files had *no* Mocha spec, so nothing was replaced: `mocha` stays at 151. The counter starts falling when a legacy spec is actually ported, which is sprint 10's job; F3's contribution is the rule (a conversion ships a spec) and the habit, not the number.
+
+## Validation (PR F3)
+
+- **Full Mocha suite (3025) green** and **vitest 6 files / 64 tests green** in Docker (`npm run build` included).
+- `npx tsc --noEmit` clean; `npm run test:lint` 0 errors; `prettier --check` clean on every touched file.
+- Ratchets: js 66, mocha 151, any 208, implicit-any 520 — all at baseline. `npm run test:strict` ✅ **94/94**, `--candidates` empty (`wildcard` out, `promback` in).
+- **All 51 CI checks green**, SonarCloud quality gate included.
+- ✅ **The lcov-merge assumption is confirmed — SonarCloud unions the two reports.** `lib/util/assertType.ts` imports `BadRequestError`, so the vitest report necessarily carries ~15 zero-hit `lib/kerror/errors/*` records: the *production* import chain pulls them in, and no spec-side change avoids it (removing the spec's own import was tried and is useless). Merging is only safe if a line covered in *either* report counts as covered. Measured on the two PRs' own analyses:
+
+  | | F2 ([#2693](https://github.com/kuzzleio/kuzzle/pull/2693)) | F3 ([#2694](https://github.com/kuzzleio/kuzzle/pull/2694)) |
+  |---|---|---|
+  | `coverage` | 84.7% | **84.7%** |
+  | `lines_to_cover` | 57 027 | 57 033 |
+  | `uncovered_lines` | 9 035 | **9 014** (−21) |
+  | `new_coverage` | — | **100%** (0 uncovered of 20 new lines) |
+
+  Coverage did **not** drop, and uncovered lines went *down* by exactly the amount the new specs cover. Union semantics hold; no `coverage.include` workaround is needed. *(Sonar's 84.7% is over all of `sonar.sources=./lib` including never-loaded files and branch conditions, hence lower than the 88.5% computed over the `lib/**/*.ts` records alone.)*
+
+## Validation (PR F2)## Validation (PR F2)
 
 - **Mocha coverage in Docker** (`npm run build && npm run test:unit:mocha:coverage`): 3025 passing, `coverage/mocha/lcov.info` written with **249 file records, 172 of them `.ts`**, all paths pointing at sources (`lib/**/*.ts`) — the source-map remap needs no help.
 - **Vitest coverage in Docker**: 1 file / 7 tests, `coverage/vitest/lcov.info` written with real records (`lib/util/distributedLock.ts` 96.6%) where it previously emitted an empty report to the wrong directory.
