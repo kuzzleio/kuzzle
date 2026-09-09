@@ -36,7 +36,9 @@ while IFS= read -r path; do
   case "$path" in ''|\#*) continue;; esac
   count=$((count + 1))
   # tsc error lines look like:  lib/foo/bar.ts(12,3): error TS2345: ...
-  hits="$(grep -F "$path(" "$LOG" | grep 'error TS' || true)"
+  # The path must be anchored at the start of the line: an unanchored substring
+  # match makes a bare "index.ts" entry swallow every "lib/**/index.ts" error.
+  hits="$(grep -E "^$(printf '%s' "$path" | sed 's/[.[\*^$/]/\\&/g')\(" "$LOG" | grep 'error TS' || true)"
   if [ -n "$hits" ]; then
     echo "❌ strict: errors in an adopted file: $path"
     printf '%s\n' "$hits" | head -10
