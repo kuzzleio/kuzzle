@@ -13,7 +13,7 @@ export type HttpConfiguration = {
    *
    * @default "*"
    */
-  accessControlAllowOrigin: string;
+  accessControlAllowOrigin: string | string[] | RegExp[];
 
   /**
    * Sets the default Access-Control-Allow-Origin HTTP

@@ -359,7 +359,7 @@ class ServerController extends NativeController {
   }
 
   _buildApiDefinition(
-    controllers: Map<string, { _actions: string[] }>,
+    controllers: Map<string, { _actions: Iterable<string> }>,
     httpRoutes: ApiRoute[],
   ) {
     const apiDefinition: Record<
