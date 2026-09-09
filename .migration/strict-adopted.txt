@@ -111,3 +111,11 @@ lib/util/time.ts
 # settled value is `T | undefined`, which is what `resolve()` and
 # `promback.resolve(updated[0])` actually pass.
 lib/util/promback.ts
+
+# Sprint 5 PR G1 (2026-09-09): the converted files that are strict-clean as-is.
+# The repositories and the notifier are not: nullable `request.context.*`,
+# dynamic pipe payloads and the still-JS module wiring they receive.
+lib/core/realtime/actionEnum.ts
+lib/core/realtime/notification/index.ts
+lib/core/realtime/notification/server.ts
+lib/core/security/securityLoader.ts
