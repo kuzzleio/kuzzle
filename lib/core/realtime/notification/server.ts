@@ -19,10 +19,24 @@
  * limitations under the License.
  */
 
-"use strict";
+import "../../../types/Global";
 
-module.exports = {
-  DocumentNotification: require("./document"),
-  ServerNotification: require("./server"),
-  UserNotification: require("./user"),
-};
+/**
+ * A notification issued by the server itself rather than by a request —
+ * currently only "TokenExpired".
+ */
+class ServerNotification {
+  public status = 200;
+  public info = "This is an automated server notification";
+  public message: string;
+  public type: string;
+  public node: string;
+
+  constructor(type: string, message: string) {
+    this.message = message;
+    this.type = type;
+    this.node = global.kuzzle.id;
+  }
+}
+
+export = ServerNotification;

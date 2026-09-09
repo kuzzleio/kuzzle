@@ -328,9 +328,14 @@ export class ObjectRepository<TObject extends { _id: string }> {
   /**
    * Serializes the object before being persisted to the database.
    *
+   * The return type is deliberately `JSONObject` and not `Omit<TObject, "_id">`:
+   * subclasses strip more than `_id` (RoleRepository also drops `restrictedTo`),
+   * so the narrower type was a contract none of them honoured. Nothing consumes
+   * the precision — the result only flows into the store calls below.
+   *
    * @param object - The object to serialize
    */
-  serializeToDatabase(object: TObject): Omit<TObject, "_id"> {
+  serializeToDatabase(object: TObject): JSONObject {
     const dto = this.toDTO(object);
     delete dto._id;
     return dto;

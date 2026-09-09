@@ -19,13 +19,25 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
 
-const Bluebird = require("bluebird");
+import Redis = require("../../service/cache/redis");
+import { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
 
-const Redis = require("../../service/cache/redis");
+/**
+ * A Lua script registered at runtime through `core:cache:internal:script:define`.
+ * ioredis attaches those to the raw client via `defineCommand`, so they are
+ * invisible to the client's declared type — hence the `Reflect.get` lookup in
+ * the handler below rather than a plain index access.
+ */
+type CacheScript = (...args: unknown[]) => Promise<unknown>;
 
 class CacheEngine {
+  public public: Redis;
+  public internal: Redis;
+  public logger: Logger;
+
   constructor() {
     const config = global.kuzzle.config.services;
 
@@ -156,8 +168,21 @@ class CacheEngine {
      * @param {...string} args -- script arguments
      * @return {*} script result (if any)
      */
-    global.kuzzle.onAsk("core:cache:internal:script:execute", (name, ...args) =>
-      this.internal.client[name](...args),
+    global.kuzzle.onAsk(
+      "core:cache:internal:script:execute",
+      (name: string, ...args: unknown[]) => {
+        const client = this.internal.client;
+
+        // `defineCommand` attaches the script to the client INSTANCE, so it has
+        // to be invoked as a method: a detached reference loses `this` and
+        // ioredis' Commander throws on `this.options`. `Reflect.apply` keeps the
+        // receiver, which a plain `Reflect.get(...)(...)` does not.
+        return Reflect.apply(
+          Reflect.get(client, name),
+          client,
+          args,
+        ) as ReturnType<CacheScript>;
+      },
     );
 
     /**
@@ -285,4 +310,4 @@ class CacheEngine {
   }
 }
 
-module.exports = CacheEngine;
+export = CacheEngine;

@@ -19,25 +19,62 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { Request } = require("../../api/request");
-const debug = require("../../util/debug")("kuzzle:core:security:users");
-const { ObjectRepository } = require("../shared/ObjectRepository");
-const kerror = require("../../kerror");
-const { User } = require("../../model/security/user");
-const ApiKey = require("../../model/storage/apiKey");
+import { Request } from "../../api/request";
+import createDebug = require("../../util/debug");
+
+const debug = createDebug("kuzzle:core:security:users");
+import { ObjectRepository } from "../shared/ObjectRepository";
+import * as kerror from "../../kerror";
+import { User } from "../../model/security/user";
+import ApiKey = require("../../model/storage/apiKey");
+import "../../types/Global";
+
+// Type-only: the security module is the still-JS `core/security/index.js`, so
+// only the members this repository actually reaches are described, against the
+// real (already-TS) classes. `import type` adds no runtime require, hence no
+// cycle with the module that constructs us.
+import type { ProfileRepository } from "./profileRepository";
+import type { TokenRepository } from "./tokenRepository";
+
+interface SecurityModule {
+  profile: ProfileRepository;
+  token: TokenRepository;
+}
+
+/**
+ * Who is performing the write, and how eagerly the change must be visible.
+ * `userId` ends up in `_kuzzle_info.author`.
+ */
+interface WriteOptions {
+  userId?: string | null;
+  refresh?: string;
+  retryOnConflict?: number;
+}
+
+/**
+ * Per-backend options forwarded to `ObjectRepository.persistToDatabase` and
+ * `persistToCache`.
+ */
+interface PersistOptions {
+  database?: JSONObject;
+  cache?: JSONObject;
+}
 
 /**
  * @class UserRepository
  * @extends ObjectRepository
  */
-class UserRepository extends ObjectRepository {
+class UserRepository extends ObjectRepository<User> {
+  protected module: SecurityModule;
+  public anonymousUser: User | null;
+
   /**
    * @param {SecurityModule} securityModule
    * @constructor
    */
-  constructor(securityModule) {
+  constructor(securityModule: SecurityModule) {
     super({ store: global.kuzzle.internalIndex });
     this.module = securityModule;
     this.collection = "users";
@@ -175,7 +212,12 @@ class UserRepository extends ObjectRepository {
    * @param {Object} content
    * @param {Object} [opts]
    */
-  async create(id, profileIds, content, { userId, refresh = "false" } = {}) {
+  async create(
+    id: string,
+    profileIds: string[],
+    content: JSONObject,
+    { userId, refresh = "false" }: WriteOptions = {},
+  ) {
     const user = await this.fromDTO({
       ...content,
       // Profile Ids and content are stored at the same level... for now.
@@ -213,10 +255,10 @@ class UserRepository extends ObjectRepository {
    * @returns {Promise}
    */
   async update(
-    id,
-    profileIds,
-    content,
-    { refresh = "false", retryOnConflict = 10, userId } = {},
+    id: string,
+    profileIds: string[],
+    content: JSONObject,
+    { refresh = "false", retryOnConflict = 10, userId }: WriteOptions = {},
   ) {
     const user = await this.load(id);
     const pojo = this.toDTO(user);
@@ -251,7 +293,12 @@ class UserRepository extends ObjectRepository {
    * @param  {Object} [opts]
    * @returns {Promise}
    */
-  async replace(id, profileIds, content, { refresh = "false", userId } = {}) {
+  async replace(
+    id: string,
+    profileIds: string[],
+    content: JSONObject,
+    { refresh = "false", userId }: WriteOptions = {},
+  ) {
     // Assertion: the user must exist
     await this.load(id);
 
@@ -283,7 +330,7 @@ class UserRepository extends ObjectRepository {
    * @returns {Promise.<User>}
    * @throws {NotFoundError} If the user is not found
    */
-  async load(id) {
+  async load(id: string): Promise<User> {
     if (id === "anonymous" || id === "-1") {
       return this.anonymousUser;
     }
@@ -291,13 +338,13 @@ class UserRepository extends ObjectRepository {
     return super.load(id);
   }
 
-  async persist(user, options = {}) {
+  async persist(user: User, options: PersistOptions = {}) {
     const databaseOptions = options.database || {};
     const cacheOptions = options.cache || {};
 
     if (
       user._id === this.anonymousUser._id &&
-      user.profileIds.indexOf("anonymous") === -1
+      !user.profileIds.includes("anonymous")
     ) {
       throw kerror.get("security", "user", "anonymous_profile_required");
     }
@@ -313,7 +360,7 @@ class UserRepository extends ObjectRepository {
    * @param dto
    * @returns {Promise<User>}
    */
-  async fromDTO(dto) {
+  async fromDTO(dto: JSONObject): Promise<User> {
     if (dto.profileIds && !Array.isArray(dto.profileIds)) {
       dto.profileIds = [dto.profileIds];
     }
@@ -333,7 +380,7 @@ class UserRepository extends ObjectRepository {
     const profiles = await this.module.profile.loadProfiles(user.profileIds);
 
     // Fail if not all profiles are found
-    if (profiles.some((p) => p === null)) {
+    if (profiles.includes(null)) {
       throw kerror.get("security", "user", "cannot_hydrate", dto._id);
     }
 
@@ -348,7 +395,7 @@ class UserRepository extends ObjectRepository {
    * @param {Object} [options]
    * @returns {Promise}
    */
-  async deleteById(id, opts) {
+  async deleteById(id: string, opts?: JSONObject) {
     const user = await this.load(id);
 
     return this.delete(user, opts);
@@ -357,7 +404,7 @@ class UserRepository extends ObjectRepository {
   /**
    * @override
    */
-  async delete(user, { refresh = "false" } = {}) {
+  async delete(user: User, { refresh = "false" }: WriteOptions = {}) {
     debug("Delete user: %s", user);
 
     await this._removeUserStrategies(user);
@@ -366,7 +413,7 @@ class UserRepository extends ObjectRepository {
     await super.delete(user, { refresh });
   }
 
-  async _removeUserStrategies(user) {
+  async _removeUserStrategies(user: User) {
     const availableStrategies = global.kuzzle.pluginsManager.listStrategies();
     const userStrategies = [];
     const request = new Request({ _id: user._id });
@@ -418,7 +465,7 @@ class UserRepository extends ObjectRepository {
   /**
    * @override
    */
-  async loadOneFromDatabase(id) {
+  async loadOneFromDatabase(id: string): Promise<User> {
     try {
       return await super.loadOneFromDatabase(id);
     } catch (err) {
@@ -443,4 +490,4 @@ class UserRepository extends ObjectRepository {
   }
 }
 
-module.exports = UserRepository;
+export = UserRepository;

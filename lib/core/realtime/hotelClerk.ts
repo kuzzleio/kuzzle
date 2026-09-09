@@ -74,7 +74,12 @@ export class HotelClerk {
    *
    * Map<roomId, Room>
    */
-  private rooms = new Map<string, Room>();
+  /**
+   * Not `private`: `core/realtime/notifier` reads it directly
+   * (`this.module.hotelClerk.rooms.get(room)`) to resolve a room's channels.
+   * The modifier never matched that long-standing cross-class access.
+   */
+  public rooms = new Map<string, Room>();
 
   /**
    * Current subscribing connections handled by the HotelClerk.

@@ -19,24 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
+import DocumentNotification = require("./document");
+import ServerNotification = require("./server");
+import UserNotification = require("./user");
 
-/**
- * @typedef {number} notifyActionEnum
- */
-
-/**
- * Enum for the document's notification "action" option
- * @readOnly
- * @enum {notifyActionEnum}
- */
-const actionEnum = Object.freeze({
-  CREATE: 1,
-  DELETE: 2,
-  REPLACE: 3,
-  UPDATE: 4,
-  UPSERT: 5,
-  WRITE: 6, // create or replace
-});
-
-module.exports = actionEnum;
+export = {
+  DocumentNotification,
+  ServerNotification,
+  UserNotification,
+};

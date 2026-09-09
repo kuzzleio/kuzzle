@@ -1,6 +1,6 @@
 # Step 06 — Mid-course hardening (enforcement before `lib/core`)
 
-**Status:** 🟦 In progress — F1, F2 and F3 done; closes once the three land
+**Status:** ✅ Done (frozen 2026-09-09) — F1 [#2689](https://github.com/kuzzleio/kuzzle/pull/2689), F2 [#2693](https://github.com/kuzzleio/kuzzle/pull/2693) and F3 [#2694](https://github.com/kuzzleio/kuzzle/pull/2694) all merged into `2-dev`. Sprint 5 continues in [step 07](07-sprint-5-core-i.md).
 **Date:** 2026-09-09 → …
 **PR(s):** F1 = [#2689](https://github.com/kuzzleio/kuzzle/pull/2689) (`chore/ts-migration-hardening-strict`) · F2 = `chore/ts-migration-hardening-coverage` (stacked on F1, closes [#2692](https://github.com/kuzzleio/kuzzle/issues/2692)) · F3 = `chore/ts-migration-hardening-tests` (stacked on F2)
 **Issues opened by the review:** [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) (TD-22) · [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) (TD-23) · [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) (TD-24)

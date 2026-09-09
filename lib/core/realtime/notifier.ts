@@ -19,19 +19,52 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
+import { difference } from "lodash";
+import Bluebird from "bluebird";
 
-const { difference } = require("lodash");
-const Bluebird = require("bluebird");
+import * as kerror from "../../kerror";
+import { KuzzleRequest } from "../../api/request";
+import { RealtimeScope, RealtimeUsers } from "../../types";
+import actionEnum = require("./actionEnum");
 
-const kerror = require("../../kerror");
-const actionEnum = require("./actionEnum");
-const { koncordeTest } = require("../../util/koncordeCompat");
-const {
-  DocumentNotification,
-  ServerNotification,
-  UserNotification,
-} = require("./notification");
+/**
+ * One of `actionEnum`'s members. Derived from the frozen object so the two
+ * cannot drift.
+ */
+type NotifyAction = (typeof actionEnum)[keyof typeof actionEnum];
+import { koncordeTest } from "../../util/koncordeCompat";
+import { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
+
+// Type-only: `core/realtime/index.js` is still JS, so only the member this
+// controller reaches is described, against the already-TS HotelClerk.
+import type { HotelClerk } from "./hotelClerk";
+
+interface RealtimeModule {
+  hotelClerk: HotelClerk;
+}
+
+/**
+ * The slice of a written document this controller needs: its id, the source to
+ * match against subscription filters, and — for the WRITE/UPSERT actions, which
+ * cover both cases — whether the write created the document or updated it.
+ */
+interface DocumentChanges {
+  _id: string;
+  _source?: JSONObject;
+  created?: boolean;
+  action?: string;
+}
+// The barrel ships `export = { ... }`, which a named ES import cannot target
+// (TS2497) — same shape as the api/controllers barrel (step 05, PR E2).
+import notifications = require("./notification");
+
+const { DocumentNotification, ServerNotification, UserNotification } =
+  notifications;
+
+type DocumentNotificationType = InstanceType<typeof DocumentNotification>;
+type UserNotificationType = InstanceType<typeof UserNotification>;
 
 /**
  * Notification are meant to be dispatched on "channels" created when subscribing.
@@ -53,7 +86,11 @@ const KUZZLE_NOTIFICATION_CHANNEL = "kuzzle:notification:server";
  * @class NotifierController
  */
 class NotifierController {
-  constructor(realtimeModule) {
+  private readonly module: RealtimeModule;
+  private readonly ttl: number;
+  public logger: Logger;
+
+  constructor(realtimeModule: RealtimeModule) {
     this.module = realtimeModule;
     this.ttl = global.kuzzle.config.limits.subscriptionDocumentTTL;
     this.logger = global.kuzzle.log.child("core:realtime:notifier");
@@ -138,7 +175,13 @@ class NotifierController {
    *
    * @returns {Promise}
    */
-  async notifyDocument(rooms, request, scope, action, content) {
+  async notifyDocument(
+    rooms: string[],
+    request: KuzzleRequest,
+    scope: RealtimeScope,
+    action: string,
+    content: JSONObject,
+  ) {
     if (rooms.length === 0) {
       return;
     }
@@ -171,7 +214,12 @@ class NotifierController {
    *
    * @returns {Promise}
    */
-  notifyUser(room, request, scope, content) {
+  notifyUser(
+    room: string,
+    request: KuzzleRequest,
+    scope: RealtimeUsers,
+    content: JSONObject,
+  ) {
     const notification = UserNotification.fromRequest(request, scope, content);
 
     global.kuzzle.emit("core:notify:user", {
@@ -190,7 +238,7 @@ class NotifierController {
    * @param {string} connectionId - User's connection identifier
    * @returns {Promise}
    */
-  async notifyTokenExpired(connectionId) {
+  async notifyTokenExpired(connectionId: string) {
     await this._dispatch(
       "notify:server",
       [KUZZLE_NOTIFICATION_CHANNEL], // Sending notification on Kuzzle notification channel
@@ -207,7 +255,7 @@ class NotifierController {
    * @param {Request} request
    * @returns {Promise.<Object>}
    */
-  publish(request) {
+  publish(request: KuzzleRequest) {
     const rooms = this._test(request);
 
     if (rooms.length === 0) {
@@ -227,7 +275,10 @@ class NotifierController {
    * @param {DocumentChanges} document created
    * @returns {Promise.<Array.<string>>} list of matched rooms
    */
-  async notifyDocumentCreate(request, document) {
+  async notifyDocumentCreate(
+    request: KuzzleRequest,
+    document: DocumentChanges,
+  ): Promise<string[]> {
     const rooms = this._test(request, document._source, document._id);
 
     if (rooms.length > 0) {
@@ -245,7 +296,11 @@ class NotifierController {
    * @param {string} cache notification content for that document
    * @returns {Promise.<Array.<string>} list of matched rooms
    */
-  async notifyDocumentReplace(request, document, cache = null) {
+  async notifyDocumentReplace(
+    request: KuzzleRequest,
+    document: DocumentChanges,
+    cache: string | null = null,
+  ): Promise<string[]> {
     const rooms = this._test(request, document._source, document._id);
 
     if (rooms.length > 0) {
@@ -274,7 +329,11 @@ class NotifierController {
    * @param  {Array.<DocumentChanges>} documents
    * @return {Promise}
    */
-  async notifyDocuments(request, action, documents) {
+  async notifyDocuments(
+    request: KuzzleRequest,
+    action: NotifyAction,
+    documents: DocumentChanges[],
+  ) {
     const prefix = getCachePrefix(request);
     let cached = action === actionEnum.REPLACE || action === actionEnum.UPDATE;
 
@@ -327,7 +386,7 @@ class NotifierController {
       }
     });
 
-    const toDelete = [];
+    const toDelete: string[] = [];
 
     await Bluebird.map(result, (rooms, index) => {
       if (rooms.length > 0) {
@@ -355,7 +414,11 @@ class NotifierController {
    * @param {string} cache notification content for that document
    * @returns {Promise.<Array.<string>} list of matched rooms
    */
-  async notifyDocumentUpdate(request, document, cache = null) {
+  async notifyDocumentUpdate(
+    request: KuzzleRequest,
+    document: DocumentChanges,
+    cache: string | null = null,
+  ): Promise<string[]> {
     const rooms = this._test(request, document._source, document._id);
 
     if (rooms.length > 0) {
@@ -384,7 +447,10 @@ class NotifierController {
    * @param {DocumentChanges} document
    * @returns {Promise.<Array>} returns an empty array ("no room match anymore")
    */
-  async notifyDocumentDelete(request, document) {
+  async notifyDocumentDelete(
+    request: KuzzleRequest,
+    document: DocumentChanges,
+  ): Promise<string[]> {
     const rooms = this._test(request, document._source, document._id);
 
     if (rooms.length > 0) {
@@ -406,7 +472,12 @@ class NotifierController {
    *
    * @returns {Promise}
    */
-  async _dispatch(event, channels, notification, connectionId) {
+  async _dispatch(
+    event: string,
+    channels: string[],
+    notification: unknown,
+    connectionId?: string,
+  ) {
     try {
       let updated = await global.kuzzle.pipe(event, notification);
       /**
@@ -452,7 +523,11 @@ class NotifierController {
    *
    * @returns {Promise}
    */
-  _notifyDocument(rooms, notification, { fromCluster = true } = {}) {
+  _notifyDocument(
+    rooms: string[],
+    notification: DocumentNotificationType,
+    { fromCluster = true }: { fromCluster?: boolean } = {},
+  ) {
     const channels = [];
 
     for (const room of rooms) {
@@ -490,7 +565,11 @@ class NotifierController {
    *
    * @returns {Promise}
    */
-  _notifyUser(room, notification, { fromCluster = true } = {}) {
+  _notifyUser(
+    room: string,
+    notification: UserNotificationType,
+    { fromCluster = true }: { fromCluster?: boolean } = {},
+  ) {
     const channels = [];
     const hotelClerkRoom = this.module.hotelClerk.rooms.get(room);
 
@@ -521,7 +600,11 @@ class NotifierController {
    *
    * @returns {Array.<string>}
    */
-  _test(request, source = null, id = null) {
+  _test(
+    request: KuzzleRequest,
+    source: JSONObject | null = null,
+    id: string | null = null,
+  ): string[] {
     return koncordeTest(
       global.kuzzle.koncorde,
       request.input.args.index,
@@ -532,10 +615,10 @@ class NotifierController {
   }
 }
 
-function getCachePrefix(request) {
+function getCachePrefix(request: KuzzleRequest): string {
   // use redis key hash tag
   // (see https://redis.io/topics/cluster-spec#keys-distribution-model)
   return `{notif/${request.input.args.index}/${request.input.args.collection}}/`;
 }
 
-module.exports = NotifierController;
+export = NotifierController;

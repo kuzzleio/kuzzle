@@ -19,24 +19,20 @@
  * limitations under the License.
  */
 
-"use strict";
-
 /**
- * Creates a notification response from a given room, request object, and content.
+ * Enum for the document's notification "action" option.
  *
- * @class ServerNotification
- * @param {Request} request - the request object from which the notification is issued
- * @param {string} type - Notification type
- * @param {string} message - Notification message
+ * `as const` is type-only (no runtime change) and is what gives the members
+ * literal types, so `NotifyActionEnum` below is a real union instead of
+ * widening to `number`.
  */
-class ServerNotification {
-  constructor(type, message) {
-    this.status = 200;
-    this.info = "This is an automated server notification";
-    this.message = message;
-    this.type = type;
-    this.node = global.kuzzle.id;
-  }
-}
+const actionEnum = Object.freeze({
+  CREATE: 1,
+  DELETE: 2,
+  REPLACE: 3,
+  UPDATE: 4,
+  UPSERT: 5,
+  WRITE: 6, // create or replace
+} as const);
 
-module.exports = ServerNotification;
+export = actionEnum;

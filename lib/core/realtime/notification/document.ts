@@ -19,11 +19,40 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { InternalError } = require("../../../kerror/errors");
+import { InternalError } from "../../../kerror/errors";
+import { KuzzleRequest } from "../../../api/request";
+import { RealtimeScope } from "../../../types";
+import "../../../types/Global";
 
-function getEvent(action) {
+/**
+ * Coarse event a document action belongs to. Subscribers filter on it, so the
+ * mapping below is part of the realtime contract.
+ */
+type DocumentNotificationEvent = "write" | "delete" | "publish";
+
+/**
+ * Constructor payload. Two producers fill it: `fromRequest` below, and
+ * `cluster/subscriber` when it rebuilds a notification from a decoded protobuf
+ * message — hence the wide `result` and `volatile`.
+ */
+interface DocumentNotificationOptions {
+  status: number;
+  action: string;
+  scope: RealtimeScope;
+  result: JSONObject;
+  node: string;
+  requestId?: string;
+  timestamp: number;
+  volatile: JSONObject;
+  index: string;
+  collection: string;
+  controller: string;
+  protocol: string;
+}
+
+function getEvent(action: string): DocumentNotificationEvent {
   switch (action) {
     case "create":
     case "mCreate":
@@ -51,15 +80,27 @@ function getEvent(action) {
       throw new InternalError(`Unknown event type for action "${action}"`);
   }
 }
+
 /**
  * Document notification document
- *
- * @class DocumentNotification
  */
 class DocumentNotification {
-  constructor(opts) {
-    this.type = "document";
+  public type = "document";
+  public status: number;
+  public action: string;
+  public scope: RealtimeScope;
+  public result: JSONObject;
+  public node: string;
+  public event: DocumentNotificationEvent;
+  public requestId?: string;
+  public timestamp: number;
+  public volatile: JSONObject;
+  public index: string;
+  public collection: string;
+  public controller: string;
+  public protocol: string;
 
+  constructor(opts: DocumentNotificationOptions) {
     this.status = opts.status;
     this.action = opts.action;
     this.scope = opts.scope;
@@ -80,19 +121,22 @@ class DocumentNotification {
   /**
    * Instantiates a DocumentNotification object from a KuzzleRequest
    *
-   * @param {Request} request - the request object from which the notification is issued
-   * @param {string} scope - The scope of the notification (in or out)
-   * @param {state} state - The document state (pending or done)
-   * @param {action} action - Action performed on the document
-   * @param {result} content - Notification content
-   * @returns {DocumentNotification}
+   * @param request - the request object from which the notification is issued
+   * @param scope - The scope of the notification (in or out)
+   * @param action - Action performed on the document
+   * @param result - Notification content
    */
-  static fromRequest(request, scope, action, result) {
+  static fromRequest(
+    request: KuzzleRequest,
+    scope: RealtimeScope,
+    action: string,
+    result: JSONObject,
+  ): DocumentNotification {
     return new DocumentNotification({
       action,
-      collection: request.input.resource.collection,
+      collection: request.input.args.collection,
       controller: request.input.controller,
-      index: request.input.resource.index,
+      index: request.input.args.index,
       node: global.kuzzle.id,
       protocol: request.context.connection.protocol,
       requestId: request.id,
@@ -105,4 +149,4 @@ class DocumentNotification {
   }
 }
 
-module.exports = DocumentNotification;
+export = DocumentNotification;
