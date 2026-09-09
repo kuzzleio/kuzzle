@@ -747,7 +747,7 @@ function extractArgumentsFromRequest(
       // is deeper than the two levels the request always has.
       const next = (previousValue as Record<string, unknown>)[currentValue];
 
-      return next === undefined || next === null ? undefined : next;
+      return next ?? undefined;
     }, request.input);
 
     if (value === undefined) {
@@ -1028,7 +1028,10 @@ function extractArgumentsFromRequestForZInterstore(request: KuzzleRequest) {
  */
 function assertFloat(request: KuzzleRequest, name: string, value: unknown) {
   // Number.parseXxx computes the 1st member of an array if one is provided
-  if (Array.isArray(value) || Number.isNaN(Number.parseFloat(String(value)))) {
+  if (
+    Array.isArray(value) ||
+    Number.isNaN(Number.parseFloat(scalarToString(value)))
+  ) {
     throw kerror.get("invalid_type", name, "number");
   }
 }
@@ -1044,9 +1047,25 @@ function assertFloat(request: KuzzleRequest, name: string, value: unknown) {
  */
 function assertInt(request: KuzzleRequest, name: string, value: unknown) {
   // Number.parseXxx computes the 1st member of an array if one is provided
-  if (Array.isArray(value) || Number.isNaN(Number.parseInt(String(value)))) {
+  if (
+    Array.isArray(value) ||
+    Number.isNaN(Number.parseInt(scalarToString(value)))
+  ) {
     throw kerror.get("invalid_type", name, "integer");
   }
+}
+
+/**
+ * The string `Number.parse*` would have coerced its argument to. Anything that
+ * is not a scalar parses to NaN either way, so returning "" for it preserves
+ * the behaviour without stringifying an object.
+ */
+function scalarToString(value: unknown): string {
+  return typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+    ? String(value)
+    : "";
 }
 
 /**
