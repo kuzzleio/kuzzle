@@ -50,7 +50,6 @@ lib/util/bytes.ts
 lib/util/extractFields.ts
 lib/util/memoize.ts
 lib/util/safeObject.ts
-lib/util/wildcard.ts
 
 # Mid-course hardening — step 06 (2026-09-09).
 # Every production file that passed `strict-check.sh --candidates` on that date is
@@ -107,3 +106,8 @@ lib/util/deprecate.ts
 lib/util/esRequest.ts
 lib/util/mutex.ts
 lib/util/time.ts
+
+# Step 06 PR F3 (2026-09-09): promback's own typing hole fixed under test — the
+# settled value is `T | undefined`, which is what `resolve()` and
+# `promback.resolve(updated[0])` actually pass.
+lib/util/promback.ts
