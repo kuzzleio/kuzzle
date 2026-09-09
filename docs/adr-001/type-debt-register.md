@@ -32,7 +32,8 @@
 | [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ⬜ |
 | [TD-22](#td-22) | 🟠 med | `any` | `memoryStorageController.ts`: converted without typing — 54 implicit-`any` sites (+37 cascades), 122 strict errors — [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) | M | ⬜ |
 | [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) — [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) | M | 🟦 |
-| [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | 🟦 |
+| [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | ✅ |
+| [TD-25](#td-25) | 🟡 low | Dependencies | `@types/debug` is narrower than `debug`'s runtime — adopting it costs 3 casts, so `util/debug.ts` stays out of strict | S | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -64,6 +65,18 @@
 The SDK defines `type JSONObject = Record<PropertyKey, any>`; both storage files redeclare `export interface JSONObject { [key: string]: any }` (interface, string keys only) without importing the SDK. Non-equivalent semantics (union alias vs mergeable interface; `symbol` keys). No root collision only because those 2 files are not in the barrel.
 
 - **Reco:** consolidate to a single server-owned definition (TD-09) and delete the 2 redefinitions.
+
+---
+
+## Dead code
+
+### Removed — `lib/util/wildcard.ts` (2026-09-09, step 06 PR F3)
+
+Not a type-debt entry so much as a finding worth keeping: F2's coverage run showed `lib/util/wildcard.ts` absent from the report, which turned out to mean **nothing imported it** — zero references across `lib/`, `bin/`, `test/`, `tests/`, `features/`, `index.ts` and the types barrel. `git log` gives the reason: `a9bebdd0b abort wildcard support for now`.
+
+It also carried a latent bug, identical on `master`: the comment says *"Keep only matching elements"* and the code returns `list.filter((item) => !regex.test(item))` — the **non**-matching ones. Never observed, because it never had a caller.
+
+Deleted rather than pinned by a spec. Recorded here because the shape generalises: **a converted file that is absent from the coverage report is more likely dead than untested — check for callers before writing a spec for it.**
 
 ---
 
@@ -142,6 +155,20 @@ The step-05 note says the table and the arg-extraction internals "stay inferred"
 - Fixing `mapping`'s type is what clears the 37 cascades above — they are not independent findings.
 - **Tracked as [#2690](https://github.com/kuzzleio/kuzzle/issues/2690)** (opened 2026-09-09).
 - **Trigger:** independent of the migration sprints; a good first `implicit-any` reduction PR since the file is self-contained and its spec is thorough.
+
+### TD-25
+**`@types/debug` is narrower than `debug`'s actual runtime** · 🟡 low · `lib/util/debug.ts`
+
+`lib/util/debug.ts` and `lib/util/didYouMean.ts` are kept out of `strict` by a single diagnostic each — `TS7016`, "could not find a declaration file for module 'debug' / 'didyoumean'". The obvious fix is to install the DefinitelyTyped packages. **It was tried (step 06 PR F3, `@types/debug@4.1.13` + `@types/didyoumean@1.2.3`) and reverted**, because it *breaks* `tsc --noEmit`:
+
+- `debug` builds `inspectOpts` from **any** `DEBUG_*` environment variable, so reading `inspectOpts.expand` (fed by `DEBUG_EXPAND`) is legitimate — but the declaration only knows `hideDate`/`colors`/`depth`/`showHidden` → `TS2339`.
+- Those are declared `number | boolean`, which node's `util.inspect(value, InspectOptions)` rejects (`showHidden` must be `boolean`) → `TS2769`, at both call sites.
+- `didYouMean.ts` additionally hits `TS2556` (spread into a non-rest parameter) once the module is typed.
+
+So adopting the typings means two new dependencies **and** three casts, in exchange for removing two implicit-`any` diagnostics. Net loss for now.
+
+- **Reco:** either upstream a fix to DefinitelyTyped (`inspectOpts` should be an index signature, and its values `string | number | boolean`), or write a repo-local ambient declaration that describes the real runtime — then adopt both files into strict. Do **not** simply install the packages and cast.
+- **Trigger:** whenever the last non-strict files in `lib/util` are being cleared, or before the sprint-9 global `strict` flip.
 
 ---
 
@@ -304,6 +331,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-09-07** — Sprint 4 (`lib/api`) PR E1 (#2685): `httpRoutes` + `controllers/index` → TS; js baseline 69 → 67. **TD-19 partially prepared, not closed** — the route table now carries a real shape (a module-local `KuzzleHttpRoute` interface: literal-union `verb`, `deprecated?`, `url?`), but `HttpConfiguration.routes` is deliberately **left `any`**: promoting the interface into `lib/types` and typing that field cascades into already-converted files (`serverController.ts` assigns `config.http.routes = undefined` and re-declares its own local `ApiRoute[]`), i.e. a type refactor the conversion standard keeps out of a conversion PR. Whoever picks up TD-19 should start from `KuzzleHttpRoute`. Also standardized `adminController`/`authController`/`securityController` on `export =` — the `export default` shape was the sole reason for the `new XController.default()` workaround in `funnel.js` and 10 spec call sites.
 - **2026-09-07** — Sprint 4 (`lib/api`) **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)): `funnel` → TS; js baseline 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. **TD-18 closed** (`internal.allowAllOrigins` modelled — the half PR D deferred to exactly this conversion). **TD-21 opened** (see above). Both deferred items now have **GitHub issues** ([#2687](https://github.com/kuzzleio/kuzzle/issues/2687) for TD-21, [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) for TD-20): the register is read when someone picks up the ADR, which was scheduling nothing on its own. **Convention going forward: a TD entry that defers real work gets an issue, and the entry links to it.**
 
+- **2026-09-09** — **Step 06 PR F3 (test debt).** vitest spec location settled in `CONTRIBUTING.md` (`tests/` mirror). **TD-24 closed** by F2. **TD-25 opened** — `@types/debug` is narrower than `debug`'s runtime, so installing it breaks `tsc`; `util/debug.ts` and `util/didYouMean.ts` stay out of strict deliberately. **`lib/util/wildcard.ts` deleted** — dead code carrying an inverted-filter bug (see *Dead code* above). Five vitest specs added (64 tests, up from 7): `debug` 70.7% → **100%**, `bytes` 82.5% → **91.7%**, `promback`/`assertType`/`safeObject` at 100% and now pinned directly. **`promback.ts`'s own typing hole fixed under test and adopted into strict** — the settled value is honestly `T | undefined` (`resolve()` takes no argument, and `KuzzleEventEmitter` passes `updated[0]`), and the settle methods now narrow on the settler rather than on `isPromise`; no cast, no cascade. Strict errors 1344 → **1339**. The `mocha` counter stays at 151 on purpose: none of the five files had a Mocha spec, so nothing was replaced.
 - **2026-09-09** — **Mid-course review of the 30 files converted so far** (sprints 1, 3, 4), opening [ADR step 06](ADR-0001-migration-typescript.md). The converted code holds up on the letter of the standard (0 written `any`, 0 `@ts-ignore`, 0 `!`, 0 unused imports, tsc + lint green, and PR E2's `funnel.ts` gate refactor re-verified equivalent line by line against `master`). What did not hold up is the **measurement**: **TD-22** opened (`memoryStorageController` renamed but not typed — 54 implicit-`any` sites, 91 diagnostics with the cascades), **TD-23** opened (`sonar.cpd.exclusions` at 5 files with no schedule and one undocumented entry), **TD-24** opened (SonarCloud measures no coverage on `.ts` — the biggest hole, and the reason PR F2 gates Sprint 5). All three have GitHub issues per the convention: [#2690](https://github.com/kuzzleio/kuzzle/issues/2690), [#2691](https://github.com/kuzzleio/kuzzle/issues/2691), [#2692](https://github.com/kuzzleio/kuzzle/issues/2692). **TD-02/TD-03 advanced** (4th ratchet on implicit `any` at 520; written-`any` ratchet widened to `as unknown as`, 200 → 208; strict adopted 46 → 94; repo strict errors 1483 → 1344 from one `never[]` inference). **TD-14 flagged as an opportunity missed** — `assertType` was converted without the generic returns the entry asked for. **TD-16 measured** — the esWrapper pair is 314 LOC each with a 16-line diff.
 
 ---
