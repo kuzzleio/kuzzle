@@ -173,13 +173,28 @@ Dedicated blocks cover the four handlers that *reshape* their arguments (`docume
 
 70 tests. Measured with an explicit `coverage.include`: **211 instrumented source lines, 211 covered.**
 
-### ⚠️ The two local coverage proxies disagree by a factor of five
+### The coverage gate could not credit a vitest-tested file — root cause and fix
 
-For this file, `c8` (over the source-mapped `dist/`) reports **1 189** measurable lines and 23.4% covered; `vitest`'s v8 provider reports **211** and 100%. A 1 045-line file cannot have 1 189 source lines — c8's set is over the *compiled* output mapped back, so several emitted lines collapse onto one source line and inflate the denominator.
+This is the finding of the PR, and it was about to block the whole rest of the migration.
 
-The consequence is that **neither number predicts `new_coverage`**, and a naive union of the two (36.7% here) is meaningless when the line sets differ this much. G2's lesson ("the local union is a usable early warning") does **not** generalise: it held there because both providers saw similarly-sized sets. Here it does not.
+The first run came back **`new_coverage` 40.3%** on a file whose 51 handlers and every method are under test. Diagnosis, in order:
 
-So this PR ships with the gate as the arbiter, deliberately. **Read `new_coverage` off the analysis; if it falls short, extend the table.** What justifies pushing rather than guessing: every handler and every method is exercised, and the only honest measurement available (v8 over the source) says 211/211.
+1. `c8` (wrapping Mocha) derives its line set from the **compiled** output and maps it back onto the source, producing a `DA:` entry for **every line of a loaded file** — blank lines and comments included. It listed **1 217** lines for `clientAdapter.ts`.
+2. `vitest`'s v8 provider reports only real statements: **213**, all covered.
+3. Sonar takes "lines to cover" from the **union** of both reports, so c8's inflated set dominates. The ~1 000 lines c8 lists inside regions Mocha never executes count as uncovered — even the JSDoc among them.
+
+So **a file whose tests live in vitest could not pass the gate**, and the vitest reporter can only ever *add* covered lines, never shrink c8's denominator. Every remaining sprint would have hit this — sprint 6 opens with two 1 200-LOC files.
+
+Two things that did **not** work, tried and discarded: `c8 --exclude-after-remap` (still 1 189 lines), and running vitest under `c8` (it does not instrument vitest's workers — the report contained only `vitest.config.ts`).
+
+**The fix is `.ci/scripts/prepare-coverage.ts`, run between the suites and the scan.** Two passes:
+
+- **Drop non-executable lines** — blank and comment-only — from both reports, recomputing `LF`/`LH`. Repo-wide: 23 234 of 58 781 entries removed, and the Mocha figure moves **84.3% → 80.1%**. *Down*, because comment lines sitting inside executed regions had been credited as hit. More truthful in both directions, and worth stating plainly since it lowers a number the team watches.
+- **Give each file one owner.** Pass 1 is not enough — `clientAdapter` still shows 662 c8 lines against 213 real statements (closing braces, `});`, multi-line call continuations; trimming those needs real parsing, and being wrong there would *overstate* coverage). Since the two line sets are irreconcilable, a file is measured by the runner that owns its spec, per the `tests/` mirror convention.
+
+Pass 2 is **conservative by construction**: the Mocha record is dropped only when vitest's ratio is at least as high, so it can never lower a file's measured coverage, and it *prints* any file where Mocha measures better rather than papering over it. All 12 vitest-owned files hand over cleanly today, none regress.
+
+> **Correction worth recording.** Two of my own earlier calls here were wrong. The local mocha ∪ vitest union (36.7%) was *right* about `clientAdapter` — the "211/211 so it will pass" reading was not. And the first sketch of this fix was expected to *raise* the project's coverage figure; it lowers it. Measure, then claim.
 
 ## Validation (PR G3)
 
