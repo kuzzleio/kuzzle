@@ -119,3 +119,10 @@ lib/core/realtime/actionEnum.ts
 lib/core/realtime/notification/index.ts
 lib/core/realtime/notification/server.ts
 lib/core/security/securityLoader.ts
+
+# Sprint 5 PR G2 (2026-09-09): the module-wiring files and the impersonated SDK
+# are strict-clean. storageEngine and abstractManifest are not — nullable
+# manifest fields and the still-JS clientAdapter they build on.
+lib/core/realtime/index.ts
+lib/core/security/index.ts
+lib/core/shared/sdk/impersonatedSdk.ts
