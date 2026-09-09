@@ -329,10 +329,7 @@ class RoleRepository extends ObjectRepository<Role> {
 
     const role = await this.loadOneFromDatabase(id);
 
-    await this.roles.set(role._id, role); // NOSONAR: awaiting a synchronous
-    // Map.set is pointless but removing it shifts this method's resolution by a
-    // microtask — out of scope for a conversion, see step 06 / PR E2's
-    // `_checkSdkVersion` await.
+    await this.roles.set(role._id, role); // NOSONAR: TD-26
 
     return role;
   }
@@ -407,7 +404,7 @@ class RoleRepository extends ObjectRepository<Role> {
     await this.persistToDatabase(role, options);
 
     const updatedRole = await this.loadOneFromDatabase(role._id);
-    await this.roles.set(role._id, updatedRole); // NOSONAR: same as in load()
+    await this.roles.set(role._id, updatedRole); // NOSONAR: TD-26
 
     return updatedRole;
   }

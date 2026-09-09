@@ -48,8 +48,12 @@ class SecurityModule {
   }
 
   async init() {
-    await this.role.init();
-    await this.profile.init();
+    // `role.init()` and `profile.init()` are synchronous (they only register
+    // `onAsk` handlers), so awaiting them is pointless — but dropping the
+    // `await` shifts this method's resolution by a microtask, which a
+    // conversion must not do. Tracked in TD-26.
+    await this.role.init(); // NOSONAR: TD-26
+    await this.profile.init(); // NOSONAR: TD-26
     await this.token.init();
     await this.user.init();
     // Last: the loader replays security fixtures through the API, so every
