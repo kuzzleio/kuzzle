@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress
 **Date:** 2026-09-09 → …
-**PR(s):** G1 (`chore/ts-migration-sprint5-realtime-security`) · G2 · G3
+**PR(s):** G1 [#2695](https://github.com/kuzzleio/kuzzle/pull/2695) · G2 (`chore/ts-migration-sprint5-modules`, stacked on G1) · G3
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -114,6 +114,44 @@ Two lessons:
 #### 2. The gate's new-code issues, as budgeted
 
 3 Critical + 1 Major + 10 Minor, all pre-existing and all re-scored by the renames — the standing sprint-4 pattern. Resolved behaviour-preservingly: S3776 (complexity 25 on `checkRolePluginsRights`) split into two verbatim helpers; S2933 `readonly`; S7757 ×4 class-field initialisers; S7765 ×3 `.includes()`; **S1874 ×4 — `request.input.resource.{index,collection}` → `request.input.args.*`**, which is a genuine drop-in (`RequestResource` is built as `new RequestResource(this.args)` and its getters read that very object), so unlike TD-20's deprecations this one needed no `NOSONAR`. The two S4123 `await this.roles.set(...)` are kept with `// NOSONAR` — `Map.set` is synchronous so the `await` is pointless, but removing it shifts the method's resolution by a microtask; they join PR E2's `_checkSdkVersion` follow-up.
+
+## What was done (PR G2 — the module wiring, spec-first by intent)
+
+5 files, 346 LOC: the `security` and `realtime` module barrels, `storage/storageEngine`, `shared/abstractManifest` and `shared/sdk/impersonatedSdk`. **js 56 → 51.** `lib/core/{cache,realtime,security,shared}` are done; under `lib/core` only `clientAdapter.js` (G3) and the sprint-6 files (validation, plugin, network) remain.
+
+### `kerror` could not be loaded as ESM — every vitest spec on an error path crashed
+
+The first spec written (`abstractManifest`, whose whole contract is *which* kerror it throws) failed with `TypeError: Cannot read properties of undefined (reading 'substr')`. The cause is one line in `lib/kerror/index.ts`:
+
+```ts
+_currentFileName = module.filename.substr(process.cwd().length + 1);
+```
+
+`module` is a **CommonJS global**. Kuzzle ships as CommonJS, but vitest loads `lib/` as ESM, where `module` is undefined. Since nearly every failure path in `lib/` funnels through kerror, **this made the ADR's "every new unit test in vitest" rule unworkable in practice** — and it would have blocked every remaining sprint, not just this one. Guarded so it degrades to "no stack-trace cleaning" (cosmetic), with the consumer guarded too: an empty filename would make `line.includes("")` strip the whole stack.
+
+### Two ordering rules learned the hard way
+
+- **"Spec-first, then convert" does not work mechanically.** A vitest spec for a still-`.js` module fails to load: vite cannot resolve its CommonJS `require` graph (`Error: Cannot find module '../../kerror'`). The order must be **convert, then spec** — equivalent for the gate, which measures the PR's final state, not its commit order.
+- **`import x = require(...)` is unloadable under vitest.** It emits a real `require()` that vite cannot resolve, so any spec importing that module dies on `Cannot find module './x'`. A **default import** type-checks against `export =` under `esModuleInterop` *and* works in both worlds. PR E2's rule ("a named import cannot target `export =`, use `import x = require`") is therefore refined: **use a default import**; `import x = require` is a last resort. G1's three occurrences in `notifier.ts` were switched over.
+
+### Other decisions
+
+- `impersonatedSdk`'s `this[controllerProxy] = new Proxy(...)` → `Reflect.set(this, controllerProxy, …)`: the key is a runtime-built string that a plain index access cannot type. Note the contrast with the cacheEngine regression — that one was a dynamic *method call* (receiver matters), this is a property *write* (it does not).
+- `query()` takes the SDK's `BaseRequest`, and `__kuid__` / `__checkRights__` are written with `Reflect.set` since they are not part of that declared shape.
+- The wiring specs assert the back-reference (`new RoleRepository(this)`) through **constructor arguments recorded by the mocks**, not by reading the `private`/`protected` `module` field. `vi.mock` factories are hoisted above the module body, so the mocks must come from `vi.hoisted`.
+- **`storageEngine`'s Mocha spec never awaited its own assertion** (`should(engine.init()).rejectedWith(...)`), so neither the rejection nor the success path was exercised — which is most of why the file sat at 62.7%. The vitest spec awaits both.
+
+### ⚠️ A local coverage estimate that cannot be trusted
+
+Estimating the merged (mocha ∪ vitest) per-file coverage locally put `storageEngine` at 79.1% and `impersonatedSdk` at 78.3% — just under the gate. Inspecting the "uncovered" lines showed they were **comments, blank lines and closing braces**: the two providers instrument different line sets (c8 over source-mapped `dist/`, v8 over the TS directly), and a line only one of them knows about drags a naive union down. Sonar counts executable lines only, so **the local union is not a usable proxy for `new_coverage` — read the number off the PR analysis instead.**
+
+## Validation (PR G2)
+
+- `npx tsc --noEmit` clean; `npm run test:lint` 0 errors; `prettier` clean.
+- Ratchets: **js 56 → 51** (baseline updated), mocha 151, any 208, **implicit-any 520 → 518** (baseline updated) — all green.
+- `npm run test:strict`: ✅ **101/101** (was 98), `--candidates` empty. Adopted: the two module barrels and `impersonatedSdk`.
+- **Full Mocha suite (3025) green** — including the `rewire`-driven specs on `abstractManifest` and `impersonatedSdk`, which the default-import switch could have broken (their `__set__` targets the `global` free variable, not the imports).
+- **vitest 10 files / 88 tests green** (was 6 / 64).
 
 ## Validation (PR G1)
 
