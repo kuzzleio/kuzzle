@@ -46,11 +46,16 @@ So **this sprint is sequenced by measured coverage, not only by layer**. Line co
 
 `clientAdapter.js` is the outlier that decides the shape of this sprint: 1 045 lines at 24%, i.e. roughly 790 uncovered lines. It cannot be renamed without either a large body of new specs or an explicit gate decision.
 
-### One unknown to measure, not assume
+### The unknown, measured — ✅ answered by G1
 
-Does a `.js` → `.ts` rename make **all** of a file's lines count as *new* for coverage, the way it does for issues (the sprint-4 gotcha)? Sonar derives new lines from SCM blame, and a rename is a new path — so probably yes, but sprint 4 provides no evidence and the answer changes the plan's arithmetic entirely.
+Does a `.js` → `.ts` rename make **all** of a file's lines count as *new* for coverage, the way it does for issues (the sprint-4 gotcha)? Sprint 4 gave no evidence (`new_lines_to_cover = 0`, `.ts` was excluded then), so G1 was built out of ≥ 93% files: it passes the gate under either hypothesis *and reports the number*.
 
-**PR G1 is therefore designed as the experiment**: it contains only files at ≥ 93%, so it passes the gate under either hypothesis, and its analysis tells us what `new_lines_to_cover` a rename actually produces. G2 and G3 are sized once that number is known.
+**It does.** G1's analysis: **`new_lines_to_cover = 2 646`** for 2 308 converted LOC plus the cross-layer edits — i.e. the whole body of every renamed file is measured, not just the changed lines. `new_coverage` came out at **98.5%**, comfortably over the 80% threshold.
+
+So the plan's arithmetic holds, and the consequences are now facts rather than guesses:
+
+- **G2's sub-80% files must be lifted over the threshold before renaming** — the whole file is measured, so today's coverage *is* tomorrow's `new_coverage`.
+- **`clientAdapter.js` at 24% would fail the gate outright.** G3 is a spec effort with a rename at the end, not a conversion with tests added afterwards.
 
 ## PR breakdown
 
@@ -84,10 +89,38 @@ This is the step-06 finding in miniature: every one of those 55 would have been 
 - **`ObjectRepository.serializeToDatabase`: `Omit<TObject, "_id">` → `JSONObject`.** A contract none of its three overrides honoured (RoleRepository strips `restrictedTo` too; TokenRepository's override was untyped). Nothing consumes the precision — the result only flows into the base's two store calls.
 - **`HotelClerk.rooms`: `private` → `public`.** `notifier` has always read it directly to resolve a room's channels. Third occurrence of this shape (cf. PR D's `kuzzle.statistics`): **a `private` that a sibling module reads is a mis-declaration, not an encapsulation to work around.**
 
+### Two failures worth recording
+
+The first CI round came back **12 pass / 33 fail**. Neither failure was in the unit suites.
+
+#### 1. A real runtime regression the 3 025 unit tests did not catch
+
+`Build and Run` failed, and Kuzzle would not start at all:
+
+```
+TypeError: Cannot read properties of undefined (reading 'options')
+    at ioredis/built/utils/Commander.js:106
+    at lib/core/cache/cacheEngine.js:125
+    at Mutex.unlock (lib/util/mutex.js:152)
+```
+
+The `core:cache:internal:script:execute` handler had been converted to `Reflect.get(client, name)` followed by `script(...args)` — which resolves the Lua script but calls it **detached**. `defineCommand` attaches scripts to the client *instance*, so ioredis' Commander needs `this`; the original `client[name](...args)` was a method call, and the conversion silently dropped the receiver. Fixed with `Reflect.apply(Reflect.get(client, name), client, args)`.
+
+Two lessons:
+
+- **This path has no unit spec exercising a real ioredis client**, so `Build and Run` is the only gate covering it — a conversion touching a service boundary must be run for real, not just unit-tested. Locally: `docker compose -f ./.ci/services-7.yml up -d --build` then `MAX_TRIES=60 ./bin/wait-kuzzle`. ⚠️ Plain `up -d` **reuses a stale image** — `--build` is required, which cost a confusing round of "the fix didn't work".
+- **A dynamic method call is not a dynamic property read.** Anywhere a conversion replaces `obj[name](...)`, the receiver has to be preserved explicitly.
+
+#### 2. The gate's new-code issues, as budgeted
+
+3 Critical + 1 Major + 10 Minor, all pre-existing and all re-scored by the renames — the standing sprint-4 pattern. Resolved behaviour-preservingly: S3776 (complexity 25 on `checkRolePluginsRights`) split into two verbatim helpers; S2933 `readonly`; S7757 ×4 class-field initialisers; S7765 ×3 `.includes()`; **S1874 ×4 — `request.input.resource.{index,collection}` → `request.input.args.*`**, which is a genuine drop-in (`RequestResource` is built as `new RequestResource(this.args)` and its getters read that very object), so unlike TD-20's deprecations this one needed no `NOSONAR`. The two S4123 `await this.roles.set(...)` are kept with `// NOSONAR` — `Map.set` is synchronous so the `await` is pointless, but removing it shifts the method's resolution by a microtask; they join PR E2's `_checkSdkVersion` follow-up.
+
 ## Validation (PR G1)
 
 - `npx tsc --noEmit` clean; `npm run test:lint` 0 errors (373 pre-existing warnings); `prettier` clean.
 - Ratchets: **js 66 → 56** (baseline updated), mocha 151, any 208, **implicit-any 520** — all green (see above for the 575 → 520 round trip).
 - `npm run test:strict`: ✅ **98/98**, `--candidates` empty. Adopted: `actionEnum`, the notification barrel, `ServerNotification`, `securityLoader`.
 - **Full Mocha suite (3025) green** and **vitest 6 files / 64 tests green** in Docker (`npm run build` included in both pipelines).
-- ⚠️ **Pending, and the reason this PR went first: what `new_lines_to_cover` a rename actually produces.** Read it off this PR's SonarCloud analysis (`curl "https://sonarcloud.io/api/measures/component?component=kuzzleio_kuzzle&pullRequest=<N>&metricKeys=new_lines_to_cover,new_coverage"`). Every file here is ≥ 93% covered, so the gate passes either way — the number is what sizes G2 and G3.
+- **Kuzzle starts for real**: the CI stack (`.ci/services-7.yml`, ES7) reports `[✔] Kuzzle 2.56.0 is ready` with **0 errors** in the logs, `bin/wait-kuzzle` exit 0.
+- **Coverage gate: `new_coverage` 98.5% over `new_lines_to_cover` 2 646** — see *The unknown, measured* above.
+- **First CI round failed on two counts, both fixed in-PR** — see *Two failures worth recording* below.
