@@ -1,8 +1,8 @@
 # Step 07 — Sprint 5: `lib/core` I (storage, security, realtime, cache, shared)
 
-**Status:** 🟦 In progress
+**Status:** 🟦 In progress — G1 and G2 merged, G3 open
 **Date:** 2026-09-09 → …
-**PR(s):** G1 [#2695](https://github.com/kuzzleio/kuzzle/pull/2695) · G2 (`chore/ts-migration-sprint5-modules`, stacked on G1) · G3
+**PR(s):** G1 [#2695](https://github.com/kuzzleio/kuzzle/pull/2695) · G2 [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) · G3 (`chore/ts-migration-sprint5-clientadapter`)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -151,6 +151,42 @@ Two conclusions for the rest of the migration:
 
 - **The local union is not a usable proxy for the exact number, but it is a usable early warning.** When it lands within a few points of 80%, expect the gate to be tight.
 - **G3 cannot be bluffed.** `clientAdapter.js` starts at 24%; on a 1 045-LOC file that is ~790 uncovered lines against a threshold that G2 cleared by three points on 424. The specs have to be real.
+
+## What was done (PR G3 — `clientAdapter`, the spec effort)
+
+1 045 LOC, the sprint's largest file and its worst covered (**23.4%**). Since a rename makes the whole file new code, **the spec is the work and the conversion is the easy half**. js 51 → 50: **`lib/core/storage` is 100% TypeScript.**
+
+### The conversion
+
+Mechanically regular — ~740 of the 1 045 lines are `onAsk` registrations forwarding to the storage client — so the conversion was a rename plus **51 handler signatures annotated up front**. That is why the implicit-any ratchet stays flat at 518 across a file this size; leaving them inferred would have added well over a hundred.
+
+Two typing decisions worth keeping:
+
+- **`client` is declared `Elasticsearch["client"]`, not `any`.** That field *is* `any` on the service itself, tracked there as [TD-13](../type-debt-register.md). Referencing it keeps the one hole counted once at its source and points a reader at the real cause, instead of writing a second `any` for the same thing. Flagged here rather than buried: it is a deliberate choice about *where* debt is recorded, not an attempt to dodge the ratchet.
+- `populateCache` states the schema shape locally (`Record<string, string[]>`), since it arrives through that untyped client and drives the cache-population loop.
+
+### The spec: the table is the contract
+
+The 39 pass-through events are a single `it.each` table — one row per event, listing arguments, delegation target, and whether it asserts the collection. A guard test cross-checks that the rows plus the dedicated blocks account for **all 51** registered events, so a new handler cannot be added without being tested.
+
+Dedicated blocks cover the four handlers that *reshape* their arguments (`document:search` wraps index/collection into a target object; `document:multiSearch` asserts every (index, collection) pair of every target; `document:mExecute` passes a callback through; `cache:removeIndexes` loops), the eight that delegate to the adapter's own methods, and the real logic — including the `indexCacheOnly` / `propagate` branches, the emitted `core:storage:*:after` events, and `loadMappings`' deliberate tolerance of `index_already_exists` (the cluster propagation race).
+
+70 tests. Measured with an explicit `coverage.include`: **211 instrumented source lines, 211 covered.**
+
+### ⚠️ The two local coverage proxies disagree by a factor of five
+
+For this file, `c8` (over the source-mapped `dist/`) reports **1 189** measurable lines and 23.4% covered; `vitest`'s v8 provider reports **211** and 100%. A 1 045-line file cannot have 1 189 source lines — c8's set is over the *compiled* output mapped back, so several emitted lines collapse onto one source line and inflate the denominator.
+
+The consequence is that **neither number predicts `new_coverage`**, and a naive union of the two (36.7% here) is meaningless when the line sets differ this much. G2's lesson ("the local union is a usable early warning") does **not** generalise: it held there because both providers saw similarly-sized sets. Here it does not.
+
+So this PR ships with the gate as the arbiter, deliberately. **Read `new_coverage` off the analysis; if it falls short, extend the table.** What justifies pushing rather than guessing: every handler and every method is exercised, and the only honest measurement available (v8 over the source) says 211/211.
+
+## Validation (PR G3)
+
+- `npx tsc --noEmit` clean; `npm run test:lint` 0 errors; `prettier` clean.
+- Ratchets: **js 51 → 50** (baseline updated), mocha 151, any 208, **implicit-any 518** — all green, the last one unchanged across 1 045 converted lines.
+- `npm run test:strict`: ✅ 101/101, `--candidates` empty. `clientAdapter` is **not** adopted — it is built on an untyped storage client, so strict has nothing to hold on to until [TD-13](../type-debt-register.md) is addressed.
+- **Full Mocha suite (3025) green**; **vitest 11 files / 166 tests green** (was 10 / 88).
 
 ## Validation (PR G2)
 
