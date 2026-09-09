@@ -171,9 +171,17 @@ class CacheEngine {
     global.kuzzle.onAsk(
       "core:cache:internal:script:execute",
       (name: string, ...args: unknown[]) => {
-        const script = Reflect.get(this.internal.client, name) as CacheScript;
+        const client = this.internal.client;
 
-        return script(...args);
+        // `defineCommand` attaches the script to the client INSTANCE, so it has
+        // to be invoked as a method: a detached reference loses `this` and
+        // ioredis' Commander throws on `this.options`. `Reflect.apply` keeps the
+        // receiver, which a plain `Reflect.get(...)(...)` does not.
+        return Reflect.apply(
+          Reflect.get(client, name),
+          client,
+          args,
+        ) as ReturnType<CacheScript>;
       },
     );
 
