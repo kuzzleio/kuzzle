@@ -25,7 +25,7 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
-import { Mutex } from "../../util/mutex";
+import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
 import { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
 
@@ -46,6 +46,15 @@ interface LoadMappingsOptions extends WriteScopeOptions {
 /** `{ index: { collection: payload } }`, as the fixtures and mappings
  * import payloads are shaped. */
 type ImportPayload = Record<string, Record<string, JSONObject>>;
+
+/** Hoisted out of the signature: an object literal as a default parameter is
+ * re-allocated on every call, and this one is only ever read. */
+const DEFAULT_LOAD_MAPPINGS_OPTIONS: LoadMappingsOptions = Object.freeze({
+  indexCacheOnly: false,
+  propagate: true,
+  rawMappings: false,
+  refresh: false,
+});
 
 /**
  * Storage client adapter to perform validation on index/collection existence
@@ -1124,18 +1133,16 @@ class ClientAdapter {
    */
   async loadMappings(
     fixtures: ImportPayload = {},
-    options: LoadMappingsOptions = {
-      indexCacheOnly: false,
-      propagate: true,
-      rawMappings: false,
-      refresh: false,
-    },
+    options: LoadMappingsOptions = DEFAULT_LOAD_MAPPINGS_OPTIONS,
   ) {
     if (!isPlainObject(fixtures)) {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 });
+    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
+    // incompatible acquisition/TTL formats and must not contend on the same
+    // key — swapping it is a behaviour change, deferred to TD-20 (#2688).
+    const mutex = new Mutex("loadMappings", { timeout: -1, ttl: 60000 }); // NOSONAR
 
     await mutex.lock();
 
@@ -1152,36 +1159,57 @@ class ClientAdapter {
         }
 
         for (const [collection, mappings] of Object.entries(fixtures[index])) {
-          try {
-            await this.createIndex(index, {
-              indexCacheOnly: options.indexCacheOnly,
-              propagate: options.propagate,
-            });
-          } catch (error) {
-            // @cluster: ignore if the index already exists to prevent race
-            // conditions with index cache propagation
-            if (error.id !== "services.storage.index_already_exists") {
-              throw error;
-            }
-          }
-
-          await this.createCollection(
+          await this._loadCollectionMappings(
             index,
             collection,
-            options.rawMappings ? { mappings } : mappings,
-            {
-              indexCacheOnly: options.indexCacheOnly,
-              propagate: options.propagate,
-            },
+            mappings,
+            options,
           );
-
-          if (options.refresh && !options.indexCacheOnly) {
-            await this.client.refreshCollection(index, collection);
-          }
         }
       }
     } finally {
       await mutex.unlock();
+    }
+  }
+
+  /**
+   * Creates one index/collection pair from an import payload. Extracted from
+   * `loadMappings` verbatim.
+   */
+  private async _loadCollectionMappings(
+    index: string,
+    collection: string,
+    mappings: JSONObject,
+    options: LoadMappingsOptions,
+  ): Promise<void> {
+    try {
+      await this.createIndex(index, {
+        indexCacheOnly: options.indexCacheOnly,
+        propagate: options.propagate,
+      });
+    } catch (error) {
+      // @cluster: ignore if the index already exists to prevent race
+      // conditions with index cache propagation
+      if (
+        (error as { id?: string }).id !==
+        "services.storage.index_already_exists"
+      ) {
+        throw error;
+      }
+    }
+
+    await this.createCollection(
+      index,
+      collection,
+      options.rawMappings ? { mappings } : mappings,
+      {
+        indexCacheOnly: options.indexCacheOnly,
+        propagate: options.propagate,
+      },
+    );
+
+    if (options.refresh && !options.indexCacheOnly) {
+      await this.client.refreshCollection(index, collection);
     }
   }
 }
