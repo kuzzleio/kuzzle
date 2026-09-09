@@ -22,7 +22,7 @@
     "test:functional:websocket": "KUZZLE_PROTOCOL=websocket cucumber-js --profile websocket --config cucumber.config.cjs",
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1 --passWithNoTests",
     "test:unit:mocha": "mocha --exit",
-    "test:unit:mocha:coverage": "c8 --reporter=lcov --report-dir=coverage mocha --exit",
+    "test:unit:mocha:coverage": "c8 --reporter=lcov --report-dir=coverage/mocha mocha --exit",
     "test:lint": "eslint ./lib ./test ./bin ./features",
     "test:strict": "bash scripts/strict-check.sh"
   },

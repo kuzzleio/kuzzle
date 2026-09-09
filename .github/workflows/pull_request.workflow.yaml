@@ -112,8 +112,16 @@ jobs:
         run: npm run build
         shell: bash
 
+      # Both unit runners feed the scanner: each writes its own lcov (coverage/mocha,
+      # coverage/vitest) and sonar-project.properties lists both. Before ADR-0001
+      # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
+      # every JS->TS conversion silently left the coverage gate (TD-24).
       - name: Mocha coverage
         run: npm run test:unit:mocha:coverage
+        shell: bash
+
+      - name: Vitest coverage
+        run: npm run test:unit:vitest
         shell: bash
 
       - uses: actions/create-github-app-token@v3
