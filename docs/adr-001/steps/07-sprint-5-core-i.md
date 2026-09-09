@@ -141,9 +141,16 @@ _currentFileName = module.filename.substr(process.cwd().length + 1);
 - The wiring specs assert the back-reference (`new RoleRepository(this)`) through **constructor arguments recorded by the mocks**, not by reading the `private`/`protected` `module` field. `vi.mock` factories are hoisted above the module body, so the mocks must come from `vi.hoisted`.
 - **`storageEngine`'s Mocha spec never awaited its own assertion** (`should(engine.init()).rejectedWith(...)`), so neither the rejection nor the success path was exercised — which is most of why the file sat at 62.7%. The vitest spec awaits both.
 
-### ⚠️ A local coverage estimate that cannot be trusted
+### ⚠️ The margin is thin — and the local estimate was pessimistic, not wrong
 
-Estimating the merged (mocha ∪ vitest) per-file coverage locally put `storageEngine` at 79.1% and `impersonatedSdk` at 78.3% — just under the gate. Inspecting the "uncovered" lines showed they were **comments, blank lines and closing braces**: the two providers instrument different line sets (c8 over source-mapped `dist/`, v8 over the TS directly), and a line only one of them knows about drags a naive union down. Sonar counts executable lines only, so **the local union is not a usable proxy for `new_coverage` — read the number off the PR analysis instead.**
+A local merged (mocha ∪ vitest) per-file estimate put `storageEngine` at 79.1% and `impersonatedSdk` at 78.3%, just under the gate. Its "uncovered" lines turned out to be comments, blank lines and closing braces — the two providers instrument different line sets (c8 over source-mapped `dist/`, v8 over the TS directly), and a line only one of them knows about drags a naive union down. Sonar counts executable lines only.
+
+But the real figure vindicated the *direction*: **`new_coverage` = 83.5%** over **424** new lines to cover (63 uncovered) — above the 80% threshold, and only by **3.5 points**. Compare G1's 98.5%.
+
+Two conclusions for the rest of the migration:
+
+- **The local union is not a usable proxy for the exact number, but it is a usable early warning.** When it lands within a few points of 80%, expect the gate to be tight.
+- **G3 cannot be bluffed.** `clientAdapter.js` starts at 24%; on a 1 045-LOC file that is ~790 uncovered lines against a threshold that G2 cleared by three points on 424. The specs have to be real.
 
 ## Validation (PR G2)
 
@@ -152,6 +159,7 @@ Estimating the merged (mocha ∪ vitest) per-file coverage locally put `storageE
 - `npm run test:strict`: ✅ **101/101** (was 98), `--candidates` empty. Adopted: the two module barrels and `impersonatedSdk`.
 - **Full Mocha suite (3025) green** — including the `rewire`-driven specs on `abstractManifest` and `impersonatedSdk`, which the default-import switch could have broken (their `__set__` targets the `global` free variable, not the imports).
 - **vitest 10 files / 88 tests green** (was 6 / 64).
+- **All 51 CI checks green, SonarCloud gate `OK`** — `new_coverage` **83.5%** over 424 new lines. Took two rounds: the first reported 2 New Critical (`S4123`, both true positives — `RoleRepository.init()` and `ProfileRepository.init()` are not `async`, so awaiting them is pointless; kept for timing parity and tracked as [TD-26](../type-debt-register.md) / [#2697](https://github.com/kuzzleio/kuzzle/issues/2697)) plus one functional variant flaking on `api.process.not_enough_nodes` in a `BeforeAll` hook — the known cluster-formation flake, one of 30 matrix variants, on a path this PR does not touch.
 
 ## Validation (PR G1)
 
