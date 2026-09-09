@@ -725,11 +725,7 @@ class Funnel {
     let _request = request;
 
     try {
-      // `_checkSdkVersion` is synchronous, so this `await` only costs a
-      // microtask hop. Removing it is very likely unobservable — but "very
-      // likely" is not the bar for a conversion PR (ADR-0001: no behaviour
-      // change). Drop the `await` in a follow-up.
-      await this._checkSdkVersion(_request); // NOSONAR
+      this._checkSdkVersion(_request);
       _request = await global.kuzzle.pipe("request:onExecution", _request);
       _request = await this.performDocumentAlias(_request, "before");
       _request = await global.kuzzle.pipe(
@@ -1118,14 +1114,8 @@ class Funnel {
    * @returns {KuzzleError}
    */
   _wrapError(request: KuzzleRequest, error: Error): Error {
-    // TD-21 (https://github.com/kuzzleio/kuzzle/issues/2687):
-    // `isNativeController` expects a controller NAME, but a whole
-    // request is passed here — so the guard is always false and every
-    // non-KuzzleError gets wrapped as a plugin error, native controllers
-    // included. Fixing it changes behaviour (and the specs encode the current
-    // one), so the conversion preserves it and casts explicitly.
     if (
-      !this.isNativeController(request as unknown as string) &&
+      !this.isNativeController(request.input.controller) &&
       !(error instanceof KuzzleError)
     ) {
       return kerror.getFrom(

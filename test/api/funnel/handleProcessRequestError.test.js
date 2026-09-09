@@ -72,4 +72,28 @@ describe("funnel.processRequest", () => {
       id: "plugin.runtime.unexpected_error",
     });
   });
+
+  // TD-21 (#2687): `_wrapError` guards on the controller name. It used to be
+  // handed the whole request, so the guard was always false and a native
+  // controller's internal error reached the client as a plugin error.
+  it("leaves a native controller error unwrapped", () => {
+    const originalError = new BadRequestError("original error"),
+      internalError = new TypeError("cannot read properties of undefined"),
+      request = new Request({ controller: "document", action: "fail" });
+
+    funnel.controllers.set("document", {});
+
+    kuzzle.pipe.onFirstCall().rejects(originalError);
+    kuzzle.pipe.onSecondCall().callsFake(() =>
+      Promise.resolve().then(() => {
+        throw internalError;
+      }),
+    );
+
+    return should(
+      funnel.handleProcessRequestError(request, request, originalError),
+    ).rejectedWith(TypeError, {
+      message: "cannot read properties of undefined",
+    });
+  });
 });

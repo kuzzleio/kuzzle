@@ -117,7 +117,11 @@ describe("#core/security/SecurityModule", () => {
     });
 
     it("rejects and stops at the first failure", async () => {
-      mock(module.profile).init = vi.fn().mockRejectedValue(new Error("nope"));
+      // `profile.init()` is synchronous and no longer awaited (TD-26), so the
+      // failure has to be thrown, not returned as a rejected promise.
+      mock(module.profile).init = vi.fn().mockImplementation(() => {
+        throw new Error("nope");
+      });
 
       await expect(module.init()).rejects.toThrow("nope");
       expect(mock(module.token).init).not.toHaveBeenCalled();

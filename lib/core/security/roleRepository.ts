@@ -329,7 +329,7 @@ class RoleRepository extends ObjectRepository<Role> {
 
     const role = await this.loadOneFromDatabase(id);
 
-    await this.roles.set(role._id, role); // NOSONAR: TD-26
+    this.roles.set(role._id, role);
 
     return role;
   }
@@ -404,7 +404,7 @@ class RoleRepository extends ObjectRepository<Role> {
     await this.persistToDatabase(role, options);
 
     const updatedRole = await this.loadOneFromDatabase(role._id);
-    await this.roles.set(role._id, updatedRole); // NOSONAR: TD-26
+    this.roles.set(role._id, updatedRole);
 
     return updatedRole;
   }
