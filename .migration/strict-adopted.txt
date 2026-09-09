@@ -51,3 +51,59 @@ lib/util/extractFields.ts
 lib/util/memoize.ts
 lib/util/safeObject.ts
 lib/util/wildcard.ts
+
+# Mid-course hardening — step 06 (2026-09-09).
+# Every production file that passed `strict-check.sh --candidates` on that date is
+# adopted here, so the ratchet guards the whole already-clean surface instead of a
+# hand-picked subset. Sprint 4's controllers became clean once
+# `NativeController.constructor(actions: string[] = [])` stopped inferring `never[]`.
+# If one of these ever blocks unrelated work, remove it here WITH a justification —
+# do not weaken the file.
+index.ts
+lib/api/controllers/adminController.ts
+lib/api/controllers/clusterController.ts
+lib/api/controllers/debugController.ts
+lib/api/controllers/index.ts
+lib/api/controllers/realtimeController.ts
+lib/api/httpRoutes.ts
+lib/api/openapi/OpenApiManager.ts
+lib/api/openapi/index.ts
+lib/api/openapi/openApiGenerator.ts
+lib/api/request/index.ts
+lib/config/default.config.ts
+lib/config/documentEventAliases.ts
+lib/core/auth/formatProcessing.ts
+lib/core/auth/passportResponse.ts
+lib/core/backend/applicationManager.ts
+lib/core/backend/backendCluster.ts
+lib/core/backend/backendConfig.ts
+lib/core/backend/backendHook.ts
+lib/core/backend/backendImport.ts
+lib/core/backend/backendOpenApi.ts
+lib/core/backend/backendPipe.ts
+lib/core/backend/backendPlugin.ts
+lib/core/backend/backendSubscription.ts
+lib/core/backend/index.ts
+lib/core/cache/cacheDbEnum.ts
+lib/core/realtime/channel.ts
+lib/core/realtime/connectionRooms.ts
+lib/core/realtime/room.ts
+lib/core/shared/KoncordeWrapper.ts
+lib/core/storage/storeScopeEnum.ts
+lib/kerror/errors/index.ts
+lib/kerror/errors/multipleErrorsError.ts
+lib/kuzzle/index.ts
+lib/model/security/rights.ts
+lib/model/storage/apiKey.ts
+lib/service/storage/7/esWrapper.ts
+lib/service/storage/8/esWrapper.ts
+lib/service/storage/Elasticsearch.ts
+lib/types/config/cache/BaseCacheRedisConfiguration.ts
+lib/types/controllers/adminController.type.ts
+lib/util/array.ts
+lib/util/assertType.ts
+lib/util/crypto.ts
+lib/util/deprecate.ts
+lib/util/esRequest.ts
+lib/util/mutex.ts
+lib/util/time.ts

@@ -9,8 +9,8 @@
 # unrecorded improvement — so the baseline always mirrors reality).
 #
 # Usage:
-#   scripts/ratchet.sh <js|mocha|any> [--update]
-#   npm run ratchet                  # all three, check mode
+#   scripts/ratchet.sh <js|mocha|any|implicit-any> [--update]
+#   npm run ratchet                  # all four, check mode
 #   npm run ratchet:js -- --update   # record the current js count as the new baseline
 #
 set -euo pipefail
@@ -34,13 +34,25 @@ case "$metric" in
     hint="Write new unit tests in vitest + TS (ADR-0001 › Tests)."
     ;;
   any)
-    label="': any' / 'as any' lines in lib/**/*.ts"
+    # 'as unknown as' is counted too: it is the escape hatch a conversion reaches
+    # for once ': any' is forbidden, so leaving it out would just move the debt.
+    label="': any' / 'as any' / 'as unknown as' lines in lib/**/*.ts"
     baseline_file=".migration/any-baseline.txt"
-    current="$(grep -rE ': any|as any' lib --include='*.ts' 2>/dev/null | wc -l | tr -d ' ')"
+    current="$(grep -rE ': any|as any|as unknown as' lib --include='*.ts' 2>/dev/null | wc -l | tr -d ' ')"
     hint="Type explicitly instead of 'any' (prefer 'unknown' + narrowing if dynamic)."
     ;;
+  implicit-any)
+    # The 'any' ratchet only sees WRITTEN any. This one sees INFERRED any: the
+    # TS7xxx diagnostics tsc reports on lib/ + index.ts under 'noImplicitAny'
+    # (strict off, to isolate the signal — see tsconfig.implicit.json). An
+    # un-annotated parameter is free for the 'any' ratchet but costs here.
+    label="implicit-any (TS7xxx) diagnostics in lib/ + index.ts"
+    baseline_file=".migration/implicit-any-baseline.txt"
+    current="$(npx tsc -p tsconfig.implicit.json --noEmit 2>&1 | grep -cE 'error TS7[0-9]{3}' || true)"
+    hint="Annotate the parameter/variable instead of letting it infer to any."
+    ;;
   *)
-    echo "usage: scripts/ratchet.sh <js|mocha|any> [--update]" >&2
+    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any> [--update]" >&2
     exit 2
     ;;
 esac

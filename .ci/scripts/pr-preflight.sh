@@ -3,6 +3,8 @@
 # Run the local checks most likely to fail in CI before pushing:
 #   - lint (matches the `lint` job in pull_request.workflow.yaml)
 #   - error codes documentation (matches the `error-codes-check` job)
+#   - the migration ratchets + strict (matches the `migration-ratchets` job)
+#   - a reminder to adopt a converted file into strict once it is clean
 #   - a heuristic reminder about test/doc coverage (CONTRIBUTING.md)
 #
 # Requires local Node.js/npm (same as `npm run test:lint` would).
@@ -48,6 +50,17 @@ else
 fi
 
 echo
+echo "==> Migration ratchets & strict (npm run ratchet, npm run test:strict)"
+# The E1 gotcha: a conversion that leaves the .js tracked passes locally but
+# fails the js ratchet in CI. Cheap to catch here.
+if npm run ratchet && npm run test:strict; then
+  echo "[OK] ratchets & strict"
+else
+  echo "[FAIL] ratchets & strict"
+  status=1
+fi
+
+echo
 echo "==> Test & doc coverage reminder (heuristic, not a hard gate)"
 base_ref="$(git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD master 2>/dev/null || true)"
 if [ -n "$base_ref" ]; then
@@ -70,6 +83,23 @@ else
   echo "[OK] no lib/ changes"
 fi
 
+
+echo
+echo "==> Strict adoption reminder (ADR-0001: adopt a converted file once it is clean)"
+candidates="$(bash scripts/strict-check.sh --candidates 2>/dev/null | grep -vE '^#' || true)"
+unadopted=""
+for f in $(echo "$changed" | grep -E '^lib/.*\.ts$' || true); do
+  if echo "$candidates" | grep -qxF "$f"; then
+    unadopted="$unadopted$f"$'\n'
+  fi
+done
+if [ -n "$unadopted" ]; then
+  echo "[WARN] these changed files pass strict but are not in .migration/strict-adopted.txt:"
+  printf '%s' "$unadopted" | sed 's/^/    /'
+  echo "       Add them there in this PR so the ratchet guards them from now on."
+else
+  echo "[OK] no changed file is strict-clean-but-unadopted"
+fi
 echo
 if [ "$status" -eq 0 ]; then
   echo "Preflight passed."
