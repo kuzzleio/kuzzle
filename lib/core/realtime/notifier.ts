@@ -86,8 +86,8 @@ const KUZZLE_NOTIFICATION_CHANNEL = "kuzzle:notification:server";
  * @class NotifierController
  */
 class NotifierController {
-  private module: RealtimeModule;
-  private ttl: number;
+  private readonly module: RealtimeModule;
+  private readonly ttl: number;
   public logger: Logger;
 
   constructor(realtimeModule: RealtimeModule) {

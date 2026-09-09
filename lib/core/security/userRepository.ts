@@ -344,7 +344,7 @@ class UserRepository extends ObjectRepository<User> {
 
     if (
       user._id === this.anonymousUser._id &&
-      user.profileIds.indexOf("anonymous") === -1
+      !user.profileIds.includes("anonymous")
     ) {
       throw kerror.get("security", "user", "anonymous_profile_required");
     }
@@ -380,7 +380,7 @@ class UserRepository extends ObjectRepository<User> {
     const profiles = await this.module.profile.loadProfiles(user.profileIds);
 
     // Fail if not all profiles are found
-    if (profiles.some((p) => p === null)) {
+    if (profiles.includes(null)) {
       throw kerror.get("security", "user", "cannot_hydrate", dto._id);
     }
 

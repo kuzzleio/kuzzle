@@ -85,7 +85,7 @@ function getEvent(action: string): DocumentNotificationEvent {
  * Document notification document
  */
 class DocumentNotification {
-  public type: string;
+  public type = "document";
   public status: number;
   public action: string;
   public scope: RealtimeScope;
@@ -101,8 +101,6 @@ class DocumentNotification {
   public protocol: string;
 
   constructor(opts: DocumentNotificationOptions) {
-    this.type = "document";
-
     this.status = opts.status;
     this.action = opts.action;
     this.scope = opts.scope;
@@ -136,9 +134,9 @@ class DocumentNotification {
   ): DocumentNotification {
     return new DocumentNotification({
       action,
-      collection: request.input.resource.collection,
+      collection: request.input.args.collection,
       controller: request.input.controller,
-      index: request.input.resource.index,
+      index: request.input.args.index,
       node: global.kuzzle.id,
       protocol: request.context.connection.protocol,
       requestId: request.id,

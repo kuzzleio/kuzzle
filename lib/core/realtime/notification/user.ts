@@ -47,7 +47,7 @@ interface UserNotificationOptions {
  * User notification document
  */
 class UserNotification {
-  public type: string;
+  public type = "user";
   public status: number;
   public user: RealtimeUsers;
   public result: JSONObject;
@@ -61,8 +61,6 @@ class UserNotification {
   public protocol: string;
 
   constructor(opts: UserNotificationOptions) {
-    this.type = "user";
-
     this.status = opts.status;
     this.user = opts.user;
     this.result = opts.result;
@@ -90,9 +88,9 @@ class UserNotification {
   ): UserNotification {
     return new UserNotification({
       action: request.input.action,
-      collection: request.input.resource.collection,
+      collection: request.input.args.collection,
       controller: request.input.controller,
-      index: request.input.resource.index,
+      index: request.input.args.index,
       node: global.kuzzle.id,
       protocol: request.context.connection.protocol,
       result,

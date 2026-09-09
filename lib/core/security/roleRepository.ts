@@ -329,7 +329,10 @@ class RoleRepository extends ObjectRepository<Role> {
 
     const role = await this.loadOneFromDatabase(id);
 
-    await this.roles.set(role._id, role);
+    await this.roles.set(role._id, role); // NOSONAR: awaiting a synchronous
+    // Map.set is pointless but removing it shifts this method's resolution by a
+    // microtask — out of scope for a conversion, see step 06 / PR E2's
+    // `_checkSdkVersion` await.
 
     return role;
   }
@@ -404,7 +407,7 @@ class RoleRepository extends ObjectRepository<Role> {
     await this.persistToDatabase(role, options);
 
     const updatedRole = await this.loadOneFromDatabase(role._id);
-    await this.roles.set(role._id, updatedRole);
+    await this.roles.set(role._id, updatedRole); // NOSONAR: same as in load()
 
     return updatedRole;
   }
@@ -461,8 +464,6 @@ class RoleRepository extends ObjectRepository<Role> {
       forceWarn = false,
     }: { force?: boolean; forceWarn?: boolean } = {},
   ) {
-    const plugins = global.kuzzle.pluginsManager;
-
     for (const roleController of Object.keys(role.controllers)) {
       if (
         roleController === "*" ||
@@ -471,50 +472,88 @@ class RoleRepository extends ObjectRepository<Role> {
         return;
       }
 
-      if (!plugins.isController(roleController)) {
-        if (!force) {
-          throw roleRightsError.get(
-            "unknown_controller",
-            role._id,
-            roleController,
-            didYouMean(roleController, plugins.getControllerNames()),
-          );
-        }
-
-        // Do not print any warning if Kuzzle is not started or if warn is not forced.
-        // We need this to load rights without displaying warning at startup
-        // because plugins controllers are loaded after default roles
-        // then we need to display non-existing controllers with the sanity check
-        // made after plugins controllers loading.
-        if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
-          this.logger.warn(
-            `The role "${role._id}" gives access to the non-existing controller "${roleController}".`,
-          );
-        }
-
+      if (
+        !this._checkPluginController(role, roleController, { force, forceWarn })
+      ) {
         return;
       }
 
-      const roleActions = Object.keys(role.controllers[roleController].actions);
-      for (const action of roleActions) {
-        if (action !== "*" && !plugins.isAction(roleController, action)) {
-          if (!force) {
-            throw roleRightsError.get(
-              "unknown_action",
-              role._id,
-              action,
-              roleController,
-              didYouMean(action, plugins.getActions(roleController)),
-            );
-          }
+      this._checkPluginActions(role, roleController, { force, forceWarn });
+    }
+  }
 
-          // see the other comment
-          if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
-            this.logger.warn(
-              `The role "${role._id}" gives access to the non-existing action "${action}" for the controller "${roleController}".`,
-            );
-          }
-        }
+  /**
+   * Verifies that a plugin controller referenced by a role exists. Extracted
+   * from `checkRolePluginsRights` verbatim.
+   *
+   * @returns whether the caller should keep inspecting that controller
+   */
+  private _checkPluginController(
+    role: Role,
+    roleController: string,
+    { force, forceWarn }: { force: boolean; forceWarn: boolean },
+  ): boolean {
+    const plugins = global.kuzzle.pluginsManager;
+
+    if (plugins.isController(roleController)) {
+      return true;
+    }
+
+    if (!force) {
+      throw roleRightsError.get(
+        "unknown_controller",
+        role._id,
+        roleController,
+        didYouMean(roleController, plugins.getControllerNames()),
+      );
+    }
+
+    // Do not print any warning if Kuzzle is not started or if warn is not forced.
+    // We need this to load rights without displaying warning at startup
+    // because plugins controllers are loaded after default roles
+    // then we need to display non-existing controllers with the sanity check
+    // made after plugins controllers loading.
+    if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
+      this.logger.warn(
+        `The role "${role._id}" gives access to the non-existing controller "${roleController}".`,
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Verifies every action a role grants on a plugin controller. Extracted from
+   * `checkRolePluginsRights` verbatim.
+   */
+  private _checkPluginActions(
+    role: Role,
+    roleController: string,
+    { force, forceWarn }: { force: boolean; forceWarn: boolean },
+  ): void {
+    const plugins = global.kuzzle.pluginsManager;
+    const roleActions = Object.keys(role.controllers[roleController].actions);
+
+    for (const action of roleActions) {
+      if (action === "*" || plugins.isAction(roleController, action)) {
+        continue;
+      }
+
+      if (!force) {
+        throw roleRightsError.get(
+          "unknown_action",
+          role._id,
+          action,
+          roleController,
+          didYouMean(action, plugins.getActions(roleController)),
+        );
+      }
+
+      // see the other comment
+      if (global.kuzzle.state === kuzzleStateEnum.RUNNING || forceWarn) {
+        this.logger.warn(
+          `The role "${role._id}" gives access to the non-existing action "${action}" for the controller "${roleController}".`,
+        );
       }
     }
   }
@@ -548,7 +587,7 @@ class RoleRepository extends ObjectRepository<Role> {
    * @override
    */
   async delete(role: Role, { refresh = "false" }: WriteOptions = {}) {
-    if (["admin", "default", "anonymous"].indexOf(role._id) > -1) {
+    if (["admin", "default", "anonymous"].includes(role._id)) {
       throw kerror.get("security", "role", "cannot_delete");
     }
 
