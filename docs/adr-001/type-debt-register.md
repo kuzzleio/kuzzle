@@ -30,9 +30,9 @@
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
 | [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers — [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) | S | ⬜ |
 | [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ⬜ |
-| [TD-22](#td-22) | 🟠 med | `any` | `memoryStorageController.ts`: converted without typing — 54 implicit-`any` sites (+37 cascades), 122 strict errors | M | ⬜ |
-| [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) | M | ⬜ |
-| [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate | S | 🟦 |
+| [TD-22](#td-22) | 🟠 med | `any` | `memoryStorageController.ts`: converted without typing — 54 implicit-`any` sites (+37 cascades), 122 strict errors — [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) | M | ⬜ |
+| [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) — [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) | M | 🟦 |
+| [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | 🟦 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -140,6 +140,7 @@ The step-05 note says the table and the arg-extraction internals "stay inferred"
 
 - **Reco:** type the command table as a named interface (`RedisCommandMapping`, one entry type with the `skip`/`merge`/`path`/`map` shape), make `mapping` a `const` built at module load rather than a `let` + `initMapping()`, and annotate the `map` closures. Watch the constraint that made it dynamic in the first place: `memoryStorageController.test.js` drives `rewire(...).__get__("mapping" | "extractArgumentsFromRequest")` and `__set__({ mapping })` on the **compiled** CJS, so `mapping` must stay a top-level binding and the module must keep its `export =` shape.
 - Fixing `mapping`'s type is what clears the 37 cascades above — they are not independent findings.
+- **Tracked as [#2690](https://github.com/kuzzleio/kuzzle/issues/2690)** (opened 2026-09-09).
 - **Trigger:** independent of the migration sprints; a good first `implicit-any` reduction PR since the file is self-contained and its spec is thorough.
 
 ---
@@ -161,6 +162,8 @@ The exclusion list is the documented escape hatch for pre-existing intra-file du
 Two distinct problems: the dedup work itself is unscheduled, and an exclusion added "temporarily" during a conversion has no expiry — CPD is simply off for those files from now on, including for *future* duplication introduced by unrelated PRs.
 
 - **Reco:** (1) document the `httpRoutes.ts` entry alongside the other three; (2) open the `documentController` CRUD-pair dedup as its own refactor (it is the only one that is genuinely worth doing — `esWrapper` is a declared non-goal and `memoryStorageController`'s belongs with [TD-22](#td-22)); (3) when a file's duplication is dealt with, **remove its exclusion in the same PR** — treat the list as a ratchet that may only shrink.
+- **🟦 Partially done (2026-09-09, step 06 PR F1):** (1) and (3) shipped — the `httpRoutes.ts` entry is documented and `sonar-project.properties` now records that the list may only shrink. **Remaining ⬜:** (2), the `documentController` dedup.
+- **Tracked as [#2691](https://github.com/kuzzleio/kuzzle/issues/2691)** (opened 2026-09-09).
 - **Trigger:** independent of the migration sprints.
 
 ---
@@ -207,6 +210,7 @@ Two compounding problems in the pipeline:
 - `c8` (mocha, over the compiled `dist/`) and vitest both write to `coverage/lcov.info`, so wiring vitest in naively would have one report **overwrite** the other rather than add to it.
 
 - **Reco:** drop `**/*.ts` from the exclusions; verify where the c8 lcov actually points (mocha runs `dist/**/*.test.js` with `sourceMap: true`, so c8 *should* remap onto `lib/**/*.ts` — confirm, and remap explicitly otherwise); give each runner its own report path and list both in `sonar.javascript.lcov.reportPaths`; then record the measured coverage of the already-converted files.
+- **Tracked as [#2692](https://github.com/kuzzleio/kuzzle/issues/2692)** (opened 2026-09-09).
 - **🟦 In progress:** scheduled as **PR F2 of [ADR step 06](ADR-0001-migration-typescript.md)**, and it **gates the start of Sprint 5** — `lib/core` is 50 critical files, and converting them under a gate that measures nothing is the risk this entry exists to prevent.
 
 ---
@@ -299,7 +303,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-09-07** — Sprint 4 (`lib/api`) PR E1 (#2685): `httpRoutes` + `controllers/index` → TS; js baseline 69 → 67. **TD-19 partially prepared, not closed** — the route table now carries a real shape (a module-local `KuzzleHttpRoute` interface: literal-union `verb`, `deprecated?`, `url?`), but `HttpConfiguration.routes` is deliberately **left `any`**: promoting the interface into `lib/types` and typing that field cascades into already-converted files (`serverController.ts` assigns `config.http.routes = undefined` and re-declares its own local `ApiRoute[]`), i.e. a type refactor the conversion standard keeps out of a conversion PR. Whoever picks up TD-19 should start from `KuzzleHttpRoute`. Also standardized `adminController`/`authController`/`securityController` on `export =` — the `export default` shape was the sole reason for the `new XController.default()` workaround in `funnel.js` and 10 spec call sites.
 - **2026-09-07** — Sprint 4 (`lib/api`) **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)): `funnel` → TS; js baseline 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. **TD-18 closed** (`internal.allowAllOrigins` modelled — the half PR D deferred to exactly this conversion). **TD-21 opened** (see above). Both deferred items now have **GitHub issues** ([#2687](https://github.com/kuzzleio/kuzzle/issues/2687) for TD-21, [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) for TD-20): the register is read when someone picks up the ADR, which was scheduling nothing on its own. **Convention going forward: a TD entry that defers real work gets an issue, and the entry links to it.**
 
-- **2026-09-09** — **Mid-course review of the 30 files converted so far** (sprints 1, 3, 4), opening [ADR step 06](ADR-0001-migration-typescript.md). The converted code holds up on the letter of the standard (0 written `any`, 0 `@ts-ignore`, 0 `!`, 0 unused imports, tsc + lint green, and PR E2's `funnel.ts` gate refactor re-verified equivalent line by line against `master`). What did not hold up is the **measurement**: **TD-22** opened (`memoryStorageController` renamed but not typed — 54 implicit-`any` sites, 91 diagnostics with the cascades), **TD-23** opened (`sonar.cpd.exclusions` at 5 files with no schedule and one undocumented entry), **TD-24** opened (SonarCloud measures no coverage on `.ts` — the biggest hole, and the reason PR F2 gates Sprint 5). **TD-02/TD-03 advanced** (4th ratchet on implicit `any` at 520; written-`any` ratchet widened to `as unknown as`, 200 → 208; strict adopted 46 → 94; repo strict errors 1483 → 1344 from one `never[]` inference). **TD-14 flagged as an opportunity missed** — `assertType` was converted without the generic returns the entry asked for. **TD-16 measured** — the esWrapper pair is 314 LOC each with a 16-line diff.
+- **2026-09-09** — **Mid-course review of the 30 files converted so far** (sprints 1, 3, 4), opening [ADR step 06](ADR-0001-migration-typescript.md). The converted code holds up on the letter of the standard (0 written `any`, 0 `@ts-ignore`, 0 `!`, 0 unused imports, tsc + lint green, and PR E2's `funnel.ts` gate refactor re-verified equivalent line by line against `master`). What did not hold up is the **measurement**: **TD-22** opened (`memoryStorageController` renamed but not typed — 54 implicit-`any` sites, 91 diagnostics with the cascades), **TD-23** opened (`sonar.cpd.exclusions` at 5 files with no schedule and one undocumented entry), **TD-24** opened (SonarCloud measures no coverage on `.ts` — the biggest hole, and the reason PR F2 gates Sprint 5). All three have GitHub issues per the convention: [#2690](https://github.com/kuzzleio/kuzzle/issues/2690), [#2691](https://github.com/kuzzleio/kuzzle/issues/2691), [#2692](https://github.com/kuzzleio/kuzzle/issues/2692). **TD-02/TD-03 advanced** (4th ratchet on implicit `any` at 520; written-`any` ratchet widened to `as unknown as`, 200 → 208; strict adopted 46 → 94; repo strict errors 1483 → 1344 from one `never[]` inference). **TD-14 flagged as an opportunity missed** — `assertType` was converted without the generic returns the entry asked for. **TD-16 measured** — the esWrapper pair is 314 LOC each with a 16-line diff.
 
 ---
 

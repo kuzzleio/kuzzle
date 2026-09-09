@@ -2,7 +2,8 @@
 
 **Status:** 🟦 In progress — PR F1 done, F2 and F3 to come
 **Date:** 2026-09-09 → …
-**PR(s):** F1 (`chore/ts-migration-hardening-strict`) · F2 (coverage, to open) · F3 (test debt, to open)
+**PR(s):** F1 = [#2689](https://github.com/kuzzleio/kuzzle/pull/2689) (`chore/ts-migration-hardening-strict`) · F2 (coverage, to open — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692)) · F3 (test debt, to open)
+**Issues opened by the review:** [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) (TD-22) · [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) (TD-23) · [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) (TD-24)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
