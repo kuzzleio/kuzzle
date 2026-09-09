@@ -21,6 +21,8 @@
 
 /* eslint sort-keys: 0 */
 
+import { JSONObject } from "kuzzle-sdk";
+
 import { wrap } from "../../kerror";
 import { KuzzleRequest, Request } from "../request";
 import { NativeController } from "./baseController";
@@ -29,12 +31,77 @@ import { isPlainObject, has } from "../../util/safeObject";
 
 const kerror = wrap("api", "assert");
 
-let mapping;
+/** A geopoint, as `geoadd` takes them in the request body. */
+interface GeoPoint {
+  lon: number;
+  lat: number;
+  name: string;
+}
+
+/** One `hmset` entry. */
+interface FieldEntry {
+  field: string;
+  value: unknown;
+}
+
+/** One `mset` / `msetnx` entry. */
+interface KeyEntry {
+  key: string;
+  value: unknown;
+}
+
+/**
+ * Where an argument sits in the request, e.g. `["body", "keys"]`.
+ */
+type CommandArgumentPath = string[];
+
+/**
+ * How to pull one argument out of a request, when the bare path is not enough.
+ */
+interface CommandArgumentSpec {
+  path?: CommandArgumentPath;
+  /** Concat the value into the argument list instead of pushing it. */
+  merge?: boolean;
+  /** Omit the argument when it is absent, instead of throwing. */
+  skip?: boolean;
+  /** Normalise the raw request value into what the Redis command expects. */
+  map?: (value: unknown, request: KuzzleRequest) => unknown;
+}
+
+/**
+ * The arguments of a single Redis command, in the order the command takes
+ * them. `null` means the command takes none at all (`dbsize`, `flushdb`).
+ */
+type CommandArguments = Record<
+  string,
+  CommandArgumentPath | CommandArgumentSpec
+> | null;
+
+/**
+ * The command table: Redis command name -> its arguments. Annotating it is
+ * what lets the `map` closures below infer their parameters, and what makes
+ * the aliasing block at the end of `initMapping()` legal — an inferred object
+ * literal has no `rpush` property to assign to.
+ */
+type RedisCommandMapping = Record<string, CommandArguments>;
+
+// Stays a mutable top-level binding: the Mocha spec rewires it through
+// `__get__("mapping")` / `__set__({ mapping })` on the compiled CJS, which a
+// `const` would make impossible (assignment to a constant).
+let mapping: RedisCommandMapping;
 
 /**
  * @class MemoryStorageController
  */
 class MemoryStorageController extends NativeController {
+  /**
+   * Every Redis command in the table becomes an action method on the instance,
+   * installed at construction and looked up by name by the funnel. The index
+   * signature is what makes that dynamic write typeable — it is type-only, so
+   * the emitted JavaScript is unchanged.
+   */
+  [command: string]: unknown;
+
   constructor() {
     super();
 
@@ -81,7 +148,7 @@ const scanMatchProperty = {
   skip: true,
   merge: true,
   path: ["args", "match"],
-  map: (val) => {
+  map: (val: unknown) => {
     if (typeof val !== "string") {
       throw kerror.get("invalid_type", "match", "<string>");
     }
@@ -94,7 +161,7 @@ const scanCountProperty = {
   skip: true,
   merge: true,
   path: ["args", "count"],
-  map: (val, request) => {
+  map: (val: unknown, request: KuzzleRequest) => {
     assertInt(request, "count", val);
     return ["COUNT", val];
   },
@@ -103,14 +170,14 @@ const scanCountProperty = {
 const zrangebyscoreOptionsProperty = {
   skip: true,
   merge: true,
-  map: (val) => sanitizeArrayArgument(val),
+  map: (val: unknown) => sanitizeArrayArgument(val),
   path: ["args", "options"],
 };
 
 const zrangebyscoreLimitProperty = {
   skip: true,
   merge: true,
-  map: (val) => processLimit(val),
+  map: (val: unknown) => processLimit(val),
   path: ["args", "limit"],
 };
 
@@ -156,17 +223,19 @@ function initMapping() {
     geoadd: {
       key: { path: ["resource", "_id"] },
       points: {
-        map: (val, request) => {
-          const result = [];
+        map: (val: unknown, request: KuzzleRequest) => {
+          const result: unknown[] = [];
 
           kassert.assertBodyHasAttribute(request, "points");
           kassert.assertBodyAttributeType(request, "points", "array");
+          // The assert above is what makes the array shape safe to assume.
+          const points = val as GeoPoint[];
 
-          if (val.length === 0) {
+          if (points.length === 0) {
             throw kerror.get("empty_argument", "points");
           }
 
-          val.forEach((v) => {
+          points.forEach((v) => {
             if (typeof v !== "object" || !v.lon || !v.lat || !v.name) {
               throw kerror.get(
                 "invalid_argument",
@@ -197,7 +266,7 @@ function initMapping() {
       key: ["resource", "_id"],
       members: {
         merge: true,
-        map: (val) => toArray(val),
+        map: (val: unknown) => toArray(val),
         path: ["args", "members"],
       },
     },
@@ -210,7 +279,7 @@ function initMapping() {
       options: {
         skip: true,
         merge: true,
-        map: (val) => sanitizeArrayArgument(val),
+        map: (val: unknown) => sanitizeArrayArgument(val),
         path: ["args", "options"],
       },
     },
@@ -222,7 +291,7 @@ function initMapping() {
       options: {
         skip: true,
         merge: true,
-        map: (val) => sanitizeArrayArgument(val),
+        map: (val: unknown) => sanitizeArrayArgument(val),
         path: ["args", "options"],
       },
     },
@@ -243,7 +312,7 @@ function initMapping() {
       key: ["resource", "_id"],
       fields: {
         merge: true,
-        map: (val) => toArray(val),
+        map: (val: unknown) => toArray(val),
         path: ["args", "fields"],
       },
     },
@@ -259,13 +328,13 @@ function initMapping() {
     hmset: {
       key: ["resource", "_id"],
       entries: {
-        map: (val, request) => {
-          const result = [];
+        map: (val: unknown, request: KuzzleRequest) => {
+          const result: unknown[] = [];
 
           kassert.assertBodyHasAttribute(request, "entries");
           kassert.assertBodyAttributeType(request, "entries", "array");
 
-          val.forEach((v) => {
+          (val as FieldEntry[]).forEach((v) => {
             if (
               typeof v !== "object" ||
               !v.field ||
@@ -336,7 +405,7 @@ function initMapping() {
     mget: {
       keys: {
         merge: true,
-        map: (val) => toArray(val),
+        map: (val: unknown) => toArray(val),
         path: ["args", "keys"],
       },
     },
@@ -345,12 +414,12 @@ function initMapping() {
     },
     mset: {
       entries: {
-        map: (val, request) => {
-          const result = [];
+        map: (val: unknown, request: KuzzleRequest) => {
+          const result: unknown[] = [];
 
           kassert.assertBodyHasAttribute(request, "entries");
           kassert.assertBodyAttributeType(request, "entries", "array");
-          val.forEach((entry) => {
+          (val as KeyEntry[]).forEach((entry) => {
             if (
               typeof entry !== "object" ||
               !entry.key ||
@@ -424,7 +493,7 @@ function initMapping() {
       key: ["resource", "_id"],
       keys: {
         merge: true,
-        map: (val) => toArray(val),
+        map: (val: unknown) => toArray(val),
         path: ["args", "keys"],
       },
     },
@@ -478,7 +547,7 @@ function initMapping() {
     sunion: {
       keys: {
         merge: true,
-        map: (val) => toArray(val),
+        map: (val: unknown) => toArray(val),
         path: ["args", "keys"],
       },
     },
@@ -514,7 +583,7 @@ function initMapping() {
       options: {
         skip: true,
         merge: true,
-        map: (val) => sanitizeArrayArgument(val),
+        map: (val: unknown) => sanitizeArrayArgument(val),
         path: ["args", "options"],
       },
     },
@@ -525,7 +594,7 @@ function initMapping() {
       limit: {
         skip: true,
         merge: true,
-        map: (val) => processLimit(val),
+        map: (val: unknown) => processLimit(val),
         path: ["args", "limit"],
       },
     },
@@ -562,7 +631,7 @@ function initMapping() {
       limit: {
         skip: true,
         merge: true,
-        map: (val) => processLimit(val),
+        map: (val: unknown) => processLimit(val),
         path: ["args", "limit"],
       },
     },
@@ -630,8 +699,11 @@ function initMapping() {
  * @param {Request} request
  * @returns {*}
  */
-function extractArgumentsFromRequest(command: string, request: KuzzleRequest) {
-  let args = [];
+function extractArgumentsFromRequest(
+  command: string,
+  request: KuzzleRequest,
+): unknown[] {
+  let args: unknown[] = [];
 
   // Dealing with exceptions
   if (command === "set") {
@@ -661,25 +733,22 @@ function extractArgumentsFromRequest(command: string, request: KuzzleRequest) {
     request.input.body = {};
   }
 
-  Object.keys(mapping[command]).forEach((key) => {
-    const data = mapping[command][key];
+  const commandArguments = mapping[command];
+
+  Object.keys(commandArguments).forEach((key) => {
+    const data = commandArguments[key];
     const path = Array.isArray(data) ? data : data.path;
     const toMerge = !Array.isArray(data) && data.merge === true;
     const map = !Array.isArray(data) && data.map;
     const skip = !Array.isArray(data) && data.skip === true;
 
-    let value = path.reduce(
-      (previousValue, currentValue, currentIndex, array) => {
-        if (
-          previousValue[array[currentIndex]] !== undefined &&
-          previousValue[array[currentIndex]] !== null
-        ) {
-          return previousValue[array[currentIndex]];
-        }
-        return undefined;
-      },
-      request.input,
-    );
+    let value = path.reduce<unknown>((previousValue, currentValue) => {
+      // Indexing `undefined` throws, as it did before: no path in the table
+      // is deeper than the two levels the request always has.
+      const next = (previousValue as Record<string, unknown>)[currentValue];
+
+      return next === undefined || next === null ? undefined : next;
+    }, request.input);
 
     if (value === undefined) {
       if (skip) {
@@ -689,7 +758,7 @@ function extractArgumentsFromRequest(command: string, request: KuzzleRequest) {
     }
 
     if (map) {
-      value = data.map(value, request);
+      value = map(value, request);
     }
 
     if (value !== undefined) {
@@ -795,7 +864,7 @@ function extractArgumentsFromRequestForSort(request: KuzzleRequest) {
   if (request.input.body.get !== undefined) {
     kassert.assertBodyAttributeType(request, "get", "array");
 
-    request.input.body.get.forEach((pattern) => {
+    request.input.body.get.forEach((pattern: unknown) => {
       args.push("GET", pattern);
     });
   }
@@ -818,7 +887,7 @@ function extractArgumentsFromRequestForMExecute(request: KuzzleRequest) {
 
   const actions = request.input.body.actions;
 
-  return actions.map((command) => {
+  return actions.map((command: JSONObject) => {
     if (!has(command, "action")) {
       throw kerror.get("missing_argument", "action");
     }
@@ -884,7 +953,7 @@ function extractArgumentsFromRequestForZAdd(request: KuzzleRequest) {
     throw kerror.get("too_many_arguments", "elements");
   }
 
-  request.input.body.elements.forEach((element, index) => {
+  request.input.body.elements.forEach((element: JSONObject, index: number) => {
     if (!isPlainObject(element)) {
       throw kerror.get("invalid_argument", "elements", "<array of objects>");
     }
@@ -957,9 +1026,9 @@ function extractArgumentsFromRequestForZInterstore(request: KuzzleRequest) {
  * @param {*} value of the tested parameter
  * @throws
  */
-function assertFloat(request: KuzzleRequest, name: string, value) {
+function assertFloat(request: KuzzleRequest, name: string, value: unknown) {
   // Number.parseXxx computes the 1st member of an array if one is provided
-  if (Array.isArray(value) || Number.isNaN(Number.parseFloat(value))) {
+  if (Array.isArray(value) || Number.isNaN(Number.parseFloat(String(value)))) {
     throw kerror.get("invalid_type", name, "number");
   }
 }
@@ -973,9 +1042,9 @@ function assertFloat(request: KuzzleRequest, name: string, value) {
  * @param {*} value of the tested parameter
  * @throws
  */
-function assertInt(request: KuzzleRequest, name: string, value) {
+function assertInt(request: KuzzleRequest, name: string, value: unknown) {
   // Number.parseXxx computes the 1st member of an array if one is provided
-  if (Array.isArray(value) || Number.isNaN(Number.parseInt(value))) {
+  if (Array.isArray(value) || Number.isNaN(Number.parseInt(String(value)))) {
     throw kerror.get("invalid_type", name, "integer");
   }
 }
@@ -986,8 +1055,10 @@ function assertInt(request: KuzzleRequest, name: string, value) {
  * @param  {Array|String} arg
  * @returns {Array}
  */
-function toArray(arg) {
-  return typeof arg === "string" ? arg.split(",") : arg;
+function toArray(arg: unknown): unknown[] {
+  // Anything that is neither a string nor an array used to be handed to Redis
+  // unchanged, and still is — the command itself rejects it.
+  return typeof arg === "string" ? arg.split(",") : (arg as unknown[]);
 }
 
 /**
@@ -995,10 +1066,12 @@ function toArray(arg) {
  * @param  {Array|String} arg
  * @returns {Array}
  */
-function sanitizeArrayArgument(arg) {
+function sanitizeArrayArgument(arg: unknown): unknown[] {
   const result = toArray(arg);
 
-  return result.map((v) => (typeof v === "string" ? v.toUpperCase() : v));
+  return result.map((v: unknown) =>
+    typeof v === "string" ? v.toUpperCase() : v,
+  );
 }
 
 /**
@@ -1006,8 +1079,8 @@ function sanitizeArrayArgument(arg) {
  * @param  {Array} arg
  * @throws
  */
-function processLimit(arg) {
-  let result = ["LIMIT"];
+function processLimit(arg: unknown): unknown[] {
+  let result: unknown[] = ["LIMIT"];
 
   result = result.concat(toArray(arg));
 
