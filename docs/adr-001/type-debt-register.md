@@ -34,6 +34,7 @@
 | [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) — [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) | M | 🟦 |
 | [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | ✅ |
 | [TD-25](#td-25) | 🟡 low | Dependencies | `@types/debug` is narrower than `debug`'s runtime — adopting it costs 3 casts, so `util/debug.ts` stays out of strict | S | ⬜ |
+| [TD-26](#td-26) | 🟡 low | Correctness | 5 `await`s of a non-Promise, kept for timing parity across conversions (`NOSONAR: TD-26`) | XS | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -65,6 +66,24 @@
 The SDK defines `type JSONObject = Record<PropertyKey, any>`; both storage files redeclare `export interface JSONObject { [key: string]: any }` (interface, string keys only) without importing the SDK. Non-equivalent semantics (union alias vs mergeable interface; `symbol` keys). No root collision only because those 2 files are not in the barrel.
 
 - **Reco:** consolidate to a single server-owned definition (TD-09) and delete the 2 redefinitions.
+
+### TD-26
+**`await` of a non-Promise, kept for timing parity** · 🟡 low · `NOSONAR: TD-26`
+
+Five call sites `await` a value that is not thenable. Every one predates the migration; the conversions merely made SonarCloud score them (`typescript:S4123`, Critical), and each was **kept** because removing an `await` shifts the enclosing async function's resolution by a microtask — which a conversion PR must not do (the bar set in PR E2: *"very likely unobservable" is not good enough*).
+
+| Site | Awaited value | Opened by |
+|------|---------------|-----------|
+| `funnel._executeThrottled` → `_checkSdkVersion()` | a synchronous method | PR E2 |
+| `roleRepository.load` → `this.roles.set(...)` | `Map.set` returns the Map | sprint 5 PR G1 |
+| `roleRepository.validateAndSaveRole` → `this.roles.set(...)` | idem | sprint 5 PR G1 |
+| `security/index.init` → `this.role.init()` | `RoleRepository.init()` is not `async` | sprint 5 PR G2 |
+| `security/index.init` → `this.profile.init()` | `ProfileRepository.init()` is not `async` | sprint 5 PR G2 |
+
+They are individually trivial and collectively worth one pass: the markers are accumulating one or two per conversion PR, and each one is a Critical the next reviewer has to re-justify.
+
+- **Reco:** a single behaviour-change PR that drops all five `await`s (and the markers), with a note that the only observable effect is one microtask of resolution timing per site. `grep -rn "NOSONAR: TD-26" lib/` lists them.
+- **Trigger:** independent of the migration sprints; a good companion to [TD-20](#td-20)'s deprecated-API cleanup, which is the same shape of "conversion found it, conversion must not fix it".
 
 ---
 
@@ -331,6 +350,7 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-09-07** — Sprint 4 (`lib/api`) PR E1 (#2685): `httpRoutes` + `controllers/index` → TS; js baseline 69 → 67. **TD-19 partially prepared, not closed** — the route table now carries a real shape (a module-local `KuzzleHttpRoute` interface: literal-union `verb`, `deprecated?`, `url?`), but `HttpConfiguration.routes` is deliberately **left `any`**: promoting the interface into `lib/types` and typing that field cascades into already-converted files (`serverController.ts` assigns `config.http.routes = undefined` and re-declares its own local `ApiRoute[]`), i.e. a type refactor the conversion standard keeps out of a conversion PR. Whoever picks up TD-19 should start from `KuzzleHttpRoute`. Also standardized `adminController`/`authController`/`securityController` on `export =` — the `export default` shape was the sole reason for the `new XController.default()` workaround in `funnel.js` and 10 spec call sites.
 - **2026-09-07** — Sprint 4 (`lib/api`) **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)): `funnel` → TS; js baseline 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. **TD-18 closed** (`internal.allowAllOrigins` modelled — the half PR D deferred to exactly this conversion). **TD-21 opened** (see above). Both deferred items now have **GitHub issues** ([#2687](https://github.com/kuzzleio/kuzzle/issues/2687) for TD-21, [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) for TD-20): the register is read when someone picks up the ADR, which was scheduling nothing on its own. **Convention going forward: a TD entry that defers real work gets an issue, and the entry links to it.**
 
+- **2026-09-09** — **Step 07 Sprint 5 (`lib/core` I), PRs G1 + G2.** G1: 10 files ≥93% covered (`realtime`, `security` repositories, `cache`) — js 66→56; the **`implicit-any` ratchet caught 55 inferred `any`** the compiler and the explicit-`any` ratchet both missed, and **`Build and Run` caught a startup regression** (a dynamic method call converted into a dynamic property read lost its receiver). G2: the module wiring — js 56→51, 5 vitest specs, and a **`kerror` fix without which no vitest spec could reach an error path** (`module.filename` is a CommonJS global; vitest loads `lib/` as ESM). **TD-26 opened** (5 `await`s of a non-Promise, kept for timing parity). Measured for the first time: **a `.js`→`.ts` rename makes the whole file count as new code for coverage** (`new_lines_to_cover` 2 646 for 2 308 LOC), so a file's current coverage *is* its future `new_coverage`.
 - **2026-09-09** — **Step 06 PR F3 (test debt).** vitest spec location settled in `CONTRIBUTING.md` (`tests/` mirror). **TD-24 closed** by F2. **TD-25 opened** — `@types/debug` is narrower than `debug`'s runtime, so installing it breaks `tsc`; `util/debug.ts` and `util/didYouMean.ts` stay out of strict deliberately. **`lib/util/wildcard.ts` deleted** — dead code carrying an inverted-filter bug (see *Dead code* above). Five vitest specs added (64 tests, up from 7): `debug` 70.7% → **100%**, `bytes` 82.5% → **91.7%**, `promback`/`assertType`/`safeObject` at 100% and now pinned directly. **`promback.ts`'s own typing hole fixed under test and adopted into strict** — the settled value is honestly `T | undefined` (`resolve()` takes no argument, and `KuzzleEventEmitter` passes `updated[0]`), and the settle methods now narrow on the settler rather than on `isPromise`; no cast, no cascade. Strict errors 1344 → **1339**. The `mocha` counter stays at 151 on purpose: none of the five files had a Mocha spec, so nothing was replaced.
 - **2026-09-09** — **Mid-course review of the 30 files converted so far** (sprints 1, 3, 4), opening [ADR step 06](ADR-0001-migration-typescript.md). The converted code holds up on the letter of the standard (0 written `any`, 0 `@ts-ignore`, 0 `!`, 0 unused imports, tsc + lint green, and PR E2's `funnel.ts` gate refactor re-verified equivalent line by line against `master`). What did not hold up is the **measurement**: **TD-22** opened (`memoryStorageController` renamed but not typed — 54 implicit-`any` sites, 91 diagnostics with the cascades), **TD-23** opened (`sonar.cpd.exclusions` at 5 files with no schedule and one undocumented entry), **TD-24** opened (SonarCloud measures no coverage on `.ts` — the biggest hole, and the reason PR F2 gates Sprint 5). All three have GitHub issues per the convention: [#2690](https://github.com/kuzzleio/kuzzle/issues/2690), [#2691](https://github.com/kuzzleio/kuzzle/issues/2691), [#2692](https://github.com/kuzzleio/kuzzle/issues/2692). **TD-02/TD-03 advanced** (4th ratchet on implicit `any` at 520; written-`any` ratchet widened to `as unknown as`, 200 → 208; strict adopted 46 → 94; repo strict errors 1483 → 1344 from one `never[]` inference). **TD-14 flagged as an opportunity missed** — `assertType` was converted without the generic returns the entry asked for. **TD-16 measured** — the esWrapper pair is 314 LOC each with a 16-line diff.
 
