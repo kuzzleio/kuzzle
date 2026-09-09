@@ -19,30 +19,26 @@
  * limitations under the License.
  */
 
-"use strict";
+import Notifier from "./notifier";
+import { HotelClerk } from "./hotelClerk";
 
-const RoleRepository = require("./roleRepository");
-const { ProfileRepository } = require("./profileRepository");
-const { TokenRepository } = require("./tokenRepository");
-const UserRepository = require("./userRepository");
-const SecurityLoader = require("./securityLoader");
+/**
+ * Wires the realtime components together. Both receive this module: the
+ * notifier reads `module.hotelClerk.rooms` to resolve a room's channels.
+ */
+class RealtimeModule {
+  public notifier: Notifier;
+  public hotelClerk: HotelClerk;
 
-class SecurityModule {
   constructor() {
-    this.role = new RoleRepository(this);
-    this.profile = new ProfileRepository(this);
-    this.token = new TokenRepository();
-    this.user = new UserRepository(this);
-    this.loader = new SecurityLoader();
+    this.notifier = new Notifier(this);
+    this.hotelClerk = new HotelClerk(this);
   }
 
   async init() {
-    await this.role.init();
-    await this.profile.init();
-    await this.token.init();
-    await this.user.init();
-    await this.loader.init();
+    await this.notifier.init();
+    await this.hotelClerk.init();
   }
 }
 
-module.exports = SecurityModule;
+export = RealtimeModule;

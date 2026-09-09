@@ -33,14 +33,23 @@ import { ErrorDefinition } from "../types";
 /**
  * Gets this file name in the exact same format than the one printed in the
  * stacktraces (used to clean kerror lines from stacktraces)
+ *
+ * `module` is a CommonJS global. Kuzzle ships as CommonJS, but vitest loads
+ * `lib/` as ESM, where `module` is undefined — and reading `.filename` off it
+ * threw, which made EVERY vitest spec that reaches an error path crash. The
+ * guard degrades gracefully instead: with no filename to match, stack-trace
+ * cleaning is skipped, which is cosmetic.
  */
-let _currentFileName = null;
-function _getCurrentFileName() {
+let _currentFileName: string | null = null;
+function _getCurrentFileName(): string {
   if (_currentFileName !== null) {
     return _currentFileName;
   }
 
-  _currentFileName = module.filename.substr(process.cwd().length + 1);
+  _currentFileName =
+    typeof module === "undefined" || !module.filename
+      ? ""
+      : module.filename.substring(process.cwd().length + 1);
 
   return _currentFileName;
 }
@@ -147,8 +156,10 @@ function cleanStackTrace(error: KuzzleError): void {
       return true;
     }
 
-    // filter all lines related to the kerror object
-    return !line.includes(currentFileName);
+    // filter all lines related to the kerror object. An empty
+    // `currentFileName` (see above) matches everything, so guard it: no
+    // filename means no filtering.
+    return currentFileName === "" || !line.includes(currentFileName);
   });
 
   // insert a deletion message in place of the new error instantiation line
