@@ -19,25 +19,51 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { Elasticsearch } = require("../../service/storage/Elasticsearch");
-const { IndexCache } = require("./indexCache");
-const { isPlainObject } = require("../../util/safeObject");
-const kerror = require("../../kerror");
-const { Mutex } = require("../../util/mutex");
+import { Elasticsearch } from "../../service/storage/Elasticsearch";
+import { IndexCache } from "./indexCache";
+import { isPlainObject } from "../../util/safeObject";
+import * as kerror from "../../kerror";
+import { Mutex } from "../../util/mutex";
+import { storeScopeEnum } from "./storeScopeEnum";
+import "../../types/Global";
 
 const servicesError = kerror.wrap("services", "storage");
+
+/** Where `createIndex` / `createCollection` / `loadMappings` write, and whether
+ * the change is broadcast to the rest of the cluster. */
+interface WriteScopeOptions {
+  indexCacheOnly?: boolean;
+  propagate?: boolean;
+}
+
+interface LoadMappingsOptions extends WriteScopeOptions {
+  rawMappings?: boolean;
+  refresh?: boolean;
+}
+
+/** `{ index: { collection: payload } }`, as the fixtures and mappings
+ * import payloads are shaped. */
+type ImportPayload = Record<string, Record<string, JSONObject>>;
 
 /**
  * Storage client adapter to perform validation on index/collection existence
  * and to maintain the index/collection cache.
  */
 class ClientAdapter {
+  public es: Elasticsearch;
   /**
-   * @param {storeScopeEnum} scope
+   * The version-specific ES service (ES7 or ES8). Its type is whatever
+   * `Elasticsearch` exposes — which is `any` today, and is tracked there as
+   * TD-13; referencing it rather than re-writing `any` keeps that one hole
+   * counted once, at its source.
    */
-  constructor(scope) {
+  public client: Elasticsearch["client"];
+  public scope: storeScopeEnum;
+  public cache: IndexCache;
+
+  constructor(scope: storeScopeEnum) {
     this.es = new Elasticsearch(
       global.kuzzle.config.services.storageEngine,
       scope,
@@ -80,12 +106,16 @@ class ClientAdapter {
      * @param {Object} koncordeFilters - Set of valid Koncorde filters
      * @returns {Object} Equivalent Elasticsearch query
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:translate`, (filters) =>
-      this.client.translateKoncordeFilters(filters),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:translate`,
+      (filters: JSONObject) => this.client.translateKoncordeFilters(filters),
     );
   }
 
-  async createIndex(index, { indexCacheOnly = false, propagate = true } = {}) {
+  async createIndex(
+    index: string,
+    { indexCacheOnly = false, propagate = true }: WriteScopeOptions = {},
+  ) {
     if (this.cache.hasIndex(index)) {
       throw servicesError.get("index_already_exists", this.scope, index);
     }
@@ -105,10 +135,10 @@ class ClientAdapter {
   }
 
   async createCollection(
-    index,
-    collection,
-    opts,
-    { indexCacheOnly = false, propagate = true } = {},
+    index: string,
+    collection: string,
+    opts: JSONObject,
+    { indexCacheOnly = false, propagate = true }: WriteScopeOptions = {},
   ) {
     if (!indexCacheOnly) {
       await this.client.createCollection(index, collection, opts);
@@ -125,7 +155,7 @@ class ClientAdapter {
     }
   }
 
-  async deleteIndex(index) {
+  async deleteIndex(index: string) {
     this.cache.assertIndexExists(index);
 
     await this.client.deleteIndex(index);
@@ -138,7 +168,7 @@ class ClientAdapter {
     });
   }
 
-  async deleteIndexes(indexes) {
+  async deleteIndexes(indexes: string[]): Promise<string[]> {
     for (const index of indexes) {
       this.cache.assertIndexExists(index);
     }
@@ -159,7 +189,7 @@ class ClientAdapter {
     return deleted;
   }
 
-  async deleteCollection(index, collection) {
+  async deleteCollection(index: string, collection: string) {
     this.cache.assertCollectionExists(index, collection);
 
     await this.client.deleteCollection(index, collection);
@@ -182,7 +212,9 @@ class ClientAdapter {
       await this.client.generateMissingAliases();
     }
 
-    const schema = await this.client.getSchema();
+    // `client` is untyped (see the field's comment), so the schema shape is
+    // stated here: index name -> its collection names.
+    const schema: Record<string, string[]> = await this.client.getSchema();
 
     for (const [index, collections] of Object.entries(schema)) {
       this.cache.addIndex(index);
@@ -206,8 +238,12 @@ class ClientAdapter {
 
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:create`,
-      (index, collection, opts, creationOptions) =>
-        this.createCollection(index, collection, opts, creationOptions),
+      (
+        index: string,
+        collection: string,
+        opts: JSONObject,
+        creationOptions: JSONObject,
+      ) => this.createCollection(index, collection, opts, creationOptions),
     );
 
     /**
@@ -219,7 +255,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:delete`,
-      (index, collection) => this.deleteCollection(index, collection),
+      (index: string, collection: string) =>
+        this.deleteCollection(index, collection),
     );
 
     /**
@@ -229,7 +266,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:settings:get`,
-      (index, collection) => {
+      (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.getSettings(index, collection);
       },
@@ -242,7 +279,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:exist`,
-      (index, collection) => this.cache.hasCollection(index, collection),
+      (index: string, collection: string) =>
+        this.cache.hasCollection(index, collection),
     );
 
     /**
@@ -250,8 +288,9 @@ class ClientAdapter {
      * @param {string} index
      * @returns {Promise.<string[]>}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:collection:list`, (index) =>
-      this.cache.listCollections(index),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:collection:list`,
+      (index: string) => this.cache.listCollections(index),
     );
 
     /**
@@ -262,7 +301,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:refresh`,
-      (index, collection) => {
+      (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.refreshCollection(index, collection);
       },
@@ -276,7 +315,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:truncate`,
-      (index, collection) => {
+      (index: string, collection: string) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.truncateCollection(index, collection);
       },
@@ -291,7 +330,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:collection:update`,
-      (index, collection, changes) => {
+      (index: string, collection: string, changes: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.updateCollection(index, collection, changes);
       },
@@ -308,7 +347,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:index:create`,
-      (index, options) => this.createIndex(index, options),
+      (index: string, options: JSONObject) => this.createIndex(index, options),
     );
 
     /**
@@ -317,8 +356,9 @@ class ClientAdapter {
      * @return {Promise}
      * @throws If the index does not exist
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:delete`, (index) =>
-      this.deleteIndex(index),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:delete`,
+      (index: string) => this.deleteIndex(index),
     );
 
     /**
@@ -326,8 +366,9 @@ class ClientAdapter {
      * @param {string} index
      * @return {Promise.<boolean>}
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:exist`, (index) =>
-      this.cache.hasIndex(index),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:exist`,
+      (index: string) => this.cache.hasIndex(index),
     );
 
     /**
@@ -344,8 +385,9 @@ class ClientAdapter {
      * @return {Promise}
      * @throws If at least one index does not exist
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:index:mDelete`, (indexes) =>
-      this.deleteIndexes(indexes),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:index:mDelete`,
+      (indexes: string[]) => this.deleteIndexes(indexes),
     );
 
     /**
@@ -369,7 +411,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:bulk`,
-      (index, collection, bulk, opts) => {
+      (
+        index: string,
+        collection: string,
+        bulk: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.import(index, collection, bulk, opts);
       },
@@ -385,7 +432,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:count`,
-      (index, collection, query) => {
+      (index: string, collection: string, query: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.count(index, collection, query);
       },
@@ -402,7 +449,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:create`,
-      (index, collection, content, opts) => {
+      (
+        index: string,
+        collection: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.create(index, collection, content, opts);
       },
@@ -420,7 +472,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:createOrReplace`,
-      (index, collection, id, content, opts) => {
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.createOrReplace(
           index,
@@ -443,7 +501,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:delete`,
-      (index, collection, id, opts) => {
+      (index: string, collection: string, id: string, opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.delete(index, collection, id, opts);
       },
@@ -460,7 +518,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:deleteByQuery`,
-      (index, collection, query, opts) => {
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.deleteByQuery(index, collection, query, opts);
       },
@@ -478,7 +541,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:deleteFields`,
-      (index, collection, id, fields, opts) => {
+      (
+        index: string,
+        collection: string,
+        id: string,
+        fields: string[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.deleteFields(index, collection, id, fields, opts);
       },
@@ -494,7 +563,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:exist`,
-      (index, collection, id) => {
+      (index: string, collection: string, id: string) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.exists(index, collection, id);
       },
@@ -510,7 +579,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mExists`,
-      (index, collection, ids) => {
+      (index: string, collection: string, ids: string[]) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mExists(index, collection, ids);
       },
@@ -526,7 +595,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:get`,
-      (index, collection, id) => {
+      (index: string, collection: string, id: string) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.get(index, collection, id);
       },
@@ -539,7 +608,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:import`,
-      (fixtures, options) => this.loadFixtures(fixtures, options),
+      (fixtures: ImportPayload, options: JSONObject) =>
+        this.loadFixtures(fixtures, options),
     );
 
     /**
@@ -553,7 +623,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mCreate`,
-      (index, collection, documents, opts) => {
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mCreate(index, collection, documents, opts);
       },
@@ -570,7 +645,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mCreateOrReplace`,
-      (index, collection, documents, opts) => {
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mCreateOrReplace(index, collection, documents, opts);
       },
@@ -587,7 +667,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mDelete`,
-      (index, collection, ids, opts) => {
+      (index: string, collection: string, ids: string[], opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mDelete(index, collection, ids, opts);
       },
@@ -604,7 +684,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mReplace`,
-      (index, collection, documents, opts) => {
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mReplace(index, collection, documents, opts);
       },
@@ -621,7 +706,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mUpdate`,
-      (index, collection, documents, opts) => {
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mUpdate(index, collection, documents, opts);
       },
@@ -639,7 +729,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mUpsert`,
-      (index, collection, documents, opts) => {
+      (
+        index: string,
+        collection: string,
+        documents: JSONObject[],
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mUpsert(index, collection, documents, opts);
       },
@@ -657,7 +752,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mExecute`,
-      (index, collection, query, callback, opts) => {
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        callback: (...args: unknown[]) => unknown,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mExecute(index, collection, query, callback, opts);
       },
@@ -673,7 +774,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:mGet`,
-      (index, collection, ids) => {
+      (index: string, collection: string, ids: string[]) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.mGet(index, collection, ids);
       },
@@ -691,7 +792,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:replace`,
-      (index, collection, id, content, opts) => {
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.replace(index, collection, id, content, opts);
       },
@@ -706,7 +813,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:scroll`,
-      (scrollId, opts) => this.client.scroll(scrollId, opts),
+      (scrollId: string, opts: JSONObject) =>
+        this.client.scroll(scrollId, opts),
     );
 
     /**
@@ -720,7 +828,12 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:search`,
-      (index, collection, searchBody, opts) => {
+      (
+        index: string,
+        collection: string,
+        searchBody: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.search({ collection, index, searchBody }, opts);
       },
@@ -736,7 +849,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:multiSearch`,
-      (targets, searchBody, opts) => {
+      (targets: JSONObject[], searchBody: JSONObject, opts: JSONObject) => {
         for (const target of targets) {
           for (const collection of target.collections) {
             this.cache.assertCollectionExists(target.index, collection);
@@ -759,7 +872,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:update`,
-      (index, collection, id, content, opts) => {
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.update(index, collection, id, content, opts);
       },
@@ -778,7 +897,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:updateByQuery`,
-      (index, collection, query, changes, opts) => {
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        changes: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.updateByQuery(
           index,
@@ -803,7 +928,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:bulk:updateByQuery`,
-      (index, collection, query, changes, opts) => {
+      (
+        index: string,
+        collection: string,
+        query: JSONObject,
+        changes: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.bulkUpdateByQuery(
           index,
@@ -828,7 +959,13 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:document:upsert`,
-      (index, collection, id, content, opts) => {
+      (
+        index: string,
+        collection: string,
+        id: string,
+        content: JSONObject,
+        opts: JSONObject,
+      ) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.upsert(index, collection, id, content, opts);
       },
@@ -847,7 +984,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:mappings:get`,
-      (index, collection, opts) => {
+      (index: string, collection: string, opts: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.getMapping(index, collection, opts);
       },
@@ -863,7 +1000,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:mappings:import`,
-      (fixtures, options) => this.loadMappings(fixtures, options),
+      (fixtures: ImportPayload, options: JSONObject) =>
+        this.loadMappings(fixtures, options),
     );
 
     /**
@@ -876,7 +1014,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:mappings:update`,
-      (index, collection, mappings) => {
+      (index: string, collection: string, mappings: JSONObject) => {
         this.cache.assertCollectionExists(index, collection);
         return this.client.updateMapping(index, collection, mappings);
       },
@@ -892,8 +1030,9 @@ class ClientAdapter {
      * Adds a new index to the cache
      * @param  {string} index
      */
-    global.kuzzle.onAsk(`core:storage:${this.scope}:cache:addIndex`, (index) =>
-      this.cache.addIndex(index),
+    global.kuzzle.onAsk(
+      `core:storage:${this.scope}:cache:addIndex`,
+      (index: string) => this.cache.addIndex(index),
     );
 
     /**
@@ -903,7 +1042,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:cache:addCollection`,
-      (index, collection) => this.cache.addCollection(index, collection),
+      (index: string, collection: string) =>
+        this.cache.addCollection(index, collection),
     );
 
     /**
@@ -912,7 +1052,7 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:cache:removeIndexes`,
-      (indexes) => {
+      (indexes: string[]) => {
         for (const index of indexes) {
           this.cache.removeIndex(index);
         }
@@ -926,7 +1066,8 @@ class ClientAdapter {
      */
     global.kuzzle.onAsk(
       `core:storage:${this.scope}:cache:removeCollection`,
-      (index, collection) => this.cache.removeCollection(index, collection),
+      (index: string, collection: string) =>
+        this.cache.removeCollection(index, collection),
     );
   }
 
@@ -936,7 +1077,10 @@ class ClientAdapter {
    * @param {String} fixturesId
    * @returns {Promise}
    */
-  async loadFixtures(fixtures = {}, { refresh = "wait_for" } = {}) {
+  async loadFixtures(
+    fixtures: ImportPayload = {},
+    { refresh = "wait_for" }: { refresh?: string } = {},
+  ) {
     if (!isPlainObject(fixtures)) {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
@@ -979,8 +1123,8 @@ class ClientAdapter {
    * @returns {Promise}
    */
   async loadMappings(
-    fixtures = {},
-    options = {
+    fixtures: ImportPayload = {},
+    options: LoadMappingsOptions = {
       indexCacheOnly: false,
       propagate: true,
       rawMappings: false,
@@ -1042,4 +1186,4 @@ class ClientAdapter {
   }
 }
 
-module.exports = ClientAdapter;
+export = ClientAdapter;
