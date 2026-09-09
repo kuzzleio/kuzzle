@@ -1,0 +1,15 @@
+{
+  // IMPLICIT-ANY measurement of all production code — see docs/adr-001/steps/06-hardening-mid-course.md.
+  //
+  // The `any` ratchet greps for WRITTEN `any`, so it is blind to the far larger
+  // pool of INFERRED any: an un-annotated parameter costs it nothing. This
+  // project turns `noImplicitAny` on (and strict off, to isolate the signal) so
+  // `scripts/ratchet.sh implicit-any` can count the TS7xxx diagnostics and
+  // clamp them. Final state: the count reaches 0, `noImplicitAny` is covered by
+  // the global `strict` flip, and this file is deleted.
+  "extends": "./tsconfig.strict.json",
+  "compilerOptions": {
+    "strict": false,
+    "noImplicitAny": true
+  }
+}

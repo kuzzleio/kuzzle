@@ -72,9 +72,10 @@ jobs:
         run: npm ci
         shell: bash
 
-      # Ratchets: the .js / mocha / explicit-any counts may only decrease.
-      # See docs/adr-001/steps/01-sprint-0-tooling.md and scripts/ratchet.sh.
-      - name: Migration ratchets (js / mocha / any)
+      # Ratchets: the .js / mocha / explicit-any / implicit-any counts may only
+      # decrease. See docs/adr-001/steps/01-sprint-0-tooling.md, step 06 and
+      # scripts/ratchet.sh.
+      - name: Migration ratchets (js / mocha / any / implicit-any)
         run: npm run ratchet
         shell: bash
 
