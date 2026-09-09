@@ -27,6 +27,12 @@ import { KuzzleRequest } from "../request";
 const assertionError = kerror.wrap("api", "assert");
 
 /**
+ * Handler of a controller action. Returns the action result, or a promise of
+ * it — the funnel awaits whatever comes back.
+ */
+export type ControllerAction = (request: KuzzleRequest) => unknown;
+
+/**
  * Base class for all controllers
  */
 export class BaseController {
@@ -40,7 +46,7 @@ export class BaseController {
     return this.__actions;
   }
 
-  _addAction(name, fn) {
+  _addAction(name: string, fn: ControllerAction) {
     this.__actions.add(name);
     this[name] = fn;
   }
@@ -61,7 +67,7 @@ export class NativeController extends BaseController {
   protected ask: (event: string, ...args: any[]) => Promise<any>;
   protected pipe: (event: string, ...args: any[]) => Promise<any>;
 
-  constructor(actions = []) {
+  constructor(actions: string[] = []) {
     super();
 
     this.ask = global.kuzzle.ask.bind(global.kuzzle);
