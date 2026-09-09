@@ -19,13 +19,19 @@
  * limitations under the License.
  */
 
-"use strict";
+import { wrap } from "../../kerror";
+import ClientAdapter from "./clientAdapter";
+import { storeScopeEnum } from "./storeScopeEnum";
+import { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
 
-const kerror = require("../../kerror").wrap("services", "storage");
-const ClientAdapter = require("./clientAdapter");
-const { storeScopeEnum } = require("./storeScopeEnum");
+const kerror = wrap("services", "storage");
 
 class StorageEngine {
+  public public: ClientAdapter;
+  public private: ClientAdapter;
+  public logger: Logger;
+
   constructor() {
     // Storage client for public indexes only
     this.public = new ClientAdapter(storeScopeEnum.PUBLIC);
@@ -41,10 +47,8 @@ class StorageEngine {
 
   /**
    * Initialize storage clients and perform integrity checks
-   *
-   * @returns {Promise}
    */
-  async init() {
+  async init(): Promise<void> {
     await Promise.all([this.public.init(), this.private.init()]);
 
     const privateIndexes = this.private.cache.listIndexes();
@@ -60,4 +64,4 @@ class StorageEngine {
   }
 }
 
-module.exports = StorageEngine;
+export = StorageEngine;

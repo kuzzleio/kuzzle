@@ -19,15 +19,26 @@
  * limitations under the License.
  */
 
-"use strict";
+import RoleRepository from "./roleRepository";
+import { ProfileRepository } from "./profileRepository";
+import { TokenRepository } from "./tokenRepository";
+import UserRepository from "./userRepository";
+import SecurityLoader from "./securityLoader";
 
-const RoleRepository = require("./roleRepository");
-const { ProfileRepository } = require("./profileRepository");
-const { TokenRepository } = require("./tokenRepository");
-const UserRepository = require("./userRepository");
-const SecurityLoader = require("./securityLoader");
-
+/**
+ * Wires the security repositories together and initialises them in order.
+ *
+ * The repositories that reach a sibling (`role` -> `profile`, `user` ->
+ * `profile`/`token`) receive this module; the token repository and the loader
+ * do not, and their constructors take no argument.
+ */
 class SecurityModule {
+  public role: RoleRepository;
+  public profile: ProfileRepository;
+  public token: TokenRepository;
+  public user: UserRepository;
+  public loader: SecurityLoader;
+
   constructor() {
     this.role = new RoleRepository(this);
     this.profile = new ProfileRepository(this);
@@ -41,8 +52,10 @@ class SecurityModule {
     await this.profile.init();
     await this.token.init();
     await this.user.init();
+    // Last: the loader replays security fixtures through the API, so every
+    // repository it writes through must already be up.
     await this.loader.init();
   }
 }
 
-module.exports = SecurityModule;
+export = SecurityModule;

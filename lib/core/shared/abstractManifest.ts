@@ -19,13 +19,15 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
+import { isNil } from "lodash";
+import * as path from "node:path";
+import * as semver from "semver";
 
-const _ = require("lodash");
-const path = require("path");
-const semver = require("semver");
+import { wrap } from "../../kerror";
+import "../../types/Global";
 
-const kerror = require("../../kerror").wrap("plugin", "manifest");
+const kerror = wrap("plugin", "manifest");
 
 /**
  * Abstract class used to load a manifest.json file.
@@ -35,7 +37,13 @@ const kerror = require("../../kerror").wrap("plugin", "manifest");
  * @param {string} pluginPath   - Absolute path to the plugin directory
  */
 class AbstractManifest {
-  constructor(pluginPath) {
+  public path: string;
+  public manifestPath: string;
+  public name: string | null;
+  public kuzzleVersion: string | null;
+  public raw: JSONObject | null;
+
+  constructor(pluginPath: string) {
     this.path = pluginPath;
 
     this.manifestPath = path.resolve(this.path, "manifest.json");
@@ -48,10 +56,10 @@ class AbstractManifest {
     try {
       this.raw = require(this.manifestPath);
     } catch (e) {
-      throw kerror.get("cannot_load", this.manifestPath, e.message);
+      throw kerror.get("cannot_load", this.manifestPath, (e as Error).message);
     }
 
-    if (_.isNil(this.raw.kuzzleVersion)) {
+    if (isNil(this.raw.kuzzleVersion)) {
       throw kerror.get("missing_version", this.manifestPath);
     }
 
@@ -70,7 +78,7 @@ class AbstractManifest {
       );
     }
 
-    if (!_.isNil(this.raw.name)) {
+    if (!isNil(this.raw.name)) {
       if (typeof this.raw.name !== "string" || this.raw.name.length === 0) {
         throw kerror.get("invalid_name_type", this.manifestPath);
       }
@@ -90,7 +98,7 @@ class AbstractManifest {
    *
    * @returns {Object}
    */
-  toJSON() {
+  toJSON(): JSONObject {
     return {
       kuzzleVersion: this.kuzzleVersion,
       name: this.name,
@@ -99,4 +107,4 @@ class AbstractManifest {
   }
 }
 
-module.exports = AbstractManifest;
+export = AbstractManifest;

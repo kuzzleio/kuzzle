@@ -19,12 +19,24 @@
  * limitations under the License.
  */
 
-"use strict";
+import { BaseRequest, JSONObject } from "kuzzle-sdk";
 
-const nativeControllers = require("../../../api/controllers");
+// The controllers barrel ships `export = { ... }`. A NAMED import cannot
+// target that (TS2497), but a DEFAULT one can under `esModuleInterop` — and
+// unlike `import x = require(...)` it also loads under vitest, which resolves
+// `lib/` as ESM (step 07, PR G2).
+import nativeControllers from "../../../api/controllers";
+import "../../../types/Global";
+
+interface ImpersonationOptions {
+  checkRights?: boolean;
+}
 
 class ImpersonatedSDK {
-  constructor(kuid, options = {}) {
+  public kuid: string;
+  public checkRights: boolean;
+
+  constructor(kuid: string, options: ImpersonationOptions = {}) {
     this.kuid = kuid;
     this.checkRights = options.checkRights || false;
 
@@ -44,51 +56,60 @@ class ImpersonatedSDK {
       Reflect.defineProperty(this, controllerName, {
         get: () => {
           // If the requested controller has not yet been proxied
-          if (!this[controllerProxy]) {
+          if (!Reflect.get(this, controllerProxy)) {
             // Create a proxy object to inject our local 'query' behaviour
             // in the underlying base 'sdk' action methods so we can send
             // impersonation configuration (kuid & checkRights) to the funnel
-            this[controllerProxy] = new Proxy(global.app.sdk[controllerName], {
-              get: (controllerInstance, actionName) => {
-                const customContext = {
-                  kuzzle: global.app.sdk,
-                  query: (request, opts) => {
-                    request.controller = controllerName;
+            // `Reflect.set`, not `this[controllerProxy] =`: the key is a
+            // runtime-built string, which a plain index access cannot type.
+            // Behaviour is identical — same receiver, same string key.
+            Reflect.set(
+              this,
+              controllerProxy,
+              new Proxy(global.app.sdk[controllerName], {
+                get: (controllerInstance, actionName) => {
+                  const customContext: JSONObject = {
+                    kuzzle: global.app.sdk,
+                    query: (request: BaseRequest, opts: JSONObject) => {
+                      request.controller = controllerName;
 
-                    // Call the 'ImpersonatedSdk.query' method instead
-                    return this.query(request, opts);
-                  },
-                };
+                      // Call the 'ImpersonatedSdk.query' method instead
+                      return this.query(request, opts);
+                    },
+                  };
 
-                // Make sure we bring any local methods into our new custom context
-                Object.getOwnPropertyNames(
-                  Object.getPrototypeOf(global.app.sdk[controllerName]),
-                ).forEach((localMethod) => {
-                  if (!["constructor", "query"].includes(localMethod)) {
-                    customContext[localMethod] =
-                      controllerInstance[localMethod];
-                  }
-                });
+                  // Make sure we bring any local methods into our new custom context
+                  Object.getOwnPropertyNames(
+                    Object.getPrototypeOf(global.app.sdk[controllerName]),
+                  ).forEach((localMethod) => {
+                    if (!["constructor", "query"].includes(localMethod)) {
+                      customContext[localMethod] =
+                        controllerInstance[localMethod];
+                    }
+                  });
 
-                // Return the original SDK action method AND also bind our merged custom context
-                // containing our 'query' method and any original local methods
-                return controllerInstance[actionName].bind(customContext);
-              },
-            });
+                  // Return the original SDK action method AND also bind our merged custom context
+                  // containing our 'query' method and any original local methods
+                  return controllerInstance[actionName].bind(customContext);
+                },
+              }),
+            );
           }
 
-          return this[controllerProxy];
+          return Reflect.get(this, controllerProxy);
         },
       });
     }
   }
 
-  query(request, options = {}) {
-    request.__kuid__ = this.kuid;
-    request.__checkRights__ = this.checkRights;
+  query(request: BaseRequest, options: JSONObject = {}) {
+    // Both are read back by the funnel to apply the impersonation; they are
+    // not part of the SDK's declared request shape, hence the index writes.
+    Reflect.set(request, "__kuid__", this.kuid);
+    Reflect.set(request, "__checkRights__", this.checkRights);
 
     return global.app.sdk.query(request, options);
   }
 }
 
-module.exports = ImpersonatedSDK;
+export = ImpersonatedSDK;

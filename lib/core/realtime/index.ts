@@ -19,12 +19,17 @@
  * limitations under the License.
  */
 
-"use strict";
+import Notifier from "./notifier";
+import { HotelClerk } from "./hotelClerk";
 
-const Notifier = require("./notifier");
-const { HotelClerk } = require("./hotelClerk");
-
+/**
+ * Wires the realtime components together. Both receive this module: the
+ * notifier reads `module.hotelClerk.rooms` to resolve a room's channels.
+ */
 class RealtimeModule {
+  public notifier: Notifier;
+  public hotelClerk: HotelClerk;
+
   constructor() {
     this.notifier = new Notifier(this);
     this.hotelClerk = new HotelClerk(this);
@@ -36,4 +41,4 @@ class RealtimeModule {
   }
 }
 
-module.exports = RealtimeModule;
+export = RealtimeModule;

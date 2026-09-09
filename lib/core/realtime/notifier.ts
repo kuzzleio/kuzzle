@@ -26,7 +26,7 @@ import Bluebird from "bluebird";
 import * as kerror from "../../kerror";
 import { KuzzleRequest } from "../../api/request";
 import { RealtimeScope, RealtimeUsers } from "../../types";
-import actionEnum = require("./actionEnum");
+import actionEnum from "./actionEnum";
 
 /**
  * One of `actionEnum`'s members. Derived from the frozen object so the two
@@ -56,9 +56,10 @@ interface DocumentChanges {
   created?: boolean;
   action?: string;
 }
-// The barrel ships `export = { ... }`, which a named ES import cannot target
-// (TS2497) — same shape as the api/controllers barrel (step 05, PR E2).
-import notifications = require("./notification");
+// The barrel ships `export = { ... }`: a named import cannot target that
+// (TS2497), but a default one can under `esModuleInterop` — and it also loads
+// under vitest, which `import x = require(...)` does not (step 07, PR G2).
+import notifications from "./notification";
 
 const { DocumentNotification, ServerNotification, UserNotification } =
   notifications;
