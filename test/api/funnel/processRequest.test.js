@@ -137,13 +137,16 @@ describe("funnel.processRequest", () => {
       controller: "fakeController",
       action: "succeed",
     });
+    // `_checkSdkVersion` is synchronous and throws: it is no longer awaited
+    // (TD-26), so the stub has to throw rather than return a rejected promise.
     funnel._checkSdkVersion = sinon
       .stub()
-      .rejects(new Error("incompatible sdk"));
+      .throws(new Error("incompatible sdk"));
 
+    // `fakeController` is a native controller, so the error is surfaced as-is
+    // rather than wrapped into a PluginImplementationError (TD-21, #2687).
     return should(funnel.processRequest(request)).be.rejectedWith(Error, {
-      message:
-        "Caught an unexpected plugin error: incompatible sdk\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.",
+      message: "incompatible sdk",
     });
   });
 

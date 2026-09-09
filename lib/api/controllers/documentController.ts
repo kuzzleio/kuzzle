@@ -200,39 +200,8 @@ class DocumentController extends NativeController {
   /**
    * @param {Request} request
    */
-  async mExists(request: KuzzleRequest) {
-    let ids;
-    if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
-      ids = request.getBodyArray("ids");
-    } else {
-      ids = request.getArray("ids");
-    }
-    const { index, collection } = request.getIndexAndCollection();
-
-    const strict = request.getBoolean("strict");
-    this.assertNotExceedMaxFetch(ids.length);
-
-    const { items, errors } = await this.ask(
-      "core:storage:public:document:mExists",
-      index,
-      collection,
-      ids,
-    );
-
-    if (strict && errors.length) {
-      throw kerror.get(
-        "api",
-        "process",
-        "incomplete_multiple_request",
-        "get",
-        errors,
-      );
-    }
-
-    return {
-      errors,
-      successes: items,
-    };
+  mExists(request: KuzzleRequest) {
+    return this._mFetch(request, "mExists");
   }
 
   async export(request: KuzzleRequest) {
@@ -327,41 +296,9 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async mGet(request: KuzzleRequest) {
-    let ids;
-    if (request.input.body?.ids && Object.keys(request.input.body.ids).length) {
-      ids = request.getBodyArray("ids");
-    } else {
-      ids = request.getArray("ids");
-    }
-    const { index, collection } = request.getIndexAndCollection();
-    const strict = request.getBoolean("strict");
-
-    this.assertNotExceedMaxFetch(ids.length);
-
-    const { items, errors } = await this.ask(
-      "core:storage:public:document:mGet",
-      index,
-      collection,
-      ids,
-    );
-
-    if (strict && errors.length) {
-      throw kerror.get(
-        "api",
-        "process",
-        "incomplete_multiple_request",
-        "get",
-        errors,
-      );
-    }
-
+  mGet(request: KuzzleRequest) {
     // @todo next major release: if (successes.length === 0) then throw (no matter strict value)
-
-    return {
-      errors,
-      successes: items,
-    };
+    return this._mFetch(request, "mGet");
   }
 
   /**
@@ -459,59 +396,8 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async createOrReplace(request: KuzzleRequest) {
-    const id = request.getId();
-    const content = request.getBody();
-    const userId = request.getKuid();
-    const silent = request.getBoolean("silent");
-    const refresh = request.getString("refresh", "false");
-    const { index, collection } = request.getIndexAndCollection();
-
-    const modifiedRequest = await global.kuzzle.validation.validate(
-      request,
-      false,
-    );
-
-    // Add metadata
-    const pipeMetadataResult = await this.pipe(
-      "generic:document:injectMetadata",
-      {
-        metadata: {
-          author: userId,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          updater: userId,
-        },
-        request,
-      },
-    );
-
-    const response = await this.ask(
-      "core:storage:public:document:createOrReplace",
-      index,
-      collection,
-      id,
-      {
-        ...content,
-        _kuzzle_info: pipeMetadataResult.metadata,
-      },
-      {
-        injectKuzzleMeta: false,
-        refresh,
-        userId,
-      },
-    );
-
-    if (!silent) {
-      await this.ask(
-        "core:realtime:document:notify",
-        modifiedRequest,
-        actionEnum.WRITE,
-        response,
-      );
-    }
-
-    return response;
+  createOrReplace(request: KuzzleRequest) {
+    return this._writeDocument(request, "createOrReplace", actionEnum.WRITE);
   }
 
   /**
@@ -723,62 +609,8 @@ class DocumentController extends NativeController {
    * @param {Request} request
    * @returns {Promise<Object>}
    */
-  async replace(request: KuzzleRequest) {
-    const id = request.getId();
-    const content = request.getBody();
-    const userId = request.getKuid();
-    const silent = request.getBoolean("silent");
-    const refresh = request.getString("refresh", "false");
-    const { index, collection } = request.getIndexAndCollection();
-
-    const modifiedRequest = await global.kuzzle.validation.validate(
-      request,
-      false,
-    );
-
-    // Add metadata
-    const pipeMetadataResult = await this.pipe(
-      "generic:document:injectMetadata",
-      {
-        metadata: {
-          author: userId,
-          createdAt: Date.now(),
-          updatedAt: Date.now(),
-          updater: userId,
-        },
-        request,
-      },
-    );
-
-    const response = await this.ask(
-      "core:storage:public:document:replace",
-      index,
-      collection,
-      id,
-      {
-        ...content,
-        _kuzzle_info: pipeMetadataResult.metadata,
-      },
-      {
-        injectKuzzleMeta: false,
-        refresh,
-        userId,
-      },
-    );
-
-    if (!silent) {
-      await this.ask(
-        "core:realtime:document:notify",
-        modifiedRequest,
-        actionEnum.REPLACE,
-        {
-          _id: modifiedRequest.input.args._id,
-          _source: modifiedRequest.input.body,
-        },
-      );
-    }
-
-    return response;
+  replace(request: KuzzleRequest) {
+    return this._writeDocument(request, "replace", actionEnum.REPLACE);
   }
 
   /**
@@ -1036,6 +868,126 @@ class DocumentController extends NativeController {
 
     // @todo validation service should not take request argument
     return global.kuzzle.validation.validate(request, true);
+  }
+
+  /**
+   * Fetches documents by id (`mGet`) or checks their existence (`mExists`):
+   * the two actions take the same input and shape the same response, they only
+   * read through a different storage event.
+   *
+   * @param  {Request} request
+   * @param  {String} methodName storage method to ask for
+   * @returns {Promise.<Object>} { successes, errors }
+   */
+  async _mFetch(request: KuzzleRequest, methodName: string) {
+    // `ids` may come either in the body or in the query string
+    const ids =
+      request.input.body?.ids && Object.keys(request.input.body.ids).length
+        ? request.getBodyArray("ids")
+        : request.getArray("ids");
+    const { index, collection } = request.getIndexAndCollection();
+    const strict = request.getBoolean("strict");
+
+    this.assertNotExceedMaxFetch(ids.length);
+
+    const { items, errors } = await this.ask(
+      `core:storage:public:document:${methodName}`,
+      index,
+      collection,
+      ids,
+    );
+
+    if (strict && errors.length) {
+      throw kerror.get(
+        "api",
+        "process",
+        "incomplete_multiple_request",
+        "get",
+        errors,
+      );
+    }
+
+    return {
+      errors,
+      successes: items,
+    };
+  }
+
+  /**
+   * Writes a single document, either through `replace` (which requires it to
+   * exist) or `createOrReplace` (which does not). Both validate, inject
+   * metadata, write and then notify; they differ only in the storage event,
+   * the notification action, and what that notification carries.
+   *
+   * @param  {Request} request
+   * @param  {String} methodName storage method to ask for
+   * @param  {notifyActionEnum} action performed on the document
+   * @returns {Promise.<Object>} the storage response
+   */
+  async _writeDocument(
+    request: KuzzleRequest,
+    methodName: string,
+    action: number,
+  ) {
+    const id = request.getId();
+    const content = request.getBody();
+    const userId = request.getKuid();
+    const silent = request.getBoolean("silent");
+    const refresh = request.getString("refresh", "false");
+    const { index, collection } = request.getIndexAndCollection();
+
+    const modifiedRequest = await global.kuzzle.validation.validate(
+      request,
+      false,
+    );
+
+    // Add metadata
+    const pipeMetadataResult = await this.pipe(
+      "generic:document:injectMetadata",
+      {
+        metadata: {
+          author: userId,
+          createdAt: Date.now(),
+          updatedAt: Date.now(),
+          updater: userId,
+        },
+        request,
+      },
+    );
+
+    const response = await this.ask(
+      `core:storage:public:document:${methodName}`,
+      index,
+      collection,
+      id,
+      {
+        ...content,
+        _kuzzle_info: pipeMetadataResult.metadata,
+      },
+      {
+        injectKuzzleMeta: false,
+        refresh,
+        userId,
+      },
+    );
+
+    if (!silent) {
+      // `replace` notifies the request's own payload rather than the storage
+      // response — kept as-is, the two actions have always differed here.
+      await this.ask(
+        "core:realtime:document:notify",
+        modifiedRequest,
+        action,
+        action === actionEnum.REPLACE
+          ? {
+              _id: modifiedRequest.input.args._id,
+              _source: modifiedRequest.input.body,
+            }
+          : response,
+      );
+    }
+
+    return response;
   }
 
   /**
