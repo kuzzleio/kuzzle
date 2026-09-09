@@ -1118,14 +1118,8 @@ class Funnel {
    * @returns {KuzzleError}
    */
   _wrapError(request: KuzzleRequest, error: Error): Error {
-    // TD-21 (https://github.com/kuzzleio/kuzzle/issues/2687):
-    // `isNativeController` expects a controller NAME, but a whole
-    // request is passed here — so the guard is always false and every
-    // non-KuzzleError gets wrapped as a plugin error, native controllers
-    // included. Fixing it changes behaviour (and the specs encode the current
-    // one), so the conversion preserves it and casts explicitly.
     if (
-      !this.isNativeController(request as unknown as string) &&
+      !this.isNativeController(request.input.controller) &&
       !(error instanceof KuzzleError)
     ) {
       return kerror.getFrom(
