@@ -151,7 +151,17 @@ All five specced files had *no* Mocha spec, so nothing was replaced: `mocha` sta
 - **Full Mocha suite (3025) green** and **vitest 6 files / 64 tests green** in Docker (`npm run build` included).
 - `npx tsc --noEmit` clean; `npm run test:lint` 0 errors; `prettier --check` clean on every touched file.
 - Ratchets: js 66, mocha 151, any 208, implicit-any 520 — all at baseline. `npm run test:strict` ✅ **94/94**, `--candidates` empty (`wildcard` out, `promback` in).
-- ⚠️ **One assumption to confirm on this PR's SonarCloud run.** `lib/util/assertType.ts` imports `BadRequestError`, so the vitest report necessarily carries ~15 zero-hit `lib/kerror/errors/*` records — the production import chain pulls them in, and no spec-side change can avoid it. Merging two lcov reports is only safe if SonarCloud treats a line covered in *either* report as covered (union). **Observable: project coverage must not drop below the figure F2 reports.** If it does, the fix is to give vitest an explicit `coverage.include` rather than to revert the gate.
+- **All 51 CI checks green**, SonarCloud quality gate included.
+- ✅ **The lcov-merge assumption is confirmed — SonarCloud unions the two reports.** `lib/util/assertType.ts` imports `BadRequestError`, so the vitest report necessarily carries ~15 zero-hit `lib/kerror/errors/*` records: the *production* import chain pulls them in, and no spec-side change avoids it (removing the spec's own import was tried and is useless). Merging is only safe if a line covered in *either* report counts as covered. Measured on the two PRs' own analyses:
+
+  | | F2 ([#2693](https://github.com/kuzzleio/kuzzle/pull/2693)) | F3 ([#2694](https://github.com/kuzzleio/kuzzle/pull/2694)) |
+  |---|---|---|
+  | `coverage` | 84.7% | **84.7%** |
+  | `lines_to_cover` | 57 027 | 57 033 |
+  | `uncovered_lines` | 9 035 | **9 014** (−21) |
+  | `new_coverage` | — | **100%** (0 uncovered of 20 new lines) |
+
+  Coverage did **not** drop, and uncovered lines went *down* by exactly the amount the new specs cover. Union semantics hold; no `coverage.include` workaround is needed. *(Sonar's 84.7% is over all of `sonar.sources=./lib` including never-loaded files and branch conditions, hence lower than the 88.5% computed over the `lib/**/*.ts` records alone.)*
 
 ## Validation (PR F2)## Validation (PR F2)
 
