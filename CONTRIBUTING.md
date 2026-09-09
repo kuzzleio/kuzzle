@@ -22,22 +22,30 @@ the `migration-ratchets` job:
 
 * **No new `.js` under `lib/` or `bin/`** — write new code in TypeScript. The `.js`
   file count may only decrease.
-* **New unit tests in vitest + TypeScript** — the legacy Mocha suite is frozen; its
-  spec count may only decrease.
+* **New unit tests in vitest + TypeScript, under `tests/`** — see *Where unit tests
+  live* below. The legacy Mocha suite is frozen; its spec count may only decrease.
 * **No new explicit `any`** in `lib/**/*.ts` — the count may only decrease
-  (`@typescript-eslint/no-explicit-any` is on as a warning).
+  (`@typescript-eslint/no-explicit-any` is on as a warning). `as unknown as` counts too.
+* **No new implicit `any`** — the count of `TS7xxx` diagnostics under `noImplicitAny`
+  may only decrease. This is what stops a conversion from being a rename: leaving a
+  parameter un-annotated is free for the explicit-`any` ratchet but not for this one.
 * When a file passes `strict`, add it to `.migration/strict-adopted.txt`
-  (`npm run test:strict -- --candidates` lists the ready ones).
+  (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
+  converting, this is part of the PR — not a later chore.
+* **Converting a file that has no unit spec? Write one** (vitest + TS) in the same PR.
+  `.ts` is measured by the coverage gate, so an untested conversion now fails CI.
 
 Run the gates locally before pushing:
 
 ```bash
-npm run ratchet       # js / mocha / any counts (must not increase)
-npm run test:strict   # strict type-check on adopted files
+npm run ratchet             # js / mocha / any / implicit-any (must not increase)
+npm run test:strict         # strict type-check on adopted files
+.ci/scripts/pr-preflight.sh # the above + lint + error-codes + two reminders
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
-`npm run ratchet:js -- --update` (idem `:mocha`, `:any`) — then commit `.migration/`.
+`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`) — then
+commit `.migration/`.
 
 ## Guidelines
 
@@ -144,11 +152,34 @@ Finally, run the command `docker compose up` to start your Kuzzle stack.
 
 ## Launching tests suits
 
-### Unit tests
+### Where unit tests live
+
+| Directory | Runner | Status |
+|-----------|--------|--------|
+| `tests/` | **vitest + TypeScript** | where **every new spec** goes |
+| `test/` | Mocha (JavaScript) | **frozen** — legacy, migrated away progressively |
+
+`tests/` mirrors the source tree: the spec for `lib/util/bytes.ts` is
+`tests/util/bytes.test.ts`. Discovery is `tests/**/*.{test,spec}.ts`.
+
+Two things to know about that layout, both learned the hard way (ADR-0001 step 06):
+`vitest.config.ts` must **not** set `test.root`, because coverage paths are then
+resolved against it — which sends the lcov report to the wrong directory and limits
+the instrumented scope to the spec tree, so `lib/` is never measured. And a module
+exported with `export =` (most of `lib/util`) is imported in a spec with a **default
+import** (`import bytes from "…"`), not `import bytes = require("…")`: the latter
+type-checks but does not resolve at runtime under vite.
+
+### Running unit tests
 
 ```bash
 npm run test:unit:vitest
 npm run test:unit:mocha
+
+# Or, with no local Node.js toolchain (recommended on arm64 — the native `re2`
+# binding will not load on the host):
+.ci/scripts/docker-test.sh unit vitest
+.ci/scripts/docker-test.sh unit mocha
 ```
 
 ### Functional tests
