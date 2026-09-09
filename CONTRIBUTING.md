@@ -170,6 +170,31 @@ exported with `export =` (most of `lib/util`) is imported in a spec with a **def
 import** (`import bytes from "…"`), not `import bytes = require("…")`: the latter
 type-checks but does not resolve at runtime under vite.
 
+### How coverage is measured
+
+The quality gate requires **80% coverage on new code**, and the two unit
+runners disagree on what "a line" is: `c8` (wrapping Mocha) derives its line
+set from the *compiled* output and reports every line of a loaded file, blank
+lines and comments included, while vitest's v8 provider reports only real
+statements. Merging the two understates coverage — badly, for a file whose
+tests live in vitest.
+
+So `.ci/scripts/prepare-coverage.ts` runs between the test suites and the
+SonarCloud scan. It drops non-executable lines from both reports, then gives
+each file a **single owner**: the runner whose spec targets it, per the `tests/`
+mirror convention. It only ever hands a file to vitest when vitest measures it
+at least as well, so it cannot lower a file's reported coverage — and it prints
+any file where Mocha still measures better, which is worth investigating.
+
+To reproduce the numbers CI sees:
+
+```bash
+npm run build
+npm run test:unit:mocha:coverage
+npm run test:unit:vitest
+npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
+```
+
 ### Running unit tests
 
 ```bash

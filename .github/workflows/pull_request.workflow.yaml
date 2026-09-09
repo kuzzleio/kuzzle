@@ -124,6 +124,17 @@ jobs:
         run: npm run test:unit:vitest
         shell: bash
 
+      # The two runners disagree on which lines of a .ts file are executable:
+      # c8 derives its set from the COMPILED output and reports every line of a
+      # loaded file (blank lines and comments included), while vitest's v8
+      # provider reports only real statements. Merging the two line sets
+      # understates coverage badly — it put clientAdapter.ts at 40% with every
+      # one of its handlers under test. This normalises both reports and gives
+      # each file a single owner. See docs/adr-001/steps/07-sprint-5-core-i.md.
+      - name: Normalise the coverage reports
+        run: npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
+        shell: bash
+
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:
