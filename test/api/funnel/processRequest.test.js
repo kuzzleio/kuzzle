@@ -137,9 +137,11 @@ describe("funnel.processRequest", () => {
       controller: "fakeController",
       action: "succeed",
     });
+    // `_checkSdkVersion` is synchronous and throws: it is no longer awaited
+    // (TD-26), so the stub has to throw rather than return a rejected promise.
     funnel._checkSdkVersion = sinon
       .stub()
-      .rejects(new Error("incompatible sdk"));
+      .throws(new Error("incompatible sdk"));
 
     return should(funnel.processRequest(request)).be.rejectedWith(Error, {
       message:

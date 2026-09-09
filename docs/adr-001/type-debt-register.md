@@ -34,7 +34,7 @@
 | [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) — [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) | M | 🟦 |
 | [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | ✅ |
 | [TD-25](#td-25) | 🟡 low | Dependencies | `@types/debug` is narrower than `debug`'s runtime — adopting it costs 3 casts, so `util/debug.ts` stays out of strict | S | ⬜ |
-| [TD-26](#td-26) | 🟡 low | Correctness | 5 `await`s of a non-Promise, kept for timing parity across conversions (`NOSONAR: TD-26`) | XS | ⬜ |
+| [TD-26](#td-26) | 🟡 low | Correctness | 5 `await`s of a non-Promise, kept for timing parity across conversions (`NOSONAR: TD-26`) | XS | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -84,6 +84,7 @@ They are individually trivial and collectively worth one pass: the markers are a
 
 - **Reco:** a single behaviour-change PR that drops all five `await`s (and the markers), with a note that the only observable effect is one microtask of resolution timing per site. `grep -rn "NOSONAR: TD-26" lib/` lists them.
 - **Trigger:** independent of the migration sprints; a good companion to [TD-20](#td-20)'s deprecated-API cleanup, which is the same shape of "conversion found it, conversion must not fix it".
+- **✅ Done (2026-09-09, #2697):** all five `await`s and their `NOSONAR: TD-26` markers dropped. The only observable effect is one microtask of resolution timing per site; `funnel._checkSdkVersion` still throws inside the same `try`, and `SecurityModule.init` stays `async` (its four remaining `await`s keep the ordering the loader depends on).
 
 ---
 
