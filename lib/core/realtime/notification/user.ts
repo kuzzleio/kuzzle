@@ -19,15 +19,48 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
+
+import { KuzzleRequest } from "../../../api/request";
+import { RealtimeUsers } from "../../../types";
+import "../../../types/Global";
+
+/**
+ * Constructor payload. Filled either by `fromRequest` below or by
+ * `cluster/subscriber` from a decoded protobuf message.
+ */
+interface UserNotificationOptions {
+  status: number;
+  user: RealtimeUsers;
+  result: JSONObject;
+  node: string;
+  timestamp: number;
+  volatile: JSONObject;
+  index: string;
+  collection: string;
+  controller: string;
+  action: string;
+  protocol: string;
+}
 
 /**
  * User notification document
- *
- * @class UserNotification
  */
 class UserNotification {
-  constructor(opts) {
+  public type: string;
+  public status: number;
+  public user: RealtimeUsers;
+  public result: JSONObject;
+  public node: string;
+  public timestamp: number;
+  public volatile: JSONObject;
+  public index: string;
+  public collection: string;
+  public controller: string;
+  public action: string;
+  public protocol: string;
+
+  constructor(opts: UserNotificationOptions) {
     this.type = "user";
 
     this.status = opts.status;
@@ -45,12 +78,16 @@ class UserNotification {
 
   /**
    * Instantiates a UserNotification object from a KuzzleRequest
-   * @param {Request} request - the request object from which the notification is issued
-   * @param {string} user - The scope of the notification (in or out)
-   * @param {object} content - Notification content
-   * returns {UserNotification}
+   *
+   * @param request - the request object from which the notification is issued
+   * @param user - Whether the user is entering or leaving the room
+   * @param result - Notification content
    */
-  static fromRequest(request, user, result) {
+  static fromRequest(
+    request: KuzzleRequest,
+    user: RealtimeUsers,
+    result: JSONObject,
+  ): UserNotification {
     return new UserNotification({
       action: request.input.action,
       collection: request.input.resource.collection,
@@ -67,4 +104,4 @@ class UserNotification {
   }
 }
 
-module.exports = UserNotification;
+export = UserNotification;

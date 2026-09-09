@@ -19,16 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
-
 /**
- * @typedef {number} notifyActionEnum
- */
-
-/**
- * Enum for the document's notification "action" option
- * @readOnly
- * @enum {notifyActionEnum}
+ * Enum for the document's notification "action" option.
+ *
+ * `as const` is type-only (no runtime change) and is what gives the members
+ * literal types, so `NotifyActionEnum` below is a real union instead of
+ * widening to `number`.
  */
 const actionEnum = Object.freeze({
   CREATE: 1,
@@ -37,6 +33,6 @@ const actionEnum = Object.freeze({
   UPDATE: 4,
   UPSERT: 5,
   WRITE: 6, // create or replace
-});
+} as const);
 
-module.exports = actionEnum;
+export = actionEnum;

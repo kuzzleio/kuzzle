@@ -19,10 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
+import DocumentNotification = require("./document");
+import ServerNotification = require("./server");
+import UserNotification = require("./user");
 
-module.exports = {
-  DocumentNotification: require("./document"),
-  ServerNotification: require("./server"),
-  UserNotification: require("./user"),
+export = {
+  DocumentNotification,
+  ServerNotification,
+  UserNotification,
 };

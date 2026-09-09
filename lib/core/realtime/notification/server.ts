@@ -19,18 +19,20 @@
  * limitations under the License.
  */
 
-"use strict";
+import "../../../types/Global";
 
 /**
- * Creates a notification response from a given room, request object, and content.
- *
- * @class ServerNotification
- * @param {Request} request - the request object from which the notification is issued
- * @param {string} type - Notification type
- * @param {string} message - Notification message
+ * A notification issued by the server itself rather than by a request —
+ * currently only "TokenExpired".
  */
 class ServerNotification {
-  constructor(type, message) {
+  public status: number;
+  public info: string;
+  public message: string;
+  public type: string;
+  public node: string;
+
+  constructor(type: string, message: string) {
     this.status = 200;
     this.info = "This is an automated server notification";
     this.message = message;
@@ -39,4 +41,4 @@ class ServerNotification {
   }
 }
 
-module.exports = ServerNotification;
+export = ServerNotification;
