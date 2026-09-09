@@ -307,7 +307,8 @@ Kept as-is in PR D with `// NOSONAR` on each call site (a `.js`→`.ts` rename r
 
 - **Reco:** migrate in a **dedicated behaviour-change PR** (not a conversion): add runtime deprecation warnings, document the breaking change, remove the legacy paths on a major version, then drop the `NOSONAR` markers.
 - **Tracked as [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)** (opened 2026-09-07) — the register alone was scheduling nothing.
-- **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints. Note the call-site count **grows with every conversion** (#2686 added 2 in `funnel.ts`); grep `NOSONAR: TD-20`.
+- **Also in scope (added 2026-09-09, sprint 5 PR G3):** `clientAdapter.loadMappings` uses **`Mutex`**, deprecated in favour of `withLock` from `util/distributedLock`. Not swapped by the conversion: the two use incompatible acquisition/TTL formats, and `Mutex`'s own deprecation note warns they must not contend on the same key — so this is a behaviour change, and a riskier one than the request APIs above (it is a distributed lock taken during mapping import).
+- **Trigger:** picked up when the deprecated request-API cleanup is scheduled — independent of the TS-migration sprints. Note the call-site count **grows with every conversion** (#2686 added 2 in `funnel.ts`, G3 added 2 more in `clientAdapter.ts`); grep `NOSONAR: TD-20` and `NOSONAR: see loadMappings`.
 
 ---
 
