@@ -42,7 +42,7 @@ Adopt an **incremental migration, driven by a CI ratchet, sequenced by architect
 
 **Definition of Done:**
 
-- [ ] `0` `.js` files in `lib/` and `bin/` (excluding generated files).
+- [ ] `0` `.js` files in `lib/` and `bin/` (excluding generated files **and the 4 plugin fixtures under `bin/plugins/available/**`** — see the register, 2026-09-09: the `js` ratchet's floor is therefore `4`, not `0`).
 - [ ] `strict: true` in the main `tsconfig.json`; `allowJs` removed.
 - [ ] `0` Mocha specs; vitest + TS the only unit runner; `mocha`/`should`/`rewire`/`c8` removed.
 - [ ] Cucumber functional tests unchanged (already TS).
@@ -60,18 +60,22 @@ Why this over big-bang, pure-opportunistic, full-strict-now or coupled-tests: [s
 
 Stable reference for *how* the migration is enforced and sequenced. How it was built: [step 01](steps/01-sprint-0-tooling.md).
 
-### Enforcement — three count ratchets + progressive strict
+### Enforcement — four count ratchets + progressive strict
 
-- **Count ratchets** (`scripts/ratchet.sh <js|mocha|any>`, `npm run ratchet`): the counts of `.js` files, Mocha specs and explicit `any` may **only decrease**; a reduction updates its baseline in `.migration/` in the same PR.
+- **Count ratchets** (`scripts/ratchet.sh <js|mocha|any|implicit-any>`, `npm run ratchet`): the counts of `.js` files, Mocha specs, written `any` and inferred (implicit) `any` may **only decrease**; a reduction updates its baseline in `.migration/` in the same PR.
 - **Progressive strict** (`tsconfig.strict.json` + `scripts/strict-check.sh`, `npm run test:strict`): strict is enforced on the growing file list `.migration/strict-adopted.txt` by **filtering tsc output** — *not* via `include`, since tsc pulls the entire import graph into the program. The list grows to cover all of `lib/`, then `strict: true` flips globally and this machinery is removed.
-- The **`no-explicit-any`** ratchet exists because explicit `any` is **invisible** to `strict` (see step 01).
+- The **written-`any`** ratchet (`any`) exists because explicit `any` is **invisible** to `strict` (see step 01). It counts `: any`, `as any` **and `as unknown as`** — the escape hatch a conversion reaches for once `: any` is forbidden.
+- The **implicit-`any`** ratchet (`implicit-any`, `tsconfig.implicit.json`) counts the `TS7xxx` diagnostics over `lib/` + `index.ts` under `noImplicitAny`. It exists because the written-`any` ratchet charges **nothing** for an un-annotated parameter: without it, renaming a file without typing anything scores a perfect zero (see [step 06](steps/06-hardening-mid-course.md)).
 
 ### Conversion standards (per file)
 
 - Rename `.js` → `.ts`; fix imports/exports (`export`/`import`, or `export =` for a single export, per the existing CommonJS shape).
 - **Forbidden in a conversion:** unjustified implicit `any`, `@ts-ignore`/`@ts-nocheck` without a comment + ticket, `!` (non-null assertion) to "make it pass". Prefer real typing or `unknown` + narrowing.
 - Reuse and enrich `lib/types`; do not duplicate.
-- One PR = one layer (or a coherent subset), small and reviewable, that **decrements the JS baseline**. No behaviour change in a conversion PR (structural refactors stay separate).
+- One PR = one layer (or a coherent subset), small and reviewable, that **decrements the JS baseline**.
+- **If the converted file passes strict, adopt it** into `.migration/strict-adopted.txt` in the same PR — part of the PR's definition of done. `npm run test:strict -- --candidates` lists what is clean but unadopted, and `pr-preflight` warns about it. Deferring adoption is what turns sprint 9 into a wall.
+- **A file with no unit spec ships one** (vitest + TS) in its conversion PR: converting untested code is converting blind, and it is the only mechanism that makes the mocha counter fall.
+- **No behaviour change in a conversion PR.** Structural refactors stay separate — *except* the behaviour-preserving ones the SonarCloud new-code gate forces (a rename re-scores the whole file as new code, so pre-existing S2004/S3776 smells must be cleared in-PR). Those are **in scope**, under two conditions: the extraction is **verbatim**, and the step file carries an **equivalence note** stating why behaviour is preserved. See [step 06](steps/06-hardening-mid-course.md) for why the rule is written this way rather than broken every sprint.
 
 ### Sequencing (leaves → core)
 
@@ -101,18 +105,21 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 
 > Living section (maintained by the `wrapup` skill). **Read this to resume** in a fresh context.
 
-**Where we are (2026-09-07):** the foundation is in place (ADR, register, 3 CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS) and **Sprint 3 done** (`lib/model` + `lib/service` 100% TS, PR #2676), both merged into `2-dev`. **Sprint 4 is functionally complete — `lib/api` holds zero `.js`.** PR A ([#2679](https://github.com/kuzzleio/kuzzle/pull/2679)), PR B ([#2680](https://github.com/kuzzleio/kuzzle/pull/2680)), PR C ([#2681](https://github.com/kuzzleio/kuzzle/pull/2681)), PR D ([#2682](https://github.com/kuzzleio/kuzzle/pull/2682)) and PR E1 ([#2685](https://github.com/kuzzleio/kuzzle/pull/2685)) are all **merged into `2-dev`** (A/B 2026-07-17, C/D 2026-07-21, E1 2026-09-07); js 79→67. **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686), `funnel.js` — the dispatch core, branch `chore/ts-migration-sprint4-funnel`) is **open and fully green** (51/51 checks, SonarCloud gate included) — js 67→66, ready to merge. The migration advances one layer-PR at a time off `2-dev`; **next layer is Sprint 5 (`lib/core` I)**.
+**Where we are (2026-09-09):** the foundation is in place (ADR, register, **4** CI ratchets, progressive strict, ESLint). **Sprint 1 done** (`lib/util` 100% TS), **Sprint 3 done** (`lib/model` + `lib/service` 100% TS) and **Sprint 4 done** — `lib/api` is **100% TypeScript**, all six PRs merged into `2-dev` (A [#2679](https://github.com/kuzzleio/kuzzle/pull/2679), B [#2680](https://github.com/kuzzleio/kuzzle/pull/2680), C [#2681](https://github.com/kuzzleio/kuzzle/pull/2681), D [#2682](https://github.com/kuzzleio/kuzzle/pull/2682), E1 [#2685](https://github.com/kuzzleio/kuzzle/pull/2685), E2 [#2686](https://github.com/kuzzleio/kuzzle/pull/2686)). **js baseline 111 → 66** since the ADR opened.
 
-**Counters** (baselines in `.migration/`, incl. PR E2): **js = 66**, **mocha = 151**, **any = 200**; **strict adopted = 46**.
-**Remaining JS by layer** (66 = 62 `lib/` + 4 `bin/`): `core` 50 · `api` **0** · `kuzzle` 6 · `cluster` 6 · `bin` 4.
+**A mid-course review of the 30 converted files (2026-09-09) opened [step 06](steps/06-hardening-mid-course.md) — hardening the enforcement machinery before `lib/core`.** The converted code is clean on the letter of the standard (0 explicit `any`, 0 `@ts-ignore`, 0 `!`, tsc + lint green) but the machinery was not measuring the important things: implicit `any` was uncounted (520 diagnostics, 87 of them in "converted" files), one un-annotated default parameter was costing 139 strict errors, 48 strict-clean files sat unadopted, and **SonarCloud measures no coverage at all on `.ts`** — so every conversion silently removes its file from the coverage gate. **PR F1 (strict foundation) is done; PR F2 (restore coverage) must land before Sprint 5.**
+
+**Counters** (baselines in `.migration/`): **js = 66**, **mocha = 151**, **any = 208** *(metric broadened to include `as unknown as`; was 200 on the narrower grep)*, **implicit-any = 520** *(new)*; **strict adopted = 94** *(was 46; `--candidates` now empty)*.
+**Remaining JS by layer** (66 = 62 `lib/` + 4 `bin/`): `core` 50 · `api` **0** · `kuzzle` 6 · `cluster` 6 · `bin` 4 *(all four are plugin **fixtures** under `bin/plugins/available/**` — out of the Definition of Done, see the register)*.
 
 **Doc location (2026-07-15):** the ADR and its register moved from `adrs/` to `docs/adr-001/` (`git mv`, history preserved; references updated). ADRs now live under `docs/adr-<n>/`.
 
 **Next actions:**
 
-1. **Sprint 4 — `lib/api` ([step 05](steps/05-sprint-4-api.md)): converted, closing.** PRs A–E1 (#2679, #2680, #2681, #2682, #2685) are **merged**; js 79→67. **Open: PR E2** = `funnel.js`, the last JS file of the layer ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686), `chore/ts-migration-sprint4-funnel`) — js 67→66, `lib/api` now **100% TS**. Green locally (tsc, lint, ratchets, strict, Mocha 3025 + vitest 7/7 in Docker) and in CI. **E2 is fully validated** — 51/51 CI checks green including the SonarCloud gate (which took 2 iterations: 5 Critical + 13 Minor pre-existing smells re-scored by the rename). **Only action left: merge #2686, then flip step 05 to ✅ and the step-table row to Done.** *(Sprint 2 — real `bin/` entrypoints — stays deprioritized, see [step 03](steps/03-sprint-2-bin.md).)*
-2. Then Sprints 5→7 (`lib/core`, `lib/cluster` — the hard files, under cucumber), Sprint 8 (`lib/kuzzle`), then 9 (final strict) & 10 (Mocha → vitest).
-3. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, any must not rise), decrement `.migration/js-baseline.txt`, run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
+1. **Step 06 — mid-course hardening ([detail](steps/06-hardening-mid-course.md)): in progress.** PR F1 (strict foundation: the `never[]` fix, 94 adopted files, the `implicit-any` ratchet, the anchored `strict-check.sh` match, 5 preflight checks, the amended conversion standard) is **done**. **Next: PR F2 — restore `.ts` coverage** (drop `**/*.ts` from `sonar.coverage.exclusions`, remap the c8 lcov off `dist/`, feed vitest's report to the scanner, and record the measured coverage of the 30 converted files). Then **PR F3 — test debt** (vitest spec location decided in `CONTRIBUTING.md`, specs for the 6 untested converted utils, `promback`'s typing hole fixed under test).
+2. **Then Sprint 5 — `lib/core` I** (storage, security, realtime; 50 JS files, the first layer where the cucumber net is the primary guarantee). Do not start it before F2: converting 50 critical files with a vacuous coverage gate is the risk the review flagged.
+3. Then Sprints 6→7 (`lib/core` II, `lib/cluster` — the hard files), Sprint 8 (`lib/kuzzle`), then 9 (final strict flip) & 10 (Mocha → vitest).
+4. Per PR: convert one layer, keep `npx tsc --noEmit` green, `npm run ratchet` (js must drop, neither `any` counter may rise), decrement `.migration/js-baseline.txt`, **adopt the file into strict if it is clean**, **ship a vitest spec if it had none**, and run the impacted unit tests **in Docker** (`.ci/scripts/docker-test.sh unit mocha` — native `re2` binding can't load on host arm64).
 
 > **Conversion gotchas (learned Sprint 1):** a file whose Mocha spec uses `rewire`/`__set__` on a required module (e.g. `didYouMean`) must keep the compiled variable name — use `import x = require("mod")`, not `import x from "mod"`. Typing a previously-`any` export (e.g. `Promback`) can break inferring consumers: make it **generic** (`Promback<T>`) and annotate the call sites rather than reintroducing `any`.
 
@@ -121,14 +128,15 @@ Mocha frozen and running as-is; new tests in vitest + TS; legacy specs migrated 
 **Key commands:**
 
 ```bash
-npm run ratchet                     # js / mocha / any (must not increase)
-npm run test:strict                 # strict on adopted files
-npm run test:strict -- --candidates # clean files not yet adopted
+npm run ratchet                     # js / mocha / any / implicit-any (must not increase)
+npm run test:strict                 # strict on adopted files (94)
+npm run test:strict -- --candidates # clean files not yet adopted (currently empty)
 npm run ratchet:js -- --update      # after a reduction: update the baseline
 npx tsc --noEmit                    # full type-check; npm run build = tsc + copy-binaries
+.ci/scripts/pr-preflight.sh         # lint + error-codes + ratchets/strict + 2 reminders
 ```
 
-**Conversion convention:** `export =` for a single export, named exports for an object module; never `any` / `@ts-ignore` / `!` to "make it pass"; reuse `lib/types`. Full standards in *Target architecture › Conversion standards*.
+**Conversion convention:** `export =` for a single export, named exports for an object module; never `any` / `@ts-ignore` / `!` to "make it pass"; reuse `lib/types`; adopt the file into strict if clean; ship a vitest spec if it had none. Full standards in *Target architecture › Conversion standards*.
 
 ---
 
@@ -143,13 +151,14 @@ The spine. One row per unit of work; `Detail` links to the frozen/living step fi
 | 02 | Sprint 1 — `lib/util` warm-up (100% TS) | ✅ Done | #2670, #2674 | [detail](steps/02-sprint-1-util.md) |
 | 03 | Sprint 2 — `bin/` cleanup (entrypoints deprioritized) | 🟦 Paused | #2671 | [detail](steps/03-sprint-2-bin.md) |
 | 04 | Sprint 3 — models & services (100% TS) | ✅ Done | #2676 | [detail](steps/04-sprint-3-model-service.md) |
-| 05 | Sprint 4 — `lib/api` (controllers, `funnel`) — **100% TS** | 🟦 Closing | #2679 A✅ · #2680 B✅ · #2681 C✅ · #2682 D✅ · #2685 E1✅ · #2686 E2 | [detail](steps/05-sprint-4-api.md) |
-| 06 | Sprint 5 — core I (storage, security, realtime) | ⬜ To do | — | — |
-| 07 | Sprint 6 — core II (validation, plugin, network) | ⬜ To do | — | — |
-| 08 | Sprint 7 — `lib/cluster` | ⬜ To do | — | — |
-| 09 | Sprint 8 — `lib/kuzzle`, `index` | ⬜ To do | — | — |
-| 10 | Sprint 9 — final strict flip, remove `allowJs` | ⬜ To do | — | — |
-| 11 | Sprint 10 — test closure (Mocha → vitest) | ⬜ To do | — | — |
+| 05 | Sprint 4 — `lib/api` (controllers, `funnel`) — **100% TS** | ✅ Done | #2679 A · #2680 B · #2681 C · #2682 D · #2685 E1 · #2686 E2 | [detail](steps/05-sprint-4-api.md) |
+| 06 | Mid-course hardening (enforcement before `lib/core`) | 🟦 In progress | F1 · F2 · F3 | [detail](steps/06-hardening-mid-course.md) |
+| 07 | Sprint 5 — core I (storage, security, realtime) | ⬜ To do | — | — |
+| 08 | Sprint 6 — core II (validation, plugin, network) | ⬜ To do | — | — |
+| 09 | Sprint 7 — `lib/cluster` | ⬜ To do | — | — |
+| 10 | Sprint 8 — `lib/kuzzle`, `index` | ⬜ To do | — | — |
+| 11 | Sprint 9 — final strict flip, remove `allowJs` | ⬜ To do | — | — |
+| 12 | Sprint 10 — test closure (Mocha → vitest) | ⬜ To do | — | — |
 
 ---
 
@@ -172,12 +181,21 @@ Canonical "what we decided", one line each. Links point to the step that details
 - **2026-09-07** — **PR E1** (#2685, `chore/ts-migration-sprint4-api-routes`): `httpRoutes` + `controllers/index` → TS (`export =`, no new `any`, 0 logic change); js 69 → 67, `lib/api` down to `funnel.js` alone. **Standardized every native controller on `export =`**: `adminController`, `authController` and `securityController` were still `export default class`, whose `__esModule` + `exports.default` shape forced the `new XController.default()` workaround in `funnel.js` and in 10 spec call sites — all removed. `httpRoutes` gets a module-local `KuzzleHttpRoute` interface (`url?` because the trailing loop derives it from `path`). `default.config.ts` had to drop the `.js` extension from its import: node10 module resolution does **not** substitute `.ts` for a `.js` specifier. `HttpConfiguration.routes` deliberately left `any` — typing it cascades into already-converted files. → [05](steps/05-sprint-4-api.md)
 - **2026-09-07** — **PR E2** (#2686, `chore/ts-migration-sprint4-funnel`): `funnel` → TS (`export =`, no new `any`, 0 logic change); js 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. `PendingRequest` + the module helpers kept as top-level bindings so `execute.test.js`'s `rewire(…).__get__("PendingRequest")` still resolves; the `export =` barrel imported via `import apiControllers = require("./controllers")` + destructuring (a named ES import cannot target `export =`). Typing `this.controllers` as `Map<string, NativeController>` **cascaded** into `serverController._buildApiDefinition` (`_actions` is a `Set`, not `string[]`) and `realtimeController.validate` — both fixed type-only. **[TD-18](type-debt-register.md) closed** (`internal.allowAllOrigins` modelled); `HttpConfiguration.accessControlAllowOrigin` widened to `string | string[] | RegExp[]` to match what `config/index.ts` actually produces. **[TD-21](type-debt-register.md) opened**: `_wrapError` passes the *request* to `isNativeController(name)`, so the guard is always false and every non-`KuzzleError` is wrapped as a plugin error — a latent bug the conversion **preserved** (two specs assert it). → [05](steps/05-sprint-4-api.md)
 
+- **2026-09-09** — **Sprint 4 closed** (#2686 merged): `lib/api` is 100% TypeScript; js baseline 111 → 66 since the ADR opened. → [05](steps/05-sprint-4-api.md)
+- **2026-09-09** — **Mid-course review of the 30 converted files** → open [step 06](steps/06-hardening-mid-course.md) and **harden the enforcement before `lib/core`**. Governing rule: *a review finding ends as a ratchet, an adopted-list entry or a GitHub issue — never as prose alone.* → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — Add a **4th ratchet on implicit `any`** (`TS7xxx` under `noImplicitAny`, baseline 520) and widen the written-`any` ratchet to `as unknown as` (200 → 208, a broadened metric and not a regression). Rationale: the written-`any` ratchet charges nothing for an un-annotated parameter, so it cannot tell a conversion from a rename. → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — **Strict adoption becomes part of a conversion PR's DoD** when the file is clean (46 → 94 adopted; `--candidates` emptied), enforced by a `pr-preflight` reminder. Fixed `strict-check.sh`, whose unanchored path match let a bare `index.ts` entry capture every `lib/**/index.ts` error. → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — **A conversion PR ships a vitest spec for a file that had none.** 30 files were converted with 0 tests written, 6 of them with no spec at all; deferring every spec to sprint 10 leaves conversions unnetted. → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — **Gate-driven, behaviour-preserving refactors are IN scope for a conversion PR** (verbatim extraction + an equivalence note in the step file). A rename re-scores the whole file as new code, so the SonarCloud gate forces them; the previous absolute "structural refactors stay separate" was being broken every sprint in silence. → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — **Restoring `.ts` coverage (PR F2) gates the start of Sprint 5.** `sonar.coverage.exclusions=**/*.ts` means every conversion removes its file from the coverage gate; converting the 50 files of `lib/core` under a vacuous gate is not acceptable. → [06](steps/06-hardening-mid-course.md)
+- **2026-09-09** — **The 4 remaining `bin/` `.js` are out of the Definition of Done**: all live under `bin/plugins/available/**` (`functional-test-plugin`, `kuzzle-plugin-cluster`) and are plugin **fixtures**, not product code. "0 `.js` in `bin/`" targets `bin/` proper. → [03](steps/03-sprint-2-bin.md)
+
 ---
 
 ## Open points
 
 - **Validate this ADR** with the core team (status Proposed → Accepted).
-- **vitest spec location** — `tests/` mirror vs co-location `lib/**/*.spec.ts` — decide and record in `CONTRIBUTING.md`.
+- ~~**vitest spec location**~~ — scheduled in [step 06](steps/06-hardening-mid-course.md) PR F3: `tests/` mirror (already `vitest.config.ts`'s `root`), to be recorded in `CONTRIBUTING.md`.
 - **Strict flag order** — revisit (per-flag vs per-file) based on the pain actually observed.
 - **Own `JSONObject` server-side** (`lib/types/JSONObject.ts`) and codemod the ~44 `from "kuzzle-sdk"` type imports; remove the 2 local storage redefinitions — during the `lib/types` sprint. (Register: TD-09 / TD-10.)
 - **Closure** — remove `allowJs`, Mocha and the legacy config once the counters reach zero (a closing ADR if warranted).

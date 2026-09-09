@@ -30,6 +30,9 @@
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
 | [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers — [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) | S | ⬜ |
 | [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ⬜ |
+| [TD-22](#td-22) | 🟠 med | `any` | `memoryStorageController.ts`: converted without typing — 54 implicit-`any` sites (+37 cascades), 122 strict errors | M | ⬜ |
+| [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 files) | M | ⬜ |
+| [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate | S | 🟦 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -128,6 +131,38 @@ The single largest `: any` cluster, on storage-forwarding methods typed `(...arg
 The genuinely *justified* `any`/`Record<…,any>` (ES client boundary) concentrates here, but is copy-pasted between `7/` and `8/`.
 - **Reco:** a thin typed adapter over the ES client (dynamic casts localised in one place); type `_esVersion`/`config`; factor out the shared 7/8 logic.
 
+### TD-22
+**`memoryStorageController.ts` was renamed, not typed** · 🟠 medium · `lib/api/controllers/memoryStorageController.ts:32`
+
+Converted in Sprint 4 PR C (#2681) with **0 written `any`** — and **54 implicit-`any` diagnostics** (`TS7xxx`), the largest pocket of inferred `any` among the converted files and 3rd repo-wide behind `service/storage/{7,8}/elasticsearch.ts` (108 and 86). They in turn cascade into **37 `TS2339`/`TS2551`** errors (`mapping.decr` and friends are currently reached through `any`), i.e. **91 diagnostics** for this file alone. It is also the worst file of the converted set under strict: **122 errors**. Concretely: `let mapping;` (an untyped mutable module binding, assigned by `initMapping()` and read by the constructor), 38 un-annotated `map: (val, request) => …` closures in the Redis-command table, 5 `result` accumulators inferring `any[]`, and `this[command] = buildCommandFn(command)` indexing the class dynamically.
+
+The step-05 note says the table and the arg-extraction internals "stay inferred", which was a deliberate call — but nothing recorded the size of it, and the `any` ratchet charged nothing for it. It is now visible in the `implicit-any` ratchet (step 06).
+
+- **Reco:** type the command table as a named interface (`RedisCommandMapping`, one entry type with the `skip`/`merge`/`path`/`map` shape), make `mapping` a `const` built at module load rather than a `let` + `initMapping()`, and annotate the `map` closures. Watch the constraint that made it dynamic in the first place: `memoryStorageController.test.js` drives `rewire(...).__get__("mapping" | "extractArgumentsFromRequest")` and `__set__({ mapping })` on the **compiled** CJS, so `mapping` must stay a top-level binding and the module must keep its `export =` shape.
+- Fixing `mapping`'s type is what clears the 37 cascades above — they are not independent findings.
+- **Trigger:** independent of the migration sprints; a good first `implicit-any` reduction PR since the file is self-contained and its spec is thorough.
+
+---
+
+## Duplication
+
+### TD-23
+**`sonar.cpd.exclusions` is becoming permanent, untracked debt** · 🟡 low · `sonar-project.properties`
+
+The exclusion list is the documented escape hatch for pre-existing intra-file duplication that a `.js`→`.ts` rename re-scores as new code (ADR step 05). It has grown to **5 files** across Sprint 3 and 4, and nothing schedules any of it:
+
+| File | Measured duplication | Register entry |
+|------|---------------------|----------------|
+| `lib/service/storage/7/esWrapper.ts` + `8/esWrapper.ts` | 197 duplicated 10-line windows (≈95% identical) | [TD-16](#td-16) — explicit non-goal |
+| `lib/api/controllers/documentController.ts` | 36 duplicated 10-line windows (mExists/mGet, createOrReplace/replace) | **none** |
+| `lib/api/controllers/memoryStorageController.ts` | the `mapping` table + the geoadd/hmset/mset and ZAdd/ZInterstore closures | **none** |
+| `lib/api/httpRoutes.ts` | the route table's near-identical 5-line literals | **none — and no justifying comment in `sonar-project.properties`** |
+
+Two distinct problems: the dedup work itself is unscheduled, and an exclusion added "temporarily" during a conversion has no expiry — CPD is simply off for those files from now on, including for *future* duplication introduced by unrelated PRs.
+
+- **Reco:** (1) document the `httpRoutes.ts` entry alongside the other three; (2) open the `documentController` CRUD-pair dedup as its own refactor (it is the only one that is genuinely worth doing — `esWrapper` is a declared non-goal and `memoryStorageController`'s belongs with [TD-22](#td-22)); (3) when a file's duplication is dealt with, **remove its exclusion in the same PR** — treat the list as a ratchet that may only shrink.
+- **Trigger:** independent of the migration sprints.
+
 ---
 
 ## Enforcement (config & contracts)
@@ -139,6 +174,7 @@ The genuinely *justified* `any`/`Record<…,any>` (ES client boundary) concentra
 - **Reco:** incremental strict adoption (ADR: Target architecture › Enforcement) + local re-enable of `no-explicit-any` (as `warn`).
 - **ADR link:** Target architecture › Enforcement; final strict flip = step table sprint 9.
 - **🟦 In progress (2026-07-12, PR #2669):** `no-explicit-any` re-enabled as `warn` (`.eslintrc.json`); strict tooled up (`tsconfig.strict.json` + `strict-check.sh`, 41 adopted files). **Remaining:** progressively harden the rest of `lib/` then the final `strict` flip (Sprint 9).
+- **🟦 Advanced (2026-09-09, step 06 PR F1):** adopted files **46 → 94** — every production file that passed strict on that date, `--candidates` emptied — and strict adoption is now part of a conversion PR's DoD. Repo-wide strict errors **1483 → 1344** after typing `NativeController.constructor(actions: string[] = [])`, which was inferring `never[]` and alone accounted for 139 of them.
 
 ### TD-03
 **Explicit `any` invisible to strict → 3rd ratchet required** · 🟠 medium · cross-cutting
@@ -147,17 +183,31 @@ The ADR's strict ratchet would pass *over* the ~200 explicit `any`: "strict:true
 - **Reco:** 3rd CI ratchet `no-explicit-any` as *baseline-and-decrement* (baseline ~200).
 - **ADR link:** Target architecture › Enforcement (no-explicit-any ratchet); shipped in step 01.
 - **✅ Done (2026-07-12, PR #2669):** ratchet shipped (`scripts/ratchet.sh any`, baseline 200, `npm run ratchet:any`). The actual *reduction* of the ~200 `any` remains to do (see TD-11/12/13).
+- **✅ Completed (2026-09-09, step 06 PR F1):** the finding was **only half true** — the written-`any` ratchet is itself blind to two things. (1) `as unknown as`, the hatch a conversion reaches for once `: any` is forbidden → now counted (baseline 200 → **208**, a broadened metric, not a regression). (2) **Inferred** `any`: an un-annotated parameter costs the ratchet nothing, so a rename that types nothing scores zero. A **4th ratchet** (`implicit-any`, `tsconfig.implicit.json`, baseline **520** `TS7xxx`) now measures it — 87 of those 520 sit in files already declared "converted".
 
 ### TD-14
 **Cosmetic request/response getters** · 🟡 low · `lib/api/request/requestInput.ts:206`
 
 The request/response classes advertise typed getters/setters but rely on **untyped private index access** + a plain-JS `assertType` module → the contracts don't actually narrow (`any` underneath).
 - **Reco:** real typed private fields (or a typed private state object) + migrate `lib/util/assertType.js` to `.ts` with generic returns (`assertString(name, v): string`).
+- **⚠️ Opportunity missed (noted 2026-09-09, step 06 review):** `assertType` **was** converted (Sprint 1, PR #2674) but **without** the generic returns this entry asked for — it returns `Record<string, unknown> | null` / `unknown[]` / `string | null`, so `requestInput` still casts and the getters still do not narrow. The cheap window is gone; picking TD-14 up now means editing an already-converted file. `assertType.ts` is strict-clean and adopted, so the change is at least guarded.
 
 ### TD-15
 **Implicit-any constructors on public request/response classes** · 🟡 low · `lib/api/request/requestInput.ts:149`
 
 - **Reco:** type the parameters. `RequestInput`/`KuzzleRequest` data has a known shape (controller/action/_id/index/collection/body/volatile/jwt…) that deserves a named interface; `RequestResponse.constructor` should take `KuzzleRequest`.
+
+### TD-24
+**SonarCloud measures no coverage on `.ts` — every conversion voids its own coverage gate** · 🟠 medium · `sonar-project.properties`, `.github/workflows/pull_request.workflow.yaml`
+
+`sonar.coverage.exclusions=**/*.ts,**/*.vue` (added by #2658 on 2026-05-21, before this ADR) excludes **all** TypeScript from coverage measurement. So every `.js` → `.ts` rename **removes its file from the "Coverage on New Code" gate** — the gate is vacuous on exactly the lines a conversion PR touches, and it has silently swallowed the 30 files converted so far. The conversion PRs noted this in passing ("`.ts` is coverage-excluded") as if it were neutral; it is the largest hole in the migration's safety story, and it widens with every sprint.
+
+Two compounding problems in the pipeline:
+- Only `npm run test:unit:mocha:coverage` runs in the `sonarqube` job, so **vitest coverage never reaches the scanner** — which also means the ADR's "every new test in vitest" produces no measurable coverage at all.
+- `c8` (mocha, over the compiled `dist/`) and vitest both write to `coverage/lcov.info`, so wiring vitest in naively would have one report **overwrite** the other rather than add to it.
+
+- **Reco:** drop `**/*.ts` from the exclusions; verify where the c8 lcov actually points (mocha runs `dist/**/*.test.js` with `sourceMap: true`, so c8 *should* remap onto `lib/**/*.ts` — confirm, and remap explicitly otherwise); give each runner its own report path and list both in `sonar.javascript.lcov.reportPaths`; then record the measured coverage of the already-converted files.
+- **🟦 In progress:** scheduled as **PR F2 of [ADR step 06](ADR-0001-migration-typescript.md)**, and it **gates the start of Sprint 5** — `lib/core` is 50 critical files, and converting them under a gate that measures nothing is the risk this entry exists to prevent.
 
 ---
 
@@ -168,6 +218,7 @@ The request/response classes advertise typed getters/setters but rely on **untyp
 
 `JSONObject`/`KRequestBody`/`KImportError`/`KRequestParams` duplicated verbatim. ES8 gained types (`KStats*`, `KUpdateResponse`) typing its `stats()`/`update()`, **not ES7**. The only genuine reason they can't merge: the SDK v7→v8 rename of `ByteSize`/`ClusterNodesStats`.
 - **Reco:** a shared `types/storage` module for the SDK-agnostic types; backport the stats/update types to ES7.
+- **Measured (2026-09-09, step 06 review):** the duplication also covers the *wrappers*, not just the types — `esWrapper.ts` 7 vs 8 is **314 LOC each with a 16-line diff** (≈95% identical, 197 duplicated 10-line windows). The whole diff is the `sdk-es7`/`sdk-es8` import plus one error-message regex where ES8 wraps the type name in brackets (`matches[2]` instead of `matches[1]`). Both files are `sonar.cpd.exclusions`-listed and strict-clean/adopted. Deduplicating them stays an explicit non-goal of the migration — see [TD-23](#td-23) for the exclusion-list debt as a whole.
 
 ### TD-17
 **`loadConfig()` returns `any`** · 🟡 low · `lib/config/index.ts:38`
@@ -247,6 +298,8 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 - **2026-07-21** — Sprint 4 (`lib/api`) PR D (#2682): `serverController` + `documentExtractor` → TS. **TD-18** partially closed — `version: string` added to `IKuzzleConfiguration`; `internal.allowAllOrigins` still ⬜ (out-of-scope JS consumers). **TD-20** opened — the two files' `@deprecated` `setResult`/`getArrayLegacy` calls kept for behaviour parity (both replacements change behaviour), `NOSONAR`-marked, real migration deferred to a dedicated PR. Also made `kuzzle.statistics` non-`private` (cross-class access by `serverController`); the "visibility bug" flagged in PR A was in fact just the type not matching the runtime access. js baseline 71 → 69.
 - **2026-09-07** — Sprint 4 (`lib/api`) PR E1 (#2685): `httpRoutes` + `controllers/index` → TS; js baseline 69 → 67. **TD-19 partially prepared, not closed** — the route table now carries a real shape (a module-local `KuzzleHttpRoute` interface: literal-union `verb`, `deprecated?`, `url?`), but `HttpConfiguration.routes` is deliberately **left `any`**: promoting the interface into `lib/types` and typing that field cascades into already-converted files (`serverController.ts` assigns `config.http.routes = undefined` and re-declares its own local `ApiRoute[]`), i.e. a type refactor the conversion standard keeps out of a conversion PR. Whoever picks up TD-19 should start from `KuzzleHttpRoute`. Also standardized `adminController`/`authController`/`securityController` on `export =` — the `export default` shape was the sole reason for the `new XController.default()` workaround in `funnel.js` and 10 spec call sites.
 - **2026-09-07** — Sprint 4 (`lib/api`) **PR E2** ([#2686](https://github.com/kuzzleio/kuzzle/pull/2686)): `funnel` → TS; js baseline 67 → 66 — **`lib/api` is 100% TypeScript, Sprint 4 converted**. **TD-18 closed** (`internal.allowAllOrigins` modelled — the half PR D deferred to exactly this conversion). **TD-21 opened** (see above). Both deferred items now have **GitHub issues** ([#2687](https://github.com/kuzzleio/kuzzle/issues/2687) for TD-21, [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) for TD-20): the register is read when someone picks up the ADR, which was scheduling nothing on its own. **Convention going forward: a TD entry that defers real work gets an issue, and the entry links to it.**
+
+- **2026-09-09** — **Mid-course review of the 30 files converted so far** (sprints 1, 3, 4), opening [ADR step 06](ADR-0001-migration-typescript.md). The converted code holds up on the letter of the standard (0 written `any`, 0 `@ts-ignore`, 0 `!`, 0 unused imports, tsc + lint green, and PR E2's `funnel.ts` gate refactor re-verified equivalent line by line against `master`). What did not hold up is the **measurement**: **TD-22** opened (`memoryStorageController` renamed but not typed — 54 implicit-`any` sites, 91 diagnostics with the cascades), **TD-23** opened (`sonar.cpd.exclusions` at 5 files with no schedule and one undocumented entry), **TD-24** opened (SonarCloud measures no coverage on `.ts` — the biggest hole, and the reason PR F2 gates Sprint 5). **TD-02/TD-03 advanced** (4th ratchet on implicit `any` at 520; written-`any` ratchet widened to `as unknown as`, 200 → 208; strict adopted 46 → 94; repo strict errors 1483 → 1344 from one `never[]` inference). **TD-14 flagged as an opportunity missed** — `assertType` was converted without the generic returns the entry asked for. **TD-16 measured** — the esWrapper pair is 314 LOC each with a 16-line diff.
 
 ---
 

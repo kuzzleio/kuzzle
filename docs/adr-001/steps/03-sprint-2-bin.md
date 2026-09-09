@@ -26,3 +26,9 @@ Converting the real entrypoints (`copy-binaries.js`, `start-kuzzle-server`) is *
 ## Validation
 
 - Kuzzle still starts after the dead-code removal; startup + functional suites green.
+
+## Scope decision — the 4 remaining `bin/` `.js` are out of the DoD (2026-09-09)
+
+The mid-course review ([step 06](06-hardening-mid-course.md)) checked what the `js` counter still holds under `bin/`. All four files live under `bin/plugins/available/**` (`functional-test-plugin`, `kuzzle-plugin-cluster/lib`): they are **plugin fixtures used by the functional suites**, not product code, and converting them would exercise the plugin-authoring surface rather than the server.
+
+**Decision:** the ADR's "0 `.js` in `bin/`" targets `bin/` proper (already met apart from these fixtures). The four fixture files are **excluded from the Definition of Done**; the `js` ratchet keeps counting them, so the final target is `js = 4`, not `0`. Recorded in the hub register.
