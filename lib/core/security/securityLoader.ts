@@ -19,19 +19,47 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
+import { isEmpty } from "lodash";
+import Bluebird from "bluebird";
 
-const { isEmpty } = require("lodash");
-const Bluebird = require("bluebird");
+import { Request } from "../../api/request";
+import { assertIsObject } from "../../util/requestAssertions";
+import * as kerror from "../../kerror";
+import { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
 
-const { Request } = require("../../api/request");
-const { assertIsObject } = require("../../util/requestAssertions");
-const kerror = require("../../kerror");
+/**
+ * A `{ _id: body }` map, as the security fixtures / import payloads express
+ * roles, profiles and users.
+ */
+type SecurityObjects = Record<string, JSONObject>;
+
+interface SecurityPermissions {
+  roles?: SecurityObjects;
+  profiles?: SecurityObjects;
+  users?: SecurityObjects;
+}
+
+/**
+ * How to react to users that already exist when importing.
+ */
+type OnExistingUsers = "fail" | "skip" | "overwrite";
+
+interface LoadOptions {
+  force?: boolean;
+  onExistingUsers?: OnExistingUsers;
+  onExistingUsersWarning?: boolean;
+  refresh?: string;
+  user?: JSONObject | null;
+}
 
 /**
  * @class SecurityLoader
  */
 class SecurityLoader {
+  public logger: Logger;
+
   constructor() {
     this.logger = global.kuzzle.log.child("core:security:loader");
   }
@@ -42,20 +70,21 @@ class SecurityLoader {
      * @param {Object} permissions Object containing roles, profiles and users
      * @param {Object} opts - force, onExistingUsers (fail), onExistingUsersWarning (false), user (null)
      */
-    global.kuzzle.onAsk("core:security:load", (json, opts) =>
-      this.load(json, opts),
+    global.kuzzle.onAsk(
+      "core:security:load",
+      (json: SecurityPermissions, opts: LoadOptions) => this.load(json, opts),
     );
   }
 
   async load(
-    permissions = {},
+    permissions: SecurityPermissions = {},
     {
       force,
       onExistingUsers = "fail",
       onExistingUsersWarning = false,
       refresh = "false",
       user = null,
-    } = {},
+    }: LoadOptions = {},
   ) {
     assertIsObject(permissions);
 
@@ -80,7 +109,16 @@ class SecurityLoader {
     await this._create("createUser", usersToLoad, "users", { refresh, user });
   }
 
-  async _create(action, objects, collection, { force, refresh, user } = {}) {
+  async _create(
+    action: string,
+    objects: SecurityObjects | undefined,
+    collection: string,
+    {
+      force,
+      refresh,
+      user,
+    }: Pick<LoadOptions, "force" | "refresh" | "user"> = {},
+  ) {
     if (!objects) {
       return;
     }
@@ -112,7 +150,13 @@ class SecurityLoader {
     await global.kuzzle.internalIndex.refreshCollection(collection);
   }
 
-  async _getUsersToLoad(users, { onExistingUsers, warning } = {}) {
+  async _getUsersToLoad(
+    users: SecurityObjects | undefined,
+    {
+      onExistingUsers,
+      warning,
+    }: { onExistingUsers?: OnExistingUsers; warning?: boolean } = {},
+  ) {
     if (isEmpty(users)) {
       return users;
     }
@@ -126,7 +170,7 @@ class SecurityLoader {
 
     const { result } = await global.kuzzle.funnel.processRequest(mGetUsers);
 
-    const existingUserIds = result.hits.map(({ _id }) => _id);
+    const existingUserIds = result.hits.map(({ _id }: { _id: string }) => _id);
 
     if (existingUserIds.length === 0) {
       return users;
@@ -138,13 +182,16 @@ class SecurityLoader {
       if (warning) {
         this.logger.info(`Users skipped during import: ${existingUserIds}`);
       }
-      return Object.entries(users).reduce((memo, [userId, content]) => {
-        if (!existingUserIds.includes(userId)) {
-          memo[userId] = content;
-        }
+      return Object.entries(users).reduce<SecurityObjects>(
+        (memo, [userId, content]) => {
+          if (!existingUserIds.includes(userId)) {
+            memo[userId] = content;
+          }
 
-        return memo;
-      }, {});
+          return memo;
+        },
+        {},
+      );
     } else if (onExistingUsers === "overwrite") {
       if (warning) {
         this.logger.info(`Users overwritten during import: ${existingUserIds}`);
@@ -171,4 +218,4 @@ class SecurityLoader {
   }
 }
 
-module.exports = SecurityLoader;
+export = SecurityLoader;

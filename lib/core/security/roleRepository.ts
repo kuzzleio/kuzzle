@@ -19,16 +19,37 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
 
-const Bluebird = require("bluebird");
+import kuzzleStateEnum from "../../kuzzle/kuzzleStateEnum";
+import { Role } from "../../model/security/role";
+import { ObjectRepository } from "../shared/ObjectRepository";
+import * as kerror from "../../kerror";
+import didYouMean = require("../../util/didYouMean");
+import { cacheDbEnum } from "../cache/cacheDbEnum";
+import { JSONObject } from "kuzzle-sdk";
 
-const kuzzleStateEnum = require("../../kuzzle/kuzzleStateEnum");
-const { Role } = require("../../model/security/role");
-const { ObjectRepository } = require("../shared/ObjectRepository");
-const kerror = require("../../kerror");
-const didYouMean = require("../../util/didYouMean");
-const { cacheDbEnum } = require("../cache/cacheDbEnum");
+import { Logger } from "../../kuzzle/Logger";
+import "../../types/Global";
+
+// Type-only, same rationale as userRepository: `core/security/index.js` is
+// still JS, so only the member this repository reaches is described.
+import type { ProfileRepository } from "./profileRepository";
+
+interface SecurityModule {
+  profile: ProfileRepository;
+}
+
+/**
+ * Who is performing the write, and how eagerly the change must be visible.
+ */
+interface WriteOptions {
+  force?: boolean;
+  method?: string;
+  refresh?: string;
+  retryOnConflict?: number;
+  userId?: string | null;
+}
 
 const roleRightsError = kerror.wrap("security", "role");
 
@@ -36,12 +57,21 @@ const roleRightsError = kerror.wrap("security", "role");
  * @class RoleRepository
  * @extends ObjectRepository
  */
-class RoleRepository extends ObjectRepository {
+class RoleRepository extends ObjectRepository<Role> {
+  protected module: SecurityModule;
+  /**
+   * Role cache. It holds an in-flight `Promise<Role>` while a role is being
+   * loaded (see `loadRoles`), which is what de-duplicates concurrent loads —
+   * hence the union rather than plain `Role`.
+   */
+  public roles: Map<string, Role | Promise<Role>>;
+  public logger: Logger;
+
   /**
    * @constructor
    * @param {SecurityModule} securityModule
    */
-  constructor(securityModule) {
+  constructor(securityModule: SecurityModule) {
     super({
       cache: cacheDbEnum.INTERNAL,
       store: global.kuzzle.internalIndex,
@@ -164,8 +194,8 @@ class RoleRepository extends ObjectRepository {
    * @param {Object} options - resetCache (false)
    * @returns {Promise.<Array.<Role>>}
    */
-  loadRoles(ids) {
-    const roles = [];
+  loadRoles(ids: string[]): Promise<Role[]> {
+    const roles: Array<Role | Promise<Role>> = [];
 
     for (const id of ids) {
       let role = this.roles.get(id);
@@ -194,9 +224,14 @@ class RoleRepository extends ObjectRepository {
    * @returns {Role}
    */
   async _createOrReplace(
-    id,
-    content,
-    { force = false, method, refresh = "false", userId = null } = {},
+    id: string,
+    content: JSONObject,
+    {
+      force = false,
+      method,
+      refresh = "false",
+      userId = null,
+    }: WriteOptions = {},
   ) {
     const dto = {
       ...content,
@@ -205,8 +240,8 @@ class RoleRepository extends ObjectRepository {
       _kuzzle_info: {
         author: userId,
         createdAt: Date.now(),
-        updatedAt: null,
-        updater: null,
+        updatedAt: null as number | null,
+        updater: null as string | null,
       },
     };
 
@@ -223,7 +258,7 @@ class RoleRepository extends ObjectRepository {
    * @param {Object} [opts]
    * @returns {Role}
    */
-  async create(id, content, opts) {
+  async create(id: string, content: JSONObject, opts?: WriteOptions) {
     return this._createOrReplace(id, content, {
       method: "create",
       ...opts,
@@ -238,7 +273,7 @@ class RoleRepository extends ObjectRepository {
    * @param {Object} [opts]
    * @returns {Role}
    */
-  async createOrReplace(id, content, opts) {
+  async createOrReplace(id: string, content: JSONObject, opts?: WriteOptions) {
     return this._createOrReplace(id, content, {
       method: "createOrReplace",
       ...opts,
@@ -256,7 +291,11 @@ class RoleRepository extends ObjectRepository {
    * @param  {Object} [opts]
    * @returns {Promise}
    */
-  async update(id, content, { force, refresh, retryOnConflict, userId } = {}) {
+  async update(
+    id: string,
+    content: JSONObject,
+    { force, refresh, retryOnConflict, userId }: WriteOptions = {},
+  ) {
     const updated = await this.fromDTO({
       // /!\ order is important
       ...content,
@@ -283,7 +322,7 @@ class RoleRepository extends ObjectRepository {
    * @returns {Promise.<Role>} role
    * @throws {NotFoundError} If the corresponding role doesn't exist
    */
-  async load(id) {
+  async load(id: string): Promise<Role> {
     if (this.roles.has(id)) {
       return this.roles.get(id);
     }
@@ -298,7 +337,7 @@ class RoleRepository extends ObjectRepository {
   /**
    * @override
    */
-  async loadOneFromDatabase(id) {
+  async loadOneFromDatabase(id: string): Promise<Role> {
     try {
       return await super.loadOneFromDatabase(id);
     } catch (err) {
@@ -313,7 +352,10 @@ class RoleRepository extends ObjectRepository {
    * @param {Object} body Search body containing either "query" or "controllers"
    * @param {Object} options
    */
-  async searchRole(body, { from = 0, size = 9999 } = {}) {
+  async searchRole(
+    body: JSONObject,
+    { from = 0, size = 9999 }: { from?: number; size?: number } = {},
+  ) {
     if (!body.controllers) {
       return this.search(body, { from, size });
     }
@@ -350,7 +392,7 @@ class RoleRepository extends ObjectRepository {
    * @param {object} [options] The persistence options
    * @returns Promise
    */
-  async validateAndSaveRole(role, options = {}) {
+  async validateAndSaveRole(role: Role, options: WriteOptions = {}) {
     await role.validateDefinition();
 
     if (role._id === "anonymous" && !role.canLogIn()) {
@@ -372,7 +414,7 @@ class RoleRepository extends ObjectRepository {
    *
    * @param {Role} role
    */
-  checkRoleNativeRights(role) {
+  checkRoleNativeRights(role: Role) {
     Object.keys(role.controllers).forEach((roleController) => {
       if (
         roleController !== "*" &&
@@ -398,7 +440,7 @@ class RoleRepository extends ObjectRepository {
               role._id,
               action,
               roleController,
-              didYouMean(action, controller.__actions),
+              didYouMean(action, controller._actions),
             );
           }
         });
@@ -412,7 +454,13 @@ class RoleRepository extends ObjectRepository {
    * @param {Role} role
    * @param {Force} force
    */
-  checkRolePluginsRights(role, { force = false, forceWarn = false } = {}) {
+  checkRolePluginsRights(
+    role: Role,
+    {
+      force = false,
+      forceWarn = false,
+    }: { force?: boolean; forceWarn?: boolean } = {},
+  ) {
     const plugins = global.kuzzle.pluginsManager;
 
     for (const roleController of Object.keys(role.controllers)) {
@@ -491,7 +539,7 @@ class RoleRepository extends ObjectRepository {
    * @param {object} [options]
    * @returns Promise
    */
-  async deleteById(id, options) {
+  async deleteById(id: string, options?: JSONObject) {
     const role = await this.load(id);
     return this.delete(role, options);
   }
@@ -499,7 +547,7 @@ class RoleRepository extends ObjectRepository {
   /**
    * @override
    */
-  async delete(role, { refresh = "false" } = {}) {
+  async delete(role: Role, { refresh = "false" }: WriteOptions = {}) {
     if (["admin", "default", "anonymous"].indexOf(role._id) > -1) {
       throw kerror.get("security", "role", "cannot_delete");
     }
@@ -529,14 +577,14 @@ class RoleRepository extends ObjectRepository {
    * @param {Role} role
    * @returns {object}
    */
-  serializeToDatabase(role) {
-    const serializedRole = {};
+  serializeToDatabase(role: Role): JSONObject {
+    const serializedRole: JSONObject = {};
 
-    Object.keys(role).forEach((key) => {
+    for (const [key, value] of Object.entries(role)) {
       if (key !== "_id" && key !== "restrictedTo") {
-        serializedRole[key] = role[key];
+        serializedRole[key] = value;
       }
-    });
+    }
 
     return serializedRole;
   }
@@ -544,7 +592,7 @@ class RoleRepository extends ObjectRepository {
   /**
    * @override
    */
-  async truncate(opts) {
+  async truncate(opts: JSONObject) {
     try {
       await super.truncate(opts);
     } finally {
@@ -557,7 +605,7 @@ class RoleRepository extends ObjectRepository {
    * the entire cache is emptied.
    * @param {string} [roleId]
    */
-  invalidate(roleId) {
+  invalidate(roleId?: string) {
     if (!roleId) {
       this.roles.clear();
     } else {
@@ -566,4 +614,4 @@ class RoleRepository extends ObjectRepository {
   }
 }
 
-module.exports = RoleRepository;
+export = RoleRepository;
