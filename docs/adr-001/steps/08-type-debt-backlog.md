@@ -1,8 +1,8 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 4 findings closed, 1 partial, 5 follow-ups opened
+**Status:** 🟦 In progress — 4 findings closed, 4 follow-up PRs in review, 1 decision pending
 **Date:** 2026-09-09 → …
-**PR(s):** TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702)
+**PR(s):** merged — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702); in review — TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
 
 ## Goal
@@ -73,3 +73,31 @@ The second half of that finding matters more than the mislabelling it fixes: an 
 - Every PR merged green: `tsc --noEmit`, lint, prettier, the four ratchets, the full Mocha suite (3 025) and the vitest suite, plus the SonarCloud gate on each.
 - Repo state after the four PRs (re-verified 2026-09-10 on `2-dev`): **js 50 · mocha 151 · any 207 · implicit-any 464**, strict adopted **101** (`--candidates` empty).
 - None of the four PRs adopted a new file into strict: `funnel`, `documentController` and `memoryStorageController` all still fail strict (the last one at 54 errors, down from 122).
+
+## What was done (the review's follow-ups, 2026-09-10)
+
+Four of the five findings are single-purpose PRs off `2-dev`, none stacked. The fifth ([#2705](https://github.com/kuzzleio/kuzzle/issues/2705)) is a decision, not a patch, and is left open on purpose.
+
+### TD-27 — the guard moves to the error's source ([#2709](https://github.com/kuzzleio/kuzzle/pull/2709))
+
+`processRequest` wraps only the `doAction` call, through `_wrapControllerError`; `_wrapError` returns to its pre-TD-21 rule and **loses its guard entirely**. The constraint that shaped the fix was Ricky's: *this must stay a `fix`, never a breaking change.* It does — pipes and plugin controllers keep `plugin.runtime.unexpected_error` verbatim, status stays 500, `getFrom` keeps the source stack, and the only client-visible delta is the `id` of a crash inside a native controller (`plugin.runtime.unexpected_error` → the documented `core.fatal.unexpected_error`, where TD-21 had left `id` and `code` `undefined`).
+
+The generalisable part: **a predicate about one caller cannot be expressed where several callers converge.** `_wrapError` is downstream of the controller *and* of three pipes; "was this thrown by native code?" is only answerable where the error is raised.
+
+### TD-28 — the ratchet chose the fix ([#2710](https://github.com/kuzzleio/kuzzle/pull/2710))
+
+The issue recommended replacing the class-wide index signature with a localised `this as unknown as Record<string, CommandAction>`. That was written first, and **the `any` ratchet rejected it at 208 > 207** — it counts `as unknown as`. The cast-free `Reflect.set(this, command, buildCommandFn(command))` came out of that refusal, and it is strictly better: no cast, class surface closed, and the same idiom `impersonatedSdk` already uses for a runtime-built key. A ratchet earning its keep by making a proposed solution too expensive is worth recording as much as one catching a regression.
+
+### TD-31 — the disagreement removed, not documented ([#2711](https://github.com/kuzzleio/kuzzle/pull/2711))
+
+`_writeDocument` **derives** the notification action from the method instead of taking both, so the two can no longer contradict each other; the method names become unions. `_mChanges` keeps `action` (it varies over five methods) but takes the `as const` enum's value type.
+
+### TD-29 — `ban-ts-comment`, and two suppressions deleted ([#2712](https://github.com/kuzzleio/kuzzle/pull/2712))
+
+The rule is an error on `.ts`; `@ts-expect-error` is allowed only with a description, and is preferred over `@ts-ignore` because it fails once the error it hides disappears.
+
+Two of the three undocumented sites did not need a suppression at all — `embeddedSdk` writes `propagate` with `Reflect.set` (its own idiom, two lines below), and `Profile._hash` is declared as the patchable static it is. **The suppression was hiding a mis-declaration:** `static _hash() { return false; }` never described the real contract, since `profileRepository` replaces it with `global.kuzzle.hash` at startup and uses the `false` return as its "not patched yet" probe. A bare `@ts-ignore` is often a wrong declaration wearing a hat.
+
+### TD-30 — left as a decision ([#2705](https://github.com/kuzzleio/kuzzle/issues/2705))
+
+The DoD wording and the ratchet floor (3, not 4) are corrected. Whether `bin/copy-binaries.js` is converted or deliberately exempted is **not** a cleanup call: converting it makes `npm run build` run the script from `dist/`, the directory the script itself populates, and `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`, so the emit path needs checking first. Left to Ricky.

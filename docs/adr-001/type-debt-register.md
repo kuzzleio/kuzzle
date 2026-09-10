@@ -35,11 +35,11 @@
 | [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | ✅ |
 | [TD-25](#td-25) | 🟡 low | Dependencies | `@types/debug` is narrower than `debug`'s runtime — adopting it costs 3 casts, so `util/debug.ts` stays out of strict | S | ⬜ |
 | [TD-26](#td-26) | 🟡 low | Correctness | 5 `await`s of a non-Promise, kept for timing parity across conversions (`NOSONAR: TD-26`) | XS | ✅ |
-| [TD-27](#td-27) | 🟠 med | Correctness | TD-21's guard fix sits on a shared funnel: plugin pipes changed too, and the unwrapped error loses its `id`/`code` — [#2703](https://github.com/kuzzleio/kuzzle/issues/2703) | S | ⬜ |
-| [TD-28](#td-28) | 🟠 med | `any` | `memoryStorageController`'s class-wide index signature untypes the whole controller — [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) | XS | ⬜ |
-| [TD-29](#td-29) | 🟡 low | Enforcement | Nothing charges for `@ts-ignore` (4 in `lib/`, 2 undocumented) — [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) | S | ⬜ |
+| [TD-27](#td-27) | 🟠 med | Correctness | TD-21's guard fix sits on a shared funnel: plugin pipes changed too, and the unwrapped error loses its `id`/`code` — [#2703](https://github.com/kuzzleio/kuzzle/issues/2703) | S | 🟦 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) |
+| [TD-28](#td-28) | 🟠 med | `any` | `memoryStorageController`'s class-wide index signature untypes the whole controller — [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) | XS | 🟦 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) |
+| [TD-29](#td-29) | 🟡 low | Enforcement | Nothing charges for `@ts-ignore` (4 in `lib/`, 2 undocumented) — [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) | S | 🟦 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) |
 | [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ⬜ |
-| [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | ⬜ |
+| [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | 🟦 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -396,6 +396,7 @@ Second half, and the more serious one: an error that now traverses `_wrapError` 
 - **Reco:** decide at the source. Wrap only the `doAction` call in `processRequest`; a native controller's non-`KuzzleError` becomes `kerror.getFrom(e, "core", "fatal", "unexpected_error", e.message)` (documented code, `InternalError` 500, source stack preserved), a plugin controller's keeps `plugin.runtime.unexpected_error`. Then revert `_wrapError` to its pre-fix rule and **delete the guard** — everything reaching it comes from a pipe, i.e. from plugin code, and the dead guard was TD-21's actual bug.
 - **This is what keeps the change a `fix`.** Pipes and plugin controllers keep their error verbatim, status stays 500 everywhere, and the only delta is the `id` of a crash inside a native controller: `plugin.runtime.unexpected_error` → `core.fatal.unexpected_error`. No `BREAKING CHANGE:` footer needed.
 - **Tracked as [#2703](https://github.com/kuzzleio/kuzzle/issues/2703).**
+- **🟦 In review ([#2709](https://github.com/kuzzleio/kuzzle/pull/2709)):** `processRequest` wraps only the `doAction` call, through a new `_wrapControllerError` that picks the domain from the controller and leaves a `KuzzleError` alone. `_wrapError` goes back to its pre-TD-21 rule and **the guard is deleted rather than fixed** — by the time an error reaches it, it comes from a pipe, so there is nothing left to discriminate. Pinned by specs: a pipe error on a native-controller request is a plugin error again; `_checkSdkVersion`'s stubbed raw `Error` returns to the plugin wrap (it is funnel code, not controller code); a native controller's `TypeError` becomes `core.fatal.unexpected_error` **with an id and a code**, where TD-21 left both `undefined`.
 
 ### TD-28
 **A class-wide index signature untypes `memoryStorageController`** · 🟠 medium · `lib/api/controllers/memoryStorageController.ts:42`
@@ -406,6 +407,7 @@ No ratchet charges for it: it is not `: any`, not `as any`, not `as unknown as`,
 
 - **Reco:** keep the class closed and cast once at the install site (`const actions = this as unknown as Record<string, (request: KuzzleRequest) => unknown>`), or hold the cast in a small `installCommand()` helper. Costs the `any` ratchet 1, which is the honest price.
 - **Tracked as [#2704](https://github.com/kuzzleio/kuzzle/issues/2704).**
+- **🟦 In review ([#2710](https://github.com/kuzzleio/kuzzle/pull/2710)):** solved with `Reflect.set(this, command, buildCommandFn(command))` — no cast at all, and the same idiom `core/shared/sdk/impersonatedSdk` uses for a runtime-built key. **The ratchet picked the solution:** the localised `as unknown as Record<…>` this entry recommended was written first and rejected at `any` 208 > 207, which is what pushed the fix to the cast-free form.
 
 ### TD-29
 **Nothing charges for `@ts-ignore`** · 🟡 low · `lib/`
@@ -414,6 +416,7 @@ The conversion standard forbids `@ts-ignore`/`@ts-nocheck` "without a comment + 
 
 - **Reco:** `@typescript-eslint/ban-ts-comment` with `{"ts-ignore": true, "ts-nocheck": true, "ts-expect-error": "allow-with-description", "minimumDescriptionLength": 20}`, plus fixing the three undocumented sites. `@ts-expect-error` is preferable to `@ts-ignore`: it fails once the underlying error disappears. A 5th count ratchet only if the three cannot be cleared at once.
 - **Tracked as [#2707](https://github.com/kuzzleio/kuzzle/issues/2707).**
+- **🟦 In review ([#2712](https://github.com/kuzzleio/kuzzle/pull/2712)):** `ban-ts-comment` is an error on `.ts` (`@ts-ignore`/`@ts-nocheck` forbidden, `@ts-expect-error` allowed with a ≥ 20-char description). Two of the three sites lose their suppression entirely — `embeddedSdk` writes `propagate` with `Reflect.set`, and `Profile._hash` is declared as the patchable static it actually is (`profileRepository` swaps it for `global.kuzzle.hash` at startup and uses the `false` return as the "not patched" probe, which the `static _hash()` signature never said). `HttpStream`'s stays, as an explained `@ts-expect-error` over Node internals @types/node does not declare.
 
 ### TD-30
 **`bin/copy-binaries.js` is not a plugin fixture** · 🟡 low · `bin/`, ADR Definition of Done
@@ -422,6 +425,7 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 
 - **Reco:** correct the DoD and the register wording, set the floor to 3, and record an explicit decision on `copy-binaries.js` — convert it (mind that the script is what populates `dist` with non-TS assets, so running it from `dist/` needs care) or exempt it with a stated reason.
 - **Tracked as [#2705](https://github.com/kuzzleio/kuzzle/issues/2705).**
+- **🟦 Half done:** the DoD wording and the floor (3) are corrected here. **The decision on `copy-binaries.js` is open** and is not a patch: converting it means `npm run build` runs it from `dist/`, the directory the script itself populates (tsc emits first, so the order works — but `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`, so the emit path wants checking before anything is moved). Exempting it deliberately is the other valid answer; it needs a stated reason, not silence.
 
 ### TD-31
 **TD-23's helpers take loose parameters that can disagree** · 🟡 low · `lib/api/controllers/documentController.ts`
@@ -430,3 +434,4 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 
 - **Reco:** narrow to `"mGet" | "mExists"` and `"replace" | "createOrReplace"`, branch on the method, derive `action` from it, and type `action` as the notify-action type rather than `number`.
 - **Tracked as [#2706](https://github.com/kuzzleio/kuzzle/issues/2706).**
+- **🟦 In review ([#2711](https://github.com/kuzzleio/kuzzle/pull/2711)):** the method names are unions (`FetchMethod`, `WriteMethod`, `ChangeMethod`) and **`_writeDocument` derives the action from the method** instead of taking it, which removes the disagreement rather than documenting it. `_mChanges` keeps its `action` — it varies over five methods — but takes `NotifyAction`, the value type of the `as const` enum.
