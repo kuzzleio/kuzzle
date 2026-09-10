@@ -39,7 +39,8 @@
 | [TD-28](#td-28) | 🟠 med | `any` | `memoryStorageController`'s class-wide index signature untypes the whole controller — [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) | XS | 🟦 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) |
 | [TD-29](#td-29) | 🟡 low | Enforcement | Nothing charges for `@ts-ignore` (4 in `lib/`, 2 undocumented) — [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) | S | 🟦 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) |
 | [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | 🟦 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) |
-| [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | ⬜ |
+| [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | 🟦 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716) |
+| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky functional variant blocks unrelated PRs; cluster readiness is not gated — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | ⬜ |
 | [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | 🟦 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
@@ -447,3 +448,17 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 
 - **Reco:** delete the key. Moving it into `compilerOptions` would **break the build**: `index.ts`, `bin/`, `features/`, `test/`, `tests/` and `start-kuzzle-*.ts` all sit outside `lib/` and would each raise `TS6059`. If an explicit root is wanted it has to be `"."`, which is what tsc infers today — compare `find dist -type f | sort` before and after.
 - **Tracked as [#2714](https://github.com/kuzzleio/kuzzle/issues/2714).**
+- **🟦 In review ([#2716](https://github.com/kuzzleio/kuzzle/pull/2716)):** the key is deleted. The claim that mattered was "the emitted layout does not change", so it was measured, not argued: `npm run build` then `find dist -type f | sort`, with and without the key — **1453 files, identical lists**.
+
+### TD-33
+**A flaky functional variant blocks unrelated PRs** · 🟠 medium · `.ci/scripts/run-test-cluster.sh`, `bin/wait-kuzzle`
+
+The 30-variant functional matrix is `fail-fast`, so **one flake cancels the other 29 jobs** and the PR must be re-run whole. Three occurrences: [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) (sprint 5 G2), [#2708](https://github.com/kuzzleio/kuzzle/pull/2708) — a **docs-only** PR — and [#2712](https://github.com/kuzzleio/kuzzle/pull/2712). The two on 2026-09-10 passed on re-run with no code change.
+
+Root cause of the common symptom: `run-test-cluster.sh` gates the suite on four `bin/wait-kuzzle` calls, and `wait-kuzzle` resolves on the SDK's **`connected` event** — the WebSocket handshake succeeded. That proves the transport is listening; it proves nothing about the cluster having formed a quorum, which is what the tests actually need. Hence `api.process.not_enough_nodes` in a `Before` hook, 1.7 s into the run.
+
+A second symptom is not explained yet: on #2708 the wait on port 17510 timed out after 60 s while the containers logged `[✔] Kuzzle 2.56.0 is ready` 30 s in. The SDK *does* retry (`Realtime.clientNetworkError` re-calls `connect()` every second, `autoReconnect` on by default), so "it only tried once" is **not** the explanation — recorded as open rather than guessed at.
+
+- **Reco:** (1) poll `cluster:status` for the 3 expected nodes after the port waits — this is the state the tests depend on; (2) reproduce the `wait-kuzzle` timeout before touching it; (3) consider `fail-fast: false` on the matrix, so one flake stops hiding the other 29 results.
+- **Tracked as [#2715](https://github.com/kuzzleio/kuzzle/issues/2715).**
+- **Trigger:** independent of the migration, but it taxes every PR in it.
