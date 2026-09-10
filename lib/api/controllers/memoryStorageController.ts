@@ -93,21 +93,16 @@ let mapping: RedisCommandMapping;
 /**
  * @class MemoryStorageController
  */
-class MemoryStorageController extends NativeController {
-  /**
-   * Every Redis command in the table becomes an action method on the instance,
-   * installed at construction and looked up by name by the funnel. The index
-   * signature is what makes that dynamic write typeable — it is type-only, so
-   * the emitted JavaScript is unchanged.
-   */
-  [command: string]: unknown;
+/** What every Redis command in the table becomes on the instance. */
+type CommandAction = (request: KuzzleRequest) => Promise<unknown>;
 
+class MemoryStorageController extends NativeController {
   constructor() {
     super();
 
     initMapping();
 
-    const buildCommandFn = (command: string) => {
+    const buildCommandFn = (command: string): CommandAction => {
       if (command === "mexecute") {
         return async (request: KuzzleRequest) =>
           global.kuzzle.ask(
@@ -135,9 +130,15 @@ class MemoryStorageController extends NativeController {
         );
     };
 
+    // Every Redis command in the table becomes an action method on the
+    // instance, installed here and looked up by name by the funnel. `command`
+    // is a runtime-built key, so a plain `this[command] = …` cannot be typed
+    // without opening the whole class to an index signature (TD-28, #2704);
+    // `Reflect.set` is the property-write counterpart already used for the
+    // same reason in `core/shared/sdk/impersonatedSdk`.
     for (const command of Object.keys(mapping)) {
       this._actions.add(command);
-      this[command] = buildCommandFn(command);
+      Reflect.set(this, command, buildCommandFn(command));
     }
   }
 }
