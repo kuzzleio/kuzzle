@@ -305,9 +305,9 @@ export class Profile {
                 value: actionRights,
               };
               const rightsObject = {
-                // `String()` is what the computed key does implicitly anyway,
-                // and it is what makes the `string | false` return type legal
-                // here — see `_hash` below.
+                // `String()` is what the computed key does implicitly anyway
+                // (`_hash` returns a number, or `false` while un-patched), and
+                // it is what makes that return type legal here — see `_hash`.
                 [String(
                   (this.constructor as typeof Profile)._hash(rightsItem),
                 )]: rightsItem,
@@ -328,19 +328,15 @@ export class Profile {
    *
    * Placeholder on purpose: `profileRepository` replaces it with
    * `global.kuzzle.hash` at startup, and the `false` returned here is exactly
-   * how that patching detects an un-patched class. The signature describes the
-   * patched function, not this stub.
-   */
-  /**
-   * Hashes a rights item into the key it is stored under.
-   *
-   * Placeholder on purpose: `profileRepository` replaces it with
-   * `global.kuzzle.hash` at startup, and the `false` returned here is exactly
    * how that patching detects an un-patched class. The overload signature
    * describes the patched function; the implementation is the stub.
+   *
+   * The patch is `global.kuzzle.hash`, which returns a **number** (`murmur.v3`)
+   * — hence `number | false` and not `string | false`, which is what this
+   * overload first claimed.
    */
-  static _hash(rightsItem?: unknown): string | false;
-  static _hash(): string | false {
+  static _hash(rightsItem?: unknown): number | false;
+  static _hash(): number | false {
     return false;
   }
 
