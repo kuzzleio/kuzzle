@@ -27,7 +27,6 @@
       "@cucumber/cucumber"
     ]
   },
-  "rootDir": "lib/",
   "include": [
     // Kuzzle core files
     "lib/**/*.ts",
