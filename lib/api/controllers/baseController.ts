@@ -48,7 +48,11 @@ export class BaseController {
 
   _addAction(name: string, fn: ControllerAction) {
     this.__actions.add(name);
-    this[name] = fn;
+    // `name` is a runtime-built key, so a plain `this[name] = fn` cannot be
+    // typed without opening the whole class to an index signature — the same
+    // trade-off TD-28 (#2704) settled in `memoryStorageController` with
+    // `Reflect.set`, kept consistent here.
+    Reflect.set(this, name, fn);
   }
 
   /**
