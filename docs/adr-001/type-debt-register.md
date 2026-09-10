@@ -44,6 +44,8 @@
 | [TD-33](#td-33) | 🟠 med | Enforcement | One flaky functional variant blocks unrelated PRs; cluster readiness is not gated — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | ⬜ |
 | [TD-34](#td-34) | 🟠 med | Correctness | `Profile._hash`'s new overload declared `string \| false`; the patch (`global.kuzzle.hash`) returns a `number`, and `profileRepository` still cast the site to `any` | XS | ✅ |
 | [TD-35](#td-35) | 🟠 med | Enforcement | `npm run build` ran `copy-binaries` through `tsx` (esbuild native binary) and nothing asserted its payload — a broken copy step shipped a `.proto`-less package | XS | ✅ |
+| [TD-36](#td-36) | 🔴 high | Enforcement | TD-35's payload gate never sees the published artifact: `npm publish` re-runs `prepublishOnly` → `build`, which wipes the `dist/` the workflow step verified | XS | ✅ |
+| [TD-37](#td-37) | 🟠 med | Enforcement | TD-35's gate was a hand-written 6-path list sold as "every path `files` promises" — the error-code catalogue (`dist/lib/**/*.json`) was not among them | XS | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -412,6 +414,7 @@ No ratchet charges for it: it is not `: any`, not `as any`, not `as unknown as`,
 - **Reco:** keep the class closed and cast once at the install site (`const actions = this as unknown as Record<string, (request: KuzzleRequest) => unknown>`), or hold the cast in a small `installCommand()` helper. Costs the `any` ratchet 1, which is the honest price.
 - **Tracked as [#2704](https://github.com/kuzzleio/kuzzle/issues/2704).**
 - **✅ Landed ([#2710](https://github.com/kuzzleio/kuzzle/pull/2710), merged into `2-dev` 2026-09-10):** solved with `Reflect.set(this, command, buildCommandFn(command))` — no cast at all, and the same idiom `core/shared/sdk/impersonatedSdk` uses for a runtime-built key. **The ratchet picked the solution:** the localised `as unknown as Record<…>` this entry recommended was written first and rejected at `any` 208 > 207, which is what pushed the fix to the cast-free form.
+  - **The sweep took two passes to finish.** The same runtime-built-key write lived in three places, and only one was fixed here: `baseController._addAction` followed in the post-merge pass, and `core/shared/store.ts`'s `this[method] = …` loop only in the pass after that (implicit-any 462 → **461**). When a fix is *"the idiom for this pattern"*, the pattern is what to grep for — `grep -rnE 'this\[[a-zA-Z_]+\] *='` over `lib/**/*.ts` finds all three in one command, and the remaining hits are symbol-keyed private fields, which are already typed.
 
 ### TD-29
 **Nothing charges for `@ts-ignore`** · 🟡 low · `lib/`
@@ -489,3 +492,33 @@ Two distinct defects, and the second is the one that matters:
 - **Fix:** `node -r ts-node/register/transpile-only ./bin/copy-binaries.ts` — `ts-node` is pure JavaScript, already a devDependency, and already the idiom of the `doc-error-codes` script. Plus `.ci/scripts/check-build-payload.sh`, run after `npm run build` in **both** the PR workflow and the release workflow: it asserts `dist/index.js`, a compiled `lib/` file, both `.proto` files, `dist/bin/copy-binaries.js` and `dist/bin/start-kuzzle-server` — every path `package.json`'s `files` list promises — and that the entrypoint is still executable.
 - **Verified negatively**, not just positively: `rm -rf dist && npx tsc` (i.e. the copy step skipped) makes the script fail on exactly the three missing paths.
 - **The generalisable part:** *a risk you name in a decision record is a risk you should gate in CI.* TD-30 identified the failure mode correctly, weighed two options against it, and shipped without a check for it — so the next regression on that path was found by a reviewer rather than by the pipeline.
+
+### TD-36
+**The build-payload gate never sees the artifact that is published** · 🔴 high · `package.json`, `.github/workflows/semantic-release.workflow.yaml`
+
+[TD-35](#td-35) added `.ci/scripts/check-build-payload.sh` after `npm run build` in the release workflow. That is one build too early. `semantic-release` publishes with `npm publish`, and `npm publish` runs **`prepublishOnly`, which is `npm run build`** — whose first act is `rm -Rf ./dist`. So the sequence on `master` is:
+
+```
+npm run build            # workflow step
+check-build-payload.sh   # ✅ verifies this dist/
+npm publish              # prepublishOnly → rm -Rf ./dist && tsc && copy-binaries
+                         # ↑ the tarball is packed from a dist/ nothing checked
+```
+
+The gate proves the payload of a directory that is deleted before the tarball is packed. Every failure mode TD-35 enumerated — a `copy-binaries` that dies on a platform-specific binary, or fails quietly — is still shipped, because it is the *second* build that ships.
+
+- **Fix:** `"prepublishOnly": "npm run build && ./.ci/scripts/check-build-payload.sh"`. It gates the artifact that is actually packed, on **every** publish path (CI, or a maintainer publishing by hand), and needs no workflow change. The two workflow steps stay, as the fast feedback that fails a PR before review.
+- **The generalisable part:** *gate the artifact, not a rehearsal of it.* A check placed next to a build step is only worth what the build step's output is worth — and here that output was thrown away. The question to ask of any packaging gate is "which bytes end up in the tarball, and did this run inspect *those*".
+- **Found by:** the 2026-09-10 iteration review, reading `package.json`'s lifecycle scripts rather than the workflow file.
+
+### TD-37
+**The gate's coverage was a hand-written list, sold as derived** · 🟠 medium · `.ci/scripts/check-build-payload.sh`
+
+[TD-35](#td-35) claimed the script asserts *"every path `package.json`'s `files` list promises to ship"*. It asserted six hard-coded paths out of the twelve entries in `files`, and the gap is not cosmetic: **`dist/lib/**/*.json` was unchecked**, and that glob carries `lib/kerror/codes/*.json` — the entire error-code catalogue, i.e. every error message the product can raise — plus `lib/config/sdkCompatibility.json`.
+
+Those files reach `dist/` for a reason no one asserts either: `tsconfig.json` `include`s `lib/**/*.json` and sets `resolveJsonModule`, so **tsc copies them**. Narrow that include, drop `resolveJsonModule`, or set a `rootDir` — and `tsc` still exits 0, the payload check still passes, and the published package has no error messages. `dist/index.d.ts` (the package's public types) was unchecked for the same reason: it was not on the list.
+
+- **Fix:** derive the checks from `files` itself, so the gate cannot drift from the promise. A literal entry must exist; a glob over a **verbatim-copied** asset (`.json`, `.proto`, `.yaml`) must match as many files under `dist/lib/` as exist under `lib/` — an exact count, since those are byte copies; any other glob (compiled `.js`, generated `.d.ts`) must match at least once, there being no source file to count against. `files`' dead `dist/lib/**/*.yaml` entry passes as 0 = 0 rather than needing a special case.
+- **Verified negatively, three ways:** `rm -rf dist/lib/kerror/codes` → *`dist/lib/**/*.json` — 1 file(s), expected 10*; `rm -rf dist && npx tsc` (copy step skipped) → the missing entrypoint and *`*.proto` — 0, expected 2*; `chmod -x dist/bin/start-kuzzle-server` → the executable check. All three exit 1.
+- **Portability note:** counted with `find -path`, not a shell glob — `globstar` is a bash-4 option and macOS still ships bash 3.2, so the original list would have been the *portable* half of a script whose replacement had to stay runnable on a maintainer's laptop.
+- **The generalisable part:** *a check that repeats a promise by hand is a second thing to maintain, and it drifts silently — in the direction of passing.* Derive it from the promise, or the review question "does the gate cover X" has to be re-answered by reading both.

@@ -136,3 +136,23 @@ Plus two cosmetic/consistency fixes taken in the same pass: a JSDoc block duplic
 **Two functional scenarios can never pass under `docker-test.sh functional`.** `features/Network.feature:33` hardcodes `http://localhost:17510` and `features/Websocket.feature:5` hardcodes `ws://localhost:7512` — both are **host** port mappings (`17510:7512` on `kuzzle_node_1`, `7512:7512` on nginx), while the wrapper runs cucumber *inside* a container on the compose network, where `localhost` is the cucumber container itself. `ECONNREFUSED` both times: deterministic, environment-only, and unrelated to [TD-33](../type-debt-register.md#td-33)'s flake — CI is unaffected because there cucumber runs on the runner's host network.
 
 Measured on `2-dev` + this pass: **155 scenarios, 153 passed**, the 2 failures being exactly those two. Until the wrapper reaches nodes by service name (or joins the host network), a local functional run is only conclusive read as *153/155 with those two known*.
+
+## Third review — the follow-up pass itself, 2026-09-10
+
+The four fixes above were re-read as landed code, on the same rule that produced them: *a risk you name is a risk you gate*. Two of them did not hold.
+
+| Defect | From | Filed |
+|---|---|---|
+| The payload gate runs one build too early: `npm publish` re-runs `prepublishOnly` → `build`, which `rm -Rf ./dist` before packing the tarball | TD-35 | [TD-36](../type-debt-register.md#td-36) |
+| The gate checked 6 hand-written paths while claiming to cover `files` — the error-code catalogue and `index.d.ts` were not among them | TD-35 | [TD-37](../type-debt-register.md#td-37) |
+| `core/shared/store.ts`'s `this[method] = …` loop — the third instance of the write TD-28 replaced, after `memoryStorageController` and `baseController` | TD-28 | folded into [TD-28](../type-debt-register.md#td-28) |
+
+Plus the `catch` in `copy-binaries.ts`, which reported *"Failed to copy protobuf definitions"* for a failure that is just as likely to be the entrypoint copy or its `chmod`.
+
+`prepublishOnly` now carries the check, so the gate sits on the artifact that is packed rather than on a directory that is deleted first; and the check derives its expectations from `package.json`'s `files` list instead of restating it. implicit-any 462 → **461**.
+
+**Validated on this pass:** `tsc --noEmit` clean, lint 0 error, four ratchets at equality, `test:strict` 102/102, **Mocha 3 030 passing**, **vitest 183 passing**, build payload green and failing correctly on all three sabotages.
+
+### Process finding — the platform break was reproducible here all along
+
+[TD-35](../type-debt-register.md#td-35) was argued from esbuild's error message. It is stronger than that: **this working tree's `node_modules` is Linux-installed**, so `npm run test:unit:mocha` dies in `re2.node` (*"slice is not valid mach-o file"*) and `vitest` dies in `rollup`'s native module — while `tsc` and `ts-node` run fine, which is exactly the property the fix relies on. The consequence for validation: **local unit runs are not available on this tree**, and both suites must go through `.ci/scripts/docker-test.sh unit <mocha|vitest>` (the `docker-tests` skill). A green "3 030 passing" in this log is a container's, not the host's.
