@@ -162,11 +162,16 @@ export class EmbeddedSDK extends Kuzzle {
       request.controller === "realtime" &&
       request.action === "subscribe"
     ) {
-      // @ts-expect-error
-      request.propagate =
+      // `propagate` is not part of BaseRequest: it is a Kuzzle-internal flag
+      // read back by the realtime controller. Written with `Reflect.set`, like
+      // `__kuid__` and `__checkRights__` below, rather than suppressed.
+      Reflect.set(
+        request,
+        "propagate",
         options.propagate === undefined || options.propagate === null
           ? false
-          : options.propagate;
+          : options.propagate,
+      );
     }
 
     if (

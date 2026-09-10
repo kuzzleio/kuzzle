@@ -305,9 +305,12 @@ export class Profile {
                 value: actionRights,
               };
               const rightsObject = {
-                // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-                // @ts-ignore
-                [this.constructor._hash(rightsItem)]: rightsItem,
+                // `String()` is what the computed key does implicitly anyway,
+                // and it is what makes the `string | false` return type legal
+                // here — see `_hash` below.
+                [String(
+                  (this.constructor as typeof Profile)._hash(rightsItem),
+                )]: rightsItem,
               };
 
               _.assignWith(profileRights, rightsObject, Rights.merge);
@@ -320,9 +323,15 @@ export class Profile {
     return profileRights;
   }
 
-  static _hash() {
-    return false;
-  }
+  /**
+   * Hashes a rights item into the key it is stored under.
+   *
+   * Placeholder on purpose: `profileRepository` replaces it with
+   * `global.kuzzle.hash` at startup, and the `false` returned here is exactly
+   * how that patching detects an un-patched class. The signature describes the
+   * patched function, not this stub.
+   */
+  static _hash: (rightsItem?: unknown) => string | false = () => false;
 
   validateRateLimit() {
     if (this.rateLimit === null || this.rateLimit === undefined) {
