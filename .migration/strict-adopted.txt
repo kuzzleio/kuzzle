@@ -126,3 +126,4 @@ lib/core/security/securityLoader.ts
 lib/core/realtime/index.ts
 lib/core/security/index.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+bin/copy-binaries.ts
