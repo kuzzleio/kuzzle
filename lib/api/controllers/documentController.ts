@@ -31,6 +31,24 @@ import {
 import { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 import extractFields = require("../../util/extractFields");
+
+/** One of `actionEnum`'s values — what a document notification reports. */
+type NotifyAction = (typeof actionEnum)[keyof typeof actionEnum];
+
+/** The two single-document writes `_writeDocument` serves. */
+type WriteMethod = "replace" | "createOrReplace";
+
+/** The two multi-document reads `_mFetch` serves. */
+type FetchMethod = "mGet" | "mExists";
+
+/** The five multi-document writes `_mChanges` serves. */
+type ChangeMethod =
+  | "mCreate"
+  | "mCreateOrReplace"
+  | "mUpdate"
+  | "mUpsert"
+  | "mReplace";
+
 /**
  * @description actions available on the document Controller (used by generic events)
  * @key actions
@@ -397,7 +415,7 @@ class DocumentController extends NativeController {
    * @returns {Promise<Object>}
    */
   createOrReplace(request: KuzzleRequest) {
-    return this._writeDocument(request, "createOrReplace", actionEnum.WRITE);
+    return this._writeDocument(request, "createOrReplace");
   }
 
   /**
@@ -610,7 +628,7 @@ class DocumentController extends NativeController {
    * @returns {Promise<Object>}
    */
   replace(request: KuzzleRequest) {
-    return this._writeDocument(request, "replace", actionEnum.REPLACE);
+    return this._writeDocument(request, "replace");
   }
 
   /**
@@ -879,7 +897,7 @@ class DocumentController extends NativeController {
    * @param  {String} methodName storage method to ask for
    * @returns {Promise.<Object>} { successes, errors }
    */
-  async _mFetch(request: KuzzleRequest, methodName: string) {
+  async _mFetch(request: KuzzleRequest, methodName: FetchMethod) {
     // `ids` may come either in the body or in the query string
     const ids =
       request.input.body?.ids && Object.keys(request.input.body.ids).length
@@ -920,15 +938,15 @@ class DocumentController extends NativeController {
    * the notification action, and what that notification carries.
    *
    * @param  {Request} request
-   * @param  {String} methodName storage method to ask for
-   * @param  {notifyActionEnum} action performed on the document
+   * @param  {String} methodName storage method to ask for — it also decides
+   *                  the notification action and its payload, so the two can
+   *                  no longer disagree (TD-31)
    * @returns {Promise.<Object>} the storage response
    */
-  async _writeDocument(
-    request: KuzzleRequest,
-    methodName: string,
-    action: number,
-  ) {
+  async _writeDocument(request: KuzzleRequest, methodName: WriteMethod) {
+    const action: NotifyAction =
+      methodName === "replace" ? actionEnum.REPLACE : actionEnum.WRITE;
+
     const id = request.getId();
     const content = request.getBody();
     const userId = request.getKuid();
@@ -978,7 +996,7 @@ class DocumentController extends NativeController {
         "core:realtime:document:notify",
         modifiedRequest,
         action,
-        action === actionEnum.REPLACE
+        methodName === "replace"
           ? {
               _id: modifiedRequest.input.args._id,
               _source: modifiedRequest.input.body,
@@ -999,7 +1017,11 @@ class DocumentController extends NativeController {
    * @param  {notifyActionEnum} action performed on the documents
    * @returns {Promise.<Object>} { successes, errors }
    */
-  async _mChanges(request: KuzzleRequest, methodName: string, action: number) {
+  async _mChanges(
+    request: KuzzleRequest,
+    methodName: ChangeMethod,
+    action: NotifyAction,
+  ) {
     let source = true;
     const userId = request.getKuid();
     const strict = request.getBoolean("strict");
