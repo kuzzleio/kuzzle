@@ -733,7 +733,16 @@ class Funnel {
         _request,
       );
 
-      const responseData = await doAction(controller, _request);
+      let responseData: Awaited<ReturnType<typeof doAction>>;
+
+      try {
+        responseData = await doAction(controller, _request);
+      } catch (e) {
+        // Only here is the error known to come from the controller itself:
+        // `_wrapError` sits downstream of the pipes too and cannot tell the
+        // two apart (TD-27).
+        throw this._wrapControllerError(_request, e);
+      }
 
       const status = _request.status === 102 ? 200 : _request.status;
       _request.setResult(responseData, { status }); // NOSONAR: TD-20 (#2688)
@@ -1108,26 +1117,67 @@ class Funnel {
   }
 
   /**
-   * Eventually wrap an error into a PluginImplementationError
+   * Eventually wrap an error into a PluginImplementationError.
+   *
+   * Everything that reaches this method comes out of a pipe — the error pipes
+   * of `handleProcessRequestError`, or `processRequest`'s own
+   * `request:onExecution` / before / after pipes — i.e. out of plugin code. A
+   * controller's error is wrapped at its source by `_wrapControllerError` and
+   * arrives here already a KuzzleError, so there is nothing left to guard on:
+   * see TD-27 (https://github.com/kuzzleio/kuzzle/issues/2703), which is why
+   * the previous guard on the controller name is gone rather than fixed.
+   *
    * @param  {Request} request
    * @param  {Error} error
    * @returns {KuzzleError}
    */
   _wrapError(request: KuzzleRequest, error: Error): Error {
-    if (
-      !this.isNativeController(request.input.controller) &&
-      !(error instanceof KuzzleError)
-    ) {
-      return kerror.getFrom(
-        error,
-        "plugin",
-        "runtime",
-        "unexpected_error",
-        error.message,
-      );
+    if (error instanceof KuzzleError) {
+      return error;
     }
 
-    return error;
+    return kerror.getFrom(
+      error,
+      "plugin",
+      "runtime",
+      "unexpected_error",
+      error.message,
+    );
+  }
+
+  /**
+   * Normalizes an error thrown by a controller action into a KuzzleError.
+   *
+   * A native controller throwing something that is not a KuzzleError is a
+   * Kuzzle bug, and it is reported as one (`core.fatal.unexpected_error`).
+   * Reporting it as `plugin.runtime.unexpected_error` — which is what happened
+   * for as long as `_wrapError`'s guard was dead — names the wrong culprit,
+   * and letting it through raw is worse still: `KuzzleRequest.setError` then
+   * builds an InternalError with no `id` and no `code`, on a 500 sent to a
+   * client. See TD-27 (https://github.com/kuzzleio/kuzzle/issues/2703).
+   *
+   * @param  {Request} request
+   * @param  {Error} error
+   * @returns {KuzzleError}
+   */
+  _wrapControllerError(request: KuzzleRequest, error: Error): Error {
+    if (error instanceof KuzzleError) {
+      return error;
+    }
+
+    const [domain, subdomain] = this.isNativeController(
+      request.input.controller,
+    )
+      ? ["core", "fatal"]
+      : ["plugin", "runtime"];
+
+    return kerror.getFrom(
+      error,
+      domain,
+      subdomain,
+      "unexpected_error",
+      error.message,
+    );
   }
 
   /**

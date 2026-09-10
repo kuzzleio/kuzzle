@@ -143,11 +143,62 @@ describe("funnel.processRequest", () => {
       .stub()
       .throws(new Error("incompatible sdk"));
 
-    // `fakeController` is a native controller, so the error is surfaced as-is
-    // rather than wrapped into a PluginImplementationError (TD-21, #2687).
+    // `_checkSdkVersion` is funnel code, not controller code: its error goes
+    // through `_wrapError` like a pipe's (TD-27, #2703). In production it
+    // throws a KuzzleError and is left alone; only this stub's raw Error is
+    // wrapped.
     return should(funnel.processRequest(request)).be.rejectedWith(Error, {
-      message: "incompatible sdk",
+      message:
+        "Caught an unexpected plugin error: incompatible sdk\nThis is probably not a Kuzzle error, but a problem with a plugin implementation.",
     });
+  });
+
+  // TD-27 (#2703): an error thrown by a controller action is normalized where
+  // it is raised, so a native controller's bug is reported as a Kuzzle error
+  // and a plugin controller's as a plugin error — and both keep an id.
+  it("should report a native controller's non-KuzzleError as a core error", () => {
+    const request = new Request({
+      controller: "fakeController",
+      action: "fail",
+    });
+
+    funnel.controllers
+      .get("fakeController")
+      .fail.rejects(new TypeError("cannot read properties of undefined"));
+
+    return should(funnel.processRequest(request)).be.rejectedWith(
+      KuzzleInternalError,
+      {
+        id: "core.fatal.unexpected_error",
+        status: 500,
+      },
+    );
+  });
+
+  it("should report a plugin controller's non-KuzzleError as a plugin error", () => {
+    const controller = "fakePlugin/controller",
+      request = new Request({ controller, action: "fail" });
+
+    pluginsManager.controllers
+      .get(controller)
+      .fail.rejects(new TypeError("cannot read properties of undefined"));
+
+    return should(funnel.processRequest(request)).be.rejectedWith(
+      PluginImplementationError,
+      { id: "plugin.runtime.unexpected_error" },
+    );
+  });
+
+  it("should leave a controller's KuzzleError untouched", () => {
+    const request = new Request({
+      controller: "fakeController",
+      action: "fail",
+    });
+
+    return should(funnel.processRequest(request)).be.rejectedWith(
+      KuzzleInternalError,
+      { message: "rejected action" },
+    );
   });
 
   it("should throw if a plugin action returns a non-serializable response", () => {
