@@ -8,7 +8,7 @@
     "cucumber": "cucumber.js --fail-fast",
     "dev": "tsx watch start-kuzzle-dev.ts",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
-    "prepublishOnly": "npm run build",
+    "prepublishOnly": "npm run build && ./.ci/scripts/check-build-payload.sh",
     "prettier": "prettier ./lib ./test ./features --write",
     "ratchet": "npm run ratchet:js && npm run ratchet:mocha && npm run ratchet:any && npm run ratchet:implicit-any",
     "ratchet:any": "bash scripts/ratchet.sh any",
