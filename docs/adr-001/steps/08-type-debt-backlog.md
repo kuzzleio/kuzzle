@@ -1,8 +1,8 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 4 findings closed, 5 follow-up PRs in review
+**Status:** 🟦 In progress — 10 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32), TD-33 open
 **Date:** 2026-09-09 → …
-**PR(s):** merged — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702); in review — TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713)
+**PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
 
 ## Goal
@@ -70,13 +70,14 @@ The second half of that finding matters more than the mislabelling it fixes: an 
 
 ## Validation
 
-- Every PR merged green: `tsc --noEmit`, lint, prettier, the four ratchets, the full Mocha suite (3 025) and the vitest suite, plus the SonarCloud gate on each.
-- Repo state after the four PRs (re-verified 2026-09-10 on `2-dev`): **js 50 · mocha 151 · any 207 · implicit-any 464**, strict adopted **101** (`--candidates` empty).
-- None of the four PRs adopted a new file into strict: `funnel`, `documentController` and `memoryStorageController` all still fail strict (the last one at 54 errors, down from 122).
+- Every PR merged green: `tsc --noEmit`, lint, prettier, the four ratchets, the full Mocha suite and the vitest suite, plus the SonarCloud gate on each.
+- Repo state after the first four PRs (2026-09-10 on `2-dev`): js 50 · mocha 151 · any 207 · implicit-any 464, strict adopted 101.
+- Repo state after all ten plus the post-merge fix pass: **js 49 · mocha 151 · any 205 · implicit-any 462**, strict adopted **102** (`--candidates` empty). Mocha **3 030** passing, vitest **183** passing (13 files).
+- Only TD-30 adopted a new file into strict (`bin/copy-binaries.ts`, 101 → 102); `funnel`, `documentController` and `memoryStorageController` all still fail strict (the last one at 54 errors, down from 122).
 
 ## What was done (the review's follow-ups, 2026-09-10)
 
-Four of the five findings are single-purpose PRs off `2-dev`, none stacked. The fifth ([#2705](https://github.com/kuzzleio/kuzzle/issues/2705)) is a decision, not a patch, and is left open on purpose.
+All five findings became single-purpose PRs off `2-dev`, none stacked. [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) was first triaged as "a decision, not a patch", but the decision was taken in the same pass and shipped with [#2713](https://github.com/kuzzleio/kuzzle/pull/2713), so it is closed like the rest.
 
 ### TD-27 — the guard moves to the error's source ([#2709](https://github.com/kuzzleio/kuzzle/pull/2709))
 
@@ -106,4 +107,32 @@ Running the compiled `dist/bin/copy-binaries.js` was the alternative, and was re
 
 > **Correction worth recording.** The review's first pass claimed the emit path was at risk because `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`. It is not: `rootDir` sits **outside** `compilerOptions`, so tsc ignores the key entirely — `dist/` already mirrors the repository root and `dist/bin/copy-binaries.js` was already emitted from the `.js` source under `allowJs`. A risk asserted from a config line read too fast, and it nearly picked the worse option. The dead key is now [TD-32](../type-debt-register.md#td-32) / [#2714](https://github.com/kuzzleio/kuzzle/issues/2714): it cannot simply move into `compilerOptions`, since `index.ts`, `bin/`, `features/`, `test/` and `tests/` all sit outside `lib/` and would each raise `TS6059`.
 
-No spec ships with it: `sonar.sources` is `./lib`, so `bin/` is outside both the analysed and the coverage-measured scope, and the ADR's *"a file with no spec ships one"* rule targets product code.
+No spec ships with it: `sonar.sources` is `./lib`, so `bin/` is outside both the analysed and the coverage-measured scope, and the ADR's *"a file with no spec ships one"* rule targets product code. ⚠️ **That reasoning was right about specs and wrong about checks** — see TD-35 below.
+
+## Second review — the seven merged PRs, 2026-09-10
+
+The seven PRs above were merged into `2-dev` and re-read as landed code, this time with the suites actually executed rather than trusted from CI: `tsc --noEmit` clean, lint 0 error, the four ratchets at equality, `test:strict` 102/102, **Mocha 3 030 passing**, **vitest 183 passing**, `dist/` layout unchanged and its payload verified file by file.
+
+**The direction holds and no API contract broke.** The single client-visible delta is the intended one: a crash *inside a native controller* now answers `core.fatal.unexpected_error` instead of `plugin.runtime.unexpected_error`, still 500, source stack preserved by `getFrom`. Plugin controllers and all three pipe paths are byte-identical to the released behaviour. Everything else is behaviour-preserving, and each equivalence was checked rather than assumed: `Reflect.set` ≡ assignment, `String(_hash(…))` ≡ the computed key's implicit coercion, `_writeDocument`'s derived action matches its two former call sites exactly (and the existing `#replace` / `#createOrReplace` specs already pin the notification action and payload, which is why TD-31 needed no new spec).
+
+**Four defects the seven PRs introduced**, all fixed in one follow-up pass:
+
+| Defect | From | Filed |
+|---|---|---|
+| `npm run build` dies wherever esbuild's binary does not match the platform, leaving `dist/` without its `.proto` files and entrypoint | TD-30 | [TD-35](../type-debt-register.md#td-35) |
+| Nothing asserts the build's payload — the failure mode TD-30 named is the one it left ungated | TD-30 | [TD-35](../type-debt-register.md#td-35) |
+| `Profile._hash`'s new overload declares `string \| false`; the installed patch returns a `number` | TD-29 | [TD-34](../type-debt-register.md#td-34) |
+| `profileRepository` still casts the `_hash` site to `any`, which is what hid the wrong overload | TD-29 | [TD-34](../type-debt-register.md#td-34) |
+
+Plus two cosmetic/consistency fixes taken in the same pass: a JSDoc block duplicated verbatim over `Profile._hash` (TD-29), and `baseController._addAction`'s `this[name] = fn` — the exact write TD-28 replaced with `Reflect.set` one file away — brought in line (implicit-any 464 → 462 together with TD-34).
+
+### The two lessons
+
+- **A declaration is only load-bearing once every caller is typed against it.** TD-29 correctly diagnosed a bare `@ts-ignore` as *"a wrong declaration wearing a hat"*, replaced the declaration, and left the `as any` at the only call site — so the new declaration was decoration, and it was itself wrong. The check after replacing a suppression is not "does it compile" but "**is there still a cast between this declaration and its callers**".
+- **A risk you name in a decision record is a risk you should gate in CI.** TD-30 named the failure mode exactly — *"a published package silently missing its `.proto` files"* — weighed two options against it, and shipped no check for it. `.ci/scripts/check-build-payload.sh` now runs after `npm run build` in both the PR and the release workflow, and was verified negatively (skip the copy step, it fails on the three missing paths).
+
+### Process finding
+
+**Two functional scenarios can never pass under `docker-test.sh functional`.** `features/Network.feature:33` hardcodes `http://localhost:17510` and `features/Websocket.feature:5` hardcodes `ws://localhost:7512` — both are **host** port mappings (`17510:7512` on `kuzzle_node_1`, `7512:7512` on nginx), while the wrapper runs cucumber *inside* a container on the compose network, where `localhost` is the cucumber container itself. `ECONNREFUSED` both times: deterministic, environment-only, and unrelated to [TD-33](../type-debt-register.md#td-33)'s flake — CI is unaffected because there cucumber runs on the runner's host network.
+
+Measured on `2-dev` + this pass: **155 scenarios, 153 passed**, the 2 failures being exactly those two. Until the wrapper reaches nodes by service name (or joins the host network), a local functional run is only conclusive read as *153/155 with those two known*.

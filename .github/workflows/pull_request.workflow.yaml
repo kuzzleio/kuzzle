@@ -112,6 +112,14 @@ jobs:
         run: npm run build
         shell: bash
 
+      # `tsc` succeeding does not mean the build is complete: the .proto files and
+      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
+      # used to assert ran. A published package missing its .proto files only fails
+      # when a cluster node boots.
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
+        shell: bash
+
       # Both unit runners feed the scanner: each writes its own lcov (coverage/mocha,
       # coverage/vitest) and sonar-project.properties lists both. Before ADR-0001
       # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so

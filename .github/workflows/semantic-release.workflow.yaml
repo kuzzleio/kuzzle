@@ -61,6 +61,14 @@ jobs:
       - name: Build
         run: npm run build
 
+      # `tsc` succeeding does not mean the build is complete: the .proto files and
+      # the server entrypoint are copied in by bin/copy-binaries.ts, which nothing
+      # used to assert ran. A published package missing its .proto files only fails
+      # when a cluster node boots.
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
+        shell: bash
+
       - uses: actions/create-github-app-token@v3
         id: app-token
         with:

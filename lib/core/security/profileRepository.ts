@@ -522,8 +522,13 @@ export class ProfileRepository extends ObjectRepository<Profile> {
       profile.policies = [{ roleId: "default" }];
     }
 
-    if ((profile.constructor as any)._hash("") === false) {
-      (profile.constructor as any)._hash = (obj) => global.kuzzle.hash(obj);
+    // `Profile._hash` ships as a stub returning `false`; that return value is
+    // the probe for "not patched yet". Typed through `typeof Profile` rather
+    // than `any`, which is what the overload declared on the stub is for.
+    const profileClass = profile.constructor as typeof Profile;
+
+    if (profileClass._hash("") === false) {
+      profileClass._hash = (obj: unknown) => global.kuzzle.hash(obj);
     }
 
     const policiesRoles = profile.policies.map((p) => p.roleId);
