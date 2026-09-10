@@ -38,7 +38,8 @@
 | [TD-27](#td-27) | 🟠 med | Correctness | TD-21's guard fix sits on a shared funnel: plugin pipes changed too, and the unwrapped error loses its `id`/`code` — [#2703](https://github.com/kuzzleio/kuzzle/issues/2703) | S | 🟦 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) |
 | [TD-28](#td-28) | 🟠 med | `any` | `memoryStorageController`'s class-wide index signature untypes the whole controller — [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) | XS | 🟦 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) |
 | [TD-29](#td-29) | 🟡 low | Enforcement | Nothing charges for `@ts-ignore` (4 in `lib/`, 2 undocumented) — [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) | S | 🟦 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) |
-| [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ⬜ |
+| [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | 🟦 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) |
+| [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | ⬜ |
 | [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | 🟦 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
@@ -425,7 +426,10 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 
 - **Reco:** correct the DoD and the register wording, set the floor to 3, and record an explicit decision on `copy-binaries.js` — convert it (mind that the script is what populates `dist` with non-TS assets, so running it from `dist/` needs care) or exempt it with a stated reason.
 - **Tracked as [#2705](https://github.com/kuzzleio/kuzzle/issues/2705).**
-- **🟦 Half done:** the DoD wording and the floor (3) are corrected here. **The decision on `copy-binaries.js` is open** and is not a patch: converting it means `npm run build` runs it from `dist/`, the directory the script itself populates (tsc emits first, so the order works — but `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`, so the emit path wants checking before anything is moved). Exempting it deliberately is the other valid answer; it needs a stated reason, not silence.
+- **🟦 In review ([#2713](https://github.com/kuzzleio/kuzzle/pull/2713)):** the DoD wording and the floor (3) are corrected here; **the file is converted** and run through `tsx` from the source tree (`npx tsx ./bin/copy-binaries.ts`), which is already how CI runs `.ci/scripts/prepare-coverage.ts`. Staying in `bin/` means `path.join(__dirname, "..")` still resolves to the repository root, so **no path needed changing**. js 50 → **49**, `bin/` at its floor, adopted into strict (102).
+  - Running the compiled `dist/bin/copy-binaries.js` was the alternative and was rejected: from `dist/bin/`, `__dirname/..` is `dist/`, so source and target roots would have had to be split apart — on release tooling whose failure mode is a published package silently missing its `.proto` files.
+  - **A wrong risk assessment, corrected:** the review claimed the emit path was at risk because `tsconfig.json` sets `rootDir: "lib/"` while including `bin/`. It is not — `rootDir` sits *outside* `compilerOptions`, so tsc ignores it, and `dist/bin/copy-binaries.js` was already being emitted from the `.js` source under `allowJs`. That dead key is now [TD-32](#td-32).
+  - No spec: `sonar.sources` is `./lib`, so `bin/` is outside the analysed and coverage-measured scope, and the "a file with no spec ships one" rule targets product code.
 
 ### TD-31
 **TD-23's helpers take loose parameters that can disagree** · 🟡 low · `lib/api/controllers/documentController.ts`
@@ -435,3 +439,11 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 - **Reco:** narrow to `"mGet" | "mExists"` and `"replace" | "createOrReplace"`, branch on the method, derive `action` from it, and type `action` as the notify-action type rather than `number`.
 - **Tracked as [#2706](https://github.com/kuzzleio/kuzzle/issues/2706).**
 - **🟦 In review ([#2711](https://github.com/kuzzleio/kuzzle/pull/2711)):** the method names are unions (`FetchMethod`, `WriteMethod`, `ChangeMethod`) and **`_writeDocument` derives the action from the method** instead of taking it, which removes the disagreement rather than documenting it. `_mChanges` keeps its `action` — it varies over five methods — but takes `NotifyAction`, the value type of the `as const` enum.
+
+### TD-32
+**`tsconfig.json`'s `rootDir` has never applied** · 🟡 low · `tsconfig.json`
+
+`rootDir` is declared as a **top-level key, beside `compilerOptions` rather than inside it**, so tsc ignores it. `dist/` mirrors the repository root — which is what the build, `main` (`./dist/index.js`) and the `files` list all already rely on. Harmless at runtime, but it cost a wrong risk assessment during the [TD-30](#td-30) review.
+
+- **Reco:** delete the key. Moving it into `compilerOptions` would **break the build**: `index.ts`, `bin/`, `features/`, `test/`, `tests/` and `start-kuzzle-*.ts` all sit outside `lib/` and would each raise `TS6059`. If an explicit root is wanted it has to be `"."`, which is what tsc infers today — compare `find dist -type f | sort` before and after.
+- **Tracked as [#2714](https://github.com/kuzzleio/kuzzle/issues/2714).**
