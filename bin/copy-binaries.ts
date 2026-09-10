@@ -26,8 +26,16 @@
  * copies into `dist/` what the compiler does not — the cluster's `.proto`
  * definitions and the executable server entrypoint.
  *
- * Run from the source tree (`npx tsx ./bin/copy-binaries.ts`), not from
- * `dist/`, so the paths below stay relative to the repository root.
+ * Run from the source tree, not from `dist/`, so the paths below stay relative
+ * to the repository root (`__dirname/..`); from `dist/bin/` they would resolve
+ * to `dist/`, and the script would read its sources from `dist/lib/`.
+ *
+ * Executed through `ts-node/register/transpile-only` rather than `tsx`: `tsx`
+ * pulls in esbuild's platform-specific native binary, and this script sits on
+ * the release path (`prepublishOnly` → `build`), whose failure mode is a
+ * published package silently missing its `.proto` files. `ts-node` is pure
+ * JavaScript and cannot fail that way — same idiom as the `doc-error-codes`
+ * script.
  */
 
 import * as fs from "fs/promises";
