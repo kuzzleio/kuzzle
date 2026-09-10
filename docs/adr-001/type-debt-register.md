@@ -29,12 +29,17 @@
 | [TD-18](#td-18) | 🟡 low | Config | Runtime fields `version` / `internal.allowAllOrigins` unmodelled | XS | ✅ |
 | [TD-19](#td-19) | 🟡 low | Config | `any` in config sections (`internal.hash`, `cluster.interface`, `http.routes`…) | S | ⬜ |
 | [TD-20](#td-20) | 🟡 low | Deprecation | Deprecated request APIs (`setResult(result, options)`, `getArrayLegacy`) kept in converted controllers — [#2688](https://github.com/kuzzleio/kuzzle/issues/2688) | S | ⬜ |
-| [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ✅ |
+| [TD-21](#td-21) | 🟠 medium | Correctness | `funnel._wrapError` passes a *request* to `isNativeController(name)` — guard always false — [#2687](https://github.com/kuzzleio/kuzzle/issues/2687) | XS | ✅ → [TD-27](#td-27) |
 | [TD-22](#td-22) | 🟠 med | `any` | `memoryStorageController.ts`: converted without typing — 54 implicit-`any` sites (+37 cascades), 122 strict errors — [#2690](https://github.com/kuzzleio/kuzzle/issues/2690) | M | ✅ |
 | [TD-23](#td-23) | 🟡 low | Duplication | `sonar.cpd.exclusions` growing into permanent, untracked debt (5 → 4 files) — [#2691](https://github.com/kuzzleio/kuzzle/issues/2691) | M | 🟦 |
 | [TD-24](#td-24) | 🟠 med | Enforcement | SonarCloud measures **no coverage on `.ts`** — every conversion voids its own coverage gate — [#2692](https://github.com/kuzzleio/kuzzle/issues/2692) | S | ✅ |
 | [TD-25](#td-25) | 🟡 low | Dependencies | `@types/debug` is narrower than `debug`'s runtime — adopting it costs 3 casts, so `util/debug.ts` stays out of strict | S | ⬜ |
 | [TD-26](#td-26) | 🟡 low | Correctness | 5 `await`s of a non-Promise, kept for timing parity across conversions (`NOSONAR: TD-26`) | XS | ✅ |
+| [TD-27](#td-27) | 🟠 med | Correctness | TD-21's guard fix sits on a shared funnel: plugin pipes changed too, and the unwrapped error loses its `id`/`code` — [#2703](https://github.com/kuzzleio/kuzzle/issues/2703) | S | ⬜ |
+| [TD-28](#td-28) | 🟠 med | `any` | `memoryStorageController`'s class-wide index signature untypes the whole controller — [#2704](https://github.com/kuzzleio/kuzzle/issues/2704) | XS | ⬜ |
+| [TD-29](#td-29) | 🟡 low | Enforcement | Nothing charges for `@ts-ignore` (4 in `lib/`, 2 undocumented) — [#2707](https://github.com/kuzzleio/kuzzle/issues/2707) | S | ⬜ |
+| [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ⬜ |
+| [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -178,9 +183,9 @@ The step-05 note says the table and the arg-extraction internals "stay inferred"
 - **✅ Done (2026-09-09, #2690):** the file is at **0 implicit-`any`** (91 diagnostics → 0), the `implicit-any` ratchet drops **518 → 464** (exactly the 54 sites) and strict errors for the file **122 → 54** (repo 1344 → **1309**). Written `any` unchanged at 208 — no hatch was used. Three deviations from the reco, each for a reason worth keeping:
   - **`mapping` stays a `let` + `initMapping()`.** A `const` is what the entry asked for, but the spec's `__set__({ mapping })` assigns to that binding on the compiled CJS, and assigning to a `const` throws at runtime. The annotation (`let mapping: RedisCommandMapping`) is what actually cleared the `TS7034`/`TS7005` and all 37 `TS2339` cascades, so the `const` bought nothing.
   - **The `map` closures are annotated one by one, not contextually.** An entry is `CommandArgumentPath | CommandArgumentSpec` (the table uses the bare path 100+ times), and TypeScript does not contextually type a callback through a union — so `(val: unknown, request: KuzzleRequest)` is written out.
-  - **`this[command] = …` is typed by a class index signature** (`[command: string]: unknown`), not a cast. It is type-only, keeps the emitted JS identical, and costs the `any` ratchet nothing, where `as unknown as Record<string, unknown>` would have cost 1.
+  - **`this[command] = …` is typed by a class index signature** (`[command: string]: unknown`), not a cast. It is type-only, keeps the emitted JS identical, and costs the `any` ratchet nothing, where `as unknown as Record<string, unknown>` would have cost 1. ⚠️ **The 2026-09-10 review overturned this call** ([TD-28](#td-28) / [#2704](https://github.com/kuzzleio/kuzzle/issues/2704)): the signature applies to the *whole* class, so every member access is `unknown` and every property name is accepted. Costing the ratchet nothing was the wrong thing to optimise — the localised cast is the right trade.
   - **The typing pass had to come with a spec.** The coverage gate — vacuous on `.ts` until TD-24 was fixed — scored the PR at **62.4% on new code** and failed it: every annotated line counts as new, and the Mocha spec swaps the real table for a 6-command fixture, so not one of the table's own `map` closures ever ran. 17 vitest tests now drive them through the public actions (`geoadd`, `hmset`, `mset`, `scan`, `zrangebyscore`, `zadd`, `dbsize`) and assert the argument list handed to Redis. **First time the coverage gate caught something real** — worth remembering as the pattern: a rename-and-annotate PR on an under-tested file now costs a spec, which is the point.
-  - The three runtime-asserted shapes now have names (`GeoPoint`, `FieldEntry`, `KeyEntry`) and the casts that follow their `kassert.assertBodyAttributeType(...)` calls are the only ones in the file. `assertFloat`/`assertInt` take `unknown` and go through `String(value)` — `Number.parseFloat(5.7)` and `Number.parseFloat("5.7")` agree on every input the old signature accepted, arrays included (they were rejected before reaching the parse).
+  - The three runtime-asserted shapes now have names (`GeoPoint`, `FieldEntry`, `KeyEntry`) and the casts that follow their `kassert.assertBodyAttributeType(...)` calls are the only ones in the file. `assertFloat`/`assertInt` take `unknown` and go through a local `scalarToString` (Sonar S6551 forbids stringifying an `unknown`): scalars coerce exactly as `String(value)` did, everything else maps to `""`, which parses to `NaN` — the same rejection the implicit coercion produced. Arrays are rejected before reaching the parse, as before. **Not an exact identity**: an object with a numeric `toString()`/`valueOf()`, or a bigint, used to parse and is now rejected. Neither can come out of a parsed request body, so the path is unreachable in practice — recorded because the commit message claims exact parity.
 
 ### TD-25
 **`@types/debug` is narrower than `debug`'s actual runtime** · 🟡 low · `lib/util/debug.ts`
@@ -334,6 +339,7 @@ Latent since the JS version. Surfaced by the Sprint 4 PR E2 conversion, which ma
 - **Tracked as [#2687](https://github.com/kuzzleio/kuzzle/issues/2687)** (opened 2026-09-07) — the register alone was scheduling nothing.
 - **Trigger:** independent of the TS-migration sprints.
 - **✅ Done (2026-09-09, #2687):** `_wrapError` now guards on `request.input.controller`; the cast and the inline comment are gone. **Behaviour change:** an internal error raised by a native controller (a `TypeError`, say) reaches the client as-is instead of as `plugin.runtime.unexpected_error` / `PluginImplementationError` — which is what the guard always meant to do. `processRequest.test.js`'s `_checkSdkVersion` case is re-baselined (`fakeController` is native), and a spec pinning the native-controller path was added next to the plugin one in `handleProcessRequestError.test.js`. Kept in Mocha: `lib/api/funnel` cannot be imported from a vitest spec yet — it pulls in `documentController`, which `import … = require("../../util/extractFields")`s a module vitest resolves as ESM.
+- ⚠️ **Re-opened in effect by the 2026-09-10 review → [TD-27](#td-27) / [#2703](https://github.com/kuzzleio/kuzzle/issues/2703).** The guard was put on `_wrapError`, which is the shared funnel for the controller *and* two plugin-pipe paths, so plugin pipes changed too; and the now-unwrapped error reaches the client with `id`/`code` `undefined`. The fix belongs at the error's source.
 
 ---
 
@@ -373,3 +379,54 @@ The audit **rejected** 2 findings as non-reproducible or redundant:
 ---
 
 *Register initialised on 2026-07-12 from the multi-agent audit. Keep it up to date as the ADR-0001 sprints progress.*
+
+---
+
+## Post-sprint review — 2026-09-10
+
+Findings of the review of the five PRs merged into `2-dev` on 2026-09-09 ([#2698](https://github.com/kuzzleio/kuzzle/pull/2698) and the four type-debt PRs). Execution log: [step 08](steps/08-type-debt-backlog.md).
+
+### TD-27
+**`_wrapError`'s fix is scoped to a shared funnel** · 🟠 medium · `lib/api/funnel.ts:1116`
+
+[TD-21](#td-21)'s fix guards on `request.input.controller`, but `_wrapError` is the common funnel for three sources: the whole of `processRequest`'s `try` (controller **and** the `request:onExecution` / before / after pipes), the `<controller>:error<Action>` pipe, and `request:onError`. A predicate on the controller name cannot separate "the native controller threw" from "a plugin pipe threw on a request to a native controller", so plugin-pipe behaviour changed too — which TD-21 never intended.
+
+Second half, and the more serious one: an error that now traverses `_wrapError` unwrapped ends in `KuzzleRequest.setError` → `new InternalError(error)`, i.e. **`id: undefined` and `code: undefined`** on a 500 sent to a client, while Kuzzle's error contract is built on documented id/code pairs.
+
+- **Reco:** decide at the source. Wrap only the `doAction` call in `processRequest`; a native controller's non-`KuzzleError` becomes `kerror.getFrom(e, "core", "fatal", "unexpected_error", e.message)` (documented code, `InternalError` 500, source stack preserved), a plugin controller's keeps `plugin.runtime.unexpected_error`. Then revert `_wrapError` to its pre-fix rule and **delete the guard** — everything reaching it comes from a pipe, i.e. from plugin code, and the dead guard was TD-21's actual bug.
+- **This is what keeps the change a `fix`.** Pipes and plugin controllers keep their error verbatim, status stays 500 everywhere, and the only delta is the `id` of a crash inside a native controller: `plugin.runtime.unexpected_error` → `core.fatal.unexpected_error`. No `BREAKING CHANGE:` footer needed.
+- **Tracked as [#2703](https://github.com/kuzzleio/kuzzle/issues/2703).**
+
+### TD-28
+**A class-wide index signature untypes `memoryStorageController`** · 🟠 medium · `lib/api/controllers/memoryStorageController.ts:42`
+
+[TD-22](#td-22) typed the dynamic action install with `[command: string]: unknown` on the class itself. That applies to the entire surface: every property access returns `unknown` and, worse, every property *name* compiles — `this.askk(...)` included. The file scores 0 written and 0 implicit `any` while being less type-safe about its own members than before.
+
+No ratchet charges for it: it is not `: any`, not `as any`, not `as unknown as`, and it *removes* `TS7xxx` diagnostics. Exactly the blind spot [step 06](steps/06-hardening-mid-course.md) exists to close.
+
+- **Reco:** keep the class closed and cast once at the install site (`const actions = this as unknown as Record<string, (request: KuzzleRequest) => unknown>`), or hold the cast in a small `installCommand()` helper. Costs the `any` ratchet 1, which is the honest price.
+- **Tracked as [#2704](https://github.com/kuzzleio/kuzzle/issues/2704).**
+
+### TD-29
+**Nothing charges for `@ts-ignore`** · 🟡 low · `lib/`
+
+The conversion standard forbids `@ts-ignore`/`@ts-nocheck` "without a comment + ticket", and nothing enforces it. `lib/` holds 4 suppressions: `types/HttpStream.ts:38` and `model/security/profile.ts:309` are bare `@ts-ignore`; `core/shared/sdk/embeddedSdk.ts:165` is an undocumented `@ts-expect-error`; only `model/storage/apiKey.ts:46` states its reason. A suppression is a hole exactly like a written `any`.
+
+- **Reco:** `@typescript-eslint/ban-ts-comment` with `{"ts-ignore": true, "ts-nocheck": true, "ts-expect-error": "allow-with-description", "minimumDescriptionLength": 20}`, plus fixing the three undocumented sites. `@ts-expect-error` is preferable to `@ts-ignore`: it fails once the underlying error disappears. A 5th count ratchet only if the three cannot be cleared at once.
+- **Tracked as [#2707](https://github.com/kuzzleio/kuzzle/issues/2707).**
+
+### TD-30
+**`bin/copy-binaries.js` is not a plugin fixture** · 🟡 low · `bin/`, ADR Definition of Done
+
+The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js` are fixtures under `bin/plugins/available/**`. Only 3 are; `bin/copy-binaries.js` is build tooling (`npm run build` = `rm -Rf ./dist && tsc && node ./bin/copy-binaries.js`, and it ships as `dist/bin/copy-binaries.js`). The `js` ratchet's floor is therefore **3**, and the wording currently exempts a product file by accident.
+
+- **Reco:** correct the DoD and the register wording, set the floor to 3, and record an explicit decision on `copy-binaries.js` — convert it (mind that the script is what populates `dist` with non-TS assets, so running it from `dist/` needs care) or exempt it with a stated reason.
+- **Tracked as [#2705](https://github.com/kuzzleio/kuzzle/issues/2705).**
+
+### TD-31
+**TD-23's helpers take loose parameters that can disagree** · 🟡 low · `lib/api/controllers/documentController.ts`
+
+`_mFetch(request, methodName: string)` and `_writeDocument(request, methodName: string, action: number)` interpolate `methodName` into a storage event name, so a typo fails at runtime instead of compile time. And `_writeDocument` picks the notification payload from `action === actionEnum.REPLACE` rather than from the method, so `("createOrReplace", actionEnum.REPLACE)` would silently get `replace`'s semantics.
+
+- **Reco:** narrow to `"mGet" | "mExists"` and `"replace" | "createOrReplace"`, branch on the method, derive `action` from it, and type `action` as the notify-action type rather than `number`.
+- **Tracked as [#2706](https://github.com/kuzzleio/kuzzle/issues/2706).**

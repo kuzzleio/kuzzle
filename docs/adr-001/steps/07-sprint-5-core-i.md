@@ -1,8 +1,8 @@
 # Step 07 — Sprint 5: `lib/core` I (storage, security, realtime, cache, shared)
 
-**Status:** 🟦 In progress — G1 and G2 merged, G3 open
-**Date:** 2026-09-09 → …
-**PR(s):** G1 [#2695](https://github.com/kuzzleio/kuzzle/pull/2695) · G2 [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) · G3 (`chore/ts-migration-sprint5-clientadapter`)
+**Status:** ✅ Done — frozen 2026-09-10 (G1, G2 and G3 merged into `2-dev`)
+**Date:** 2026-09-09 → 2026-09-09
+**PR(s):** G1 [#2695](https://github.com/kuzzleio/kuzzle/pull/2695) · G2 [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) · G3 [#2698](https://github.com/kuzzleio/kuzzle/pull/2698)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -221,3 +221,15 @@ Pass 2 is **conservative by construction**: the Mocha record is dropped only whe
 - **Kuzzle starts for real**: the CI stack (`.ci/services-7.yml`, ES7) reports `[✔] Kuzzle 2.56.0 is ready` with **0 errors** in the logs, `bin/wait-kuzzle` exit 0.
 - **Coverage gate: `new_coverage` 98.5% over `new_lines_to_cover` 2 646** — see *The unknown, measured* above.
 - **First CI round failed on two counts, both fixed in-PR** — see *Two failures worth recording* below.
+
+## Outcome
+
+**Sprint 5 is done.** The 16 files are TypeScript; `lib/core/{cache,realtime,security,shared,storage}` hold no `.js`. **js 66 → 50** across the three PRs, and the 34 `.js` left under `lib/core` are all sprint-6 scope (validation 15, network 14, plugin 5).
+
+What this step changed beyond the conversions, and what the rest of the migration inherits:
+
+- **The coverage gate's arithmetic is known**: a rename makes the whole file new code for coverage, not just the diff (G1, `new_lines_to_cover` 2 646 for 2 308 converted LOC). Today's coverage is tomorrow's `new_coverage`.
+- **`.ci/scripts/prepare-coverage.ts` exists** because a vitest-owned file could not otherwise clear the gate (G3). Sprint 6 opens with two 1 200-LOC files and depends on it.
+- **`kerror` is loadable under vitest** (G2). Without that fix no vitest spec could reach an error path, so the ADR's "every new test in vitest" rule was unenforceable.
+
+**Post-sprint review (2026-09-10):** the implementation was re-read against the ADR after all five PRs landed. Findings are in [step 08](08-type-debt-backlog.md); none of them invalidates this step.
