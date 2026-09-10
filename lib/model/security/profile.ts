@@ -331,7 +331,18 @@ export class Profile {
    * how that patching detects an un-patched class. The signature describes the
    * patched function, not this stub.
    */
-  static _hash: (rightsItem?: unknown) => string | false = () => false;
+  /**
+   * Hashes a rights item into the key it is stored under.
+   *
+   * Placeholder on purpose: `profileRepository` replaces it with
+   * `global.kuzzle.hash` at startup, and the `false` returned here is exactly
+   * how that patching detects an un-patched class. The overload signature
+   * describes the patched function; the implementation is the stub.
+   */
+  static _hash(rightsItem?: unknown): string | false;
+  static _hash(): string | false {
+    return false;
+  }
 
   validateRateLimit() {
     if (this.rateLimit === null || this.rateLimit === undefined) {
