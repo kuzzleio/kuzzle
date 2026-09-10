@@ -70,6 +70,6 @@ async function main(): Promise<void> {
 
 main().catch((error) => {
   // eslint-disable-next-line no-console
-  console.error("Failed to copy protobuf definitions:", error);
+  console.error("Failed to copy the build's non-compiled payload:", error);
   process.exit(1);
 });

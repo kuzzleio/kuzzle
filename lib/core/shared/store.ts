@@ -94,8 +94,13 @@ export class Store {
     };
 
     for (const [method, event] of Object.entries(methodsMapping)) {
-      this[method] = (...args: any[]) =>
-        global.kuzzle.ask(event, this.index, ...args);
+      // `method` is a runtime key over the mapping above, so a plain
+      // `this[method] = ...` cannot be typed without an index signature that
+      // would swallow every real member — the trade-off TD-28 settled with
+      // `Reflect.set` in `memoryStorageController` and `baseController`.
+      Reflect.set(this, method, (...args: any[]) =>
+        global.kuzzle.ask(event, this.index, ...args),
+      );
     }
 
     // the scroll and multiSearch method are special: they doesn't need an index parameter
