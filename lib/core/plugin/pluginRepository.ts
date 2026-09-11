@@ -104,7 +104,7 @@ class PluginRepository extends ObjectRepository<PluginDocument> {
   load(documentId: string): Promise<PluginDocument> {
     return super.load(documentId).catch((error) => {
       if (this.collection === "users" && error instanceof NotFoundError) {
-        return Promise.resolve(null);
+        return null;
       }
 
       throw error;
