@@ -1,0 +1,8 @@
+# Files excluded from SonarCloud duplication detection — see sonar-project.properties
+# and docs/adr-001/type-debt-register.md (TD-23). This list may only SHRINK: drop a
+# file's entry in the PR that deals with its duplication.
+
+lib/api/controllers/memoryStorageController.ts
+lib/api/httpRoutes.ts
+lib/service/storage/7/esWrapper.ts
+lib/service/storage/8/esWrapper.ts
