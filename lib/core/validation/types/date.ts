@@ -30,35 +30,39 @@ type DateParser = (date: MomentInput) => Moment;
 
 const formatMap: Record<string, DateParser> = {
   basic_date: (date) => moment.utc(date, "YYYYMMDD", true),
-  basic_date_time: (date) => moment.utc(date, "YYYYMMDD\\THHmmss.SSSZ", true),
+  basic_date_time: (date) =>
+    moment.utc(date, String.raw`YYYYMMDD\THHmmss.SSSZ`, true),
   basic_date_time_no_millis: (date) =>
-    moment.utc(date, "YYYYMMDD\\THHmmssZ", true),
+    moment.utc(date, String.raw`YYYYMMDD\THHmmssZ`, true),
   basic_ordinal_date: (date) => moment.utc(date, "YYYYDDD", true),
   basic_ordinal_date_time: (date) =>
-    moment.utc(date, "YYYYDDD\\THHmmss.SSSZ", true),
+    moment.utc(date, String.raw`YYYYDDD\THHmmss.SSSZ`, true),
   basic_ordinal_date_time_no_millis: (date) =>
-    moment.utc(date, "YYYYDDD\\THHmmssZ", true),
-  basic_t_time: (date) => moment.utc(date, "\\THHmmss.SSSZ", true),
-  basic_t_time_no_millis: (date) => moment.utc(date, "\\THHmmssZ", true),
+    moment.utc(date, String.raw`YYYYDDD\THHmmssZ`, true),
+  basic_t_time: (date) => moment.utc(date, String.raw`\THHmmss.SSSZ`, true),
+  basic_t_time_no_millis: (date) =>
+    moment.utc(date, String.raw`\THHmmssZ`, true),
   basic_time: (date) => moment.utc(date, "HHmmss.SSSZ", true),
   basic_time_no_millis: (date) => moment.utc(date, "HHmmssZ", true),
-  basic_week_date: (date) => moment.utc(date, "gggg\\Wwwe", false),
+  basic_week_date: (date) => moment.utc(date, String.raw`gggg\Wwwe`, false),
   basic_week_date_time: (date) =>
-    moment.utc(date, "gggg\\Wwwe\\THHmmss.SSSZ", false),
+    moment.utc(date, String.raw`gggg\Wwwe\THHmmss.SSSZ`, false),
   basic_week_date_time_no_millis: (date) =>
-    moment.utc(date, "gggg\\Wwwe\\THHmmssZ", false),
+    moment.utc(date, String.raw`gggg\Wwwe\THHmmssZ`, false),
   date: (date) => moment.utc(date, "YYYY-MM-DD", false),
-  date_hour: (date) => moment.utc(date, "YYYY-MM-DD\\THH", false),
-  date_hour_minute: (date) => moment.utc(date, "YYYY-MM-DD\\THH:mm", false),
+  date_hour: (date) => moment.utc(date, String.raw`YYYY-MM-DD\THH`, false),
+  date_hour_minute: (date) =>
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm`, false),
   date_hour_minute_second: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss", false),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss`, false),
   date_hour_minute_second_fraction: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSS", false),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSS`, false),
   date_hour_minute_second_millis: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSS", false),
-  date_time: (date) => moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSSZZ", false),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSS`, false),
+  date_time: (date) =>
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSSZZ`, false),
   date_time_no_millis: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ssZZ", false),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ssZZ`, false),
   epoch_millis: (date) =>
     typeof date === "number" ? moment.utc(date) : moment.invalid(),
   epoch_second: (date) =>
@@ -71,29 +75,31 @@ const formatMap: Record<string, DateParser> = {
   hour_minute_second_millis: (date) => moment.utc(date, "HH:mm:ss.SSS", false),
   ordinal_date: (date) => moment.utc(date, "YYYY-DDD", false),
   ordinal_date_time: (date) =>
-    moment.utc(date, "YYYY-DDD\\THH:mm:ss.SSSZZ", false),
+    moment.utc(date, String.raw`YYYY-DDD\THH:mm:ss.SSSZZ`, false),
   ordinal_date_time_no_millis: (date) =>
-    moment.utc(date, "YYYY-DDD\\THH:mm:ssZZ", false),
-  strict_basic_week_date: (date) => moment.utc(date, "gggg\\Wwwe", true),
+    moment.utc(date, String.raw`YYYY-DDD\THH:mm:ssZZ`, false),
+  strict_basic_week_date: (date) =>
+    moment.utc(date, String.raw`gggg\Wwwe`, true),
   strict_basic_week_date_time: (date) =>
-    moment.utc(date, "gggg\\Wwwe\\THHmmss.SSSZ", true),
+    moment.utc(date, String.raw`gggg\Wwwe\THHmmss.SSSZ`, true),
   strict_basic_week_date_time_no_millis: (date) =>
-    moment.utc(date, "gggg\\Wwwe\\THHmmssZ", true),
+    moment.utc(date, String.raw`gggg\Wwwe\THHmmssZ`, true),
   strict_date: (date) => moment.utc(date, "YYYY-MM-DD", true),
-  strict_date_hour: (date) => moment.utc(date, "YYYY-MM-DD\\THH", true),
+  strict_date_hour: (date) =>
+    moment.utc(date, String.raw`YYYY-MM-DD\THH`, true),
   strict_date_hour_minute: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm`, true),
   strict_date_hour_minute_second: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss`, true),
   strict_date_hour_minute_second_fraction: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSS", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSS`, true),
   strict_date_hour_minute_second_millis: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSS", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSS`, true),
   strict_date_optional_time: (date) => moment.utc(date, moment.ISO_8601, true),
   strict_date_time: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ss.SSSZZ", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ss.SSSZZ`, true),
   strict_date_time_no_millis: (date) =>
-    moment.utc(date, "YYYY-MM-DD\\THH:mm:ssZZ", true),
+    moment.utc(date, String.raw`YYYY-MM-DD\THH:mm:ssZZ`, true),
   strict_hour: (date) => moment.utc(date, "HH", true),
   strict_hour_minute: (date) => moment.utc(date, "HH:mm", true),
   strict_hour_minute_second: (date) => moment.utc(date, "HH:mm:ss", true),
@@ -103,33 +109,34 @@ const formatMap: Record<string, DateParser> = {
     moment.utc(date, "HH:mm:ss.SSS", true),
   strict_ordinal_date: (date) => moment.utc(date, "YYYY-DDD", true),
   strict_ordinal_date_time: (date) =>
-    moment.utc(date, "YYYY-DDD\\THH:mm:ss.SSSZZ", true),
+    moment.utc(date, String.raw`YYYY-DDD\THH:mm:ss.SSSZZ`, true),
   strict_ordinal_date_time_no_millis: (date) =>
-    moment.utc(date, "YYYY-DDD\\THH:mm:ssZZ", true),
-  strict_t_time: (date) => moment.utc(date, "\\THH:mm:ss.SSSZZ", true),
-  strict_t_time_no_millis: (date) => moment.utc(date, "\\THH:mm:ssZZ", true),
+    moment.utc(date, String.raw`YYYY-DDD\THH:mm:ssZZ`, true),
+  strict_t_time: (date) => moment.utc(date, String.raw`\THH:mm:ss.SSSZZ`, true),
+  strict_t_time_no_millis: (date) =>
+    moment.utc(date, String.raw`\THH:mm:ssZZ`, true),
   strict_time: (date) => moment.utc(date, "HH:mm:ss.SSSZZ", true),
   strict_time_no_millis: (date) => moment.utc(date, "HH:mm:ssZZ", true),
-  strict_week_date: (date) => moment.utc(date, "gggg-\\Www-e", true),
+  strict_week_date: (date) => moment.utc(date, String.raw`gggg-\Www-e`, true),
   strict_week_date_time: (date) =>
-    moment.utc(date, "gggg-\\Www-e\\THH:mm:ss.SSSZZ", true),
+    moment.utc(date, String.raw`gggg-\Www-e\THH:mm:ss.SSSZZ`, true),
   strict_week_date_time_no_millis: (date) =>
-    moment.utc(date, "gggg-\\Www-e\\THH:mm:ssZZ", true),
+    moment.utc(date, String.raw`gggg-\Www-e\THH:mm:ssZZ`, true),
   strict_weekyear: (date) => moment.utc(date, "gggg", true),
   strict_weekyear_week: (date) => moment.utc(date, "ggggww", true),
   strict_weekyear_week_day: (date) => moment.utc(date, "ggggwwe", true),
   strict_year: (date) => moment.utc(date, "YYYY", true),
   strict_year_month: (date) => moment.utc(date, "YYYYMM", true),
   strict_year_month_day: (date) => moment.utc(date, "YYYYMMDD", true),
-  t_time: (date) => moment.utc(date, "\\THH:mm:ss.SSSZZ", false),
-  t_time_no_millis: (date) => moment.utc(date, "\\THH:mm:ssZZ", false),
+  t_time: (date) => moment.utc(date, String.raw`\THH:mm:ss.SSSZZ`, false),
+  t_time_no_millis: (date) => moment.utc(date, String.raw`\THH:mm:ssZZ`, false),
   time: (date) => moment.utc(date, "HH:mm:ss.SSSZZ", false),
   time_no_millis: (date) => moment.utc(date, "HH:mm:ssZZ", false),
-  week_date: (date) => moment.utc(date, "gggg-\\Www-e", false),
+  week_date: (date) => moment.utc(date, String.raw`gggg-\Www-e`, false),
   week_date_time: (date) =>
-    moment.utc(date, "gggg-\\Www-e\\THH:mm:ss.SSSZZ", false),
+    moment.utc(date, String.raw`gggg-\Www-e\THH:mm:ss.SSSZZ`, false),
   week_date_time_no_millis: (date) =>
-    moment.utc(date, "gggg-\\Www-e\\THH:mm:ssZZ", false),
+    moment.utc(date, String.raw`gggg-\Www-e\THH:mm:ssZZ`, false),
   weekyear: (date) => moment.utc(date, "gggg", false),
   weekyear_week: (date) => moment.utc(date, "ggggww", false),
   weekyear_week_day: (date) => moment.utc(date, "ggggwwe", false),
@@ -153,7 +160,7 @@ class DateType extends BaseType<DateTypeOptions> {
   ): boolean {
     const momentDate = parseDate(typeOptions.formats ?? [], fieldValue);
 
-    if (momentDate === null || !momentDate.isValid()) {
+    if (!momentDate?.isValid()) {
       errorMessages.push("The date format is invalid.");
       return false;
     }
@@ -206,7 +213,7 @@ class DateType extends BaseType<DateTypeOptions> {
       max = convertRangeValue(range.max);
     }
 
-    if (min && max && max.isBefore(min)) {
+    if (min && max?.isBefore(min)) {
       throw assertionError.get("invalid_range", "range", "min", "max");
     }
 
@@ -306,7 +313,7 @@ function convertRangeValue(value: unknown): Moment {
     converted = moment.utc(value);
   }
 
-  if (!converted || !converted.isValid()) {
+  if (!converted?.isValid()) {
     throw typeError.get("invalid_date", value);
   }
 

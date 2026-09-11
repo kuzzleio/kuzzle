@@ -22,6 +22,7 @@
 import { Koncorde } from "koncorde";
 
 import * as kerror from "../../../kerror";
+import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
 import { GeoShapeTypeOptions } from "../typeOptions";
 
@@ -97,7 +98,7 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
     // exist to keep the destructuring total.
     const { type = "", coordinates = [], geometries = [] } = shape;
 
-    const isMulti = multiTypes.indexOf(type) !== -1;
+    const isMulti = multiTypes.includes(type);
     // the default also covers "geometrycollection", which holds no coordinates
     // of its own, and the unreachable `default:` branch below
     let coordinateValidation: CoordinateValidation = () => true,
@@ -200,7 +201,7 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
       result = false;
     }
 
-    if (allowedShapes.indexOf(type) === -1) {
+    if (!allowedShapes.includes(type)) {
       errorMessages.push("The provided shape type is not allowed.");
       result = false;
     }
@@ -285,7 +286,7 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
   validateFieldSpecification(
     typeOptions: GeoShapeTypeOptions,
   ): GeoShapeTypeOptions {
-    if (Object.prototype.hasOwnProperty.call(typeOptions, "shapeTypes")) {
+    if (has(typeOptions, "shapeTypes")) {
       const { shapeTypes } = typeOptions;
 
       if (!Array.isArray(shapeTypes) || shapeTypes.length === 0) {

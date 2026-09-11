@@ -20,6 +20,7 @@
  */
 
 import * as kerror from "../../../kerror";
+import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
 import { EnumTypeOptions } from "../typeOptions";
 
@@ -54,7 +55,7 @@ class EnumType extends BaseType<EnumTypeOptions> {
    * @throws {PreconditionError}
    */
   validateFieldSpecification(typeOptions: EnumTypeOptions): EnumTypeOptions {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "values")) {
+    if (!has(typeOptions, "values")) {
       throw kerror.get("validation", "types", "missing_enum_values");
     }
 

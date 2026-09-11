@@ -20,6 +20,7 @@
  */
 
 import { wrap } from "../../../kerror";
+import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
 import { ObjectTypeOptions } from "../typeOptions";
 
@@ -53,10 +54,7 @@ class ObjectType extends BaseType<ObjectTypeOptions> {
   validateFieldSpecification(
     typeOptions: ObjectTypeOptions,
   ): ObjectTypeOptions {
-    if (
-      Object.prototype.hasOwnProperty.call(typeOptions, "strict") &&
-      typeof typeOptions.strict !== "boolean"
-    ) {
+    if (has(typeOptions, "strict") && typeof typeOptions.strict !== "boolean") {
       throw kerror.get("invalid_type", "strict", "boolean");
     }
 

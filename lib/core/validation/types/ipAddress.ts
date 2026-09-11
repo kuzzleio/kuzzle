@@ -19,9 +19,10 @@
  * limitations under the License.
  */
 
-import validator from "validator";
+import isIP from "validator/lib/isIP";
 
 import { wrap } from "../../../kerror";
+import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
 import { NotEmptyTypeOptions } from "../typeOptions";
 
@@ -50,7 +51,7 @@ class IpAddressType extends BaseType<NotEmptyTypeOptions> {
       return true;
     }
 
-    if (!validator.isIP(fieldValue)) {
+    if (!isIP(fieldValue)) {
       errorMessages.push("The string must be a valid IP address.");
       return false;
     }
@@ -64,7 +65,7 @@ class IpAddressType extends BaseType<NotEmptyTypeOptions> {
   validateFieldSpecification(
     typeOptions: NotEmptyTypeOptions,
   ): NotEmptyTypeOptions {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "notEmpty")) {
+    if (!has(typeOptions, "notEmpty")) {
       typeOptions.notEmpty = false;
     } else if (typeof typeOptions.notEmpty !== "boolean") {
       throw kerror.get("invalid_type", "notEmpty", "boolean");

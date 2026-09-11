@@ -74,7 +74,7 @@ class BaseType<TOptions extends TypeOptions = TypeOptions> {
     }
 
     return !Object.keys(object).some(
-      (propertyName) => allowedProperties.indexOf(propertyName) === -1,
+      (propertyName) => !allowedProperties.includes(propertyName),
     );
   }
 
