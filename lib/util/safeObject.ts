@@ -33,6 +33,6 @@ export function get(o: unknown, prop: PropertyKey): unknown {
   return undefined;
 }
 
-export function isPlainObject(o: unknown): boolean {
+export function isPlainObject(o: unknown): o is Record<string, unknown> {
   return Object.prototype.toString.call(o) === "[object Object]";
 }
