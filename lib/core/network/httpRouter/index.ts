@@ -19,28 +19,30 @@
  * limitations under the License.
  */
 
-"use strict";
+import { Request } from "../../../api/request";
+import { wrap } from "../../../kerror";
+import { KuzzleError } from "../../../kerror/errors";
+import createDebug from "../../../util/debug";
+import { has } from "../../../util/safeObject";
+import type HttpMessage from "../protocols/httpMessage";
+import RoutePart from "./routePart";
+import { RouteCallback, RouteHandlerFunction } from "./routeTypes";
 
-const { Request } = require("../../../api/request");
-const { KuzzleError } = require("../../../kerror/errors");
-const RoutePart = require("./routePart");
-const { has } = require("../../../util/safeObject");
-
-const kerror = require("../../../kerror").wrap("network", "http");
-const debug = require("../../../util/debug")("kuzzle:http:router");
+const kerror = wrap("network", "http");
+const debug = createDebug("kuzzle:http:router");
 
 /**
- * Attach handler to routes and dispatch a HTTP
- * message to the right handler
+ * Attach handler to routes and dispatch a HTTP message to the right handler
  *
  * Handlers will be called with the following arguments:
  *   - request: received HTTP request
  *   - response: HTTP response object
  *   - data: URL query arguments and/or POST data, if any
- *
- * @class Router
  */
 class Router {
+  public defaultHeaders: Record<string, string>;
+  public routes: Record<string, RoutePart>;
+
   constructor() {
     this.defaultHeaders = {
       "Accept-Encoding": "identity",
@@ -72,7 +74,7 @@ class Router {
     attach(
       "/",
       (request, cb) => {
-        request.setResult({}, 200);
+        request.setResult({}, { status: 200 });
         cb(request);
       },
       this.routes.HEAD,
@@ -81,71 +83,52 @@ class Router {
 
   /**
    * Attach a handler to a GET HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  get(path, handler) {
+  get(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.GET);
   }
 
   /**
    * Attach a handler to a POST HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  post(path, handler) {
+  post(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.POST);
   }
 
   /**
    * Attach a handler to a PUT HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  put(path, handler) {
+  put(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.PUT);
   }
 
   /**
    * Attach a handler to a PATCH HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  patch(path, handler) {
+  patch(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.PATCH);
   }
 
   /**
    * Attach a handler to a DELETE HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  delete(path, handler) {
+  delete(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.DELETE);
   }
 
   /**
    * Attach a handler to a HEAD HTTP route
-   *
-   * @param {string} path
-   * @param {Function} handler
    */
-  head(path, handler) {
+  head(path: string, handler: RouteHandlerFunction): void {
     attach(path, handler, this.routes.HEAD);
   }
 
   /**
    * Route an incoming HTTP message to the right handler
    *
-   * @param {HttpMessage} message - Parsed HTTP message
-   * @param {function} cb
+   * @param message - Parsed HTTP message
    */
-  route(message, cb) {
+  route(message: HttpMessage, cb: RouteCallback): void {
     debug("Routing HTTP message: %a", message);
 
     if (!has(this.routes, message.method)) {
@@ -170,6 +153,7 @@ class Router {
       routeHandler.invokeHandler(cb);
     } catch (err) {
       let request;
+
       if (!routeHandler || !routeHandler._request) {
         request = new Request({ requestId: message.requestId }, {});
         // Set Headers if not present
@@ -183,7 +167,7 @@ class Router {
       const e =
         err instanceof KuzzleError
           ? err
-          : kerror.getFrom(err, "unexpected_error", err.message);
+          : kerror.getFrom(err, "unexpected_error", (err as Error).message);
 
       replyWithError(cb, request, e);
     }
@@ -192,10 +176,8 @@ class Router {
   /**
    * Route HTTP messages using an HTTP method that is not handled by Kuzzle's
    * API, such as OPTIONS.
-   * @param  {HttpMessage} message
-   * @param {function} cb
    */
-  routeUnhandledHttpMethod(message, cb) {
+  routeUnhandledHttpMethod(message: HttpMessage, cb: RouteCallback): void {
     const requestContext = global.kuzzle.router.connections.get(
         message.connection.id,
       ),
@@ -211,15 +193,19 @@ class Router {
 
     if (message.method === "OPTIONS") {
       request.input.headers = message.headers;
-      request.setResult({}, 200);
+      request.setResult({}, { status: 200 });
 
-      global.kuzzle.pipe("http:options", request, (error, result) => {
-        if (error) {
-          replyWithError(cb, request, error);
-        } else {
-          cb(result);
-        }
-      });
+      global.kuzzle.pipe(
+        "http:options",
+        request,
+        (error: Error | null, result: Request) => {
+          if (error) {
+            replyWithError(cb, request, error);
+          } else {
+            cb(result);
+          }
+        },
+      );
 
       return;
     }
@@ -229,12 +215,10 @@ class Router {
 }
 
 /**
- * Set the Header Access-Control-Allow-Origin based on the kuzzle configuration and request origin
- *
- * @param {HttpMessage} message
- * @param {Request} request
+ * Set the Header Access-Control-Allow-Origin based on the kuzzle configuration
+ * and request origin
  */
-function applyACAOHeader(message, request) {
+function applyACAOHeader(message: HttpMessage, request: Request): void {
   if (message.headers && message.headers.origin) {
     request.response.setHeaders(
       {
@@ -247,14 +231,14 @@ function applyACAOHeader(message, request) {
 }
 
 /**
- * Attach a handler to an path and stores it to the target object
- *
- * @param {string} path
- * @param {Function} handler
- * @param {RoutePart} target
+ * Attach a handler to a path and stores it to the target object
  */
-function attach(path, handler, target) {
-  const sanitized = path[path.length - 1] === "/" ? path.slice(0, -1) : path;
+function attach(
+  path: string,
+  handler: RouteHandlerFunction,
+  target: RoutePart,
+): void {
+  const sanitized = path.at(-1) === "/" ? path.slice(0, -1) : path;
 
   if (!attachParts(sanitized.split("/"), handler, target)) {
     throw kerror.get("duplicate_url", sanitized);
@@ -262,15 +246,15 @@ function attach(path, handler, target) {
 }
 
 /**
- *
- * @param {Array<string>} parts
- * @param {Function} routeHandler
- * @param {RoutePart} target
- * @param {Array<string>} placeholders
- * @returns {Boolean} If false, failed to attach because of a duplicate
+ * @returns If false, failed to attach because of a duplicate
  */
-function attachParts(parts, handler, target, placeholders = []) {
-  let part;
+function attachParts(
+  parts: string[],
+  handler: RouteHandlerFunction,
+  target: RoutePart,
+  placeholders: string[] = [],
+): boolean {
+  let part: string | undefined;
 
   do {
     part = parts.shift();
@@ -299,18 +283,15 @@ function attachParts(parts, handler, target, placeholders = []) {
 
 /**
  * Reply to a callback function with an HTTP error
- *
- * @param {function} cb
- * @param {Request} request
- * @param {Error} error
  */
-function replyWithError(cb, request, error) {
+function replyWithError(
+  cb: RouteCallback,
+  request: Request,
+  error: Error,
+): void {
   request.setError(error);
 
   cb(request);
 }
 
-/**
- * @type {Router}
- */
-module.exports = Router;
+export = Router;

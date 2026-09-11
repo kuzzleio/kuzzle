@@ -19,16 +19,17 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const AbstractManifest = require("../shared/abstractManifest");
+import AbstractManifest from "../shared/abstractManifest";
+import type Protocol from "./protocols/protocol";
 
 class ProtocolManifest extends AbstractManifest {
-  constructor(protocolPath, protocol) {
+  public protocol: Protocol;
+
+  constructor(protocolPath: string, protocol: Protocol) {
     super(protocolPath);
 
     this.protocol = protocol;
   }
 }
 
-module.exports = ProtocolManifest;
+export = ProtocolManifest;

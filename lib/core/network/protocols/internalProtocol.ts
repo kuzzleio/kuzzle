@@ -19,14 +19,19 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const Protocol = require("./protocol");
-const ClientConnection = require("../clientConnection");
+import createDebug from "../../../util/debug";
+import ClientConnection from "../clientConnection";
+import { NetworkEntryPoint } from "../networkEntryPoint";
+import Protocol from "./protocol";
 
-const debug = require("../../../util/debug")(
-  "kuzzle:network:protocols:internal",
-);
+const debug = createDebug("kuzzle:network:protocols:internal");
+
+interface InternalMessage {
+  channels: string[];
+  payload: JSONObject;
+}
 
 /**
  * Internal protocol to use SDK realtime subscription from plugins.
@@ -37,19 +42,20 @@ const debug = require("../../../util/debug")(
  *  - 'core:network:internal:message'
  */
 class InternalProtocol extends Protocol {
+  public connection: ClientConnection;
+
+  /** List of channel IDs */
+  public channels: Set<string>;
+
   constructor() {
     super("internal");
 
     this.connection = new ClientConnection(this.name, ["127.0.0.1"]);
 
-    /**
-     * List of channel IDs
-     * @type {Set<string>}
-     */
     this.channels = new Set();
   }
 
-  async init(entryPoint) {
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean> {
     await super.init(null, entryPoint);
 
     debug("initializing InternalProtocol");
@@ -58,52 +64,56 @@ class InternalProtocol extends Protocol {
 
     /**
      * Returns the internal connection ID used by the protocol.
-     *
-     * @returns {string} connectionId
      */
     global.kuzzle.onAsk(
       "core:network:internal:connectionId:get",
       () => this.connection.id,
     );
+
+    return true;
   }
 
-  joinChannel(channel, connectionId) {
+  joinChannel(channel: string, connectionId: string) {
     debug("joinChannel: %s", channel, connectionId);
 
     this.channels.add(channel);
+
+    return { channel, connectionId };
   }
 
-  leaveChannel(channel, connectionId) {
+  leaveChannel(channel: string, connectionId: string) {
     debug("leaveChannel: %s", channel, connectionId);
 
     this.channels.delete(channel);
+
+    return { channel, connectionId };
   }
 
-  disconnect(connectionId) {
+  disconnect(connectionId: string): void {
     debug("disconnect: %s", connectionId);
 
     // Never happens, the InternalProtocol always keep his only connection open
   }
 
-  broadcast(data) {
+  broadcast(data: InternalMessage): void {
     debug("broadcast: %a", data);
 
     this._send(data);
   }
 
-  notify(data) {
+  notify(data: InternalMessage): void {
     debug("notify: %a", data);
 
     this._send(data);
   }
 
-  _send(data) {
-    for (let i = 0; i < data.channels.length; i++) {
-      const message = { ...data.payload, room: data.channels[i] };
+  _send(data: InternalMessage): void {
+    for (const channel of data.channels) {
+      const message = { ...data.payload, room: channel };
 
       global.kuzzle.emit("core:network:internal:message", message);
     }
   }
 }
 
-module.exports = InternalProtocol;
+export = InternalProtocol;

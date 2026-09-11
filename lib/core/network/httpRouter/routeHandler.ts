@@ -19,26 +19,31 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { Request } = require("../../../api/request");
-const kerror = require("../../../kerror").wrap("network", "http");
+import { Request } from "../../../api/request";
+import { wrap } from "../../../kerror";
+import type HttpMessage from "../protocols/httpMessage";
+import { RouteCallback, RouteHandlerFunction } from "./routeTypes";
+
+const kerror = wrap("network", "http");
 
 /**
- * Object returned by routePart.getHandler(),
- * containing the information gathered about
- * a requested route and the corresponding handler
- * to invoke
+ * Object returned by routePart.getHandler(), containing the information
+ * gathered about a requested route and the corresponding handler to invoke
  *
- * @class RouteHandler
- * @param {string} url - parsed URL
- * @param {object} query - parsed query string
- * @param {HttpMessage} message
  * @throws {BadRequestError} If x-kuzzle-volatile HTTP header can not be parsed
  *                           in JSON format
  */
 class RouteHandler {
-  constructor(url, query, message) {
+  public handler: RouteHandlerFunction | null;
+  public url: string;
+  public data: JSONObject;
+  public connection: { connection: JSONObject };
+
+  public _request: Request | null;
+
+  constructor(url: string, query: JSONObject, message: HttpMessage) {
     this.handler = null;
     this._request = null;
     this.url = url;
@@ -72,13 +77,17 @@ class RouteHandler {
         try {
           this.data.volatile = JSON.parse(message.headers[k]);
         } catch (e) {
-          throw kerror.getFrom(e, "volatile_parse_failed", e.message);
+          throw kerror.getFrom(
+            e,
+            "volatile_parse_failed",
+            (e as Error).message,
+          );
         }
       }
     }
   }
 
-  get request() {
+  get request(): Request {
     if (this._request === null) {
       this._request = new Request(this.data, this.connection);
     }
@@ -88,24 +97,17 @@ class RouteHandler {
 
   /**
    * Add a parametric argument to the request object
-   * @param {string} name
-   * @param {string} value
    */
-  addArgument(name, value) {
+  addArgument(name: string, value: string): void {
     this.data[name] = value;
   }
 
   /**
    * Invokes the registered handler
-   *
-   * @param {Function} callback
    */
-  invokeHandler(callback) {
+  invokeHandler(callback: RouteCallback): void {
     this.handler(this.request, callback);
   }
 }
 
-/**
- * @type {RouteHandler}
- */
-module.exports = RouteHandler;
+export = RouteHandler;
