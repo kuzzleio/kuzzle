@@ -19,25 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
-
-const { PluginContext } = require("./pluginContext");
+import { PluginContext } from "./pluginContext";
 
 /**
- * @class PrivilegedPluginContext
- * @extends PluginContext
+ * The context handed to a plugin declared `privileged` in its manifest: the
+ * same surface as a regular plugin's, plus the Kuzzle instance itself.
  */
 class PrivilegedPluginContext extends PluginContext {
-  /**
-   * @param {Kuzzle} kuzzle
-   * @param {string} pluginName
-   * @constructor
-   */
-  constructor(pluginName) {
+  constructor(pluginName: string) {
     super(pluginName);
 
     this.accessors.kuzzle = global.kuzzle;
   }
 }
 
-module.exports = PrivilegedPluginContext;
+export = PrivilegedPluginContext;

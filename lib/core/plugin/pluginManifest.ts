@@ -19,28 +19,27 @@
  * limitations under the License.
  */
 
-"use strict";
+import { isNil } from "lodash";
 
-const _ = require("lodash");
+import { wrap } from "../../kerror";
+import AbstractManifest from "../shared/abstractManifest";
 
-const kerror = require("../../kerror").wrap("plugin", "manifest");
-const AbstractManifest = require("../shared/abstractManifest");
+const kerror = wrap("plugin", "manifest");
 
 class PluginManifest extends AbstractManifest {
-  constructor(pluginPath) {
-    super(pluginPath);
-    this.privileged = false;
-  }
+  public privileged = false;
 
-  load() {
+  load(): void {
     super.load();
 
     // Ensure ES will accept the plugin name as index
-    if (!/^[\w-]+$/.test(this.name)) {
+    // String(): `name` is typed nullable by the base, and `test()` coerces
+    // anyway — super.load() has already thrown if it were nil
+    if (!/^[\w-]+$/.test(String(this.name))) {
       throw kerror.get("invalid_name", this.path);
     }
 
-    if (!_.isNil(this.raw) && !_.isNil(this.raw.privileged)) {
+    if (!isNil(this.raw) && !isNil(this.raw.privileged)) {
       if (typeof this.raw.privileged !== "boolean") {
         throw kerror.get(
           "invalid_privileged",
@@ -48,9 +47,10 @@ class PluginManifest extends AbstractManifest {
           typeof this.raw.privileged,
         );
       }
+
       this.privileged = this.raw.privileged;
     }
   }
 }
 
-module.exports = PluginManifest;
+export = PluginManifest;

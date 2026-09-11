@@ -156,3 +156,9 @@ lib/core/network/httpRouter/routeTypes.ts
 lib/core/network/networkEntryPoint.ts
 lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
+
+# Sprint 6, PR H3 (2026-09-11) — the plugin leaves. pluginRepository.ts is left
+# out: its load() resolves null for a missing user, which cannot be declared
+# against ObjectRepository<TObject>'s Promise<TObject> without a double cast.
+lib/core/plugin/pluginManifest.ts
+lib/core/plugin/privilegedContext.ts
