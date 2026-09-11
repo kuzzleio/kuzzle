@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
+import { Koncorde } from "koncorde";
 
-const { Koncorde } = require("koncorde");
-
-const kerror = require("../../../kerror");
-const BaseType = require("../baseType");
+import * as kerror from "../../../kerror";
+import { has } from "../../../util/safeObject";
+import BaseType from "../baseType";
+import { GeoShapeTypeOptions } from "../typeOptions";
 
 const allowedShapeProperties = [
     "type",
@@ -33,15 +33,15 @@ const allowedShapeProperties = [
     "orientation",
     "geometries",
   ],
-  allowedOrientations = [
+  allowedOrientations = new Set([
     "right",
     "ccw",
     "counterclockwise",
     "left",
     "cw",
     "clockwise",
-  ],
-  multiTypes = ["multipoint", "multilinestring", "multipolygon"],
+  ]),
+  multiTypes = new Set(["multipoint", "multilinestring", "multipolygon"]),
   allowedShapeTypes = [
     "point",
     "linestring",
@@ -55,46 +55,56 @@ const allowedShapeProperties = [
   ];
 
 /**
- * @class GeoShapeType
+ * A GeoJSON-like shape, as the user submits it: nothing but `type` can be
+ * assumed to be there, which is what `checkStructure` is for.
  */
-class GeoShapeType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "geo_shape";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["shapeTypes"];
-  }
+interface GeoShape {
+  type?: string;
+  coordinates?: unknown[];
+  radius?: string | number;
+  orientation?: string;
+  geometries?: GeoShape[];
+}
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {GeoShape} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+type CoordinateValidation = (coordinates: unknown) => boolean;
+
+class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
+  public typeName = "geo_shape";
+  public allowChildren = false;
+  public allowedTypeOptions = ["shapeTypes"];
+
+  validate(
+    typeOptions: GeoShapeTypeOptions,
+    fieldValue: GeoShape,
+    errorMessages: string[],
+  ): boolean {
     return this.recursiveShapeValidation(
-      typeOptions.shapeTypes,
+      typeOptions.shapeTypes ?? [],
       fieldValue,
       errorMessages,
     );
   }
 
-  /**
-   * @param {string[]} allowedShapes
-   * @param {GeoShape} shape
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  recursiveShapeValidation(allowedShapes, shape, errorMessages) {
+  recursiveShapeValidation(
+    allowedShapes: string[],
+    shape: GeoShape,
+    errorMessages: string[],
+  ): boolean {
     if (!this.checkStructure(allowedShapes, shape, errorMessages)) {
       return false;
     }
 
-    const isMulti = multiTypes.indexOf(shape.type) !== -1;
-    let coordinateValidation,
+    // checkStructure has just proven these three are there; the defaults only
+    // exist to keep the destructuring total.
+    const { type = "", coordinates = [], geometries = [] } = shape;
+
+    const isMulti = multiTypes.has(type);
+    // the default also covers "geometrycollection", which holds no coordinates
+    // of its own, and the unreachable `default:` branch below
+    let coordinateValidation: CoordinateValidation = () => true,
       result = true;
 
-    switch (shape.type) {
+    switch (type) {
       case "point":
       case "multipoint":
         coordinateValidation = isPoint;
@@ -106,98 +116,107 @@ class GeoShapeType extends BaseType {
       case "polygon":
       case "multipolygon":
         coordinateValidation = isPolygon;
-        if (
-          shape.orientation &&
-          !allowedOrientations.includes(shape.orientation)
-        ) {
-          errorMessages.push("The orientation property has not a valid value.");
-          result = false;
-        }
+        result = checkOrientation(shape, errorMessages);
         break;
       case "geometrycollection":
-        coordinateValidation = () => true;
-
-        for (let i = 0; i < shape.geometries.length; i++) {
-          if (
-            !this.recursiveShapeValidation(
-              allowedShapes,
-              shape.geometries[i],
-              errorMessages,
-            )
-          ) {
-            result = false;
-          }
-        }
+        result = this.checkGeometries(allowedShapes, geometries, errorMessages);
         break;
       case "envelope":
         coordinateValidation = isEnvelope;
         break;
       case "circle":
         coordinateValidation = isPoint;
-        if (typeof shape.radius === "string") {
-          try {
-            if (typeof Koncorde.convertDistance(shape.radius) !== "number") {
-              errorMessages.push("The radius property has not a valid format.");
-              result = false;
-            }
-          } catch (error) {
-            errorMessages.push("The radius property has not a valid format.");
-            result = false;
-          }
-        } else if (typeof shape.radius !== "number") {
-          errorMessages.push("The radius property has not a valid format.");
-          result = false;
-        }
+        result = checkRadius(shape, errorMessages);
         break;
       default:
         // added to comply with sonarqube
         // but it's currently not possible to get here
-        errorMessages.push(`Unrecognized shape: ${shape.type}`);
+        errorMessages.push(`Unrecognized shape: ${type}`);
         result = false;
     }
 
-    if (isMulti) {
+    // evaluated before the `&&` so that its error message is pushed even when
+    // the switch has already invalidated the shape
+    const coordinatesOk = checkCoordinates(
+      type,
+      isMulti,
+      coordinates,
+      coordinateValidation,
+      errorMessages,
+    );
+
+    return result && coordinatesOk;
+  }
+
+  private checkGeometries(
+    allowedShapes: string[],
+    geometries: GeoShape[],
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
+
+    for (const geometry of geometries) {
       if (
-        shape.coordinates.some(
-          (coordinate) => !coordinateValidation(coordinate),
-        )
+        !this.recursiveShapeValidation(allowedShapes, geometry, errorMessages)
       ) {
-        errorMessages.push(
-          `One of the shapes in  the shape type "${shape.type}" has bad coordinates.`,
-        );
         result = false;
       }
-    } else if (!coordinateValidation(shape.coordinates)) {
-      errorMessages.push(`The shape type "${shape.type}" has bad coordinates.`);
-      return false;
     }
 
     return result;
   }
 
-  /**
-   * @param {string[]} allowedShapes
-   * @param {GeoShape} shape
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  checkStructure(allowedShapes, shape, errorMessages) {
-    let result = true;
-
+  checkStructure(
+    allowedShapes: string[],
+    shape: GeoShape,
+    errorMessages: string[],
+  ): boolean {
     if (!shape.type) {
       errorMessages.push("The shape object has no type defined.");
       return false;
     }
+
+    // every check pushes its own message, so none of them may be short-circuited
+    const typeOk = this.checkShapeType(
+      allowedShapes,
+      shape,
+      shape.type,
+      errorMessages,
+    );
+    const propertiesOk = this.checkShapeProperties(shape, errorMessages);
+
+    return typeOk && propertiesOk;
+  }
+
+  private checkShapeType(
+    allowedShapes: string[],
+    shape: GeoShape,
+    type: string,
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
 
     if (!this.checkAllowedProperties(shape, allowedShapeProperties)) {
       errorMessages.push("The shape object has a not allowed property.");
       result = false;
     }
 
-    if (allowedShapes.indexOf(shape.type) === -1) {
+    if (!allowedShapes.includes(type)) {
       errorMessages.push("The provided shape type is not allowed.");
       result = false;
     }
+
+    return result;
+  }
+
+  /**
+   * Checks the properties each shape type does and does not accept.
+   */
+  private checkShapeProperties(
+    shape: GeoShape,
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
 
     if (shape.type === "geometrycollection" && shape.coordinates) {
       errorMessages.push(
@@ -262,16 +281,15 @@ class GeoShapeType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
-    if (Object.prototype.hasOwnProperty.call(typeOptions, "shapeTypes")) {
-      if (
-        !Array.isArray(typeOptions.shapeTypes) ||
-        typeOptions.shapeTypes.length === 0
-      ) {
+  validateFieldSpecification(
+    typeOptions: GeoShapeTypeOptions,
+  ): GeoShapeTypeOptions {
+    if (has(typeOptions, "shapeTypes")) {
+      const { shapeTypes } = typeOptions;
+
+      if (!Array.isArray(shapeTypes) || shapeTypes.length === 0) {
         throw kerror.get(
           "validation",
           "assert",
@@ -281,7 +299,7 @@ class GeoShapeType extends BaseType {
         );
       }
 
-      const invalid = typeOptions.shapeTypes.filter(
+      const invalid = shapeTypes.filter(
         (shape) => !allowedShapeTypes.includes(shape),
       );
 
@@ -296,11 +314,63 @@ class GeoShapeType extends BaseType {
   }
 }
 
-/**
- * @param {GeoShapePointCoordinates} point
- * @returns {boolean}
- */
-function isPoint(point) {
+function checkOrientation(shape: GeoShape, errorMessages: string[]): boolean {
+  if (shape.orientation && !allowedOrientations.has(shape.orientation)) {
+    errorMessages.push("The orientation property has not a valid value.");
+    return false;
+  }
+
+  return true;
+}
+
+function checkRadius(shape: GeoShape, errorMessages: string[]): boolean {
+  let valid: boolean;
+
+  if (typeof shape.radius === "string") {
+    try {
+      valid = typeof Koncorde.convertDistance(shape.radius) === "number";
+    } catch (error) {
+      // an unparseable distance is an invalid radius, like any other
+      valid = false;
+    }
+  } else {
+    valid = typeof shape.radius === "number";
+  }
+
+  if (!valid) {
+    errorMessages.push("The radius property has not a valid format.");
+  }
+
+  return valid;
+}
+
+function checkCoordinates(
+  type: string,
+  isMulti: boolean,
+  coordinates: unknown[],
+  coordinateValidation: CoordinateValidation,
+  errorMessages: string[],
+): boolean {
+  if (isMulti) {
+    if (coordinates.some((coordinate) => !coordinateValidation(coordinate))) {
+      errorMessages.push(
+        `One of the shapes in  the shape type "${type}" has bad coordinates.`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  if (!coordinateValidation(coordinates)) {
+    errorMessages.push(`The shape type "${type}" has bad coordinates.`);
+    return false;
+  }
+
+  return true;
+}
+
+function isPoint(point: unknown): boolean {
   if (!Array.isArray(point) || point.length !== 2) {
     return false;
   }
@@ -313,20 +383,11 @@ function isPoint(point) {
   );
 }
 
-/**
- * @param {GeoShapePointCoordinates} pointA
- * @param {GeoShapePointCoordinates} pointB
- * @returns {boolean}
- */
-function isPointEqual(pointA, pointB) {
+function isPointEqual(pointA: unknown[], pointB: unknown[]): boolean {
   return pointA[0] === pointB[0] && pointA[1] === pointB[1];
 }
 
-/**
- * @param {GeoShapeLineCoordinates} line
- * @returns {boolean}
- */
-function isLine(line) {
+function isLine(line: unknown): boolean {
   if (!Array.isArray(line) || line.length < 2) {
     return false;
   }
@@ -334,24 +395,16 @@ function isLine(line) {
   return line.every((point) => isPoint(point));
 }
 
-/**
- * @param {GeoShapePolygonPart} polygonPart
- * @returns {boolean}
- */
-function isPolygonPart(polygonPart) {
+function isPolygonPart(polygonPart: unknown): boolean {
   return (
     Array.isArray(polygonPart) &&
     polygonPart.length >= 4 &&
     isLine(polygonPart) &&
-    isPointEqual(polygonPart[0], polygonPart[polygonPart.length - 1])
+    isPointEqual(polygonPart[0], polygonPart.at(-1))
   );
 }
 
-/**
- * @param {GeoShapePolygon} polygon
- * @returns {boolean}
- */
-function isPolygon(polygon) {
+function isPolygon(polygon: unknown): boolean {
   if (!Array.isArray(polygon)) {
     return false;
   }
@@ -359,7 +412,7 @@ function isPolygon(polygon) {
   return polygon.every((polygonPart) => isPolygonPart(polygonPart));
 }
 
-function isEnvelope(envelope) {
+function isEnvelope(envelope: unknown): boolean {
   if (!Array.isArray(envelope) || envelope.length !== 2) {
     return false;
   }
@@ -367,4 +420,4 @@ function isEnvelope(envelope) {
   return isPoint(envelope[0]) && isPoint(envelope[1]);
 }
 
-module.exports = GeoShapeType;
+export = GeoShapeType;

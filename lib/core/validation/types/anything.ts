@@ -19,39 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
+import BaseType from "../baseType";
 
-const Numeric = require("./numeric");
-
-/**
- * @class IntegerType
- */
-class IntegerType extends Numeric {
-  constructor() {
-    super();
-    this.typeName = "integer";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["range"];
-  }
-
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
-    if (!super.validate(typeOptions, fieldValue, errorMessages)) {
-      return false;
-    }
-
-    if (!Number.isInteger(fieldValue)) {
-      errorMessages.push("The field must be an integer.");
-      return false;
-    }
-
-    return true;
-  }
+class AnythingType extends BaseType {
+  public typeName = "anything";
+  public allowChildren = false;
+  public allowedTypeOptions: string[] = [];
 }
 
-module.exports = IntegerType;
+export = AnythingType;

@@ -19,39 +19,31 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as kerror from "../../../kerror";
+import { has } from "../../../util/safeObject";
+import BaseType from "../baseType";
+import { EnumTypeOptions } from "../typeOptions";
 
-const kerror = require("../../../kerror"),
-  BaseType = require("../baseType");
+class EnumType extends BaseType<EnumTypeOptions> {
+  public typeName = "enum";
+  public allowChildren = false;
+  public allowedTypeOptions = ["values"];
 
-/**
- * @class EnumType
- */
-class EnumType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "enum";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["values"];
-  }
-
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+  validate(
+    typeOptions: EnumTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
     if (typeof fieldValue !== "string") {
       errorMessages.push("The field must be a string.");
       return false;
     }
 
-    if (!typeOptions.values.includes(fieldValue)) {
+    const values = typeOptions.values ?? [];
+
+    if (!values.includes(fieldValue)) {
       errorMessages.push(
-        `The field only accepts following values: "${typeOptions.values.join(
-          ", ",
-        )}".`,
+        `The field only accepts following values: "${values.join(", ")}".`,
       );
       return false;
     }
@@ -60,16 +52,16 @@ class EnumType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "values")) {
+  validateFieldSpecification(typeOptions: EnumTypeOptions): EnumTypeOptions {
+    if (!has(typeOptions, "values")) {
       throw kerror.get("validation", "types", "missing_enum_values");
     }
 
-    if (!Array.isArray(typeOptions.values) || typeOptions.values.length === 0) {
+    const { values } = typeOptions;
+
+    if (!Array.isArray(values) || values.length === 0) {
       throw kerror.get(
         "validation",
         "assert",
@@ -79,9 +71,7 @@ class EnumType extends BaseType {
       );
     }
 
-    const nonString = typeOptions.values.filter(
-      (value) => typeof value !== "string",
-    );
+    const nonString = values.filter((value) => typeof value !== "string");
 
     if (nonString.length > 0) {
       throw kerror.get(
@@ -97,4 +87,4 @@ class EnumType extends BaseType {
   }
 }
 
-module.exports = EnumType;
+export = EnumType;

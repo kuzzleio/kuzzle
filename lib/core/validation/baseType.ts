@@ -19,41 +19,52 @@
  * limitations under the License.
  */
 
-"use strict";
+import { TypeOptions } from "./typeOptions";
 
 /**
- * @class BaseType
+ * Base class of every validation type, and the contract `Validation.addType`
+ * checks a plugin-provided type against.
+ *
+ * @typeParam TOptions - the `typeOptions` shape this type accepts
  */
-class BaseType {
+class BaseType<TOptions extends TypeOptions = TypeOptions> {
+  /** Name under which the type is registered */
+  public typeName = "";
+
+  /** Whether fields of that type may declare children */
+  public allowChildren = false;
+
+  /** `typeOptions` properties the type recognizes */
+  public allowedTypeOptions: string[] = [];
+
   /**
    * Validate a document against a registered field type validator
-   *
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
    */
-  validate() {
+  validate(
+    typeOptions?: TOptions,
+    fieldValue?: unknown,
+    errorMessages?: string[],
+  ): boolean;
+  validate(): boolean {
     return true;
   }
 
   /**
    * Validate a field specification itself
    *
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {KuzzleError}
    */
-  validateFieldSpecification(opts) {
+  validateFieldSpecification(opts: TOptions): TOptions {
     return opts;
   }
 
   /**
-   * @param {*} object
-   * @param {string[]} allowedProperties
-   * @returns {boolean}
+   * Narrows `object` to a plain object holding none but the allowed properties.
    */
-  checkAllowedProperties(object, allowedProperties) {
+  checkAllowedProperties(
+    object: unknown,
+    allowedProperties: string[],
+  ): object is Record<string, unknown> {
     if (
       typeof object !== "object" ||
       Array.isArray(object) ||
@@ -63,18 +74,13 @@ class BaseType {
     }
 
     return !Object.keys(object).some(
-      (propertyName) => allowedProperties.indexOf(propertyName) === -1,
+      (propertyName) => !allowedProperties.includes(propertyName),
     );
   }
 
-  /**
-   * @param {StructuredFieldSpecification} fieldSpec
-   * @param {boolean} parentStrictness
-   * @returns {boolean}
-   */
-  getStrictness(fieldSpec, parentStrictness) {
+  getStrictness(fieldSpec: TOptions, parentStrictness: boolean): boolean {
     return parentStrictness;
   }
 }
 
-module.exports = BaseType;
+export = BaseType;

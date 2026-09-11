@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress — opened 2026-09-11
 **Date:** 2026-09-11 → …
-**PR(s):** —
+**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -122,10 +122,66 @@ Unchanged from step 06, restated because this sprint is long:
 - A vitest spec for any file whose coverage the PR relies on, under `tests/` mirroring the source tree.
 - A gate-driven, behaviour-preserving refactor is **in scope** when the rename's new-code score forces it — with a verbatim-extraction equivalence note in this file.
 
-## What was done
+## What was done (PR H1 — the validation type leaves)
 
-_(nothing yet — the step was opened 2026-09-11 with the coverage measurement above)_
+14 files, 916 measurable lines: `baseType` and the 13 leaf types. **js 49 → 35.** The block was measured at 99.3%, so it clears `new_coverage` on the specs that already exist — and every one of the 14 has a dedicated Mocha spec, so the ADR's *"a file with no spec ships one"* rule does not apply here. All 15 files (the 14 plus the new `typeOptions.ts`) were adopted into strict: **102 → 117**, `--candidates` back to empty.
+
+### The generic is what makes `typeOptions` typable at all
+
+The JSDoc had a single `TypeOptions` typedef that never existed as a real declaration. Writing it as one interface does not work: `range` means `{ min?: number; max?: number }` to `numeric` and `{ min?: Moment | "NOW"; max?: … }` to `date`, and a union of the two makes every comparison in `numeric.validate` a type error.
+
+So `BaseType` is **generic over the options shape its subclass accepts** (`BaseType<NumericTypeOptions>`, `BaseType<DateTypeOptions>`, …), with the shapes in a new `lib/core/validation/typeOptions.ts`. Two consequences worth keeping:
+
+- The declared shapes describe the options **after `validateFieldSpecification` has run** — that method is what rejects the invalid ones and fills the defaults in. That is what lets `validate` read `range.min` as a `number` without re-proving anything, and it is the honest reading of the contract: the two methods are a pipeline, not two independent entry points.
+- **Method parameter bivariance is what keeps `this.types[…]` usable.** A `BaseType<NumericTypeOptions>` stays assignable to `BaseType`, so `validation.js`'s heterogeneous type registry needs no `any` when H4 converts it.
+
+### `checkAllowedProperties` is a type guard, and that removed the casts
+
+`checkAllowedProperties(o, ["min", "max"])` already proves `o` is a non-null, non-array object holding none but those keys. Declaring `o is Record<string, unknown>` means the code that follows it — which is always "now read `min` and `max`" — needs no cast. `safeObject.isPlainObject` got the same treatment (type-only, own commit); `date.validate` is its beneficiary.
+
+**The generalisable part:** *a boolean-returning validator that every caller follows with a property read is a type guard that has not been declared yet.* Two of them in one file, both free.
+
+### `{ range: undefined }` must still throw — the specs said so before review did
+
+The first pass rewrote `Object.prototype.hasOwnProperty.call(typeOptions, "range")` as `if (range)`, which reads better and is what TS narrows on. Four Mocha specs failed: `numeric` and `string` both assert that `{ range: undefined }` / `{ range: { min: undefined } }` throw `validation.assert.unexpected_properties` and `…invalid_type`. An own-property test and a truthiness test differ exactly on the specifications that are malformed, which is the only input those methods exist to reject.
+
+The conversion therefore keeps `has()` for presence and uses `!== undefined` only where TS genuinely needs the narrowing (the `max < min` comparisons, where the preceding loop has already thrown on any non-number). **A `hasOwnProperty` in validation code is load-bearing until a test says otherwise** — and here the test said so within one run.
+
+### Three unreachable branches, made explicit rather than latent
+
+Each was a `TypeError` waiting on an input `validateFieldSpecification` already rejects; strict mode is what surfaced them:
+
+| Site | Was | Is |
+|------|-----|----|
+| `date.validate`, unknown format | `formatMap[f](v)` → `undefined is not a function` | skipped, with the reason in a comment |
+| `geoShape`, shape type falling through the switch | `coordinateValidation` unassigned, then called | initialised to `() => true`; the `default:` branch already sets `result = false` |
+| `geoShape`, `geometrycollection` coordinates | `undefined` passed to a validator that ignores it | destructured with a `[]` default |
+
+### Other decisions
+
+- **`@types/validator` is a new dev dependency.** `validator` ships no declarations, so the three `import validator from "validator"` scored `TS7016` — an implicit `any` on a whole third-party surface, which is exactly what the fourth ratchet is for. Hand-writing a local `.d.ts` for three functions was rejected: it is debt with no owner.
+- **Two `as` casts, both at the boundary where the input is genuinely `unknown`** and the library it feeds is the thing that decides: `parse(fieldValue as MomentInput)` and `Koncorde.convertGeopoint(fieldValue as string | JSONObject)`. Neither is `as unknown as`, so neither moves the `any` counter.
+- **`BaseType.validate` is declared as an overload** (`validate(typeOptions?, fieldValue?, errorMessages?): boolean` over an implementation taking none). The base returns `true` and reads nothing; without the overload, either the subclasses stop being assignable or ESLint reports three unused parameters.
+- **Constructors are gone.** Every type's constructor did nothing but assign `typeName` / `allowChildren` / `allowedTypeOptions`; they are class-field initialisers now, which is the shape Sonar's S7757 asked for in sprint 5. With `target: es2020` and `useDefineForClassFields` off, the emitted code is the same assignment in the constructor, so `has(validationType, "allowChildren")` in `Validation.addType` still sees an own property.
+
+### The gate's new-code issues: four S3776, as budgeted
+
+`new_coverage` came out at **97.0%** and duplication at 0.0%, but the gate failed on **4 new Critical** — `S3776` cognitive complexity on `date.validate` (23), `date.validateFieldSpecification` (22), `geoShape.recursiveShapeValidation` (23) and `geoShape.checkStructure` (17). All four are pre-existing and all four were re-scored by the rename: the standing sprint-4 pattern, and the reason the step's DoD says a gate-driven refactor is in scope.
+
+Resolved by verbatim extraction — `parseDate`, `checkRange`, `validateFormats`, `validateRange`, `checkOrientation`, `checkRadius`, `checkCoordinates`, `checkGeometries`, `checkShapeType`, `checkShapeProperties`. **Equivalence note**, the two places where the extraction is not a straight cut-and-paste:
+
+- **`geoShape`'s checks each push their own error message, so none of them may be short-circuited.** `checkStructure` and `recursiveShapeValidation` both accumulated into a `result` flag precisely so that every applicable message lands. The extracted helpers therefore return into locals that are combined *after* the fact (`return typeOk && propertiesOk`), never inline in a `&&` chain. A comment says so at both sites.
+- **`recursiveShapeValidation`'s tail already collapsed to `result && coordinatesOk`.** The original returned `false` early when a non-multi shape had bad coordinates, skipping `result` — but `result` is the only other term, so the early return and the conjunction agree on every input. The conjunction is what the extraction leaves behind.
+- **`checkRadius` keeps an assignment in its `catch`.** The original pushed the error message from inside the block; hoisting that push to a single site at the end would have left an empty `catch`, which is a Sonar issue of its own. The block assigns `valid = false` instead.
 
 ## Validation
 
-_(pending)_
+Run on the H1 branch, 2026-09-11:
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **35**, mocha 151, any 205, implicit-any 461, cpd-exclusions 4)
+- `npm run test:strict` — 117 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
+- `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
+- `eslint` + `prettier` — clean
+- SonarCloud on [#2722](https://github.com/kuzzleio/kuzzle/pull/2722): `new_coverage` **97.0%**, duplication 0.0%, all three ratings A — green after the S3776 round above

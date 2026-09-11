@@ -127,3 +127,21 @@ lib/core/realtime/index.ts
 lib/core/security/index.ts
 lib/core/shared/sdk/impersonatedSdk.ts
 bin/copy-binaries.ts
+
+# Sprint 6, PR H1 (2026-09-11) — lib/core/validation's type leaves: the base
+# class, the shared typeOptions shapes and the 13 leaf types.
+lib/core/validation/baseType.ts
+lib/core/validation/typeOptions.ts
+lib/core/validation/types/anything.ts
+lib/core/validation/types/boolean.ts
+lib/core/validation/types/date.ts
+lib/core/validation/types/email.ts
+lib/core/validation/types/enum.ts
+lib/core/validation/types/geoPoint.ts
+lib/core/validation/types/geoShape.ts
+lib/core/validation/types/integer.ts
+lib/core/validation/types/ipAddress.ts
+lib/core/validation/types/numeric.ts
+lib/core/validation/types/object.ts
+lib/core/validation/types/string.ts
+lib/core/validation/types/url.ts

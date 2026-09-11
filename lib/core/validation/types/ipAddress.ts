@@ -19,54 +19,40 @@
  * limitations under the License.
  */
 
-"use strict";
+import isIP from "validator/lib/isIP";
 
-const kerror = require("../../../kerror").wrap("validation", "assert"),
-  BaseType = require("../baseType"),
-  validator = require("validator");
+import { wrap } from "../../../kerror";
+import { has } from "../../../util/safeObject";
+import BaseType from "../baseType";
+import { NotEmptyTypeOptions } from "../typeOptions";
 
-/**
- * @class EmailType
- */
-class EmailType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "email";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["notEmpty"];
-  }
+const kerror = wrap("validation", "assert");
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
-    if (fieldValue === undefined || fieldValue === null) {
-      if (typeOptions.notEmpty) {
-        errorMessages.push("Field cannot be undefined or null");
-        return false;
-      }
+class IpAddressType extends BaseType<NotEmptyTypeOptions> {
+  public typeName = "ip_address";
+  public allowChildren = false;
+  public allowedTypeOptions = ["notEmpty"];
 
-      return true;
-    }
-
+  validate(
+    typeOptions: NotEmptyTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
     if (typeof fieldValue !== "string") {
       errorMessages.push("The field must be a string.");
       return false;
     }
 
     if (fieldValue.length === 0) {
-      if (typeOptions.notEmpty === true) {
+      if (typeOptions.notEmpty) {
         errorMessages.push("The string must not be empty.");
         return false;
       }
       return true;
     }
 
-    if (!validator.isEmail(fieldValue)) {
-      errorMessages.push("The string must be a valid email address.");
+    if (!isIP(fieldValue)) {
+      errorMessages.push("The string must be a valid IP address.");
       return false;
     }
 
@@ -74,12 +60,12 @@ class EmailType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "notEmpty")) {
+  validateFieldSpecification(
+    typeOptions: NotEmptyTypeOptions,
+  ): NotEmptyTypeOptions {
+    if (!has(typeOptions, "notEmpty")) {
       typeOptions.notEmpty = false;
     } else if (typeof typeOptions.notEmpty !== "boolean") {
       throw kerror.get("invalid_type", "notEmpty", "boolean");
@@ -89,4 +75,4 @@ class EmailType extends BaseType {
   }
 }
 
-module.exports = EmailType;
+export = IpAddressType;

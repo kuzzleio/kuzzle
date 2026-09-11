@@ -19,45 +19,49 @@
  * limitations under the License.
  */
 
-"use strict";
+import isEmail from "validator/lib/isEmail";
 
-const kerror = require("../../../kerror").wrap("validation", "assert"),
-  BaseType = require("../baseType"),
-  validator = require("validator");
+import { wrap } from "../../../kerror";
+import { has } from "../../../util/safeObject";
+import BaseType from "../baseType";
+import { NotEmptyTypeOptions } from "../typeOptions";
 
-/**
- * @class UrlType
- */
-class UrlType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "url";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["notEmpty"];
-  }
+const kerror = wrap("validation", "assert");
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+class EmailType extends BaseType<NotEmptyTypeOptions> {
+  public typeName = "email";
+  public allowChildren = false;
+  public allowedTypeOptions = ["notEmpty"];
+
+  validate(
+    typeOptions: NotEmptyTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
+    if (fieldValue === undefined || fieldValue === null) {
+      if (typeOptions.notEmpty) {
+        errorMessages.push("Field cannot be undefined or null");
+        return false;
+      }
+
+      return true;
+    }
+
     if (typeof fieldValue !== "string") {
       errorMessages.push("The field must be a string.");
       return false;
     }
 
     if (fieldValue.length === 0) {
-      if (typeOptions.notEmpty) {
+      if (typeOptions.notEmpty === true) {
         errorMessages.push("The string must not be empty.");
         return false;
       }
       return true;
     }
 
-    if (!validator.isURL(fieldValue)) {
-      errorMessages.push("The string must be a valid URL.");
+    if (!isEmail(fieldValue)) {
+      errorMessages.push("The string must be a valid email address.");
       return false;
     }
 
@@ -65,12 +69,12 @@ class UrlType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
-   * @throws PreconditionError
+   * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "notEmpty")) {
+  validateFieldSpecification(
+    typeOptions: NotEmptyTypeOptions,
+  ): NotEmptyTypeOptions {
+    if (!has(typeOptions, "notEmpty")) {
       typeOptions.notEmpty = false;
     } else if (typeof typeOptions.notEmpty !== "boolean") {
       throw kerror.get("invalid_type", "notEmpty", "boolean");
@@ -80,4 +84,4 @@ class UrlType extends BaseType {
   }
 }
 
-module.exports = UrlType;
+export = EmailType;

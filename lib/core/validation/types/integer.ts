@@ -19,31 +19,25 @@
  * limitations under the License.
  */
 
-"use strict";
+import { NumericTypeOptions } from "../typeOptions";
+import Numeric from "./numeric";
 
-const BaseType = require("../baseType");
-const { Koncorde } = require("../../shared/KoncordeWrapper");
+class IntegerType extends Numeric {
+  public typeName = "integer";
+  public allowChildren = false;
+  public allowedTypeOptions = ["range"];
 
-/**
- * @class GeoPointType
- */
-class GeoPointType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "geo_point";
-    this.allowChildren = false;
-    this.allowedTypeOptions = [];
-  }
+  validate(
+    typeOptions: NumericTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
+    if (!super.validate(typeOptions, fieldValue, errorMessages)) {
+      return false;
+    }
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
-    if (Koncorde.convertGeopoint(fieldValue) === null) {
-      errorMessages.push("Invalid GeoPoint format");
+    if (!Number.isInteger(fieldValue)) {
+      errorMessages.push("The field must be an integer.");
       return false;
     }
 
@@ -51,4 +45,4 @@ class GeoPointType extends BaseType {
   }
 }
 
-module.exports = GeoPointType;
+export = IntegerType;

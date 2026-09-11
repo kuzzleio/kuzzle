@@ -19,30 +19,25 @@
  * limitations under the License.
  */
 
-"use strict";
+import isURL from "validator/lib/isURL";
 
-const kerror = require("../../../kerror").wrap("validation", "assert"),
-  BaseType = require("../baseType"),
-  validator = require("validator");
+import { wrap } from "../../../kerror";
+import { has } from "../../../util/safeObject";
+import BaseType from "../baseType";
+import { NotEmptyTypeOptions } from "../typeOptions";
 
-/**
- * @class IpAddressType
- */
-class IpAddressType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "ip_address";
-    this.allowChildren = false;
-    this.allowedTypeOptions = ["notEmpty"];
-  }
+const kerror = wrap("validation", "assert");
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+class UrlType extends BaseType<NotEmptyTypeOptions> {
+  public typeName = "url";
+  public allowChildren = false;
+  public allowedTypeOptions = ["notEmpty"];
+
+  validate(
+    typeOptions: NotEmptyTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
     if (typeof fieldValue !== "string") {
       errorMessages.push("The field must be a string.");
       return false;
@@ -56,8 +51,8 @@ class IpAddressType extends BaseType {
       return true;
     }
 
-    if (!validator.isIP(fieldValue)) {
-      errorMessages.push("The string must be a valid IP address.");
+    if (!isURL(fieldValue)) {
+      errorMessages.push("The string must be a valid URL.");
       return false;
     }
 
@@ -65,12 +60,12 @@ class IpAddressType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "notEmpty")) {
+  validateFieldSpecification(
+    typeOptions: NotEmptyTypeOptions,
+  ): NotEmptyTypeOptions {
+    if (!has(typeOptions, "notEmpty")) {
       typeOptions.notEmpty = false;
     } else if (typeof typeOptions.notEmpty !== "boolean") {
       throw kerror.get("invalid_type", "notEmpty", "boolean");
@@ -80,4 +75,4 @@ class IpAddressType extends BaseType {
   }
 }
 
-module.exports = IpAddressType;
+export = UrlType;
