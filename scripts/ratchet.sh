@@ -74,10 +74,22 @@ fi
 
 case "$metric" in
   js)
-    label=".js files under lib/ and bin/"
+    label="JavaScript files under lib/ and bin/"
     baseline_file=".migration/js-baseline.txt"
-    current="$(find lib bin -type f -name '*.js' ! -name '*.d.ts' | wc -l | tr -d ' ')"
-    hint="Write new code in .ts — no new .js under lib/ or bin/."
+    # Extension AND shebang: bin/ holds Node executables with no extension at
+    # all (bin/wait-kuzzle, bin/start-kuzzle-server), which a `-name '*.js'`
+    # predicate cannot see. They went uncounted from the start, so the floor
+    # this ratchet reports was wrong by two — and #2719 could add 100 lines of
+    # JavaScript to bin/wait-kuzzle during a TypeScript migration without the
+    # ratchet noticing. See ADR-0001 type-debt register, TD-45 (#2732), and
+    # TD-30 (#2705) for the same class of defect in the other direction.
+    current="$(
+      {
+        find lib bin -type f -name '*.js'
+        find lib bin -type f ! -name '*.*' -exec grep -lE '^#!.*\bnode\b' {} +
+      } | sort -u | wc -l | tr -d ' '
+    )"
+    hint="Write new code in .ts — no new JavaScript under lib/ or bin/, extension or not."
     ;;
   mocha)
     label="Mocha specs (test/**/*.test.js)"
