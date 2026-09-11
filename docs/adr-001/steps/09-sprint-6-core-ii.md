@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress — opened 2026-09-11
 **Date:** 2026-09-11 → …
-**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723)
+**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) · H3 [#2724](https://github.com/kuzzleio/kuzzle/pull/2724)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -220,6 +220,30 @@ A second round left exactly one: an S6606 on the `(unknown)` fallback the extrac
 
 Two of the six S1874 were **self-inflicted**: a `@deprecated` written for `Protocol.init`'s `name` parameter sat as a block tag, which deprecates the whole method — every `super.init(...)` then scored. *A `@deprecated` line in a JSDoc block is never about one parameter.*
 
+## What was done (PR H3 — the plugin leaves)
+
+3 files, 88 measurable lines: `pluginManifest`, `pluginRepository`, `privilegedContext`. The smallest block of the sprint, and **the last one that is a conversion**; H4, H5 and H6 all write specs before they rename anything.
+
+### Being under the gate was the useful part
+
+At **76.1%** the block was four covered lines short of 80%. Topping it up with four assertions would have cleared the gate and netted nothing, so both gaps were closed properly instead — and the result came back at **92.2%**.
+
+- **`privilegedContext` had no spec at all.** The ADR's *"a file with no spec ships one"* rule, in its plain form.
+- **`pluginManifest`'s Mocha spec was replaced, not duplicated.** It stubbed `AbstractManifest.load()` to a no-op and assigned `name` and `raw` by hand — so it never exercised the base class, and the file's real load path was untested while looking tested. The vitest version drives real `manifest.json` fixtures through the real base. The Mocha spec is deleted in the same commit: **mocha 151 → 150**, the first movement on that counter since the ADR opened.
+
+**The generalisable part:** *a block that lands under the threshold is telling you which file is not really tested.* The gate's arithmetic pointed at the two files whose specs were thinnest, and the fix for both was a spec rather than a number.
+
+### Typing decisions
+
+- **`accessors.kuzzle` is now declared on `PluginContext`**, optional, documented as present only for a plugin declared `privileged`. `PrivilegedPluginContext` has assigned it since it existed and the public type never mentioned it — the third occurrence in this migration of *the type describing less than the class does*.
+- **`PluginRepository`'s public methods take `JSONObject`**, not the id-bearing document. That is what the plugin-facing `Repository` contract passes, and a document being created legitimately has no `_id` yet. `ObjectRepository<TObject>`'s `_id` requirement is asserted at one point — the same point the runtime has always read `object._id`.
+- **`delete()` accepts `string | PluginDocument`.** It overrides a base that takes the object; an override narrowed to the id alone is not a signature the base can satisfy. The union keeps both, and the callers still pass a string.
+- **`pluginRepository.ts` is deliberately left out of strict.** Its `load()` resolves `null` for a missing user — documented behaviour — and that cannot be declared against `ObjectRepository<TObject>`'s `Promise<TObject>` without a double cast, which the conversion standard forbids. The reason sits next to the entry in `.migration/strict-adopted.txt`. **`ObjectRepository`'s type parameter cannot express a nullable load**; whoever revisits the base class should start there.
+
+### The gate
+
+`new_coverage` **92.2%**, and a single Major: S7746, `return Promise.resolve(null)` inside a `.catch()` where `return null` is the same value. Fixed.
+
 ## Validation
 
 Run on the H1 branch, 2026-09-11:
@@ -239,4 +263,14 @@ Run on the H2 branch, 2026-09-11 (rebased on `2-dev` after H1 merged):
 - `npm run test:strict` — 123 adopted files pass; `--candidates` empty
 - `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
 - `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
+- `eslint` + `prettier` — clean
+- SonarCloud on [#2723](https://github.com/kuzzleio/kuzzle/pull/2723): `new_coverage` **85.2%**, duplication 0.0%, all three ratings A, **0 violations**
+
+Run on the H3 branch, 2026-09-11 (rebased on `2-dev` after H2 merged):
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **20**, mocha **150**, any 205, implicit-any 457, cpd-exclusions 4)
+- `npm run test:strict` — 125 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing** (3030 − the 3 replaced)
+- `.ci/scripts/docker-test.sh unit vitest` — **189 passing** (183 + 6)
 - `eslint` + `prettier` — clean

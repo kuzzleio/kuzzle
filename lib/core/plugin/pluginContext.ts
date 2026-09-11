@@ -53,6 +53,7 @@ import { Store } from "../shared/store";
 import { storeScopeEnum } from "../storage/storeScopeEnum";
 import PluginRepository from "./pluginRepository";
 import { KuzzleLogger } from "kuzzle-logger/dist";
+import { Kuzzle } from "../../kuzzle";
 
 const contextError = kerror.wrap("plugin", "context");
 
@@ -165,6 +166,14 @@ export class PluginContext {
      * Current Kuzzle node unique identifier
      */
     nodeId: string;
+
+    /**
+     * The Kuzzle instance itself.
+     *
+     * Only present for plugins declared `privileged` in their manifest:
+     * `PrivilegedPluginContext` is what sets it.
+     */
+    kuzzle?: Kuzzle;
   };
 
   public config: JSONObject;
