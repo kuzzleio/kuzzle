@@ -23,6 +23,18 @@ import { JSONObject } from "kuzzle-sdk";
 import * as kerror from "../../kerror";
 import { cacheDbEnum } from "../cache/cacheDbEnum";
 
+/**
+ * The constructor's options. `store` used to be untyped, so it inferred from
+ * its `= null` default and every subclass passing a real store was, under
+ * strict, passing something "not assignable to null" (ADR-0001, TD-40 —
+ * #2727). Only `.index` is read here; the rest of a store's surface is
+ * exercised through `this.store`.
+ */
+interface ObjectRepositoryOptions {
+  cache?: cacheDbEnum;
+  store?: { index: string } | null;
+}
+
 export class ObjectRepository<TObject extends { _id: string }> {
   protected ttl: number;
   protected index: string;
@@ -31,7 +43,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
   protected store: any;
   protected cacheDb: cacheDbEnum;
 
-  constructor({ cache = cacheDbEnum.INTERNAL, store = null } = {}) {
+  constructor({
+    cache = cacheDbEnum.INTERNAL,
+    store = null,
+  }: ObjectRepositoryOptions = {}) {
     this.ttl = global.kuzzle.config.repositories.common.cacheTTL;
     this.collection = null;
     this.ObjectConstructor = null;
@@ -40,7 +55,11 @@ export class ObjectRepository<TObject extends { _id: string }> {
     this.cacheDb = cache;
   }
 
-  async loadOneFromDatabase(id: string): Promise<TObject> {
+  /**
+   * Resolves `null` when the document does not carry an `_id` — see `load()`
+   * for why the whole load path is nullable (ADR-0001, TD-40 — #2727).
+   */
+  async loadOneFromDatabase(id: string): Promise<TObject | null> {
     let response;
 
     try {
@@ -131,7 +150,7 @@ export class ObjectRepository<TObject extends { _id: string }> {
   async loadFromCache(
     id: string,
     options: { key?: string } = {},
-  ): Promise<TObject> {
+  ): Promise<TObject | null> {
     const key = options.key || this.getCacheKey(id);
     let response;
 
@@ -153,6 +172,14 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * Returns a promise that resolves either to the
    * retrieved object of null in case it is not found.
    *
+   * The `| null` is not new behaviour: all three of `load`, `loadFromCache`
+   * and `loadOneFromDatabase` have always had a `return null` path, and the
+   * declared `Promise<TObject>` was simply wrong about them. It is stated now
+   * because a subclass that resolves `null` on purpose — `PluginRepository`
+   * does, for a missing user — could not say so against the old signature
+   * without a double cast, and so said nothing at all. ADR-0001, TD-40
+   * (#2727).
+   *
    * If the object is not found in Cache and found in the Database,
    * it will be written to cache also.
    *
@@ -164,7 +191,10 @@ export class ObjectRepository<TObject extends { _id: string }> {
    * @param id - The id of the object to get
    * @param options.key - Optional cache key
    */
-  async load(id: string, options: { key?: string } = {}): Promise<TObject> {
+  async load(
+    id: string,
+    options: { key?: string } = {},
+  ): Promise<TObject | null> {
     if (this.cacheDb === cacheDbEnum.NONE) {
       return this.loadOneFromDatabase(id);
     }
