@@ -208,6 +208,9 @@ jobs:
     name: Functional tests
     needs: [sonarqube, unit-tests]
     strategy:
+      # One flaky variant must not cancel the 29 others: a re-run is otherwise
+      # the only way to learn whether anything else was broken.
+      fail-fast: false
       matrix:
         test-set:
           [
