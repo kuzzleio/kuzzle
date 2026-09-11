@@ -214,7 +214,9 @@ The first pass used `node:net` and `node:worker_threads` and **11 unit tests tur
 
 ### The gate, in two rounds
 
-`new_coverage` cleared on the first analysis; the violations did not. **27 of them** — 1 Critical (S3776 on `logAccess`, complexity 28), 7 Major, 19 Minor — every one a pre-existing idiom re-scored by the rename. Resolved the same way as H1's: verbatim extraction for the complexity, mechanical rewrites for the rest (`readonly`, class fields, object spread, `startsWith`, optional chains, `??=`, a Set), and `NOSONAR` only where the deprecation has no usable replacement ([TD-20](../type-debt-register.md#td-20) / [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)).
+`new_coverage` cleared on the first analysis (**85.3%**); the violations did not. **27 of them** — 1 Critical (S3776 on `logAccess`, complexity 28), 7 Major, 19 Minor — every one a pre-existing idiom re-scored by the rename. Resolved the same way as H1's: verbatim extraction for the complexity, mechanical rewrites for the rest (`readonly`, class fields, object spread, `startsWith`, optional chains, `??=`, a Set), and `NOSONAR` only where the deprecation has no usable replacement ([TD-20](../type-debt-register.md#td-20) / [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)).
+
+A second round left exactly one: an S6606 on the `(unknown)` fallback the extraction had just created — `user === null ? … : user` where `??` is both what Sonar asks for and the better behaviour, since a token with no `userId` at all used to log the string `"undefined"`.
 
 Two of the six S1874 were **self-inflicted**: a `@deprecated` written for `Protocol.init`'s `name` parameter sat as a block tag, which deprecates the whole method — every `super.init(...)` then scored. *A `@deprecated` line in a JSDoc block is never about one parameter.*
 

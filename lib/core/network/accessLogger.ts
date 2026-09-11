@@ -276,7 +276,9 @@ class AccessLoggerWorker {
     const user =
       token.userId === this.anonymousUserId ? "(anonymous)" : token.userId;
 
-    return user === null ? "(unknown)" : user;
+    // `??` rather than a `=== null` test: a token with no userId at all used
+    // to log the string "undefined"
+    return user ?? "(unknown)";
   }
 
   getIP(connection: ClientConnection): string {
