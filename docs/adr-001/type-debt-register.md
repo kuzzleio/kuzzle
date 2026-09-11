@@ -46,6 +46,17 @@
 | [TD-35](#td-35) | 🟠 med | Enforcement | `npm run build` ran `copy-binaries` through `tsx` (esbuild native binary) and nothing asserted its payload — a broken copy step shipped a `.proto`-less package | XS | ✅ |
 | [TD-36](#td-36) | 🔴 high | Enforcement | TD-35's payload gate never sees the published artifact: `npm publish` re-runs `prepublishOnly` → `build`, which wipes the `dist/` the workflow step verified | XS | ✅ |
 | [TD-37](#td-37) | 🟠 med | Enforcement | TD-35's gate was a hand-written 6-path list sold as "every path `files` promises" — the error-code catalogue (`dist/lib/**/*.json`) was not among them | XS | ✅ |
+| [TD-38](#td-38) | 🟠 med | Enforcement | A fork PR never runs the functional suite, the monkey tests or the build-payload gate — `needs: [sonarqube]` — [#2725](https://github.com/kuzzleio/kuzzle/issues/2725) | XS | ✅ |
+| [TD-39](#td-39) | 🟠 med | Enforcement | `tests/` (the vitest tree) is neither linted nor formatted; `prettier` is never checked — [#2726](https://github.com/kuzzleio/kuzzle/issues/2726) | XS | ✅ |
+| [TD-40](#td-40) | 🟠 med | Correctness | `PluginRepository.load()` is declared non-nullable and resolves `null`; `ObjectRepository` cannot express a nullable load — [#2727](https://github.com/kuzzleio/kuzzle/issues/2727) | S | ⬜ |
+| [TD-41](#td-41) | 🟠 med | Correctness | `Protocol.init`'s union advertises a call shape the body cannot honour — [#2728](https://github.com/kuzzleio/kuzzle/issues/2728) | XS | ⬜ |
+| [TD-42](#td-42) | 🟠 med | Enforcement | The coverage rule is an aggregate over the block, so a 0-spec file ships behind its siblings — [#2729](https://github.com/kuzzleio/kuzzle/issues/2729) | S | ⬜ |
+| [TD-43](#td-43) | 🟡 low | Enforcement | Nothing charges for a single `as` assertion, nor for a type-only import written as a value import — [#2730](https://github.com/kuzzleio/kuzzle/issues/2730) | S | ⬜ |
+| [TD-44](#td-44) | 🟡 low | Enforcement | `strict-check.sh` fails **open**: a tsc that never ran reads as "all adopted files pass" — [#2731](https://github.com/kuzzleio/kuzzle/issues/2731) | XS | ✅ |
+| [TD-45](#td-45) | 🟡 low | Enforcement | Extensionless Node executables in `bin/` are invisible to the `js` ratchet — the floor is 5, not 3 — [#2732](https://github.com/kuzzleio/kuzzle/issues/2732) | XS | ✅ |
+| [TD-46](#td-46) | 🟡 low | Tests | `privilegedContext`'s new spec mocks the base class it exists to exercise; fixture leaks beside it — [#2733](https://github.com/kuzzleio/kuzzle/issues/2733) | XS | ⬜ |
+| [TD-47](#td-47) | 🟡 low | Enforcement | CI hygiene: no `concurrency` group, a pointless Node matrix on `lint`, an undefined `NODE_LTS_ACTIVE_VERSION`, no least-privilege — [#2734](https://github.com/kuzzleio/kuzzle/issues/2734) | XS | ✅ |
+| [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -549,3 +560,174 @@ Those files reach `dist/` for a reason no one asserts either: `tsconfig.json` `i
 - **Verified negatively, three ways:** `rm -rf dist/lib/kerror/codes` → *`dist/lib/**/*.json` — 1 file(s), expected 10*; `rm -rf dist && npx tsc` (copy step skipped) → the missing entrypoint and *`*.proto` — 0, expected 2*; `chmod -x dist/bin/start-kuzzle-server` → the executable check. All three exit 1.
 - **Portability note:** counted with `find -path`, not a shell glob — `globstar` is a bash-4 option and macOS still ships bash 3.2, so the original list would have been the *portable* half of a script whose replacement had to stay runnable on a maintainer's laptop.
 - **The generalisable part:** *a check that repeats a promise by hand is a second thing to maintain, and it drifts silently — in the direction of passing.* Derive it from the promise, or the review question "does the gate cover X" has to be re-answered by reading both.
+
+
+---
+
+## Fourth review — the sprint-6 conversions and the CI, 2026-09-11
+
+The fifteen PRs merged into `2-dev` between #2708 and #2724 were re-read end to end — the three sprint-6 conversions (H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722), H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723), H3 [#2724](https://github.com/kuzzleio/kuzzle/pull/2724)), the type-debt track, and the CI work of [#2718](https://github.com/kuzzleio/kuzzle/pull/2718)/[#2719](https://github.com/kuzzleio/kuzzle/pull/2719)/[#2720](https://github.com/kuzzleio/kuzzle/pull/2720).
+
+The conversions hold up. H2's four latent bugs are all real and all correctly fixed — including the removal of `removeStacktrace` from the router, verified against `lib/util/stackTrace.ts`'s two branches and the eight protocol call sites that do the real sanitising. H3's decision to write two specs rather than four assertions is the register's own rule working as designed.
+
+Eleven findings, all filed. They fall into three groups.
+
+**The conversions bought their types with a wrong signature, twice** ([TD-40](#td-40), [TD-41](#td-41)). Both times the ADR's "no double cast" standard was honoured and the *outcome* the standard exists to prevent was reached anyway, by a different route: a return type that does not describe what the function returns, and a parameter union that describes a call the body cannot serve. A cast is at least counted by the `any` ratchet and visible to a reader. **A wrong type is cheaper than a cast at review time and more expensive at every point afterwards** — and the file excluded from strict to accommodate it is the one place nothing will look again until step 12.
+
+**The gates are aggregates, and an aggregate hides its worst member** ([TD-42](#td-42), [TD-43](#td-43), [TD-44](#td-44), [TD-45](#td-45)). H3 landed under the coverage threshold and the arithmetic pointed straight at the two files that were not really tested; H2 landed comfortably above it and three files went in with no spec at all — one of them receiving a bug fix in that same PR. The same shape recurs across the tooling: the `any` ratchet counts the hatches it was told about and the debt moved to `as T`; the `js` ratchet counts `*.js` and two Node executables in `bin/` have never been seen; `strict-check.sh` derives a verdict from a log and reads an empty one as success. *A counter is only a gate for the things it can see, and every one of these was blind in the direction of passing.*
+
+**The CI gates what maintainers push, not what arrives** ([TD-38](#td-38), [TD-47](#td-47)). Three iterations (TD-35 → TD-36 → TD-37) went into making the build-payload gate real; it lives in the one job that is fork-gated, and everything hung off that job — 30 functional jobs and 6 monkey jobs — is skipped on a fork PR too.
+
+| Finding | Sev. | Issue |
+|---|---|---|
+| A fork PR never runs the functional suite, the monkey tests, or the build-payload gate | 🟠 med | [#2725](https://github.com/kuzzleio/kuzzle/issues/2725) |
+| `tests/` is in neither the ESLint nor the Prettier glob, and `prettier` is never checked anywhere | 🟠 med | [#2726](https://github.com/kuzzleio/kuzzle/issues/2726) |
+| `PluginRepository.load()` declares `Promise<PluginDocument>` and resolves `null` | 🟠 med | [#2727](https://github.com/kuzzleio/kuzzle/issues/2727) |
+| `Protocol.init(entryPoint)` type-checks and throws; the documented legacy shape is not the one in the tree | 🟠 med | [#2728](https://github.com/kuzzleio/kuzzle/issues/2728) |
+| The coverage rule is per block, so `context.ts`, `protocol.ts` and `protocolManifest.ts` shipped with no spec | 🟠 med | [#2729](https://github.com/kuzzleio/kuzzle/issues/2729) |
+| Nothing charges for `as T`, nor for a type-only import written as a value import | 🟡 low | [#2730](https://github.com/kuzzleio/kuzzle/issues/2730) |
+| `strict-check.sh` prints "all 125 adopted files pass" when tsc never ran | 🟡 low | [#2731](https://github.com/kuzzleio/kuzzle/issues/2731) |
+| `bin/wait-kuzzle` and `bin/start-kuzzle-server` have never been counted by the `js` ratchet | 🟡 low | [#2732](https://github.com/kuzzleio/kuzzle/issues/2732) |
+| H3's new `privilegedContext` spec mocks the base class, the fault the same PR removed elsewhere | 🟡 low | [#2733](https://github.com/kuzzleio/kuzzle/issues/2733) |
+| CI hygiene: no `concurrency`, a Node matrix on `lint`, an undefined `NODE_LTS_ACTIVE_VERSION` | 🟡 low | [#2734](https://github.com/kuzzleio/kuzzle/issues/2734) |
+| Nothing asserts that a stack trace never leaves the process | 🟡 low | [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) |
+
+### Correction made to a finding during verification
+
+The first version of [#2725](https://github.com/kuzzleio/kuzzle/issues/2725) claimed a fork PR is **never type-checked**, on the grounds that `npm run build` appears only in the fork-gated `sonarqube` job. Reading the composite actions rather than the workflow showed that `.github/actions/unit-tests` and `.github/actions/build-and-run-kuzzle` both run `npm run build`, neither is fork-gated, and `tsc` therefore runs eight times on a fork PR. The issue was corrected before any work started on it. *The workflow file is not the whole workflow; a composite action is where half of this repository's CI actually lives.*
+
+### TD-38
+**A fork PR never runs the functional suite, the monkey tests or the build-payload gate** · 🟠 medium · `.github/workflows/pull_request.workflow.yaml`
+
+`sonarqube` carries `if: github.event.pull_request.head.repo.fork == false`, which is correct in itself — a fork cannot reach `SONAR_TOKEN`. What is not correct is what has been hung off it: `functional-tests` declares `needs: [sonarqube, unit-tests]`, and a skipped `needs` skips its dependents, so the 30-job functional matrix is skipped on every fork PR — and `cluster-monkey-tests`, which needs it, with it. Nothing in either suite consumes the scan; the dependency was sequencing, to stagger the runner bill.
+
+The same job is also the only place `check-build-payload.sh` runs in the PR workflow — the gate TD-35, TD-36 and TD-37 took three iterations to get right.
+
+- **Fix:** a `build` job (`npm ci` → `npm run build` → `check-build-payload.sh`) with no fork condition, and `functional-tests: needs: [build, unit-tests]`. `sonarqube` keeps a build step of its own, because its Mocha coverage run executes against `dist/` and artifacts are not shared between jobs here.
+- **The generalisable part:** *a job's `if:` is inherited by everything downstream of it.* A conditional job is a fine thing; a conditional job in the middle of a dependency chain silently rewrites the gate for everyone who trips the condition.
+
+### TD-39
+**`tests/` is neither linted nor formatted, and `prettier` is never checked** · 🟠 medium · `package.json:12,28`
+
+```
+"prettier":  "prettier ./lib ./test ./features --write",
+"test:lint": "eslint ./lib ./test ./bin ./features",
+```
+
+`./tests` is in neither glob — nor is `./features-legacy`. ADR-0001 freezes `test/` and sends every new spec to `tests/`, so the reach of both tools shrinks with each sprint, and the tree they still cover is the one being deprecated. Nothing enforced `@typescript-eslint/no-explicit-any`, the `ban-ts-comment` rule [TD-29](#td-29) installed, or any formatting at all on 15 spec files.
+
+And `prettier` is only ever `--write`: there is no `--check`, in any script or any job. Formatting was applied by whoever remembered.
+
+- **Fix:** both globs widened to `./lib ./test ./tests ./bin ./features ./features-legacy`; a new `prettier:check`, run in the `lint` job; a `.prettierignore` so the new globs stay cheap.
+- **What it caught on its first run:** 7 ESLint **errors**, all `@typescript-eslint/no-shadow`, all the same pattern — a `vi.hoisted` factory whose inner `const` shadows the destructured binding it is returned as. Renamed in place (`calls` → `initCalls` returned as `calls`, etc.), 4 files. Plus one unformatted `features-legacy` fixture. 478 warnings remain, overwhelmingly `sort-keys`, which is `warn` project-wide and equally noisy on `test/`; they do not gate.
+- **The generalisable part:** *a tool's scope is a glob written once and never revisited, while the tree it was written for is the one the migration is moving away from.* Any rule aimed at "new code" has to name where new code goes.
+
+### TD-40
+**`PluginRepository.load()` is declared non-nullable and resolves `null`** · 🟠 medium · `lib/core/plugin/pluginRepository.ts:104`
+
+```ts
+load(documentId: string): Promise<PluginDocument> {
+  return super.load(documentId).catch((error) => {
+    if (this.collection === "users" && error instanceof NotFoundError) {
+      return null;                       // ← not a PluginDocument
+    }
+    throw error;
+  });
+}
+```
+
+Resolving `null` for a missing user is documented, intentional behaviour. The `null` only type-checks because the file is excluded from strict, and [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) records the exclusion honestly: the nullable load cannot be declared against `ObjectRepository<TObject>`'s `Promise<TObject>` without a double cast, which the conversion standard forbids.
+
+The reasoning about the base class is right; the conclusion is not. Refusing the cast did not avoid the lie, it moved it somewhere no tool looks. Every converted caller is now told it holds a document, and at step 12 — the final strict flip — the file has to enter strict with no local fix available.
+
+- **Fix, in order of preference:** widen the base to `Promise<TObject | null>` and let the call sites narrow (which will surface other unhandled `null`s — the point); or give the base an overridable not-found behaviour so the subclass *declares* its nullability; failing both, `Promise<PluginDocument | null>` with a documented `@ts-expect-error` on the override, which is at least visible to the rule [TD-29](#td-29) installed.
+- **The generalisable part:** *"no cast" is a proxy for "no unchecked claim", and a wrong return type is the same claim made more quietly.* When a standard cannot be met, the honest move is the visible violation, not the invisible one.
+
+### TD-41
+**`Protocol.init`'s union advertises a call shape the body cannot honour** · 🟠 medium · `lib/core/network/protocols/protocol.ts:56`
+
+The first parameter was widened to `string | null | NetworkEntryPoint` so that `protocol.init(entryPoint)` type-checks. The body was not changed to match — it still reads the entry point from the **second** parameter — so that call shape passes the type-checker and throws on `entryPoint.config`. It works today only because every subclass overrides `init` and calls `super.init(null, entryPoint)`; a third-party protocol extending `Protocol` and calling `super.init(entryPoint)` gets a green check and a `TypeError`.
+
+The doc comment's account of the legacy shape is also not the one in the tree: `lib/core/network/entryPoint.js:205` calls `protocol.init(this, new Context())` — `(entryPoint, context)`, not the documented `(name, entryPoint)`.
+
+- **Fix:** two real overloads plus a normalising body. Note `protocol.ts` has no spec of its own ([TD-42](#td-42)); the change should ship one.
+- **Related, same block:** `MqttProtocol.disconnect(connectionId, message)` — [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) correctly removed `client.close(undefined, message)` (aedes' `close()` takes a callback and nothing else), leaving `message` an unused parameter, neither prefixed nor deprecated nor removed.
+- **The generalisable part:** *widening a parameter to make a call site compile is not the same as supporting that call.* An `any` that was never passed is harmless; a union that was never implemented is an invitation.
+
+### TD-42
+**The coverage rule is an aggregate over the block, so a 0-spec file ships behind its siblings** · 🟠 medium · process
+
+The conversion standard says *"a file with no spec ships one"*, and blocks are measured as an aggregate against SonarCloud's 80% `new_coverage`. [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) shows the rule working: 76.1%, under the gate, and the arithmetic named the two thinnest files. [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) shows it failing: 88.3% aggregate, no spec written, and three files in with none at all — `lib/core/network/context.ts`, `lib/core/network/protocols/protocol.ts`, `lib/core/network/protocolManifest.ts`.
+
+Not theoretical. `context.ts` received a bug fix in that very PR — `context.Request`, `context.RequestContext` and `context.RequestInput` were destructured from `kerror/errors`, which does not export them, so a protocol plugin calling `new context.Request(...)` crashed — and it shipped with no assertion that they are now defined. `protocol.ts` received the logic change that is [TD-41](#td-41). **Four latent bugs were found and fixed in that PR and not one shipped a regression test**, because the aggregate was comfortable and the rule never fired.
+
+- **Fix:** make the rule per file. Extend `.ci/scripts/prepare-coverage.ts`, which already owns and normalises both lcov reports, to assert that every file renamed `.js` → `.ts` in the PR appears in the merged report with at least one hit. A well-covered sibling must not be able to pay for a file nothing executes.
+- **The generalisable part:** *an aggregate threshold prices the block and says nothing about its worst member*, and the worst member is exactly the file a reviewer would have asked about.
+
+### TD-43
+**Nothing charges for a single `as` assertion, nor for a type-only import written as a value import** · 🟡 low · `scripts/ratchet.sh`, `.eslintrc.json`
+
+The `any` ratchet counts `: any`, `as any` and `as unknown as`, and its own comment explains why the third is there: *"it is the escape hatch a conversion reaches for once `': any'` is forbidden, so leaving it out would just move the debt."* It then stops one step short. `as SomeType` is the next hatch and the debt moved there on schedule — sprint 6 alone added `as PublishPacket` ×4, `as PluginDocument` ×4, `{} as TConfig`, `{} as Record<LogLevel, …>`, `as HttpVerb`. 16 in `lib/**/*.ts` today, against a ratcheted 205 `any`. Unlike `any`, a wrong `as` does not degrade to a permissive type — it asserts a specific wrong one, silently.
+
+Separately, `lib/core/plugin/pluginContext.ts` imports `Kuzzle` as a value and uses it only as a type. Elided by `tsc` today; the moment `verbatimModuleSyntax` or `isolatedModules` is on — which is step 12 — `pluginContext` → `kuzzle` becomes a runtime circular `require`.
+
+- **Fix:** a sixth ratchet, `casts`, counting `as [A-Z]` minus `as const` and minus what the `any` ratchet already owns; and `@typescript-eslint/consistent-type-imports` as an error, with the mechanical `import type` pass it forces.
+- **Deliberately not bundled** with the TD-38/39/44/45/47 tooling PR: a new baseline interacts with sprint 6's remaining PRs (H4–H6), so it lands between sprints rather than across them.
+
+### TD-44
+**`strict-check.sh` fails open: a tsc that never ran reads as "all adopted files pass"** · 🟡 low · `scripts/strict-check.sh`
+
+```bash
+npx tsc -p tsconfig.strict.json --noEmit > "$LOG" 2>&1 || true
+```
+
+The exit status was discarded and the verdict derived purely from grepping the log for `error TS` against each adopted path. A tsc that never got as far as reporting diagnostics — an OOM kill, a malformed `tsconfig.strict.json`, a missing `typescript` after a bad install — produces a log with no matching line and the script prints `✅ strict: all 125 adopted file(s) pass.` and exits 0. This is the check that guards the migration's central invariant, and it was the one member of the set that failed **open**. (`ratchet.sh`'s `implicit-any` has the same `|| true` and fails closed by accident: a crashed tsc yields a count of 0, which trips the "progress — update the baseline" branch.)
+
+- **Fix, and why it is not an exit-code check:** the first attempt treated `exit > 1` as "did not run" and broke immediately — tsc returns 2 both for "I found errors in your code" and for "I could not read your config". The status alone cannot separate the cases, so the discriminator is the output. Two guards: any line matching `^error TS` is a config- or CLI-level diagnostic (TS5xxx/TS6xxx/TS18003) printed with no `path(line,col)` prefix, meaning tsc never read the project asked for → hard fail; and a non-zero exit with no `path(line,col): error TS` line anywhere → hard fail. Plus a guard on an empty `$ADOPTED`, which used to print `✅ all 0 adopted file(s) pass`.
+- **Verified negatively, three ways:** a broken `extends` → caught by the first guard (and worth noting *why* it needed that guard — with no config tsc happily fell back to compiling `dist/` and filled the log with genuine diagnostics about the wrong files); `mv node_modules/typescript` → caught by the second, and `npx` had silently downloaded the unrelated `tsc@2.0.4` package from npm, which prints a banner and exits 1; and the normal run, still `✅ 125`.
+- **The generalisable part:** *a check that reads its verdict out of another process's stdout has to prove that process ran.* Absence of an error message is not evidence of absence of errors.
+
+### TD-45
+**Extensionless Node executables in `bin/` are invisible to the `js` ratchet** · 🟡 low · `scripts/ratchet.sh`
+
+```bash
+current="$(find lib bin -type f -name '*.js' ! -name '*.d.ts' | wc -l)"
+```
+
+`bin/start-kuzzle-server` and `bin/wait-kuzzle` are `#!/usr/bin/env node` scripts with no extension. Neither has ever been counted. The baseline said **20**; the real figure is **22**, and the `bin/` floor the ADR describes as "3, all plugin fixtures under `bin/plugins/available/**`" is **5**.
+
+Same class of defect as [TD-30](#td-30), which corrected a file's *classification*; this corrects the *predicate*. It bites now: [#2719](https://github.com/kuzzleio/kuzzle/pull/2719) rewrote `bin/wait-kuzzle` and added ~100 lines of JavaScript to `bin/` during a TypeScript migration whose stated invariant is "no new `.js` under `lib/` or `bin/`", and the ratchet could not see the file. (`! -name '*.d.ts'` is also dead: no path matches both `*.js` and `*.d.ts`.)
+
+- **Fix:** match on the shebang as well as the extension, and re-record the baseline at its true value. **The baseline goes up, 20 → 22** — the one direction this ratchet is built to forbid. That is correct here and only here: the metric did not regress, the instrument was wrong, and freezing a known-false floor to preserve a monotonic number would be the worse trade. Both files remain in scope for conversion; `bin/wait-kuzzle` first, being the one with logic worth type-checking.
+- **The generalisable part:** *a ratchet measures its predicate, not its label.* "`.js` files under `lib/` and `bin/`" and `-name '*.js'` are not the same set, and the gap is invisible precisely because the counter reports a number rather than a list. It now reports what it counted.
+
+### TD-46
+**`privilegedContext`'s new spec mocks the base class it exists to exercise** · 🟡 low · `tests/core/plugin/privilegedContext.test.ts`
+
+[#2724](https://github.com/kuzzleio/kuzzle/pull/2724)'s strongest move was deleting a Mocha spec that faked its own subject — *"it stubbed `AbstractManifest.load()` to a no-op … so it never exercised the base at all"*. The vitest spec added beside it `vi.mock`s `PluginContext`. But `PrivilegedPluginContext` **is** `PluginContext` plus one assignment, so what remains asserts an assignment to a field on a stub the test itself declared; it would pass if `PluginContext` were deleted. The one property worth pinning — that a privileged context is a *complete* plugin context which additionally carries `kuzzle` — is exactly the one the mock removes.
+
+The mock is presumably there because the real constructor reaches `global.kuzzle`. The sibling `pluginManifest.test.ts` shows the answer: give it a `global.kuzzle`.
+
+- **Also, in that sibling:** `mkdtempSync` runs once per fixture and nothing ever removes the directories (five per run, forever); and `globalThis.kuzzle` is set in `beforeEach` and never restored — harmless only because vitest isolates per file by default, i.e. the spec is correct by virtue of a config setting it neither states nor controls.
+- **The generalisable part:** *a review finding is a rule, not an anecdote.* "A spec that stubs its subject's base class is not testing anything" was learned and written down in the PR body, and broken twenty lines away in the same commit — because it was applied to the file under repair rather than adopted as a check on the file being written.
+
+### TD-47
+**CI hygiene: no `concurrency`, a pointless Node matrix, an undefined Node version, no least-privilege** · 🟡 low · `.github/workflows/pull_request.workflow.yaml`
+
+The workflow schedules roughly 50 jobs per push and nothing cancels a run the next push supersedes, so three pushes in a row mean three full runs to completion. `lint` and `error-codes-check` ran on `node-version: [20, 22, 24]`, which cannot change either verdict — and `lint` is a `needs:` of three other jobs, so the slowest of three identical runs sat on the critical path.
+
+The sharpest of the four: `NODE_LTS_ACTIVE_VERSION` is referenced four times, in `error-codes-check` and `sonarqube`, and **defined nowhere** — the workflow has no `env:` block, and the `env` context reads only workflow/job/step env. Both jobs called `setup-node` with an empty `node-version`, ran on whatever Node the runner image shipped, and rendered in the UI as the bare string `Node version`. The sibling workflows define `NODE_VERSION` instead, and disagree: `release` says `"24"`, `sbom-release` says `"22"`.
+
+- **Fix:** workflow-level `env: NODE_VERSION`, `permissions: contents: read`, a `concurrency` group with `cancel-in-progress`, and `lint` pinned to one Node. Four jobs saved per run and a shorter critical path, on top of the cancellations.
+- **Not done here:** pinning third-party actions to a commit SHA. `actions/checkout@v4`, `SonarSource/sonarqube-scan-action@v7.0.0` and `actions/create-github-app-token@v3` are referenced by mutable tag; the mitigation is a SHA plus a version comment, kept current by dependabot. Left out of this PR so the diff stays one reviewable idea.
+- **Note on the interaction with [TD-33](#td-33):** `cancel-in-progress` and the `fail-fast: false` [#2719](https://github.com/kuzzleio/kuzzle/pull/2719) put on the functional matrix pull in the same direction, not opposite ones — finish every variant of the commit under test, abandon every variant of the commit nobody is asking about.
+
+### TD-48
+**Nothing asserts that a stack trace never leaves the process** · 🟡 low · `lib/util/stackTrace.ts` and its 8 call sites
+
+[#2723](https://github.com/kuzzleio/kuzzle/pull/2723) removed a `removeStacktrace` call from `router._executeFromHttp`. **The removal is correct** — verified against `lib/util/stackTrace.ts:71`, which takes an `Error` or a *serialized* response, against `_res` being a `KuzzleRequest` that matches neither branch, and against the eight call sites in `httpwsProtocol.js` (`:455`, `:936`, `:990`), `mqttProtocol.ts:287` and `entryPoint.js` (`:269`, `:313`, `:332`, `:349`) that do the real sanitising on `toJSON()` output. The call had been a no-op for as long as it had existed.
+
+What remains is that the property is guarded by a comment. `removeStacktrace`'s own docstring says it "must be invoked by all protocols" — an obligation stated in prose, spread over eight call sites in four files, two of which (`entryPoint.js`, `httpwsProtocol.js`) are still JavaScript and are exactly what sprint 6's H6 is about to rewrite. No test asserts the outcome. A conversion that drops one of the eight fails nothing.
+
+- **Fix:** functional-suite scenarios, not unit tests — the property is about what crosses the wire. With `NODE_ENV` ≠ `development`, provoke a 500 over HTTP and assert `content.error.stack` is absent; the same over WebSocket, since `httpwsProtocol` serves both and sanitises them on different paths (`:455` vs `:990`); ideally the same for a notification (`entryPoint.js:349`).
+- **The generalisable part:** *when a review concludes "this call was always dead, the real work happens elsewhere", the same reading has just established where the invariant actually lives — and that nothing is testing it there.* The dead call was, in effect, the only thing naming the requirement.
