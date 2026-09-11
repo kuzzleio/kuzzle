@@ -19,9 +19,7 @@
  * limitations under the License.
  */
 
-// bare specifiers on purpose: the Mocha specs intercept "net" and
-// "worker_threads" with mock-require, which never sees a "node:" prefix
-import * as net from "net";
+import * as net from "node:net";
 
 import Aedes, {
   AedesPublishPacket,
@@ -68,7 +66,9 @@ class MqttProtocol extends Protocol<MqttConfig> {
   public connectionsById: Map<string, Client>;
   public publishCallback: (error?: Error) => void;
 
-  private logger: ReturnType<typeof global.kuzzle.log.child>;
+  private readonly logger = global.kuzzle.log.child(
+    "core:network:protocols:mqtt",
+  );
 
   constructor() {
     super("mqtt");
@@ -79,8 +79,6 @@ class MqttProtocol extends Protocol<MqttConfig> {
 
     this.connections = new Map();
     this.connectionsById = new Map();
-    this.logger = global.kuzzle.log.child("core:network:protocols:mqtt");
-
     // needs to be bound to this object's context
     this.publishCallback = (error?: Error) => {
       if (error) {
@@ -98,19 +96,17 @@ class MqttProtocol extends Protocol<MqttConfig> {
 
     debug("initializing MQTT Server with config: %a", this.config);
 
-    this.config = Object.assign(
-      {
-        allowPubSub: false,
-        developmentMode: false,
-        disconnectDelay: 250,
-        requestTopic: "Kuzzle/request",
-        responseTopic: "Kuzzle/response",
-        server: {
-          port: 1883,
-        },
+    this.config = {
+      allowPubSub: false,
+      developmentMode: false,
+      disconnectDelay: 250,
+      requestTopic: "Kuzzle/request",
+      responseTopic: "Kuzzle/response",
+      server: {
+        port: 1883,
       },
-      this.config,
-    );
+      ...this.config,
+    };
 
     /*
      * To avoid ill-use of our topics, we need to configure authorizations:

@@ -150,6 +150,7 @@ lib/core/validation/types/url.ts
 # The rest of lib/core/network is nullable-heavy by nature (parentPort, the
 # optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
 # is left to the sprint-9 flip rather than guarded file by file here.
+lib/core/network/clientConnection.ts
 lib/core/network/context.ts
 lib/core/network/httpRouter/routeTypes.ts
 lib/core/network/networkEntryPoint.ts

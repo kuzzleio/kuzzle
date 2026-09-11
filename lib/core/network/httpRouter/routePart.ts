@@ -73,7 +73,7 @@ class RoutePart {
     // There are two issues:
     //   - Heavy performance impact: https://github.com/nodejs/node/issues/30334
     //   - Double slash bug: https://github.com/nodejs/node/issues/30776
-    const parsed = URL.parse(message.url, true);
+    const parsed = URL.parse(message.path, true);
     let pathname = parsed.pathname || ""; // pathname is set to null if empty
 
     if (pathname.at(-1) === "/") {

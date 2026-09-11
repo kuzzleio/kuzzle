@@ -36,16 +36,14 @@ const kerror = wrap("network", "http");
  *                           in JSON format
  */
 class RouteHandler {
-  public handler: RouteHandlerFunction | null;
+  public handler: RouteHandlerFunction | null = null;
   public url: string;
   public data: JSONObject;
   public connection: { connection: JSONObject };
 
-  public _request: Request | null;
+  public _request: Request | null = null;
 
   constructor(url: string, query: JSONObject, message: HttpMessage) {
-    this.handler = null;
-    this._request = null;
     this.url = url;
 
     this.data = {
@@ -61,8 +59,8 @@ class RouteHandler {
         ips: message.ips,
         path: message.path,
         protocol: "http",
-        // @deprecated use "path" instead
-        url: message.url,
+        // the request context's own deprecated alias of "path"
+        url: message.path,
         verb: message.method,
       },
     };
@@ -88,9 +86,7 @@ class RouteHandler {
   }
 
   get request(): Request {
-    if (this._request === null) {
-      this._request = new Request(this.data, this.connection);
-    }
+    this._request ??= new Request(this.data, this.connection);
 
     return this._request;
   }

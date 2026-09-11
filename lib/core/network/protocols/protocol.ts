@@ -30,19 +30,14 @@ import { NetworkEntryPoint } from "../networkEntryPoint";
  *                      `this.config`
  */
 class Protocol<TConfig = Record<string, unknown>> {
-  public maxRequestSize: number | null;
-  public entryPoint: NetworkEntryPoint | null;
+  public maxRequestSize: number | null = null;
+  public entryPoint: NetworkEntryPoint | null = null;
   public name: string;
-  public config: TConfig;
-  public initCalled: boolean;
+  public config: TConfig = {} as TConfig;
+  public initCalled = false;
 
   constructor(name = "") {
-    this.maxRequestSize = null;
-    this.entryPoint = null;
     this.name = name;
-    this.config = {} as TConfig;
-
-    this.initCalled = false;
 
     Reflect.defineProperty(this, "_kuzzle", {
       value: null,
@@ -51,7 +46,7 @@ class Protocol<TConfig = Record<string, unknown>> {
   }
 
   /**
-   * @param name - Protocol name (used for accessor) @deprecated
+   * The `name` parameter is deprecated: pass it to the constructor instead.
    *
    * The first parameter carries two shapes on purpose: `entryPoint` calls
    * `protocol.init(entryPoint)` on every subclass, while the subclasses call

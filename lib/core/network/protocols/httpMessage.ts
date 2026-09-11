@@ -29,7 +29,7 @@ class HttpMessage {
   public query: string;
   public path: string;
   /** @deprecated use "path" instead */
-  public url: string;
+  public url: string; // NOSONAR the field is the deprecation, not a use of one
   public method: string;
   public headers: Record<string, string>;
   public requestId: string;
@@ -49,7 +49,7 @@ class HttpMessage {
       this.path = request.getUrl();
     }
 
-    this.url = this.path;
+    this.url = this.path; // NOSONAR this is what declares the alias
 
     this.method = request.getMethod().toUpperCase();
     this.headers = {};

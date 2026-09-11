@@ -34,12 +34,11 @@ class Router {
   public connections: Map<string, RequestContext>;
   public http: HttpRouter;
 
-  private logger: ReturnType<typeof global.kuzzle.log.child>;
+  private readonly logger = global.kuzzle.log.child("core:network:router");
 
   constructor() {
     this.connections = new Map();
     this.http = new HttpRouter();
-    this.logger = global.kuzzle.log.child("core:network:router");
   }
 
   /**
@@ -206,10 +205,7 @@ class Router {
         continue;
       }
 
-      if (connectionsByProtocol[protocol] === undefined) {
-        connectionsByProtocol[protocol] = 0;
-      }
-
+      connectionsByProtocol[protocol] ??= 0;
       connectionsByProtocol[protocol]++;
     }
 

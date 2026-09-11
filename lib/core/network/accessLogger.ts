@@ -21,9 +21,12 @@
 
 // winston is CPU-hungry: isolating it in a worker thread allows for a more
 // efficient CPU resources management, and more performances in the end
-// bare specifier on purpose: the Mocha spec intercepts "worker_threads" with
-// mock-require, which never sees a "node:" prefix
-import { isMainThread, parentPort, Worker, workerData } from "worker_threads";
+import {
+  isMainThread,
+  parentPort,
+  Worker,
+  workerData,
+} from "node:worker_threads";
 
 import moment from "moment";
 import * as pino from "pino";
@@ -33,7 +36,12 @@ import { Kuzzle } from "../../kuzzle";
 import { ServerConfiguration } from "../../types";
 import type ClientConnection from "./clientConnection";
 
-const ALLOWED_TRANSPORTS = ["console", "elasticsearch", "file", "syslog"];
+const ALLOWED_TRANSPORTS = new Set([
+  "console",
+  "elasticsearch",
+  "file",
+  "syslog",
+]);
 
 /** What a protocol adds to an HTTP access log line */
 interface AccessLogExtra {
@@ -42,22 +50,18 @@ interface AccessLogExtra {
 }
 
 class AccessLogger {
-  public isActive: boolean;
-  public worker: Worker | null;
+  public isActive = false;
+  public worker: Worker | null = null;
 
-  private logger: ReturnType<typeof global.kuzzle.log.child>;
-
-  constructor() {
-    this.isActive = false;
-    this.worker = null;
-    this.logger = global.kuzzle.log.child("core:network:accessLogger");
-  }
+  private readonly logger = global.kuzzle.log.child(
+    "core:network:accessLogger",
+  );
 
   async init(): Promise<void> {
     const config = global.kuzzle.config.server;
 
     for (const out of config.logs.transports) {
-      if (out.transport && !ALLOWED_TRANSPORTS.includes(out.transport)) {
+      if (out.transport && !ALLOWED_TRANSPORTS.has(out.transport)) {
         this.logger.error(
           `Failed to initialize logger transport "${out.transport}": unsupported transport. Skipped.`,
         );
@@ -169,7 +173,7 @@ class AccessLoggerWorker {
         case "elasticsearch":
           targets.push({
             level: conf.level || "info",
-            options: Object.assign({}, conf.options),
+            options: { ...conf.options },
             target: "pino-elasticsearch",
           });
           break;
@@ -225,69 +229,20 @@ class AccessLoggerWorker {
       return;
     }
 
-    // user init: prioritize the already decoded and verified token stored in
-    // the request
-    // If not available, then that may mean that we didn't verify the user yet,
-    // so we have to decode any provided token
-    let user = null;
-
-    if (request.context.token !== null) {
-      user =
-        request.context.token.userId === this.anonymousUserId
-          ? "(anonymous)"
-          : request.context.token.userId;
-    }
+    const user = this.resolveUser(request);
 
     // = apache combined
     const protocol = connection.protocol.toUpperCase();
     let url;
     let verb = "DO";
 
-    if (connection.protocol.indexOf("HTTP/") === 0) {
+    if (connection.protocol.startsWith("HTTP/")) {
       verb = extra.method;
       url = extra.url;
     }
     // for other protocols than http, we rebuild a pseudo url
     else {
-      url = `/${request.input.controller}/${request.input.action}`;
-
-      if (request.input.args.index) {
-        url += `/${request.input.args.index}`;
-      }
-
-      if (request.input.args.collection) {
-        url += `/${request.input.args.collection}`;
-      }
-
-      if (request.input.args._id) {
-        url += `/${request.input.args._id}`;
-      }
-
-      let queryString = "";
-
-      for (const k of Object.keys(request.input.args)) {
-        if (k === "_id" || k === "index" || k === "collection") {
-          continue;
-        }
-
-        const val = request.input.args[k];
-
-        if (queryString.length > 0) {
-          queryString += "&";
-        }
-
-        queryString += `${k}=${
-          typeof val === "object" ? JSON.stringify(val) : val
-        }`;
-      }
-
-      if (queryString.length > 0) {
-        url += `?${queryString}`;
-      }
-    }
-
-    if (user === null) {
-      user = "(unknown)";
+      url = buildPseudoUrl(request);
     }
 
     const ip = this.getIP(connection);
@@ -306,6 +261,24 @@ class AccessLoggerWorker {
     );
   }
 
+  /**
+   * The user the access log line is attributed to: the already decoded and
+   * verified token stored in the request is preferred; without one, we have no
+   * verified identity to report.
+   */
+  private resolveUser(request: KuzzleRequest): string {
+    const { token } = request.context;
+
+    if (token === null) {
+      return "(unknown)";
+    }
+
+    const user =
+      token.userId === this.anonymousUserId ? "(anonymous)" : token.userId;
+
+    return user === null ? "(unknown)" : user;
+  }
+
   getIP(connection: ClientConnection): string {
     const { ips } = connection;
 
@@ -320,6 +293,48 @@ class AccessLoggerWorker {
 
     return ips[idx];
   }
+}
+
+/**
+ * For protocols other than http, we rebuild a pseudo url out of the request's
+ * controller, action and arguments.
+ */
+function buildPseudoUrl(request: KuzzleRequest): string {
+  let url = `/${request.input.controller}/${request.input.action}`;
+
+  if (request.input.args.index) {
+    url += `/${request.input.args.index}`;
+  }
+
+  if (request.input.args.collection) {
+    url += `/${request.input.args.collection}`;
+  }
+
+  if (request.input.args._id) {
+    url += `/${request.input.args._id}`;
+  }
+
+  let queryString = "";
+
+  for (const k of Object.keys(request.input.args)) {
+    if (k === "_id" || k === "index" || k === "collection") {
+      continue;
+    }
+
+    const val = request.input.args[k];
+
+    if (queryString.length > 0) {
+      queryString += "&";
+    }
+
+    queryString += `${k}=${typeof val === "object" ? JSON.stringify(val) : val}`;
+  }
+
+  if (queryString.length > 0) {
+    url += `?${queryString}`;
+  }
+
+  return url;
 }
 
 if (!isMainThread) {

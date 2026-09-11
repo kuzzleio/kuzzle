@@ -74,7 +74,9 @@ class Router {
     attach(
       "/",
       (request, cb) => {
-        request.setResult({}, { status: 200 });
+        // setResult's options signature is deprecated with no usable
+        // replacement yet — tracked as TD-20 / #2688
+        request.setResult({}, { status: 200 }); // NOSONAR
         cb(request);
       },
       this.routes.HEAD,
@@ -154,7 +156,7 @@ class Router {
     } catch (err) {
       let request;
 
-      if (!routeHandler || !routeHandler._request) {
+      if (!routeHandler?._request) {
         request = new Request({ requestId: message.requestId }, {});
         // Set Headers if not present
         request.response.setHeaders(this.defaultHeaders, true);
@@ -183,7 +185,7 @@ class Router {
       ),
       request = new Request(
         { requestId: message.requestId },
-        requestContext && requestContext.toJSON(),
+        requestContext?.toJSON(),
       );
 
     // Set Headers if not present
@@ -193,7 +195,9 @@ class Router {
 
     if (message.method === "OPTIONS") {
       request.input.headers = message.headers;
-      request.setResult({}, { status: 200 });
+      // setResult's options signature is deprecated with no usable
+      // replacement yet — tracked as TD-20 / #2688
+      request.setResult({}, { status: 200 }); // NOSONAR
 
       global.kuzzle.pipe(
         "http:options",
@@ -219,7 +223,7 @@ class Router {
  * and request origin
  */
 function applyACAOHeader(message: HttpMessage, request: Request): void {
-  if (message.headers && message.headers.origin) {
+  if (message.headers?.origin) {
     request.response.setHeaders(
       {
         "Access-Control-Allow-Origin": message.headers.origin,
@@ -260,7 +264,7 @@ function attachParts(
     part = parts.shift();
   } while (parts.length > 0 && part.length === 0);
 
-  if (part && part[0] === ":") {
+  if (part?.startsWith(":")) {
     placeholders.push(part.substring(1));
     part = "*";
   }
