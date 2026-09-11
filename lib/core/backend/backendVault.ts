@@ -63,6 +63,7 @@ export class BackendVault extends ApplicationManager {
       const kuzzleVault = vault.load(
         this._application._vaultKey,
         this._application._secretsFile,
+        this._application.config.content.vault.newAlgorithm,
       );
       this._secrets = kuzzleVault.secrets;
     }

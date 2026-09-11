@@ -98,6 +98,25 @@ Kuzzle start sequence ends in failure if:
   - a file is provided but Kuzzle cannot read it
 :::
 
+## Encryption algorithm
+
+By default, Kuzzle encrypts and decrypts secrets using the legacy AES-256-CBC algorithm, for backward compatibility with existing encrypted secrets files.
+
+You can opt in for the newer, more secure AES-256-GCM algorithm with the `vault.newAlgorithm` configuration key:
+
+```js
+/* .kuzzlerc */
+{
+  "vault": {
+    "newAlgorithm": true
+  }
+}
+```
+
+::: warning
+Secrets encrypted with one algorithm cannot be decrypted with the other. If you enable this option, you must re-encrypt your secrets file (e.g. with `kourou vault:encrypt`) after enabling it.
+:::
+
 ## Accessing secrets in your application
 
 <SinceBadge version="2.8.0" />
