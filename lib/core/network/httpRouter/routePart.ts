@@ -19,19 +19,24 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as querystring from "node:querystring";
+import * as URL from "node:url";
 
-const URL = require("url");
-const querystring = require("querystring");
-const RouteHandler = require("./routeHandler");
-const { has } = require("../../../util/safeObject");
+import { JSONObject } from "kuzzle-sdk";
+
+import { has } from "../../../util/safeObject";
+import type HttpMessage from "../protocols/httpMessage";
+import RouteHandler from "./routeHandler";
+import { RouteHandlerFunction } from "./routeTypes";
 
 /**
  * Defines a new route part
- *
- * @class RoutePart
  */
 class RoutePart {
+  public subparts: Record<string, RoutePart>;
+  public placeholders: string[] | null;
+  public handler: RouteHandlerFunction | null;
+
   constructor() {
     this.subparts = {};
     this.placeholders = null;
@@ -41,24 +46,17 @@ class RoutePart {
 
   /**
    * Checks if an url part already exists
-   *
-   * @param {string} part
-   * @returns {boolean}
    */
-  exists(part) {
+  exists(part: string): boolean {
     return (
       this.subparts[part] !== undefined && this.subparts[part].handler !== null
     );
   }
 
   /**
-   * Gets the next element of an URL part, creating a new
-   * tree leaf if necessary
-   *
-   * @param {string} part
-   * @returns {RoutePart}
+   * Gets the next element of an URL part, creating a new tree leaf if necessary
    */
-  getNext(part) {
+  getNext(part: string): RoutePart {
     if (!has(this.subparts, part)) {
       this.subparts[part] = new RoutePart();
     }
@@ -69,23 +67,24 @@ class RoutePart {
   /**
    * Returns a RouteHandler instance corresponding to the provided URL
    * Returns null if no handler was found
-   *
-   * @param {HttpMessage} message
-   * @returns {RouteHandler} registered function handler
    */
-  getHandler(message) {
+  getHandler(message: HttpMessage): RouteHandler {
     // Do not use WHATWG API yet, stick with the legacy (and deprecated) URL
     // There are two issues:
     //   - Heavy performance impact: https://github.com/nodejs/node/issues/30334
     //   - Double slash bug: https://github.com/nodejs/node/issues/30776
-    const parsed = URL.parse(message.url, true);
+    const parsed = URL.parse(message.path, true);
     let pathname = parsed.pathname || ""; // pathname is set to null if empty
 
-    if (pathname[pathname.length - 1] === "/") {
+    if (pathname.at(-1) === "/") {
       pathname = pathname.slice(0, -1);
     }
 
-    const routeHandler = new RouteHandler(pathname, parsed.query, message);
+    const routeHandler = new RouteHandler(
+      pathname,
+      parsed.query as JSONObject,
+      message,
+    );
 
     return getHandlerPart(this, pathname.split("/"), routeHandler);
   }
@@ -94,14 +93,17 @@ class RoutePart {
 /**
  * Populate the routeHandler argument with parametric values, if any
  *
- * @param {RoutePart} routePart - tree leaf to scan
- * @param {Array<string>} parts
- * @param {RouteHandler} routeHandler - registered function handler
- * @param {Array<string>} placeholders - sorted array to populate the list of parametric values
- * @returns {RouteHandler} registered function handler
+ * @param routePart - tree leaf to scan
+ * @param routeHandler - registered function handler
+ * @param placeholders - sorted array to populate the list of parametric values
  */
-function getHandlerPart(routePart, parts, routeHandler, placeholders = []) {
-  let part;
+function getHandlerPart(
+  routePart: RoutePart,
+  parts: string[],
+  routeHandler: RouteHandler,
+  placeholders: string[] = [],
+): RouteHandler {
+  let part: string | undefined;
 
   do {
     part = parts.shift();
@@ -109,11 +111,13 @@ function getHandlerPart(routePart, parts, routeHandler, placeholders = []) {
 
   if (part === undefined) {
     routeHandler.handler = routePart.handler;
+
     if (routePart.placeholders !== null) {
-      for (const i of Object.keys(routePart.placeholders)) {
-        routeHandler.addArgument(routePart.placeholders[i], placeholders[i]);
+      for (const [i, name] of routePart.placeholders.entries()) {
+        routeHandler.addArgument(name, placeholders[i]);
       }
     }
+
     return routeHandler;
   }
 
@@ -130,6 +134,7 @@ function getHandlerPart(routePart, parts, routeHandler, placeholders = []) {
 
   if (routePart.subparts["*"]) {
     placeholders.push(part);
+
     return getHandlerPart(
       routePart.subparts["*"],
       parts,
@@ -141,7 +146,4 @@ function getHandlerPart(routePart, parts, routeHandler, placeholders = []) {
   return routeHandler;
 }
 
-/**
- * @type {RoutePart}
- */
-module.exports = RoutePart;
+export = RoutePart;

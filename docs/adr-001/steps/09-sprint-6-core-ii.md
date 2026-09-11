@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress — opened 2026-09-11
 **Date:** 2026-09-11 → …
-**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722)
+**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -174,6 +174,52 @@ Resolved by verbatim extraction — `parseDate`, `checkRange`, `validateFormats`
 - **`recursiveShapeValidation`'s tail already collapsed to `result && coordinatesOk`.** The original returned `false` early when a non-multi shape had bad coordinates, skipping `result` — but `result` is the only other term, so the early return and the conjunction agree on every input. The conjunction is what the extraction leaves behind.
 - **`checkRadius` keeps an assignment in its `catch`.** The original pushed the error message from inside the block; hoisting that push to a single site at the end would have left an empty `catch`, which is a Sonar issue of its own. The block assigns `valid = false` instead.
 
+## What was done (PR H2 — the network leaves)
+
+12 files: `lib/core/network` minus `entryPoint` and `httpwsProtocol`, which are coupled and land in H6. **js 35 → 23**, implicit-any **461 → 457**, strict **117 → 123**.
+
+### The entry point is typed by a declared contract, not by inference
+
+`entryPoint.js` is still JavaScript, so the obvious move was `import type EntryPoint from "../entryPoint"` and let TS infer it from the JS. It compiled, and it was **wrong**: `entryPoint.execute`'s JSDoc says `@param {Request}`, and in a file that imports no `Request`, that resolves to the **DOM** `Request` — `lib.dom` is in `tsconfig.json`'s `lib`. The protocols were being checked against `fetch`'s Request.
+
+So H2 declares `NetworkEntryPoint`: the five members (`config`, `execute`, `logAccess`, `newConnection`, `removeConnection`) the protocols actually reach. H6 makes `entryPoint` implement it.
+
+**The generalisable part:** *a JSDoc type in an unconverted file is not a type, it is a name lookup in that file's scope.* Inferring from JS is fine for shapes; for anything named, check what the name resolves to before trusting it.
+
+### Four latent bugs, none of them reachable before the rename
+
+| Site | What it did | Why it was invisible |
+|------|-------------|----------------------|
+| `context.{Request,RequestContext,RequestInput}` | were **`undefined`** — destructured from `kerror/errors`, which exports none of them | a plugin's `new context.Request(...)` is the only caller, and nothing in-tree tests it |
+| `router.removeConnection` | logged `JSON.stringify(requestContext.context)` → `"undefined"` | `newConnection`, three lines up, stringifies `requestContext` |
+| `router._executeFromHttp` | `removeStacktrace(_res)` matched neither branch (`_res` is a `KuzzleRequest`, not an `Error` or a serialized response) | the protocols sanitise the serialized response anyway, so nothing leaked |
+| `mqtt.publishCallback` | a plain `function` handed detached to aedes: `this.logger` would have thrown | only reachable when a publish fails |
+
+Plus `request.setResult({}, 200)` at two http-router sites: the second parameter is an options object, and `this.status = options.status || 200` is exactly what made passing `200` look correct.
+
+Each is a one-liner, and each is the same shape: **a value that is never read, or read only on a path no test reaches.** Type-checking a file is what turns those from "nobody noticed" into "does not compile".
+
+### `node:` prefixes and mock-require
+
+The first pass used `node:net` and `node:worker_threads` and **11 unit tests turned red** — `mock-require` keys on the literal specifier, so a spec that registers `"net"` never sees `require("node:net")`. The first fix was to drop the prefixes in the source; SonarCloud then asked for them back (S7772). The resolution is to register **both** names in the two specs, which keeps the source idiomatic and costs two lines of test.
+
+**Rule:** before dropping a `node:` prefix to satisfy a spec, check whether the spec can register both names instead — the mock, not the source, is the thing that is behind.
+
+### Other decisions
+
+- **`Protocol` is generic over its configuration** (`Protocol<MqttConfig>`): `this.config` is `server.protocols.<name>`, a shape only the subclass knows. The lookup itself goes through `Reflect.get` — the key is a runtime protocol name, and indexing the typed config object with a `string` is an implicit `any` the fourth ratchet would have caught.
+- **`Protocol.init`'s first parameter carries two shapes.** Every in-tree caller uses `protocol.init(entryPoint)` while the subclasses call `super.init(null, entryPoint)`; third-party protocols may still use the deprecated `(name, entryPoint)` form. `string | null | NetworkEntryPoint` keeps both rather than breaking either, and method parameter bivariance is what lets the subclasses declare the one-argument form.
+- **Strict adoption is partial: 6 of 12.** The rest of the network layer is nullable-heavy by nature — `parentPort`, the optional `entryPoint`, a route tree read through `noUncheckedIndexedAccess` — and guarding it file by file here would be sprint 9's work done early, in the riskiest layer. `--candidates` is empty, which is what the DoD asks.
+- `clientConnection.ts` became strict-clean **because of H1**: `isPlainObject` is a type guard now, so the two `JSONObject | null` assignments narrow on their own.
+
+### The gate, in two rounds
+
+`new_coverage` cleared on the first analysis (**85.3%**); the violations did not. **27 of them** — 1 Critical (S3776 on `logAccess`, complexity 28), 7 Major, 19 Minor — every one a pre-existing idiom re-scored by the rename. Resolved the same way as H1's: verbatim extraction for the complexity, mechanical rewrites for the rest (`readonly`, class fields, object spread, `startsWith`, optional chains, `??=`, a Set), and `NOSONAR` only where the deprecation has no usable replacement ([TD-20](../type-debt-register.md#td-20) / [#2688](https://github.com/kuzzleio/kuzzle/issues/2688)).
+
+A second round left exactly one: an S6606 on the `(unknown)` fallback the extraction had just created — `user === null ? … : user` where `??` is both what Sonar asks for and the better behaviour, since a token with no `userId` at all used to log the string `"undefined"`.
+
+Two of the six S1874 were **self-inflicted**: a `@deprecated` written for `Protocol.init`'s `name` parameter sat as a block tag, which deprecates the whole method — every `super.init(...)` then scored. *A `@deprecated` line in a JSDoc block is never about one parameter.*
+
 ## Validation
 
 Run on the H1 branch, 2026-09-11:
@@ -184,4 +230,13 @@ Run on the H1 branch, 2026-09-11:
 - `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
 - `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
 - `eslint` + `prettier` — clean
-- SonarCloud on [#2722](https://github.com/kuzzleio/kuzzle/pull/2722): `new_coverage` **97.0%**, duplication 0.0%, all three ratings A — green after the S3776 round above
+- SonarCloud on [#2722](https://github.com/kuzzleio/kuzzle/pull/2722): `new_coverage` **97.3%**, duplication 0.0%, all three ratings A, **0 violations** — green after the rounds above
+
+Run on the H2 branch, 2026-09-11 (rebased on `2-dev` after H1 merged):
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js **23**, mocha 151, any 205, implicit-any **457**, cpd-exclusions 4)
+- `npm run test:strict` — 123 adopted files pass; `--candidates` empty
+- `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
+- `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
+- `eslint` + `prettier` — clean

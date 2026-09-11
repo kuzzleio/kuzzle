@@ -12,6 +12,7 @@ import { Kuzzle } from "../kuzzle";
 declare global {
   var app: Backend;
   var kuzzle: Kuzzle;
+  var nodeId: string;
   var NODE_ENV: string;
 }
 

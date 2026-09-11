@@ -19,36 +19,49 @@
  * limitations under the License.
  */
 
-"use strict";
-
 // winston is CPU-hungry: isolating it in a worker thread allows for a more
 // efficient CPU resources management, and more performances in the end
-const {
-  Worker,
+import {
   isMainThread,
   parentPort,
+  Worker,
   workerData,
-} = require("worker_threads");
+} from "node:worker_threads";
 
-const pino = require("pino");
-const moment = require("moment");
+import moment from "moment";
+import * as pino from "pino";
 
-const { KuzzleRequest } = require("../../api/request");
+import { KuzzleRequest } from "../../api/request";
+import { Kuzzle } from "../../kuzzle";
+import { ServerConfiguration } from "../../types";
+import type ClientConnection from "./clientConnection";
 
-const ALLOWED_TRANSPORTS = ["console", "elasticsearch", "file", "syslog"];
+const ALLOWED_TRANSPORTS = new Set([
+  "console",
+  "elasticsearch",
+  "file",
+  "syslog",
+]);
+
+/** What a protocol adds to an HTTP access log line */
+interface AccessLogExtra {
+  method: string;
+  url: string;
+}
 
 class AccessLogger {
-  constructor() {
-    this.isActive = false;
-    this.worker = null;
-    this.logger = global.kuzzle.log.child("core:network:accessLogger");
-  }
+  public isActive = false;
+  public worker: Worker | null = null;
 
-  async init() {
+  private readonly logger = global.kuzzle.log.child(
+    "core:network:accessLogger",
+  );
+
+  async init(): Promise<void> {
     const config = global.kuzzle.config.server;
 
     for (const out of config.logs.transports) {
-      if (out.transport && !ALLOWED_TRANSPORTS.includes(out.transport)) {
+      if (out.transport && !ALLOWED_TRANSPORTS.has(out.transport)) {
         this.logger.error(
           `Failed to initialize logger transport "${out.transport}": unsupported transport. Skipped.`,
         );
@@ -64,6 +77,7 @@ class AccessLogger {
     const anonymous = await global.kuzzle.ask(
       "core:security:user:anonymous:get",
     );
+
     this.worker = new Worker(__filename, {
       workerData: {
         anonymousUserId: anonymous._id,
@@ -73,7 +87,11 @@ class AccessLogger {
     });
   }
 
-  log(connection, request, extra) {
+  log(
+    connection: ClientConnection,
+    request: KuzzleRequest,
+    extra?: AccessLogExtra | null,
+  ): void {
     if (!this.isActive) {
       return;
     }
@@ -101,20 +119,26 @@ class AccessLogger {
       });
     } catch (error) {
       this.logger.error(
-        `Failed to write access log for request "${request.id}": ${error.message}`,
+        `Failed to write access log for request "${request.id}": ${
+          (error as Error).message
+        }`,
       );
     }
   }
 }
 
 class AccessLoggerWorker {
-  constructor(config, anonymousUserId) {
+  public config: ServerConfiguration;
+  public logger: pino.Logger | null;
+  public anonymousUserId: string;
+
+  constructor(config: ServerConfiguration, anonymousUserId: string) {
     this.config = config;
     this.logger = null;
     this.anonymousUserId = anonymousUserId;
   }
 
-  init() {
+  init(): void {
     this.initTransport();
 
     parentPort.on("message", ({ connection, extra, request, size }) => {
@@ -127,8 +151,8 @@ class AccessLoggerWorker {
     });
   }
 
-  initTransport() {
-    const transports = { targets: [] };
+  initTransport(): void {
+    const targets: pino.TransportTargetOptions[] = [];
 
     for (const conf of this.config.logs.transports) {
       if (conf.silent === true) {
@@ -138,7 +162,7 @@ class AccessLoggerWorker {
       // Guarantee default transport is 'console' and retro compatibility with winston options
       switch (conf.transport || conf.preset || "console") {
         case "console":
-          transports.targets.push({
+          targets.push({
             level: conf.level || "info",
             options: {
               destination: 1,
@@ -147,14 +171,14 @@ class AccessLoggerWorker {
           });
           break;
         case "elasticsearch":
-          transports.targets.push({
+          targets.push({
             level: conf.level || "info",
-            options: Object.assign({}, conf.options),
+            options: { ...conf.options },
             target: "pino-elasticsearch",
           });
           break;
         case "file":
-          transports.targets.push({
+          targets.push({
             level: conf.level || "info",
             options: {
               append: conf.options?.append ?? true,
@@ -171,7 +195,7 @@ class AccessLoggerWorker {
       // If a pino transport configuration is used, we'll try to use it as-is and
       // assume the user installed the necessary dependencies in his Kuzzle application
       if (typeof conf.target === "string" && conf.target !== "") {
-        transports.targets.push({
+        targets.push({
           level: conf.level || "info",
           options: conf.options || {},
           target: conf.target,
@@ -179,16 +203,18 @@ class AccessLoggerWorker {
       }
     }
 
-    this.logger = pino.pino(pino.transport(transports));
+    this.logger = pino.pino(pino.transport({ targets }));
   }
 
   /**
-   * @param {ClientConnection} connection
-   * @param {Request} request
-   * @param {String} size - response size, in bytes
-   * @param {Object} [extra]
+   * @param size - response size, in bytes
    */
-  logAccess(connection, request, size, extra = null) {
+  logAccess(
+    connection: ClientConnection,
+    request: KuzzleRequest,
+    size: string,
+    extra: AccessLogExtra | null = null,
+  ): void {
     if (this.config.logs.accessLogFormat === "logstash") {
       // custom kuzzle logs to be exported to logstash
       this.logger.info({
@@ -203,69 +229,20 @@ class AccessLoggerWorker {
       return;
     }
 
-    // user init: prioritize the already decoded and verified token stored in
-    // the request
-    // If not available, then that may mean that we didn't verify the user yet,
-    // so we have to decode any provided token
-    let user = null;
-
-    if (request.context.token !== null) {
-      user =
-        request.context.token.userId === this.anonymousUserId
-          ? "(anonymous)"
-          : request.context.token.userId;
-    }
+    const user = this.resolveUser(request);
 
     // = apache combined
     const protocol = connection.protocol.toUpperCase();
     let url;
     let verb = "DO";
 
-    if (connection.protocol.indexOf("HTTP/") === 0) {
+    if (connection.protocol.startsWith("HTTP/")) {
       verb = extra.method;
       url = extra.url;
     }
     // for other protocols than http, we rebuild a pseudo url
     else {
-      url = `/${request.input.controller}/${request.input.action}`;
-
-      if (request.input.args.index) {
-        url += `/${request.input.args.index}`;
-      }
-
-      if (request.input.args.collection) {
-        url += `/${request.input.args.collection}`;
-      }
-
-      if (request.input.args._id) {
-        url += `/${request.input.args._id}`;
-      }
-
-      let queryString = "";
-
-      for (const k of Object.keys(request.input.args)) {
-        if (k === "_id" || k === "index" || k === "collection") {
-          continue;
-        }
-
-        const val = request.input.args[k];
-
-        if (queryString.length > 0) {
-          queryString += "&";
-        }
-
-        queryString += `${k}=${
-          typeof val === "object" ? JSON.stringify(val) : val
-        }`;
-      }
-
-      if (queryString.length > 0) {
-        url += `?${queryString}`;
-      }
-    }
-
-    if (user === null) {
-      user = "(unknown)";
+      url = buildPseudoUrl(request);
     }
 
     const ip = this.getIP(connection);
@@ -285,9 +262,26 @@ class AccessLoggerWorker {
   }
 
   /**
-   * @param  {ClientConnection} connection
+   * The user the access log line is attributed to: the already decoded and
+   * verified token stored in the request is preferred; without one, we have no
+   * verified identity to report.
    */
-  getIP(connection) {
+  private resolveUser(request: KuzzleRequest): string {
+    const { token } = request.context;
+
+    if (token === null) {
+      return "(unknown)";
+    }
+
+    const user =
+      token.userId === this.anonymousUserId ? "(anonymous)" : token.userId;
+
+    // `??` rather than a `=== null` test: a token with no userId at all used
+    // to log the string "undefined"
+    return user ?? "(unknown)";
+  }
+
+  getIP(connection: ClientConnection): string {
     const { ips } = connection;
 
     if (ips.length === 0) {
@@ -303,9 +297,52 @@ class AccessLoggerWorker {
   }
 }
 
+/**
+ * For protocols other than http, we rebuild a pseudo url out of the request's
+ * controller, action and arguments.
+ */
+function buildPseudoUrl(request: KuzzleRequest): string {
+  let url = `/${request.input.controller}/${request.input.action}`;
+
+  if (request.input.args.index) {
+    url += `/${request.input.args.index}`;
+  }
+
+  if (request.input.args.collection) {
+    url += `/${request.input.args.collection}`;
+  }
+
+  if (request.input.args._id) {
+    url += `/${request.input.args._id}`;
+  }
+
+  let queryString = "";
+
+  for (const k of Object.keys(request.input.args)) {
+    if (k === "_id" || k === "index" || k === "collection") {
+      continue;
+    }
+
+    const val = request.input.args[k];
+
+    if (queryString.length > 0) {
+      queryString += "&";
+    }
+
+    queryString += `${k}=${typeof val === "object" ? JSON.stringify(val) : val}`;
+  }
+
+  if (queryString.length > 0) {
+    url += `?${queryString}`;
+  }
+
+  return url;
+}
+
 if (!isMainThread) {
-  // Needed for instantiating a serialized KuzzleRequest object
-  global.kuzzle = { id: workerData.kuzzleId };
+  // Needed for instantiating a serialized KuzzleRequest object: the worker
+  // thread has no Kuzzle instance of its own, only the node id.
+  global.kuzzle = { id: workerData.kuzzleId } as Kuzzle;
 
   const worker = new AccessLoggerWorker(
     workerData.config,
@@ -319,4 +356,4 @@ if (!isMainThread) {
 // useful to make this class testable. I usually don't like it when tests have a
 // say in how the code should be written, but in this particular case, I see
 // no other way to correctly test this.
-module.exports = { AccessLogger, AccessLoggerWorker };
+export { AccessLogger, AccessLoggerWorker };

@@ -19,20 +19,25 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "node:assert";
 
-const assert = require("assert");
+import bytes from "../../../util/bytes";
+import { NetworkEntryPoint } from "../networkEntryPoint";
 
-const bytes = require("../../../util/bytes");
+/**
+ * @typeParam TConfig - the shape of `server.protocols.<name>` in the Kuzzle
+ *                      configuration, which is what `init` copies into
+ *                      `this.config`
+ */
+class Protocol<TConfig = Record<string, unknown>> {
+  public maxRequestSize: number | null = null;
+  public entryPoint: NetworkEntryPoint | null = null;
+  public name: string;
+  public config: TConfig = {} as TConfig;
+  public initCalled = false;
 
-class Protocol {
-  constructor(name) {
-    this.maxRequestSize = null;
-    this.entryPoint = null;
+  constructor(name = "") {
     this.name = name;
-    this.config = {};
-
-    this.initCalled = false;
 
     Reflect.defineProperty(this, "_kuzzle", {
       value: null,
@@ -41,12 +46,17 @@ class Protocol {
   }
 
   /**
-   * @param {string} name - Protocol name (used for accessor) @deprecated
-   * @param {EmbeddedEntryPoint} entryPoint
+   * The `name` parameter is deprecated: pass it to the constructor instead.
    *
-   * @returns {Promise<boolean>}
+   * The first parameter carries two shapes on purpose: `entryPoint` calls
+   * `protocol.init(entryPoint)` on every subclass, while the subclasses call
+   * `super.init(null, entryPoint)` here. Third-party protocols may still use
+   * the deprecated `(name, entryPoint)` form, so the signature keeps both.
    */
-  async init(name, entryPoint) {
+  async init(
+    name: string | null | NetworkEntryPoint,
+    entryPoint?: NetworkEntryPoint,
+  ): Promise<boolean> {
     this.entryPoint = entryPoint;
 
     // name should be passed in the constructor
@@ -56,7 +66,8 @@ class Protocol {
     );
 
     if (!this.name) {
-      this.name = name;
+      // only reachable when `name` is falsy: the assert above throws otherwise
+      this.name = typeof name === "string" ? name : "";
     }
 
     this.maxRequestSize = bytes(entryPoint.config.maxRequestSize);
@@ -66,8 +77,11 @@ class Protocol {
       'Invalid "name" parameter value: expected a non empty string value',
     );
 
-    if (entryPoint.config.protocols && entryPoint.config.protocols[this.name]) {
-      this.config = entryPoint.config.protocols[this.name];
+    const protocolsConfig = entryPoint.config.protocols;
+
+    // the config is keyed by protocol name, which is only known at runtime
+    if (protocolsConfig && Reflect.get(protocolsConfig, this.name)) {
+      this.config = Reflect.get(protocolsConfig, this.name) as TConfig;
     }
 
     assert(
@@ -80,23 +94,25 @@ class Protocol {
     return true;
   }
 
-  broadcast() {
+  broadcast(data?: unknown): void;
+  broadcast(): void {
     // do nothing by default
   }
 
-  joinChannel(channel, connectionId) {
-    // do nothing by default
-    return { channel, connectionId };
-  }
-
-  leaveChannel(channel, connectionId) {
+  joinChannel(channel: string, connectionId: string) {
     // do nothing by default
     return { channel, connectionId };
   }
 
-  notify() {
+  leaveChannel(channel: string, connectionId: string) {
+    // do nothing by default
+    return { channel, connectionId };
+  }
+
+  notify(data?: unknown): void;
+  notify(): void {
     // do nothing by default
   }
 }
 
-module.exports = Protocol;
+export = Protocol;

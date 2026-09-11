@@ -29,7 +29,7 @@ describe("#AccessLogger", () => {
       }),
     };
 
-    mockRequire("worker_threads", {
+    const workerThreadsMock = {
       Worker: function (...args) {
         workerArgs = args;
         workerData = args[1].workerData;
@@ -38,7 +38,12 @@ describe("#AccessLogger", () => {
       isMainThread: true,
       parentPort,
       workerData,
-    });
+    };
+
+    // the source imports the "node:"-prefixed name; mock-require keys on the
+    // literal specifier, so both have to be registered
+    mockRequire("worker_threads", workerThreadsMock);
+    mockRequire("node:worker_threads", workerThreadsMock);
 
     mockRequire("pino", {
       transport: sinon.stub(),

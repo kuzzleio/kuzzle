@@ -19,19 +19,31 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
+import * as uuid from "uuid";
 
-const { isPlainObject } = require("../../util/safeObject");
-const uuid = require("uuid");
+import { isPlainObject } from "../../util/safeObject";
 
 /**
- * @class ClientConnection
- * @param {string} protocol - The protocol used (http, websocket, mqtt etc)
- * @param {Array.<string>} ips - The list of forwarded ips (= X-Forwarded-For http header + the final ip, i.e. client, proxy1, proxy2, etc.)
- * @param {object} [headers] - Optional extra key-value object. I.e., for http, will receive the request headers
+ * @param protocol - The protocol used (http, websocket, mqtt etc)
+ * @param ips - The list of forwarded ips (= X-Forwarded-For http header + the
+ *              final ip, i.e. client, proxy1, proxy2, etc.)
+ * @param headers - Optional extra key-value object. I.e., for http, will
+ *                  receive the request headers
  */
 class ClientConnection {
-  constructor(protocol, ips, headers = null, internal = null) {
+  public readonly id: string;
+  public readonly protocol: string;
+  public readonly headers: JSONObject;
+  public readonly internal: JSONObject;
+  public readonly ips: string[];
+
+  constructor(
+    protocol: string,
+    ips: string[],
+    headers: JSONObject | null = null,
+    internal: JSONObject | null = null,
+  ) {
     this.id = uuid.v4();
     this.protocol = protocol;
     this.headers = {};
@@ -54,4 +66,4 @@ class ClientConnection {
   }
 }
 
-module.exports = ClientConnection;
+export = ClientConnection;

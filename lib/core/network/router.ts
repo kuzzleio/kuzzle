@@ -19,32 +19,32 @@
  * limitations under the License.
  */
 
-"use strict";
+import { JSONObject } from "kuzzle-sdk";
 
-const { Request } = require("../../api/request");
-const kerror = require("../../kerror");
-const HttpRouter = require("./httpRouter");
-const { removeStacktrace } = require("../../util/stackTrace");
-const kuzzleStateEnum = require("../../kuzzle/kuzzleStateEnum");
+import { Request, RequestContext } from "../../api/request";
+import * as kerror from "../../kerror";
+import kuzzleStateEnum from "../../kuzzle/kuzzleStateEnum";
+import HttpRouter from "./httpRouter";
+import { RouteCallback } from "./httpRouter/routeTypes";
 
-/**
- * @class Router
- * @property action
- * @param {Kuzzle} kuzzle
- */
+/** The HttpRouter methods a route's verb may resolve to */
+type HttpVerb = "get" | "post" | "put" | "patch" | "delete" | "head";
+
 class Router {
+  public connections: Map<string, RequestContext>;
+  public http: HttpRouter;
+
+  private readonly logger = global.kuzzle.log.child("core:network:router");
+
   constructor() {
     this.connections = new Map();
     this.http = new HttpRouter();
-    this.logger = global.kuzzle.log.child("core:network:router");
   }
 
   /**
    * Declares a new connection attached to a network protocol.
-   *
-   * @param {RequestContext} requestContext
    */
-  newConnection(requestContext) {
+  newConnection(requestContext: RequestContext): void {
     if (!requestContext.connection.id || !requestContext.connection.protocol) {
       this.logger.error(
         kerror.get(
@@ -62,10 +62,8 @@ class Router {
 
   /**
    * Removes a connection from the connection pool.
-   *
-   * @param {RequestContext} requestContext
    */
-  removeConnection(requestContext) {
+  removeConnection(requestContext: RequestContext): void {
     const connId = requestContext.connection.id;
 
     if (!connId || !requestContext.connection.protocol) {
@@ -74,7 +72,7 @@ class Router {
           "protocol",
           "runtime",
           "invalid_connection",
-          JSON.stringify(requestContext.context),
+          JSON.stringify(requestContext),
         ),
       );
       return;
@@ -99,10 +97,8 @@ class Router {
 
   /**
    * Check that the provided connection id executing a request is still alive
-   *
-   * @param  {RequestContext} requestContext
    */
-  isConnectionAlive(requestContext) {
+  isConnectionAlive(requestContext: RequestContext): boolean {
     // Check only defined connection identifiers (some protocols might
     // not have one)
     return (
@@ -114,7 +110,7 @@ class Router {
   /**
    * Initializes the HTTP routes for the Kuzzle HTTP API.
    */
-  init() {
+  init(): void {
     // Register API and plugin routes
     const routes = [
       ...global.kuzzle.config.http.routes,
@@ -161,7 +157,7 @@ class Router {
       }
 
       request.response.configure({
-        status: status,
+        status,
       });
 
       /**
@@ -172,7 +168,8 @@ class Router {
     });
 
     for (const route of routes) {
-      const verb = route.verb.toLowerCase();
+      // the route table's verbs are the HttpRouter method names, uppercased
+      const verb = route.verb.toLowerCase() as HttpVerb;
 
       this.http[verb](route.path, (request, cb) => {
         request.input.controller = route.controller;
@@ -191,28 +188,24 @@ class Router {
 
     /**
      * Returns inner metrics from the router
-     * @returns {Object}
      */
     global.kuzzle.onAsk("core:network:router:metrics", () => this.metrics());
   }
 
   /**
    * Returns the metrics of the router
-   * @returns {Object}
    */
-  metrics() {
-    const connectionsByProtocol = {};
+  metrics(): JSONObject {
+    const connectionsByProtocol: Record<string, number> = {};
 
     for (const connection of this.connections.values()) {
       const protocol = connection.connection.protocol.toLowerCase();
+
       if (protocol === "internal") {
         continue;
       }
 
-      if (connectionsByProtocol[protocol] === undefined) {
-        connectionsByProtocol[protocol] = 0;
-      }
-
+      connectionsByProtocol[protocol] ??= 0;
       connectionsByProtocol[protocol]++;
     }
 
@@ -225,31 +218,37 @@ class Router {
    * Transmit HTTP requests to the funnel controller and forward its response
    * back to the client
    *
-   * @param {String} verb
-   * @param {Request} request - includes URL and POST query data
-   * @param {function} cb - callback to invoke with the result
+   * @param request - includes URL and POST query data
+   * @param cb - callback to invoke with the result
    */
-  _executeFromHttp(verb, request, cb) {
-    global.kuzzle.pipe(`http:${verb}`, request, (error, mutatedRequest) => {
-      if (error) {
-        request.setError(error);
-        cb(request);
-      } else {
-        global.kuzzle.funnel.execute(mutatedRequest, (err, result) => {
-          const _res = result || request;
+  _executeFromHttp(verb: string, request: Request, cb: RouteCallback): void {
+    global.kuzzle.pipe(
+      `http:${verb}`,
+      request,
+      (error: Error | null, mutatedRequest: Request) => {
+        if (error) {
+          request.setError(error);
+          cb(request);
+          return;
+        }
 
-          if (err && !_res.error) {
-            _res.setError(err);
-          }
+        global.kuzzle.funnel.execute(
+          mutatedRequest,
+          (err: Error | null, result: Request) => {
+            const _res = result || request;
 
-          cb(removeStacktrace(_res));
-        });
-      }
-    });
+            if (err && !_res.error) {
+              _res.setError(err);
+            }
+
+            // no sanitisation here: `_res` is a KuzzleRequest, and the stack
+            // is stripped by the protocols, on the serialized response
+            cb(_res);
+          },
+        );
+      },
+    );
   }
 }
 
-/**
- * @type {RouterController}
- */
-module.exports = Router;
+export = Router;

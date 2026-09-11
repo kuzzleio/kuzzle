@@ -19,23 +19,57 @@
  * limitations under the License.
  */
 
-"use strict";
+import * as net from "node:net";
 
-const net = require("net");
+import Aedes, {
+  AedesPublishPacket,
+  Client,
+  PublishPacket,
+  Subscription,
+} from "aedes";
+import { JSONObject } from "kuzzle-sdk";
 
-const Aedes = require("aedes");
+import { Request } from "../../../api/request";
+import { wrap } from "../../../kerror";
+import createDebug from "../../../util/debug";
+import { removeStacktrace } from "../../../util/stackTrace";
+import ClientConnection from "../clientConnection";
+import { NetworkEntryPoint } from "../networkEntryPoint";
+import Protocol from "./protocol";
 
-const ClientConnection = require("../clientConnection");
-const Protocol = require("./protocol");
-const { Request } = require("../../../api/request");
-const { removeStacktrace } = require("../../../util/stackTrace");
-const kerror = require("../../../kerror").wrap("network", "mqtt");
-const debug = require("../../../util/debug")("kuzzle:network:protocols:mqtt");
+const kerror = wrap("network", "mqtt");
+const debug = createDebug("kuzzle:network:protocols:mqtt");
 
-/**
- * @class MqttProtocol
- */
-class MqttProtocol extends Protocol {
+/** `server.protocols.mqtt` in the Kuzzle configuration */
+interface MqttConfig {
+  enabled?: boolean;
+  allowPubSub: boolean;
+  developmentMode: boolean;
+  disconnectDelay: number;
+  requestTopic: string;
+  responseTopic: string;
+  server: {
+    port: number;
+  };
+}
+
+interface MqttNotification {
+  channels: string[];
+  connectionId?: string;
+  payload: JSONObject;
+}
+
+class MqttProtocol extends Protocol<MqttConfig> {
+  public aedes: Aedes;
+  public server: net.Server;
+  public connections: Map<Client, ClientConnection>;
+  public connectionsById: Map<string, Client>;
+  public publishCallback: (error?: Error) => void;
+
+  private readonly logger = global.kuzzle.log.child(
+    "core:network:protocols:mqtt",
+  );
+
   constructor() {
     super("mqtt");
 
@@ -45,17 +79,15 @@ class MqttProtocol extends Protocol {
 
     this.connections = new Map();
     this.connectionsById = new Map();
-    this.logger = global.kuzzle.log.child("core:network:protocols:mqtt");
-
     // needs to be bound to this object's context
-    this.publishCallback = function pubcb(error) {
+    this.publishCallback = (error?: Error) => {
       if (error) {
         this.logger.info(`[MQTT] Publishing message failed: ${error}`);
       }
     };
   }
 
-  async init(entryPoint) {
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean> {
     await super.init(null, entryPoint);
 
     if (this.config.enabled === false) {
@@ -64,19 +96,17 @@ class MqttProtocol extends Protocol {
 
     debug("initializing MQTT Server with config: %a", this.config);
 
-    this.config = Object.assign(
-      {
-        allowPubSub: false,
-        developmentMode: false,
-        disconnectDelay: 250,
-        requestTopic: "Kuzzle/request",
-        responseTopic: "Kuzzle/response",
-        server: {
-          port: 1883,
-        },
+    this.config = {
+      allowPubSub: false,
+      developmentMode: false,
+      disconnectDelay: 250,
+      requestTopic: "Kuzzle/request",
+      responseTopic: "Kuzzle/response",
+      server: {
+        port: 1883,
       },
-      this.config,
-    );
+      ...this.config,
+    };
 
     /*
      * To avoid ill-use of our topics, we need to configure authorizations:
@@ -94,42 +124,52 @@ class MqttProtocol extends Protocol {
     this.aedes.on("clientDisconnect", this.onDisconnection.bind(this));
     this.aedes.on("publish", this.onMessage.bind(this));
 
-    await new Promise((res) =>
+    await new Promise<void>((res) =>
       this.server.listen(this.config.server.port, res),
     );
 
     return true;
   }
 
-  broadcast(data) {
+  broadcast(data: MqttNotification): void {
     debug("broadcast %a", data);
 
     const payload = JSON.stringify(data.payload);
 
     for (const channel of data.channels) {
-      this.aedes.publish({ payload, topic: channel }, this.publishCallback);
+      this.aedes.publish(
+        { payload, topic: channel } as PublishPacket,
+        this.publishCallback,
+      );
     }
   }
 
-  disconnect(connectionId, message = "Connection closed by remote host") {
+  disconnect(
+    connectionId: string,
+    message = "Connection closed by remote host",
+  ): void {
     debug("disconnect: connection id: %s, message %s", connectionId, message);
 
     const client = this.connectionsById.get(connectionId);
 
     if (client) {
-      client.close(undefined, message);
+      // aedes' close() takes a callback and nothing else: `message` has never
+      // reached the client
+      client.close();
     }
   }
 
-  joinChannel() {
+  joinChannel(channel: string, connectionId: string) {
     // do nothing
+    return { channel, connectionId };
   }
 
-  leaveChannel() {
+  leaveChannel(channel: string, connectionId: string) {
     // do nothing
+    return { channel, connectionId };
   }
 
-  notify(data) {
+  notify(data: MqttNotification): void {
     debug("notify %a", data);
 
     const client = this.connectionsById.get(data.connectionId);
@@ -140,20 +180,17 @@ class MqttProtocol extends Protocol {
 
     const payload = Buffer.from(JSON.stringify(data.payload));
 
-    data.channels.forEach((topic) => {
-      client.publish({ payload, topic }, this.publishCallback);
-    });
+    for (const topic of data.channels) {
+      client.publish({ payload, topic } as PublishPacket, this.publishCallback);
+    }
   }
 
-  /**
-   * @param {Client} client
-   */
-  onConnection(client) {
+  onConnection(client: Client): void {
     debug("onConnection: %s", client.id);
 
     const connection = new ClientConnection(
       this.name,
-      [client.conn.remoteAddress],
+      [(client.conn as net.Socket).remoteAddress],
       {},
     );
     this.entryPoint.newConnection(connection);
@@ -162,10 +199,7 @@ class MqttProtocol extends Protocol {
     this.connectionsById.set(connection.id, client);
   }
 
-  /**
-   * @param {Client} client
-   */
-  onDisconnection(client) {
+  onDisconnection(client: Client): void {
     debug("onDisconnection %s", client.id);
 
     if (this.connections.has(client)) {
@@ -181,11 +215,7 @@ class MqttProtocol extends Protocol {
     }
   }
 
-  /**
-   * @param packet
-   * @param client
-   */
-  onMessage(packet, client) {
+  onMessage(packet: AedesPublishPacket, client: Client): void {
     if (
       packet.topic !== this.config.requestTopic ||
       packet.payload === null ||
@@ -223,7 +253,7 @@ class MqttProtocol extends Protocol {
     }
   }
 
-  _respond(client, response) {
+  _respond(client: Client, response: JSONObject): void {
     debug("sending response: %o", response.content);
 
     if (global.NODE_ENV === "development" && this.config.developmentMode) {
@@ -239,12 +269,12 @@ class MqttProtocol extends Protocol {
       {
         payload: Buffer.from(JSON.stringify(response.content)),
         topic: this.config.responseTopic,
-      },
+      } as PublishPacket,
       this.publishCallback,
     );
   }
 
-  _respondError(client, error) {
+  _respondError(client: Client, error: Error): void {
     const connection = this.connections.get(client);
 
     const errReq = new Request(
@@ -257,7 +287,11 @@ class MqttProtocol extends Protocol {
     this._respond(client, removeStacktrace(errReq.response.toJSON()));
   }
 
-  _authorizePublish(client, packet, callback) {
+  _authorizePublish(
+    client: Client,
+    packet: AedesPublishPacket,
+    callback: (error?: Error | null) => void,
+  ): void {
     const topic = packet.topic.toString();
 
     if (this.config.allowPubSub) {
@@ -277,7 +311,11 @@ class MqttProtocol extends Protocol {
     }
   }
 
-  _authorizeSubscribe(client, sub, callback) {
+  _authorizeSubscribe(
+    client: Client,
+    sub: Subscription,
+    callback: (error: Error | null, subscription?: Subscription | null) => void,
+  ): void {
     if (sub.topic === this.config.requestTopic) {
       callback(new Error("Cannot subscribe: this topic is write-only"));
     } else if (sub.topic.includes("#") || sub.topic.includes("+")) {
@@ -288,4 +326,4 @@ class MqttProtocol extends Protocol {
   }
 }
 
-module.exports = MqttProtocol;
+export = MqttProtocol;

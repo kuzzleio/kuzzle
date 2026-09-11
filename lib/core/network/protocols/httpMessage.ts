@@ -19,17 +19,24 @@
  * limitations under the License.
  */
 
-"use strict";
+import type * as uWS from "uWebSockets.js";
 
-/**
- * @class HttpMessage
- */
+import type ClientConnection from "../clientConnection";
+
 class HttpMessage {
-  /**
-   * @param {ClientConnection} connection
-   * @param {uWS.HttpRequest} request
-   */
-  constructor(connection, request) {
+  public connection: ClientConnection;
+  public ips: string[];
+  public query: string;
+  public path: string;
+  /** @deprecated use "path" instead */
+  public url: string; // NOSONAR the field is the deprecation, not a use of one
+  public method: string;
+  public headers: Record<string, string>;
+  public requestId: string;
+
+  private _content: Buffer | null;
+
+  constructor(connection: ClientConnection, request: uWS.HttpRequest) {
     this.connection = connection;
     this._content = null;
     this.ips = connection.ips;
@@ -42,8 +49,7 @@ class HttpMessage {
       this.path = request.getUrl();
     }
 
-    // @deprecated use "path" instead
-    this.url = this.path;
+    this.url = this.path; // NOSONAR this is what declares the alias
 
     this.method = request.getMethod().toUpperCase();
     this.headers = {};
@@ -53,7 +59,7 @@ class HttpMessage {
     this.requestId = this.headers["x-kuzzle-request-id"] || connection.id;
   }
 
-  set content(value) {
+  set content(value: Buffer | null) {
     if (!value || value.length === 0) {
       this._content = null;
     } else {
@@ -61,9 +67,9 @@ class HttpMessage {
     }
   }
 
-  get content() {
+  get content(): Buffer | null {
     return this._content;
   }
 }
 
-module.exports = HttpMessage;
+export = HttpMessage;

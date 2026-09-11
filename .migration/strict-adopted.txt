@@ -145,3 +145,14 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
+
+# Sprint 6, PR H2 (2026-09-11) — the network files that are already strict-clean.
+# The rest of lib/core/network is nullable-heavy by nature (parentPort, the
+# optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
+# is left to the sprint-9 flip rather than guarded file by file here.
+lib/core/network/clientConnection.ts
+lib/core/network/context.ts
+lib/core/network/httpRouter/routeTypes.ts
+lib/core/network/networkEntryPoint.ts
+lib/core/network/protocolManifest.ts
+lib/core/network/protocols/httpMessage.ts

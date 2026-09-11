@@ -44,7 +44,10 @@ describe("/lib/core/network/entryPoint/protocols/mqttProtocol", () => {
       }),
     };
 
+    // the source imports the "node:"-prefixed name; mock-require keys on the
+    // literal specifier, so both have to be registered
     mockrequire("net", netMock);
+    mockrequire("node:net", netMock);
     mockrequire("aedes", AedesMock);
 
     MqttProtocol = mockrequire.reRequire(
