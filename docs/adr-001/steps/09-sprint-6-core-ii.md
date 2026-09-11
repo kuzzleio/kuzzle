@@ -164,6 +164,16 @@ Each was a `TypeError` waiting on an input `validateFieldSpecification` already 
 - **`BaseType.validate` is declared as an overload** (`validate(typeOptions?, fieldValue?, errorMessages?): boolean` over an implementation taking none). The base returns `true` and reads nothing; without the overload, either the subclasses stop being assignable or ESLint reports three unused parameters.
 - **Constructors are gone.** Every type's constructor did nothing but assign `typeName` / `allowChildren` / `allowedTypeOptions`; they are class-field initialisers now, which is the shape Sonar's S7757 asked for in sprint 5. With `target: es2020` and `useDefineForClassFields` off, the emitted code is the same assignment in the constructor, so `has(validationType, "allowChildren")` in `Validation.addType` still sees an own property.
 
+### The gate's new-code issues: four S3776, as budgeted
+
+`new_coverage` came out at **97.0%** and duplication at 0.0%, but the gate failed on **4 new Critical** — `S3776` cognitive complexity on `date.validate` (23), `date.validateFieldSpecification` (22), `geoShape.recursiveShapeValidation` (23) and `geoShape.checkStructure` (17). All four are pre-existing and all four were re-scored by the rename: the standing sprint-4 pattern, and the reason the step's DoD says a gate-driven refactor is in scope.
+
+Resolved by verbatim extraction — `parseDate`, `checkRange`, `validateFormats`, `validateRange`, `checkOrientation`, `checkRadius`, `checkCoordinates`, `checkGeometries`, `checkShapeType`, `checkShapeProperties`. **Equivalence note**, the two places where the extraction is not a straight cut-and-paste:
+
+- **`geoShape`'s checks each push their own error message, so none of them may be short-circuited.** `checkStructure` and `recursiveShapeValidation` both accumulated into a `result` flag precisely so that every applicable message lands. The extracted helpers therefore return into locals that are combined *after* the fact (`return typeOk && propertiesOk`), never inline in a `&&` chain. A comment says so at both sites.
+- **`recursiveShapeValidation`'s tail already collapsed to `result && coordinatesOk`.** The original returned `false` early when a non-multi shape had bad coordinates, skipping `result` — but `result` is the only other term, so the early return and the conjunction agree on every input. The conjunction is what the extraction leaves behind.
+- **`checkRadius` keeps an assignment in its `catch`.** The original pushed the error message from inside the block; hoisting that push to a single site at the end would have left an empty `catch`, which is a Sonar issue of its own. The block assigns `valid = false` instead.
+
 ## Validation
 
 Run on the H1 branch, 2026-09-11:
@@ -174,3 +184,4 @@ Run on the H1 branch, 2026-09-11:
 - `.ci/scripts/docker-test.sh unit mocha` — **3030 passing**
 - `.ci/scripts/docker-test.sh unit vitest` — **183 passing**
 - `eslint` + `prettier` — clean
+- SonarCloud on [#2722](https://github.com/kuzzleio/kuzzle/pull/2722): `new_coverage` **97.0%**, duplication 0.0%, all three ratings A — green after the S3776 round above
