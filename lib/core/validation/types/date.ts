@@ -151,23 +151,7 @@ class DateType extends BaseType<DateTypeOptions> {
     fieldValue: unknown,
     errorMessages: string[],
   ): boolean {
-    let momentDate: Moment | null = null;
-
-    for (const formatOpt of typeOptions.formats ?? []) {
-      const parse = formatMap[formatOpt];
-
-      // unreachable: validateFieldSpecification rejects unknown formats
-      if (!parse) {
-        continue;
-      }
-
-      // `moment` is the one telling an unparseable value apart from a date
-      momentDate = parse(fieldValue as MomentInput);
-
-      if (momentDate.isValid()) {
-        break;
-      }
-    }
+    const momentDate = parseDate(typeOptions.formats ?? [], fieldValue);
 
     if (momentDate === null || !momentDate.isValid()) {
       errorMessages.push("The date format is invalid.");
@@ -176,85 +160,138 @@ class DateType extends BaseType<DateTypeOptions> {
 
     const { range } = typeOptions;
 
-    if (isPlainObject(range)) {
-      if (range.min) {
-        const min = range.min === "NOW" ? moment.utc() : range.min;
-
-        if (momentDate.isBefore(min)) {
-          errorMessages.push(
-            "The provided date is before the defined minimum.",
-          );
-          return false;
-        }
-      }
-
-      if (range.max) {
-        const max = range.max === "NOW" ? moment.utc() : range.max;
-
-        if (max.isBefore(momentDate)) {
-          errorMessages.push("The provided date is after the defined maximum.");
-          return false;
-        }
-      }
+    if (!isPlainObject(range)) {
+      return true;
     }
 
-    return true;
+    return checkRange(momentDate, range, errorMessages);
   }
 
   /**
    * @throws {PreconditionError}
    */
   validateFieldSpecification(typeOptions: DateTypeOptions): DateTypeOptions {
-    if (has(typeOptions, "formats")) {
-      const { formats } = typeOptions;
+    validateFormats(typeOptions);
+    this.validateRange(typeOptions);
 
-      if (!Array.isArray(formats) || formats.length === 0) {
-        throw assertionError.get("invalid_type", "formats", "non-empty array");
-      }
+    return typeOptions;
+  }
 
-      const unrecognized = formats.filter((f) => !formatMap[f]);
-
-      if (unrecognized.length > 0) {
-        throw typeError.get("invalid_date_format", unrecognized.join(", "));
-      }
-    } else {
-      typeOptions.formats = ["epoch_millis"];
+  /**
+   * Normalizes `range` in place: each bound becomes a moment, except `NOW`,
+   * which is kept verbatim so that it resolves at validation time rather than
+   * at specification time.
+   *
+   * @throws {PreconditionError}
+   */
+  private validateRange(typeOptions: DateTypeOptions): void {
+    if (!has(typeOptions, "range")) {
+      return;
     }
 
     const { range } = typeOptions;
 
-    if (has(typeOptions, "range")) {
-      let min: Moment | null = null,
-        max: Moment | null = null;
-
-      if (!this.checkAllowedProperties(range, ["min", "max"])) {
-        throw assertionError.get("unexpected_properties", "range", "min, max");
-      }
-
-      if (has(range, "min")) {
-        min = convertRangeValue(range.min);
-      }
-
-      if (has(range, "max")) {
-        max = convertRangeValue(range.max);
-      }
-
-      if (min && max && max.isBefore(min)) {
-        throw assertionError.get("invalid_range", "range", "min", "max");
-      }
-
-      // We want to keep NOW as a special value, else we would keep the time
-      // of the launch
-      if (min && range.min !== "NOW") {
-        range.min = min;
-      }
-
-      if (max && range.max !== "NOW") {
-        range.max = max;
-      }
+    if (!this.checkAllowedProperties(range, ["min", "max"])) {
+      throw assertionError.get("unexpected_properties", "range", "min, max");
     }
 
-    return typeOptions;
+    let min: Moment | null = null,
+      max: Moment | null = null;
+
+    if (has(range, "min")) {
+      min = convertRangeValue(range.min);
+    }
+
+    if (has(range, "max")) {
+      max = convertRangeValue(range.max);
+    }
+
+    if (min && max && max.isBefore(min)) {
+      throw assertionError.get("invalid_range", "range", "min", "max");
+    }
+
+    if (min && range.min !== "NOW") {
+      range.min = min;
+    }
+
+    if (max && range.max !== "NOW") {
+      range.max = max;
+    }
+  }
+}
+
+/**
+ * Parses `fieldValue` with the first of `formats` that accepts it.
+ */
+function parseDate(formats: string[], fieldValue: unknown): Moment | null {
+  let momentDate: Moment | null = null;
+
+  for (const formatOpt of formats) {
+    const parse = formatMap[formatOpt];
+
+    // unreachable: validateFieldSpecification rejects unknown formats
+    if (!parse) {
+      continue;
+    }
+
+    // `moment` is the one telling an unparseable value apart from a date
+    momentDate = parse(fieldValue as MomentInput);
+
+    if (momentDate.isValid()) {
+      break;
+    }
+  }
+
+  return momentDate;
+}
+
+function checkRange(
+  momentDate: Moment,
+  range: NonNullable<DateTypeOptions["range"]>,
+  errorMessages: string[],
+): boolean {
+  if (range.min) {
+    const min = range.min === "NOW" ? moment.utc() : range.min;
+
+    if (momentDate.isBefore(min)) {
+      errorMessages.push("The provided date is before the defined minimum.");
+      return false;
+    }
+  }
+
+  if (range.max) {
+    const max = range.max === "NOW" ? moment.utc() : range.max;
+
+    if (max.isBefore(momentDate)) {
+      errorMessages.push("The provided date is after the defined maximum.");
+      return false;
+    }
+  }
+
+  return true;
+}
+
+/**
+ * Checks `formats`, defaulting it to `epoch_millis` when absent.
+ *
+ * @throws {PreconditionError}
+ */
+function validateFormats(typeOptions: DateTypeOptions): void {
+  if (!has(typeOptions, "formats")) {
+    typeOptions.formats = ["epoch_millis"];
+    return;
+  }
+
+  const { formats } = typeOptions;
+
+  if (!Array.isArray(formats) || formats.length === 0) {
+    throw assertionError.get("invalid_type", "formats", "non-empty array");
+  }
+
+  const unrecognized = formats.filter((f) => !formatMap[f]);
+
+  if (unrecognized.length > 0) {
+    throw typeError.get("invalid_date_format", unrecognized.join(", "));
   }
 }
 

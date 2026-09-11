@@ -115,46 +115,17 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
       case "polygon":
       case "multipolygon":
         coordinateValidation = isPolygon;
-        if (
-          shape.orientation &&
-          !allowedOrientations.includes(shape.orientation)
-        ) {
-          errorMessages.push("The orientation property has not a valid value.");
-          result = false;
-        }
+        result = checkOrientation(shape, errorMessages);
         break;
       case "geometrycollection":
-        for (const geometry of geometries) {
-          if (
-            !this.recursiveShapeValidation(
-              allowedShapes,
-              geometry,
-              errorMessages,
-            )
-          ) {
-            result = false;
-          }
-        }
+        result = this.checkGeometries(allowedShapes, geometries, errorMessages);
         break;
       case "envelope":
         coordinateValidation = isEnvelope;
         break;
       case "circle":
         coordinateValidation = isPoint;
-        if (typeof shape.radius === "string") {
-          try {
-            if (typeof Koncorde.convertDistance(shape.radius) !== "number") {
-              errorMessages.push("The radius property has not a valid format.");
-              result = false;
-            }
-          } catch (error) {
-            errorMessages.push("The radius property has not a valid format.");
-            result = false;
-          }
-        } else if (typeof shape.radius !== "number") {
-          errorMessages.push("The radius property has not a valid format.");
-          result = false;
-        }
+        result = checkRadius(shape, errorMessages);
         break;
       default:
         // added to comply with sonarqube
@@ -163,16 +134,32 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
         result = false;
     }
 
-    if (isMulti) {
-      if (coordinates.some((coordinate) => !coordinateValidation(coordinate))) {
-        errorMessages.push(
-          `One of the shapes in  the shape type "${type}" has bad coordinates.`,
-        );
+    // evaluated before the `&&` so that its error message is pushed even when
+    // the switch has already invalidated the shape
+    const coordinatesOk = checkCoordinates(
+      type,
+      isMulti,
+      coordinates,
+      coordinateValidation,
+      errorMessages,
+    );
+
+    return result && coordinatesOk;
+  }
+
+  private checkGeometries(
+    allowedShapes: string[],
+    geometries: GeoShape[],
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
+
+    for (const geometry of geometries) {
+      if (
+        !this.recursiveShapeValidation(allowedShapes, geometry, errorMessages)
+      ) {
         result = false;
       }
-    } else if (!coordinateValidation(coordinates)) {
-      errorMessages.push(`The shape type "${type}" has bad coordinates.`);
-      return false;
     }
 
     return result;
@@ -183,22 +170,52 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
     shape: GeoShape,
     errorMessages: string[],
   ): boolean {
-    let result = true;
-
     if (!shape.type) {
       errorMessages.push("The shape object has no type defined.");
       return false;
     }
+
+    // every check pushes its own message, so none of them may be short-circuited
+    const typeOk = this.checkShapeType(
+      allowedShapes,
+      shape,
+      shape.type,
+      errorMessages,
+    );
+    const propertiesOk = this.checkShapeProperties(shape, errorMessages);
+
+    return typeOk && propertiesOk;
+  }
+
+  private checkShapeType(
+    allowedShapes: string[],
+    shape: GeoShape,
+    type: string,
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
 
     if (!this.checkAllowedProperties(shape, allowedShapeProperties)) {
       errorMessages.push("The shape object has a not allowed property.");
       result = false;
     }
 
-    if (allowedShapes.indexOf(shape.type) === -1) {
+    if (allowedShapes.indexOf(type) === -1) {
       errorMessages.push("The provided shape type is not allowed.");
       result = false;
     }
+
+    return result;
+  }
+
+  /**
+   * Checks the properties each shape type does and does not accept.
+   */
+  private checkShapeProperties(
+    shape: GeoShape,
+    errorMessages: string[],
+  ): boolean {
+    let result = true;
 
     if (shape.type === "geometrycollection" && shape.coordinates) {
       errorMessages.push(
@@ -294,6 +311,62 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
 
     return typeOptions;
   }
+}
+
+function checkOrientation(shape: GeoShape, errorMessages: string[]): boolean {
+  if (shape.orientation && !allowedOrientations.includes(shape.orientation)) {
+    errorMessages.push("The orientation property has not a valid value.");
+    return false;
+  }
+
+  return true;
+}
+
+function checkRadius(shape: GeoShape, errorMessages: string[]): boolean {
+  let valid: boolean;
+
+  if (typeof shape.radius === "string") {
+    try {
+      valid = typeof Koncorde.convertDistance(shape.radius) === "number";
+    } catch (error) {
+      // an unparseable distance is an invalid radius, like any other
+      valid = false;
+    }
+  } else {
+    valid = typeof shape.radius === "number";
+  }
+
+  if (!valid) {
+    errorMessages.push("The radius property has not a valid format.");
+  }
+
+  return valid;
+}
+
+function checkCoordinates(
+  type: string,
+  isMulti: boolean,
+  coordinates: unknown[],
+  coordinateValidation: CoordinateValidation,
+  errorMessages: string[],
+): boolean {
+  if (isMulti) {
+    if (coordinates.some((coordinate) => !coordinateValidation(coordinate))) {
+      errorMessages.push(
+        `One of the shapes in  the shape type "${type}" has bad coordinates.`,
+      );
+      return false;
+    }
+
+    return true;
+  }
+
+  if (!coordinateValidation(coordinates)) {
+    errorMessages.push(`The shape type "${type}" has bad coordinates.`);
+    return false;
+  }
+
+  return true;
 }
 
 function isPoint(point: unknown): boolean {
