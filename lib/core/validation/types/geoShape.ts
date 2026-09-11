@@ -33,15 +33,15 @@ const allowedShapeProperties = [
     "orientation",
     "geometries",
   ],
-  allowedOrientations = [
+  allowedOrientations = new Set([
     "right",
     "ccw",
     "counterclockwise",
     "left",
     "cw",
     "clockwise",
-  ],
-  multiTypes = ["multipoint", "multilinestring", "multipolygon"],
+  ]),
+  multiTypes = new Set(["multipoint", "multilinestring", "multipolygon"]),
   allowedShapeTypes = [
     "point",
     "linestring",
@@ -98,7 +98,7 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
     // exist to keep the destructuring total.
     const { type = "", coordinates = [], geometries = [] } = shape;
 
-    const isMulti = multiTypes.includes(type);
+    const isMulti = multiTypes.has(type);
     // the default also covers "geometrycollection", which holds no coordinates
     // of its own, and the unreachable `default:` branch below
     let coordinateValidation: CoordinateValidation = () => true,
@@ -315,7 +315,7 @@ class GeoShapeType extends BaseType<GeoShapeTypeOptions> {
 }
 
 function checkOrientation(shape: GeoShape, errorMessages: string[]): boolean {
-  if (shape.orientation && !allowedOrientations.includes(shape.orientation)) {
+  if (shape.orientation && !allowedOrientations.has(shape.orientation)) {
     errorMessages.push("The orientation property has not a valid value.");
     return false;
   }
@@ -400,7 +400,7 @@ function isPolygonPart(polygonPart: unknown): boolean {
     Array.isArray(polygonPart) &&
     polygonPart.length >= 4 &&
     isLine(polygonPart) &&
-    isPointEqual(polygonPart[0], polygonPart[polygonPart.length - 1])
+    isPointEqual(polygonPart[0], polygonPart.at(-1))
   );
 }
 
