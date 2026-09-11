@@ -19,27 +19,19 @@
  * limitations under the License.
  */
 
-"use strict";
+import BaseType from "../baseType";
+import { TypeOptions } from "../typeOptions";
 
-const BaseType = require("../baseType");
-
-/**
- * @class BooleanType
- */
 class BooleanType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "boolean";
-    this.allowChildren = false;
-    this.allowedTypeOptions = [];
-  }
+  public typeName = "boolean";
+  public allowChildren = false;
+  public allowedTypeOptions: string[] = [];
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+  validate(
+    typeOptions: TypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
     if (typeof fieldValue !== "boolean") {
       errorMessages.push("The field must be of type boolean.");
       return false;
@@ -49,4 +41,4 @@ class BooleanType extends BaseType {
   }
 }
 
-module.exports = BooleanType;
+export = BooleanType;

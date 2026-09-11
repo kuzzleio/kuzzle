@@ -19,29 +19,22 @@
  * limitations under the License.
  */
 
-"use strict";
+import { wrap } from "../../../kerror";
+import BaseType from "../baseType";
+import { ObjectTypeOptions } from "../typeOptions";
 
-const kerror = require("../../../kerror").wrap("validation", "assert"),
-  BaseType = require("../baseType");
+const kerror = wrap("validation", "assert");
 
-/**
- * @class ObjectType
- */
-class ObjectType extends BaseType {
-  constructor() {
-    super();
-    this.typeName = "object";
-    this.allowChildren = true;
-    this.allowedTypeOptions = ["strict"];
-  }
+class ObjectType extends BaseType<ObjectTypeOptions> {
+  public typeName = "object";
+  public allowChildren = true;
+  public allowedTypeOptions = ["strict"];
 
-  /**
-   * @param {TypeOptions} typeOptions
-   * @param {*} fieldValue
-   * @param {string[]} errorMessages
-   * @returns {boolean}
-   */
-  validate(typeOptions, fieldValue, errorMessages) {
+  validate(
+    typeOptions: ObjectTypeOptions,
+    fieldValue: unknown,
+    errorMessages: string[],
+  ): boolean {
     if (
       fieldValue === null ||
       typeof fieldValue !== "object" ||
@@ -55,11 +48,11 @@ class ObjectType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @returns {TypeOptions}
    * @throws {PreconditionError}
    */
-  validateFieldSpecification(typeOptions) {
+  validateFieldSpecification(
+    typeOptions: ObjectTypeOptions,
+  ): ObjectTypeOptions {
     if (
       Object.prototype.hasOwnProperty.call(typeOptions, "strict") &&
       typeof typeOptions.strict !== "boolean"
@@ -71,13 +64,13 @@ class ObjectType extends BaseType {
   }
 
   /**
-   * @param {TypeOptions} typeOptions
-   * @param {boolean} parentStrictness
-   * @returns {boolean|TypeOptions}
    * @throws KuzzleInternalError
    */
-  getStrictness(typeOptions, parentStrictness) {
-    if (!Object.prototype.hasOwnProperty.call(typeOptions, "strict")) {
+  getStrictness(
+    typeOptions: ObjectTypeOptions,
+    parentStrictness: boolean,
+  ): boolean {
+    if (typeOptions.strict === undefined) {
       return parentStrictness;
     }
 
@@ -85,4 +78,4 @@ class ObjectType extends BaseType {
   }
 }
 
-module.exports = ObjectType;
+export = ObjectType;
