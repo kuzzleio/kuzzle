@@ -157,8 +157,18 @@ lib/core/network/networkEntryPoint.ts
 lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
 
-# Sprint 6, PR H3 (2026-09-11) — the plugin leaves. pluginRepository.ts is left
-# out: its load() resolves null for a missing user, which cannot be declared
-# against ObjectRepository<TObject>'s Promise<TObject> without a double cast.
+# Sprint 6, PR H3 (2026-09-11) — the plugin leaves. pluginRepository.ts was
+# left out here: its load() resolves null for a missing user, which could not
+# be declared against ObjectRepository<TObject>'s Promise<TObject> without a
+# double cast. TD-40 (#2727) fixed that in the base class instead — the whole
+# load path had always had a `return null` — so the file is adopted below.
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/privilegedContext.ts
+
+# TD-40 (2026-09-11, #2727) — ObjectRepository's load path is declared nullable,
+# which is what it always did. pluginRepository.ts can now say what it returns.
+lib/core/plugin/pluginRepository.ts
+
+# TD-41 (2026-09-11, #2728) — protocol.ts's init normalises its two call shapes
+# instead of typing a union the body could not serve, and ships its first spec.
+lib/core/network/protocols/protocol.ts

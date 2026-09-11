@@ -42,7 +42,7 @@ interface PluginRepositoryOptions {
 }
 
 class PluginRepository extends ObjectRepository<PluginDocument> {
-  constructor(store: unknown, collection: string) {
+  constructor(store: { index: string }, collection: string) {
     super({ cache: cacheDbEnum.NONE, store });
 
     this.collection = collection;
@@ -61,8 +61,9 @@ class PluginRepository extends ObjectRepository<PluginDocument> {
    * Serializes the object before being persisted to database.
    */
   serializeToDatabase(data: PluginDocument): JSONObject {
-    // avoid the data var mutation
-    const result = merge({}, data);
+    // avoid the data var mutation. Typed as JSONObject, not PluginDocument:
+    // dropping `_id` is the whole point, and `_id` is required on the latter.
+    const result: JSONObject = merge({}, data);
 
     delete result._id;
 
@@ -99,9 +100,13 @@ class PluginRepository extends ObjectRepository<PluginDocument> {
 
   /**
    * If we load a user that does not exists, we have to resolve the promise with
-   * null instead of throwing NotFoundError
+   * null instead of throwing NotFoundError.
+   *
+   * The `| null` is the base's now (ADR-0001, TD-40 — #2727): this override
+   * used to declare `Promise<PluginDocument>` and resolve `null` anyway, which
+   * type-checked only because the file was held out of strict.
    */
-  load(documentId: string): Promise<PluginDocument> {
+  load(documentId: string): Promise<PluginDocument | null> {
     return super.load(documentId).catch((error) => {
       if (this.collection === "users" && error instanceof NotFoundError) {
         return null;

@@ -46,29 +46,62 @@ class Protocol<TConfig = Record<string, unknown>> {
   }
 
   /**
-   * The `name` parameter is deprecated: pass it to the constructor instead.
+   * Initializes the protocol against the entry point that owns it.
    *
-   * The first parameter carries two shapes on purpose: `entryPoint` calls
-   * `protocol.init(entryPoint)` on every subclass, while the subclasses call
-   * `super.init(null, entryPoint)` here. Third-party protocols may still use
-   * the deprecated `(name, entryPoint)` form, so the signature keeps both.
+   * Two call shapes reach this method, and only one of them is alive:
+   *
+   *  - `init(entryPoint)` — what `entryPoint.js` calls on every protocol, and
+   *    what a subclass should call on `super`;
+   *  - `init(null, entryPoint)` — what the three in-tree subclasses currently
+   *    call, and what a third-party protocol written against an older version
+   *    still calls. Kept working, hence the implementation signature below.
+   *
+   * A *string* first argument is **not** a third shape. The parameter was
+   * deprecated in #1645 (2020-06-16) by an assert that reads
+   * `assert(this.name && !name)`, so passing a name here has thrown ever since
+   * — including when no name was given to the constructor, which is the only
+   * case the deprecation was meant to still allow. The signature says `null`
+   * because `null` is what this method can accept. Widening it to
+   * `string | null`, as the first TypeScript conversion did, advertised a call
+   * that throws. ADR-0001, TD-41 (#2728).
+   *
+   * The assert is left exactly as it is: fixing it would re-open a path that
+   * has been closed for five years, which is a decision about the plugin API,
+   * not about this method's type.
    */
+  async init(entryPoint: NetworkEntryPoint): Promise<boolean>;
+  /** @deprecated pass the name to the constructor and call `init(entryPoint)` */
+  async init(name: null, entryPoint: NetworkEntryPoint): Promise<boolean>;
   async init(
-    name: string | null | NetworkEntryPoint,
-    entryPoint?: NetworkEntryPoint,
+    nameOrEntryPoint: null | NetworkEntryPoint,
+    maybeEntryPoint?: NetworkEntryPoint,
   ): Promise<boolean> {
-    this.entryPoint = entryPoint;
+    // The old shape puts the entry point second. Normalising here is what the
+    // union in the first conversion left undone: the body read `maybeEntryPoint`
+    // unconditionally, so `init(entryPoint)` type-checked and threw on
+    // `entryPoint.config` (TD-41).
+    const entryPoint =
+      nameOrEntryPoint === null ? maybeEntryPoint : nameOrEntryPoint;
 
-    // name should be passed in the constructor
+    // New: the call shapes above both crashed on `entryPoint.config` a few
+    // lines down when the entry point was missing. Same outcome, with the
+    // reason in the message — httpwsProtocol.js is still JavaScript and the
+    // overloads do not constrain it.
     assert(
-      this.name && !name,
-      "A name has been given in the constructor and init method. Passing the name in the init method is deprecated.",
+      entryPoint !== undefined && entryPoint !== null,
+      'Invalid "entryPoint" parameter value: expected the network entry point',
     );
 
-    if (!this.name) {
-      // only reachable when `name` is falsy: the assert above throws otherwise
-      this.name = typeof name === "string" ? name : "";
-    }
+    this.entryPoint = entryPoint;
+
+    // name should be passed in the constructor. The original condition was
+    // `this.name && !name`; normalisation above proves the first argument is
+    // never a name, so `!name` was constant-true. What remains is the half
+    // that can fail, and it throws the same error it always did.
+    assert(
+      this.name,
+      "A name has been given in the constructor and init method. Passing the name in the init method is deprecated.",
+    );
 
     this.maxRequestSize = bytes(entryPoint.config.maxRequestSize);
 
