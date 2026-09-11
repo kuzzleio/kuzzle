@@ -41,7 +41,7 @@
 | [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ✅ [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) |
 | [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | ✅ [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 | [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | ✅ [#2716](https://github.com/kuzzleio/kuzzle/pull/2716) |
-| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky functional variant blocks unrelated PRs; cluster readiness is not gated — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | ⬜ |
+| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky functional variant blocks unrelated PRs; cluster readiness is not gated — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | 🟦 readiness gate + `fail-fast: false` done; the `resetDatabase` visibility race still open |
 | [TD-34](#td-34) | 🟠 med | Correctness | `Profile._hash`'s new overload declared `string \| false`; the patch (`global.kuzzle.hash`) returns a `number`, and `profileRepository` still cast the site to `any` | XS | ✅ |
 | [TD-35](#td-35) | 🟠 med | Enforcement | `npm run build` ran `copy-binaries` through `tsx` (esbuild native binary) and nothing asserted its payload — a broken copy step shipped a `.proto`-less package | XS | ✅ |
 | [TD-36](#td-36) | 🔴 high | Enforcement | TD-35's payload gate never sees the published artifact: `npm publish` re-runs `prepublishOnly` → `build`, which wipes the `dist/` the workflow step verified | XS | ✅ |
@@ -464,9 +464,27 @@ The 30-variant functional matrix is `fail-fast`, so **one flake cancels the othe
 
 Root cause of the common symptom: `run-test-cluster.sh` gates the suite on four `bin/wait-kuzzle` calls, and `wait-kuzzle` resolves on the SDK's **`connected` event** — the WebSocket handshake succeeded. That proves the transport is listening; it proves nothing about the cluster having formed a quorum, which is what the tests actually need. Hence `api.process.not_enough_nodes` in a `Before` hook, 1.7 s into the run.
 
-A second symptom is not explained yet: on #2708 the wait on port 17510 timed out after 60 s while the containers logged `[✔] Kuzzle 2.56.0 is ready` 30 s in. The SDK *does* retry (`Realtime.clientNetworkError` re-calls `connect()` every second, `autoReconnect` on by default), so "it only tried once" is **not** the explanation — recorded as open rather than guessed at.
+A second symptom was recorded as unexplained: on #2708 the wait on port 17510 timed out after 60 s while the containers logged `[✔] Kuzzle 2.56.0 is ready` 30 s in. The SDK *does* retry (`Realtime.clientNetworkError` re-calls `connect()` every second, `autoReconnect` on by default), so "it only tried once" is **not** the explanation.
+
+**✅ Root cause found (2026-09-11) — the retry is real but unreachable.** `clientNetworkError()` is the only thing that schedules a retry, and `WebSocketProtocol.onclose` forwards a close to it *conditionally*:
+
+```js
+if (status === 1000) { this.clientDisconnected(USER_CONNECTION_CLOSED); }
+// do not forward a connection close error if no connection has been previously established
+else if (this.wasConnected) { this.clientNetworkError(error); }
+```
+
+A socket that is **accepted and then closed before the first successful connection** matches neither branch: `wasConnected` is still `false` on the first attempt. Nothing is emitted, no retry is scheduled, and `connect()`'s promise neither resolves nor rejects — `onopen` never fired and `onerror` never fired either. That is exactly what a *published Docker port whose container is still booting* produces: `docker-proxy` accepts the TCP connection, then drops it. The wait then spends its entire 60 s budget on one dead attempt, which is precisely the log on #2708.
+
+So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connection, only for a re-connection — a distinction worth remembering anywhere else the SDK is used as a readiness probe.
 
 - **Reco:** (1) poll `cluster:status` for the 3 expected nodes after the port waits — this is the state the tests depend on; (2) reproduce the `wait-kuzzle` timeout before touching it; (3) consider `fail-fast: false` on the matrix, so one flake stops hiding the other 29 results.
+- **✅ Fixed (2026-09-11)** — all three, in `bin/wait-kuzzle` and the PR workflow:
+  - **(1) readiness, done without `cluster:status`.** `funnel.throttle()` is the single gate *every* request passes, and it is where `NOT_ENOUGH_NODES` rejects. With `minimumNodes=3`, a node that answers a request at all *is* a node in quorum — so each attempt now sends `auth:getCurrentUser` (cheap, open to anonymous) and treats any answer other than `api.process.not_enough_nodes` as ready. No credentials, no extra endpoint, and it works unchanged for the single-node waits in `docker-test.sh`. Polling `cluster:status` would have needed an admin login, since anonymous has no `cluster` rights.
+  - **(2) reproduced by reading the SDK rather than the logs** — see the root cause above. The retry loop is now ours: a fresh client per attempt with `autoReconnect: false`, each bounded by `ATTEMPT_TIMEOUT` (5 s), inside an overall `MAX_TRIES` deadline. A dead attempt now costs 5 s instead of the whole budget.
+  - **(3) `fail-fast: false`** on the functional matrix.
+- **⬜ Still open — the third symptom (`nyc-open-data` already exists) is *not* addressed by this.** That one is inside the cucumber `Before` hook, not in the readiness gate: `admin:resetDatabase` with `refresh: "wait_for"` returns on an Elasticsearch *refresh* acknowledgement, which says nothing about the other cluster nodes. The two share a shape — *a per-node acknowledgement trusted as cluster state* — but not a fix.
+- **The generalisable part:** *a readiness probe must exercise the thing the caller depends on.* Both the handshake gate and `wait_for` are real signals about the wrong layer; the suite needs "this node processes my requests", and only sending a request proves it.
 - **Tracked as [#2715](https://github.com/kuzzleio/kuzzle/issues/2715).**
 - **Trigger:** independent of the migration, but it taxes every PR in it.
 
