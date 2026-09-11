@@ -9,8 +9,8 @@
 # unrecorded improvement — so the baseline always mirrors reality).
 #
 # Usage:
-#   scripts/ratchet.sh <js|mocha|any|implicit-any> [--update]
-#   npm run ratchet                  # all four, check mode
+#   scripts/ratchet.sh <js|mocha|any|implicit-any|cpd-exclusions> [--update]
+#   npm run ratchet                  # all five, check mode
 #   npm run ratchet:js -- --update   # record the current js count as the new baseline
 #
 set -euo pipefail
@@ -19,6 +19,58 @@ cd "$(dirname "$0")/.."
 
 metric="${1:-}"
 mode="${2:-check}"
+
+# The CPD-exclusion ratchet is a SET, not a count: a count alone would let a PR
+# swap an entry out for a new one. `sonar.cpd.exclusions` disables duplication
+# detection on a file for every future PR, so the list may only shrink, and only
+# as a file's duplication is actually dealt with (ADR-0001 register, TD-23).
+if [ "$metric" = "cpd-exclusions" ]; then
+  baseline_file=".migration/cpd-exclusions.txt"
+
+  current="$(grep '^sonar.cpd.exclusions=' sonar-project.properties \
+    | cut -d= -f2- | tr ',' '\n' | sed '/^[[:space:]]*$/d' | sort)"
+
+  if [ "$mode" = "--update" ]; then
+    {
+      echo "# Files excluded from SonarCloud duplication detection — see sonar-project.properties"
+      echo "# and docs/adr-001/type-debt-register.md (TD-23). This list may only SHRINK: drop a"
+      echo "# file's entry in the PR that deals with its duplication."
+      echo
+      echo "$current"
+    } > "$baseline_file"
+    echo "✅ 'cpd-exclusions' baseline updated:"
+    echo "$current" | sed 's/^/   /'
+    exit 0
+  fi
+
+  if [ ! -f "$baseline_file" ]; then
+    echo "❌ missing baseline: $baseline_file (run: scripts/ratchet.sh cpd-exclusions --update)" >&2
+    exit 2
+  fi
+
+  baseline="$(sed 's/#.*//' "$baseline_file" | sed '/^[[:space:]]*$/d' | sort)"
+
+  added="$(comm -13 <(echo "$baseline") <(echo "$current"))"
+  removed="$(comm -23 <(echo "$baseline") <(echo "$current"))"
+
+  if [ -n "$added" ]; then
+    echo "❌ 'cpd-exclusions' ratchet: new exclusion(s) added — not allowed."
+    echo "$added" | sed 's/^/   + /'
+    echo "   → Dedupe the file instead. An exclusion disables CPD on it for every future PR."
+    exit 1
+  fi
+
+  if [ -n "$removed" ]; then
+    echo "🎉 Progress on 'cpd-exclusions': exclusion(s) dropped."
+    echo "$removed" | sed 's/^/   - /'
+    echo "   Update the baseline in the same PR: npm run ratchet:cpd-exclusions -- --update"
+    echo "   then commit $baseline_file."
+    exit 1
+  fi
+
+  echo "✅ 'cpd-exclusions' ratchet: $(echo "$baseline" | wc -l | tr -d ' ') exclusion(s), unchanged."
+  exit 0
+fi
 
 case "$metric" in
   js)
@@ -52,7 +104,7 @@ case "$metric" in
     hint="Annotate the parameter/variable instead of letting it infer to any."
     ;;
   *)
-    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any> [--update]" >&2
+    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any|cpd-exclusions> [--update]" >&2
     exit 2
     ;;
 esac
