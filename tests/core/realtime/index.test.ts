@@ -4,28 +4,28 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 // close over has to come from `vi.hoisted`.
 const { calls, constructedWith, NotifierMock, HotelClerkMock } = vi.hoisted(
   () => {
-    const calls: string[] = [];
+    const initCalls: string[] = [];
     /** Constructor arguments, recorded so the back-reference can be asserted
      * without reaching into a private field. */
-    const constructedWith: Record<string, unknown> = {};
+    const ctorArgs: Record<string, unknown> = {};
 
     return {
-      calls,
-      constructedWith,
+      calls: initCalls,
+      constructedWith: ctorArgs,
       NotifierMock: class {
         constructor(module: unknown) {
-          constructedWith.notifier = module;
+          ctorArgs.notifier = module;
         }
         init = vi.fn(async () => {
-          calls.push("notifier");
+          initCalls.push("notifier");
         });
       },
       HotelClerkMock: class {
         constructor(module: unknown) {
-          constructedWith.hotelClerk = module;
+          ctorArgs.hotelClerk = module;
         }
         init = vi.fn(async () => {
-          calls.push("hotelClerk");
+          initCalls.push("hotelClerk");
         });
       },
     };

@@ -1,15 +1,18 @@
 {
   "kuzzle-test-index": {
     "testCollection": [
-      { "create": { "_id": "alovelace"} },
-      { "username": "alovelace", "name": {"first": "Ada", "last": "Lovelace"} }
+      { "create": { "_id": "alovelace" } },
+      {
+        "username": "alovelace",
+        "name": { "first": "Ada", "last": "Lovelace" }
+      }
     ]
   },
   "kuzzle-test-index-alt": {
     "testCollection": [
-      { "create": { "_id": "ghopper"} },
-      { "username": "ghopper", "name": {"first": "Grace", "last": "Hopper"} },
-      { "delete": { "_id": "ghopper"} }
+      { "create": { "_id": "ghopper" } },
+      { "username": "ghopper", "name": { "first": "Grace", "last": "Hopper" } },
+      { "delete": { "_id": "ghopper" } }
     ]
   }
 }

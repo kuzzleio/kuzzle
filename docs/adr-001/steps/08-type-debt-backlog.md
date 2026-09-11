@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 10 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32), TD-33 open
+**Status:** 🟦 In progress — 15 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-44 · TD-45 · TD-47), TD-33 and TD-40/41/42/43/46/48 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -158,3 +158,69 @@ Plus the `catch` in `copy-binaries.ts`, which reported *"Failed to copy protobuf
 [TD-35](../type-debt-register.md#td-35) was argued from esbuild's error message. It is stronger than that: **this working tree's `node_modules` is Linux-installed**, so `npm run test:unit:mocha` dies in `re2.node` (*"slice is not valid mach-o file"*) and `vitest` dies in `rollup`'s native module — while `tsc` and `ts-node` run fine, which is exactly the property the fix relies on. The consequence for validation: **local unit runs are not available on this tree**, and both suites must go through `.ci/scripts/docker-test.sh unit <mocha|vitest>` (the `docker-tests` skill). A green "3 030 passing" in this log is a container's, not the host's.
 
 **CI on [#2718](https://github.com/kuzzleio/kuzzle/pull/2718):** 51 checks green (lint ×3, error codes, ratchets & strict, unit ×6, build & run ES 7/8, SonarCloud gate pass) — **after one re-run**. The first round lost `Functional tests (http, 24, 7)` to a fourth [TD-33](../type-debt-register.md#td-33) occurrence, and with it the 29 variants `fail-fast` cancelled. New symptom, recorded there: `resetDatabase` + `refresh: "wait_for"` returned before the index deletion was visible to the next scenario's node.
+
+
+---
+
+## Fourth review — the sprint-6 conversions and the CI, 2026-09-11
+
+The fifteen PRs merged into `2-dev` between [#2708](https://github.com/kuzzleio/kuzzle/pull/2708) and [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) were re-read end to end: sprint 6's three conversions (H1/H2/H3), this track's ten, and the CI work of #2718/#2719/#2720.
+
+The conversions hold up. H2's four latent bugs are real and correctly fixed — including the removal of `removeStacktrace` from the router, which was checked against `lib/util/stackTrace.ts`'s two branches, against `_res` being a `KuzzleRequest` that matches neither, and against the eight protocol call sites that do the real sanitising. H3's decision to write two specs rather than four assertions is this register's own rule working exactly as designed.
+
+Eleven findings, [TD-38](../type-debt-register.md#td-38) → [TD-48](../type-debt-register.md#td-48), filed as [#2725](https://github.com/kuzzleio/kuzzle/issues/2725)–[#2735](https://github.com/kuzzleio/kuzzle/issues/2735). The register holds the detail; the three shapes they fall into are worth stating here.
+
+**The gates are aggregates, and an aggregate hides its worst member.** H3 landed *under* the coverage threshold and the arithmetic pointed straight at the two files that were not really tested. H2 landed comfortably *above* it and three files went in with no spec at all — `context.ts`, which received a bug fix in that same PR, `protocol.ts`, which received a logic change, and `protocolManifest.ts`. Four latent bugs were found and fixed in H2 and **not one shipped a regression test**, because the aggregate was comfortable and the rule never fired. The same shape recurs across the tooling: the `any` ratchet counts the hatches it was told about while the debt moved to `as T`; the `js` ratchet counts `*.js` and had never seen two Node executables in `bin/`; `strict-check.sh` derived a verdict from a log and read an empty one as success. Every one of those was blind **in the direction of passing**.
+
+**Twice, the standard was honoured and its purpose defeated.** [TD-40](../type-debt-register.md#td-40) and [TD-41](../type-debt-register.md#td-41) both refuse a cast the conversion standard forbids, and both arrive at the outcome the standard exists to prevent by a quieter route — a return type that does not describe what the function returns, and a parameter union the body cannot serve. A cast is counted by a ratchet and visible to a reader. A wrong type is cheaper than a cast at review time and more expensive everywhere after it.
+
+**The CI gates what maintainers push, not what arrives.** [TD-38](../type-debt-register.md#td-38): three iterations went into making the build-payload gate real, and it lives in the one fork-gated job — along with, by way of `needs:`, 30 functional jobs and 6 monkey jobs.
+
+### A finding corrected during verification
+
+The first version of [#2725](https://github.com/kuzzleio/kuzzle/issues/2725) claimed a fork PR is never type-checked, on the grounds that `npm run build` appears only in the fork-gated `sonarqube` job. Reading `.github/actions/` rather than the workflow showed that `unit-tests` and `build-and-run-kuzzle` both run `npm run build` and neither is fork-gated, so `tsc` runs eight times on a fork PR. Corrected before any work started on it. *The workflow file is not the whole workflow; a composite action is where half of this repository's CI actually lives.*
+
+## What was done (TD-38 · TD-39 · TD-44 · TD-45 · TD-47)
+
+Five of the eleven in one PR, chosen on the same criterion every time: **tooling only, no runtime change**. Nothing under `lib/` is touched.
+
+### TD-39 — `tests/` enters the linters, and Prettier becomes a gate
+
+Both globs widened to `./lib ./test ./tests ./bin ./features ./features-legacy`, a new `prettier:check` script, and that script run in the `lint` job — `npm run prettier` had only ever *written*.
+
+Its first run found **7 ESLint errors**, all `@typescript-eslint/no-shadow` and all the same pattern: a `vi.hoisted` factory whose inner `const` shadows the destructured binding it is returned as. Fixed by naming the inner one for what it is and aliasing on the way out (`const initCalls` … `return { calls: initCalls }`), across 4 spec files. One unformatted `features-legacy` fixture besides. 478 warnings remain, overwhelmingly `sort-keys`, which is `warn` project-wide and just as noisy on `test/`; they do not gate, and quieting them is not this PR's business.
+
+### TD-44 — the strict check fails closed
+
+The first attempt was wrong and is worth recording: it treated `exit > 1` as "tsc did not run", which broke on the first real run, because **tsc returns 2 both for "I found errors in your code" and for "I could not read your config"**. The status cannot separate the cases. The discriminator is the output's shape — a `^error TS` line with no `path(line,col)` prefix is a config- or CLI-level diagnostic (TS5xxx/TS6xxx/TS18003) and means the project asked for was never read.
+
+Verified negatively three ways, and the first two were instructive:
+
+| Injected failure | Result |
+|---|---|
+| `tsconfig.strict.json` with a broken `extends` | `❌ … could not read tsconfig.strict.json`, exit 2. **Needed the first guard:** with no usable config, tsc cheerfully fell back to compiling `dist/` and filled the log with genuine diagnostics about the wrong files — the second guard alone would have passed it. |
+| `mv node_modules/typescript` away | `❌ … exited 1 without reporting a single file diagnostic`, exit 2. `npx` had silently downloaded the unrelated **`tsc@2.0.4`** package from npm, which prints a banner and exits 1. The old script read that as 125 passing files. |
+| unmodified | `✅ strict: all 125 adopted file(s) pass.`, exit 0 |
+
+Plus a guard on an empty `$ADOPTED`, which used to print `✅ all 0 adopted file(s) pass`.
+
+### TD-45 — the `js` ratchet sees what Node executes
+
+The predicate now matches the shebang as well as the extension. **The baseline goes up, 20 → 22.** That is the one direction this ratchet exists to forbid, and it is right here and only here: the metric did not regress, the instrument was wrong, and freezing a known-false floor to preserve a monotonic number would be the worse trade. `bin/start-kuzzle-server` and `bin/wait-kuzzle` are now in scope; the ADR's floor is corrected from 3 to 5.
+
+### TD-38 + TD-47 — the workflow
+
+A `build` job (`npm ci` → `npm run build` → `check-build-payload.sh`) with no fork condition, and `functional-tests: needs: [build, unit-tests]`. `sonarqube` keeps a build step of its own — its Mocha coverage run executes against `dist/`, and artifacts are not shared between jobs here — and keeps its `if:`, which is legitimate: a fork cannot reach `SONAR_TOKEN`.
+
+Alongside it: a workflow-level `concurrency` group with `cancel-in-progress`, `permissions: contents: read`, `lint` off its 3-version Node matrix (ESLint's verdict does not depend on the Node major, and `lint` gates three other jobs), and `NODE_LTS_ACTIVE_VERSION` — referenced four times, **defined nowhere**, so two jobs had been running on whatever Node the runner image shipped — replaced by a declared `NODE_VERSION`.
+
+Deliberately **not** done: pinning third-party actions to a commit SHA. Worth doing, a separate diff.
+
+## Validation (2026-09-11, this PR's branch)
+
+- `npm run ratchet` — five green (js **22**, mocha 150, any 205, implicit-any 457, cpd-exclusions 4)
+- `npm run test:strict` — `✅ all 125 adopted file(s) pass`, and the three injected-failure cases above all exit 2
+- `npm run test:lint` — exit 0, 479 warnings, **0 errors** (was 7 before the shadow fixes)
+- `npm run prettier:check` — *All matched files use Prettier code style!*
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+- `.ci/scripts/docker-test.sh unit vitest` — **189 passing**, unchanged

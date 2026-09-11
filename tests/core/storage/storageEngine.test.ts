@@ -5,16 +5,16 @@ import { storeScopeEnum } from "../../../lib/core/storage/storeScopeEnum";
 // `vi.mock` factories are hoisted above the module body, so everything they
 // close over has to come from `vi.hoisted`.
 const { instances, ClientAdapterMock } = vi.hoisted(() => {
-  const instances: unknown[] = [];
+  const created: unknown[] = [];
 
   return {
-    instances,
+    instances: created,
     ClientAdapterMock: class {
       public cache = { listIndexes: vi.fn<() => string[]>(() => []) };
       public init = vi.fn(async () => undefined);
 
       constructor(public scope: string) {
-        instances.push(this);
+        created.push(this);
       }
     },
   };

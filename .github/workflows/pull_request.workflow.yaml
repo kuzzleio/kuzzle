@@ -2,6 +2,27 @@ name: Tests
 
 on: [pull_request]
 
+env:
+  # Referenced by every job that does not deliberately run a Node matrix.
+  # It used to be spelled NODE_LTS_ACTIVE_VERSION and was never defined
+  # anywhere, so those jobs ran on whatever Node the runner image shipped
+  # (ADR-0001 type-debt register, TD-47 — #2734).
+  NODE_VERSION: "22"
+
+# Least privilege: only the Sonar job needs more, and it mints its own app
+# token for PR decoration (TD-47).
+permissions:
+  contents: read
+
+# A push supersedes the run it interrupts. Without this, three pushes in a row
+# mean three full ~50-job runs to completion, two of them answering a question
+# nobody is asking any more. Pairs with the `fail-fast: false` TD-33 (#2715)
+# put on the functional matrix: that keeps sibling variants running, which is
+# worth paying for on the *current* commit only (TD-47).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   error-codes-check:
     name: Documentation - Error codes check
@@ -13,10 +34,10 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
@@ -28,9 +49,10 @@ jobs:
   lint:
     name: Lint - Node.js
     runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        node-version: [20, 22, 24]
+    # No Node matrix: ESLint's and Prettier's verdict on a fixed source tree
+    # with a fixed config does not depend on the Node major running them, and
+    # this job gates three others — the slowest of three identical runs used to
+    # sit on the critical path for nothing (TD-47).
     steps:
       - name: Checkout project
         uses: actions/checkout@v4
@@ -38,10 +60,10 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Node version ${{ matrix.node-version }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
@@ -50,6 +72,13 @@ jobs:
 
       - name: ESLint
         run: npm run test:lint
+        shell: bash
+
+      # `npm run prettier` only ever *wrote*; nothing checked. Both globs now
+      # cover ./tests, the vitest tree every new spec goes to, which neither
+      # tool used to see (TD-39 — #2726).
+      - name: Prettier
+        run: npm run prettier:check
         shell: bash
 
   migration-ratchets:
@@ -85,6 +114,46 @@ jobs:
         run: npm run test:strict
         shell: bash
 
+  # The build and its payload gate used to live inside `sonarqube`, which is
+  # fork-gated — so on a pull request from a fork, `check-build-payload.sh`
+  # never ran at all, and neither did the 30 functional jobs nor the 6 monkey
+  # jobs that hung off `needs: [sonarqube]` (a skipped `needs` skips its
+  # dependents). See ADR-0001 type-debt register, TD-38 (#2725).
+  #
+  # `sonarqube` keeps a build step of its own: its Mocha coverage run executes
+  # against `dist/`, and artifacts are not shared between jobs here.
+  build:
+    name: Build and payload gate
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Install additional libraries
+        uses: ./.github/actions/install-packages
+
+      - name: Node version ${{ env.NODE_VERSION }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+        shell: bash
+
+      - name: Build
+        run: npm run build
+        shell: bash
+
+      # `tsc` succeeding does not mean the build is complete: the .proto files
+      # and the server entrypoint are copied in by bin/copy-binaries.ts, and
+      # the error-code catalogue by tsc's own `resolveJsonModule`. The gate is
+      # derived from package.json's `files` (TD-35/36/37).
+      - name: Check the build payload
+        run: ./.ci/scripts/check-build-payload.sh
+        shell: bash
+
   sonarqube:
     runs-on: ubuntu-24.04
     if: github.event.pull_request.head.repo.fork == false
@@ -98,10 +167,10 @@ jobs:
       - name: Install additional libraries
         uses: ./.github/actions/install-packages
 
-      - name: Node version ${{ env.NODE_LTS_ACTIVE_VERSION }}
+      - name: Node version ${{ env.NODE_VERSION }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_LTS_ACTIVE_VERSION }}
+          node-version: ${{ env.NODE_VERSION }}
           cache: "npm"
 
       - name: Install dependencies
@@ -206,7 +275,10 @@ jobs:
 
   functional-tests:
     name: Functional tests
-    needs: [sonarqube, unit-tests]
+    # Not `needs: [sonarqube]`: nothing in the functional suite consumes the
+    # Sonar scan, and depending on a fork-gated job skipped this whole matrix
+    # on every pull request from a fork (TD-38).
+    needs: [build, unit-tests]
     strategy:
       # One flaky variant must not cancel the 29 others: a re-run is otherwise
       # the only way to learn whether anything else was broken.
