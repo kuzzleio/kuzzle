@@ -362,3 +362,35 @@ So the resolution is the honest one rather than the expected one:
 - `.ci/scripts/docker-test.sh functional http -- --tags "@stacktrace"` — **4 scenarios, 11 steps, all passing**
 - the same, with `removeStacktrace`'s non-development branch disabled — **fails**, which is the point
 - `.ci/scripts/docker-test.sh functional http` (whole suite) — 175 of 176 scenarios; the one failure is `Network.feature`'s `on port 17510`, which cannot resolve a *published* port from inside the compose network and fails the same way without this branch. It passes in CI, where the suite runs on the runner host. The new scenarios take their host and port from the environment for exactly that reason, so they run green both ways.
+
+
+### TD-49 — the walls behind the import form ([#2739](https://github.com/kuzzleio/kuzzle/issues/2739), [#2742](https://github.com/kuzzleio/kuzzle/pull/2742))
+
+The entry described one thing to fix: 25 `import x = require("…")` whose `require(…)` call vite leaves for Node's resolver, which cannot resolve a `.ts` path. Rewriting them to ESM default imports is mechanical — the targets all `export =`, `esModuleInterop` makes the default import type-check — and it took ten minutes. Twenty-four changed; `lib/util/didYouMean.ts` keeps the form, now with a comment saying why: its Mocha spec calls `__set__("didYouMean", …)`, which addresses the **compiled variable by name**, and a default import compiles to `didyoumean_1.default`, so the stub would silently miss.
+
+**Then the spec still would not run**, and the next four failures are the actual content of this step. Each was found by re-running it and reading one line of a Node require stack — not by reading the code, which type-checks in every state:
+
+1. `Cannot find module '../util/debug'` from `lib/cluster/node.js`. Nothing in the subject's graph imports `lib/cluster`; `lib/types/Global.ts` did, by importing `Backend` **as a value** to declare `var app: Backend`. Every module that touches the global type — which is nearly all of them — therefore pulled the backend barrel → `kuzzle` → `lib/cluster/*.js` at runtime.
+2. Same error, different route: `pluginContext` imported `KuzzleRequest`/`RequestContext`/`RequestInput` from **the package's own `index.ts`**, which re-exports `pluginContext` itself, and `BackendCluster` from the backend barrel for one `new BackendCluster()`. Both now import the module that defines what they use.
+3. `Cannot find module '../validation/baseType'` — a **lazy `require()` in the constructor body**, a third spelling of the same class that no grep for `import … = require` finds. It is a static import now: `baseType` has no runtime import of its own, so there was no cycle to break. `backend.ts`'s lazy `require("../plugin/plugin")` stays until H5 converts that file.
+4. `Cannot read properties of undefined` — the module finally loaded, and the failure moved into the constructor. That is the point at which the fixture, not the resolver, is what the spec is about.
+
+Wall (1) is [TD-43](../type-debt-register.md#td-43)'s type-only-import half, and it is why the first three looked like whack-a-mole: the shortest path to `lib/cluster` changed every time one was cut, because *every* file had one. The systematic fix is the one TD-43 already prescribed — `@typescript-eslint/consistent-type-imports` as an **error**, autofixed over the lint scope (135 files, no change to the emitted JavaScript). `disallowTypeAnnotations` is left off: an `import()` in a type position has none of this problem. **TD-43's `casts` ratchet half is untouched and still open.**
+
+**The witness is a test.** `tests/core/plugin/privilegedContext.test.ts` is back with **no mock of any kind** — the shape [TD-46](../type-debt-register.md#td-46) wanted and could not have — and it **replaces** `test/core/plugin/context/privilegedContext.test.js` rather than sitting beside it: **mocha 150 → 149**. This matters more than the usual "a conversion ships a spec": nothing else in the repo fails if wall (1) comes back. `tsc` elides these imports by construction, so the type system cannot see the regression; only a runner that actually executes the import graph can.
+
+**Two things this changes about how the register reads:**
+
+- TD-43 was filed as an *enforcement gap* — "nothing charges for this". Half of it was a defect in the module graph, and only a test runner could see it. The severity of a lint rule is not knowable from the rule.
+- TD-49 was filed as "25 sites, one class". It was one class with **four spellings**, three of which the filing grep could not match. *A finding that counts its own instances has already chosen a predicate — and the predicate is the claim, not the number.* The same lesson as [TD-45](../type-debt-register.md#td-45), arrived at from the opposite direction.
+
+
+## Validation (2026-09-14, TD-49 branch)
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js 22, **mocha 149**, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **212 passing** (210 + 2)
+- `.ci/scripts/docker-test.sh unit mocha` — **3026 passing** (3027 minus the replaced spec's single case)
+- `npm run build` + `.ci/scripts/check-build-payload.sh` — clean
