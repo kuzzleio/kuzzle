@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import { Backend } from "../../core/backend";
-import { ControllerDefinition } from "./ControllerDefinition";
-import { EmbeddedSDK } from "../../core/shared/sdk/embeddedSdk";
+import type { Backend } from "../../core/backend";
+import type { ControllerDefinition } from "./ControllerDefinition";
+import type { EmbeddedSDK } from "../../core/shared/sdk/embeddedSdk";
 
 /**
  * Base class to declare a controller class

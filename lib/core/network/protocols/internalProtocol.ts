@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import createDebug from "../../../util/debug";
 import ClientConnection from "../clientConnection";
-import { NetworkEntryPoint } from "../networkEntryPoint";
+import type { NetworkEntryPoint } from "../networkEntryPoint";
 import Protocol from "./protocol";
 
 const debug = createDebug("kuzzle:network:protocols:internal");

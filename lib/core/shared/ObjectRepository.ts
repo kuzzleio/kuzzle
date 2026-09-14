@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import * as kerror from "../../kerror";
 import { cacheDbEnum } from "../cache/cacheDbEnum";
 

@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
-import { KuzzleRequest } from "../../api/request";
+import type { JSONObject } from "kuzzle-sdk";
+import type { KuzzleRequest } from "../../api/request";
 
 /**
  * API controller definition.

@@ -20,7 +20,7 @@
  */
 
 import BaseType from "../baseType";
-import { TypeOptions } from "../typeOptions";
+import type { TypeOptions } from "../typeOptions";
 
 class BooleanType extends BaseType {
   public typeName = "boolean";

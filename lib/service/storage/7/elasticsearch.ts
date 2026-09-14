@@ -21,10 +21,11 @@
 
 import _ from "lodash";
 
-import { ApiResponse, Client, RequestParams } from "sdk-es7";
-import { Index, IndicesCreate } from "sdk-es7/api/requestParams";
-import { TypeMapping } from "sdk-es7/api/types";
-import {
+import type { ApiResponse, RequestParams } from "sdk-es7";
+import { Client } from "sdk-es7";
+import type { Index, IndicesCreate } from "sdk-es7/api/requestParams";
+import type { TypeMapping } from "sdk-es7/api/types";
+import type {
   InfoResult,
   JSONObject,
   KImportError,

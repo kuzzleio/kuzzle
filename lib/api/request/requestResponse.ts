@@ -19,10 +19,10 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import * as assert from "../../util/assertType";
-import { Deprecation } from "../../types";
-import { KuzzleError } from "../../kerror/errors/kuzzleError";
+import type { Deprecation } from "../../types";
+import type { KuzzleError } from "../../kerror/errors/kuzzleError";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output

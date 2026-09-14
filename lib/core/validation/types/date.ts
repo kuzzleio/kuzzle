@@ -19,12 +19,13 @@
  * limitations under the License.
  */
 
-import moment, { Moment, MomentInput } from "moment";
+import type { Moment, MomentInput } from "moment";
+import moment from "moment";
 
 import * as kerror from "../../../kerror";
 import { has, isPlainObject } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import { DateTypeOptions } from "../typeOptions";
+import type { DateTypeOptions } from "../typeOptions";
 
 type DateParser = (date: MomentInput) => Moment;
 

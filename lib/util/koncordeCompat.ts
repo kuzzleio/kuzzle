@@ -24,8 +24,8 @@
  */
 
 import { uniq } from "lodash";
-import { JSONObject } from "kuzzle-sdk";
-import { Koncorde } from "koncorde";
+import type { JSONObject } from "kuzzle-sdk";
+import type { Koncorde } from "koncorde";
 
 // No collision possible: "/" is forbidden in index (or collection) names
 const SEPARATOR = "/";

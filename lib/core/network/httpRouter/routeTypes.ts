@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Request } from "../../../api/request";
+import type { Request } from "../../../api/request";
 
 export type RouteCallback = (request: Request) => void;
 

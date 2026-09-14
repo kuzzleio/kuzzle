@@ -20,7 +20,7 @@
  */
 
 import { NativeController } from "./baseController";
-import { KuzzleRequest } from "../request";
+import type { KuzzleRequest } from "../request";
 import type DocumentController from "./documentController";
 
 /**

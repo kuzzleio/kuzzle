@@ -20,12 +20,13 @@
  */
 
 import fs from "node:fs";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import Kuzzle from "../../kuzzle";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import * as kerror from "../../kerror";
-import { EventDefinition, NameGenerator } from "../../../index";
+import type { EventDefinition } from "../../../index";
+import { NameGenerator } from "../../../index";
 import {
   BackendCluster,
   BackendConfig,

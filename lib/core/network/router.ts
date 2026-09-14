@@ -19,13 +19,14 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { Request, RequestContext } from "../../api/request";
+import type { RequestContext } from "../../api/request";
+import { Request } from "../../api/request";
 import * as kerror from "../../kerror";
 import kuzzleStateEnum from "../../kuzzle/kuzzleStateEnum";
 import HttpRouter from "./httpRouter";
-import { RouteCallback } from "./httpRouter/routeTypes";
+import type { RouteCallback } from "./httpRouter/routeTypes";
 
 /** The HttpRouter methods a route's verb may resolve to */
 type HttpVerb = "get" | "post" | "put" | "patch" | "delete" | "head";

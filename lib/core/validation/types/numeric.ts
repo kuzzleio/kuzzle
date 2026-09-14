@@ -22,7 +22,7 @@
 import { wrap } from "../../../kerror";
 import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import { NumericTypeOptions } from "../typeOptions";
+import type { NumericTypeOptions } from "../typeOptions";
 
 const kerror = wrap("validation", "assert");
 

@@ -19,7 +19,8 @@
  * limitations under the License.
  */
 
-import { KuzzleRequest, Request } from "../request";
+import type { KuzzleRequest } from "../request";
+import { Request } from "../request";
 import { NativeController } from "./baseController";
 
 /**

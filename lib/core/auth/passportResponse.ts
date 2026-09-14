@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { OutgoingHttpHeaders } from "http";
+import type { OutgoingHttpHeaders } from "http";
 
 /*
 HTTP Response Mockup to emulate response objects for Passport Authentication

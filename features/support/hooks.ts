@@ -1,6 +1,6 @@
 import { After, Before, BeforeAll } from "@cucumber/cucumber";
 
-import { EmbeddedSDK } from "../../lib/core/shared/sdk/embeddedSdk";
+import type { EmbeddedSDK } from "../../lib/core/shared/sdk/embeddedSdk";
 import testMappings from "../fixtures/mappings";
 import testPermissions from "../fixtures/permissions";
 import testFixtures from "../fixtures/fixtures";

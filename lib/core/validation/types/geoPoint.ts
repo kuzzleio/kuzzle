@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Koncorde } from "../../shared/KoncordeWrapper";
 import BaseType from "../baseType";
-import { TypeOptions } from "../typeOptions";
+import type { TypeOptions } from "../typeOptions";
 
 class GeoPointType extends BaseType {
   public typeName = "geo_point";

@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Moment } from "moment";
+import type { Moment } from "moment";
 
 /**
  * A field's `typeOptions`: an arbitrary, user-provided object, narrowed by each

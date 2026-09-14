@@ -21,7 +21,7 @@
 
 import { Inflector } from "../../util/Inflector";
 import * as kerror from "../../kerror";
-import { ControllerDefinition, Controller } from "../../types";
+import type { ControllerDefinition, Controller } from "../../types";
 import { ApplicationManager } from "./index";
 import Plugin from "../plugin/plugin";
 

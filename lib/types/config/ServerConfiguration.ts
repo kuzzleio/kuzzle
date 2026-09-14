@@ -1,5 +1,5 @@
-import { KuzzleLoggerConfig } from "kuzzle-logger";
-import { JSONObject } from "kuzzle-sdk";
+import type { KuzzleLoggerConfig } from "kuzzle-logger";
+import type { JSONObject } from "kuzzle-sdk";
 
 export type ServerConfiguration = {
   /**

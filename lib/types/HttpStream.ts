@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { Readable } from "stream";
+import type { Readable } from "stream";
 
 export type HttpStreamProperties = {
   totalBytes?: number;

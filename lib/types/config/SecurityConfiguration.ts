@@ -1,6 +1,6 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { RoleDefinition, ProfileDefinition } from "../index";
+import type { RoleDefinition, ProfileDefinition } from "../index";
 
 export type SecurityConfiguration = {
   /**

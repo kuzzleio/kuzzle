@@ -19,13 +19,13 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import { difference } from "lodash";
 import Bluebird from "bluebird";
 
 import * as kerror from "../../kerror";
-import { KuzzleRequest } from "../../api/request";
-import { RealtimeScope, RealtimeUsers } from "../../types";
+import type { KuzzleRequest } from "../../api/request";
+import type { RealtimeScope, RealtimeUsers } from "../../types";
 import actionEnum from "./actionEnum";
 
 /**
@@ -34,7 +34,7 @@ import actionEnum from "./actionEnum";
  */
 type NotifyAction = (typeof actionEnum)[keyof typeof actionEnum];
 import { koncordeTest } from "../../util/koncordeCompat";
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 
 // Type-only: `core/realtime/index.js` is still JS, so only the member this

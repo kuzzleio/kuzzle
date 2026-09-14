@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { KuzzleRequest } from "./request";
+import type { KuzzleRequest } from "./request";
 
 class RateLimiter {
   private readonly loginsPerSecond: number;

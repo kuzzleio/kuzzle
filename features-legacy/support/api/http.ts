@@ -3,7 +3,7 @@ import _ from "lodash";
 import rp from "request-promise";
 
 import routes from "../../../lib/api/httpRoutes";
-import KWorld from "../world";
+import type KWorld from "../world";
 
 type CompressionAlgorithm = "identity" | "gzip" | "deflate";
 

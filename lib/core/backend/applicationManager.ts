@@ -19,8 +19,8 @@
  * limitations under the License.
  */
 
-import Kuzzle from "../../kuzzle/kuzzle";
-import { Backend } from "./index";
+import type Kuzzle from "../../kuzzle/kuzzle";
+import type { Backend } from "./index";
 
 export class ApplicationManager {
   protected _application: any;

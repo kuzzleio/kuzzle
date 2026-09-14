@@ -33,8 +33,8 @@ import formatProcessing from "../../core/auth/formatProcessing";
 import { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
 import SecurityController from "./securityController";
-import { JSONObject } from "kuzzle-sdk";
-import { Token } from "../../model/security/token";
+import type { JSONObject } from "kuzzle-sdk";
+import type { Token } from "../../model/security/token";
 
 import type { GetCurrentUserResponse } from "../../types/controllers/authController.type";
 

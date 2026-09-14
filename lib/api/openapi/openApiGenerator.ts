@@ -20,7 +20,7 @@
  */
 
 import _ from "lodash";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Inflector } from "../../util/Inflector";
 

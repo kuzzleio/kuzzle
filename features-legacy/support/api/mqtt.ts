@@ -1,7 +1,8 @@
 // TODO modify the syntax to be typescript
 
 import Bluebird from "bluebird";
-import mqtt, { MqttClient } from "mqtt";
+import type { MqttClient } from "mqtt";
+import mqtt from "mqtt";
 import { v4 as uuidv4 } from "uuid";
 
 import ApiBase from "./apiBase";

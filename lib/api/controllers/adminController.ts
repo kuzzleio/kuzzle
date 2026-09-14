@@ -23,8 +23,8 @@ import Bluebird from "bluebird";
 import * as kerror from "../../kerror";
 import { NativeController } from "./baseController";
 import { Mutex } from "../../util/mutex";
-import { KuzzleRequest } from "../request";
-import { ResetSecurityResult } from "../../types/controllers/adminController.type";
+import type { KuzzleRequest } from "../request";
+import type { ResetSecurityResult } from "../../types/controllers/adminController.type";
 
 /**
  * @class AdminController

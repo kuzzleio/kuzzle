@@ -1,5 +1,5 @@
-import { JSONObject } from "kuzzle-sdk";
-import { ClientConnection } from "./ClientConnection";
+import type { JSONObject } from "kuzzle-sdk";
+import type { ClientConnection } from "./ClientConnection";
 
 export interface HttpMessage {
   connection: ClientConnection;

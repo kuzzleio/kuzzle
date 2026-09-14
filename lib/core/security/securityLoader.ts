@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import { isEmpty } from "lodash";
 import Bluebird from "bluebird";
 
 import { Request } from "../../api/request";
 import { assertIsObject } from "../../util/requestAssertions";
 import * as kerror from "../../kerror";
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 
 /**

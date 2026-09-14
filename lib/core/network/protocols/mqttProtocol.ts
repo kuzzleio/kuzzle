@@ -21,20 +21,21 @@
 
 import * as net from "node:net";
 
-import Aedes, {
+import type {
   AedesPublishPacket,
   Client,
   PublishPacket,
   Subscription,
 } from "aedes";
-import { JSONObject } from "kuzzle-sdk";
+import Aedes from "aedes";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Request } from "../../../api/request";
 import { wrap } from "../../../kerror";
 import createDebug from "../../../util/debug";
 import { removeStacktrace } from "../../../util/stackTrace";
 import ClientConnection from "../clientConnection";
-import { NetworkEntryPoint } from "../networkEntryPoint";
+import type { NetworkEntryPoint } from "../networkEntryPoint";
 import Protocol from "./protocol";
 
 const kerror = wrap("network", "mqtt");

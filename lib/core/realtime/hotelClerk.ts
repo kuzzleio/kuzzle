@@ -20,8 +20,8 @@
  */
 
 import Bluebird from "bluebird";
-import { JSONObject } from "kuzzle-sdk";
-import { Koncorde, NormalizedFilter } from "koncorde";
+import type { JSONObject } from "kuzzle-sdk";
+import type { Koncorde, NormalizedFilter } from "koncorde";
 
 import { KuzzleRequest, Request, RequestContext } from "../../api/request";
 import * as kerror from "../../kerror";
@@ -31,12 +31,12 @@ import {
   getCollections,
   toKoncordeIndex,
 } from "../../util/koncordeCompat";
-import { RoomList } from "../../types";
+import type { RoomList } from "../../types";
 import { Channel } from "./channel";
 import { ConnectionRooms } from "./connectionRooms";
 import { Room } from "./room";
 import { Subscription } from "./subscription";
-import { User } from "../../model/security/user";
+import type { User } from "../../model/security/user";
 
 const realtimeError = kerror.wrap("core", "realtime");
 

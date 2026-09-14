@@ -20,9 +20,9 @@
  */
 
 import { KuzzleLogger } from "kuzzle-logger";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { KuzzleConfiguration, KuzzleRequest } from "../../index";
+import type { KuzzleConfiguration, KuzzleRequest } from "../../index";
 
 /**
  * The Logger class provides logging functionality for Kuzzle.

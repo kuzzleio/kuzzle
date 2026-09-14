@@ -20,10 +20,10 @@
  */
 
 import { NormalizedFilter } from "koncorde";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { RoomList } from "../types";
-import Long from "long";
+import type { RoomList } from "../types";
+import type Long from "long";
 
 import * as kerror from "../kerror";
 import "../types/Global";

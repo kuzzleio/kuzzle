@@ -20,14 +20,15 @@
  */
 
 import Bluebird from "bluebird";
-import IORedis, { Cluster, RedisCommander } from "ioredis";
+import type { RedisCommander } from "ioredis";
+import IORedis, { Cluster } from "ioredis";
 
 import Service from "../service";
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 import * as kerrorLib from "../../kerror";
 import "../../types/Global";
-import { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
-import { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
+import type { InternalCacheConfiguration } from "../../types/config/internalCache/InternalCacheRedisConfiguration";
+import type { PublicCacheRedisConfiguration } from "../../types/config/publicCache/PublicCacheRedisConfiguration";
 
 const kerror = kerrorLib.wrap("services", "cache");
 

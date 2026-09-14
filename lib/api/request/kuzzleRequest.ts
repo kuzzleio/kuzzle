@@ -24,14 +24,15 @@ import { get, set } from "lodash";
 import moment from "moment";
 import * as uuid from "uuid";
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { RequestInput } from "./requestInput";
 import { RequestResponse } from "./requestResponse";
 import { RequestContext } from "./requestContext";
 import { KuzzleError, InternalError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
-import { Deprecation, HttpStream } from "../../types";
+import type { Deprecation } from "../../types";
+import { HttpStream } from "../../types";
 import * as assert from "../../util/assertType";
 
 const assertionError = kerror.wrap("api", "assert");

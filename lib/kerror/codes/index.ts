@@ -22,7 +22,7 @@
 import assert from "assert";
 
 import * as errors from "../errors";
-import { ErrorDefinition } from "../../types/errors/ErrorDefinition";
+import type { ErrorDefinition } from "../../types/errors/ErrorDefinition";
 import { has, isPlainObject } from "../../util/safeObject";
 import api from "./2-api.json";
 import cluster from "./8-cluster.json";

@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Request } from "../../../api/request";
 import { wrap } from "../../../kerror";
 import type HttpMessage from "../protocols/httpMessage";
-import { RouteCallback, RouteHandlerFunction } from "./routeTypes";
+import type { RouteCallback, RouteHandlerFunction } from "./routeTypes";
 
 const kerror = wrap("network", "http");
 
