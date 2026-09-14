@@ -80,8 +80,7 @@ class Protocol<TConfig = Record<string, unknown>> {
     // union in the first conversion left undone: the body read `maybeEntryPoint`
     // unconditionally, so `init(entryPoint)` type-checked and threw on
     // `entryPoint.config` (TD-41).
-    const entryPoint =
-      nameOrEntryPoint === null ? maybeEntryPoint : nameOrEntryPoint;
+    const entryPoint = nameOrEntryPoint ?? maybeEntryPoint;
 
     // New: the call shapes above both crashed on `entryPoint.config` a few
     // lines down when the entry point was missing. Same outcome, with the
