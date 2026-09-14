@@ -1,10 +1,14 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import PluginManifest from "../../../lib/core/plugin/pluginManifest";
+import { restoreKuzzle, stubKuzzle } from "../../mocks/kuzzle";
+
+/** Every fixture directory this file created, so that it can remove them. */
+const fixtureDirectories: string[] = [];
 
 /**
  * `load()` reads the manifest with a bare `require`, so the fixture has to be a
@@ -13,6 +17,8 @@ import PluginManifest from "../../../lib/core/plugin/pluginManifest";
  */
 function writeManifest(content: Record<string, unknown>): string {
   const dir = mkdtempSync(join(tmpdir(), "kuzzle-plugin-manifest-"));
+
+  fixtureDirectories.push(dir);
 
   writeFileSync(
     join(dir, "manifest.json"),
@@ -38,10 +44,23 @@ function expectKerror(fn: () => unknown, id: string) {
 }
 
 describe("#core/plugin/PluginManifest", () => {
+  // `globalThis.kuzzle` used to be set here and never put back: harmless only
+  // because vitest isolates per file by default, i.e. correct by virtue of a
+  // config setting this spec neither states nor controls (TD-46, #2733). And
+  // the fixture directories, one per `writeManifest`, were never removed —
+  // five per run, forever.
   beforeEach(() => {
-    (globalThis as { kuzzle?: unknown }).kuzzle = {
-      config: { version: "2.56.0" },
-    };
+    stubKuzzle();
+  });
+
+  afterEach(() => {
+    restoreKuzzle();
+  });
+
+  afterAll(() => {
+    for (const dir of fixtureDirectories) {
+      rmSync(dir, { force: true, recursive: true });
+    }
   });
 
   it("defaults privileged to false", () => {
