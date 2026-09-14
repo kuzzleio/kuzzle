@@ -472,6 +472,10 @@ const defaultConfig: KuzzleConfiguration = {
       allowAdditionalActionProperties: false,
     },
   },
+
+  vault: {
+    newAlgorithm: false,
+  },
 };
 
 export default defaultConfig;
