@@ -20,8 +20,8 @@
  */
 
 import { NameGenerator } from "../util/name-generator";
-import type { ChildProcess as ChildProcess } from "child_process";
-import { fork } from "child_process";
+import { fork } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import Bluebird from "bluebird";
 
 import "../types";
