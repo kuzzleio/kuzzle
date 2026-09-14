@@ -1,0 +1,10 @@
+# Converted files the per-file coverage gate deliberately does not hold — see
+# .ci/scripts/prepare-coverage.ts (pass 3) and docs/adr-001/type-debt-register.md
+# (TD-42). One path per line, the reason on the same line; it is printed back on
+# every run, so an exemption stays a sentence someone wrote rather than a silence.
+#
+# The only admissible reason is that the file has NO executable line to hit — a
+# conversion whose output is type-only. "The spec is coming in a follow-up" is
+# not one: that is the case the gate exists for.
+#
+# Empty on purpose.

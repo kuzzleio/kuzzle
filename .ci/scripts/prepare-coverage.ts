@@ -1,5 +1,6 @@
 /**
- * Makes the LCOV reports honest before SonarCloud reads them. Two passes.
+ * Makes the LCOV reports honest before SonarCloud reads them, then holds the
+ * per-file conversion rule the aggregate gate cannot. Three passes.
  *
  * PASS 1 — drop non-executable lines
  * ----------------------------------
@@ -46,12 +47,34 @@
  * measured coverage. Any file where mocha still wins is printed and left
  * alone — that is a signal worth looking at, not a case to paper over.
  *
+ * PASS 3 — a converted file must be executed by something
+ * --------------------------------------------------------
+ * The conversion standard says "a file with no spec ships one", and the gate
+ * that was supposed to hold it is SonarCloud's 80% `new_coverage` — an
+ * aggregate over the whole PR. An aggregate prices the block and says nothing
+ * about its worst member: #2723 passed at 88.3% with three files carrying no
+ * spec at all, two of which had just received bug fixes. TD-42 (#2729).
+ *
+ * So, per file: every `lib/**.js` renamed to `.ts` in this PR must appear in
+ * one of the two reports with at least one line hit. A well-covered sibling
+ * cannot pay for a file nothing executes. Deliberate exceptions — a conversion
+ * whose output is genuinely type-only, with no executable line to hit — go in
+ * `.migration/coverage-exempt.txt`, one path per line with the reason beside
+ * it, so that "nothing runs this" stays a decision someone wrote down rather
+ * than a number nobody read.
+ *
+ * The pass needs the PR's base commit, which it takes from
+ * `COVERAGE_BASE_SHA`; with the variable unset it says so and does nothing,
+ * because outside a PR there is no set of "files this change converted".
+ *
  * Usage: npx tsx .ci/scripts/prepare-coverage.ts <mocha lcov> <vitest lcov>
- * Rewrites both in place and prints what it did.
+ * Rewrites both in place and prints what it did. Exits non-zero when pass 3
+ * finds a conversion nothing executes.
  *
  * See docs/adr-001/steps/07-sprint-5-core-i.md.
  */
 
+import { execFileSync } from "node:child_process";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
@@ -272,68 +295,285 @@ function vitestOwnedFiles(): Set<string> {
   return owned;
 }
 
-const [mochaFile, vitestFile] = process.argv.slice(2);
+// --- pass 3: a converted file must be executed by something
 
-if (!mochaFile || !vitestFile) {
-  console.error(
-    "usage: npx tsx .ci/scripts/prepare-coverage.ts <mocha lcov> <vitest lcov>",
-  );
-  process.exit(2);
-}
+const EXEMPT_FILE = ".migration/coverage-exempt.txt";
 
-// --- pass 1: non-executable lines
-for (const file of [mochaFile, vitestFile]) {
-  if (!existsSync(file)) {
-    console.log(`\u00b7 ${file}: not found, skipped`);
-    continue;
-  }
+/**
+ * The `.js` -> `.ts` conversions in a `git diff --name-status` output.
+ *
+ * A conversion reaches git in one of two shapes: a rename, when enough of the
+ * file survived `--find-renames`, or a delete plus an add when it did not. Both
+ * are the same event here, and reading only the first would let a heavily
+ * rewritten conversion — the kind most worth a spec — past the gate.
+ */
+export function convertedFiles(diff: string): string[] {
+  const added = new Set<string>();
+  const deleted = new Set<string>();
+  const converted = new Set<string>();
 
-  const { output, before, after } = filterReport(readFileSync(file, "utf8"));
+  const inScope = (path: string) =>
+    path.startsWith("lib/") && path.endsWith(".ts") && !path.endsWith(".d.ts");
 
-  writeFileSync(file, output);
-  console.log(
-    `\u2714 ${file}: ${before.found} \u2192 ${after.found} lines to cover ` +
-      `(dropped ${before.found - after.found} blank/comment), ` +
-      `coverage ${pct(before)} \u2192 ${pct(after)}`,
-  );
-}
+  for (const record of diff.split("\n")) {
+    const [status, first, second] = record.split("\t");
 
-// --- pass 2: one owner per file
-if (existsSync(mochaFile) && existsSync(vitestFile)) {
-  const mochaTotals = perFile(readFileSync(mochaFile, "utf8"));
-  const vitestTotals = perFile(readFileSync(vitestFile, "utf8"));
-  const handOver = new Set<string>();
-
-  for (const target of vitestOwnedFiles()) {
-    const vitest = vitestTotals.get(target);
-    const mocha = mochaTotals.get(target);
-
-    if (!vitest || !mocha) {
+    if (!status) {
       continue;
     }
 
-    if (vitest.hit / vitest.found >= mocha.hit / mocha.found) {
-      handOver.add(target);
-      console.log(
-        `\u21a6 ${target}: measured by vitest (${pct(vitest)} of ${vitest.found}), ` +
-          `dropping the mocha record (${pct(mocha)} of ${mocha.found})`,
-      );
-    } else {
-      console.log(
-        `\u26a0 ${target}: has a vitest spec, but mocha measures it BETTER ` +
-          `(${pct(mocha)} vs ${pct(vitest)}) \u2014 left to mocha, worth a look`,
-      );
+    if (status.startsWith("R") && first?.endsWith(".js") && second) {
+      if (inScope(second)) {
+        converted.add(second);
+      }
+    } else if (status === "A" && first && inScope(first)) {
+      added.add(first);
+    } else if (status === "D" && first?.endsWith(".js")) {
+      deleted.add(first);
     }
   }
 
-  if (handOver.size > 0) {
-    writeFileSync(
-      mochaFile,
-      dropRecords(readFileSync(mochaFile, "utf8"), handOver),
+  for (const path of added) {
+    if (deleted.has(`${path.slice(0, -".ts".length)}.js`)) {
+      converted.add(path);
+    }
+  }
+
+  return [...converted].sort();
+}
+
+/** `git diff --name-status` between the PR's base commit and the working tree. */
+function diffAgainstBase(baseSha: string): string {
+  return execFileSync(
+    "git",
+    [
+      "diff",
+      "--name-status",
+      "--find-renames",
+      "--diff-filter=ADR",
+      baseSha,
+      "HEAD",
+    ],
+    { encoding: "utf8" },
+  );
+}
+
+/**
+ * Paths this gate deliberately does not hold, from `.migration/coverage-exempt.txt`.
+ * Format: one path per line, `#` comments and blank lines ignored, anything
+ * after the path on the line is the reason and is printed back.
+ */
+export function coverageExemptions(contents: string): Map<string, string> {
+  const exempt = new Map<string, string>();
+
+  for (const raw of contents.split("\n")) {
+    const line = raw.trim();
+
+    if (line.length === 0 || line.startsWith("#")) {
+      continue;
+    }
+
+    const [path, ...reason] = line.split(/\s+/);
+
+    exempt.set(path, reason.join(" "));
+  }
+
+  return exempt;
+}
+
+/** Per-file totals across both reports — a file may be measured by either. */
+export function mergeTotals(
+  ...reports: Map<string, Totals>[]
+): Map<string, Totals> {
+  const merged = new Map<string, Totals>();
+
+  for (const report of reports) {
+    for (const [path, totals] of report) {
+      const entry = merged.get(path) ?? { found: 0, hit: 0 };
+
+      entry.found += totals.found;
+      entry.hit += totals.hit;
+      merged.set(path, entry);
+    }
+  }
+
+  return merged;
+}
+
+/**
+ * What the gate has to say about each conversion. Returns the failures; the
+ * lines it is happy with are printed by the caller.
+ */
+export function conversionFailures(
+  converted: string[],
+  coverage: Map<string, Totals>,
+  exempt: Map<string, string>,
+  log: (line: string) => void,
+): string[] {
+  const failures: string[] = [];
+
+  for (const file of converted) {
+    if (exempt.has(file)) {
+      log(
+        `\u00b7 ${file}: exempt \u2014 ${exempt.get(file) || "no reason recorded"}`,
+      );
+      continue;
+    }
+
+    const totals = coverage.get(file);
+
+    if (!totals || totals.found === 0) {
+      failures.push(
+        `${file}: converted in this PR and absent from both coverage reports \u2014 no spec loads it`,
+      );
+      continue;
+    }
+
+    if (totals.hit === 0) {
+      failures.push(
+        `${file}: converted in this PR, ${totals.found} lines to cover, none of them hit`,
+      );
+      continue;
+    }
+
+    log(`\u2714 ${file}: converted, ${pct(totals)} of ${totals.found} lines`);
+  }
+
+  return failures;
+}
+
+function main([mochaFile, vitestFile]: string[]): number {
+  if (!mochaFile || !vitestFile) {
+    console.error(
+      "usage: npx tsx .ci/scripts/prepare-coverage.ts <mocha lcov> <vitest lcov>",
+    );
+
+    return 2;
+  }
+
+  // --- pass 1: non-executable lines
+  for (const file of [mochaFile, vitestFile]) {
+    if (!existsSync(file)) {
+      console.log(`\u00b7 ${file}: not found, skipped`);
+      continue;
+    }
+
+    const { output, before, after } = filterReport(readFileSync(file, "utf8"));
+
+    writeFileSync(file, output);
+    console.log(
+      `\u2714 ${file}: ${before.found} \u2192 ${after.found} lines to cover ` +
+        `(dropped ${before.found - after.found} blank/comment), ` +
+        `coverage ${pct(before)} \u2192 ${pct(after)}`,
     );
   }
 
-  console.log(
-    `\u2714 ${handOver.size} file(s) handed over to the vitest report`,
+  // --- pass 2: one owner per file
+  if (existsSync(mochaFile) && existsSync(vitestFile)) {
+    const mochaTotals = perFile(readFileSync(mochaFile, "utf8"));
+    const vitestTotals = perFile(readFileSync(vitestFile, "utf8"));
+    const handOver = new Set<string>();
+
+    for (const target of vitestOwnedFiles()) {
+      const vitest = vitestTotals.get(target);
+      const mocha = mochaTotals.get(target);
+
+      if (!vitest || !mocha) {
+        continue;
+      }
+
+      if (vitest.hit / vitest.found >= mocha.hit / mocha.found) {
+        handOver.add(target);
+        console.log(
+          `\u21a6 ${target}: measured by vitest (${pct(vitest)} of ${vitest.found}), ` +
+            `dropping the mocha record (${pct(mocha)} of ${mocha.found})`,
+        );
+      } else {
+        console.log(
+          `\u26a0 ${target}: has a vitest spec, but mocha measures it BETTER ` +
+            `(${pct(mocha)} vs ${pct(vitest)}) \u2014 left to mocha, worth a look`,
+        );
+      }
+    }
+
+    if (handOver.size > 0) {
+      writeFileSync(
+        mochaFile,
+        dropRecords(readFileSync(mochaFile, "utf8"), handOver),
+      );
+    }
+
+    console.log(
+      `\u2714 ${handOver.size} file(s) handed over to the vitest report`,
+    );
+  }
+
+  // --- pass 3: every conversion in this PR is executed by something
+  const baseSha = process.env.COVERAGE_BASE_SHA;
+
+  if (!baseSha) {
+    console.log(
+      "\u00b7 COVERAGE_BASE_SHA unset \u2014 per-file conversion gate skipped " +
+        '(there is no set of "files this change converted" outside a PR)',
+    );
+
+    return 0;
+  }
+
+  const converted = convertedFiles(diffAgainstBase(baseSha));
+
+  if (converted.length === 0) {
+    console.log(
+      "\u2714 no .js \u2192 .ts conversion in this PR, nothing to gate",
+    );
+
+    return 0;
+  }
+
+  const coverage = mergeTotals(
+    existsSync(mochaFile)
+      ? perFile(readFileSync(mochaFile, "utf8"))
+      : new Map<string, Totals>(),
+    existsSync(vitestFile)
+      ? perFile(readFileSync(vitestFile, "utf8"))
+      : new Map<string, Totals>(),
   );
+
+  const exempt = existsSync(EXEMPT_FILE)
+    ? coverageExemptions(readFileSync(EXEMPT_FILE, "utf8"))
+    : new Map<string, string>();
+
+  const failures = conversionFailures(converted, coverage, exempt, (line) =>
+    console.log(line),
+  );
+
+  if (failures.length > 0) {
+    console.error(
+      `\n\u2716 ${failures.length} of ${converted.length} converted file(s) are not executed by any spec:`,
+    );
+
+    for (const failure of failures) {
+      console.error(`  \u2022 ${failure}`);
+    }
+
+    console.error(
+      "\nADR-0001: a file with no spec ships one. The aggregate coverage gate " +
+        "cannot see this (TD-42, #2729).\nWrite the spec, or record the file in " +
+        `${EXEMPT_FILE} with the reason nothing can execute it.`,
+    );
+
+    return 1;
+  }
+
+  console.log(
+    `\u2714 all ${converted.length} converted file(s) are executed by a spec`,
+  );
+
+  return 0;
+}
+
+// Only when run as a script: the pure helpers above are imported by
+// tests/ci/prepareCoverage.test.ts, and importing must not run the passes.
+if (process.argv[1]?.endsWith("prepare-coverage.ts")) {
+  process.exit(main(process.argv.slice(2)));
 }

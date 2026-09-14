@@ -208,9 +208,19 @@ jobs:
       # understates coverage badly — it put clientAdapter.ts at 40% with every
       # one of its handlers under test. This normalises both reports and gives
       # each file a single owner. See docs/adr-001/steps/07-sprint-5-core-i.md.
+      #
+      # It also holds the rule the aggregate gate cannot: every lib/**.js
+      # renamed to .ts in this PR must be executed by at least one spec.
+      # SonarCloud's 80% new_coverage is an aggregate over the block, and an
+      # aggregate says nothing about its worst member — #2723 passed at 88.3%
+      # with three files carrying no spec at all (TD-42, #2729). The base
+      # commit is what "converted in this PR" is measured against; the checkout
+      # above is unshallow, so it is in history.
       - name: Normalise the coverage reports
         run: npx tsx .ci/scripts/prepare-coverage.ts coverage/mocha/lcov.info coverage/vitest/lcov.info
         shell: bash
+        env:
+          COVERAGE_BASE_SHA: ${{ github.event.pull_request.base.sha }}
 
       - uses: actions/create-github-app-token@v3
         id: app-token
