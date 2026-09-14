@@ -9,7 +9,8 @@
     "dev": "tsx watch start-kuzzle-dev.ts",
     "doc-error-codes": "node -r ts-node/register doc/build-error-codes",
     "prepublishOnly": "npm run build && ./.ci/scripts/check-build-payload.sh",
-    "prettier": "prettier ./lib ./test ./features --write",
+    "prettier": "prettier ./lib ./test ./tests ./features ./features-legacy --write",
+    "prettier:check": "prettier ./lib ./test ./tests ./features ./features-legacy --check",
     "ratchet": "npm run ratchet:js && npm run ratchet:mocha && npm run ratchet:any && npm run ratchet:implicit-any && npm run ratchet:cpd-exclusions",
     "ratchet:any": "bash scripts/ratchet.sh any",
     "ratchet:cpd-exclusions": "bash scripts/ratchet.sh cpd-exclusions",
@@ -24,7 +25,7 @@
     "test:unit:vitest": "vitest run --fileParallelism false --coverage --bail=1 --passWithNoTests",
     "test:unit:mocha": "mocha --exit",
     "test:unit:mocha:coverage": "c8 --reporter=lcov --report-dir=coverage/mocha mocha --exit",
-    "test:lint": "eslint ./lib ./test ./bin ./features",
+    "test:lint": "eslint ./lib ./test ./tests ./bin ./features ./features-legacy",
     "test:strict": "bash scripts/strict-check.sh"
   },
   "main": "./dist/index.js",

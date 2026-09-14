@@ -1,0 +1,14 @@
+# Prettier now runs over ./lib ./test ./tests ./features ./features-legacy
+# (ADR-0001 type-debt register, TD-39 — #2726). Two of those trees carry
+# directories Prettier must not walk.
+
+node_modules/
+dist/
+coverage/
+
+# `tests/` holds a vitest cache directory
+.vite/
+
+# Generated from the .ts sources; never hand-edited.
+*.d.ts
+*.js.map

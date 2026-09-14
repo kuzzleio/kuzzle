@@ -120,12 +120,12 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
       "removeCollection",
       "removeIndex",
     ];
-    const esInstances: unknown[] = [];
-    const cacheInstances: unknown[] = [];
+    const createdEs: unknown[] = [];
+    const createdCache: unknown[] = [];
 
     return {
-      esInstances,
-      cacheInstances,
+      esInstances: createdEs,
+      cacheInstances: createdCache,
       ElasticsearchMock: class {
         public client: Record<string, ReturnType<typeof vi.fn>> = {};
         public init = vi.fn(async () => undefined);
@@ -141,7 +141,7 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
           this.client.getSchema = vi.fn(async () => ({}));
           this.client.deleteIndexes = vi.fn(async () => [] as string[]);
           this.client.import = vi.fn(async () => ({ errors: [] }));
-          esInstances.push(this);
+          createdEs.push(this);
         }
       },
       IndexCacheMock: class {
@@ -149,7 +149,7 @@ const { esInstances, cacheInstances, ElasticsearchMock, IndexCacheMock } =
           for (const m of cacheMethods) {
             (this as unknown as Record<string, unknown>)[m] = vi.fn();
           }
-          cacheInstances.push(this);
+          createdCache.push(this);
         }
       },
     };

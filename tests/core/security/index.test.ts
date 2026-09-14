@@ -11,25 +11,25 @@ const {
   UserRepositoryMock,
   SecurityLoaderMock,
 } = vi.hoisted(() => {
-  const calls: string[] = [];
+  const initCalls: string[] = [];
   /** Constructor arguments, recorded so the back-reference can be asserted
    * without reaching into a private/protected field. */
-  const constructedWith: Record<string, unknown> = {};
+  const ctorArgs: Record<string, unknown> = {};
 
   function repositoryMock(name: string) {
     return class {
       constructor(module?: unknown) {
-        constructedWith[name] = module;
+        ctorArgs[name] = module;
       }
       init = vi.fn(async () => {
-        calls.push(name);
+        initCalls.push(name);
       });
     };
   }
 
   return {
-    calls,
-    constructedWith,
+    calls: initCalls,
+    constructedWith: ctorArgs,
     RoleRepositoryMock: repositoryMock("role"),
     ProfileRepositoryMock: repositoryMock("profile"),
     TokenRepositoryMock: repositoryMock("token"),
