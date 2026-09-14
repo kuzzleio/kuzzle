@@ -81,10 +81,22 @@ run_functional() {
     -e KUZZLE_HOST=kuzzle_node_2 -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
   docker compose -f "$yml_file" run --rm --no-deps \
     -e KUZZLE_HOST=kuzzle_node_3 -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
+  # The production-mode node: nginx does not balance over it, so nothing else
+  # would wait for it, and features/StackTrace.feature addresses it directly.
+  docker compose -f "$yml_file" run --rm --no-deps \
+    -e KUZZLE_HOST=kuzzle_node_prod -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
   docker compose -f "$yml_file" run --rm --no-deps \
     -e KUZZLE_HOST=nginx -e KUZZLE_PORT=7512 kuzzle_node_1 node bin/wait-kuzzle
 
   trap - ERR
+
+  # Scenarios that address one node rather than nginx (features/StackTrace.feature)
+  # reach it by published port from the CI runner, and by service name from in
+  # here — same reason KUZZLE_HOST is set above.
+  local node_env_flags=(
+    -e KUZZLE_DEV_HOST=kuzzle_node_1 -e KUZZLE_DEV_PORT=7512
+    -e KUZZLE_PROD_HOST=kuzzle_node_prod -e KUZZLE_PROD_PORT=7512
+  )
 
   if [ "${#extra_args[@]}" -gt 0 ] && [ "${extra_args[0]}" = "--" ]; then
     extra_args=("${extra_args[@]:1}")
@@ -94,11 +106,13 @@ run_functional() {
     echo "Running functional tests: ${test_script} -- ${extra_args[*]}"
     docker compose -f "$yml_file" run --rm --no-deps \
       -e KUZZLE_HOST=nginx \
+      "${node_env_flags[@]}" \
       kuzzle_node_1 npm run "$test_script" -- "${extra_args[@]}"
   else
     echo "Running functional tests: ${test_script}"
     docker compose -f "$yml_file" run --rm --no-deps \
       -e KUZZLE_HOST=nginx \
+      "${node_env_flags[@]}" \
       kuzzle_node_1 npm run "$test_script"
   fi
 }

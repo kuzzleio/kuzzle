@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 19 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-46 · TD-47), TD-33 and TD-43/48/49 open
+**Status:** 🟦 In progress — 20 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-46 · TD-47 · TD-48), TD-33, TD-43 and TD-49 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -308,6 +308,20 @@ So the resolution is the honest one rather than the expected one:
 
 *A spec that stubs its subject's collaborator is sometimes reporting that the collaborator cannot be loaded — a fact about the build, not about the test.*
 
+### TD-48 — the invariant that was guarded by a comment ([#2735](https://github.com/kuzzleio/kuzzle/issues/2735))
+
+`removeStacktrace`'s docstring says it "must be invoked by all protocols": an obligation stated in prose, spread over eight call sites in four files, two of them still JavaScript and exactly what sprint 6's H6 is about to rewrite. Nothing asserted the outcome, so a conversion that dropped one of the eight would have failed nothing.
+
+`features/StackTrace.feature`, four scenarios — and the interesting part is what it took to make them able to fail.
+
+**The suite had no node that could express the property.** A stack is only stripped when `NODE_ENV` is not `development`, and all three functional-cluster nodes run in development, where the stack is deliberately kept and highlighted. `.ci/test-cluster-{7,8}.yml` now runs a **fourth node in production mode** on port 17513, outside nginx's rotation so that nothing lands on it by accident, and **without the cluster plugin**: nothing in the suite reads state from it, and a fourth cluster member would add synchronisation traffic to all thirty functional jobs for no benefit. The scenarios address it directly, the way `Network.feature` already addresses node 1 by 17510, and both runners wait on it — nothing else would.
+
+**The first WebSocket assertion was wrong in an instructive way.** Written against the SDK's error object, it failed on a stack full of `kuzzle-sdk/src/protocols/…` frames: *the SDK rebuilds the error client-side*, so `error.stack` there is the caller's own and says nothing about what crossed the wire. The step now opens a raw socket (`ws`, promoted to a direct devDependency) and reads the JSON frame. HTTP and WebSocket are separate scenarios because `httpwsProtocol` serves both and sanitises them in different places (`:455` and `:990`).
+
+**Two of the four scenarios are controls**, one per transport, asserting that the development node *does* carry a stack. Without them the other two would pass just as happily against a response that never had a stack — a renamed action, a wrong route, an error raised before the handler ever ran. That is [TD-42](../type-debt-register.md#td-42)'s lesson moved into the functional suite.
+
+**Verified negatively:** with `removeStacktrace`'s non-development branch disabled, the HTTP scenario fails with the real 500 payload, stack and all.
+
 ## Validation (2026-09-11, TD-40/41 branch — stacked on [#2736](https://github.com/kuzzleio/kuzzle/pull/2736))
 
 - `npx tsc --noEmit` — clean, and **unchanged by the widening**, which is the point
@@ -337,3 +351,14 @@ So the resolution is the honest one rather than the expected one:
 - `npm run test:lint` / `npm run prettier:check` — clean
 - `.ci/scripts/docker-test.sh unit vitest` — **210 passing** (211 minus the single case of the removed spec)
 - `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+
+
+## Validation (2026-09-14, TD-48 branch — stacked on [#2740](https://github.com/kuzzleio/kuzzle/pull/2740))
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green · `npm run test:strict` — **127**, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **210 passing** · `unit mocha` — **3027 passing**
+- `.ci/scripts/docker-test.sh functional http -- --tags "@stacktrace"` — **4 scenarios, 11 steps, all passing**
+- the same, with `removeStacktrace`'s non-development branch disabled — **fails**, which is the point
+- `.ci/scripts/docker-test.sh functional http` (whole suite) — 175 of 176 scenarios; the one failure is `Network.feature`'s `on port 17510`, which cannot resolve a *published* port from inside the compose network and fails the same way without this branch. It passes in CI, where the suite runs on the runner host. The new scenarios take their host and port from the environment for exactly that reason, so they run green both ways.

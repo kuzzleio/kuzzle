@@ -56,7 +56,7 @@
 | [TD-45](#td-45) | 🟡 low | Enforcement | Extensionless Node executables in `bin/` are invisible to the `js` ratchet — the floor is 5, not 3 — [#2732](https://github.com/kuzzleio/kuzzle/issues/2732) | XS | ✅ |
 | [TD-46](#td-46) | 🟡 low | Tests | `privilegedContext`'s new spec mocks the base class it exists to exercise; fixture leaks beside it — [#2733](https://github.com/kuzzleio/kuzzle/issues/2733) | XS | ✅ |
 | [TD-47](#td-47) | 🟡 low | Enforcement | CI hygiene: no `concurrency` group, a pointless Node matrix on `lint`, an undefined `NODE_LTS_ACTIVE_VERSION`, no least-privilege — [#2734](https://github.com/kuzzleio/kuzzle/issues/2734) | XS | ✅ |
-| [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ⬜ |
+| [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ✅ |
 | [TD-49](#td-49) | 🟠 med | Tests | The vitest tree cannot load anything reaching `lib/api/controllers`: 25 `import x = require()` reach Node's resolver and die on a `.ts` path — [#2739](https://github.com/kuzzleio/kuzzle/issues/2739) | M | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
@@ -740,6 +740,10 @@ What remains is that the property is guarded by a comment. `removeStacktrace`'s 
 
 - **Fix:** functional-suite scenarios, not unit tests — the property is about what crosses the wire. With `NODE_ENV` ≠ `development`, provoke a 500 over HTTP and assert `content.error.stack` is absent; the same over WebSocket, since `httpwsProtocol` serves both and sanitises them on different paths (`:455` vs `:990`); ideally the same for a notification (`entryPoint.js:349`).
 - **The generalisable part:** *when a review concludes "this call was always dead, the real work happens elsewhere", the same reading has just established where the invariant actually lives — and that nothing is testing it there.* The dead call was, in effect, the only thing naming the requirement.
+- ✅ **Done** — `features/StackTrace.feature`, four scenarios. The property holds only outside development mode (development keeps the stack and highlights it), and every node of the functional cluster ran with `NODE_ENV=development`, so the suite had no node that could express it: `.ci/test-cluster-{7,8}.yml` now runs a **fourth node in production mode** on port 17513, outside nginx's rotation *and outside the cluster* — nothing in the suite reads state from it, and a fourth cluster member would add synchronisation traffic to all thirty functional jobs for no benefit. The scenarios address it by port, the way `Network.feature` already addresses node 1 by 17510.
+- **The assertions are made against the wire, not against the SDK.** The first WebSocket attempt asserted `error.stack` on the SDK's error object and failed — the SDK rebuilds the error client-side, so that stack is the *caller's* and says nothing about what the server sent. The step now opens a raw socket (`ws`, added as a direct devDependency) and reads the JSON frame.
+- **Two of the four scenarios are controls**, one per transport, asserting that the development node *does* carry a stack. Without them the other two would also pass against a response that never had a stack — a renamed action, a wrong route, an error raised before the handler. This is [TD-42](#td-42)'s lesson in the functional suite: *an assertion that cannot fail is not evidence, and the cheapest way to know it can fail is to watch it fail.*
+- **Verified negatively:** with `removeStacktrace`'s non-development branch disabled, the HTTP scenario fails with the real 500 payload, stack and all.
 
 ### TD-49
 **The vitest tree cannot load anything that reaches `lib/api/controllers`** · 🟠 medium · `lib/**/*.ts` (25 sites)
