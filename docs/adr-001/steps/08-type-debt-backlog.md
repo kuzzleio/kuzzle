@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 17 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-44 · TD-45 · TD-47), TD-33 and TD-42/43/46/48 open
+**Status:** 🟦 In progress — 18 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-47), TD-33 and TD-43/46/48 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -266,6 +266,26 @@ assert(
 
 Also here, from the same finding: `MqttProtocol.disconnect`'s `message` parameter, left unused by #2723's correct removal of `client.close(undefined, message)`, is documented and suppressed rather than left reading as a live argument.
 
+### TD-42 — the coverage rule is per file now, not per block ([#2729](https://github.com/kuzzleio/kuzzle/issues/2729))
+
+The conversion standard says *"a file with no spec ships one"*, and the thing enforcing it was SonarCloud's 80% `new_coverage` — **an aggregate over the whole PR**. [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) shows the rule working (76.1%, under the gate, the arithmetic naming the two thinnest files); [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) shows it failing (88.3%, and three files in with no spec at all — `context.ts`, `protocol.ts`, `protocolManifest.ts`). Two of those three had just received bug fixes, and one of them is [TD-41](../type-debt-register.md#td-41).
+
+The gate is now per file, as a **third pass** in `.ci/scripts/prepare-coverage.ts` — the script that already owns and normalises both lcov reports, so it is the one place that knows what was measured and by whom:
+
+> every `lib/**.js` renamed to `.ts` in this PR must appear in one of the two reports **with at least one line hit**.
+
+Three details decide whether such a gate is real or decorative:
+
+- **A conversion reaches git in two shapes.** `--find-renames` records the light ones as `R`; a heavy rewrite arrives as a `D` plus an `A` — `lib/core/network/context.js` → `context.ts` in #2723 is exactly that, and it is one of the three files the gate exists for. Reading only the rename side would let the *most* rewritten conversions through, which is backwards. Both shapes are read.
+- **The base commit comes from `COVERAGE_BASE_SHA`**, set in the workflow from `github.event.pull_request.base.sha`. Unset, the pass says so and does nothing: outside a PR there is no set of "files this change converted", and a gate that invents one would fail on `2-dev` forever.
+- **The exemption is a sentence, not a silence.** `.migration/coverage-exempt.txt` takes one path per line with the reason on the same line, printed back on every run. The only admissible reason is that the file has no executable line to hit — a conversion whose output is type-only. *"The spec is coming in a follow-up"* is not one; that is the case the gate exists for. The file ships **empty**.
+
+**Verified against the PR it was written for.** Pointed at #2723's own base commit with an lcov crediting `protocol.ts` alone, the pass prints `✔ lib/core/network/protocols/protocol.ts: converted, 50.0% of 2 lines`, then names the other 14 conversions and exits 1. Pointed at this branch, which converts nothing: `✔ no .js → .ts conversion in this PR, nothing to gate`, exit 0.
+
+**The gate has a spec** — 13 vitest cases in `tests/ci/prepareCoverage.test.ts`, the first repo spec for a file under `.ci/`. That is TD-46's lesson applied before it is fixed: *a review finding is a rule, not an anecdote*, and a check that nothing exercises is the very shape this finding is about. Importing the script from a spec also puts it inside `tsconfig.json`'s program for the first time, so `tsc --noEmit` now type-checks it; the passes moved into a `main()` behind a direct-invocation guard so that importing it does not run them.
+
+**Not done here:** `.ci/` is still outside the `prettier`/`eslint` scopes that [TD-39](../type-debt-register.md#td-39) extended to `tests/` — this file was formatted by hand. Worth a follow-up, but it is a different diff.
+
 ## Validation (2026-09-11, TD-40/41 branch — stacked on [#2736](https://github.com/kuzzleio/kuzzle/pull/2736))
 
 - `npx tsc --noEmit` — clean, and **unchanged by the widening**, which is the point
@@ -274,3 +294,14 @@ Also here, from the same finding: `MqttProtocol.disconnect`'s `message` paramete
 - `npm run test:lint` / `npm run prettier:check` — clean
 - `.ci/scripts/docker-test.sh unit vitest` — **198 passing** (189 + 9)
 - `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+
+
+## Validation (2026-09-14, TD-42 branch)
+
+- `npx tsc --noEmit` — clean (and now covering `.ci/scripts/prepare-coverage.ts`, pulled into the program by its spec)
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **211 passing** (198 + 13)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
+- the new pass, both ways: exit 1 naming 14 unexecuted conversions against #2723's base, exit 0 on this branch
