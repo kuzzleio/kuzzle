@@ -144,8 +144,16 @@ class MqttProtocol extends Protocol<MqttConfig> {
     }
   }
 
+  /**
+   * @param message - **unused.** aedes' `close()` takes a callback and nothing
+   *   else, so this never reached the client; #2723 removed the call that
+   *   pretended to pass it. Kept in the signature because `disconnect` is
+   *   reached by name from the entry point and by protocol plugins.
+   *   ADR-0001, TD-41 (#2728).
+   */
   disconnect(
     connectionId: string,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     message = "Connection closed by remote host",
   ): void {
     debug("disconnect: connection id: %s, message %s", connectionId, message);

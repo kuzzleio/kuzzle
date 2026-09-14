@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 15 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-44 · TD-45 · TD-47), TD-33 and TD-40/41/42/43/46/48 open
+**Status:** 🟦 In progress — 17 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-44 · TD-45 · TD-47), TD-33 and TD-42/43/46/48 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -224,3 +224,53 @@ Deliberately **not** done: pinning third-party actions to a commit SHA. Worth do
 - `npm run prettier:check` — *All matched files use Prettier code style!*
 - `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
 - `.ci/scripts/docker-test.sh unit vitest` — **189 passing**, unchanged
+
+
+## What was done (TD-40 · TD-41 — the two wrong signatures)
+
+The fourth review's two 🟠 findings, both of the same shape: the conversion honoured the "no double cast" standard and reached the outcome the standard exists to prevent by a quieter route. Both are fixed where the defect is, in the base class, and both base classes now have a file in strict that could not be adopted before.
+
+### TD-40 — the nullable load was the base class's all along ([#2727](https://github.com/kuzzleio/kuzzle/issues/2727))
+
+`PluginRepository.load()` declared `Promise<PluginDocument>` and resolved `null`, and the file was held out of strict so that nothing would notice. #2724 recorded the reason honestly — the base's `Promise<TObject>` cannot express it without a double cast — and the reading was right about the base class and wrong about what to do.
+
+Reading `ObjectRepository` settled it in one look: **`load`, `loadFromCache` and `loadOneFromDatabase` all have a `return null` path**. The declaration was wrong about the base class itself, and the subclass was only the place it became visible. All three now say `Promise<TObject | null>`.
+
+**It costs nothing today.** `strictNullChecks` is off in `tsconfig.json`, so `T | null` collapses to `T` and `tsc --noEmit` is unchanged — no call site had to move. The entire value is at step 12, where this would otherwise have surfaced as a hard error in a file nobody had looked at since sprint 6, with the root cause two classes away.
+
+Adopting `pluginRepository.ts` then turned up two more, both in the base's constructor options:
+
+- `constructor({ cache = cacheDbEnum.INTERNAL, store = null } = {})` has no type annotation, so `store` **infers from its default** as `null`. Every subclass passing a real store was, under strict, passing "something not assignable to `null`". Named as `ObjectRepositoryOptions`, with `store?: { index: string } | null` — the constructor reads `.index` and nothing else.
+- `delete result._id` on a `PluginDocument`, where `_id` is required (`TS2790`). The local is a `JSONObject`: dropping `_id` is the whole point of `serializeToDatabase`.
+
+**strict 125 → 126, implicit-any 457 → 456.**
+
+### TD-41 — the overloads the union was standing in for ([#2728](https://github.com/kuzzleio/kuzzle/issues/2728))
+
+`Protocol.init`'s first parameter had been widened to `string | null | NetworkEntryPoint` so that `protocol.init(entryPoint)` would type-check; the body still read the entry point from the **second** parameter, so that call type-checked and threw. Two real overloads and a normalising body. `protocol.ts` passes strict, is adopted (**126 → 127**), and ships **its first spec** — 9 vitest cases, the first being exactly the call that used to compile and crash.
+
+**Writing the spec is what found the rest of it.** The deprecated `(name, entryPoint)` form is not discouraged, it is *dead*:
+
+```js
+assert(
+  this.name && !name,
+  "A name has been given in the constructor and init method. …",
+);
+```
+
+`this.name` must be **truthy**. So passing a name to `init` throws — including when the constructor was given none, which is the one case the deprecation was meant to still allow. That assert arrived with [#1645](https://github.com/kuzzleio/kuzzle/pull/1645) on **2020-06-16**; the parameter has been unusable for five years, and the first TypeScript conversion widened the type to `string | null` to accommodate it. The legacy overload is therefore typed `init(name: null, entryPoint)` — the only second shape this method can accept — and the assert is left exactly as it is. Re-opening a path closed for five years is a decision about the plugin API, not about a method's type. Recorded in the register rather than filed as an issue: nothing calls it.
+
+*A dead parameter is worse than a removed one: it survives a conversion as a type.*
+
+**One behaviour change**, stated plainly: a missing entry point now fails an `assert` with `'Invalid "entryPoint" parameter value'` rather than a `TypeError` on `entryPoint.config` three lines later. Both call shapes already died there, and `httpwsProtocol.js` is still JavaScript, so the overloads do not constrain it — the message is worth having.
+
+Also here, from the same finding: `MqttProtocol.disconnect`'s `message` parameter, left unused by #2723's correct removal of `client.close(undefined, message)`, is documented and suppressed rather than left reading as a live argument.
+
+## Validation (2026-09-11, TD-40/41 branch — stacked on [#2736](https://github.com/kuzzleio/kuzzle/pull/2736))
+
+- `npx tsc --noEmit` — clean, and **unchanged by the widening**, which is the point
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any **456**, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **198 passing** (189 + 9)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
