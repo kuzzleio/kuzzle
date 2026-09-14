@@ -33,6 +33,9 @@ docker compose -f $YML_FILE up -d
 KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
+# The production-mode node: features/StackTrace.feature addresses it directly,
+# and nginx does not balance over it, so nothing else would wait for it.
+KUZZLE_PORT=17513 ./bin/wait-kuzzle
 KUZZLE_PORT=7512 ./bin/wait-kuzzle
 
 trap - err

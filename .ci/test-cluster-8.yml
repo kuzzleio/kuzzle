@@ -15,24 +15,24 @@ x-kuzzle-config: &kuzzle-config
   depends_on:
     - redis
     - elasticsearch
-  environment:
-    - kuzzle_services__storageEngine__majorVersion=8
-    - kuzzle_services__storageEngine__client__node=http://elasticsearch:9200
-    - kuzzle_services__storageEngine__commonMapping__dynamic=true
-    - kuzzle_services__internalCache__node__host=redis
-    - kuzzle_services__memoryStorage__node__host=redis
-    - kuzzle_server__protocols__mqtt__enabled=true
-    - kuzzle_server__protocols__mqtt__developmentMode=false
-    - kuzzle_http__accessControlAllowOrigin=localhost
-    - kuzzle_limits__loginsPerSecond=50
-    - kuzzle_server__protocols__http__additionalContentTypes=*json:["application/x-yaml"]
-    - NODE_ENV=development
-    - NODE_VERSION=${NODE_VERSION:-24}
-    - DEBUG=none
-    - SECRETS_FILE_PREFIX=/var/app/
+  environment: &kuzzle-env
+    kuzzle_services__storageEngine__majorVersion: "8"
+    kuzzle_services__storageEngine__client__node: "http://elasticsearch:9200"
+    kuzzle_services__storageEngine__commonMapping__dynamic: "true"
+    kuzzle_services__internalCache__node__host: "redis"
+    kuzzle_services__memoryStorage__node__host: "redis"
+    kuzzle_server__protocols__mqtt__enabled: "true"
+    kuzzle_server__protocols__mqtt__developmentMode: "false"
+    kuzzle_http__accessControlAllowOrigin: "localhost"
+    kuzzle_limits__loginsPerSecond: "50"
+    kuzzle_server__protocols__http__additionalContentTypes: '*json:["application/x-yaml"]'
+    NODE_ENV: "development"
+    NODE_VERSION: "${NODE_VERSION:-24}"
+    DEBUG: "none"
+    SECRETS_FILE_PREFIX: "/var/app/"
     # cluster
-    - kuzzle_plugins__cluster__privileged=true
-    - kuzzle_plugins__cluster__minimumNodes=3
+    kuzzle_plugins__cluster__privileged: "true"
+    kuzzle_plugins__cluster__minimumNodes: "3"
 
 services:
   nginx:
@@ -61,6 +61,20 @@ services:
     <<: *kuzzle-config
     ports:
       - "17512:7512"
+
+  # The one node that runs outside development mode. nginx (port 7512) load
+  # balances over nodes 1-3 only, so the suite never lands here by accident:
+  # scenarios address it by port, the way Network.feature already addresses
+  # node 1 by 17510. It exists because "a stack trace never leaves the process"
+  # is only true when NODE_ENV is not development — in development the stack is
+  # deliberately kept and highlighted. See features/StackTrace.feature (TD-48).
+  kuzzle_node_prod:
+    <<: *kuzzle-config
+    environment:
+      <<: *kuzzle-env
+      NODE_ENV: "production"
+    ports:
+      - "17513:7512"
 
   redis:
     image: redis:8

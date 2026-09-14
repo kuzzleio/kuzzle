@@ -333,6 +333,16 @@ app.controller.register("tests", {
       },
     },
 
+    // A plain Error, not a KuzzleError: the funnel wraps it into a 500 whose
+    // payload carries a stack trace, which is what the protocols are supposed
+    // to strip on their way out. See features/StackTrace.feature (TD-48).
+    unexpectedError: {
+      handler: async () => {
+        throw new Error("Deliberate failure, for the stack-trace scenarios");
+      },
+      http: [{ path: "/tests/unexpected-error", verb: "get" }],
+    },
+
     getSyncedHello: {
       handler: async () => `Hello, ${syncedHello}`,
       http: [{ path: "/hello", verb: "get" }],
