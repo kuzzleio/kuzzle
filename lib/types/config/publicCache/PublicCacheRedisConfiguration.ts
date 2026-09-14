@@ -1,4 +1,4 @@
-import { BaseCacheRedisConfiguration } from "../cache/BaseCacheRedisConfiguration";
+import type { BaseCacheRedisConfiguration } from "../cache/BaseCacheRedisConfiguration";
 
 export type PublicCacheRedisConfiguration = BaseCacheRedisConfiguration & {
   /**

@@ -22,13 +22,13 @@
 import { format } from "util";
 
 import _ from "lodash";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import type { Domains } from "./codes";
 import { domains as internalDomains } from "./codes";
 import * as errors from "./errors";
-import { KuzzleError } from "./errors";
-import { ErrorDefinition } from "../types";
+import type { KuzzleError } from "./errors";
+import type { ErrorDefinition } from "../types";
 
 /**
  * Gets this file name in the exact same format than the one printed in the

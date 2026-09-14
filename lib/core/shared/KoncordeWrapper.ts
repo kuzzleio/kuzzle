@@ -19,12 +19,9 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
-import {
-  Koncorde as KoncordeV4,
-  KoncordeOptions,
-  NormalizedFilter,
-} from "koncorde";
+import type { JSONObject } from "kuzzle-sdk";
+import type { KoncordeOptions } from "koncorde";
+import { Koncorde as KoncordeV4, NormalizedFilter } from "koncorde";
 import {
   getCollections,
   getIndexes,

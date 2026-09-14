@@ -22,8 +22,9 @@
 import _ from "lodash";
 
 import * as kerror from "../../kerror";
-import { ApplicationManager, Backend } from "./index";
-import { KuzzleConfiguration } from "../../types/config/KuzzleConfiguration";
+import type { Backend } from "./index";
+import { ApplicationManager } from "./index";
+import type { KuzzleConfiguration } from "../../types/config/KuzzleConfiguration";
 import { loadConfig } from "../../config/index";
 
 const runtimeError = kerror.wrap("plugin", "runtime");

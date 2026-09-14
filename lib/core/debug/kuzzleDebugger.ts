@@ -1,7 +1,7 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
-import { JSONObject } from "kuzzle-sdk";
-import HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
+import type { JSONObject } from "kuzzle-sdk";
+import type HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
 

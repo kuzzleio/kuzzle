@@ -22,7 +22,7 @@
 import * as kerror from "../../../kerror";
 import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import { EnumTypeOptions } from "../typeOptions";
+import type { EnumTypeOptions } from "../typeOptions";
 
 class EnumType extends BaseType<EnumTypeOptions> {
   public typeName = "enum";

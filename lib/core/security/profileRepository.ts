@@ -22,8 +22,8 @@
 import Bluebird from "bluebird";
 import { omit } from "lodash";
 
-import { JSONObject } from "kuzzle-sdk";
-import { OptimizedPolicy, Policy } from "../../../index";
+import type { JSONObject } from "kuzzle-sdk";
+import type { OptimizedPolicy, Policy } from "../../../index";
 import * as kerror from "../../kerror";
 import { Profile } from "../../model/security/profile";
 import { ObjectRepository } from "../shared/ObjectRepository";

@@ -23,7 +23,8 @@ import { isEmpty, isNil } from "lodash";
 import { v4 as uuidv4 } from "uuid";
 
 import { BadRequestError, KuzzleError } from "../../kerror/errors";
-import { KuzzleRequest, Request } from "../request";
+import type { KuzzleRequest } from "../request";
+import { Request } from "../request";
 import { NativeController } from "./baseController";
 import formatProcessing from "../../core/auth/formatProcessing";
 import ApiKey from "../../model/storage/apiKey";

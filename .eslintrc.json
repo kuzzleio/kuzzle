@@ -22,6 +22,12 @@
         "plugin:kuzzle/typescript"
       ],
       "rules": {
+        "@typescript-eslint/consistent-type-imports": [
+          "error",
+          {
+            "disallowTypeAnnotations": false
+          }
+        ],
         "@typescript-eslint/no-explicit-any": "warn",
         "@typescript-eslint/ban-ts-comment": [
           "error",

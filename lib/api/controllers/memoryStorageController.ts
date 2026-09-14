@@ -21,10 +21,11 @@
 
 /* eslint sort-keys: 0 */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { wrap } from "../../kerror";
-import { KuzzleRequest, Request } from "../request";
+import type { KuzzleRequest } from "../request";
+import { Request } from "../request";
 import { NativeController } from "./baseController";
 import * as kassert from "../../util/requestAssertions";
 import { isPlainObject, has } from "../../util/safeObject";

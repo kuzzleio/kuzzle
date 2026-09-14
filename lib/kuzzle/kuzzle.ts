@@ -44,11 +44,11 @@ import Statistics from "../core/statistics/statistics";
 import StorageEngine from "../core/storage/storageEngine";
 import Validation from "../core/validation/validation";
 import * as kerror from "../kerror";
-import { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { Mutex } from "../util/mutex";
-import {
+import type {
   ImportConfig,
   InstallationConfig,
   StartOptions,

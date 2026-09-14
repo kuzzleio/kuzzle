@@ -1,4 +1,4 @@
-import { estypes } from "sdk-es8";
+import type { estypes } from "sdk-es8";
 
 export type InfoResult = {
   type: string;

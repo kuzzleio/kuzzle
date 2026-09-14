@@ -22,12 +22,12 @@
 import * as querystring from "node:querystring";
 import * as URL from "node:url";
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { has } from "../../../util/safeObject";
 import type HttpMessage from "../protocols/httpMessage";
 import RouteHandler from "./routeHandler";
-import { RouteHandlerFunction } from "./routeTypes";
+import type { RouteHandlerFunction } from "./routeTypes";
 
 /**
  * Defines a new route part

@@ -19,14 +19,14 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { IndexCache } from "./indexCache";
 import { isPlainObject } from "../../util/safeObject";
 import * as kerror from "../../kerror";
 import { Mutex } from "../../util/mutex"; // NOSONAR: see loadMappings
-import { storeScopeEnum } from "./storeScopeEnum";
+import type { storeScopeEnum } from "./storeScopeEnum";
 import "../../types/Global";
 
 const servicesError = kerror.wrap("services", "storage");

@@ -19,6 +19,13 @@
  * limitations under the License.
  */
 
+/*
+ * The one `import … = require()` left in `lib/` (TD-49 replaced the other 24
+ * with ESM imports): `test/util/didYouMean.test.js` rewires this module and
+ * calls `__set__("didYouMean", …)`, which addresses the compiled variable by
+ * name. A default import compiles to `didyoumean_1.default` and the stub would
+ * silently miss. It goes when that spec moves to vitest.
+ */
 import didYouMean = require("didyoumean");
 
 import "../types/Global";

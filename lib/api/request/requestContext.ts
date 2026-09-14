@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import * as assert from "../../util/assertType";
 
-import { Token } from "../../model/security/token";
-import { User } from "../../model/security/user";
+import type { Token } from "../../model/security/token";
+import type { User } from "../../model/security/user";
 
 // private properties
 // \u200b is a zero width space, used to masquerade console.log output

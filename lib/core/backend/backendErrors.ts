@@ -19,11 +19,12 @@
  * limitations under the License.
  */
 
-import { KuzzleError } from "../../kerror/errors";
+import type { KuzzleError } from "../../kerror/errors";
 import * as kerror from "../../kerror";
-import { ApplicationManager, Backend } from "./index";
+import type { Backend } from "./index";
+import { ApplicationManager } from "./index";
 import type { Domains } from "../../kerror/codes";
-import { CustomErrorDefinition } from "../../types";
+import type { CustomErrorDefinition } from "../../types";
 
 export class BackendErrors extends ApplicationManager {
   private domains: Domains = {};

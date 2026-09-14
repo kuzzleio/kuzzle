@@ -22,12 +22,12 @@
 import * as kerror from "../../kerror";
 import { has, isPlainObject } from "../../util/safeObject";
 import { binarySearch } from "../../util/array";
-import {
+import type {
   ControllerRight,
   ControllerRights,
 } from "../../types/controllers/ControllerRights";
-import { KuzzleRequest } from "../../../index";
-import { OptimizedPolicyRestrictions } from "../../types/PolicyRestrictions";
+import type { KuzzleRequest } from "../../../index";
+import type { OptimizedPolicyRestrictions } from "../../types/PolicyRestrictions";
 
 const assertionError = kerror.wrap("api", "assert");
 

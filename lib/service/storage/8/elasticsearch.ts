@@ -21,9 +21,10 @@
 
 import _ from "lodash";
 
-import { Client, estypes } from "sdk-es8";
+import type { estypes } from "sdk-es8";
+import { Client } from "sdk-es8";
 
-import {
+import type {
   InfoResult,
   JSONObject,
   KImportError,

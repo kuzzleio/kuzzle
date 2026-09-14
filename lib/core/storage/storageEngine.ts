@@ -22,7 +22,7 @@
 import { wrap } from "../../kerror";
 import ClientAdapter from "./clientAdapter";
 import { storeScopeEnum } from "./storeScopeEnum";
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 
 const kerror = wrap("services", "storage");

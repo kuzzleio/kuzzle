@@ -21,8 +21,8 @@
 
 import Bluebird from "bluebird";
 
-import Redis = require("../../service/cache/redis");
-import { Logger } from "../../kuzzle/Logger";
+import Redis from "../../service/cache/redis";
+import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 
 /**

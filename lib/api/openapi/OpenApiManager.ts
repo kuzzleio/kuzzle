@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { OpenApiDefinition } from "../../types/OpenApiDefinition";
+import type { OpenApiDefinition } from "../../types/OpenApiDefinition";
 import { version } from "../../../package.json";
 import { generateOpenApi } from "./openApiGenerator";
 

@@ -25,13 +25,13 @@ import Bluebird from "bluebird";
 import Rights from "./rights";
 import * as kerror from "../../kerror";
 import { isPlainObject } from "../../util/safeObject";
-import {
+import type {
   Policy,
   OptimizedPolicy,
   OptimizedPolicyRestrictions,
 } from "../../types/index";
-import { Role } from "./role";
-import { KuzzleRequest } from "../../../index";
+import type { Role } from "./role";
+import type { KuzzleRequest } from "../../../index";
 
 const assertionError = kerror.wrap("api", "assert");
 

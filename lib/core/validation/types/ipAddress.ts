@@ -24,7 +24,7 @@ import isIP from "validator/lib/isIP";
 import { wrap } from "../../../kerror";
 import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import { NotEmptyTypeOptions } from "../typeOptions";
+import type { NotEmptyTypeOptions } from "../typeOptions";
 
 const kerror = wrap("validation", "assert");
 

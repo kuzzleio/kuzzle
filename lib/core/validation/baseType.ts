@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { TypeOptions } from "./typeOptions";
+import type { TypeOptions } from "./typeOptions";
 
 /**
  * Base class of every validation type, and the contract `Validation.addType`

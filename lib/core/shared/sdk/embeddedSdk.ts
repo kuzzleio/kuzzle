@@ -19,16 +19,16 @@
  * limitations under the License.
  */
 
-import {
+import type {
   RealtimeController,
   Notification,
   JSONObject,
   ScopeOption,
   UserOption,
-  Kuzzle,
   ResponsePayload,
   BaseRequest,
 } from "kuzzle-sdk";
+import { Kuzzle } from "kuzzle-sdk";
 
 import _ from "lodash";
 import { FunnelProtocol } from "./funnelProtocol";

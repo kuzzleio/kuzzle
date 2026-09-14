@@ -24,7 +24,7 @@ import { Koncorde } from "koncorde";
 import * as kerror from "../../../kerror";
 import { has } from "../../../util/safeObject";
 import BaseType from "../baseType";
-import { GeoShapeTypeOptions } from "../typeOptions";
+import type { GeoShapeTypeOptions } from "../typeOptions";
 
 const allowedShapeProperties = [
     "type",

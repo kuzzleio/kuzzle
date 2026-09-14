@@ -1,5 +1,5 @@
+import type { IWorldOptions } from "@cucumber/cucumber";
 import {
-  IWorldOptions,
   setDefaultTimeout,
   setWorldConstructor,
   World,

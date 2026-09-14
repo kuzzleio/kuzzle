@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
 import Bluebird from "bluebird";
-import WebSocket, { RawData } from "ws";
+import type { RawData } from "ws";
+import WebSocket from "ws";
 
 import WebSocketApiBase from "./websocketBase";
 

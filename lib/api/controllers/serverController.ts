@@ -21,12 +21,12 @@
 
 import * as os from "node:os";
 
-import jsonToYaml = require("json2yaml");
+import jsonToYaml from "json2yaml";
 
 import packagejson from "../../../package.json";
 
 import * as kerror from "../../kerror";
-import { KuzzleRequest } from "../request";
+import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 
 interface ApiActionDefinition {

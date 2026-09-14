@@ -1,4 +1,4 @@
-import { ByteSize, ClusterNodesStats } from "sdk-es7/api/types";
+import type { ByteSize, ClusterNodesStats } from "sdk-es7/api/types";
 
 export type InfoResult = {
   type: string;

@@ -21,7 +21,7 @@
 
 import * as actionEnum from "../../core/realtime/actionEnum";
 import * as kerror from "../../kerror";
-import { KuzzleRequest } from "../request";
+import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 
 /**

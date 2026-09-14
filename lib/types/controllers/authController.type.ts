@@ -1,5 +1,5 @@
-import { User } from "../../model/security/user";
-import { Serialized } from "../core/auth/formatProcessing.type";
+import type { User } from "../../model/security/user";
+import type { Serialized } from "../core/auth/formatProcessing.type";
 
 export type GetCurrentUserResponse = Serialized<User> & {
   strategies: any;

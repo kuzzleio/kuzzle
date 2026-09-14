@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { NumericTypeOptions } from "../typeOptions";
+import type { NumericTypeOptions } from "../typeOptions";
 import Numeric from "./numeric";
 
 class IntegerType extends Numeric {

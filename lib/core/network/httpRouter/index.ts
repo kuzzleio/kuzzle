@@ -26,7 +26,7 @@ import createDebug from "../../../util/debug";
 import { has } from "../../../util/safeObject";
 import type HttpMessage from "../protocols/httpMessage";
 import RoutePart from "./routePart";
-import { RouteCallback, RouteHandlerFunction } from "./routeTypes";
+import type { RouteCallback, RouteHandlerFunction } from "./routeTypes";
 
 const kerror = wrap("network", "http");
 const debug = createDebug("kuzzle:http:router");

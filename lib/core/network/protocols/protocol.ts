@@ -22,7 +22,7 @@
 import assert from "node:assert";
 
 import bytes from "../../../util/bytes";
-import { NetworkEntryPoint } from "../networkEntryPoint";
+import type { NetworkEntryPoint } from "../networkEntryPoint";
 
 /**
  * @typeParam TConfig - the shape of `server.protocols.<name>` in the Kuzzle

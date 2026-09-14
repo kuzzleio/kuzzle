@@ -26,21 +26,19 @@ import get from "lodash/get";
 
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
 import { KuzzleError } from "../kerror/errors";
-import apiControllers = require("./controllers");
-import {
-  documentEventAliases,
-  EventAliases,
-} from "../config/documentEventAliases";
-import DocumentExtractor = require("./documentExtractor");
+import apiControllers from "./controllers";
+import type { EventAliases } from "../config/documentEventAliases";
+import { documentEventAliases } from "../config/documentEventAliases";
+import DocumentExtractor from "./documentExtractor";
 import sdkCompatibility from "../config/sdkCompatibility.json";
-import RateLimiter = require("./rateLimiter");
+import RateLimiter from "./rateLimiter";
 import * as kerror from "../kerror";
-import createDebug = require("../util/debug");
+import createDebug from "../util/debug";
 import { has } from "../util/safeObject";
 import { HttpStream } from "../types";
-import { Logger } from "../kuzzle/Logger";
-import { NativeController } from "./controllers/baseController";
-import { KuzzleRequest } from "./request";
+import type { Logger } from "../kuzzle/Logger";
+import type { NativeController } from "./controllers/baseController";
+import type { KuzzleRequest } from "./request";
 
 const {
   AdminController,

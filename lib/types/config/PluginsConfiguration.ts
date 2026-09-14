@@ -1,6 +1,6 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { PasswordPolicy } from "../index";
+import type { PasswordPolicy } from "../index";
 
 export type PluginsConfiguration = {
   /**

@@ -30,7 +30,7 @@ import { v4 as uuidv4 } from "uuid";
 import { default as kuzzleDebug } from "../../util/debug";
 
 import * as kerror from "../../kerror";
-import {
+import type {
   AskEventDefinition,
   AskEventHandler,
   CallEventHandler,

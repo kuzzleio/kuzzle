@@ -32,8 +32,8 @@ import moment from "moment";
 import * as pino from "pino";
 
 import { KuzzleRequest } from "../../api/request";
-import { Kuzzle } from "../../kuzzle";
-import { ServerConfiguration } from "../../types";
+import type { Kuzzle } from "../../kuzzle";
+import type { ServerConfiguration } from "../../types";
 import type ClientConnection from "./clientConnection";
 
 const ALLOWED_TRANSPORTS = new Set([

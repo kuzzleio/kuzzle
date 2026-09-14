@@ -20,11 +20,11 @@
  */
 
 import * as kerror from "../../kerror";
-import { StoreCollectionsDefinition } from "../../types";
+import type { StoreCollectionsDefinition } from "../../types";
 import { promiseAllN } from "../../util/async";
 import { getESIndexDynamicSettings } from "../../util/esRequest";
 import { Mutex } from "../../util/mutex";
-import { storeScopeEnum } from "../storage/storeScopeEnum";
+import type { storeScopeEnum } from "../storage/storeScopeEnum";
 
 /**
  * Wrapper around the document store.

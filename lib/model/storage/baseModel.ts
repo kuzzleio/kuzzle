@@ -20,7 +20,7 @@
  */
 
 import Bluebird from "bluebird";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 /**
  * Minimal shape of a model class handled by {@link BaseModel.register}.

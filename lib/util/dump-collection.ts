@@ -1,8 +1,8 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import get from "lodash/get";
 import isObject from "lodash/isObject";
 import ndjson from "ndjson";
-import stream from "node:stream";
+import type stream from "node:stream";
 
 import * as kerror from "../kerror";
 import { BufferedPassThrough } from "./bufferedPassThrough";

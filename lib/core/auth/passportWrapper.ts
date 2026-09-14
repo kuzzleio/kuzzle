@@ -20,11 +20,12 @@
  */
 
 import Bluebird from "bluebird";
-import passport, {
+import type {
   AuthenticateCallback,
   AuthenticateOptions,
   Strategy,
 } from "passport";
+import passport from "passport";
 
 import { KuzzleError } from "../../kerror/errors";
 import * as kerror from "../../kerror";

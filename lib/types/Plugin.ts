@@ -19,15 +19,15 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
-import { PluginContext } from "../core/plugin/pluginContext";
-import { ControllerDefinition } from "./controllers/ControllerDefinition";
-import { PluginManifest } from "./PluginManifest";
-import { StrategyDefinition } from "./StrategyDefinition";
-import { PipeEventHandler, HookEventHandler } from "./EventHandler";
+import type { JSONObject } from "kuzzle-sdk";
+import type { PluginContext } from "../core/plugin/pluginContext";
+import type { ControllerDefinition } from "./controllers/ControllerDefinition";
+import type { PluginManifest } from "./PluginManifest";
+import type { StrategyDefinition } from "./StrategyDefinition";
+import type { PipeEventHandler, HookEventHandler } from "./EventHandler";
 import * as kerror from "../kerror";
 import { has } from "../util/safeObject";
-import { ImportConfig } from "./Kuzzle";
+import type { ImportConfig } from "./Kuzzle";
 
 /**
  * Allows to define plugins controllers and actions

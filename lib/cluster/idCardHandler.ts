@@ -20,11 +20,12 @@
  */
 
 import { NameGenerator } from "../util/name-generator";
-import { ChildProcess as ChildProcess, fork } from "child_process";
+import { fork } from "node:child_process";
+import type { ChildProcess } from "node:child_process";
 import Bluebird from "bluebird";
 
 import "../types";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 const REDIS_PREFIX = "{cluster/node}/";
 const REDIS_ID_CARDS_INDEX = REDIS_PREFIX + "id-cards-index";

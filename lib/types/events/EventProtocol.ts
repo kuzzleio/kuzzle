@@ -1,7 +1,7 @@
-import { JSONObject } from "kuzzle-sdk";
-import { PipeEventHandler } from "../../../index";
-import { ClientConnection } from "../ClientConnection";
-import { HttpMessage } from "../HttpMessage";
+import type { JSONObject } from "kuzzle-sdk";
+import type { PipeEventHandler } from "../../../index";
+import type { ClientConnection } from "../ClientConnection";
+import type { HttpMessage } from "../HttpMessage";
 
 export type EventHTTPBeforeParsingPayload = {
   name: `protocol:http:beforeParsingPayload`;

@@ -11,9 +11,9 @@
  * Whatever a caller passes is merged on top, so a spec can pin the one field
  * it is about without restating the rest.
  */
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { Kuzzle } from "../../lib/kuzzle";
+import type { Kuzzle } from "../../lib/kuzzle";
 
 /**
  * `global.kuzzle` is declared as the real `Kuzzle`, and a fixture that

@@ -1,4 +1,4 @@
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 export interface StoreCollectionDefinition {
   /**

@@ -20,14 +20,14 @@
  */
 
 import jwt from "jsonwebtoken";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 import _ from "lodash";
 import ms from "ms";
 
 import * as kerror from "../../kerror";
 import { UnauthorizedError } from "../../kerror/errors";
 import { Token } from "../../model/security/token";
-import { User } from "../../model/security/user";
+import type { User } from "../../model/security/user";
 import ApiKey from "../../model/storage/apiKey";
 import { ObjectRepository } from "../shared/ObjectRepository";
 import { sha256 } from "../../util/crypto";

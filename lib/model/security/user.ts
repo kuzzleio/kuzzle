@@ -23,9 +23,9 @@ import _ from "lodash";
 
 import Rights from "./rights";
 import * as kerror from "../../kerror";
-import { Profile } from "./profile";
-import { KuzzleRequest } from "../../../index";
-import { Target } from "../../types";
+import type { Profile } from "./profile";
+import type { KuzzleRequest } from "../../../index";
+import type { Target } from "../../types";
 
 /**
  * @class User

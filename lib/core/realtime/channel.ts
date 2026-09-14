@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { RealtimeScope, RealtimeUsers } from "../../types";
+import type { RealtimeScope, RealtimeUsers } from "../../types";
 import * as kerror from "../../kerror";
 
 const realtimeError = kerror.wrap("core", "realtime");

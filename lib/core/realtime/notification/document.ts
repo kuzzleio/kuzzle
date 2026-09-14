@@ -19,11 +19,11 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { InternalError } from "../../../kerror/errors";
-import { KuzzleRequest } from "../../../api/request";
-import { RealtimeScope } from "../../../types";
+import type { KuzzleRequest } from "../../../api/request";
+import type { RealtimeScope } from "../../../types";
 import "../../../types/Global";
 
 /**
