@@ -62,14 +62,23 @@ services:
     ports:
       - "17512:7512"
 
-  # The one node that runs outside development mode. nginx (port 7512) load
-  # balances over nodes 1-3 only, so the suite never lands here by accident:
-  # scenarios address it by port, the way Network.feature already addresses
-  # node 1 by 17510. It exists because "a stack trace never leaves the process"
-  # is only true when NODE_ENV is not development — in development the stack is
-  # deliberately kept and highlighted. See features/StackTrace.feature (TD-48).
+  # The one node that runs outside development mode. It exists because "a stack
+  # trace never leaves the process" is only true when NODE_ENV is not
+  # development — in development the stack is deliberately kept and highlighted.
+  # See features/StackTrace.feature (TD-48).
+  #
+  # It runs WITHOUT the cluster plugin, and nginx (port 7512) balances over
+  # nodes 1-3 only: scenarios address it by port, the way Network.feature
+  # already addresses node 1 by 17510. Keeping it out of the cluster is
+  # deliberate — nothing in the suite reads state from it, and a fourth member
+  # would add synchronisation traffic to all thirty functional jobs for no
+  # benefit. The gain is a node this feature can address, not a bigger cluster.
   kuzzle_node_prod:
     <<: *kuzzle-config
+    command: >
+      bash -c "
+        node -r ts-node/register/transpile-only ./start-kuzzle-test.ts --enable-plugins functional-test-plugin
+      "
     environment:
       <<: *kuzzle-env
       NODE_ENV: "production"
