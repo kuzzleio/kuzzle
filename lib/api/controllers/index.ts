@@ -19,17 +19,17 @@
  * limitations under the License.
  */
 
-import AdminController = require("./adminController");
-import AuthController = require("./authController");
-import BulkController = require("./bulkController");
-import ClusterController = require("./clusterController");
-import CollectionController = require("./collectionController");
-import DocumentController = require("./documentController");
-import IndexController = require("./indexController");
-import MemoryStorageController = require("./memoryStorageController");
-import RealtimeController = require("./realtimeController");
-import SecurityController = require("./securityController");
-import ServerController = require("./serverController");
+import AdminController from "./adminController";
+import AuthController from "./authController";
+import BulkController from "./bulkController";
+import ClusterController from "./clusterController";
+import CollectionController from "./collectionController";
+import DocumentController from "./documentController";
+import IndexController from "./indexController";
+import MemoryStorageController from "./memoryStorageController";
+import RealtimeController from "./realtimeController";
+import SecurityController from "./securityController";
+import ServerController from "./serverController";
 import { DebugController } from "./debugController";
 
 export = {

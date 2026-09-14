@@ -19,9 +19,9 @@
  * limitations under the License.
  */
 
-import DocumentNotification = require("./document");
-import ServerNotification = require("./server");
-import UserNotification = require("./user");
+import DocumentNotification from "./document";
+import ServerNotification from "./server";
+import UserNotification from "./user";
 
 export = {
   DocumentNotification,

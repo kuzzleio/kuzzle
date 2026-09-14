@@ -19,16 +19,16 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import { Request } from "../../api/request";
-import createDebug = require("../../util/debug");
+import createDebug from "../../util/debug";
 
 const debug = createDebug("kuzzle:core:security:users");
 import { ObjectRepository } from "../shared/ObjectRepository";
 import * as kerror from "../../kerror";
 import { User } from "../../model/security/user";
-import ApiKey = require("../../model/storage/apiKey");
+import ApiKey from "../../model/storage/apiKey";
 import "../../types/Global";
 
 // Type-only: the security module is the still-JS `core/security/index.js`, so

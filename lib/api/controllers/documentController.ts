@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
 import * as actionEnum from "../../core/realtime/actionEnum";
 import * as kerror from "../../kerror";
@@ -28,9 +28,9 @@ import {
   assertHasBody,
   assertHasIndexAndCollection,
 } from "../../util/requestAssertions";
-import { KuzzleRequest } from "../request";
+import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
-import extractFields = require("../../util/extractFields");
+import extractFields from "../../util/extractFields";
 
 /** One of `actionEnum`'s values — what a document notification reports. */
 type NotifyAction = (typeof actionEnum)[keyof typeof actionEnum];

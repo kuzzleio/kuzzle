@@ -22,9 +22,10 @@
 import Bluebird from "bluebird";
 import _ from "lodash";
 import { Koncorde } from "../shared/KoncordeWrapper";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { KuzzleRequest, RequestContext, RequestInput } from "../../../index";
+import { KuzzleRequest, RequestContext, RequestInput } from "../../api/request";
+import BaseValidationType from "../validation/baseType";
 
 import * as kerror from "../../kerror";
 import {
@@ -47,13 +48,13 @@ import { Elasticsearch } from "../../service/storage/Elasticsearch";
 import { Mutex } from "../../util/mutex";
 import Promback from "../../util/promback";
 import { isPlainObject } from "../../util/safeObject";
-import { BackendCluster } from "../backend";
+import { BackendCluster } from "../backend/backendCluster";
 import { EmbeddedSDK } from "../shared/sdk/embeddedSdk";
 import { Store } from "../shared/store";
 import { storeScopeEnum } from "../storage/storeScopeEnum";
 import PluginRepository from "./pluginRepository";
-import { KuzzleLogger } from "kuzzle-logger/dist";
-import { Kuzzle } from "../../kuzzle";
+import type { KuzzleLogger } from "kuzzle-logger/dist";
+import type { Kuzzle } from "../../kuzzle";
 
 const contextError = kerror.wrap("plugin", "context");
 
@@ -323,7 +324,7 @@ export class PluginContext {
     }
 
     this.constructors = {
-      BaseValidationType: require("../validation/baseType"),
+      BaseValidationType,
       ESClient: PluginContextESClient as any,
       Koncorde: Koncorde as any,
       Mutex: Mutex,

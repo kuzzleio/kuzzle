@@ -25,11 +25,11 @@ import kuzzleStateEnum from "../../kuzzle/kuzzleStateEnum";
 import { Role } from "../../model/security/role";
 import { ObjectRepository } from "../shared/ObjectRepository";
 import * as kerror from "../../kerror";
-import didYouMean = require("../../util/didYouMean");
+import didYouMean from "../../util/didYouMean";
 import { cacheDbEnum } from "../cache/cacheDbEnum";
-import { JSONObject } from "kuzzle-sdk";
+import type { JSONObject } from "kuzzle-sdk";
 
-import { Logger } from "../../kuzzle/Logger";
+import type { Logger } from "../../kuzzle/Logger";
 import "../../types/Global";
 
 // Type-only, same rationale as userRepository: `core/security/index.js` is
