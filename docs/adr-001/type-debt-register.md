@@ -54,9 +54,10 @@
 | [TD-43](#td-43) | 🟡 low | Enforcement | Nothing charges for a single `as` assertion, nor for a type-only import written as a value import — [#2730](https://github.com/kuzzleio/kuzzle/issues/2730) | S | ⬜ |
 | [TD-44](#td-44) | 🟡 low | Enforcement | `strict-check.sh` fails **open**: a tsc that never ran reads as "all adopted files pass" — [#2731](https://github.com/kuzzleio/kuzzle/issues/2731) | XS | ✅ |
 | [TD-45](#td-45) | 🟡 low | Enforcement | Extensionless Node executables in `bin/` are invisible to the `js` ratchet — the floor is 5, not 3 — [#2732](https://github.com/kuzzleio/kuzzle/issues/2732) | XS | ✅ |
-| [TD-46](#td-46) | 🟡 low | Tests | `privilegedContext`'s new spec mocks the base class it exists to exercise; fixture leaks beside it — [#2733](https://github.com/kuzzleio/kuzzle/issues/2733) | XS | ⬜ |
+| [TD-46](#td-46) | 🟡 low | Tests | `privilegedContext`'s new spec mocks the base class it exists to exercise; fixture leaks beside it — [#2733](https://github.com/kuzzleio/kuzzle/issues/2733) | XS | ✅ |
 | [TD-47](#td-47) | 🟡 low | Enforcement | CI hygiene: no `concurrency` group, a pointless Node matrix on `lint`, an undefined `NODE_LTS_ACTIVE_VERSION`, no least-privilege — [#2734](https://github.com/kuzzleio/kuzzle/issues/2734) | XS | ✅ |
 | [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ⬜ |
+| [TD-49](#td-49) | 🟠 med | Tests | The vitest tree cannot load anything reaching `lib/api/controllers`: 25 `import x = require()` reach Node's resolver and die on a `.ts` path — [#2739](https://github.com/kuzzleio/kuzzle/issues/2739) | M | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -716,6 +717,8 @@ The mock is presumably there because the real constructor reaches `global.kuzzle
 
 - **Also, in that sibling:** `mkdtempSync` runs once per fixture and nothing ever removes the directories (five per run, forever); and `globalThis.kuzzle` is set in `beforeEach` and never restored — harmless only because vitest isolates per file by default, i.e. the spec is correct by virtue of a config setting it neither states nor controls.
 - **The generalisable part:** *a review finding is a rule, not an anecdote.* "A spec that stubs its subject's base class is not testing anything" was learned and written down in the PR body, and broken twenty lines away in the same commit — because it was applied to the file under repair rather than adopted as a check on the file being written.
+- ✅ **Done**, and *not* the way this entry expected. Dropping the mock and handing the real constructor a `global.kuzzle` **cannot run**: `pluginContext.ts` → `index.ts` → `funnel.ts` → `controllers/` crosses `import x = require("…")`, which vite leaves for Node's resolver, which cannot resolve a `.ts` path. That is [TD-49](#td-49), filed from this finding, and it is *why* the mock was there. So the vitest spec was **removed** rather than kept as a weaker second witness — `test/core/plugin/context/privilegedContext.test.js` already exercises the real class through `KuzzleMock`, and a note there records that the port waits on TD-49. The sibling's two defects are fixed: the fixture directories are removed in an `afterAll`, and `globalThis.kuzzle` now comes from `tests/mocks/kuzzle.ts` — a small, readable fixture (what the subject touches at construction, nothing more) with a `restoreKuzzle()` that puts back what was there, so the spec no longer depends on vitest's per-file isolation without saying so.
+- **What the finding was actually about, in hindsight:** the mock read as a testing choice and was a resolver limitation. *A spec that stubs its subject's collaborator is sometimes reporting that the collaborator cannot be loaded — which is a fact about the build, not about the test.*
 
 ### TD-47
 **CI hygiene: no `concurrency`, a pointless Node matrix, an undefined Node version, no least-privilege** · 🟡 low · `.github/workflows/pull_request.workflow.yaml`
@@ -737,3 +740,24 @@ What remains is that the property is guarded by a comment. `removeStacktrace`'s 
 
 - **Fix:** functional-suite scenarios, not unit tests — the property is about what crosses the wire. With `NODE_ENV` ≠ `development`, provoke a 500 over HTTP and assert `content.error.stack` is absent; the same over WebSocket, since `httpwsProtocol` serves both and sanitises them on different paths (`:455` vs `:990`); ideally the same for a notification (`entryPoint.js:349`).
 - **The generalisable part:** *when a review concludes "this call was always dead, the real work happens elsewhere", the same reading has just established where the invariant actually lives — and that nothing is testing it there.* The dead call was, in effect, the only thing naming the requirement.
+
+### TD-49
+**The vitest tree cannot load anything that reaches `lib/api/controllers`** · 🟠 medium · `lib/**/*.ts` (25 sites)
+
+Found while fixing [TD-46](#td-46), and it is the reason TD-46 exists.
+
+```
+Error: Cannot find module '../../util/extractFields'
+Require stack:
+- /var/app/lib/api/controllers/documentController.ts
+❯ lib/api/controllers/documentController.ts:33:24
+    33| import extractFields = require("../../util/extractFields");
+```
+
+`import x = require("…")` is TypeScript's CommonJS import form. Vite's SSR transform leaves the `require(…)` call in place, so it reaches **Node's** resolver — which cannot resolve a `.ts` path. Every module reachable through one of these is unloadable from a vitest spec.
+
+**A class, not a file:** changing that one line to an ESM import moves the error to `import apiControllers = require("./controllers")` in `funnel.ts`. There are **25** in `lib/**/*.ts`, 11 of them in `lib/api/controllers/index.ts`, and `pluginContext.ts` → `index.ts` → `funnel.ts` → `controllers/` puts the whole API surface behind them. A vitest spec can exercise `lib/util` and `lib/core/shared`; it cannot exercise most of `lib/core`.
+
+- **Fix:** replace the form with a standard ESM import — `esModuleInterop` is on and the targets use `export =`, so a default import is the shape. Mechanical, type-checked, and covered by the 3027 Mocha specs. Prerequisite work for **step 12** in any case: `verbatimModuleSyntax`/`isolatedModules` reject this form outright, which is where [TD-43](#td-43)'s type-only-import half already points.
+- **Not bundled** into the TD-46 PR: 25 files across `lib/api` and `lib/core` is a different diff from a test fix.
+- **The generalisable part:** *the frozen suite and the new one do not resolve modules the same way, so "the Mocha spec passes" says nothing about whether the vitest tree can load the subject at all.* The gap surfaces as a mocked collaborator, which reads like a testing choice.

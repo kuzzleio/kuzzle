@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 18 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-47), TD-33 and TD-43/46/48 open
+**Status:** 🟦 In progress — 19 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-46 · TD-47), TD-33 and TD-43/48/49 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -286,6 +286,28 @@ Three details decide whether such a gate is real or decorative:
 
 **Not done here:** `.ci/` is still outside the `prettier`/`eslint` scopes that [TD-39](../type-debt-register.md#td-39) extended to `tests/` — this file was formatted by hand. Worth a follow-up, but it is a different diff.
 
+### TD-46 — the spec that mocked its own subject, and what that mock was really reporting ([#2733](https://github.com/kuzzleio/kuzzle/issues/2733))
+
+The finding is exact: [#2724](https://github.com/kuzzleio/kuzzle/pull/2724)'s vitest spec `vi.mock`s `PluginContext`, and `PrivilegedPluginContext` **is** `PluginContext` plus one assignment — so the spec asserted an assignment to a field on a stub it had declared itself, and would have passed with `PluginContext` deleted.
+
+The expected fix was to drop the mock and give the real constructor a `global.kuzzle`, as the sibling `pluginManifest.test.ts` does. **It does not run:**
+
+```
+Error: Cannot find module '../../util/extractFields'
+❯ lib/api/controllers/documentController.ts:33:24
+    33| import extractFields = require("../../util/extractFields");
+```
+
+`pluginContext.ts` -> `index.ts` -> `funnel.ts` -> `controllers/` crosses TypeScript's CommonJS import form, whose `require(...)` call vite's SSR transform leaves for **Node's** resolver — which cannot resolve a `.ts` path. Changing that one line moves the error to the next of the **25** such imports in `lib/`. Filed as [TD-49](../type-debt-register.md#td-49) ([#2739](https://github.com/kuzzleio/kuzzle/issues/2739)): *the vitest tree cannot load most of `lib/core`*, and that — not a testing preference — is why the mock was there.
+
+So the resolution is the honest one rather than the expected one:
+
+- **the vitest spec is removed.** `test/core/plugin/context/privilegedContext.test.js` already exercises the real class through `KuzzleMock`; keeping a second, weaker witness beside it is what the finding objects to. A note in the Mocha spec records that the port waits on TD-49 — the frozen suite keeps this one for now, which is the opposite of the migration's direction and is exactly TD-49's cost.
+- **the sibling's two defects are fixed:** the `mkdtempSync` fixture directories (five per run, never removed) go in an `afterAll`, and `globalThis.kuzzle` comes from a new `tests/mocks/kuzzle.ts` with a `restoreKuzzle()` — so the spec no longer relies on vitest's per-file isolation without saying so.
+- **`tests/mocks/kuzzle.ts` is deliberately not `test/mocks/kuzzle.mock.js`.** That mock is a ~600-line stub of the whole application; a spec resting on all of it cannot say which part its subject needs. The new fixture is what a subject touches at construction time and nothing else, with overrides merged on top.
+
+*A spec that stubs its subject's collaborator is sometimes reporting that the collaborator cannot be loaded — a fact about the build, not about the test.*
+
 ## Validation (2026-09-11, TD-40/41 branch — stacked on [#2736](https://github.com/kuzzleio/kuzzle/pull/2736))
 
 - `npx tsc --noEmit` — clean, and **unchanged by the widening**, which is the point
@@ -305,3 +327,13 @@ Three details decide whether such a gate is real or decorative:
 - `.ci/scripts/docker-test.sh unit vitest` — **211 passing** (198 + 13)
 - `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
 - the new pass, both ways: exit 1 naming 14 unexecuted conversions against #2723's base, exit 0 on this branch
+
+
+## Validation (2026-09-14, TD-46 branch)
+
+- `npx tsc --noEmit` — clean
+- `npm run ratchet` — five green (js 22, mocha 150, any 205, implicit-any 456, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass, `--candidates` empty
+- `npm run test:lint` / `npm run prettier:check` — clean
+- `.ci/scripts/docker-test.sh unit vitest` — **210 passing** (211 minus the single case of the removed spec)
+- `.ci/scripts/docker-test.sh unit mocha` — **3027 passing**, unchanged
