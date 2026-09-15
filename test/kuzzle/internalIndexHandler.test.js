@@ -317,9 +317,12 @@ describe("#kuzzle/InternalIndexHandler", () => {
     const randomBytesMock = sinon.stub().returns(Buffer.from("12345"));
 
     before(() => {
-      mockrequire("crypto", {
-        randomBytes: randomBytesMock,
-      });
+      const cryptoMock = { randomBytes: randomBytesMock };
+
+      mockrequire("crypto", cryptoMock);
+      // The source imports "node:crypto"; mock-require matches the specifier,
+      // not the module, so both spellings have to be intercepted.
+      mockrequire("node:crypto", cryptoMock);
 
       InternalIndexHandler = mockrequire.reRequire(
         "../../lib/kuzzle/internalIndexHandler",
@@ -328,6 +331,7 @@ describe("#kuzzle/InternalIndexHandler", () => {
 
     after(() => {
       mockrequire.stop("crypto");
+      mockrequire.stop("node:crypto");
     });
 
     beforeEach(() => {

@@ -42,6 +42,9 @@ describe("Test: kuzzle/dumpGenerator", () => {
     kuzzle.statistics.getAllStats.resolves({ hits: [{ stats: 42 }] });
 
     mockrequire("fs", fsStub);
+    // The source imports "node:fs"; mock-require matches the specifier, not the
+    // module, so both spellings have to be intercepted.
+    mockrequire("node:fs", fsStub);
     mockrequire("dumpme", coreStub);
 
     mockrequire.reRequire("../../lib/kuzzle/dumpGenerator");
@@ -197,7 +200,7 @@ describe("Test: kuzzle/dumpGenerator", () => {
     // (9 - 5 + 1) directories
     // (+1 because we are about to create a new one,
     // and we don't want the limit to be exceeded)
-    should(fsStub.rmdirSync.callCount).be.eql(5);
+    should(fsStub.rmSync.callCount).be.eql(5);
   });
 
   it("should delete coredumps in reports directories, if over the limit", async () => {
