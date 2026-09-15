@@ -60,6 +60,7 @@
 | [TD-49](#td-49) | 🟠 med | Tests | The vitest tree cannot load anything reaching `lib/api/controllers`: 25 `import x = require()` reach Node's resolver and die on a `.ts` path — [#2739](https://github.com/kuzzleio/kuzzle/issues/2739) | M | ✅ |
 | [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | 🟦 |
 | [TD-51](#td-51) | 🟡 low | Correctness | The application logger is never flushed on shutdown: the optional chain reads `log` off the Plugin wrapper, which never has one — [#2747](https://github.com/kuzzleio/kuzzle/issues/2747) | XS | 🔴 |
+| [TD-52](#td-52) | 🔴 high | Correctness | Three things `httpwsProtocol` reads that are never set: the multipart file-size limit is not enforced, and an HTTP connection's headers are always empty — [#2749](https://github.com/kuzzleio/kuzzle/issues/2749) | S | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -823,3 +824,36 @@ Found by H5's conversion: typing `pluginsManager.application` as `Plugin` made t
 
 - **Fix:** route the flush to the instance (`application.instance.log`), or give the wrapper the accessor. Either is a **behaviour change** — the application's buffered logs would start being written on shutdown, which is the point — so it does not belong in a conversion PR.
 - **The generalisable part:** *optional chaining is a null guard, not a correctness guard.* `?.` over a property that never exists is indistinguishable, at runtime, from `?.` over one that is merely absent right now. Only a type can tell those apart, and this line sat in the shutdown path unread for as long as the file was JavaScript.
+
+
+### TD-52
+**Three things `httpwsProtocol` reads that nothing ever sets** · 🔴 high · `lib/core/network/protocols/httpwsProtocol.ts`
+
+All three were found by H6's conversion, and all three are invisible to JavaScript for the same reason: reading a property that does not exist yields `undefined` rather than failing.
+
+#### 1. The multipart file-size limit is not enforced
+
+```js
+if (part.data.byteLength > this.maxFormFileSize) {
+```
+
+`this.maxFormFileSize` is **never assigned** anywhere in `lib/`. The configured value is parsed and validated (`lib/config/index.ts` turns `"1MB"` into a number and asserts it), and `parseHttpOptions` puts it in `httpConfig.opts.maxFormFileSize` — nothing copies it onto the instance. So the comparison is `byteLength > undefined`, which is **always false**, and a multipart upload of any size passes.
+
+The spec that covers this path is the tell: `test/core/network/protocols/http.test.js` does `httpWs.maxFormFileSize = 2;` **by hand** before asserting the rejection. It sets the property production never sets, so it passes while production does not enforce anything.
+
+- **Severity:** the limit exists to bound memory per request. `maxRequestSize` still caps the whole body, so this is not unbounded, but the per-file limit a user configures does nothing.
+
+#### 2. An HTTP connection's headers are always empty
+
+```js
+const connection = new ClientConnection("HTTP/1.1", getHttpIps(response, request), request.headers);
+```
+
+`request` is a uWS `HttpRequest`, which has **no `headers` property** — its headers are only reachable through `forEach`, which is exactly how `HttpMessage` collects them two lines later. So `ClientConnection` receives `undefined`, falls back to `{}`, and `connection.headers` is empty for every HTTP connection — while `ClientConnection`'s own doc says *"for http, will receive the request headers"*.
+
+#### 3. `Protocol.joinChannel`'s return value
+
+Not a bug, but the same family: the base class returns `{ channel, connectionId }` and every override returns nothing. A vitest spec pins the base's echo, so the declared type is now `… | void` rather than either half of the truth.
+
+- **Fix:** (1) assign `maxFormFileSize` where the other options are read, (2) pass the headers `HttpMessage` already collects. Both are **behaviour changes** — the point of each is that something starts happening — so neither belongs in a conversion PR. H6 preserves all three exactly and declares them, so the compiler now holds them.
+- **The generalisable part:** *a comparison against `undefined` is not a check, and JavaScript cannot tell you which of your reads is one.* Two of these sat in the HTTP entry point, the file step 09 called the riskiest of the migration, and both were found by writing down what the types were rather than by reading the code.
