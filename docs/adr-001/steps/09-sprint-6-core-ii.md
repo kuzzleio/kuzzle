@@ -331,3 +331,19 @@ Two tools, chosen per case:
 ### What the tests caught
 
 Rewriting the specification lookup to use the typed map dropped a short-circuit — `has(this.specification, index) && get(…)` became `has(indexSpec, collection)` with `indexSpec` possibly `undefined`, and `Object.hasOwn(undefined, …)` throws. Two `validate` specs failed immediately. The guard is back and explicit: `index` and `collection` come from the request, so an inherited property must not answer for a specification.
+
+### Gate-driven refactor, and the equivalence note
+
+SonarCloud failed the first run on **5 new Critical** (S3776 cognitive complexity: `isValidField` 51, `manageErrorMessage` 30, `validate` 25, `curateFieldSpecificationFormat` 20, `getValidationConfiguration` 17), **1 new Major** (S2301, `manageErrorMessage`'s boolean selector) and **11 new Minor**. Every one is pre-existing JavaScript re-scored by the rename — the standing pattern since sprint 4, and what the DoD above anticipates.
+
+Extractions, all verbatim: `resolveValidationBody`, `checkDocumentFields`, `checkValidators` out of `validate`; `resolveFieldValues`, `validateFieldValue`, `validateFieldChildren` out of `isValidField`; `checkMultivaluedSpecification` out of `curateFieldSpecificationFormat`; `collectStoredSpecification` out of `getValidationConfiguration`; and `manageErrorMessage` split into `storeErrorMessage` / `throwErrorMessage`, which answers S2301 and S3776 together.
+
+**Equivalence note** — the five places the extraction is not a straight cut:
+
+1. **`if (collectionSpec)` in `validate` was dead.** `collectionSpec` falls back to `{}` on the line that builds it, so the test could never fail. Dropped rather than carried into the extracted shape.
+2. **The validators branch now reads `check(...) && isValid`** where the original assigned `isValid = false` outright. Equivalent: the original only ever wrote `false` there, and `&&` preserves an earlier `false`.
+3. **`resolveFieldValues` answers `null` where the original did `return false`** from inside `isValidField`. The caller returns `false` immediately on `null`, so the arity failures reach the same exit.
+4. **`manageErrorMessage`'s unreachable branch is now explicit.** `structured` and the holder's shape are one fact — `validate` builds an object exactly when `verbose` holds — so the `Array.isArray(errorHolder)` early return cannot be taken. It exists to narrow the type, and it is the only line in the refactor with no counterpart in the original.
+5. **A field value flowing into `recurseFieldValidation` is typed `JSONObject`, not `unknown`.** `unknown` would have needed `val as JSONObject`, and TD-43's `casts` ratchet is exactly the thing that should make an author stop there. Since `JSONObject` is `Record<PropertyKey, any>`, the parameter is no weaker than the `{*}` the JSDoc declared, and no runtime check was added — the alternative, an `isPlainObject` guard, is provably redundant (only `allowChildren` types recurse, and `ObjectType.validate` has already rejected non-objects) but "provably redundant" is precisely the reasoning this ADR keeps finding to be wrong, so it was not added.
+
+Left deliberately: `_.cloneDeep` ×3 against S4123's `structuredClone` suggestion, and `request.input.resource` against the deprecation warning — both `// NOSONAR` with the reason inline. Swapping clone semantics or migrating off `resource` ([TD-20](../type-debt-register.md#td-20)) are behaviour changes, and a conversion does not get to make those.

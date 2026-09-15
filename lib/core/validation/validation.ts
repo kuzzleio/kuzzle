@@ -22,7 +22,7 @@
 import Bluebird from "bluebird";
 import { Koncorde } from "koncorde";
 import type { JSONObject } from "kuzzle-sdk";
-import _ from "lodash";
+import { cloneDeep, defaultsDeep, isNil } from "lodash";
 
 import type { KuzzleRequest } from "../../api/request";
 import * as kerror from "../../kerror";
@@ -36,6 +36,7 @@ import type {
   CuratedCollectionSpecification,
   DocumentSpecification,
   ErrorMessages,
+  FieldErrorScope,
   FieldSpecification,
   RawSpecification,
   SpecificationValidationResult,
@@ -167,7 +168,7 @@ class Validation {
     request: KuzzleRequest,
     verbose = false,
   ): Promise<KuzzleRequest | { errorMessages: ErrorMessages; valid: boolean }> {
-    const { _id, index, collection } = request.input.resource;
+    const { _id, index, collection } = request.input.resource; // NOSONAR migrating off `resource` is TD-20, and would change behaviour
 
     // `has` rather than a plain lookup: `index` and `collection` come from the
     // request, so an inherited property must not answer for a specification.
@@ -181,85 +182,50 @@ class Validation {
         indexSpec[collection]) ||
       {};
 
-    let isUpdate = false,
-      body = request.input.body;
-
-    if (
-      request.input.controller === "document" &&
-      request.input.action === "update"
-    ) {
-      isUpdate = true;
-
-      const document = await global.kuzzle.ask(
-        "core:storage:public:document:get",
-        index,
-        collection,
-        _id,
-      );
-
-      // Avoid side effects on the request during the update validation
-      body = _.cloneDeep(request.input.body);
-      _.defaultsDeep(body, document._source);
-    }
+    const { body, isUpdate } = await this.resolveValidationBody(
+      request,
+      index,
+      collection,
+      _id,
+    );
 
     const errorMessages: ErrorMessages = verbose ? {} : [];
     let isValid = true;
 
-    if (collectionSpec) {
-      if (collectionSpec.fields && collectionSpec.fields.children) {
-        try {
-          isValid = this.recurseFieldValidation(
-            body,
-            collectionSpec.fields.children,
-            collectionSpec.strict,
-            errorMessages,
-            verbose,
-          );
-        } catch (error) {
-          // The strictness message can be received here only if it happens at
-          // the validation of the document's root
-          if (error.message !== "strictness") {
-            throw error;
-          }
+    // `collectionSpec` is always truthy — it falls back to `{}` above — so the
+    // enclosing `if (collectionSpec)` the JavaScript had was dead.
+    const children = collectionSpec.fields?.children;
 
-          isValid = false;
-          manageErrorMessage(
-            "document",
-            errorMessages,
-            `The document validation is strict. Cannot add unspecified sub-field "${error.details.field}"`,
-            verbose,
-          );
-        }
-      }
+    if (children) {
+      isValid = this.checkDocumentFields(
+        body,
+        children,
+        collectionSpec.strict,
+        errorMessages,
+        verbose,
+      );
+    }
 
-      if (collectionSpec.validators) {
-        const filters = koncordeTest(
-          this.koncorde,
+    if (collectionSpec.validators) {
+      isValid =
+        this.checkValidators(
           index,
           collection,
-          body,
           _id,
-        );
-
-        if (filters.length === 0 || filters[0] !== collectionSpec.validators) {
-          isValid = false;
-          manageErrorMessage(
-            "document",
-            errorMessages,
-            "The document does not match validation filters.",
-            verbose,
-          );
-        }
-      }
+          body,
+          collectionSpec.validators,
+          errorMessages,
+          verbose,
+        ) && isValid;
     }
 
     if (!verbose) {
       // We only modify the request if the validation succeeds
-      if (collectionSpec.fields && collectionSpec.fields.children) {
+      if (children) {
         request.input.body = this.recurseApplyDefault(
           isUpdate,
           request.input.body,
-          collectionSpec.fields.children,
+          children,
         );
       }
 
@@ -267,6 +233,103 @@ class Validation {
     }
 
     return { errorMessages, valid: isValid };
+  }
+
+  /**
+   * The body validation runs against: the request's own, or — on an update —
+   * a copy merged over the stored document, so that a partial update is
+   * validated as the document it will produce.
+   */
+  private async resolveValidationBody(
+    request: KuzzleRequest,
+    index: string,
+    collection: string,
+    _id: string,
+  ): Promise<{ body: JSONObject; isUpdate: boolean }> {
+    if (
+      request.input.controller !== "document" ||
+      request.input.action !== "update"
+    ) {
+      return { body: request.input.body, isUpdate: false };
+    }
+
+    const document = await global.kuzzle.ask(
+      "core:storage:public:document:get",
+      index,
+      collection,
+      _id,
+    );
+
+    // Avoid side effects on the request during the update validation
+    const body = cloneDeep(request.input.body); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
+    defaultsDeep(body, document._source);
+
+    return { body, isUpdate: true };
+  }
+
+  /**
+   * Walks the document against the collection's field tree, turning a
+   * root-level strictness breach into a message rather than an exception.
+   */
+  private checkDocumentFields(
+    body: JSONObject,
+    children: Record<string, StructuredFieldSpecification>,
+    strict: boolean,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
+    try {
+      return this.recurseFieldValidation(
+        body,
+        children,
+        strict,
+        errorMessages,
+        verbose,
+      );
+    } catch (error) {
+      // The strictness message can be received here only if it happens at
+      // the validation of the document's root
+      if (error.message !== "strictness") {
+        throw error;
+      }
+
+      manageErrorMessage(
+        "document",
+        errorMessages,
+        `The document validation is strict. Cannot add unspecified sub-field "${error.details.field}"`,
+        verbose,
+      );
+
+      return false;
+    }
+  }
+
+  /**
+   * Checks the document against the collection's Koncorde validator filter.
+   */
+  private checkValidators(
+    index: string,
+    collection: string,
+    _id: string,
+    body: JSONObject,
+    validators: string,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
+    const filters = koncordeTest(this.koncorde, index, collection, body, _id);
+
+    if (filters.length === 0 || filters[0] !== validators) {
+      manageErrorMessage(
+        "document",
+        errorMessages,
+        "The document does not match validation filters.",
+        verbose,
+      );
+
+      return false;
+    }
+
+    return true;
   }
 
   /**
@@ -376,12 +439,11 @@ class Validation {
     verbose: boolean,
   ): boolean {
     const field = collectionSpecSubset[fieldName];
-    let result = true;
 
     if (
       field.mandatory &&
       !has(field, "defaultValue") &&
-      _.isNil(documentSubset[fieldName])
+      isNil(documentSubset[fieldName])
     ) {
       manageErrorMessage(
         field.path,
@@ -392,129 +454,179 @@ class Validation {
       return false;
     }
 
-    if (!_.isNil(documentSubset[fieldName])) {
-      let nestedStrictness = false;
-      let fieldValues: unknown[];
+    if (isNil(documentSubset[fieldName])) {
+      return true;
+    }
 
-      if (field.multivalued.value) {
-        if (!Array.isArray(documentSubset[fieldName])) {
-          manageErrorMessage(
-            field.path,
-            errorMessages,
-            "The field must be multivalued, unary value provided.",
-            verbose,
-          );
-          return false;
-        }
+    const fieldValues = this.resolveFieldValues(
+      field,
+      documentSubset[fieldName],
+      errorMessages,
+      verbose,
+    );
 
-        if (
-          has(field.multivalued, "minCount") &&
-          documentSubset[fieldName].length < field.multivalued.minCount
-        ) {
-          manageErrorMessage(
-            field.path,
-            errorMessages,
-            `Not enough elements. Minimum count is set to ${field.multivalued.minCount}.`,
-            verbose,
-          );
-          return false;
-        }
+    if (fieldValues === null) {
+      return false;
+    }
 
-        if (
-          has(field.multivalued, "maxCount") &&
-          documentSubset[fieldName].length > field.multivalued.maxCount
-        ) {
-          manageErrorMessage(
-            field.path,
-            errorMessages,
-            `Too many elements. Maximum count is set to ${field.multivalued.maxCount}.`,
-            verbose,
-          );
-          return false;
-        }
+    const type = this.types[field.type];
+    const nestedStrictness = type.allowChildren
+      ? type.getStrictness(field.typeOptions, strictness)
+      : false;
 
-        fieldValues = documentSubset[fieldName];
-      } else {
-        if (Array.isArray(documentSubset[fieldName])) {
-          manageErrorMessage(
-            field.path,
-            errorMessages,
-            "The field is not a multivalued field; Multiple values provided.",
-            verbose,
-          );
-          return false;
-        }
+    let result = true;
 
-        fieldValues = [documentSubset[fieldName]];
+    for (const val of fieldValues) {
+      if (!this.validateFieldValue(field, val, errorMessages, verbose)) {
+        return false;
       }
 
-      if (this.types[field.type].allowChildren) {
-        nestedStrictness = this.types[field.type].getStrictness(
-          field.typeOptions,
-          strictness,
-        );
-      }
-
-      for (const val of fieldValues) {
-        const fieldErrors: string[] = [];
-
-        if (
-          !this.types[field.type].validate(field.typeOptions, val, fieldErrors)
-        ) {
-          if (fieldErrors.length === 0) {
-            // We still want to trigger an error, even if no message is provided
-            manageErrorMessage(
-              field.path,
-              errorMessages,
-              "An error has occurred during validation.",
-              verbose,
-            );
-          } else {
-            fieldErrors.forEach((message) =>
-              manageErrorMessage(field.path, errorMessages, message, verbose),
-            );
-          }
-          return false;
-        }
-
-        if (this.types[field.type].allowChildren && field.children) {
-          try {
-            if (
-              !this.recurseFieldValidation(
-                val,
-                field.children,
-                nestedStrictness,
-                errorMessages,
-                verbose,
-              )
-            ) {
-              result = false;
-            }
-          } catch (error) {
-            if (error.message === "strictness") {
-              manageErrorMessage(
-                field.path,
-                errorMessages,
-                `The field is set to "strict"; cannot add unspecified sub-field "${error.details.field}".`,
-                verbose,
-              );
-            } else if (verbose) {
-              manageErrorMessage(
-                field.path,
-                errorMessages,
-                error.message,
-                verbose,
-              );
-            } else {
-              throw error;
-            }
-
-            result = false;
-          }
-        }
+      if (type.allowChildren && field.children) {
+        result =
+          this.validateFieldChildren(
+            field,
+            val,
+            nestedStrictness,
+            errorMessages,
+            verbose,
+          ) && result;
       }
     }
+
     return result;
+  }
+
+  /**
+   * Answers the values to validate — the array itself for a multivalued field,
+   * a single-element list otherwise — or `null` once it has filed the reason
+   * the field's arity is wrong.
+   */
+  private resolveFieldValues(
+    field: StructuredFieldSpecification,
+    value: JSONObject,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): JSONObject[] | null {
+    if (!field.multivalued.value) {
+      if (Array.isArray(value)) {
+        manageErrorMessage(
+          field.path,
+          errorMessages,
+          "The field is not a multivalued field; Multiple values provided.",
+          verbose,
+        );
+        return null;
+      }
+
+      return [value];
+    }
+
+    if (!Array.isArray(value)) {
+      manageErrorMessage(
+        field.path,
+        errorMessages,
+        "The field must be multivalued, unary value provided.",
+        verbose,
+      );
+      return null;
+    }
+
+    if (
+      has(field.multivalued, "minCount") &&
+      value.length < field.multivalued.minCount
+    ) {
+      manageErrorMessage(
+        field.path,
+        errorMessages,
+        `Not enough elements. Minimum count is set to ${field.multivalued.minCount}.`,
+        verbose,
+      );
+      return null;
+    }
+
+    if (
+      has(field.multivalued, "maxCount") &&
+      value.length > field.multivalued.maxCount
+    ) {
+      manageErrorMessage(
+        field.path,
+        errorMessages,
+        `Too many elements. Maximum count is set to ${field.multivalued.maxCount}.`,
+        verbose,
+      );
+      return null;
+    }
+
+    return value;
+  }
+
+  /**
+   * Hands one value to the field's registered type.
+   */
+  private validateFieldValue(
+    field: StructuredFieldSpecification,
+    val: unknown,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
+    const fieldErrors: string[] = [];
+
+    if (this.types[field.type].validate(field.typeOptions, val, fieldErrors)) {
+      return true;
+    }
+
+    if (fieldErrors.length === 0) {
+      // We still want to trigger an error, even if no message is provided
+      manageErrorMessage(
+        field.path,
+        errorMessages,
+        "An error has occurred during validation.",
+        verbose,
+      );
+    } else {
+      fieldErrors.forEach((message) =>
+        manageErrorMessage(field.path, errorMessages, message, verbose),
+      );
+    }
+
+    return false;
+  }
+
+  /**
+   * Recurses into a value's children, turning this field's strictness breach
+   * into a message rather than an exception.
+   */
+  private validateFieldChildren(
+    field: StructuredFieldSpecification,
+    val: JSONObject,
+    nestedStrictness: boolean,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
+    try {
+      return this.recurseFieldValidation(
+        val,
+        field.children,
+        nestedStrictness,
+        errorMessages,
+        verbose,
+      );
+    } catch (error) {
+      if (error.message === "strictness") {
+        manageErrorMessage(
+          field.path,
+          errorMessages,
+          `The field is set to "strict"; cannot add unspecified sub-field "${error.details.field}".`,
+          verbose,
+        );
+      } else if (verbose) {
+        manageErrorMessage(field.path, errorMessages, error.message, verbose);
+      } else {
+        throw error;
+      }
+
+      return false;
+    }
   }
 
   /**
@@ -576,7 +688,7 @@ class Validation {
     verboseErrors = false,
   ): Promise<SpecificationValidationResult> {
     // We make a deep clone to avoid side effects
-    const specification = _.cloneDeep(collectionSpec);
+    const specification = cloneDeep(collectionSpec); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
 
     return (
       this.curateCollectionSpecification(
@@ -706,7 +818,7 @@ class Validation {
 
     for (const fieldName of Object.keys(collectionSpec.fields)) {
       const // We deep clone the field because we will modify it
-        fieldSpecClone = _.cloneDeep(collectionSpec.fields[fieldName]);
+        fieldSpecClone = cloneDeep(collectionSpec.fields[fieldName]); // NOSONAR structuredClone is not equivalent here: specifications and documents are user data, and a conversion does not get to change clone semantics
 
       try {
         const result = this.curateFieldSpecification(
@@ -718,7 +830,7 @@ class Validation {
         );
 
         if (result.isValid === false) {
-          errors = _.concat(errors, result.errors);
+          errors = errors.concat(result.errors);
           this.logger.error(result.errors.join("\n"));
         } else {
           const field = result.fieldSpec;
@@ -781,7 +893,7 @@ class Validation {
       return result;
     }
 
-    _.defaultsDeep(fieldSpec, {
+    defaultsDeep(fieldSpec, {
       mandatory: false,
       multivalued: {
         value: false,
@@ -900,77 +1012,14 @@ class Validation {
       );
     }
 
-    if (has(fieldSpec, "multivalued")) {
-      const multivaluedProps = ["value", "minCount", "maxCount"];
-      if (!checkAllowedProperties(fieldSpec.multivalued, multivaluedProps)) {
-        throwOrStoreError(
-          assertionError.get(
-            "unexpected_properties",
-            `${indexName}.${collectionName}.${fieldName}.multivalued`,
-            multivaluedProps.join(", "),
-          ),
-          verboseErrors,
-          errors,
-        );
-      }
-
-      if (!has(fieldSpec.multivalued, "value")) {
-        throwOrStoreError(
-          assertionError.get(
-            "missing_value",
-            `${indexName}.${collectionName}.${fieldName}.multivalued`,
-          ),
-          verboseErrors,
-          errors,
-        );
-      }
-
-      if (typeof fieldSpec.multivalued.value !== "boolean") {
-        throwOrStoreError(
-          assertionError.get(
-            "invalid_type",
-            `${indexName}.${collectionName}.${fieldName}.multivalued.value`,
-            "boolean",
-          ),
-          verboseErrors,
-          errors,
-        );
-      }
-
-      for (const unexpected of ["minCount", "maxCount"]) {
-        if (
-          !fieldSpec.multivalued.value &&
-          has(fieldSpec.multivalued, unexpected)
-        ) {
-          throwOrStoreError(
-            assertionError.get(
-              "not_multivalued",
-              `${indexName}.${collectionName}.${fieldName}`,
-              unexpected,
-            ),
-            verboseErrors,
-            errors,
-          );
-        }
-      }
-
-      if (
-        has(fieldSpec.multivalued, "minCount") &&
-        has(fieldSpec.multivalued, "maxCount") &&
-        fieldSpec.multivalued.minCount > fieldSpec.multivalued.maxCount
-      ) {
-        throwOrStoreError(
-          assertionError.get(
-            "invalid_range",
-            `${indexName}.${collectionName}.${fieldName}`,
-            "minCount",
-            "maxCount",
-          ),
-          verboseErrors,
-          errors,
-        );
-      }
-    }
+    checkMultivaluedSpecification(
+      fieldSpec,
+      indexName,
+      collectionName,
+      fieldName,
+      verboseErrors,
+      errors,
+    );
 
     if (errors.length > 0) {
       return { errors, isValid: false };
@@ -1085,6 +1134,92 @@ class Validation {
 }
 
 /**
+ * Checks a field's `multivalued` block. Lifted verbatim out of
+ * `curateFieldSpecificationFormat`, whose cognitive complexity the `.js` → `.ts`
+ * rename re-scored as new code.
+ */
+function checkMultivaluedSpecification(
+  fieldSpec: FieldSpecification,
+  indexName: string,
+  collectionName: string,
+  fieldName: string,
+  verboseErrors: boolean,
+  errors: string[],
+): void {
+  if (has(fieldSpec, "multivalued")) {
+    const multivaluedProps = ["value", "minCount", "maxCount"];
+    if (!checkAllowedProperties(fieldSpec.multivalued, multivaluedProps)) {
+      throwOrStoreError(
+        assertionError.get(
+          "unexpected_properties",
+          `${indexName}.${collectionName}.${fieldName}.multivalued`,
+          multivaluedProps.join(", "),
+        ),
+        verboseErrors,
+        errors,
+      );
+    }
+
+    if (!has(fieldSpec.multivalued, "value")) {
+      throwOrStoreError(
+        assertionError.get(
+          "missing_value",
+          `${indexName}.${collectionName}.${fieldName}.multivalued`,
+        ),
+        verboseErrors,
+        errors,
+      );
+    }
+
+    if (typeof fieldSpec.multivalued.value !== "boolean") {
+      throwOrStoreError(
+        assertionError.get(
+          "invalid_type",
+          `${indexName}.${collectionName}.${fieldName}.multivalued.value`,
+          "boolean",
+        ),
+        verboseErrors,
+        errors,
+      );
+    }
+
+    for (const unexpected of ["minCount", "maxCount"]) {
+      if (
+        !fieldSpec.multivalued.value &&
+        has(fieldSpec.multivalued, unexpected)
+      ) {
+        throwOrStoreError(
+          assertionError.get(
+            "not_multivalued",
+            `${indexName}.${collectionName}.${fieldName}`,
+            unexpected,
+          ),
+          verboseErrors,
+          errors,
+        );
+      }
+    }
+
+    if (
+      has(fieldSpec.multivalued, "minCount") &&
+      has(fieldSpec.multivalued, "maxCount") &&
+      fieldSpec.multivalued.minCount > fieldSpec.multivalued.maxCount
+    ) {
+      throwOrStoreError(
+        assertionError.get(
+          "invalid_range",
+          `${indexName}.${collectionName}.${fieldName}`,
+          "minCount",
+          "maxCount",
+        ),
+        verboseErrors,
+        errors,
+      );
+    }
+  }
+}
+
+/**
  * Narrows `object` to a plain object holding none but the allowed properties.
  */
 function checkAllowedProperties(
@@ -1123,9 +1258,9 @@ function curateStructuredFields(
 
     fields[i].forEach((field) => {
       const parent = getParent(structuredFields, field.path),
-        childKey = field.path[field.path.length - 1];
+        childKey = field.path.at(-1);
 
-      if (!parent.root && typeAllowsChildren.indexOf(parent.type) === -1) {
+      if (!parent.root && !typeAllowsChildren.includes(parent.type)) {
         throw assertionError.get("unexpected_children", parent.type);
       }
 
@@ -1191,62 +1326,80 @@ function throwOrStoreError(
  *
  * @throws {BadRequestError} when `structured` is false
  */
+function storeErrorMessage(
+  errorContext: string | string[],
+  errorHolder: VerboseErrorMessages,
+  message: string,
+): void {
+  if (errorContext === "document") {
+    if (!errorHolder.documentScope) {
+      errorHolder.documentScope = [];
+    }
+
+    errorHolder.documentScope.push(message);
+    return;
+  }
+
+  if (!errorHolder.fieldScope) {
+    errorHolder.fieldScope = {};
+  }
+
+  let pointer: FieldErrorScope = errorHolder.fieldScope;
+
+  for (const segment of errorContext) {
+    if (!pointer.children) {
+      pointer.children = {};
+    }
+
+    if (!has(pointer.children, segment)) {
+      pointer.children[segment] = {};
+    }
+    pointer = pointer.children[segment];
+  }
+
+  if (!has(pointer, "messages")) {
+    pointer.messages = [];
+  }
+
+  pointer.messages.push(message);
+}
+
+function throwErrorMessage(
+  errorContext: string | string[],
+  message: string,
+): never {
+  if (errorContext === "document") {
+    throw kerror.get("validation", "check", "failed_document", message);
+  }
+
+  // Everything that is not the "document" literal is a field path.
+  throw kerror.get(
+    "validation",
+    "check",
+    "failed_field",
+    Array.isArray(errorContext) ? errorContext.join(".") : errorContext,
+    message,
+  );
+}
+
 function manageErrorMessage(
   errorContext: string | string[],
   errorHolder: ErrorMessages,
   message: string,
   structured: boolean,
 ): void {
-  if (structured) {
-    // `structured` and the holder's shape are the same fact: `validate` builds
-    // an object exactly when `verbose` holds, and a list when it does not. The
-    // narrowing is what says so; the branch cannot be taken.
-    if (Array.isArray(errorHolder)) {
-      return;
-    }
-
-    if (errorContext === "document") {
-      if (!errorHolder.documentScope) {
-        errorHolder.documentScope = [];
-      }
-
-      errorHolder.documentScope.push(message);
-    } else {
-      if (!errorHolder.fieldScope) {
-        errorHolder.fieldScope = {};
-      }
-
-      let pointer = errorHolder.fieldScope;
-
-      for (let i = 0; i < errorContext.length; i++) {
-        if (!pointer.children) {
-          pointer.children = {};
-        }
-
-        if (!has(pointer.children, errorContext[i])) {
-          pointer.children[errorContext[i]] = {};
-        }
-        pointer = pointer.children[errorContext[i]];
-      }
-
-      if (!has(pointer, "messages")) {
-        pointer.messages = [];
-      }
-
-      pointer.messages.push(message);
-    }
-  } else if (errorContext === "document") {
-    throw kerror.get("validation", "check", "failed_document", message);
-  } else {
-    // Everything that is not the "document" literal is a field path.
-    throw kerror.get(
-      "validation",
-      "check",
-      "failed_field",
-      Array.isArray(errorContext) ? errorContext.join(".") : errorContext,
-      message,
-    );
+  if (!structured) {
+    throwErrorMessage(errorContext, message);
   }
+
+  // `structured` and the holder's shape are the same fact: `validate` builds an
+  // object exactly when `verbose` holds, and a list when it does not. The
+  // narrowing is what says so; the branch cannot be taken.
+  if (Array.isArray(errorHolder)) {
+    return;
+  }
+
+  storeErrorMessage(errorContext, errorHolder, message);
 }
 
 /**
@@ -1254,49 +1407,43 @@ function manageErrorMessage(
  * configuration when the internal index holds none — the database is not
  * necessarily prepared yet when this first runs.
  */
+function collectStoredSpecification(
+  validation: RawSpecification,
+  hit: { _id: string; _source: JSONObject },
+): void {
+  const { _id, _source } = hit;
+  const collectionName = `${_id.split("#")[0]}/${_id.split("#")[1]}`;
+
+  for (const required of ["index", "collection", "validation"]) {
+    if (!get(_source, required)) {
+      throw assertionError.get(
+        "incorrect_validation_format",
+        collectionName,
+        required,
+      );
+    }
+  }
+
+  if (!has(validation, _source.index)) {
+    validation[_source.index] = {};
+  }
+
+  validation[_source.index][_source.collection] = _source.validation;
+}
+
 function getValidationConfiguration(): Promise<RawSpecification> {
   return global.kuzzle.internalIndex
     .search("validations", {}, { from: 0, size: 1000 })
     .then((result) => {
-      let validation: RawSpecification = {};
-
-      if (result && Array.isArray(result.hits) && result.hits.length > 0) {
-        for (const { _source, _id } of result.hits) {
-          const collectionName = `${_id.split("#")[0]}/${_id.split("#")[1]}`;
-
-          if (!get(_source, "index")) {
-            throw assertionError.get(
-              "incorrect_validation_format",
-              collectionName,
-              "index",
-            );
-          }
-
-          if (!get(_source, "collection")) {
-            throw assertionError.get(
-              "incorrect_validation_format",
-              collectionName,
-              "collection",
-            );
-          }
-
-          if (!get(_source, "validation")) {
-            throw assertionError.get(
-              "incorrect_validation_format",
-              collectionName,
-              "validation",
-            );
-          }
-
-          if (!has(validation, _source.index)) {
-            validation[_source.index] = {};
-          }
-
-          validation[_source.index][_source.collection] = _source.validation;
-        }
-      } else if (global.kuzzle.config.validation) {
+      if (!result || !Array.isArray(result.hits) || result.hits.length === 0) {
         // We can't wait prepareDb as it runs outside of the rest of the start
-        validation = global.kuzzle.config.validation;
+        return global.kuzzle.config.validation || {};
+      }
+
+      const validation: RawSpecification = {};
+
+      for (const hit of result.hits) {
+        collectStoredSpecification(validation, hit);
       }
 
       return validation;
