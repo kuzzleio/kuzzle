@@ -8,9 +8,11 @@ export type InstallationConfig = {
 export type StartOptions = {
   import?: JSONObject;
   plugins?: JSONObject;
-  secretsFile?: JSONObject;
+  /** Path to the encrypted secrets file — see `lib/kuzzle/vault.ts`. */
+  secretsFile?: string;
   support?: JSONObject;
-  vaultKey?: JSONObject;
+  /** Key the encrypted secrets file is decrypted with. */
+  vaultKey?: string;
   installations?: Array<InstallationConfig>;
 };
 
