@@ -28,7 +28,7 @@ import type { StorageEngineElasticsearch } from "../types";
 import { storeScopeEnum } from "../core/storage/storeScopeEnum";
 import * as kerror from "../kerror";
 import createDebug from "../util/debug";
-import { Mutex } from "../util/mutex";
+import { Mutex } from "../util/mutex"; // NOSONAR: see init()
 
 const debug = createDebug("kuzzle:bootstrap:internalIndex");
 
@@ -109,10 +109,11 @@ class InternalIndexHandler extends Store {
   async init(): Promise<void> {
     await super.init(this.config.collections);
 
-    const mutex = new Mutex("InternalIndexBootstrap", {
-      timeout: -1,
-      ttl: 30000,
-    });
+    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
+    // incompatible acquisition/TTL formats and must not contend on the same
+    // key — swapping it is a behaviour change, deferred to TD-20 (#2688).
+    const lockOptions = { timeout: -1, ttl: 30000 };
+    const mutex = new Mutex("InternalIndexBootstrap", lockOptions); // NOSONAR
 
     await mutex.lock();
 
@@ -213,8 +214,11 @@ class InternalIndexHandler extends Store {
   }
 
   async _initSecret(): Promise<void> {
-    const { authToken, jwt } = global.kuzzle.config.security;
-    const configSeed = authToken?.secret ?? jwt?.secret;
+    // NOSONAR: `jwt` is the deprecated spelling of `authToken`, read second so
+    // an existing configuration keeps working. Dropping it is a breaking change
+    // for anyone who has not migrated, not a conversion's to make.
+    const { authToken, jwt } = global.kuzzle.config.security; // NOSONAR
+    const configSeed = authToken?.secret ?? jwt?.secret; // NOSONAR
 
     let storedSeed = await this.exists("config", this._JWT_SECRET_ID);
 
@@ -232,9 +236,9 @@ class InternalIndexHandler extends Store {
         "[!] Kuzzle is using a generated seed for authentication. This is suitable for development but should NEVER be used in production. See https://docs.kuzzle.io/core/2/guides/getting-started/deploy-your-application/",
       );
     }
-    global.kuzzle.secret = configSeed
-      ? configSeed
-      : (await this.get("config", this._JWT_SECRET_ID))._source.seed;
+    global.kuzzle.secret =
+      configSeed ||
+      (await this.get("config", this._JWT_SECRET_ID))._source.seed;
   }
 }
 

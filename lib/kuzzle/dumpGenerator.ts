@@ -33,11 +33,10 @@ import * as kerror from "../kerror";
 import { BadRequestError } from "../kerror/errors";
 
 class DumpGenerator {
-  private _dump: boolean;
+  private _dump = false;
   private readonly logger;
 
   constructor() {
-    this._dump = false;
     this.logger = global.kuzzle.log.child("dump:dumpGenerator");
   }
 
