@@ -20,6 +20,7 @@
  */
 
 export * from "./controllers/Controller";
+export * from "./ApiRoute";
 export * from "./controllers/ControllerDefinition";
 export * from "./controllers/ControllerRights";
 export * from "./ClientConnection";

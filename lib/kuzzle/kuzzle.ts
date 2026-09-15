@@ -101,7 +101,8 @@ class Kuzzle extends KuzzleEventEmitter {
   public config: KuzzleConfiguration;
   private _state: number = kuzzleStateEnum.STARTING;
   public log: Logger;
-  private rootPath: string;
+  /** Read by `PluginsManager` to locate the plugins directories. */
+  public rootPath: string;
   /**
    * Internal index bootstrapper and accessor
    */
@@ -369,7 +370,12 @@ class Kuzzle extends KuzzleEventEmitter {
 
     // flush both application and Kuzzle core loggers before leaving (Could happen even if some core/application components are not initialized)
     await this?.log?.flush?.();
-    await this?.pluginsManager?.application?.log?.flush?.();
+    // The application logger is NOT flushed here, and has never been: `log`
+    // lives on the application instance, while `pluginsManager.application` is
+    // the Plugin wrapper around it, which nothing assigns a `log` to. The
+    // optional chain made the call a silent no-op. Left as a finding rather
+    // than fixed here — routing the flush to the instance is a behaviour
+    // change, and this is a conversion. See ADR-0001 TD-51.
 
     process.exit(0);
   }

@@ -37,7 +37,10 @@ import createDebug from "../util/debug";
 import { has } from "../util/safeObject";
 import { HttpStream } from "../types";
 import type { Logger } from "../kuzzle/Logger";
-import type { NativeController } from "./controllers/baseController";
+import type {
+  BaseController,
+  NativeController,
+} from "./controllers/baseController";
 import type { KuzzleRequest } from "./request";
 
 const {
@@ -939,11 +942,16 @@ class Funnel {
    * @returns {Object} controller object
    * @throws {BadRequestError} If the asked controller or action is unknown
    */
-  getController(request: KuzzleRequest): NativeController {
-    for (const controllers of [
+  getController(request: KuzzleRequest): BaseController {
+    // `BaseController`, not `NativeController`: the second map holds plugin
+    // controllers, which extend the base and not the native one. The narrower
+    // return type described half of what this returns.
+    const controllerMaps: Map<string, BaseController>[] = [
       this.controllers,
       global.kuzzle.pluginsManager.controllers,
-    ]) {
+    ];
+
+    for (const controllers of controllerMaps) {
       const controller = controllers.get(request.input.controller);
 
       if (controller) {
@@ -1226,10 +1234,26 @@ function capitalize(string: string): string {
  * @param  {Request} request
  * @returns {Promise}
  */
-function doAction(controller: NativeController, request: KuzzleRequest) {
-  const ret = controller[request.input.action](request);
+function doAction(controller: BaseController, request: KuzzleRequest) {
+  // `Reflect.apply(Reflect.get(...))`, not `controller[action](...)`: the
+  // action is a runtime-built key and `BaseController` deliberately has no
+  // index signature (TD-28). `apply` rather than calling the result of `get`
+  // keeps the receiver — losing it is the exact bug sprint 5's Build and Run
+  // job caught.
+  const ret = Reflect.apply(
+    Reflect.get(controller, request.input.action),
+    controller,
+    [request],
+  );
 
-  if (!ret || typeof ret.then !== "function") {
+  // Same duck-type check as before, spelled so it narrows: a truthy non-object
+  // used to reach `ret.then` and read `undefined`, which took this branch too.
+  if (
+    !ret ||
+    typeof ret !== "object" ||
+    !("then" in ret) ||
+    typeof ret.then !== "function"
+  ) {
     return kerror.reject(
       "plugin",
       "controller",

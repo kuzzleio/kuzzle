@@ -349,3 +349,62 @@ Extractions, all verbatim: `resolveValidationBody`, `checkDocumentFields`, `chec
 A second gate run left one Critical — `checkMultivaluedSpecification` itself at 16 — because the block it had just received was wrapped in `if (has(fieldSpec, "multivalued"))`, which nests everything inside it. Inverted into a guard clause (`if (!has(…)) return;`), which is the sixth extraction and the only one that changes indentation rather than moving code.
 
 Left deliberately: `_.cloneDeep` ×3 against S4123's `structuredClone` suggestion, and `request.input.resource` against the deprecation warning — both `// NOSONAR` with the reason inline. Swapping clone semantics or migrating off `resource` ([TD-20](../type-debt-register.md#td-20)) are behaviour changes, and a conversion does not get to make those.
+
+
+## What was done (PR H5 — `plugin.js` + `pluginsManager.js`)
+
+2 files, 1 680 lines. **js 21 → 19**, strict **128 → 130**, `any` **205 → 204**, implicit-any **456 → 455**. Like H4, no spec effort: the pair measured 96.4% once [TD-50](../type-debt-register.md#td-50) was fixed.
+
+### A plugin is user data, and the types had to say so
+
+The hard part was not the wrapper, it was that `plugin.instance` is **an object a third party wrote**. The JavaScript indexed it freely — `plugin.instance[strategy.methods.verify]`, `plugin.instance[definition[action]]` — and every one of those became an error the moment the instance had a type.
+
+`lib/types/PluginInstance.ts` answers with an index signature of `unknown` plus the named members Kuzzle reads. That is the honest shape, and it forces the call sites to prove callability, which `bindPluginMethod` now does in one place instead of eight. Three types came out of the same reasoning:
+
+- **`PluginMethod`** — `(...args: unknown[]) => unknown`, what a `typeof … === "function"` check on a plugin member produces.
+- **`StrategyEntry` is `JSONObject`, not `StrategyDefinition[string]`.** `StrategyDefinition` is the *authoring* contract; `registerStrategy` receives something nothing has checked yet, and `validateStrategy` is what turns one into the other. Claiming the validated type at the entry point would have been a lie the runtime check exists to prevent.
+- **`PluginInstance.strategies` is `JSONObject`** for the same reason, while `lib/types/Plugin.ts` keeps `StrategyDefinition` for plugin authors.
+
+### Four declared types that described less than half of what they carried
+
+Each was fixed where the defect is, per the [TD-40](../type-debt-register.md#td-40) precedent:
+
+| declared | reality |
+| --- | --- |
+| `Funnel.getController(): NativeController` | one of the two maps it walks holds **plugin** controllers, which extend `BaseController` |
+| `registerPluginPipe(handler: PipeEventHandler)` | `PluginsManager.registerPipe` hands it the **callback** form, and the runner supports both — now `RegisteredPipeHandler` |
+| `registerPluginHook(fn: HookEventHandler)` | a hook resolved from a plugin member returns `unknown`, not `void \| Promise<void>` |
+| `Kuzzle.rootPath` `private` | read by `PluginsManager` to locate the plugins directories |
+
+### Two dead members the compiler found
+
+- **`Plugin._initCalled`** was set in the constructor and **never read**. What the manager sets — and what the specs assert — is `plugin.initCalled`, created ad hoc on the object. The dead field is gone; the live one is declared.
+- **`kuzzle.pluginsManager.application?.log?.flush?.()`** on shutdown is a **no-op and always has been**: `log` lives on the application *instance*, while `pluginsManager.application` is the `Plugin` wrapper around it, and nothing assigns a `log` there. The optional chain hid it. Left as a finding rather than fixed — routing the flush to the instance is a behaviour change. → [TD-51](../type-debt-register.md#td-51)
+
+### TD-49's last lazy `require` is gone
+
+`backend.ts` held `require("../plugin/plugin")` behind a `Reflect.defineProperty`, with a comment blaming a cyclic dependency. It was waiting on this conversion, and it is now a static import — which also let `PluginObject: any` become `typeof Plugin`, the `any` ratchet's 205 → 204.
+
+### Equivalence note
+
+1. **`hasStrategyMethod` returns a boolean rather than `undefined`** when the strategy is absent. It read `get(this.strategies, name)` and answered `strategy && has(...)`; it now indexes the typed map behind the same `has` own-property guard and answers `strategy !== undefined && has(...)`. Every caller used it as a condition.
+2. **`isConstructor` returns `false` for a non-function before trying `Reflect.construct`.** The original let the `try` throw and returned `false` from the `catch`; same answer, one fewer exception.
+3. **The verify adapter returns early if its trailing argument is not a function.** passport always passes a callback, so the branch cannot be taken; it is what lets the callback be invoked at all. Same shape as the narrowing H4 added to `manageErrorMessage`.
+4. **`doAction` uses `Reflect.apply(Reflect.get(controller, action), controller, [request])`.** `BaseController` deliberately carries no index signature ([TD-28](../type-debt-register.md#td-28)), and `_addAction` already writes through `Reflect.set`. `apply` rather than calling the result of `get` is deliberate: dropping the receiver there is precisely the bug sprint 5's `Build and Run` job caught.
+5. **The two Mocha specs now mock `node:fs` alongside `fs`.** The conversion writes `import fs from "node:fs"`, which compiles to `require("node:fs")`, and `mockrequire("fs", …)` does not intercept that. The source keeps the modern specifier; the specs follow it.
+
+### Gate-driven refactor (H5)
+
+SonarCloud failed the first run on **7 new Critical** (S3776: `_initControllers` 45, `checkControllerDefinition` 33, `_initApi` 22, `_initPipes`/`_initHooks` 21 each, `wrapStrategyVerify` 20, `loadFromDirectory` 16), **4 new Major** and **14 new Minor**. All pre-existing, all re-scored by the two renames.
+
+Extractions, verbatim: `loadPluginErrors`, `checkActionDefinition`, `checkHttpRoute` (plugin.ts); `resolveEventHandler`, `registerApiAction`, `registerLegacyAction`, `checkLegacyRoute`, `resolveVerifiedUser` (pluginsManager.ts).
+
+**`resolveEventHandler` is the one that is not only a split.** `_initPipes` and `_initHooks` carried the same twenty lines with two words changed — the error id and the deprecation message. They now share one method, so the gate asked for a deduplication the files already wanted.
+
+**Equivalence note, H5 — the three places this is not a straight cut:**
+
+1. **`_initPipes` gained a `typeof target !== "string"` guard** before reading `target.name`. A string has no `name`, so the original read `undefined` and skipped the branch; the guard says so instead of relying on it. `_initHooks` already had it.
+2. **`isPluginMethod` replaces three inline `typeof x === "function"` checks.** It is a *predicate*, not an assertion — the same shape `safeObject.isPlainObject` has — and it is what lets a plugin member be invoked without an `as`. The alternative was three casts, which the `casts` ratchet now prices, and pricing them is exactly what should make an author look for the predicate.
+3. **`!a?.b ?? c` became `!(a?.b ?? c)` in `checkControllerDefinition`.** The original parses as `(!a?.b) ?? c`, and `!x` is never nullish, so the fallback was dead. It happens to be equivalent **today only because the packaged default is `false`** — the two would differ the moment that default became `true`. Recorded here because the fix is a parenthesis and the reasoning is not.
+
+Left deliberately: `JSON.parse(JSON.stringify(config))` against S4123's `structuredClone`, `// NOSONAR` with the reason inline — a plugin's configuration is user data and a conversion does not change clone semantics.

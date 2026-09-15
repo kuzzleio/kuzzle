@@ -39,6 +39,7 @@ describe("Plugin", () => {
     fsMock = new FsMock();
 
     mockrequire("fs", fsMock);
+    mockrequire("node:fs", fsMock);
     mockrequire("testPlugin", TestPlugin);
     mockrequire(`${rootDir}/testPlugin/manifest.json`, manifest);
     mockrequire("testPlugin/package.json", packageJson);

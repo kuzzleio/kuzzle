@@ -26,6 +26,7 @@ import jsonToYaml from "json2yaml";
 import packagejson from "../../../package.json";
 
 import * as kerror from "../../kerror";
+import type { ApiRoute } from "../../types/ApiRoute";
 import type { KuzzleRequest } from "../request";
 import { NativeController } from "./baseController";
 
@@ -33,13 +34,6 @@ interface ApiActionDefinition {
   action: string;
   controller: string;
   http?: Array<{ path: string; url: string; verb: string }>;
-}
-
-interface ApiRoute {
-  controller: string;
-  action: string;
-  path: string;
-  verb: string;
 }
 
 /**
