@@ -19,12 +19,12 @@
  * limitations under the License.
  */
 
-import assert from "assert";
-import fs from "fs";
-import path from "path";
+import assert from "node:assert";
+import fs from "node:fs";
+import path from "node:path";
 
-import _ from "lodash";
 import { Vault } from "kuzzle-vault";
+import isEmpty from "lodash/isEmpty";
 
 // The Vault package remove the variable from env after reading it and we have
 // to instantiate the Vault two times with Kaaf (one before init and one after)
@@ -46,8 +46,8 @@ function load(vaultKey?: string, secretsFile?: string): Vault {
 
   let key = vaultKey;
   if (
-    _.isEmpty(vaultKey) &&
-    (!_.isEmpty(process.env.KUZZLE_VAULT_KEY) || !_.isEmpty(ENV_VAULT_KEY))
+    isEmpty(vaultKey) &&
+    (!isEmpty(process.env.KUZZLE_VAULT_KEY) || !isEmpty(ENV_VAULT_KEY))
   ) {
     // Keep the vault key value when reading it from the env
     key = ENV_VAULT_KEY = process.env.KUZZLE_VAULT_KEY || ENV_VAULT_KEY;
@@ -55,7 +55,7 @@ function load(vaultKey?: string, secretsFile?: string): Vault {
 
   const fileExists = fs.existsSync(encryptedSecretsFile);
   // Abort if a custom secrets file has been provided but Kuzzle can't load it
-  if (!_.isEmpty(process.env.KUZZLE_SECRETS_FILE) || !_.isEmpty(secretsFile)) {
+  if (!isEmpty(process.env.KUZZLE_SECRETS_FILE) || !isEmpty(secretsFile)) {
     assert(
       fileExists,
       `A secret file has been provided but Kuzzle cannot find it at "${encryptedSecretsFile}".`,
@@ -65,14 +65,14 @@ function load(vaultKey?: string, secretsFile?: string): Vault {
   // Abort if a secret file is found (default or custom)
   // but no vault key has been provided
   assert(
-    !(fileExists && _.isEmpty(key)),
+    !(fileExists && isEmpty(key)),
     "A secret file has been provided but Kuzzle cannot find the Vault key. Aborting.",
   );
 
   // Abort if a vault key has been provided
   // but no secrets file can be loaded (default or custom)
   assert(
-    !(!_.isEmpty(key) && !fileExists),
+    !(!isEmpty(key) && !fileExists),
     `A Vault key is present but Kuzzle cannot find the secret file at "${encryptedSecretsFile}". Aborting.`,
   );
 
