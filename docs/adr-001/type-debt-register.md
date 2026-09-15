@@ -58,6 +58,7 @@
 | [TD-47](#td-47) | 🟡 low | Enforcement | CI hygiene: no `concurrency` group, a pointless Node matrix on `lint`, an undefined `NODE_LTS_ACTIVE_VERSION`, no least-privilege — [#2734](https://github.com/kuzzleio/kuzzle/issues/2734) | XS | ✅ |
 | [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ✅ |
 | [TD-49](#td-49) | 🟠 med | Tests | The vitest tree cannot load anything reaching `lib/api/controllers`: 25 `import x = require()` reach Node's resolver and die on a `.ts` path — [#2739](https://github.com/kuzzleio/kuzzle/issues/2739) | M | ✅ |
+| [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | 🟦 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -778,3 +779,30 @@ Require stack:
   3. **a lazy `require()` in a constructor body** — `pluginContext`'s `require("../validation/baseType")`, now a static import (`baseType` has no runtime import of its own, so there was no cycle to break). One other survives, `backend.ts`'s `require("../plugin/plugin")`, and it cannot be static until H5 converts `plugin.js`.
 - **The witness is a test, not a count.** `tests/core/plugin/privilegedContext.test.ts` is back, this time with **no mock of any kind** — the shape TD-46 wanted and could not have — and it replaces the Mocha spec rather than sitting beside it, so **mocha 150 → 149**. Without it nothing would fail if wall (1) came back, since `tsc` is blind to all of this by construction.
 - **The generalisable part, second half:** *"this is a style rule" and "this is what makes the program loadable" can be the same rule.* `consistent-type-imports` reads as a lint preference right up until a runner that actually executes the import graph asks for it.
+
+
+### TD-50
+**c8's merge loses coverage for any module loaded more than once in a process** · 🔴 high · `.ci/scripts/merge-coverage.ts`, `package.json`
+
+Found while opening sprint 6's H4, which [step 09](steps/09-sprint-6-core-ii.md) had sized as a **+390 covered-line spec effort** on `lib/core/validation/validation.js` (36.2%). The file turned out to be **99.2%** covered by the specs it already has. There was no spec effort to do.
+
+**The tell was in the report all along: line coverage far below branch coverage.** `validation.js` read 36% of lines against **93% of branches**. Those two cannot diverge that way in an honestly-measured file — a branch cannot be exercised on a line that never ran, so branches sit at or below lines. Every one of the five files left to convert in the sprint carried the same signature, +24 to +57 points.
+
+**The mechanism.** `mock-require`'s `reRequire` gives each test a fresh module instance, and **43 spec files use it**. V8 then compiles the module several times and the process reports several `ScriptCoverage` entries for one URL. c8 merges those with `mergeProcessCovs` (`@bcoe/v8-coverage`), which works on **V8 ranges, before conversion**, and that merge is lossy — a function V8 never compiled in one instance is *not reported* there, which is not the same as *executed zero times*, and the range merge cannot tell the two apart.
+
+Measured on `validation.js` with three spec files, the three instances and the two merges:
+
+| | statements covered (of 1180) |
+| --- | ---: |
+| scriptId 1809 | 186 |
+| scriptId 2141 | 878 |
+| scriptId 2216 | 995 |
+| **c8's report** | **508** ← below its own largest input |
+| **merged as istanbul** | **1171** |
+
+The three instances produce an **identical** 1180-entry `statementMap`, so merging the converted `FileCoverage` objects is a per-key sum and is exactly right. The loss is entirely in doing it at the V8 level first.
+
+- **Fix:** `.ci/scripts/merge-coverage.ts` re-derives `coverage/mocha/lcov.info` from c8's raw temp directory, converting each `ScriptCoverage` separately through `v8-to-istanbul` and merging the results. Wired into `npm run test:unit:mocha:coverage`, so CI and `pr-preflight` both get it; `prepare-coverage.ts` then runs on the result unchanged.
+- **Blast radius.** Overall mocha coverage **81.4% → 92.7%**; 29 files gain more than 5 points, several enormously (`cluster/subscriber.js` 28.3% → 98.9%, `cluster/publisher.js` 34.2% → 99.4%, `core/auth/passportWrapper.ts` 52.7% → 100%). It has been understating the gate since c8 was introduced, for `.ts` conversions as much as for `.js`.
+- **Which direction it failed in:** *closed*. Understated coverage blocks work, it does not let defects through — no conversion was waved past on a bad number. What it cost is plan: the sprint was sequenced, and two PRs sized, against phantom debt.
+- **The generalisable part:** *a coverage number is the output of a merge, and a merge is a claim about what two measurements have in common.* Every other gate in this ADR reads one number from one run. This one silently combined several and the combination was wrong — and the arithmetic that would have caught it (branch > line is impossible) was sitting in the same report from the start.

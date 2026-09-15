@@ -92,23 +92,25 @@ The gate scores a PR's **aggregate**, not each file, so the blocks are formed to
 | **H1** | 14 | 916 | 6 | 99.3% | — |
 | **H2** | 12 | 1052 | 123 | 88.3% | — |
 | **H3** | 3 | 88 | 21 | 76.1% | +4 |
-| **H4** | 1 | 890 | 568 | 36.2% | +390 |
-| **H5** | 2 | 1178 | 531 | 54.9% | +296 |
-| **H6** | 2 | 1088 | 431 | 60.4% | +214 |
-| **all** | 34 | 5212 | 1680 | 67.8% | |
+| **H4** | 1 | 890 | ~~568~~ **7** | ~~36.2%~~ **99.2%** | ~~+390~~ **—** |
+| **H5** | 2 | 1178 | ~~531~~ **43** | ~~54.9%~~ **96.4%** | ~~+296~~ **—** |
+| **H6** | 2 | 1088 | ~~431~~ **61** | ~~60.4%~~ **94.4%** | ~~+214~~ **—** |
+| **all** | 34 | 5212 | — | — | |
+
+> ⚠️ **The H4/H5/H6 figures in this table were wrong when it was written (2026-09-11); the struck-through numbers are what it said.** They came from a coverage report that loses data for any module loaded more than once in a process — [TD-50](../type-debt-register.md#td-50), [#2744](https://github.com/kuzzleio/kuzzle/issues/2744). Corrected values in bold. **The roughly +900 covered lines this table asked for do not exist**, and the three PRs it classified as spec efforts are plain conversions. See *The H4 that wasn't* below.
 
 Reading that table:
 
 - **H1 and H2 are conversions.** They clear the gate on existing specs with room to spare and can move immediately, in parallel.
 - **H3 is a conversion plus four lines of test.** `router.js` (79.3%) is carried by H2's aggregate; the three plugin leaves are only 88 lines between them, so their block lands at 76.1% and needs a handful of assertions — not a spec effort.
-- **H4, H5 and H6 are spec efforts with a rename at the end**, the shape sprint 5 established for `clientAdapter`. Together they need roughly **+900 covered lines**. `validation.js` alone needs +390 and is the largest single piece of work in the sprint.
+- ~~**H4, H5 and H6 are spec efforts with a rename at the end**, the shape sprint 5 established for `clientAdapter`. Together they need roughly **+900 covered lines**. `validation.js` alone needs +390 and is the largest single piece of work in the sprint.~~ **False, on a bad measurement** ([TD-50](../type-debt-register.md#td-50)): all five files are above 80% already, so H4, H5 and H6 are **plain conversions** and the sprint has no spec effort left in it.
 
 H1 → H3 are independent of each other and of H4 → H6; the leaves go first so `validation.js` (H4) is converted against already-typed types.
 
 ## Known risks, before starting
 
 - **`httpwsProtocol.js` (865 measurable lines, 61.7%)** is the riskiest file of the whole migration: HTTP *and* WebSocket entrypoint, with its uncovered third largely error and back-pressure paths, where a regression is not caught by unit tests. Sprint 5's `Build and Run` job caught exactly that class of bug (a dynamic method call turned into a property read, losing its receiver) — keep that job in mind as the real net here.
-- **`validation.js` at 36.2%** is the lowest-covered file in scope and the most branch-heavy (recursive schema walking). Its three existing specs (`init`, `util`, `validate`) cover the happy paths.
+- ~~**`validation.js` at 36.2%** is the lowest-covered file in scope and the most branch-heavy (recursive schema walking). Its three existing specs (`init`, `util`, `validate`) cover the happy paths.~~ **It is at 99.2%** — the three specs cover far more than the happy paths, and the 36.2% was [TD-50](../type-debt-register.md#td-50). The phrase *the most branch-heavy* is the part that should have raised the alarm: the report said 93% of branches next to 36% of lines.
 - **The plugin machinery is the API surface third-party plugins are written against.** The conversion must not change the shape of what `pluginContext` hands out; `lib/core/plugin/pluginContext.ts` is already TS and typed, so most of the risk sits in `plugin.js`'s manifest and loading paths.
 - **`fail-fast: false` is now set on the functional matrix** and the readiness gate is fixed ([TD-33](../type-debt-register.md#td-33)), so a flaky variant no longer hides the other 29 results during this sprint's re-runs.
 
@@ -117,7 +119,7 @@ H1 → H3 are independent of each other and of H4 → H6; the leaves go first so
 Unchanged from step 06, restated because this sprint is long:
 
 - `export =` for modules consumed by JS; no new written `any`, no `@ts-ignore`, no `!`.
-- All **five** ratchets green, baselines updated **in the same PR** (`js`, `mocha`, `any`, `implicit-any`, `cpd-exclusions`).
+- All **six** ratchets green, baselines updated **in the same PR** (`js`, `mocha`, `any`, `implicit-any`, `casts`, `cpd-exclusions`).
 - Strict adoption when the converted file is clean (`npm run test:strict -- --candidates` must come back empty).
 - A vitest spec for any file whose coverage the PR relies on, under `tests/` mirroring the source tree.
 - A gate-driven, behaviour-preserving refactor is **in scope** when the rename's new-code score forces it — with a verbatim-extraction equivalence note in this file.
@@ -274,3 +276,25 @@ Run on the H3 branch, 2026-09-11 (rebased on `2-dev` after H2 merged):
 - `.ci/scripts/docker-test.sh unit mocha` — **3027 passing** (3030 − the 3 replaced)
 - `.ci/scripts/docker-test.sh unit vitest` — **189 passing** (183 + 6)
 - `eslint` + `prettier` — clean
+
+
+## The H4 that wasn't (2026-09-15)
+
+H4 opened as the largest single piece of work in the sprint: `validation.js`, 36.2% covered, **+390 covered lines** to write before the rename. The first step was to reproduce that number. It reproduced exactly — `LF:890 LH:322` — and then did not survive being looked at.
+
+**Three facts that cannot all be true of a real measurement:**
+
+1. **Branch coverage was 93.5% against 36.2% of lines.** A branch cannot be exercised on a line that never ran, so branches sit at or below lines. A +57 point gap is not a property a file can have.
+2. **Coverage was not monotonic.** `init.test.js` run alone covered 785 lines; adding `validate.test.js` and `util.test.js` brought the total *down* to 508. Adding tests cannot remove coverage.
+3. **The union of the three specs, each run in its own process, was 835 of 890 measurable lines — 93.8%**, which is where branch coverage had been pointing the whole time.
+
+The cause is [TD-50](../type-debt-register.md#td-50): 43 specs use `mock-require`'s `reRequire`, V8 therefore compiles those modules several times, and c8 merges the resulting `ScriptCoverage` entries at the **V8 range** level, before conversion, which loses coverage. Merging the same raw data as istanbul `FileCoverage` gives 1171 of 1180 statements where c8 gave 508 — *below its own largest single input*.
+
+**What this costs and what it does not.** Nothing shipped on a false pass: the error understates coverage, so it fails closed, blocking work rather than admitting defects. What it cost is plan. Two of this sprint's six PRs were sized, and all three remaining ones classified, against debt that was not there.
+
+**Two wrong turns on the way, both worth recording**, because both are the failure this ADR keeps meeting — *a measurement that answers a slightly different question than the one asked*:
+
+- The first diagnosis was *the source map is misaligned*, from function records landing 90 lines away from their declaration. That was real, but it was a **symptom**: those records belonged to a different instance of the module, not to a shifted map. The check that would have refuted it immediately — do the instances share a `statementMap`? — is the one that eventually did (they do, all 1180 entries).
+- The generalising check after it, *how many files show duplicated function names in the report*, flagged 16% of `.ts` files. That predicate was wrong in exactly the way `as [A-Z]` was wrong for [TD-43](../type-debt-register.md#td-43): a file may legitimately hold two functions of one name, and a class constructor legitimately carries its class's name. The signal that held up is arithmetic on the report itself — **branches above lines** — and it needs no predicate at all.
+
+**Consequence for the sprint.** H4, H5 and H6 are conversions. Each file's definition of done is unchanged except for the coverage clause, which all five already satisfy.

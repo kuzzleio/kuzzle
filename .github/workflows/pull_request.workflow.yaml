@@ -193,6 +193,13 @@ jobs:
       # coverage/vitest) and sonar-project.properties lists both. Before ADR-0001
       # step 06 only mocha ran here, and `.ts` was coverage-excluded outright, so
       # every JS->TS conversion silently left the coverage gate (TD-24).
+      # The npm script runs c8 and then re-derives its lcov with
+      # .ci/scripts/merge-coverage.ts. A module loaded twice in one process
+      # (43 specs use mock-require's reRequire) yields several V8
+      # ScriptCoverage entries for one file, and c8's range-level merge loses
+      # coverage between them — it reported validation.js at 36% of lines
+      # against 93% of branches, and the five files left to convert in sprint 6
+      # were all understated by 30 to 60 points (TD-50).
       - name: Mocha coverage
         run: npm run test:unit:mocha:coverage
         shell: bash
