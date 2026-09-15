@@ -1,8 +1,8 @@
 # Step 09 — Sprint 6: `lib/core` II (validation, plugin, network)
 
-**Status:** 🟦 In progress — opened 2026-09-11
-**Date:** 2026-09-11 → …
-**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) · H3 [#2724](https://github.com/kuzzleio/kuzzle/pull/2724)
+**Status:** ✅ Done — 2026-09-11 → 2026-09-15, frozen
+**Date:** 2026-09-11 → 2026-09-15
+**PR(s):** H1 [#2722](https://github.com/kuzzleio/kuzzle/pull/2722) · H2 [#2723](https://github.com/kuzzleio/kuzzle/pull/2723) · H3 [#2724](https://github.com/kuzzleio/kuzzle/pull/2724) · H4 [#2746](https://github.com/kuzzleio/kuzzle/pull/2746) · H5 [#2748](https://github.com/kuzzleio/kuzzle/pull/2748) · H6 [#2750](https://github.com/kuzzleio/kuzzle/pull/2750)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -436,3 +436,55 @@ All three are preserved exactly and declared, so the compiler holds them. Fixing
 4. **`Buffer.from(message ?? new ArrayBuffer(0))`** replaces `Buffer.from(message || "")` in the close handler: the argument is an `ArrayBuffer`, and the empty-string default only ever stood in for "nothing".
 5. **The `kuzzleDebugger` narrows with a predicate** (`isSocketRegistry`) rather than `instanceof`: importing the concrete protocol as a *value* would add a runtime edge to the graph, which is the shape [TD-49](../type-debt-register.md#td-49) spent a PR removing.
 6. **Three specs now mock `node:fs` / `node:zlib`** alongside the bare specifiers, for the same reason as H5.
+
+### Gate-driven refactor (H6)
+
+Same shape as H5, one round later. The two renames re-scored 1 617 lines as new
+code and SonarCloud answered with **1 Critical**, **1 Major** and **15 Minor** —
+every one of them pre-existing.
+
+The Critical was `httpParseContent` at a cognitive complexity of 16. The
+multipart branch carried it: a loop with a size guard and a file/text split
+nested two deep. It is now `httpParseMultipart`, a private method that answers a
+**boolean** and leaves the error to the caller's callback, so `httpParseContent`
+keeps its single `cb` contract.
+
+The rest, all behaviour-preserving:
+
+| file | what the analyser was looking at |
+| --- | --- |
+| `entryPoint.ts` | `_clients` is assigned once → `readonly`; five `client && client.protocol` / `!client \|\| !client.protocol` chains → optional chaining, or plain access where the guard above already narrowed |
+| `httpMessage.ts` | the body union had three spellings → one `HttpMessageContent` alias |
+| `httpwsProtocol.ts` | `HTTP_SKIPPED_HEADERS` → `Set`/`.has()`; the indexed channel loop → `for-of`; the allowed-content-type check → `.includes()`; the body-parse `catch (e)` drops its unused binding and says why the parser message is not propagated |
+
+**`super.init` was the one worth doing rather than silencing.** The call was
+`super.init(null, entrypoint)` — the overload [TD-41](../type-debt-register.md#td-41)
+deprecated. The name comes from the constructor (`super("websocket")`), so the
+current one-argument overload has always been the right call here; the deprecated
+shape was never needed.
+
+**`url.parse` stays**, with the reason on the line. `message.url` is a path with
+no origin, so the WHATWG parser needs a base — and it *throws* where the legacy
+one tolerates a malformed URL. Swapping them changes what a bad request does,
+which is not a decision a conversion gets to make.
+
+### What the first H5 pass got wrong about `// NOSONAR`
+
+Two findings survived H5's gate-driven refactor into a second analysis, and both
+are worth recording because neither is about the code.
+
+1. **`resolveVerifiedUser` was still at 17.** The first extraction lifted it out
+   of `wrapStrategyVerify` whole, which moved the complexity rather than reducing
+   it. The `kuid` branch — a nested type check wrapped around a `try`/`catch`
+   with its own error triage — is now `resolveKuid`.
+2. **A `// NOSONAR` on a leading comment line does nothing.** The marker must sit
+   on the line the analyser flags, and for the plugin-config clone that line is
+   the `JSON.parse(`. Prettier wraps the call across three lines and pushes any
+   trailing comment onto its own line, so the fix was to hoist the looked-up
+   config into a local — which keeps the clone a single expression the marker can
+   ride on. The rationale moved to the lines above, where Prettier leaves it.
+
+The rule that follows: **a gate-driven refactor is not done when the local checks
+pass.** Cognitive complexity is recomputed on the extracted function, and
+`NOSONAR` placement is only observable in an analysis. Both need the real
+SonarCloud run, which is why `wrapup` waits for it.
