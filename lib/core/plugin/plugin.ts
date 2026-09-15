@@ -127,13 +127,13 @@ class Plugin {
   init(name: string): void {
     this.name = name;
 
-    if (global.kuzzle.config.plugins[this.name]) {
-      // NOSONAR structuredClone is not equivalent: a plugin's configuration is
-      // user data that has been through JSON, and swapping clone semantics in a
+    const configured = global.kuzzle.config.plugins[this.name];
+
+    if (configured) {
+      // structuredClone is not equivalent: a plugin's configuration is user
+      // data that has been through JSON, and swapping clone semantics in a
       // conversion is out of scope.
-      this.config = JSON.parse(
-        JSON.stringify(global.kuzzle.config.plugins[this.name]),
-      );
+      this.config = JSON.parse(JSON.stringify(configured)); // NOSONAR
     }
 
     // check plugin privileged prerequisites
