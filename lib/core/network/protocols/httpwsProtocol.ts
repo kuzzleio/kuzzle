@@ -692,29 +692,9 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     const type = message.headers["content-type"] || "";
 
     if (type.includes("multipart/form-data")) {
-      const parts = uWS.getParts(content, message.headers["content-type"]);
-      message.content = {};
-
-      if (!parts) {
-        cb();
+      if (!this.httpParseMultipart(message, content)) {
+        cb(HTTP_FILE_TOO_LARGE_ERROR);
         return;
-      }
-
-      for (const part of parts) {
-        if (part.data.byteLength > this.maxFormFileSize) {
-          cb(HTTP_FILE_TOO_LARGE_ERROR);
-          return;
-        }
-
-        if (part.filename) {
-          message.content[part.name] = {
-            encoding: part.type,
-            file: Buffer.from(part.data).toString("base64"),
-            filename: part.filename,
-          };
-        } else {
-          message.content[part.name] = Buffer.from(part.data).toString();
-        }
       }
     } else if (type.includes("application/x-www-form-urlencoded")) {
       message.content = querystring.parse(content.toString());
@@ -734,6 +714,41 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     }
 
     cb();
+  }
+
+  /**
+   * Fills `message.content` from a multipart/form-data payload, file parts
+   * base64-encoded and the rest read as text.
+   *
+   * Returns false when a part is over `maxFormFileSize`, leaving the caller to
+   * raise the error — a boolean rather than a throw so `httpParseContent` keeps
+   * answering through its callback, and split out of it to stay under the
+   * cognitive complexity ceiling the `.js` → `.ts` rename re-scores as new code.
+   */
+  private httpParseMultipart(message: HttpMessage, content: Buffer): boolean {
+    const parts = uWS.getParts(content, message.headers["content-type"]);
+
+    message.content = {};
+
+    if (!parts) {
+      return true;
+    }
+
+    for (const part of parts) {
+      if (part.data.byteLength > this.maxFormFileSize) {
+        return false;
+      }
+
+      message.content[part.name] = part.filename
+        ? {
+            encoding: part.type,
+            file: Buffer.from(part.data).toString("base64"),
+            filename: part.filename,
+          }
+        : Buffer.from(part.data).toString();
+    }
+
+    return true;
   }
 
   httpProcessRequest(response: uWS.HttpResponse, message: HttpMessage): void {
