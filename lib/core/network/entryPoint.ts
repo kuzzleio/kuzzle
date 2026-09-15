@@ -56,7 +56,7 @@ const DEFAULT_PROTOCOLS = [HttpWsProtocol, MqttProtocol, InternalProtocol];
 class EntryPoint implements NetworkEntryPoint {
   public config: ServerConfiguration;
   public protocols: Map<string, Protocol<unknown>>;
-  private _clients: Map<string, ClientConnection>;
+  private readonly _clients: Map<string, ClientConnection>;
   public accessLogger: AccessLogger;
   public isShuttingDown: boolean;
   public logger: ReturnType<typeof global.kuzzle.log.child>;
@@ -156,7 +156,7 @@ class EntryPoint implements NetworkEntryPoint {
 
     const client = this._clients.get(connectionId);
 
-    if (!client || !client.protocol) {
+    if (!client?.protocol) {
       return;
     }
 
@@ -164,7 +164,7 @@ class EntryPoint implements NetworkEntryPoint {
       this.protocols.get(client.protocol).joinChannel(channel, connectionId);
     } catch (e) {
       this.logger.error(
-        `[join] protocol ${client && client.protocol} failed: ${e.message}`,
+        `[join] protocol ${client.protocol} failed: ${e.message}`,
       );
     }
   }
@@ -178,7 +178,7 @@ class EntryPoint implements NetworkEntryPoint {
 
     const client = this._clients.get(connectionId);
 
-    if (!client || !client.protocol) {
+    if (!client?.protocol) {
       return;
     }
 
@@ -186,9 +186,7 @@ class EntryPoint implements NetworkEntryPoint {
       this.protocols.get(client.protocol).leaveChannel(channel, connectionId);
     } catch (e) {
       this.logger.error(
-        `[leave channel] protocol ${client && client.protocol} failed: ${
-          e.message
-        }`,
+        `[leave channel] protocol ${client.protocol} failed: ${e.message}`,
       );
     }
   }
@@ -374,7 +372,7 @@ class EntryPoint implements NetworkEntryPoint {
 
     const client = this._clients.get(data.connectionId);
 
-    if (!client || !client.protocol) {
+    if (!client?.protocol) {
       return;
     }
 

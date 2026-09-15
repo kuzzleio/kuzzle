@@ -84,7 +84,7 @@ const HTTP_ALLOWED_CONTENT_TYPES = [
   "application/x-www-form-urlencoded",
   "multipart/form-data",
 ];
-const HTTP_SKIPPED_HEADERS = ["content-length", "set-cookie"];
+const HTTP_SKIPPED_HEADERS = new Set(["content-length", "set-cookie"]);
 const HTTP_HEADER_CONNECTION = Buffer.from("Connection");
 const HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN = Buffer.from(
   "Access-Control-Allow-Origin",
@@ -159,7 +159,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
   }
 
   async init(entrypoint: NetworkEntryPoint): Promise<boolean> {
-    super.init(null, entrypoint);
+    super.init(entrypoint);
 
     this.config = entrypoint.config.protocols;
 
@@ -256,8 +256,8 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
     const payload = data.payload;
 
-    for (let i = 0; i < data.channels.length; i++) {
-      payload.room = data.channels[i];
+    for (const channel of data.channels) {
+      payload.room = channel;
       this.wsSend(socket, Buffer.from(JSON.stringify(payload)));
     }
   }
@@ -580,11 +580,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
           ? contentTypeHeader.slice(0, contentTypeParamIndex).trim()
           : contentTypeHeader.trim();
 
-      if (
-        !this.httpConfig.opts.allowedContentTypes.some(
-          (allowed: string) => contentType === allowed,
-        )
-      ) {
+      if (!this.httpConfig.opts.allowedContentTypes.includes(contentType)) {
         this.httpSendError(
           message,
           response,
@@ -705,7 +701,10 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
           { message, payload: JSON.parse(content.toString()) },
         );
         message.content = payload;
-      } catch (e) {
+      } catch {
+        // The parser error is deliberately dropped: `body_parse_failed` already
+        // carries the offending payload, and the raw message leaks internals of
+        // whichever parser ran to the client.
         cb(
           kerrorHTTP.get("body_parse_failed", content.toString().slice(0, 50)),
         );
@@ -834,8 +833,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     // Access-Control-Allow-Origin Logic
     if (
       request.response.headers["Access-Control-Allow-Origin"] === undefined &&
-      message.headers &&
-      message.headers.origin
+      message.headers?.origin
     ) {
       response.writeHeader(
         HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
@@ -853,7 +851,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
     for (const [key, value] of Object.entries(request.response.headers)) {
       // Skip some headers that are not allowed to be sent or modified
-      if (HTTP_SKIPPED_HEADERS.includes(key.toLowerCase())) {
+      if (HTTP_SKIPPED_HEADERS.has(key.toLowerCase())) {
         continue;
       }
 
@@ -1052,7 +1050,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
       }
 
       // Access-Control-Allow-Origin Logic
-      if (message.headers && message.headers.origin) {
+      if (message.headers?.origin) {
         if (global.kuzzle.config.internal.allowAllOrigins) {
           response.writeHeader(
             HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN,
@@ -1097,9 +1095,13 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     // what the conversion could not express. Each branch is the original one.
     if (!data.raw) {
       let indent = 0;
-      const parsedUrl = url.parse(message.url, true);
+      // `url.parse` is legacy, but `message.url` is a path with no origin, so
+      // the WHATWG parser needs a base, and it throws where this one tolerates
+      // a malformed URL. Swapping them changes what a bad request does, which
+      // is not a decision the conversion gets to make.
+      const parsedUrl = url.parse(message.url, true); // NOSONAR
 
-      if (parsedUrl.query && parsedUrl.query.pretty !== undefined) {
+      if (parsedUrl.query?.pretty !== undefined) {
         indent = 2;
       }
 
