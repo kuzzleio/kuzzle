@@ -1,6 +1,6 @@
 # Step 08 — Type-debt backlog, worked in parallel with the sprints
 
-**Status:** 🟦 In progress — 20 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-44 · TD-45 · TD-46 · TD-47 · TD-48), TD-33, TD-43 and TD-49 open
+**Status:** 🟦 In progress — 22 findings closed (TD-21 · TD-22 · TD-23 · TD-26 through TD-32 · TD-38 · TD-39 · TD-40 · TD-41 · TD-42 · TD-43 · TD-44 · TD-45 · TD-46 · TD-47 · TD-48 · TD-49), TD-33 open
 **Date:** 2026-09-09 → …
 **PR(s):** all merged into `2-dev` — TD-26 [#2699](https://github.com/kuzzleio/kuzzle/pull/2699) · TD-21 [#2700](https://github.com/kuzzleio/kuzzle/pull/2700) · TD-23 [#2701](https://github.com/kuzzleio/kuzzle/pull/2701) · TD-22 [#2702](https://github.com/kuzzleio/kuzzle/pull/2702) · TD-27 [#2709](https://github.com/kuzzleio/kuzzle/pull/2709) · TD-28 [#2710](https://github.com/kuzzleio/kuzzle/pull/2710) · TD-31 [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) · TD-29 [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) · TD-30 [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) · TD-32 [#2716](https://github.com/kuzzleio/kuzzle/pull/2716); TD-34 + TD-35 in the post-merge fix pass
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md) · **Register:** [type-debt register](../type-debt-register.md)
@@ -394,3 +394,38 @@ Wall (1) is [TD-43](../type-debt-register.md#td-43)'s type-only-import half, and
 - `.ci/scripts/docker-test.sh unit vitest` — **212 passing** (210 + 2)
 - `.ci/scripts/docker-test.sh unit mocha` — **3026 passing** (3027 minus the replaced spec's single case)
 - `npm run build` + `.ci/scripts/check-build-payload.sh` — clean
+
+
+## TD-43, second half — the `casts` ratchet (2026-09-15, [#2743](https://github.com/kuzzleio/kuzzle/pull/2743))
+
+The register said this baseline lands **between** sprints, not across H4–H6, and sprint 6's conversions are done — so this is the window. It closes the fourth review's last enforcement finding; TD-33 is all that remains of it.
+
+**The work was not writing the ratchet; it was discovering the finding's own predicate was unusable.** TD-43 specified `as [A-Z]` and counted 16. That regex matches **84** times across `lib/**/*.ts`, and the matches are dominated by things that are not assertions at all:
+
+- `import * as Cookie from "cookie"`, `import * as URL from "url"` — the namespace-import syntax;
+- English prose in comments — *"tracked as TD-43"*, *"we try to parse it as JSON"*, *"Kuzzle ships as CommonJS while `lib/` is ESM"*, *"behaves the same as Node"*, *"Browser Cookie as Authentication"*.
+
+The real figure, counted off the AST, is **87**. So the filed number was wrong in both directions at once — it under-counted the assertions and over-counted the matches — and neither error would have been visible without building the thing.
+
+That matters past arithmetic. A ratchet is a message to a future contributor: *this number may not go up*. If its predicate fires on a comment, the cheapest way past it is to reword the comment, and the gate has taught exactly the wrong lesson. So `casts` is **the first ratchet that parses**: `scripts/count-casts.ts` runs `ts.createSourceFile` over every `lib/**/*.ts` and counts `AsExpression` and `TypeAssertionExpression` nodes. It is also the first that counts **nodes rather than matching lines** — the `any` ratchet lets a second `any` on an already-counted line through free, and there was no reason to inherit that.
+
+**The exclusions are the design, and each one is a claim:**
+
+| Form | Counted | Why |
+| --- | --- | --- |
+| `x as T`, `<T>x` | ✅ | The hatch. A wrong one asserts a *specific* wrong type, silently. |
+| `x as const` | ❌ | Narrows to what is already written; it cannot be wrong. |
+| `x as any`, `x as unknown` | ❌ | The `any` ratchet's. Charging twice means one fix moves two baselines. |
+| `x as unknown as T`, `x as any as T` | ❌ | Same — both halves. The second form is `lib/kerror/index.ts`. |
+| `x satisfies T` | ❌ | Checked against the annotation rather than asserted over it: the fix, not the hatch. |
+| `x!` | ❌ | A different hatch with a different cost; TD-43 never covered it. |
+
+**Verified negatively**, the way TD-44 established: four probes appended to `lib/util/safeObject.ts` — `{} as Date`, `{ a: 1 } as const`, `{} as any`, `{} as unknown as Date` — move the count by exactly **+1**, and the ratchet reports `❌ 88 > baseline 87`.
+
+**Baseline 87**, `.migration/casts-baseline.txt`. It is the largest of the spendable counters after `implicit-any`, and it is *new debt* in the sense that matters: 87 places where a conversion told the compiler something instead of proving it.
+
+## Validation (2026-09-15, TD-43 `casts` branch)
+
+- `npm run ratchet` — **six** green (js 22, mocha 149, any 205, implicit-any 456, **casts 87**, cpd-exclusions 4)
+- `npm run test:strict` — **127** adopted files pass
+- `npm run test:lint` / `npm run prettier:check` — clean

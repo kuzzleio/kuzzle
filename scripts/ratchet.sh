@@ -9,8 +9,8 @@
 # unrecorded improvement — so the baseline always mirrors reality).
 #
 # Usage:
-#   scripts/ratchet.sh <js|mocha|any|implicit-any|cpd-exclusions> [--update]
-#   npm run ratchet                  # all five, check mode
+#   scripts/ratchet.sh <js|mocha|any|implicit-any|casts|cpd-exclusions> [--update]
+#   npm run ratchet                  # all six, check mode
 #   npm run ratchet:js -- --update   # record the current js count as the new baseline
 #
 set -euo pipefail
@@ -115,8 +115,24 @@ case "$metric" in
     current="$(npx tsc -p tsconfig.implicit.json --noEmit 2>&1 | grep -cE 'error TS7[0-9]{3}' || true)"
     hint="Annotate the parameter/variable instead of letting it infer to any."
     ;;
+  casts)
+    # The 'any' ratchet counts the hatches it was told about — ': any', 'as any',
+    # 'as unknown as'. 'as SomeType' is the NEXT one, and the debt moved there
+    # exactly as that comment predicted (ADR-0001 register, TD-43). It is the
+    # worse hatch of the two: 'any' degrades to a permissive type and strict
+    # can still be pointed at it later, while a wrong 'as T' asserts a specific
+    # WRONG type, silently, and every gate downstream believes it.
+    #
+    # Counted by parsing, not grepping: over lib/ the filed 'as [A-Z]' predicate
+    # matches 84 times and most are 'import * as Cookie' or English prose. See
+    # scripts/count-casts.ts for what counts and, more importantly, what does not.
+    label="type assertions in lib/**/*.ts"
+    baseline_file=".migration/casts-baseline.txt"
+    current="$(npx tsx scripts/count-casts.ts | tail -n 1)"
+    hint="Narrow instead of asserting (type guard, 'satisfies', or fix the source type)."
+    ;;
   *)
-    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any|cpd-exclusions> [--update]" >&2
+    echo "usage: scripts/ratchet.sh <js|mocha|any|implicit-any|casts|cpd-exclusions> [--update]" >&2
     exit 2
     ;;
 esac
