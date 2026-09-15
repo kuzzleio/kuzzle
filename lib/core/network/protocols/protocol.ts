@@ -131,13 +131,21 @@ class Protocol<TConfig = Record<string, unknown>> {
     // do nothing by default
   }
 
-  joinChannel(channel: string, connectionId: string) {
-    // do nothing by default
+  joinChannel(
+    channel: string,
+    connectionId: string,
+  ): { channel: string; connectionId: string } | void {
+    // do nothing by default, beyond echoing back what it was given — which the
+    // spec pins. The `| void` is what lets an override that registers the
+    // channel and returns nothing satisfy the contract.
     return { channel, connectionId };
   }
 
-  leaveChannel(channel: string, connectionId: string) {
-    // do nothing by default
+  leaveChannel(
+    channel: string,
+    connectionId: string,
+  ): { channel: string; connectionId: string } | void {
+    // do nothing by default — see joinChannel.
     return { channel, connectionId };
   }
 

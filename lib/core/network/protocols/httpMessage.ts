@@ -19,9 +19,13 @@
  * limitations under the License.
  */
 
+import type { JSONObject } from "kuzzle-sdk";
 import type * as uWS from "uWebSockets.js";
 
 import type ClientConnection from "../clientConnection";
+
+/** What a request body can be once parsed, or `null` when there is none. */
+type HttpMessageContent = Buffer | JSONObject | null;
 
 class HttpMessage {
   public connection: ClientConnection;
@@ -34,7 +38,7 @@ class HttpMessage {
   public headers: Record<string, string>;
   public requestId: string;
 
-  private _content: Buffer | null;
+  private _content: HttpMessageContent;
 
   constructor(connection: ClientConnection, request: uWS.HttpRequest) {
     this.connection = connection;
@@ -59,7 +63,7 @@ class HttpMessage {
     this.requestId = this.headers["x-kuzzle-request-id"] || connection.id;
   }
 
-  set content(value: Buffer | null) {
+  set content(value: HttpMessageContent) {
     if (!value || value.length === 0) {
       this._content = null;
     } else {
@@ -67,7 +71,7 @@ class HttpMessage {
     }
   }
 
-  get content(): Buffer | null {
+  get content(): HttpMessageContent {
     return this._content;
   }
 }

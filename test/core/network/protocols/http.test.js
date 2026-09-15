@@ -959,9 +959,12 @@ describe("core/network/protocols/http", () => {
     });
 
     it("should fall back to not compressing if the payload could not be compressed with gzip", async () => {
-      mockRequire("zlib", {
+      const zlibStub = {
         gzip: sinon.stub().yields(new Error("foo")),
-      });
+      };
+
+      mockRequire("zlib", zlibStub);
+      mockRequire("node:zlib", zlibStub);
       HttpWs = mockRequire.reRequire(
         "../../../../lib/core/network/protocols/httpwsProtocol",
       );
@@ -1000,6 +1003,7 @@ describe("core/network/protocols/http", () => {
         );
       } finally {
         mockRequire.stop("zlib");
+        mockRequire.stop("node:zlib");
         HttpWs = mockRequire.reRequire(
           "../../../../lib/core/network/protocols/httpwsProtocol",
         );
@@ -1008,9 +1012,12 @@ describe("core/network/protocols/http", () => {
     });
 
     it("should fall back to not compressing if the payload could not be compressed with deflate", async () => {
-      mockRequire("zlib", {
+      const zlibStub = {
         deflate: sinon.stub().yields(new Error("foo")),
-      });
+      };
+
+      mockRequire("zlib", zlibStub);
+      mockRequire("node:zlib", zlibStub);
       HttpWs = mockRequire.reRequire(
         "../../../../lib/core/network/protocols/httpwsProtocol",
       );
@@ -1049,6 +1056,7 @@ describe("core/network/protocols/http", () => {
         );
       } finally {
         mockRequire.stop("zlib");
+        mockRequire.stop("node:zlib");
         HttpWs = mockRequire.reRequire(
           "../../../../lib/core/network/protocols/httpwsProtocol",
         );

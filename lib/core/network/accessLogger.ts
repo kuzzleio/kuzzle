@@ -44,7 +44,7 @@ const ALLOWED_TRANSPORTS = new Set([
 ]);
 
 /** What a protocol adds to an HTTP access log line */
-interface AccessLogExtra {
+export interface AccessLogExtra {
   method: string;
   url: string;
 }

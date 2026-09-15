@@ -408,3 +408,31 @@ Extractions, verbatim: `loadPluginErrors`, `checkActionDefinition`, `checkHttpRo
 3. **`!a?.b ?? c` became `!(a?.b ?? c)` in `checkControllerDefinition`.** The original parses as `(!a?.b) ?? c`, and `!x` is never nullish, so the fallback was dead. It happens to be equivalent **today only because the packaged default is `false`** — the two would differ the moment that default became `true`. Recorded here because the fix is a parenthesis and the reasoning is not.
 
 Left deliberately: `JSON.parse(JSON.stringify(config))` against S4123's `structuredClone`, `// NOSONAR` with the reason inline — a plugin's configuration is user data and a conversion does not change clone semantics.
+
+
+## What was done (PR H6 — `entryPoint.js` + `httpwsProtocol.js`)
+
+2 files, 1 612 lines, and **the sprint is done**: `lib/core` holds no JavaScript. **js 19 → 17**, strict **130 → 131**. No spec effort — the pair measured 94.4% once [TD-50](../type-debt-register.md#td-50) was fixed.
+
+### The contract declared in advance was the point
+
+`lib/core/network/networkEntryPoint.ts` was written during H2 with a comment saying it existed *because* `entryPoint.js` was still JavaScript, and that H6 would convert it. It stays — protocols need the contract and importing the concrete class would close a cycle — but `EntryPoint` now **`implements`** it, so it is checked against the implementation rather than asserted about it.
+
+### Three reads of properties nothing sets
+
+This file is where the conversion paid, and it is [TD-52](../type-debt-register.md#td-52) ([#2749](https://github.com/kuzzleio/kuzzle/issues/2749)):
+
+1. **`this.maxFormFileSize` is never assigned.** The configured value is parsed and validated and lands in `httpConfig.opts`; nothing copies it to the instance, so `byteLength > undefined` is always false and **the multipart file-size limit is not enforced**. The spec sets the property by hand, which is why it passes.
+2. **`request.headers` does not exist on a uWS `HttpRequest`.** Every HTTP `ClientConnection` has therefore been built with `undefined` headers and fallen back to `{}`, against `ClientConnection`'s own documentation.
+3. **`Protocol.joinChannel` returns an object no override returns.** A vitest spec pins the base's echo, so the declared type is `… | void`.
+
+All three are preserved exactly and declared, so the compiler holds them. Fixing any of them makes something start happening, which is not what a conversion does.
+
+### Equivalence note (H6)
+
+1. **`httpRequestToResponse` uses early returns** instead of reassigning `data` from the response object to a string and then a Buffer. The variable changed type under itself, which is what the conversion could not express. One branch is not a literal copy: where the original did `Buffer.from(data)` with `data` being the JSON form of a Buffer (`{ type: "Buffer", data: [...] }`), it now does `Buffer.from(content.data)`. Verified equivalent in a Node shell — `Buffer.from` builds the same bytes from either — and it is the form that types.
+2. **`httpUncompress` names the parsed list separately** rather than reassigning the `content-encoding` header string to the array parsed out of it.
+3. **`Number(headers["content-length"])`** where the JavaScript relied on `>` coercing the header string. Same comparison, spelled; a non-numeric header gives `NaN > n`, which is false, exactly as `"abc" > n` was.
+4. **`Buffer.from(message ?? new ArrayBuffer(0))`** replaces `Buffer.from(message || "")` in the close handler: the argument is an `ArrayBuffer`, and the empty-string default only ever stood in for "nothing".
+5. **The `kuzzleDebugger` narrows with a predicate** (`isSocketRegistry`) rather than `instanceof`: importing the concrete protocol as a *value* would add a runtime edge to the graph, which is the shape [TD-49](../type-debt-register.md#td-49) spent a PR removing.
+6. **Three specs now mock `node:fs` / `node:zlib`** alongside the bare specifiers, for the same reason as H5.

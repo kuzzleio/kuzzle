@@ -1,7 +1,30 @@
 import Inspector from "inspector";
 import * as kerror from "../../kerror";
 import type { JSONObject } from "kuzzle-sdk";
-import type HttpWsProtocol from "../../core/network/protocols/httpwsProtocol";
+import type { KuzzleWebSocket } from "../../types/KuzzleWebSocket";
+
+/**
+ * What the debugger needs of the WebSocket protocol. Declared rather than
+ * imported as the concrete class: `entryPoint.protocols` is typed by the base,
+ * and naming the one member used here is both narrower and honest.
+ */
+interface SocketRegistry {
+  socketByConnectionId: Map<string, KuzzleWebSocket>;
+}
+
+/**
+ * A declared narrowing, not an assertion: `entryPoint.protocols` is typed by
+ * the base `Protocol`, and this is what makes the one member the debugger uses
+ * reachable without an `as`.
+ */
+function isSocketRegistry(protocol: unknown): protocol is SocketRegistry {
+  return (
+    typeof protocol === "object" &&
+    protocol !== null &&
+    "socketByConnectionId" in protocol &&
+    protocol.socketByConnectionId instanceof Map
+  );
+}
 
 const DEBUGGER_EVENT = "kuzzle-debugger-event";
 
@@ -15,10 +38,15 @@ export class KuzzleDebugger {
    */
   private events = new Map<string, Set<string>>();
 
-  private httpWsProtocol?: HttpWsProtocol;
+  private httpWsProtocol?: SocketRegistry;
 
   async init() {
-    this.httpWsProtocol = global.kuzzle.entryPoint.protocols.get("websocket");
+    const protocol = global.kuzzle.entryPoint.protocols.get("websocket");
+
+    // Narrowed with `in` rather than `instanceof`: `protocols` is typed by the
+    // base class, and importing the concrete one as a *value* would add a
+    // runtime edge to the graph — the shape TD-49 spent a PR removing.
+    this.httpWsProtocol = isSocketRegistry(protocol) ? protocol : undefined;
 
     this.inspector = new Inspector.Session();
 

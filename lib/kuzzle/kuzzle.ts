@@ -352,7 +352,7 @@ class Kuzzle extends KuzzleEventEmitter {
     this.log.info("Initiating shutdown...");
 
     // Ask the network layer to stop accepting new request
-    this.entryPoint.dispatch("shutdown");
+    this.entryPoint.dispatch("shutdown", null);
 
     await this.pipe("kuzzle:shutdown");
 
