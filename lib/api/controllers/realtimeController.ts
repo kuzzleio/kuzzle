@@ -131,7 +131,11 @@ class RealtimeController extends NativeController {
 
     const newRequest = await global.kuzzle.validation.validate(request, false);
 
-    newRequest.input.body._kuzzle_info = {
+    // `getBody` rather than `input.body`: the body is nullable on the request
+    // and this line has always required it. The assertion is the same one
+    // `request.getBody()` made above, on the same object — `validate` answers
+    // the request it was handed.
+    newRequest.getBody()._kuzzle_info = {
       author: request.getKuid(),
       createdAt: Date.now(),
     };

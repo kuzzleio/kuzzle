@@ -298,3 +298,54 @@ The cause is [TD-50](../type-debt-register.md#td-50): 43 specs use `mock-require
 - The generalising check after it, *how many files show duplicated function names in the report*, flagged 16% of `.ts` files. That predicate was wrong in exactly the way `as [A-Z]` was wrong for [TD-43](../type-debt-register.md#td-43): a file may legitimately hold two functions of one name, and a class constructor legitimately carries its class's name. The signal that held up is arithmetic on the report itself — **branches above lines** — and it needs no predicate at all.
 
 **Consequence for the sprint.** H4, H5 and H6 are conversions. Each file's definition of done is unchanged except for the coverage clause, which all five already satisfy.
+
+
+## What was done (PR H4 — `validation.js`)
+
+1 file, 890 measurable lines. **js 22 → 21**, strict **127 → 128**, and the converted file measures **99.9%** (993 of 994) on the corrected pipeline. No spec was written: [TD-50](../type-debt-register.md#td-50) is why one looked necessary.
+
+### The specification types were another phantom typedef
+
+`FieldSpecification`, `StructuredFieldSpecification`, `CollectionSpecification` and `DocumentSpecification` were written in JSDoc annotations across `validation.js` *and* `default.config.ts`, and none of them had ever been declared — the same situation H1 found with `TypeOptions`. They now live in `lib/core/validation/specification.ts`.
+
+Writing them made one distinction explicit that the JSDoc could not draw, and it is the reason the file holds four types rather than one: **before and after curation**. What a user submits is a flat map of `/`-separated paths with almost everything optional; what the validator walks is a tree with defaults filled in and `path`/`depth`/`children` added. `curateCollectionSpecification` is the boundary, and the two shapes had shared one name.
+
+`KuzzleConfiguration.validation` was `Record<string, unknown>` next to a `/** @type {DocumentSpecification} */` comment pointing at nothing; it is now `RawSpecification`, and the comment is gone because the type says it.
+
+### Four methods answer "the value, or why it could not be built"
+
+`curateCollectionSpecification`, `structureCollectionValidation`, `curateFieldSpecification` and `validateFormat` each return a curated value **or** a `{ isValid: false, errors }` report, depending on a `verbose` flag. That is not a discriminated union — the success branch is the value itself and carries no tag — so a naive union return type breaks every caller, which is exactly what [TD-41](../type-debt-register.md#td-41) warned about.
+
+Two tools, chosen per case:
+
+- **Overloads** where the caller passes a literal, which is what `validate` and `curateCollectionSpecification` get. Every call site of `validate` passes `false` or `true` written out, so `documentController` and `realtimeController` see `Promise<KuzzleRequest>` and need no narrowing at all.
+- **A type guard** — `isCurationFailure`, `"isValid" in result && result.isValid === false` — where the flag is a runtime boolean. `in` is what makes it a guard rather than an assertion, and with TD-43's `casts` ratchet now live that distinction has a price attached.
+
+### Two defects the types surfaced
+
+- **`realtimeController.publish` wrote `newRequest.input.body._kuzzle_info` on a nullable body.** It was invisible while `validate` came from JavaScript and returned `any`; typing the return made `strict` fail on an *already-adopted* file. Fixed where the defect is, with `newRequest.getBody()` — the same assertion the method already makes on the same object two lines above.
+- **The 13 built-in types were loaded by `require(`./types/${typeFile}`)` over a list of names.** A runtime `require` in a function body is [TD-49](../type-debt-register.md#td-49)'s third spelling, the one no grep for `import … = require` finds. They are static imports now, so the module loads under a runner that resolves the graph itself — which is what H5 will need, since `pluginsManager` reaches this file.
+
+`error.details = { field }` bolted onto a plain `Error` became a `StrictnessError` class. The `error.message !== "strictness"` checks at both catch sites are untouched: `instanceof` would have been a behaviour change, and a conversion does not get to make those.
+
+### What the tests caught
+
+Rewriting the specification lookup to use the typed map dropped a short-circuit — `has(this.specification, index) && get(…)` became `has(indexSpec, collection)` with `indexSpec` possibly `undefined`, and `Object.hasOwn(undefined, …)` throws. Two `validate` specs failed immediately. The guard is back and explicit: `index` and `collection` come from the request, so an inherited property must not answer for a specification.
+
+### Gate-driven refactor, and the equivalence note
+
+SonarCloud failed the first run on **5 new Critical** (S3776 cognitive complexity: `isValidField` 51, `manageErrorMessage` 30, `validate` 25, `curateFieldSpecificationFormat` 20, `getValidationConfiguration` 17), **1 new Major** (S2301, `manageErrorMessage`'s boolean selector) and **11 new Minor**. Every one is pre-existing JavaScript re-scored by the rename — the standing pattern since sprint 4, and what the DoD above anticipates.
+
+Extractions, all verbatim: `resolveValidationBody`, `checkDocumentFields`, `checkValidators` out of `validate`; `resolveFieldValues`, `validateFieldValue`, `validateFieldChildren` out of `isValidField`; `checkMultivaluedSpecification` out of `curateFieldSpecificationFormat`; `collectStoredSpecification` out of `getValidationConfiguration`; and `manageErrorMessage` split into `storeErrorMessage` / `throwErrorMessage`, which answers S2301 and S3776 together.
+
+**Equivalence note** — the five places the extraction is not a straight cut:
+
+1. **`if (collectionSpec)` in `validate` was dead.** `collectionSpec` falls back to `{}` on the line that builds it, so the test could never fail. Dropped rather than carried into the extracted shape.
+2. **The validators branch now reads `check(...) && isValid`** where the original assigned `isValid = false` outright. Equivalent: the original only ever wrote `false` there, and `&&` preserves an earlier `false`.
+3. **`resolveFieldValues` answers `null` where the original did `return false`** from inside `isValidField`. The caller returns `false` immediately on `null`, so the arity failures reach the same exit.
+4. **`manageErrorMessage`'s unreachable branch is now explicit.** `structured` and the holder's shape are one fact — `validate` builds an object exactly when `verbose` holds — so the `Array.isArray(errorHolder)` early return cannot be taken. It exists to narrow the type, and it is the only line in the refactor with no counterpart in the original.
+5. **A field value flowing into `recurseFieldValidation` is typed `JSONObject`, not `unknown`.** `unknown` would have needed `val as JSONObject`, and TD-43's `casts` ratchet is exactly the thing that should make an author stop there. Since `JSONObject` is `Record<PropertyKey, any>`, the parameter is no weaker than the `{*}` the JSDoc declared, and no runtime check was added — the alternative, an `isPlainObject` guard, is provably redundant (only `allowChildren` types recurse, and `ObjectType.validate` has already rejected non-objects) but "provably redundant" is precisely the reasoning this ADR keeps finding to be wrong, so it was not added.
+
+A second gate run left one Critical — `checkMultivaluedSpecification` itself at 16 — because the block it had just received was wrapped in `if (has(fieldSpec, "multivalued"))`, which nests everything inside it. Inverted into a guard clause (`if (!has(…)) return;`), which is the sixth extraction and the only one that changes indentation rather than moving code.
+
+Left deliberately: `_.cloneDeep` ×3 against S4123's `structuredClone` suggestion, and `request.input.resource` against the deprecation warning — both `// NOSONAR` with the reason inline. Swapping clone semantics or migrating off `resource` ([TD-20](../type-debt-register.md#td-20)) are behaviour changes, and a conversion does not get to make those.

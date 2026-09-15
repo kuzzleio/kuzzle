@@ -1,3 +1,5 @@
+import type { RawSpecification } from "../../core/validation/specification";
+
 import type {
   DumpConfiguration,
   HttpConfiguration,
@@ -167,7 +169,12 @@ export interface IKuzzleConfiguration {
     allowAllOrigins: boolean;
   };
 
-  validation: Record<string, unknown>;
+  /**
+   * Collection specifications to apply at startup, by index then collection.
+   * Read when the internal index holds none of its own — the database is not
+   * necessarily prepared when validation first loads.
+   */
+  validation: RawSpecification;
 
   controllers: {
     definition: {
