@@ -29,6 +29,13 @@ the `migration-ratchets` job:
 * **No new implicit `any`** — the count of `TS7xxx` diagnostics under `noImplicitAny`
   may only decrease. This is what stops a conversion from being a rename: leaving a
   parameter un-annotated is free for the explicit-`any` ratchet but not for this one.
+* **No new type assertion** (`x as SomeType`) in `lib/**/*.ts` — the count may only
+  decrease. An assertion is the hatch a conversion reaches for once `any` is
+  ratcheted, and it is the worse one: `any` is permissive and visibly untyped,
+  while a *wrong* `as T` asserts a specific wrong type and every gate downstream
+  believes it. Narrow instead — a type guard, `satisfies`, or a fix to the source
+  type. `as const`, `as any` and `as unknown as T` are **not** counted here (the
+  first cannot be wrong, the other two are the `any` ratchet's).
 * When a file passes `strict`, add it to `.migration/strict-adopted.txt`
   (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
   converting, this is part of the PR — not a later chore.
@@ -38,13 +45,13 @@ the `migration-ratchets` job:
 Run the gates locally before pushing:
 
 ```bash
-npm run ratchet             # js / mocha / any / implicit-any (must not increase)
+npm run ratchet             # js / mocha / any / implicit-any / casts / cpd-exclusions
 npm run test:strict         # strict type-check on adopted files
 .ci/scripts/pr-preflight.sh # the above + lint + error-codes + two reminders
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
-`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`) — then
+`npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`, `:casts`) — then
 commit `.migration/`.
 
 ## Guidelines
