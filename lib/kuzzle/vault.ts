@@ -19,19 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "assert";
+import fs from "fs";
+import path from "path";
 
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-const _ = require("lodash");
-const { Vault } = require("kuzzle-vault");
+import _ from "lodash";
+import { Vault } from "kuzzle-vault";
 
 // The Vault package remove the variable from env after reading it and we have
 // to instantiate the Vault two times with Kaaf (one before init and one after)
-let ENV_VAULT_KEY;
+let ENV_VAULT_KEY: string;
 
-function load(vaultKey, secretsFile) {
+function load(vaultKey?: string, secretsFile?: string): Vault {
   // Using KaaF kuzzle is an npm package and is located under node_modules folder
   // We need to get back to root folder of the project to get the secret file
   const defaultEncryptedSecretsFile = __dirname.endsWith(
@@ -86,4 +85,4 @@ function load(vaultKey, secretsFile) {
   return vault;
 }
 
-module.exports = { load };
+export = { load };

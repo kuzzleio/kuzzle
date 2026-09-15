@@ -76,6 +76,98 @@ Both have Mocha specs. Per the standing rule, **convert first, then touch the sp
 
 `js` **17 → 11** · `strict` **131 → 137** (all six are expected to adopt; `--candidates` will confirm) · `mocha` unchanged at **149** unless a spec is replaced rather than kept · `any` and `implicit-any` must not rise.
 
-## What was done
+## What was done (PR I1 — the four leaves)
 
-*(filled per PR)*
+4 files, 374 LOC. **js 17 → 13**, strict **131 → 135**. No counter moved in the
+wrong direction; `any`, `implicit-any` and `casts` are untouched.
+
+### Four export shapes, four answers
+
+| file | JavaScript | TypeScript |
+| --- | --- | --- |
+| `kuzzleStateEnum` | `module.exports = Object.freeze({…})` + a `@typedef` | a frozen `const` **and** a same-named `type` derived from it, both carried by one `export =` |
+| `vault` | `module.exports = { load }` | `export = { load }` — the one shape that is an object rather than a class |
+| `waterfall` | `module.exports = waterfall` | `export = waterfall` |
+| `pipeRunner` | `module.exports = PipeRunner` | `export = PipeRunner` |
+
+**`kuzzleStateEnum` is the one worth explaining.** `kuzzle.ts` writes both
+`kuzzleStateEnum.RUNNING` and `get state(): kuzzleStateEnum` — a value and a
+type under one name, which the JavaScript supported through a `@typedef` and
+TypeScript supports through declaration merging. Not a TS `enum`: an `enum`
+emits an ordinary, mutable object, and the export has been frozen since 2022.
+
+The derived type turned out to be **narrower than the `@typedef` claimed**.
+`Object.freeze` over a fresh object literal keeps literal types, so
+`(typeof kuzzleStateEnum)[keyof typeof kuzzleStateEnum]` is `1 | 2 | 3 | 4`,
+not the `number` the JSDoc said — and `Kuzzle._state`, declared `number`, stopped
+being assignable to its own getter. It is now `kuzzleStateEnum`, which is what it
+has always held.
+
+### Two declared types that did not describe what they carried
+
+Same category as [TD-40](../type-debt-register.md#td-40)/[TD-41](../type-debt-register.md#td-41), fixed where the defect is:
+
+- **`StartOptions.secretsFile` and `StartOptions.vaultKey` were `JSONObject`.**
+  One is a **path**, the other a **key**; `Backend` holds both as `string?`, and
+  `vault.load` passes the first to `fs.existsSync`. Now `string`.
+- **`Kuzzle._state: number`**, above.
+
+### `noUncheckedIndexedAccess` removed two invariants rather than asserting them
+
+The repo compiles with `noUncheckedIndexedAccess`, so every indexed read is
+`T | undefined`, and both files had a bounds check standing one call away from
+the read it justified:
+
+1. `WaterfallContext` had `hasNext()` and then `this.chain[this.index - 1](…)`.
+   One lookup now answers both questions — `shift()` returns the step or
+   `undefined` — so there is no invariant left to take on trust.
+2. `PipeRunner._runNext` had `buffer.isEmpty()` and then `buffer.shift()`.
+   `shift()` on an empty `Denque` returns `undefined` and mutates nothing, so
+   the two forms agree and only one of them needs a guard.
+
+Neither is a cast, which is the point: the [`casts`](../type-debt-register.md#td-43)
+ratchet prices the alternative.
+
+### Equivalence note
+
+1. **A pipe's error is `unknown`, not `Error`.** A step is arbitrary plugin code
+   and can call its callback with anything; `WaterfallCallback` and
+   `PipeCallback` now say so. The behaviour is unchanged — the JavaScript read
+   `error.message` off whatever arrived, which is `undefined` for a non-`Error`,
+   and `toKuzzleError` preserves exactly that. Improving it is a behaviour
+   change and not this PR's.
+2. **`_runNext` checks `running >= maxConcurrent` before touching the buffer**,
+   where the original checked `isEmpty()` first. The order matters only in that
+   the original never shifted while saturated — and neither does this one.
+3. **The `no-invalid-this` suppressions stay.** The declared `this` parameters
+   are what make the accesses type-check, but the rule that fires is ESLint's
+   **core** `no-invalid-this`, which predates `this` parameters and cannot see
+   the declaration. Swapping it for the `@typescript-eslint` version is a
+   repo-wide lint change, not a conversion.
+
+### The `vault` spec was testing nothing, and the conversion is what said so
+
+`test/kuzzle/vault.test.js` broke on the rename, with `ReferenceError: fs is not
+defined` from `rewire`'s `__set__`: the JavaScript had a module-scope `fs`, and
+`import fs from "fs"` compiles to `fs_1`. Reading it to fix the name showed the
+test had never asserted anything:
+
+- the body was an `async` callback handed to `__with__(…)(…)` and **never
+  awaited**, so every assertion inside it ran detached;
+- it called `new Vault(…)` on a module that exports `{ load }`, which throws
+  `not a constructor` — swallowed into an unhandled rejection;
+- `vaultArgs` was declared, never assigned, and then asserted to `eql([…])`;
+- one expected value was `"the spoon does not exists"` for an input of
+  `"the spoon does not exist"`.
+
+It is replaced by five tests that call `load()` and assert the three `assert`
+messages, the undecrypted-vault case and the env-key path, stubbing
+`fs.existsSync` with sinon instead of rewiring the module. **Mocha 3026 → 3030
+tests**, the spec-file count unchanged at 149.
+
+This also explains the file's coverage, which the plan above quoted as 100% of
+lines and **1 of 7 branches**: `load()` ran once in the whole suite, from
+somewhere else entirely, down a single path. The line figure was true and
+useless, and the branch figure was the tell — the same shape as
+[TD-50](../type-debt-register.md#td-50)'s "93% of branches next to 36% of lines",
+read the other way round.
