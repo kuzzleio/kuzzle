@@ -19,23 +19,26 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "node:assert";
+import fs from "node:fs";
+import path from "node:path";
 
-const assert = require("assert");
-const path = require("path");
-const fs = require("fs");
+import Bluebird from "bluebird";
+import type { JSONObject } from "kuzzle-sdk";
+import _ from "lodash";
 
-const Bluebird = require("bluebird");
-const _ = require("lodash");
+import { BaseController } from "../../api/controllers/baseController";
+import type { ApiRoute } from "../../types/ApiRoute";
+import * as kerror from "../../kerror";
+import { KuzzleError } from "../../kerror/errors";
+import createDebug from "../../util/debug";
+import didYouMean from "../../util/didYouMean";
+import { Inflector } from "../../util/Inflector";
+import { has, isPlainObject } from "../../util/safeObject";
+import type { PluginInstance } from "../../types/PluginInstance";
+import Plugin from "./plugin";
 
-const kerror = require("../../kerror");
-const didYouMean = require("../../util/didYouMean");
-const { Inflector } = require("../../util/Inflector");
-const debug = require("../../util/debug")("kuzzle:plugins");
-const { KuzzleError } = require("../../kerror/errors");
-const { has, get, isPlainObject } = require("../../util/safeObject");
-const { BaseController } = require("../../api/controllers/baseController");
-const Plugin = require("./plugin");
+const debug = createDebug("kuzzle:plugins");
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
@@ -46,10 +49,54 @@ const controllerError = kerror.wrap("plugin", "controller");
 const CORE_PLUGINS = ["kuzzle-plugin-auth-passport-local"];
 
 /**
- * @class PluginsManager
- * @param {Kuzzle} kuzzle
+ * Any function a plugin exposes: a pipe, a hook, an action handler, a strategy
+ * method. A plugin's members are `unknown` by construction — it is a
+ * user-supplied object — so this is the type a `typeof … === "function"` check
+ * produces, and what `bindPluginMethod` answers.
  */
+type PluginMethod = (...args: unknown[]) => unknown;
+
+/**
+ * A strategy as a plugin hands it over: `JSONObject`, not
+ * `StrategyDefinition[string]`, because nothing has checked its shape yet —
+ * `validateStrategy` is what does, at runtime, and it is the reason this
+ * parameter cannot claim the validated type.
+ */
+type StrategyEntry = JSONObject;
+
+/**
+ * A strategy once registered: the declaration, the plugin that owns it, and the
+ * methods resolved and bound from the names the declaration carries.
+ */
+/**
+ * A strategy method, resolved from its name and bound to the plugin instance.
+ *
+ * The return is whatever the plugin's method answers — `exists` gives a boolean,
+ * `getInfo` an object — so `JSONObject` describes what the *callers* read off it
+ * rather than a promise the plugins make. That is the same latitude the JSDoc's
+ * `{object}` gave, kept rather than narrowed, because narrowing it is an API
+ * decision and this is a conversion.
+ */
+type StrategyMethod = (...args: unknown[]) => Promise<JSONObject>;
+
+interface RegisteredStrategy {
+  methods: JSONObject;
+  owner: string;
+  strategy: StrategyEntry;
+}
+
 class PluginsManager {
+  private _plugins: Map<string, Plugin>;
+  public controllers: Map<string, BaseController>;
+  public strategies: Record<string, RegisteredStrategy>;
+  public routes: ApiRoute[];
+  public pluginsEnabledDir: string;
+  public pluginsAvailableDir: string;
+  public authenticators: JSONObject;
+  public config: JSONObject;
+  public logger: ReturnType<typeof global.kuzzle.log.child>;
+  public loadedPlugins: string[];
+
   constructor() {
     Reflect.defineProperty(this, "kuzzle", {
       value: global.kuzzle,
@@ -102,7 +149,7 @@ class PluginsManager {
     this.loadedPlugins = [];
   }
 
-  set application(plugin) {
+  set application(plugin: Plugin) {
     assert(
       this._plugins.size === 0,
       "The application plugin can only be set before every other plugins are loaded",
@@ -115,13 +162,13 @@ class PluginsManager {
     this._plugins.set(plugin.name, plugin);
   }
 
-  get plugins() {
+  get plugins(): Plugin[] {
     return Array.from(this._plugins.values()).filter(
       (plugin) => !plugin.application,
     );
   }
 
-  get application() {
+  get application(): Plugin {
     return Array.from(this._plugins.values()).find(
       (plugin) => plugin.application,
     );
@@ -133,7 +180,7 @@ class PluginsManager {
    * @param {string} controller
    * @returns {Boolean}
    */
-  isController(controller) {
+  isController(controller: string): boolean {
     return this.controllers.has(controller);
   }
 
@@ -144,7 +191,7 @@ class PluginsManager {
    * @param {string} action
    * @returns {Boolean}
    */
-  isAction(controller, action) {
+  isAction(controller: string, action: string): boolean {
     return this.getActions(controller).includes(action);
   }
 
@@ -154,7 +201,7 @@ class PluginsManager {
    * @param {string} controller
    * @returns {Array}
    */
-  getActions(controller) {
+  getActions(controller: string): string[] {
     return Array.from(this.controllers.get(controller)._actions);
   }
 
@@ -163,7 +210,7 @@ class PluginsManager {
    *
    * @returns {Array}
    */
-  getControllerNames() {
+  getControllerNames(): string[] {
     return Array.from(this.controllers.keys());
   }
 
@@ -174,7 +221,7 @@ class PluginsManager {
    * @returns {boolean}
    */
 
-  exists(pluginName) {
+  exists(pluginName: string): boolean {
     return this._plugins.has(pluginName);
   }
 
@@ -183,7 +230,7 @@ class PluginsManager {
    *
    * @returns {object}
    */
-  getPluginsDescription() {
+  getPluginsDescription(): JSONObject {
     const pluginsDescription = {};
 
     for (const plugin of this.plugins) {
@@ -206,7 +253,7 @@ class PluginsManager {
    *
    * @throws PluginImplementationError - Throws when an error occurs when registering a plugin
    */
-  async init(plugins = {}) {
+  async init(plugins: JSONObject = {}): Promise<JSONObject> {
     this._plugins = new Map([...this.loadPlugins(plugins), ...this._plugins]);
 
     global.kuzzle.on("plugin:hook:loop-error", ({ error, pluginName }) => {
@@ -326,7 +373,7 @@ class PluginsManager {
    * @param {string} strategyName
    * @returns {string[]}
    */
-  getStrategyFields(strategyName) {
+  getStrategyFields(strategyName: string): string[] {
     return this.strategies[strategyName].strategy.config.fields || [];
   }
 
@@ -335,9 +382,12 @@ class PluginsManager {
    * @param {string} methodName
    * @returns {boolean}
    */
-  hasStrategyMethod(strategyName, methodName) {
-    const strategy = get(this.strategies, strategyName);
-    return strategy && has(strategy.methods, methodName);
+  hasStrategyMethod(strategyName: string, methodName: string): boolean {
+    const strategy = has(this.strategies, strategyName)
+      ? this.strategies[strategyName]
+      : undefined;
+
+    return strategy !== undefined && has(strategy.methods, methodName);
   }
 
   /**
@@ -345,7 +395,7 @@ class PluginsManager {
    * @param {string} methodName
    * @returns {function}
    */
-  getStrategyMethod(strategyName, methodName) {
+  getStrategyMethod(strategyName: string, methodName: string): StrategyMethod {
     return this.strategies[strategyName].methods[methodName];
   }
 
@@ -353,7 +403,7 @@ class PluginsManager {
    * Returns the list of registered passport strategies
    * @returns {string[]}
    */
-  listStrategies() {
+  listStrategies(): string[] {
     return Object.keys(this.strategies);
   }
 
@@ -365,7 +415,11 @@ class PluginsManager {
    * @param {object} strategy
    * @throws {PluginImplementationError} If the strategy is invalid
    */
-  validateStrategy(pluginName, strategyName, strategy) {
+  validateStrategy(
+    pluginName: string,
+    strategyName: string,
+    strategy: StrategyEntry,
+  ): void {
     const errorPrefix = `[${pluginName}] Strategy ${strategyName}:`;
 
     if (!isPlainObject(strategy)) {
@@ -480,7 +534,7 @@ class PluginsManager {
    *
    * @returns {string} pipeId
    */
-  registerPipe(plugin, event, handler) {
+  registerPipe(plugin: Plugin, event: string, handler: PluginMethod): string {
     debug('[%s] registering pipe on event "%s"', plugin.name, event);
 
     const warnDelay =
@@ -492,7 +546,7 @@ class PluginsManager {
       const now = warnDelay ? Date.now() : null;
       const callback = data.pop();
 
-      const cb = (error, result) => {
+      const cb = (error: Error | null, result?: unknown) => {
         if (warnDelay) {
           const elapsed = Date.now() - now;
 
@@ -510,12 +564,7 @@ class PluginsManager {
         const pipeResponse =
           data.length === 0 ? handler(null, cb) : handler(...data, cb);
 
-        if (
-          typeof pipeResponse === "object" &&
-          pipeResponse !== null &&
-          typeof pipeResponse.then === "function" &&
-          typeof pipeResponse.catch === "function"
-        ) {
+        if (isThenable(pipeResponse)) {
           pipeResponse
             .then((result) => {
               cb(null, result);
@@ -535,7 +584,7 @@ class PluginsManager {
     return global.kuzzle.registerPluginPipe(event, wrapper);
   }
 
-  unregisterPipe(pipeId) {
+  unregisterPipe(pipeId: string): void {
     global.kuzzle.unregisterPluginPipe(pipeId);
   }
 
@@ -550,7 +599,11 @@ class PluginsManager {
    * @throws {PluginImplementationError} If the strategy is invalid or if
    *                                     registration fails
    */
-  registerStrategy(pluginName, strategyName, strategy) {
+  registerStrategy(
+    pluginName: string,
+    strategyName: string,
+    strategy: StrategyEntry,
+  ): void {
     // prior to Kaaf, plugin names can contains upper case
     const plugin = this._plugins.get(pluginName.toLowerCase());
 
@@ -569,7 +622,7 @@ class PluginsManager {
       this.unregisterStrategy(plugin.name, strategyName);
     }
 
-    const methods = {};
+    const methods: JSONObject = {};
 
     // wrap plugin methods to force their context and to
     // convert uncaught exception into PluginImplementationError
@@ -579,9 +632,10 @@ class PluginsManager {
     )) {
       methods[methodName] = async (...args) => {
         try {
-          const boundFunction = plugin.instance[
-            strategy.methods[methodName]
-          ].bind(plugin.instance);
+          const boundFunction = bindPluginMethod(
+            plugin.instance,
+            strategy.methods[methodName],
+          );
 
           return await boundFunction(...args);
         } catch (error) {
@@ -602,7 +656,7 @@ class PluginsManager {
     const verifyAdapter = this.wrapStrategyVerify(
       plugin.logPrefix,
       strategyName,
-      plugin.instance[strategy.methods.verify].bind(plugin.instance),
+      bindPluginMethod(plugin.instance, strategy.methods.verify),
     );
 
     try {
@@ -637,7 +691,7 @@ class PluginsManager {
    * @throws {PluginImplementationError} If not the owner of the strategy or if strategy
    *                                     does not exist
    */
-  unregisterStrategy(pluginName, strategyName) {
+  unregisterStrategy(pluginName: string, strategyName: string): void {
     const strategy = this.strategies[strategyName];
 
     if (strategy) {
@@ -656,7 +710,7 @@ class PluginsManager {
    * @param {object} plugin
    * @param {number} pipeWarnTime
    */
-  _initPipes(plugin) {
+  _initPipes(plugin: Plugin): void {
     const methodsList = getMethods(plugin.instance);
 
     for (const [event, fn] of Object.entries(plugin.instance.pipes)) {
@@ -673,7 +727,7 @@ class PluginsManager {
           throw assertionError.get("invalid_pipe", event, target, message);
         }
 
-        let handler = target;
+        let handler: PluginMethod;
 
         if (typeof target === "string") {
           // @deprecated - warn about using a string representing an instance method
@@ -681,7 +735,9 @@ class PluginsManager {
             "Defining pipe handler using a string is deprecated. Pass a function instead.",
           );
 
-          handler = plugin.instance[target].bind(plugin.instance);
+          handler = bindPluginMethod(plugin.instance, target);
+        } else {
+          handler = target;
         }
 
         // if the function handler is a plugin instance method,
@@ -698,7 +754,7 @@ class PluginsManager {
   /**
    * @param {object} plugin
    */
-  _initHooks(plugin) {
+  _initHooks(plugin: Plugin): void {
     const methodsList = getMethods(plugin.instance);
 
     for (const [event, fn] of Object.entries(plugin.instance.hooks)) {
@@ -717,7 +773,7 @@ class PluginsManager {
 
         debug('[%s] register hook on event "%s"', plugin.name, event);
 
-        let handler = target;
+        let handler: PluginMethod;
 
         // @deprecated - warn about using a string representing an instance method
         if (typeof target === "string") {
@@ -725,12 +781,18 @@ class PluginsManager {
             "Defining hook handler using a string is deprecated. Pass a function instead.",
           );
 
-          handler = plugin.instance[target].bind(plugin.instance);
+          handler = bindPluginMethod(plugin.instance, target);
+        } else {
+          handler = target;
         }
 
         // if the function handler is a plugin instance method,
         // bound the context to the plugin instance
-        if (target.name && typeof plugin.instance[target.name] === "function") {
+        if (
+          typeof target !== "string" &&
+          target.name &&
+          typeof plugin.instance[target.name] === "function"
+        ) {
           handler = target.bind(plugin.instance);
         }
 
@@ -739,7 +801,7 @@ class PluginsManager {
     }
   }
 
-  async _initApi(plugin) {
+  async _initApi(plugin: Plugin): Promise<void> {
     for (const [controller, definition] of Object.entries(
       plugin.instance.api,
     )) {
@@ -830,7 +892,7 @@ class PluginsManager {
    * @param {object} plugin
    * @returns {boolean}
    */
-  _initControllers(plugin) {
+  _initControllers(plugin: Plugin): void {
     // @deprecated - warn about using the obsolete "controllers" object
     if (!_.isEmpty(plugin.instance.controllers)) {
       plugin.printDeprecation(
@@ -847,7 +909,7 @@ class PluginsManager {
 
       const methodsList = getMethods(plugin.instance);
       const controllerName = `${plugin.name}/${controller}`;
-      const definition = plugin.instance.controllers[controller];
+      const definition: JSONObject = plugin.instance.controllers[controller];
       const errorControllerPrefix = `Unable to inject controller "${controller}" from plugin "${plugin.name}":`;
 
       if (!isPlainObject(definition)) {
@@ -867,14 +929,15 @@ class PluginsManager {
           action,
         );
 
+        const target = definition[action];
+        const named = typeof target === "string" ? target : null;
+
         if (
-          typeof definition[action] !== "function" &&
-          typeof plugin.instance[definition[action]] !== "function"
+          typeof target !== "function" &&
+          (named === null || typeof plugin.instance[named] !== "function")
         ) {
           const suggestion =
-            typeof definition[action] === "string"
-              ? didYouMean(definition[action], methodsList)
-              : "";
+            named === null ? "" : didYouMean(named, methodsList);
 
           throw controllerError.get(
             "invalid_action",
@@ -892,12 +955,12 @@ class PluginsManager {
           this.controllers.set(controllerName, apiController);
         }
 
-        if (typeof definition[action] === "function") {
-          apiController._addAction(action, definition[action]);
+        if (typeof target === "function") {
+          apiController._addAction(action, target);
         } else {
           apiController._addAction(
             action,
-            plugin.instance[definition[action]].bind(plugin.instance),
+            bindPluginMethod(plugin.instance, named),
           );
         }
       }
@@ -1021,7 +1084,7 @@ class PluginsManager {
    * @param {object} plugin
    * @throws {PluginImplementationError} If strategies registration fails
    */
-  _initStrategies(plugin) {
+  _initStrategies(plugin: Plugin): void {
     if (
       !isPlainObject(plugin.instance.strategies) ||
       _.isEmpty(plugin.instance.strategies)
@@ -1042,7 +1105,7 @@ class PluginsManager {
    * @param {object} plugin
    * @throws {PluginImplementationError} If strategies registration fails
    */
-  _initAuthenticators(plugin) {
+  _initAuthenticators(plugin: Plugin): void {
     if (!isPlainObject(plugin.instance.authenticators)) {
       throw kerror.get(
         "plugin",
@@ -1075,7 +1138,7 @@ class PluginsManager {
    *
    * @returns {object} list of loaded plugin
    */
-  loadPlugins(plugins = {}) {
+  loadPlugins(plugins: JSONObject = {}): Map<string, Plugin> {
     const loadedPlugins = new Map();
 
     // first load plugins from Backend.plugin.use
@@ -1142,16 +1205,27 @@ class PluginsManager {
    * @param {Function} verifyMethod - Strategy plugin's verify method
    * @returns {Function}
    */
-  wrapStrategyVerify(pluginName, strategyName, verifyMethod) {
+  wrapStrategyVerify(
+    pluginName: string,
+    strategyName: string,
+    verifyMethod: PluginMethod,
+  ): (...args: unknown[]) => Promise<unknown> {
     const prefix = `${pluginName} Strategy ${strategyName}:`;
 
-    return async (...args) => {
+    return async (...args: unknown[]) => {
       const callback = args[args.length - 1];
+
+      // passport always calls the adapter with a trailing callback; the
+      // narrowing is what lets it be invoked, and the branch cannot be taken.
+      if (typeof callback !== "function") {
+        return;
+      }
+
       const ret = verifyMethod(...args.slice(0, -1));
 
       // catching plugins returning non-thenable content
       // @todo - with async/await we might consider allowing non-promise results
-      if (!ret || !_.isFunction(ret.then)) {
+      if (!isThenable(ret)) {
         callback(strategyError.get("invalid_verify_return", prefix, ret));
         return;
       }
@@ -1217,7 +1291,47 @@ class PluginsManager {
  * @param  {*} arg
  * @returns {Boolean}
  */
-function isConstructor(arg) {
+/**
+ * The duck-typed promise check `registerPipe` has always made: a plugin's pipe
+ * may answer a promise, a value, or nothing, and only the first is awaited.
+ * A guard rather than an inline `typeof` chain so the branch narrows.
+ */
+/**
+ * Resolves a handler a plugin referenced by name and binds it to the instance.
+ *
+ * `plugin.instance[name]` is `unknown` — a plugin may expose anything — so the
+ * `typeof` check is what makes the result callable. Every call site had already
+ * made that check; this is the same one, in the place that needs it.
+ */
+function bindPluginMethod(
+  instance: PluginInstance,
+  name: string,
+): PluginMethod {
+  const method = instance[name];
+
+  if (typeof method !== "function") {
+    return undefined;
+  }
+
+  return method.bind(instance);
+}
+
+function isThenable(value: unknown): value is Bluebird<unknown> {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "then" in value &&
+    typeof value.then === "function" &&
+    "catch" in value &&
+    typeof value.catch === "function"
+  );
+}
+
+function isConstructor(arg: unknown): boolean {
+  if (typeof arg !== "function") {
+    return false;
+  }
+
   try {
     Reflect.construct(Object, [], arg);
   } catch (e) {
@@ -1227,7 +1341,7 @@ function isConstructor(arg) {
   return true;
 }
 
-function getMethods(object) {
+function getMethods(object: object): string[] {
   const prototype = Object.getPrototypeOf(object);
 
   const instanceMethods = Object.getOwnPropertyNames(prototype).filter(
@@ -1241,4 +1355,4 @@ function getMethods(object) {
   return [...instanceMethods, ...objectMethods];
 }
 
-module.exports = PluginsManager;
+export = PluginsManager;

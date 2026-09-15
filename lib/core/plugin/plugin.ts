@@ -19,19 +19,21 @@
  * limitations under the License.
  */
 
-"use strict";
+import fs from "node:fs";
+import path from "node:path";
 
-const path = require("path");
-const fs = require("fs");
-const semver = require("semver");
+import type { JSONObject } from "kuzzle-sdk";
+import * as semver from "semver";
 
-const { PluginContext } = require("./pluginContext");
-const PrivilegedPluginContext = require("./privilegedContext");
-const kerror = require("../../kerror");
-const errorCodes = require("../../kerror/codes");
-const Manifest = require("./pluginManifest");
-const { has, isPlainObject } = require("../../util/safeObject");
-const defaultConfig = require("../../config/default.config");
+import defaultConfig from "../../config/default.config";
+import * as kerror from "../../kerror";
+import * as errorCodes from "../../kerror/codes";
+import type { ControllerDefinition } from "../../types";
+import type { PluginInstance, PluginOptions } from "../../types/PluginInstance";
+import { has, isPlainObject } from "../../util/safeObject";
+import Manifest from "./pluginManifest";
+import { PluginContext } from "./pluginContext";
+import PrivilegedPluginContext from "./privilegedContext";
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
@@ -39,16 +41,69 @@ const runtimeError = kerror.wrap("plugin", "runtime");
 const PLUGIN_NAME_REGEX = /^[a-z-\d]+$/;
 const HTTP_VERBS = ["get", "head", "post", "put", "delete", "patch", "options"];
 
+/**
+ * What `info()` reports for a plugin — the names of what it registers, not the
+ * registrations themselves.
+ */
+interface PluginDescription {
+  version: string;
+  controllers: string[];
+  hooks: string[];
+  manifest: Manifest | null;
+  pipes: string[];
+  routes: JSONObject[];
+  strategies: string[];
+  imports: string[] | JSONObject;
+}
+
+/**
+ * Kuzzle's own wrapper around a plugin: its name, config, context and manifest,
+ * plus the assertions a plugin must satisfy before it is loaded.
+ *
+ * Not to be confused with `lib/types/Plugin.ts`'s `Plugin`, which is the
+ * abstract class a plugin author extends. This one wraps an instance of that.
+ */
 class Plugin {
+  private _instance: PluginInstance;
+  private _application: boolean;
+  private _config: JSONObject;
+  private _context: PluginContext | null;
+  private _version: string;
+  private _name: string;
+  private _manifest: Manifest | null;
+  private _deprecationWarning: boolean;
+
+  /**
+   * Set by `PluginsManager` once the plugin's own `init` has resolved.
+   *
+   * The JavaScript declared a `_initCalled` in the constructor and never read
+   * it: what the manager actually sets, and what the specs assert, is this
+   * public `initCalled`, created ad hoc on the object. The dead field is gone
+   * and the live one is declared.
+   */
+  public initCalled = false;
+
+  /**
+   * Set from the outside by `Backend`, which reads it from the git tree — the
+   * wrapper has no way to derive it. `info()` reports it for an application.
+   */
+  public commit: string | null = null;
+
+  /** Set from the outside by `Backend`, like `commit`. */
+  public openApi: JSONObject | null = null;
+
   constructor(
-    instance,
-    { name, application = false, deprecationWarning = true } = {},
+    instance: PluginInstance,
+    {
+      name,
+      application = false,
+      deprecationWarning = true,
+    }: PluginOptions = {},
   ) {
     this._instance = instance;
 
     this._application = application;
 
-    this._initCalled = false;
     this._config = {};
     this._context = null;
     this._version = instance.version || "";
@@ -61,7 +116,7 @@ class Plugin {
     }
   }
 
-  init(name) {
+  init(name: string): void {
     this.name = name;
 
     if (global.kuzzle.config.plugins[this.name]) {
@@ -104,7 +159,7 @@ class Plugin {
       : new PluginContext(this.name);
   }
 
-  info() {
+  info(): JSONObject {
     /* eslint-disable sort-keys */
     if (this.application) {
       return {
@@ -117,7 +172,7 @@ class Plugin {
       };
     }
 
-    const description = {
+    const description: PluginDescription = {
       version: this.version,
       controllers: [],
       hooks: [],
@@ -158,7 +213,7 @@ class Plugin {
     return description;
   }
 
-  printDeprecation(message) {
+  printDeprecation(message: string): void {
     if (this.deprecationWarning) {
       global.kuzzle.log.warn(`${this.logPrefix} ${message}`);
     }
@@ -166,48 +221,51 @@ class Plugin {
 
   // getters/setters ===========================================================
 
-  get instance() {
+  get instance(): PluginInstance {
     return this._instance;
   }
 
-  get context() {
+  get context(): PluginContext | null {
     return this._context;
   }
 
-  get application() {
+  get application(): boolean {
     return this._application;
   }
 
-  get logPrefix() {
+  get logPrefix(): string {
     return `[${this.name}]`;
   }
 
-  get config() {
+  get config(): JSONObject {
     return this._config;
   }
-  set config(config) {
+  set config(config: JSONObject) {
     this._config = config;
   }
 
-  get version() {
+  get version(): string {
     return this._version;
   }
-  set version(version) {
+  set version(version: string) {
     this._version = version;
   }
 
-  get deprecationWarning() {
+  get deprecationWarning(): boolean {
     return this._deprecationWarning;
   }
-  set deprecationWarning(value) {
+  set deprecationWarning(value: boolean) {
     this._deprecationWarning = value;
   }
 
-  get name() {
+  get name(): string {
     return this._name;
   }
-  set name(name) {
-    if (!this.constructor.checkName(name)) {
+  set name(name: string) {
+    // `Plugin.checkName` rather than `this.constructor.checkName`: nothing
+    // extends this class, and the static-through-instance form is not typable
+    // without an assertion.
+    if (!Plugin.checkName(name)) {
       this.printDeprecation(
         "Plugin names should be in kebab-case. This behavior will be enforced in futur versions of Kuzzle.",
       );
@@ -216,23 +274,26 @@ class Plugin {
     this._name = name;
   }
 
-  get manifest() {
+  get manifest(): Manifest | null {
     return this._manifest;
   }
-  set manifest(manifest) {
+  set manifest(manifest: Manifest | null) {
     this._manifest = manifest;
   }
 
   // static methods ============================================================
 
-  static loadFromDirectory(pluginPath) {
+  static loadFromDirectory(pluginPath: string): Plugin {
     if (!fs.statSync(pluginPath).isDirectory()) {
       throw assertionError.get("cannot_load", pluginPath, "Not a directory.");
     }
 
-    let plugin;
-    let PluginClass = {};
+    let plugin: Plugin;
+    let PluginClass: { new (): PluginInstance; name?: string } = null;
     try {
+      // A plugin is loaded from disk at runtime: the path is only known then,
+      // so this require is the feature, not an unconverted import.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       PluginClass = require(pluginPath);
 
       const pluginInstance = new PluginClass();
@@ -255,6 +316,8 @@ class Plugin {
     // load plugin version if exists
     const packageJsonPath = path.join(pluginPath, "package.json");
     if (fs.existsSync(packageJsonPath) && !plugin.version) {
+      // Same as the plugin's own module above: a path known only at runtime.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       plugin.version = require(packageJsonPath).version;
     }
 
@@ -267,7 +330,16 @@ class Plugin {
         const pluginCode =
           config && config._pluginCode ? config._pluginCode : 0x00;
 
-        errorCodes.loadPluginsErrors(plugin.manifest.raw, pluginCode);
+        // The two properties `loadPluginsErrors` reads, named explicitly:
+        // `raw` is a JSONObject and cannot be narrowed to the shape it wants
+        // without an assertion. Same values, same call.
+        errorCodes.loadPluginsErrors(
+          {
+            errors: plugin.manifest.raw.errors,
+            name: plugin.manifest.raw.name,
+          },
+          pluginCode,
+        );
 
         global.kuzzle.log.info(
           `${plugin.logPrefix} Custom errors successfully loaded.`,
@@ -299,15 +371,15 @@ class Plugin {
     return plugin;
   }
 
-  static checkName(name) {
+  static checkName(name: string): boolean {
     return PLUGIN_NAME_REGEX.test(name);
   }
 
   static checkControllerDefinition(
-    name,
-    definition,
-    { application = false } = {},
-  ) {
+    name: string,
+    definition: ControllerDefinition,
+    { application = false }: { application?: boolean } = {},
+  ): void {
     if (typeof name !== "string") {
       throw assertionError.get(
         "invalid_controller_definition",
@@ -419,7 +491,12 @@ class Plugin {
   }
 }
 
-function checkHttpRouteProperties(route, action, name, application) {
+function checkHttpRouteProperties(
+  route: JSONObject,
+  action: string,
+  name: string,
+  application: boolean,
+): void {
   if (typeof route.path !== "string" || route.path.length === 0) {
     if (!application && typeof route.url === "string" && route.url.length > 0) {
       return;
@@ -433,4 +510,4 @@ function checkHttpRouteProperties(route, action, name, application) {
   }
 }
 
-module.exports = Plugin;
+export = Plugin;

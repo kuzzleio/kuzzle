@@ -37,6 +37,7 @@ import type {
   EventDefinition,
   HookEventHandler,
   PipeEventHandler,
+  RegisteredPipeHandler,
 } from "../../types/EventHandler";
 import memoize from "../../util/memoize";
 import Promback from "../../util/promback";
@@ -48,12 +49,12 @@ class PluginPipeDefinition<
   TEventDefinition extends EventDefinition = EventDefinition,
 > {
   public event: TEventDefinition["name"];
-  public handler: PipeEventHandler<TEventDefinition>;
+  public handler: RegisteredPipeHandler<TEventDefinition>;
   public pipeId: string | null;
 
   constructor(
     event: TEventDefinition["name"],
-    handler: PipeEventHandler<TEventDefinition>,
+    handler: RegisteredPipeHandler<TEventDefinition>,
     pipeId: string | null = null,
   ) {
     this.event = event;
@@ -68,7 +69,7 @@ class KuzzleEventEmitter extends EventEmitter {
   private coreSyncedAnswerers: Map<string, HookEventHandler>;
   private corePipes: Map<string, PipeEventHandler[]>;
   private pipeRunner: PipeRunner;
-  private pluginPipes: Map<string, PipeEventHandler[]>;
+  private pluginPipes: Map<string, RegisteredPipeHandler[]>;
   private pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
   private superEmit: typeof EventEmitter.prototype.emit;
 
@@ -80,7 +81,7 @@ class KuzzleEventEmitter extends EventEmitter {
     /**
      * Map of plugin pipe handler functions by event
      */
-    this.pluginPipes = new Map<string, PipeEventHandler[]>();
+    this.pluginPipes = new Map<string, RegisteredPipeHandler[]>();
 
     /**
      * Map of plugin pipe definitions by pipeId
@@ -311,13 +312,20 @@ class KuzzleEventEmitter extends EventEmitter {
   >(
     pluginName: string,
     event: TEventDefinition["name"],
-    fn: HookEventHandler<TEventDefinition>,
+    // Same as `registerPluginPipe`: a hook resolved from a plugin member is a
+    // function of unknown return, not necessarily `void | Promise<void>`.
+    fn: HookEventHandler<TEventDefinition> | ((...args: unknown[]) => unknown),
   ) {
     this.on(event, (...args) => {
       try {
         const ret = fn(...args, event);
 
-        if (typeof ret === "object" && typeof ret.catch === "function") {
+        if (
+          typeof ret === "object" &&
+          ret !== null &&
+          "catch" in ret &&
+          typeof ret.catch === "function"
+        ) {
           ret.catch((error) => {
             if (event !== "hook:onError") {
               this.emit("hook:onError", { error, event, pluginName });
@@ -340,7 +348,10 @@ class KuzzleEventEmitter extends EventEmitter {
     TEventDefinition extends EventDefinition = EventDefinition,
   >(
     event: TEventDefinition["name"],
-    handler: PipeEventHandler<TEventDefinition>,
+    // A plugin pipe may answer a promise OR take a trailing callback — the
+    // runner supports both, and `PluginsManager.registerPipe` hands it the
+    // callback form. The promise-only type described half of what is accepted.
+    handler: RegisteredPipeHandler<TEventDefinition>,
   ) {
     if (!this.pluginPipes.has(event)) {
       this.pluginPipes.set(event, []);

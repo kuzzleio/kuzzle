@@ -118,6 +118,7 @@ lib/model/storage/apiKey.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/esWrapper.ts
 lib/service/storage/Elasticsearch.ts
+lib/types/ApiRoute.ts
 lib/types/ClientConnection.ts
 lib/types/Deprecation.ts
 lib/types/EventHandler.ts
@@ -127,6 +128,7 @@ lib/types/Kuzzle.ts
 lib/types/KuzzleDocument.ts
 lib/types/OpenApiDefinition.ts
 lib/types/PasswordPolicy.ts
+lib/types/PluginInstance.ts
 lib/types/PluginManifest.ts
 lib/types/Policy.ts
 lib/types/PolicyRestrictions.ts

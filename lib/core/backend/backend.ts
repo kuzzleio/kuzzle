@@ -42,6 +42,7 @@ import {
   BackendSubscription,
 } from "./index";
 import { Logger } from "../../kuzzle/Logger";
+import Plugin from "../plugin/plugin";
 
 const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
@@ -98,9 +99,10 @@ export class Backend {
   }> = [];
 
   /**
-   * Requiring the PluginObject on module top level creates cyclic dependency
+   * The `Plugin` wrapper class, held on the instance rather than imported at
+   * use site — see the `Reflect.defineProperty` in the constructor.
    */
-  protected PluginObject: any;
+  protected PluginObject: typeof Plugin;
 
   /**
    * Application version
@@ -230,11 +232,8 @@ export class Backend {
    * @param name - Your application name
    */
   constructor(name: string) {
-    /**
-     * Requiring the PluginObject on module top level creates cyclic dependency
-     */
     Reflect.defineProperty(this, "PluginObject", {
-      value: require("../plugin/plugin"),
+      value: Plugin,
     });
 
     if (!this.PluginObject.checkName(name)) {
