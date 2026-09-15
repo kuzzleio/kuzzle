@@ -1,63 +1,51 @@
-# Files adopted in STRICT mode — see docs/adr-001/steps/01-sprint-0-tooling.md and scripts/strict-check.sh.
-# A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
+
+
+
+
+
+
+
+
+
+
+
 # 'npm run test:strict -- --candidates' lists files that are already clean.
-# Seeded 2026-07-12: lib/types files already clean under strict.
-
-lib/types/ClientConnection.ts
-lib/types/Deprecation.ts
-lib/types/EventHandler.ts
-lib/types/HttpMessage.ts
-lib/types/HttpStream.ts
-lib/types/Kuzzle.ts
-lib/types/KuzzleDocument.ts
-lib/types/OpenApiDefinition.ts
-lib/types/PasswordPolicy.ts
-lib/types/PluginManifest.ts
-lib/types/Policy.ts
-lib/types/PolicyRestrictions.ts
-lib/types/ProfileDefinition.ts
-lib/types/RoleDefinition.ts
-lib/types/StrategyDefinition.ts
-lib/types/Target.ts
-lib/types/Token.ts
-lib/types/config/DumpConfiguration.ts
-lib/types/config/HttpConfiguration.ts
-lib/types/config/KuzzleConfiguration.ts
-lib/types/config/LimitsConfiguration.ts
-lib/types/config/SecurityConfiguration.ts
-lib/types/config/ServerConfiguration.ts
-lib/types/config/ServicesConfiguration.ts
-lib/types/config/internalCache/InternalCacheRedisConfiguration.ts
-lib/types/config/publicCache/PublicCacheRedisConfiguration.ts
-lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.ts
-lib/types/controllers/ControllerDefinition.ts
-lib/types/controllers/ControllerRights.ts
-lib/types/controllers/authController.type.ts
-lib/types/core/auth/formatProcessing.type.ts
-lib/types/errors/ErrorDefinition.ts
-lib/types/errors/ErrorDomains.ts
-lib/types/events/EventProtocol.ts
-lib/types/index.ts
-lib/types/realtime/RealtimeScope.ts
-lib/types/realtime/RealtimeUsers.ts
-lib/types/realtime/RoomList.ts
-lib/types/shared/StoreCollectionsDefinition.ts
-lib/types/storage/7/Elasticsearch.ts
-lib/types/storage/8/Elasticsearch.ts
-
-# Sprint 1 — lib/util (warm-up, 2026-07-12)
-lib/util/bytes.ts
-lib/util/extractFields.ts
-lib/util/memoize.ts
-lib/util/safeObject.ts
-
-# Mid-course hardening — step 06 (2026-09-09).
+# A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
 # Every production file that passed `strict-check.sh --candidates` on that date is
-# adopted here, so the ratchet guards the whole already-clean surface instead of a
-# hand-picked subset. Sprint 4's controllers became clean once
-# `NativeController.constructor(actions: string[] = [])` stopped inferring `never[]`.
+# Files adopted in STRICT mode — see docs/adr-001/steps/01-sprint-0-tooling.md and scripts/strict-check.sh.
 # If one of these ever blocks unrelated work, remove it here WITH a justification —
+# Mid-course hardening — step 06 (2026-09-09).
+# Seeded 2026-07-12: lib/types files already clean under strict.
+# Sprint 1 — lib/util (warm-up, 2026-07-12)
+# Sprint 5 PR G1 (2026-09-09): the converted files that are strict-clean as-is.
+# Sprint 5 PR G2 (2026-09-09): the module-wiring files and the impersonated SDK
+# Sprint 6, PR H1 (2026-09-11) — lib/core/validation's type leaves: the base
+# Sprint 6, PR H2 (2026-09-11) — the network files that are already strict-clean.
+# Sprint 6, PR H3 (2026-09-11) — the plugin leaves. pluginRepository.ts was
+# Step 06 PR F3 (2026-09-09): promback's own typing hole fixed under test — the
+# TD-40 (2026-09-11, #2727) — ObjectRepository's load path is declared nullable,
+# TD-41 (2026-09-11, #2728) — protocol.ts's init normalises its two call shapes
+# The repositories and the notifier are not: nullable `request.context.*`,
+# The rest of lib/core/network is nullable-heavy by nature (parentPort, the
+# `NativeController.constructor(actions: string[] = [])` stopped inferring `never[]`.
+# `promback.resolve(updated[0])` actually pass.
+# adopted here, so the ratchet guards the whole already-clean surface instead of a
+# are strict-clean. storageEngine and abstractManifest are not — nullable
+# be declared against ObjectRepository<TObject>'s Promise<TObject> without a
+# class, the shared typeOptions shapes and the 13 leaf types.
 # do not weaken the file.
+# double cast. TD-40 (#2727) fixed that in the base class instead — the whole
+# dynamic pipe payloads and the still-JS module wiring they receive.
+# hand-picked subset. Sprint 4's controllers became clean once
+# instead of typing a union the body could not serve, and ships its first spec.
+# is left to the sprint-9 flip rather than guarded file by file here.
+# left out here: its load() resolves null for a missing user, which could not
+# load path had always had a `return null` — so the file is adopted below.
+# manifest fields and the still-JS clientAdapter they build on.
+# optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
+# settled value is `T | undefined`, which is what `resolve()` and
+# which is what it always did. pluginRepository.ts can now say what it returns.
+bin/copy-binaries.ts
 index.ts
 lib/api/controllers/adminController.ts
 lib/api/controllers/clusterController.ts
@@ -84,53 +72,30 @@ lib/core/backend/backendPlugin.ts
 lib/core/backend/backendSubscription.ts
 lib/core/backend/index.ts
 lib/core/cache/cacheDbEnum.ts
+lib/core/network/clientConnection.ts
+lib/core/network/context.ts
+lib/core/network/httpRouter/routeTypes.ts
+lib/core/network/networkEntryPoint.ts
+lib/core/network/protocolManifest.ts
+lib/core/network/protocols/httpMessage.ts
+lib/core/network/protocols/protocol.ts
+lib/core/plugin/pluginManifest.ts
+lib/core/plugin/pluginRepository.ts
+lib/core/plugin/privilegedContext.ts
+lib/core/realtime/actionEnum.ts
 lib/core/realtime/channel.ts
 lib/core/realtime/connectionRooms.ts
-lib/core/realtime/room.ts
-lib/core/shared/KoncordeWrapper.ts
-lib/core/storage/storeScopeEnum.ts
-lib/kerror/errors/index.ts
-lib/kerror/errors/multipleErrorsError.ts
-lib/kuzzle/index.ts
-lib/model/security/rights.ts
-lib/model/storage/apiKey.ts
-lib/service/storage/7/esWrapper.ts
-lib/service/storage/8/esWrapper.ts
-lib/service/storage/Elasticsearch.ts
-lib/types/config/cache/BaseCacheRedisConfiguration.ts
-lib/types/controllers/adminController.type.ts
-lib/util/array.ts
-lib/util/assertType.ts
-lib/util/crypto.ts
-lib/util/deprecate.ts
-lib/util/esRequest.ts
-lib/util/mutex.ts
-lib/util/time.ts
-
-# Step 06 PR F3 (2026-09-09): promback's own typing hole fixed under test — the
-# settled value is `T | undefined`, which is what `resolve()` and
-# `promback.resolve(updated[0])` actually pass.
-lib/util/promback.ts
-
-# Sprint 5 PR G1 (2026-09-09): the converted files that are strict-clean as-is.
-# The repositories and the notifier are not: nullable `request.context.*`,
-# dynamic pipe payloads and the still-JS module wiring they receive.
-lib/core/realtime/actionEnum.ts
+lib/core/realtime/index.ts
 lib/core/realtime/notification/index.ts
 lib/core/realtime/notification/server.ts
-lib/core/security/securityLoader.ts
-
-# Sprint 5 PR G2 (2026-09-09): the module-wiring files and the impersonated SDK
-# are strict-clean. storageEngine and abstractManifest are not — nullable
-# manifest fields and the still-JS clientAdapter they build on.
-lib/core/realtime/index.ts
+lib/core/realtime/room.ts
 lib/core/security/index.ts
+lib/core/security/securityLoader.ts
+lib/core/shared/KoncordeWrapper.ts
 lib/core/shared/sdk/impersonatedSdk.ts
-bin/copy-binaries.ts
-
-# Sprint 6, PR H1 (2026-09-11) — lib/core/validation's type leaves: the base
-# class, the shared typeOptions shapes and the 13 leaf types.
+lib/core/storage/storeScopeEnum.ts
 lib/core/validation/baseType.ts
+lib/core/validation/specification.ts
 lib/core/validation/typeOptions.ts
 lib/core/validation/types/anything.ts
 lib/core/validation/types/boolean.ts
@@ -145,30 +110,66 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
-
-# Sprint 6, PR H2 (2026-09-11) — the network files that are already strict-clean.
-# The rest of lib/core/network is nullable-heavy by nature (parentPort, the
-# optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
-# is left to the sprint-9 flip rather than guarded file by file here.
-lib/core/network/clientConnection.ts
-lib/core/network/context.ts
-lib/core/network/httpRouter/routeTypes.ts
-lib/core/network/networkEntryPoint.ts
-lib/core/network/protocolManifest.ts
-lib/core/network/protocols/httpMessage.ts
-
-# Sprint 6, PR H3 (2026-09-11) — the plugin leaves. pluginRepository.ts was
-# left out here: its load() resolves null for a missing user, which could not
-# be declared against ObjectRepository<TObject>'s Promise<TObject> without a
-# double cast. TD-40 (#2727) fixed that in the base class instead — the whole
-# load path had always had a `return null` — so the file is adopted below.
-lib/core/plugin/pluginManifest.ts
-lib/core/plugin/privilegedContext.ts
-
-# TD-40 (2026-09-11, #2727) — ObjectRepository's load path is declared nullable,
-# which is what it always did. pluginRepository.ts can now say what it returns.
-lib/core/plugin/pluginRepository.ts
-
-# TD-41 (2026-09-11, #2728) — protocol.ts's init normalises its two call shapes
-# instead of typing a union the body could not serve, and ships its first spec.
-lib/core/network/protocols/protocol.ts
+lib/kerror/errors/index.ts
+lib/kerror/errors/multipleErrorsError.ts
+lib/kuzzle/index.ts
+lib/model/security/rights.ts
+lib/model/storage/apiKey.ts
+lib/service/storage/7/esWrapper.ts
+lib/service/storage/8/esWrapper.ts
+lib/service/storage/Elasticsearch.ts
+lib/types/ClientConnection.ts
+lib/types/Deprecation.ts
+lib/types/EventHandler.ts
+lib/types/HttpMessage.ts
+lib/types/HttpStream.ts
+lib/types/Kuzzle.ts
+lib/types/KuzzleDocument.ts
+lib/types/OpenApiDefinition.ts
+lib/types/PasswordPolicy.ts
+lib/types/PluginManifest.ts
+lib/types/Policy.ts
+lib/types/PolicyRestrictions.ts
+lib/types/ProfileDefinition.ts
+lib/types/RoleDefinition.ts
+lib/types/StrategyDefinition.ts
+lib/types/Target.ts
+lib/types/Token.ts
+lib/types/config/DumpConfiguration.ts
+lib/types/config/HttpConfiguration.ts
+lib/types/config/KuzzleConfiguration.ts
+lib/types/config/LimitsConfiguration.ts
+lib/types/config/SecurityConfiguration.ts
+lib/types/config/ServerConfiguration.ts
+lib/types/config/ServicesConfiguration.ts
+lib/types/config/cache/BaseCacheRedisConfiguration.ts
+lib/types/config/internalCache/InternalCacheRedisConfiguration.ts
+lib/types/config/publicCache/PublicCacheRedisConfiguration.ts
+lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.ts
+lib/types/controllers/ControllerDefinition.ts
+lib/types/controllers/ControllerRights.ts
+lib/types/controllers/adminController.type.ts
+lib/types/controllers/authController.type.ts
+lib/types/core/auth/formatProcessing.type.ts
+lib/types/errors/ErrorDefinition.ts
+lib/types/errors/ErrorDomains.ts
+lib/types/events/EventProtocol.ts
+lib/types/index.ts
+lib/types/realtime/RealtimeScope.ts
+lib/types/realtime/RealtimeUsers.ts
+lib/types/realtime/RoomList.ts
+lib/types/shared/StoreCollectionsDefinition.ts
+lib/types/storage/7/Elasticsearch.ts
+lib/types/storage/8/Elasticsearch.ts
+lib/util/array.ts
+lib/util/assertType.ts
+lib/util/bytes.ts
+lib/util/crypto.ts
+lib/util/deprecate.ts
+lib/util/esRequest.ts
+lib/util/extractFields.ts
+lib/util/memoize.ts
+lib/util/mutex.ts
+lib/util/promback.ts
+lib/util/safeObject.ts
+lib/util/time.ts

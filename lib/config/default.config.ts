@@ -464,7 +464,6 @@ const defaultConfig: KuzzleConfiguration = {
     },
     syncTimeout: 5000,
   },
-  /** @type {DocumentSpecification} */
   validation: {},
 
   controllers: {

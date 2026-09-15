@@ -19,34 +19,121 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import { Koncorde } from "koncorde";
+import type { JSONObject } from "kuzzle-sdk";
+import _ from "lodash";
 
-const Bluebird = require("bluebird");
-const _ = require("lodash");
-const { Koncorde } = require("koncorde");
+import type { KuzzleRequest } from "../../api/request";
+import * as kerror from "../../kerror";
+import { KuzzleError } from "../../kerror/errors";
+import createDebug from "../../util/debug";
+import { koncordeTest, toKoncordeIndex } from "../../util/koncordeCompat";
+import { get, has, isPlainObject } from "../../util/safeObject";
+import type BaseType from "./baseType";
+import type {
+  CollectionSpecification,
+  CuratedCollectionSpecification,
+  DocumentSpecification,
+  ErrorMessages,
+  FieldSpecification,
+  RawSpecification,
+  SpecificationValidationResult,
+  StructuredFieldSpecification,
+  VerboseErrorMessages,
+} from "./specification";
+import AnythingType from "./types/anything";
+import BooleanType from "./types/boolean";
+import DateType from "./types/date";
+import EmailType from "./types/email";
+import EnumType from "./types/enum";
+import GeoPointType from "./types/geoPoint";
+import GeoShapeType from "./types/geoShape";
+import IntegerType from "./types/integer";
+import IpAddressType from "./types/ipAddress";
+import NumericType from "./types/numeric";
+import ObjectType from "./types/object";
+import StringType from "./types/string";
+import UrlType from "./types/url";
 
-const debug = require("../../util/debug")("core:validation");
-const kerror = require("../../kerror");
-const { KuzzleError } = require("../../kerror/errors");
-const { has, isPlainObject, get } = require("../../util/safeObject");
-const { koncordeTest, toKoncordeIndex } = require("../../util/koncordeCompat");
+const debug = createDebug("core:validation");
 
 const assertionError = kerror.wrap("validation", "assert");
+
 /**
- * @class Validation
+ * The 13 built-in types, in the order `init` registers them.
+ *
+ * They were loaded by `require(`./types/${typeFile}`)` over a list of names.
+ * That is a runtime `require` in a function body, which is the third spelling
+ * of the defect TD-49 catalogued: a bundler cannot see it, so the module is
+ * unloadable from a runner that resolves the import graph itself. Naming the
+ * constructors statically also lets `addType`'s contract be checked at compile
+ * time for the built-ins, where before only the runtime assertions in `addType`
+ * stood between a typo and a broken boot.
  */
+const BUILT_IN_TYPES = [
+  AnythingType,
+  BooleanType,
+  DateType,
+  EmailType,
+  EnumType,
+  GeoPointType,
+  GeoShapeType,
+  IntegerType,
+  IpAddressType,
+  NumericType,
+  ObjectType,
+  StringType,
+  UrlType,
+];
+
+/**
+ * The marker `recurseFieldValidation` throws when a document holds a field its
+ * specification does not declare and the specification is strict.
+ *
+ * It is caught by message — `error.message !== "strictness"` — at two levels,
+ * and carries the offending field name for the message the catcher builds. It
+ * was a plain `Error` with an untyped `details` property bolted on.
+ */
+class StrictnessError extends Error {
+  public details: { field: string };
+
+  constructor(field: string) {
+    super("strictness");
+    this.details = { field };
+  }
+}
+
+/**
+ * Narrows the "a curated value, or a report of why it could not be curated"
+ * pair that four of the curation methods answer with.
+ *
+ * The pair is not a discriminated union — the success branch is the curated
+ * value itself and carries no tag — so the discriminator has to be the failure
+ * shape. `"isValid" in result` is what makes this a guard rather than a cast,
+ * and TD-43's `casts` ratchet is the reason it matters.
+ */
+function isCurationFailure<T extends object>(
+  result: T | SpecificationValidationResult,
+): result is SpecificationValidationResult {
+  return "isValid" in result && result.isValid === false;
+}
+
 class Validation {
+  public types: Record<string, BaseType>;
+  public typeAllowsChildren: string[];
+  public specification: DocumentSpecification;
+  public koncorde: Koncorde;
+  public rawConfiguration: RawSpecification;
+  public logger: ReturnType<typeof global.kuzzle.log.child>;
+
   constructor() {
-    /** @type {...ValidationType} */
     this.types = {};
 
-    /** @type {string[]} */
     this.typeAllowsChildren = [];
 
-    /** @type {DocumentSpecification} */
     this.specification = {};
 
-    /** @type {Koncorde} */
     this.koncorde = new Koncorde();
 
     this.rawConfiguration = {};
@@ -54,43 +141,45 @@ class Validation {
   }
 
   /**
-   * Walks through all types in "defaultTypesFiles" initializes all types
+   * Registers every built-in validation type.
    */
-  init() {
-    for (const typeFile of [
-      "anything",
-      "boolean",
-      "date",
-      "email",
-      "enum",
-      "geoPoint",
-      "geoShape",
-      "integer",
-      "ipAddress",
-      "numeric",
-      "object",
-      "string",
-      "url",
-    ]) {
-      const TypeConstructor = require(`./types/${typeFile}`);
+  init(): void {
+    for (const TypeConstructor of BUILT_IN_TYPES) {
       this.addType(new TypeConstructor());
     }
   }
 
   /**
-   * Validates a document against its collection specifications
+   * Validates a document against its collection specifications.
    *
-   * @param {import("../../api/request").KuzzleRequest} request
-   * @param {boolean} [verbose]
-   * @returns {Promise.<{documentBody: *, errorMessages:string[], valid: boolean}|KuzzleRequest>}
+   * Answers the request itself when `verbose` is false — the caller's document
+   * has had its defaults applied in place — and a report when it is true.
    */
-  async validate(request, verbose = false) {
-    const { _id, index, collection } = request.input.resource,
-      collectionSpec =
-        (isPlainObject(this.specification) &&
-          has(this.specification, index) &&
-          get(this.specification[index], collection)) ||
-        {};
+  async validate(
+    request: KuzzleRequest,
+    verbose?: false,
+  ): Promise<KuzzleRequest>;
+  async validate(
+    request: KuzzleRequest,
+    verbose: true,
+  ): Promise<{ errorMessages: VerboseErrorMessages; valid: boolean }>;
+  async validate(
+    request: KuzzleRequest,
+    verbose = false,
+  ): Promise<KuzzleRequest | { errorMessages: ErrorMessages; valid: boolean }> {
+    const { _id, index, collection } = request.input.resource;
+
+    // `has` rather than a plain lookup: `index` and `collection` come from the
+    // request, so an inherited property must not answer for a specification.
+    const indexSpec = has(this.specification, index)
+      ? this.specification[index]
+      : undefined;
+    const collectionSpec: Partial<CuratedCollectionSpecification> =
+      (isPlainObject(this.specification) &&
+        indexSpec !== undefined &&
+        has(indexSpec, collection) &&
+        indexSpec[collection]) ||
+      {};
 
     let isUpdate = false,
       body = request.input.body;
@@ -113,7 +202,7 @@ class Validation {
       _.defaultsDeep(body, document._source);
     }
 
-    const errorMessages = verbose ? {} : [];
+    const errorMessages: ErrorMessages = verbose ? {} : [];
     let isValid = true;
 
     if (collectionSpec) {
@@ -181,11 +270,14 @@ class Validation {
   }
 
   /**
-   * @param {boolean} isUpdate
-   * @param {*} documentSubset
-   * @param {...StructuredFieldSpecification} collectionSpecSubset
+   * Fills a document subset in with the default values its specification
+   * declares, recursing through the fields that allow children.
    */
-  recurseApplyDefault(isUpdate, documentSubset, collectionSpecSubset) {
+  recurseApplyDefault(
+    isUpdate: boolean,
+    documentSubset: JSONObject,
+    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+  ): JSONObject {
     Object.keys(collectionSpecSubset).forEach((fieldName) => {
       const specSubset = collectionSpecSubset[fieldName],
         field = documentSubset[fieldName];
@@ -222,25 +314,23 @@ class Validation {
   }
 
   /**
-   * @param {*} documentSubset
-   * @param {StructuredFieldSpecification} collectionSpecSubset
-   * @param {boolean} strictness
-   * @param {string[]} errorMessages
-   * @param {boolean} verbose
+   * Validates every field of a document subset against its specification.
+   *
+   * @throws {StrictnessError} when `strictness` holds and the subset declares a
+   * field the specification does not — caught by the two callers, which turn it
+   * into a message naming the field.
    */
   recurseFieldValidation(
-    documentSubset,
-    collectionSpecSubset,
-    strictness,
-    errorMessages,
-    verbose,
-  ) {
+    documentSubset: JSONObject,
+    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+    strictness: boolean,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
     if (strictness) {
       for (const field of Object.keys(documentSubset)) {
         if (!collectionSpecSubset[field]) {
-          const error = new Error("strictness");
-          error.details = { field };
-          throw error;
+          throw new StrictnessError(field);
         }
       }
     }
@@ -275,23 +365,16 @@ class Validation {
   }
 
   /**
-   * @param {string} fieldName
-   * @param {*} documentSubset
-   * @param {StructuredFieldSpecification} collectionSpecSubset
-   * @param {boolean} strictness
-   * @param {string[]} errorMessages
-   * @param {boolean} verbose
-   * @returns {boolean}
+   * Validates one field of a document subset against its specification.
    */
   isValidField(
-    fieldName,
-    documentSubset,
-    collectionSpecSubset,
-    strictness,
-    errorMessages,
-    verbose,
-  ) {
-    /** @type StructuredFieldSpecification */
+    fieldName: string,
+    documentSubset: JSONObject,
+    collectionSpecSubset: Record<string, StructuredFieldSpecification>,
+    strictness: boolean,
+    errorMessages: ErrorMessages,
+    verbose: boolean,
+  ): boolean {
     const field = collectionSpecSubset[fieldName];
     let result = true;
 
@@ -310,8 +393,8 @@ class Validation {
     }
 
     if (!_.isNil(documentSubset[fieldName])) {
-      let nestedStrictness = false,
-        fieldValues;
+      let nestedStrictness = false;
+      let fieldValues: unknown[];
 
       if (field.multivalued.value) {
         if (!Array.isArray(documentSubset[fieldName])) {
@@ -373,7 +456,7 @@ class Validation {
       }
 
       for (const val of fieldValues) {
-        const fieldErrors = [];
+        const fieldErrors: string[] = [];
 
         if (
           !this.types[field.type].validate(field.typeOptions, val, fieldErrors)
@@ -435,11 +518,14 @@ class Validation {
   }
 
   /**
-   * @returns {Promise.<T>}
+   * Loads every stored specification, curates it, and swaps the result in.
+   *
+   * A collection whose specification does not curate is logged and skipped, so
+   * one bad specification cannot keep the others from being applied.
    */
-  curateSpecification() {
-    const promises = [],
-      specification = {};
+  curateSpecification(): Promise<void> {
+    const promises: Promise<null>[] = [];
+    const specification: DocumentSpecification = {};
 
     return getValidationConfiguration().then((validation) => {
       this.rawConfiguration = validation;
@@ -481,18 +567,14 @@ class Validation {
   }
 
   /**
-   * @param {string} indexName
-   * @param {string} collectionName
-   * @param {CollectionSpecification} collectionSpec
-   * @param {boolean} [verboseErrors]
-   * @returns {Promise<object>}
+   * Reports whether a specification would curate, without registering it.
    */
   validateFormat(
-    indexName,
-    collectionName,
-    collectionSpec,
+    indexName: string,
+    collectionName: string,
+    collectionSpec: CollectionSpecification,
     verboseErrors = false,
-  ) {
+  ): Promise<SpecificationValidationResult> {
     // We make a deep clone to avoid side effects
     const specification = _.cloneDeep(collectionSpec);
 
@@ -505,7 +587,7 @@ class Validation {
         verboseErrors,
       )
         .then((result) => {
-          if (verboseErrors && result.isValid === false) {
+          if (verboseErrors && isCurationFailure(result)) {
             return result;
           }
           return { isValid: true };
@@ -517,23 +599,37 @@ class Validation {
   }
 
   /**
-   * @param {string} index
-   * @param {string} collection
-   * @param {CollectionSpecification} spec
-   * @param {boolean} [dryRun]
-   * @param {boolean} [verbose]
-   * @returns {Promise<CollectionSpecification>}
-   * @rejects PreconditionError
+   * Turns a submitted specification into the tree the validator walks.
+   *
+   * Answers a {@link SpecificationValidationResult} instead of throwing when
+   * `verbose` holds, which is what lets `validateFormat` collect every problem
+   * rather than the first one.
+   *
+   * @throws {PreconditionError}
    */
   async curateCollectionSpecification(
-    index,
-    collection,
-    spec,
+    index: string,
+    collection: string,
+    spec: CollectionSpecification,
+    dryRun?: boolean,
+    verbose?: false,
+  ): Promise<CuratedCollectionSpecification>;
+  async curateCollectionSpecification(
+    index: string,
+    collection: string,
+    spec: CollectionSpecification,
+    dryRun: boolean,
+    verbose: boolean,
+  ): Promise<CuratedCollectionSpecification | SpecificationValidationResult>;
+  async curateCollectionSpecification(
+    index: string,
+    collection: string,
+    spec: CollectionSpecification,
     dryRun = false,
     verbose = false,
-  ) {
-    let error = "";
-    const processed = {
+  ): Promise<CuratedCollectionSpecification | SpecificationValidationResult> {
+    let error: KuzzleError;
+    const processed: CuratedCollectionSpecification = {
       fields: {},
       strict: spec.strict || false,
       validators: null,
@@ -562,7 +658,7 @@ class Validation {
         verbose,
       );
 
-      if (result.isValid === false) {
+      if (isCurationFailure(result)) {
         if (verbose) {
           // do not fail fast if we need verbose errors
           return result;
@@ -595,15 +691,18 @@ class Validation {
     return processed;
   }
 
+  /**
+   * Curates every field of a specification, then assembles them into a tree.
+   */
   structureCollectionValidation(
-    collectionSpec,
-    indexName,
-    collectionName,
+    collectionSpec: CollectionSpecification,
+    indexName: string,
+    collectionName: string,
     verboseErrors = false,
-  ) {
-    const fields = {};
-    let errors = [],
-      maxDepth = 0;
+  ): StructuredFieldSpecification | SpecificationValidationResult {
+    const fields: Record<number, StructuredFieldSpecification[]> = {};
+    let errors: string[] = [];
+    let maxDepth = 0;
 
     for (const fieldName of Object.keys(collectionSpec.fields)) {
       const // We deep clone the field because we will modify it
@@ -654,22 +753,21 @@ class Validation {
   }
 
   /**
-   * @param {FieldSpecification} fieldSpec
-   * @param {string} indexName
-   * @param {string} collectionName
-   * @param {string} fieldName
-   * @param {boolean} [verboseErrors]
-   * @returns {object}
-   * @throws PreconditionError
+   * Fills a field specification's defaults in and hands its `typeOptions` to
+   * the type that owns them.
+   *
+   * @throws {PreconditionError}
    */
   curateFieldSpecification(
-    fieldSpec,
-    indexName,
-    collectionName,
-    fieldName,
+    fieldSpec: FieldSpecification,
+    indexName: string,
+    collectionName: string,
+    fieldName: string,
     verboseErrors = false,
-  ) {
-    const errors = [];
+  ): SpecificationValidationResult & {
+    fieldSpec?: StructuredFieldSpecification;
+  } {
+    const errors: string[] = [];
 
     const result = this.curateFieldSpecificationFormat(
       fieldSpec,
@@ -745,22 +843,18 @@ class Validation {
   }
 
   /**
-   * @param {FieldSpecification} fieldSpec
-   * @param {string} indexName
-   * @param {string} collectionName
-   * @param {string} fieldName
-   * @param {boolean} [verboseErrors]
-   * @returns {object}
-   * @throws PreconditionError
+   * Checks a field specification's shape, before any type is consulted.
+   *
+   * @throws {PreconditionError}
    */
   curateFieldSpecificationFormat(
-    fieldSpec,
-    indexName,
-    collectionName,
-    fieldName,
+    fieldSpec: FieldSpecification,
+    indexName: string,
+    collectionName: string,
+    fieldName: string,
     verboseErrors = false,
-  ) {
-    const errors = [];
+  ): SpecificationValidationResult {
+    const errors: string[] = [];
 
     const props = [
       "mandatory",
@@ -886,13 +980,15 @@ class Validation {
   }
 
   /**
-   * @param {string} indexName
-   * @param {string} collectionName
-   * @param {*} validatorFilter
-   * @param {boolean} dryRun
-   * @returns {string}
+   * Registers a collection's validators as a Koncorde filter and answers its
+   * id — or validates it and answers `null`, on a dry run.
    */
-  curateValidatorFilter(indexName, collectionName, validatorFilter, dryRun) {
+  curateValidatorFilter(
+    indexName: string,
+    collectionName: string,
+    validatorFilter: JSONObject[],
+    dryRun: boolean,
+  ): string | null {
     const query = {
       bool: {
         must: validatorFilter,
@@ -919,10 +1015,15 @@ class Validation {
   }
 
   /**
-   * @param {ValidationType} validationType
+   * Registers a validation type, built-in or plugin-provided.
+   *
+   * This is public API: `pluginContext` hands it to every plugin, so the
+   * runtime assertions below are the contract and stay exactly as they were —
+   * a plugin's type is not checked by the compiler.
+   *
    * @throws {PluginImplementationError}
    */
-  addType(validationType) {
+  addType(validationType: BaseType): void {
     if (!validationType.typeName) {
       throw kerror.get("validation", "types", "missing_type_name");
     }
@@ -984,11 +1085,12 @@ class Validation {
 }
 
 /**
- * @param {*} object
- * @param {string[]} allowedProperties
- * @returns {boolean}
+ * Narrows `object` to a plain object holding none but the allowed properties.
  */
-function checkAllowedProperties(object, allowedProperties) {
+function checkAllowedProperties(
+  object: unknown,
+  allowedProperties: string[],
+): object is Record<string, unknown> {
   if (!isPlainObject(object)) {
     return false;
   }
@@ -999,17 +1101,20 @@ function checkAllowedProperties(object, allowedProperties) {
 }
 
 /**
- * @param {string[]} typeAllowsChildren
- * @param {StructuredFieldSpecification[][]} fields
- * @param {number} maxDepth : depth of the fields; counting starts at 1
- * @throws PreconditionError
+ * Assembles curated fields, grouped by depth, into the tree the validator
+ * walks. Depth counting starts at 1.
+ *
+ * @throws {PreconditionError}
  */
-function curateStructuredFields(typeAllowsChildren, fields, maxDepth) {
-  const /** @type StructuredFieldSpecification */
-    structuredFields = {
-      children: {},
-      root: true,
-    };
+function curateStructuredFields(
+  typeAllowsChildren: string[],
+  fields: Record<number, StructuredFieldSpecification[]>,
+  maxDepth: number,
+): StructuredFieldSpecification {
+  const structuredFields: StructuredFieldSpecification = {
+    children: {},
+    root: true,
+  };
 
   for (let i = 1; i <= maxDepth; i++) {
     if (!has(fields, i)) {
@@ -1036,11 +1141,14 @@ function curateStructuredFields(typeAllowsChildren, fields, maxDepth) {
 }
 
 /**
- * @param {StructuredFieldSpecification} structuredFields
- * @param {string[]}fieldPath
- * @returns {StructuredFieldSpecification}
+ * Walks a field's path down the tree and answers the node that must hold it.
+ *
+ * @throws {PreconditionError} when an intermediate node is missing
  */
-function getParent(structuredFields, fieldPath) {
+function getParent(
+  structuredFields: StructuredFieldSpecification,
+  fieldPath: string[],
+): StructuredFieldSpecification {
   if (fieldPath.length === 1) {
     return structuredFields;
   }
@@ -1059,11 +1167,14 @@ function getParent(structuredFields, fieldPath) {
 }
 
 /**
- * @param {KuzzleError} error
- * @param {boolean} doNotThrow
- * @param {string[]} errors
+ * Rethrows, or collects the message — the single place the verbose/fail-fast
+ * choice is made during curation.
  */
-function throwOrStoreError(error, doNotThrow, errorMessages) {
+function throwOrStoreError(
+  error: KuzzleError,
+  doNotThrow: boolean,
+  errorMessages: string[],
+): void {
   if (!doNotThrow) {
     throw error;
   }
@@ -1072,13 +1183,28 @@ function throwOrStoreError(error, doNotThrow, errorMessages) {
 }
 
 /**
- * @param {string|string[]} errorContext
- * @param {string[]|{documentScope:string[], fieldScope: {children: ...*}}} errorHolder
- * @param {string} message
- * @param {boolean} structured
+ * Files a validation message, or throws it.
+ *
+ * When `structured` holds, the message is hung off `errorHolder` at the field's
+ * own path so the caller can report it in place; when it does not, the first
+ * message throws and the holder is never written to.
+ *
+ * @throws {BadRequestError} when `structured` is false
  */
-function manageErrorMessage(errorContext, errorHolder, message, structured) {
+function manageErrorMessage(
+  errorContext: string | string[],
+  errorHolder: ErrorMessages,
+  message: string,
+  structured: boolean,
+): void {
   if (structured) {
+    // `structured` and the holder's shape are the same fact: `validate` builds
+    // an object exactly when `verbose` holds, and a list when it does not. The
+    // narrowing is what says so; the branch cannot be taken.
+    if (Array.isArray(errorHolder)) {
+      return;
+    }
+
     if (errorContext === "document") {
       if (!errorHolder.documentScope) {
         errorHolder.documentScope = [];
@@ -1112,27 +1238,27 @@ function manageErrorMessage(errorContext, errorHolder, message, structured) {
   } else if (errorContext === "document") {
     throw kerror.get("validation", "check", "failed_document", message);
   } else {
+    // Everything that is not the "document" literal is a field path.
     throw kerror.get(
       "validation",
       "check",
       "failed_field",
-      errorContext.join("."),
+      Array.isArray(errorContext) ? errorContext.join(".") : errorContext,
       message,
     );
   }
 }
 
 /**
- * Retrieve the plugins list from the database and returns it,
- * along with their configuration
- *
- * @returns {Promise}
+ * Reads every stored specification, falling back to the one in the
+ * configuration when the internal index holds none — the database is not
+ * necessarily prepared yet when this first runs.
  */
-function getValidationConfiguration() {
+function getValidationConfiguration(): Promise<RawSpecification> {
   return global.kuzzle.internalIndex
     .search("validations", {}, { from: 0, size: 1000 })
     .then((result) => {
-      let validation = {};
+      let validation: RawSpecification = {};
 
       if (result && Array.isArray(result.hits) && result.hits.length > 0) {
         for (const { _source, _id } of result.hits) {
@@ -1177,4 +1303,4 @@ function getValidationConfiguration() {
     });
 }
 
-module.exports = Validation;
+export = Validation;
