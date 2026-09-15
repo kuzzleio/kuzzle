@@ -59,6 +59,7 @@
 | [TD-48](#td-48) | 🟡 low | Tests | Nothing asserts that a stack trace never leaves the process — [#2735](https://github.com/kuzzleio/kuzzle/issues/2735) | S | ✅ |
 | [TD-49](#td-49) | 🟠 med | Tests | The vitest tree cannot load anything reaching `lib/api/controllers`: 25 `import x = require()` reach Node's resolver and die on a `.ts` path — [#2739](https://github.com/kuzzleio/kuzzle/issues/2739) | M | ✅ |
 | [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | 🟦 |
+| [TD-51](#td-51) | 🟡 low | Correctness | The application logger is never flushed on shutdown: the optional chain reads `log` off the Plugin wrapper, which never has one | XS | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -806,3 +807,19 @@ The three instances produce an **identical** 1180-entry `statementMap`, so mergi
 - **Blast radius.** Overall mocha coverage **81.4% → 92.7%**; 29 files gain more than 5 points, several enormously (`cluster/subscriber.js` 28.3% → 98.9%, `cluster/publisher.js` 34.2% → 99.4%, `core/auth/passportWrapper.ts` 52.7% → 100%). It has been understating the gate since c8 was introduced, for `.ts` conversions as much as for `.js`.
 - **Which direction it failed in:** *closed*. Understated coverage blocks work, it does not let defects through — no conversion was waved past on a bad number. What it cost is plan: the sprint was sequenced, and two PRs sized, against phantom debt.
 - **The generalisable part:** *a coverage number is the output of a merge, and a merge is a claim about what two measurements have in common.* Every other gate in this ADR reads one number from one run. This one silently combined several and the combination was wrong — and the arithmetic that would have caught it (branch > line is impossible) was sitting in the same report from the start.
+
+
+### TD-51
+**The application logger is never flushed on shutdown** · 🟡 low · `lib/kuzzle/kuzzle.ts`
+
+```js
+await this?.log?.flush?.();
+await this?.pluginsManager?.application?.log?.flush?.();
+```
+
+The second line is a no-op and always has been. `log` is set on the **application instance** (`Backend`, `this.log = new Logger(...)`), while `pluginsManager.application` is the **`Plugin` wrapper** around that instance, and nothing anywhere assigns a `log` to a wrapper — `Backend` sets `version`, `commit` and `openApi` on it, and that is all. The optional chain turned a wrong property path into silence.
+
+Found by H5's conversion: typing `pluginsManager.application` as `Plugin` made the access a compile error, which is the only reason anyone looked.
+
+- **Fix:** route the flush to the instance (`application.instance.log`), or give the wrapper the accessor. Either is a **behaviour change** — the application's buffered logs would start being written on shutdown, which is the point — so it does not belong in a conversion PR.
+- **The generalisable part:** *optional chaining is a null guard, not a correctness guard.* `?.` over a property that never exists is indistinguishable, at runtime, from `?.` over one that is merely absent right now. Only a type can tell those apart, and this line sat in the shutdown path unread for as long as the file was JavaScript.
