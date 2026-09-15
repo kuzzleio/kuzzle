@@ -1326,11 +1326,6 @@ class PluginsManager {
 }
 
 /**
- * The duck-typed promise check `registerPipe` has always made: a plugin's pipe
- * may answer a promise, a value, or nothing, and only the first is awaited.
- * A guard rather than an inline `typeof` chain so the branch narrows.
- */
-/**
  * Turns what a strategy's `verify` resolved into the passport callback call it
  * stands for: the authenticated user, an explicit refusal, or an error.
  *
@@ -1354,37 +1349,46 @@ async function resolveVerifiedUser(
   }
 
   if (result.kuid !== null && result.kuid !== undefined) {
-    if (typeof result.kuid === "string") {
-      try {
-        const user = await global.kuzzle.ask(
-          "core:security:user:get",
-          result.kuid,
-        );
-
-        callback(null, user);
-      } catch (e) {
-        if (e.id === "security.user.not_found") {
-          callback(strategyError.get("unknown_kuid", prefix));
-        } else {
-          callback(e);
-        }
-      }
-
-      return;
-    }
-
-    callback(strategyError.get("invalid_kuid", prefix, typeof result.kuid));
+    await resolveKuid(result.kuid, prefix, callback);
     return;
   }
 
-  let message;
-  if (result.message && typeof result.message === "string") {
-    message = result.message;
-  } else {
-    message = `Unable to log in using the strategy "${strategyName}"`;
-  }
+  const message =
+    typeof result.message === "string" && result.message
+      ? result.message
+      : `Unable to log in using the strategy "${strategyName}"`;
 
   callback(null, false, { message });
+}
+
+/**
+ * Loads the user a strategy named by `kuid` and hands it to the passport
+ * callback, turning a missing user into the dedicated `unknown_kuid` error.
+ *
+ * Split out of `resolveVerifiedUser` to keep both under the cognitive
+ * complexity ceiling the `.js` → `.ts` rename re-scores as new code.
+ */
+async function resolveKuid(
+  kuid: unknown,
+  prefix: string,
+  callback: PluginMethod,
+): Promise<void> {
+  if (typeof kuid !== "string") {
+    callback(strategyError.get("invalid_kuid", prefix, typeof kuid));
+    return;
+  }
+
+  try {
+    const user = await global.kuzzle.ask("core:security:user:get", kuid);
+
+    callback(null, user);
+  } catch (e) {
+    if (e.id === "security.user.not_found") {
+      callback(strategyError.get("unknown_kuid", prefix));
+    } else {
+      callback(e);
+    }
+  }
 }
 
 /**
@@ -1417,6 +1421,11 @@ function isPluginMethod(value: unknown): value is PluginMethod {
   return typeof value === "function";
 }
 
+/**
+ * The duck-typed promise check `registerPipe` has always made: a plugin's pipe
+ * may answer a promise, a value, or nothing, and only the first is awaited.
+ * A guard rather than an inline `typeof` chain so the branch narrows.
+ */
 function isThenable(value: unknown): value is Bluebird<unknown> {
   return (
     typeof value === "object" &&
