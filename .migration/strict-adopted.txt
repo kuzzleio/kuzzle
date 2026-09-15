@@ -126,6 +126,7 @@ lib/types/HttpMessage.ts
 lib/types/HttpStream.ts
 lib/types/Kuzzle.ts
 lib/types/KuzzleDocument.ts
+lib/types/KuzzleWebSocket.ts
 lib/types/OpenApiDefinition.ts
 lib/types/PasswordPolicy.ts
 lib/types/PluginInstance.ts

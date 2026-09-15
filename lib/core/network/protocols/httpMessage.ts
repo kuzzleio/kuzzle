@@ -19,6 +19,7 @@
  * limitations under the License.
  */
 
+import type { JSONObject } from "kuzzle-sdk";
 import type * as uWS from "uWebSockets.js";
 
 import type ClientConnection from "../clientConnection";
@@ -34,7 +35,7 @@ class HttpMessage {
   public headers: Record<string, string>;
   public requestId: string;
 
-  private _content: Buffer | null;
+  private _content: Buffer | JSONObject | null;
 
   constructor(connection: ClientConnection, request: uWS.HttpRequest) {
     this.connection = connection;
@@ -59,7 +60,7 @@ class HttpMessage {
     this.requestId = this.headers["x-kuzzle-request-id"] || connection.id;
   }
 
-  set content(value: Buffer | null) {
+  set content(value: Buffer | JSONObject | null) {
     if (!value || value.length === 0) {
       this._content = null;
     } else {
@@ -67,7 +68,7 @@ class HttpMessage {
     }
   }
 
-  get content(): Buffer | null {
+  get content(): Buffer | JSONObject | null {
     return this._content;
   }
 }

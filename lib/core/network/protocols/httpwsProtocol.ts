@@ -19,23 +19,26 @@
  * limitations under the License.
  */
 
-"use strict";
+import querystring from "node:querystring";
+import url from "node:url";
+import zlib from "node:zlib";
 
-const querystring = require("querystring");
-const url = require("url");
-const zlib = require("zlib");
+import type { JSONObject } from "kuzzle-sdk";
+import uWS from "uWebSockets.js";
 
-const uWS = require("uWebSockets.js");
+import { Request } from "../../../api/request";
+import * as kerror from "../../../kerror";
+import { KuzzleError } from "../../../kerror/errors";
+import { HttpStream } from "../../../types";
+import createDebug from "../../../util/debug";
+import { removeStacktrace } from "../../../util/stackTrace";
+import ClientConnection from "../clientConnection";
+import type { KuzzleWebSocket } from "../../../types/KuzzleWebSocket";
+import HttpMessage from "./httpMessage";
+import type { NetworkEntryPoint } from "../networkEntryPoint";
+import Protocol from "./protocol";
 
-const { HttpStream } = require("../../../types");
-const { Request } = require("../../../api/request");
-const { KuzzleError } = require("../../../kerror/errors");
-const Protocol = require("./protocol");
-const ClientConnection = require("../clientConnection");
-const { removeStacktrace } = require("../../../util/stackTrace");
-const debug = require("../../../util/debug");
-const kerror = require("../../../kerror");
-const HttpMessage = require("./httpMessage");
+const debug = createDebug;
 
 const kerrorWS = kerror.wrap("network", "websocket");
 const kerrorHTTP = kerror.wrap("network", "http");
@@ -98,7 +101,38 @@ const CHARSET_REGEX = /charset=([\w-]+)/i;
  * @class HTTPWS
  * Handles both HTTP and WebSocket connections
  */
-class HttpWsProtocol extends Protocol {
+/**
+ * `server.protocols` as this protocol reads it: the `websocket` and `http`
+ * blocks of the Kuzzle configuration.
+ */
+interface HttpWsProtocolConfig {
+  websocket: JSONObject;
+  http: JSONObject;
+}
+
+class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
+  public server: uWS.TemplatedApp | null;
+  public wsConfig: JSONObject | null;
+  public httpConfig: JSONObject | null;
+  public now: number;
+  public nowInterval: NodeJS.Timeout;
+  public connectionBySocket: Map<KuzzleWebSocket, ClientConnection>;
+  public backpressureBuffer: Map<KuzzleWebSocket, Buffer[]>;
+  public socketByConnectionId: Map<string, KuzzleWebSocket>;
+  public logger: ReturnType<typeof global.kuzzle.log.child>;
+
+  /**
+   * NEVER ASSIGNED in production — see ADR-0001 TD-52.
+   *
+   * `httpReadData` compares a multipart part against it, so the comparison is
+   * `byteLength > undefined`, which is always false and the limit is not
+   * enforced. The configured value is parsed and validated by `lib/config`, and
+   * `parseHttpOptions` puts it in `httpConfig.opts.maxFormFileSize`; nothing
+   * copies it here. Declared, not assigned: this conversion preserves the
+   * behaviour and makes the defect visible instead of quietly fixing it.
+   */
+  public maxFormFileSize: number;
+
   constructor() {
     super("websocket");
 
@@ -124,7 +158,7 @@ class HttpWsProtocol extends Protocol {
     this.logger = global.kuzzle.log.child("core:network:protocols:httpws");
   }
 
-  async init(entrypoint) {
+  async init(entrypoint: NetworkEntryPoint): Promise<boolean> {
     super.init(null, entrypoint);
 
     this.config = entrypoint.config.protocols;
@@ -158,7 +192,7 @@ class HttpWsProtocol extends Protocol {
     return true;
   }
 
-  initWebSocket() {
+  initWebSocket(): void {
     /* eslint-disable sort-keys */
     this.server.ws("/*", {
       ...this.wsConfig.opts,
@@ -172,11 +206,11 @@ class HttpWsProtocol extends Protocol {
     /* eslint-enable sort-keys */
   }
 
-  initHttp() {
+  initHttp(): void {
     this.server.any("/*", this.httpOnMessageHandler.bind(this));
   }
 
-  broadcast(data) {
+  broadcast(data: JSONObject): void {
     const stringified = JSON.stringify(data.payload);
     const payloadByteSize = Buffer.from(stringified).byteLength;
     // 255 bytes should be enough to hold the following:
@@ -212,7 +246,7 @@ class HttpWsProtocol extends Protocol {
     }
   }
 
-  notify(data) {
+  notify(data: JSONObject): void {
     const socket = this.socketByConnectionId.get(data.connectionId);
     debugWS("notify: %a", data);
 
@@ -228,7 +262,7 @@ class HttpWsProtocol extends Protocol {
     }
   }
 
-  joinChannel(channel, connectionId) {
+  joinChannel(channel: string, connectionId: string): void {
     const socket = this.socketByConnectionId.get(connectionId);
 
     if (!socket) {
@@ -243,7 +277,7 @@ class HttpWsProtocol extends Protocol {
     socket.subscribe(`realtime/${channel}`);
   }
 
-  leaveChannel(channel, connectionId) {
+  leaveChannel(channel: string, connectionId: string): void {
     const socket = this.socketByConnectionId.get(connectionId);
 
     if (!socket) {
@@ -259,7 +293,7 @@ class HttpWsProtocol extends Protocol {
     socket.unsubscribe(`realtime/${channel}`);
   }
 
-  disconnect(connectionId, message = null) {
+  disconnect(connectionId: string, message: string = null): void {
     debugWS("[%s] forced disconnect", connectionId);
 
     const socket = this.socketByConnectionId.get(connectionId);
@@ -274,8 +308,12 @@ class HttpWsProtocol extends Protocol {
     );
   }
 
-  wsOnUpgradeHandler(res, req, context) {
-    const headers = {};
+  wsOnUpgradeHandler(
+    res: uWS.HttpResponse,
+    req: uWS.HttpRequest,
+    context: uWS.us_socket_context_t,
+  ): void {
+    const headers: Record<string, string> = {};
     // Extract headers from uWS request
     req.forEach((header, value) => {
       headers[header] = value;
@@ -293,7 +331,7 @@ class HttpWsProtocol extends Protocol {
     );
   }
 
-  wsOnOpenHandler(socket) {
+  wsOnOpenHandler(socket: KuzzleWebSocket): void {
     const ip = Buffer.from(socket.getRemoteAddressAsText()).toString();
     const connection = new ClientConnection(
       this.name,
@@ -308,14 +346,18 @@ class HttpWsProtocol extends Protocol {
     this.backpressureBuffer.set(socket, []);
   }
 
-  wsOnCloseHandler(socket, code, message) {
+  wsOnCloseHandler(
+    socket: KuzzleWebSocket,
+    code: number,
+    message: ArrayBuffer,
+  ): void {
     const connection = this.connectionBySocket.get(socket);
 
     if (!connection) {
       return;
     }
 
-    const reason = Buffer.from(message || "").toString();
+    const reason = Buffer.from(message ?? new ArrayBuffer(0)).toString();
 
     // This hack is only here to indicate that uWebSockets killed the connection early
     // because the received payload exceeded the configured threshold.
@@ -339,7 +381,10 @@ class HttpWsProtocol extends Protocol {
     this.socketByConnectionId.delete(connection.id);
   }
 
-  async wsOnMessageHandler(socket, data) {
+  async wsOnMessageHandler(
+    socket: KuzzleWebSocket,
+    data: ArrayBuffer,
+  ): Promise<void> {
     if (!data || data.byteLength === 0) {
       return;
     }
@@ -424,7 +469,7 @@ class HttpWsProtocol extends Protocol {
    * Absorb as much of the backpressure buffer as possible
    * @param  {uWS.WebSocket} socket
    */
-  wsOnDrainHandler(socket) {
+  wsOnDrainHandler(socket: KuzzleWebSocket): void {
     socket.cork(() => {
       const buffer = this.backpressureBuffer.get(socket);
 
@@ -446,7 +491,12 @@ class HttpWsProtocol extends Protocol {
    * @param  {Error} error
    * @param  {String} requestId @optional
    */
-  wsSendError(socket, connection, error, requestId) {
+  wsSendError(
+    socket: KuzzleWebSocket,
+    connection: ClientConnection,
+    error: KuzzleError,
+    requestId?: string,
+  ): void {
     const request = new Request({}, { connection, error });
 
     // If a requestId is provided we use it instead of the generated one
@@ -464,7 +514,7 @@ class HttpWsProtocol extends Protocol {
    * @param  {uWS.WebSocket} socket
    * @param  {Buffer} payload
    */
-  wsSend(socket, payload) {
+  wsSend(socket: KuzzleWebSocket, payload: Buffer): void {
     if (!this.connectionBySocket.has(socket)) {
       return;
     }
@@ -495,17 +545,28 @@ class HttpWsProtocol extends Protocol {
    * @param  {uWS.HttpResponse} response
    * @param  {uWS.HttpRequest} request
    */
-  httpOnMessageHandler(response, request) {
+  httpOnMessageHandler(
+    response: uWS.HttpResponse,
+    request: uWS.HttpRequest,
+  ): void {
     const connection = new ClientConnection(
       "HTTP/1.1",
       getHttpIps(response, request),
-      request.headers,
+      // `undefined`, spelled. The JavaScript passed `request.headers`, and a
+      // uWS `HttpRequest` has no such property — its headers are only reachable
+      // through `forEach`, which is how `HttpMessage` below collects them. So
+      // an HTTP connection's `headers` has always been `{}`, despite
+      // `ClientConnection`'s own doc promising the request headers. Preserved
+      // rather than fixed: populating it is a behaviour change. See TD-52.
+      undefined,
     );
     const message = new HttpMessage(connection, request);
 
     debugHTTP("[%s] Received HTTP request: %a", connection.id, message);
 
-    if (message.headers["content-length"] > this.maxRequestSize) {
+    // `Number(...)`: a header value is a string, and the JavaScript relied on
+    // `>` coercing it. Same comparison, spelled.
+    if (Number(message.headers["content-length"]) > this.maxRequestSize) {
       this.httpSendError(message, response, HTTP_REQUEST_TOO_LARGE_ERROR);
       return;
     }
@@ -521,7 +582,7 @@ class HttpWsProtocol extends Protocol {
 
       if (
         !this.httpConfig.opts.allowedContentTypes.some(
-          (allowed) => contentType === allowed,
+          (allowed: string) => contentType === allowed,
         )
       ) {
         this.httpSendError(
@@ -561,8 +622,12 @@ class HttpWsProtocol extends Protocol {
    * @param  {uWS.HttpResponse} response
    * @param  {Function} cb
    */
-  httpReadData(message, response, cb) {
-    let payload = null;
+  httpReadData(
+    message: HttpMessage,
+    response: uWS.HttpResponse,
+    cb: (error?: Error) => void,
+  ): void {
+    let payload: Buffer | null = null;
     response.aborted = false;
 
     response.onData((data, isLast) => {
@@ -591,8 +656,8 @@ class HttpWsProtocol extends Protocol {
         return;
       }
 
-      let resolve;
-      let promise = new Promise((res) => (resolve = res));
+      let resolve: (value?: unknown) => void;
+      const promise = new Promise((res) => (resolve = res));
 
       this.httpUncompress(message, payload, async (err, inflated) => {
         if (err) {
@@ -619,7 +684,11 @@ class HttpWsProtocol extends Protocol {
     });
   }
 
-  async httpParseContent(message, content, cb) {
+  async httpParseContent(
+    message: HttpMessage,
+    content: Buffer,
+    cb: (error?: Error) => void,
+  ): Promise<void> {
     const type = message.headers["content-type"] || "";
 
     if (type.includes("multipart/form-data")) {
@@ -667,7 +736,7 @@ class HttpWsProtocol extends Protocol {
     cb();
   }
 
-  httpProcessRequest(response, message) {
+  httpProcessRequest(response: uWS.HttpResponse, message: HttpMessage): void {
     debugHTTP("[%s] httpProcessRequest: %a", message.connection.id, message);
 
     if (response.aborted) {
@@ -730,7 +799,11 @@ class HttpWsProtocol extends Protocol {
    * @param {uWS.HttpResponse} response
    * @param {HttpMessage} message
    */
-  httpWriteRequestHeaders(request, response, message) {
+  httpWriteRequestHeaders(
+    request: Request,
+    response: uWS.HttpResponse,
+    message: HttpMessage,
+  ): void {
     response.writeStatus(Buffer.from(request.response.status.toString()));
 
     response.writeHeader(HTTP_HEADER_CONNECTION, CLOSE);
@@ -780,7 +853,12 @@ class HttpWsProtocol extends Protocol {
    * @param {uWS.HttpResponse} response
    * @param {HttpMessage} message
    */
-  httpSendStream(request, response, httpStream, message) {
+  httpSendStream(
+    request: Request,
+    response: uWS.HttpResponse,
+    httpStream: HttpStream,
+    message: HttpMessage,
+  ): void {
     const streamSizeFixed =
       typeof httpStream.totalBytes === "number" && httpStream.totalBytes > 0;
 
@@ -908,11 +986,7 @@ class HttpWsProtocol extends Protocol {
         response.end();
       }
 
-      debugHTTP(
-        "[%s] httpSendStream: %s",
-        httpStream.connection.id,
-        err.message,
-      );
+      debugHTTP("[%s] httpSendStream: %s", message.connection.id, err.message);
     });
 
     response.onAborted(() => {
@@ -927,7 +1001,11 @@ class HttpWsProtocol extends Protocol {
    * @param {uWS.HttpResponse} response
    * @param {Error} error
    */
-  httpSendError(message, response, error) {
+  httpSendError(
+    message: HttpMessage,
+    response: uWS.HttpResponse,
+    error: Error,
+  ): void {
     const kerr =
       error instanceof KuzzleError
         ? error
@@ -986,8 +1064,8 @@ class HttpWsProtocol extends Protocol {
    * @param {HttpMessage} message
    * @returns {Buffer}
    */
-  httpRequestToResponse(request, message) {
-    let data = removeStacktrace(request.response.toJSON());
+  httpRequestToResponse(request: Request, message: HttpMessage): Buffer {
+    const data = removeStacktrace(request.response.toJSON());
 
     if (message.requestId !== data.requestId) {
       data.requestId = message.requestId;
@@ -999,29 +1077,10 @@ class HttpWsProtocol extends Protocol {
 
     debugHTTP("HTTP request response: %a", data);
 
-    if (data.raw) {
-      if (data.content === null || data.content === undefined) {
-        data = "";
-      } else if (typeof data.content === "object") {
-        /*
-         This object can be either a Buffer object, a stringified Buffer object,
-         or anything else.
-         In the former two cases, we create a new Buffer object, and in the
-         latter, we stringify t he content.
-         */
-        if (
-          data.content instanceof Buffer ||
-          (data.content.type === "Buffer" && Array.isArray(data.content.data))
-        ) {
-          data = data.content;
-        } else {
-          data = JSON.stringify(data.content);
-        }
-      } else {
-        // scalars are sent as strings
-        data = data.content.toString();
-      }
-    } else {
+    // Early returns rather than reassigning `data` from the response object to
+    // a string or a Buffer: the variable changed type under itself, which is
+    // what the conversion could not express. Each branch is the original one.
+    if (!data.raw) {
       let indent = 0;
       const parsedUrl = url.parse(message.url, true);
 
@@ -1029,10 +1088,37 @@ class HttpWsProtocol extends Protocol {
         indent = 2;
       }
 
-      data = JSON.stringify(data.content, undefined, indent);
+      return Buffer.from(JSON.stringify(data.content, undefined, indent));
     }
 
-    return Buffer.from(data);
+    const content = data.content;
+
+    if (content === null || content === undefined) {
+      return Buffer.from("");
+    }
+
+    if (typeof content !== "object") {
+      // scalars are sent as strings
+      return Buffer.from(content.toString());
+    }
+
+    /*
+     This object can be either a Buffer object, a stringified Buffer object,
+     or anything else.
+     In the former two cases, we create a new Buffer object, and in the
+     latter, we stringify the content.
+     */
+    if (content instanceof Buffer) {
+      return Buffer.from(content);
+    }
+
+    if (content.type === "Buffer" && Array.isArray(content.data)) {
+      // `Buffer.from(content)` and `Buffer.from(content.data)` build the same
+      // bytes for the JSON form of a Buffer; the latter is the one that types.
+      return Buffer.from(content.data);
+    }
+
+    return Buffer.from(JSON.stringify(content));
   }
 
   /**
@@ -1043,19 +1129,25 @@ class HttpWsProtocol extends Protocol {
    * @param  {Buffer} data
    * @param  {Function} callback
    */
-  httpCompress(message, data, callback) {
+  httpCompress(
+    message: HttpMessage,
+    data: Buffer,
+    callback: (result: { compressed: Buffer; encoding: string }) => void,
+  ): void {
     if (message.headers["accept-encoding"]) {
       const encodings = message.headers["accept-encoding"]
         .split(",")
         .map((e) => e.trim().toLowerCase());
 
-      let algorithm;
+      let algorithm: string;
       let priority = -1;
 
       for (const encoding of encodings) {
         if (encoding.startsWith("gzip") || encoding.startsWith("deflate")) {
-          let [_algorithm, _priority = "q=0"] = encoding.split(";");
-          _priority = Number.parseFloat(_priority.split("=")[1] || 0);
+          const [_algorithm, rawPriority = "q=0"] = encoding.split(";");
+          // `|| 0` was a number falling into `parseFloat`, which stringifies it
+          // back; `"0"` is the same value without the round trip.
+          const _priority = Number.parseFloat(rawPriority.split("=")[1] || "0");
 
           if (_priority > priority) {
             algorithm = _algorithm;
@@ -1096,14 +1188,20 @@ class HttpWsProtocol extends Protocol {
     });
   }
 
-  httpUncompress(message, payload, cb) {
-    let encodings = message.headers["content-encoding"];
-    if (!encodings) {
+  httpUncompress(
+    message: HttpMessage,
+    payload: Buffer,
+    cb: (error?: Error | null, result?: Buffer) => void,
+  ): void {
+    const header = message.headers["content-encoding"];
+    if (!header) {
       cb(null, payload);
       return;
     }
 
-    encodings = encodings.split(",").map((e) => e.trim().toLowerCase());
+    // A separate name for the list: the JavaScript reassigned the header string
+    // to the array parsed out of it.
+    const encodings = header.split(",").map((e) => e.trim().toLowerCase());
 
     if (encodings.length > this.httpConfig.opts.maxEncodingLayers) {
       cb(kerrorHTTP.get("too_many_encodings"));
@@ -1118,7 +1216,12 @@ class HttpWsProtocol extends Protocol {
     this.httpUncompressStep(encodings, payload, cb, 0);
   }
 
-  httpUncompressStep(encodings, payload, cb, index) {
+  httpUncompressStep(
+    encodings: string[],
+    payload: Buffer,
+    cb: (error?: Error | null, result?: Buffer) => void,
+    index: number,
+  ): void {
     if (index === encodings.length) {
       cb(null, payload);
       return;
@@ -1144,7 +1247,7 @@ class HttpWsProtocol extends Protocol {
     }
   }
 
-  parseWebSocketOptions() {
+  parseWebSocketOptions(): JSONObject {
     const cfg = this.config.websocket;
 
     if (cfg === undefined) {
@@ -1188,7 +1291,7 @@ class HttpWsProtocol extends Protocol {
     };
   }
 
-  parseHttpOptions() {
+  parseHttpOptions(): JSONObject {
     const cfg = this.config.http;
 
     if (cfg === undefined) {
@@ -1198,7 +1301,12 @@ class HttpWsProtocol extends Protocol {
 
     // precomputes default headers
     const httpCfg = global.kuzzle.config.http;
-    const headers = [
+    // A row starts as [name, value] and is rewritten in place to
+    // [Buffer(name), Buffer(value), rawName] — uWS writes Buffers, and the raw
+    // name is kept for the lookup that follows. The annotation is what says so;
+    // the alternative was asserting it at the loop, which the `casts` ratchet
+    // prices.
+    const headers: (string | Buffer)[][] = [
       ["Access-Control-Allow-Headers", httpCfg.accessControlAllowHeaders],
       ["Access-Control-Allow-Methods", httpCfg.accessControlAllowMethods],
       ["Content-Type", "application/json"],
@@ -1233,7 +1341,10 @@ class HttpWsProtocol extends Protocol {
  * @param {uWS.HttpRequest} request
  * @return {Array.<string>}
  */
-function getHttpIps(response, request) {
+function getHttpIps(
+  response: uWS.HttpResponse,
+  request: uWS.HttpRequest,
+): string[] {
   const ips = [Buffer.from(response.getRemoteAddressAsText()).toString()];
 
   const forwardHeader = request.getHeader("x-forwarded-for");
@@ -1251,4 +1362,4 @@ function getHttpIps(response, request) {
   return ips;
 }
 
-module.exports = HttpWsProtocol;
+export = HttpWsProtocol;

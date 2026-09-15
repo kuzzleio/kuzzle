@@ -297,10 +297,13 @@ describe("lib/core/core/network/entryPoint", () => {
     const entryPointDir = `${root}/lib/core/network/entryPoint`;
 
     it("should load plugins as Node.js modules", () => {
-      mockrequire("fs", {
+      const fsStub = {
         readdirSync: sinon.stub().returns(["one", "two"]),
         statSync: sinon.stub().returns({ isDirectory: () => true }),
-      });
+      };
+
+      mockrequire("fs", fsStub);
+      mockrequire("node:fs", fsStub);
 
       mockrequire(path.join(protocolDir, "one/manifest.json"), {
         kuzzleVersion: ">=2.0.0 <3.0.0",
@@ -324,10 +327,13 @@ describe("lib/core/core/network/entryPoint", () => {
     });
 
     it("should throw if there is no manifest.json file", () => {
-      mockrequire("fs", {
+      const fsStub = {
         readdirSync: sinon.stub().returns(["protocol"]),
         statSync: sinon.stub().returns({ isDirectory: () => true }),
-      });
+      };
+
+      mockrequire("fs", fsStub);
+      mockrequire("node:fs", fsStub);
 
       mockrequire.reRequire(entryPointDir);
       const Rewired = rewire(entryPointDir);
@@ -347,10 +353,13 @@ describe("lib/core/core/network/entryPoint", () => {
     });
 
     it("should log and reject if an error occured", () => {
-      mockrequire("fs", {
+      const fsStub = {
         readdirSync: sinon.stub().returns(["protocol"]),
         statSync: sinon.stub().returns({ isDirectory: () => true }),
-      });
+      };
+
+      mockrequire("fs", fsStub);
+      mockrequire("node:fs", fsStub);
 
       mockrequire(path.join(protocolDir, "protocol/manifest.json"), {
         kuzzleVersion: ">=2.0.0 <3.0.0",

@@ -19,29 +19,48 @@
  * limitations under the License.
  */
 
-"use strict";
+import fs from "node:fs";
+import path from "node:path";
 
-const fs = require("fs");
-const path = require("path");
+import Bluebird from "bluebird";
+import type { JSONObject } from "kuzzle-sdk";
 
-const Bluebird = require("bluebird");
+import type { KuzzleRequest } from "../../api/request";
+import { RequestContext } from "../../api/request";
+import * as kerror from "../../kerror";
+import createDebug from "../../util/debug";
+import { removeStacktrace } from "../../util/stackTrace";
+import { AccessLogger, type AccessLogExtra } from "./accessLogger";
+import Context from "./context";
+import Manifest from "./protocolManifest";
+import HttpWsProtocol from "./protocols/httpwsProtocol";
+import InternalProtocol from "./protocols/internalProtocol";
+import MqttProtocol from "./protocols/mqttProtocol";
+import type Protocol from "./protocols/protocol";
+import type ClientConnection from "./clientConnection";
+import type { NetworkEntryPoint } from "./networkEntryPoint";
+import type { ServerConfiguration } from "../../types";
 
-const { RequestContext } = require("../../api/request");
-const Context = require("./context");
-const debug = require("../../util/debug")("kuzzle:network:embedded");
-const MqttProtocol = require("./protocols/mqttProtocol");
-const InternalProtocol = require("./protocols/internalProtocol");
-const HttpWsProtocol = require("./protocols/httpwsProtocol");
-const Manifest = require("./protocolManifest");
-const { removeStacktrace } = require("../../util/stackTrace");
-const kerror = require("../../kerror");
-const { AccessLogger } = require("./accessLogger");
+const debug = createDebug("kuzzle:network:embedded");
 
 const networkError = kerror.wrap("network", "entrypoint");
 
 const DEFAULT_PROTOCOLS = [HttpWsProtocol, MqttProtocol, InternalProtocol];
 
-class EntryPoint {
+/**
+ * `implements NetworkEntryPoint`: that interface was declared as a stop-gap
+ * while this file was JavaScript — protocols need the contract and importing
+ * the concrete class would close a cycle. It stays, but it is now *checked*
+ * against the implementation rather than asserted about it.
+ */
+class EntryPoint implements NetworkEntryPoint {
+  public config: ServerConfiguration;
+  public protocols: Map<string, Protocol<unknown>>;
+  private _clients: Map<string, ClientConnection>;
+  public accessLogger: AccessLogger;
+  public isShuttingDown: boolean;
+  public logger: ReturnType<typeof global.kuzzle.log.child>;
+
   constructor() {
     this.config = global.kuzzle.config.server;
 
@@ -56,7 +75,7 @@ class EntryPoint {
     this.logger = global.kuzzle.log.child("core:network:entrypoint");
   }
 
-  dispatch(event, data) {
+  dispatch(event: string, data: JSONObject): void {
     switch (event) {
       case "notify":
         this._notify(data);
@@ -78,7 +97,7 @@ class EntryPoint {
    *
    * @returns {Promise}
    */
-  async init() {
+  async init(): Promise<boolean> {
     for (const ProtocolClass of DEFAULT_PROTOCOLS) {
       const protocol = new ProtocolClass();
 
@@ -94,7 +113,7 @@ class EntryPoint {
    *
    * @returns {Promise}
    */
-  async startListening() {
+  async startListening(): Promise<void> {
     // We need to verify the port ourselves, to make sure Node.js won't open
     // a named pipe if the provided port number is a string
     if (!Number.isInteger(this.config.port)) {
@@ -132,7 +151,7 @@ class EntryPoint {
    * @param {string} channel
    * @param {string} connectionId
    */
-  joinChannel(channel, connectionId) {
+  joinChannel(channel: string, connectionId: string): void {
     debug('[server] client "%s" joining channel "%s"', connectionId, channel);
 
     const client = this._clients.get(connectionId);
@@ -150,7 +169,7 @@ class EntryPoint {
     }
   }
 
-  leaveChannel(channel, connectionId) {
+  leaveChannel(channel: string, connectionId: string): void {
     debug(
       '[server] connection "%s" leaving channel "%s"',
       connectionId,
@@ -177,9 +196,9 @@ class EntryPoint {
   /**
    * Loads installed protocols in memory
    */
-  async loadMoreProtocols() {
+  async loadMoreProtocols(): Promise<void> {
     const dir = path.join(__dirname, "../../../protocols/enabled");
-    let dirs;
+    let dirs: string[];
 
     try {
       dirs = fs.readdirSync(dir);
@@ -193,6 +212,8 @@ class EntryPoint {
       .filter((d) => fs.statSync(d).isDirectory());
 
     await Bluebird.map(dirs, (protoDir) => {
+      // A protocol is loaded from disk at runtime: the path is only known then.
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
       const protocol = new (require(protoDir))();
       const manifest = new Manifest(protoDir, protocol);
 
@@ -231,7 +252,11 @@ class EntryPoint {
    * @param {Request} request
    * @param {object} extra
    */
-  logAccess(connection, request, extra = null) {
+  logAccess(
+    connection: ClientConnection,
+    request: KuzzleRequest,
+    extra: AccessLogExtra | null = null,
+  ): void {
     this.accessLogger.log(connection, request, extra);
   }
 
@@ -246,7 +271,11 @@ class EntryPoint {
    * @param {Request} request
    * @param cb
    */
-  execute(connection, request, cb) {
+  execute(
+    connection: ClientConnection,
+    request: KuzzleRequest,
+    cb: (response: JSONObject) => void,
+  ): void {
     if (this.isShuttingDown) {
       debug("Shutting down. Dropping request: %a", request);
       this._isShuttingDownError(connection, request, cb);
@@ -274,7 +303,7 @@ class EntryPoint {
    *
    * @param {ClientConnection} connection
    */
-  newConnection(connection) {
+  newConnection(connection: ClientConnection): void {
     this._clients.set(connection.id, connection);
 
     global.kuzzle.emit("connection:new", connection);
@@ -289,7 +318,7 @@ class EntryPoint {
   /**
    * @param {string} connectionId
    */
-  removeConnection(connectionId) {
+  removeConnection(connectionId: string): void {
     const connection = this._clients.get(connectionId);
 
     if (connection) {
@@ -309,7 +338,7 @@ class EntryPoint {
 
   // --------------------------------------------------------------------
 
-  _broadcast(data) {
+  _broadcast(data: JSONObject): void {
     const sanitized = removeStacktrace(data);
 
     debug("[server] broadcasting data through all protocols: %a", sanitized);
@@ -325,14 +354,18 @@ class EntryPoint {
     }
   }
 
-  _isShuttingDownError(connection, request, cb) {
+  _isShuttingDownError(
+    connection: ClientConnection,
+    request: KuzzleRequest,
+    cb: (response: JSONObject) => void,
+  ): void {
     request.setError(networkError.get("shutting_down"));
     this.logAccess(connection, request);
 
     cb(removeStacktrace(request.response.toJSON()));
   }
 
-  _notify(data) {
+  _notify(data: JSONObject): void {
     debug(
       '[server] sending notification to client with connection id "%s": %a',
       data.connectionId,
@@ -355,4 +388,4 @@ class EntryPoint {
   }
 }
 
-module.exports = EntryPoint;
+export = EntryPoint;
