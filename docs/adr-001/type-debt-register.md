@@ -61,6 +61,7 @@
 | [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | 🟦 |
 | [TD-51](#td-51) | 🟡 low | Correctness | The application logger is never flushed on shutdown: the optional chain reads `log` off the Plugin wrapper, which never has one — [#2747](https://github.com/kuzzleio/kuzzle/issues/2747) | XS | 🔴 |
 | [TD-52](#td-52) | 🔴 high | Correctness | Three things `httpwsProtocol` reads that are never set: the multipart file-size limit is not enforced, and an HTTP connection's headers are always empty — [#2749](https://github.com/kuzzleio/kuzzle/issues/2749) | S | 🔴 |
+| [TD-53](#td-53) | 🟠 med | Enforcement | `KuzzleConfiguration` is `Partial<…>`, so every config section is `undefined` under strict: no file that reads `global.kuzzle.config` can be adopted, whatever its own quality | M | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -857,3 +858,25 @@ Not a bug, but the same family: the base class returns `{ channel, connectionId 
 
 - **Fix:** (1) assign `maxFormFileSize` where the other options are read, (2) pass the headers `HttpMessage` already collects. Both are **behaviour changes** — the point of each is that something starts happening — so neither belongs in a conversion PR. H6 preserves all three exactly and declares them, so the compiler now holds them.
 - **The generalisable part:** *a comparison against `undefined` is not a check, and JavaScript cannot tell you which of your reads is one.* Two of these sat in the HTTP entry point, the file step 09 called the riskiest of the migration, and both were found by writing down what the types were rather than by reading the code.
+
+### TD-53
+**`KuzzleConfiguration` is `Partial<…>`, and that is what keeps config readers out of strict** · 🟠 med · `lib/types/config/KuzzleConfiguration.ts`
+
+```ts
+export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;
+```
+
+Every top-level section — `dump`, `services`, `security`, `validation`, `server`, … — is therefore optional, and under `strictNullChecks` every read of one is `possibly undefined`. Found by sprint 7's I2: `internalIndexHandler` and `dumpGenerator` convert cleanly, pass `tsc --noEmit`, and **cannot be adopted into strict** — not for anything in them, but because between them they read `config.dump`, `config.services`, `config.security` and `config.validation`.
+
+The errors are all the same shape:
+
+```
+dumpGenerator.ts(158,12):        'global.kuzzle.config.dump' is possibly 'undefined'.
+internalIndexHandler.ts(93,7):   'global.kuzzle.config.services' is possibly 'undefined'.
+internalIndexHandler.ts(216,13): Property 'authToken' does not exist on type 'SecurityConfiguration | undefined'.
+```
+
+- **Why it is `Partial` at all:** the type serves two jobs at once. It describes what a **user** may put in a `.kuzzlerc` — where every section is genuinely optional — *and* what `global.kuzzle.config` holds at runtime, which is that file **merged over the packaged defaults**, where no section is ever missing. One name for both, so the looser of the two wins everywhere.
+- **Fix:** split the two. `IKuzzleConfiguration` is already the total shape; `global.kuzzle.config` should be typed with it, and the partial kept for what the user supplies (`Partial<IKuzzleConfiguration>`, under a name that says so). The change itself is small; the blast radius is not, since every config reader's narrowing assumptions change at once — which is why it is its own piece of work and not a conversion's.
+- **Until then:** a converted file that reads config is adopted into strict only once this lands. I2 leaves both its files out of `.migration/strict-adopted.txt` rather than scattering guards for a condition that cannot happen.
+- **The generalisable part:** *a ratchet measures the file it names, but a type can make a file unmeasurable from the outside.* The strict list has been read as a quality score per file; these two are evidence it is partly a score of what the file happens to touch.

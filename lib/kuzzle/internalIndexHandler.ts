@@ -19,17 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import crypto from "node:crypto";
 
-const crypto = require("crypto");
+import Bluebird from "bluebird";
 
-const Bluebird = require("bluebird");
+import { Store } from "../core/shared/store";
+import type { StorageEngineElasticsearch } from "../types";
+import { storeScopeEnum } from "../core/storage/storeScopeEnum";
+import * as kerror from "../kerror";
+import createDebug from "../util/debug";
+import { Mutex } from "../util/mutex";
 
-const debug = require("../util/debug")("kuzzle:bootstrap:internalIndex");
-const { Store } = require("../core/shared/store");
-const { Mutex } = require("../util/mutex");
-const { storeScopeEnum } = require("../core/storage/storeScopeEnum");
-const kerror = require("../kerror");
+const debug = createDebug("kuzzle:bootstrap:internalIndex");
 
 const securitiesBootstrap = {
   profiles: {
@@ -78,6 +79,15 @@ const securitiesBootstrap = {
 const dataModelVersion = "2.0.0";
 
 class InternalIndexHandler extends Store {
+  private readonly timeout: number;
+  /** Indexed access rather than a new name, so it cannot drift from the config. */
+  private readonly config: StorageEngineElasticsearch["internalIndex"];
+
+  /** IDs for config documents */
+  private readonly _BOOTSTRAP_DONE_ID: string;
+  private readonly _DATAMODEL_VERSION_ID: string;
+  private readonly _JWT_SECRET_ID: string;
+
   constructor() {
     super(
       global.kuzzle.config.services.storageEngine.internalIndex.name,
@@ -96,10 +106,7 @@ class InternalIndexHandler extends Store {
     this.logger = global.kuzzle.log.child("internalIndexHandler");
   }
 
-  /**
-   * @returns {Promise}
-   */
-  async init() {
+  async init(): Promise<void> {
     await super.init(this.config.collections);
 
     const mutex = new Mutex("InternalIndexBootstrap", {
@@ -145,7 +152,7 @@ class InternalIndexHandler extends Store {
   /**
    * @override
    */
-  async _bootstrapSequence() {
+  async _bootstrapSequence(): Promise<void> {
     debug("Bootstrapping security structure");
     await this.createInitialSecurities();
 
@@ -168,7 +175,7 @@ class InternalIndexHandler extends Store {
   /**
    * Creates initial roles and profiles as specified in Kuzzle configuration
    */
-  async createInitialSecurities() {
+  async createInitialSecurities(): Promise<void> {
     await Bluebird.map(
       Object.entries(securitiesBootstrap.roles),
       ([roleId, content]) => {
@@ -188,7 +195,7 @@ class InternalIndexHandler extends Store {
     );
   }
 
-  async createInitialValidations() {
+  async createInitialValidations(): Promise<void> {
     const initialValidations = global.kuzzle.config.validation;
     const promises = [];
 
@@ -205,7 +212,7 @@ class InternalIndexHandler extends Store {
     await Bluebird.all(promises);
   }
 
-  async _initSecret() {
+  async _initSecret(): Promise<void> {
     const { authToken, jwt } = global.kuzzle.config.security;
     const configSeed = authToken?.secret ?? jwt?.secret;
 
@@ -231,4 +238,4 @@ class InternalIndexHandler extends Store {
   }
 }
 
-module.exports = InternalIndexHandler;
+export = InternalIndexHandler;
