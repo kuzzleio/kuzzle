@@ -1146,76 +1146,78 @@ function checkMultivaluedSpecification(
   verboseErrors: boolean,
   errors: string[],
 ): void {
-  if (has(fieldSpec, "multivalued")) {
-    const multivaluedProps = ["value", "minCount", "maxCount"];
-    if (!checkAllowedProperties(fieldSpec.multivalued, multivaluedProps)) {
-      throwOrStoreError(
-        assertionError.get(
-          "unexpected_properties",
-          `${indexName}.${collectionName}.${fieldName}.multivalued`,
-          multivaluedProps.join(", "),
-        ),
-        verboseErrors,
-        errors,
-      );
-    }
+  if (!has(fieldSpec, "multivalued")) {
+    return;
+  }
 
-    if (!has(fieldSpec.multivalued, "value")) {
-      throwOrStoreError(
-        assertionError.get(
-          "missing_value",
-          `${indexName}.${collectionName}.${fieldName}.multivalued`,
-        ),
-        verboseErrors,
-        errors,
-      );
-    }
+  const multivaluedProps = ["value", "minCount", "maxCount"];
+  if (!checkAllowedProperties(fieldSpec.multivalued, multivaluedProps)) {
+    throwOrStoreError(
+      assertionError.get(
+        "unexpected_properties",
+        `${indexName}.${collectionName}.${fieldName}.multivalued`,
+        multivaluedProps.join(", "),
+      ),
+      verboseErrors,
+      errors,
+    );
+  }
 
-    if (typeof fieldSpec.multivalued.value !== "boolean") {
-      throwOrStoreError(
-        assertionError.get(
-          "invalid_type",
-          `${indexName}.${collectionName}.${fieldName}.multivalued.value`,
-          "boolean",
-        ),
-        verboseErrors,
-        errors,
-      );
-    }
+  if (!has(fieldSpec.multivalued, "value")) {
+    throwOrStoreError(
+      assertionError.get(
+        "missing_value",
+        `${indexName}.${collectionName}.${fieldName}.multivalued`,
+      ),
+      verboseErrors,
+      errors,
+    );
+  }
 
-    for (const unexpected of ["minCount", "maxCount"]) {
-      if (
-        !fieldSpec.multivalued.value &&
-        has(fieldSpec.multivalued, unexpected)
-      ) {
-        throwOrStoreError(
-          assertionError.get(
-            "not_multivalued",
-            `${indexName}.${collectionName}.${fieldName}`,
-            unexpected,
-          ),
-          verboseErrors,
-          errors,
-        );
-      }
-    }
+  if (typeof fieldSpec.multivalued.value !== "boolean") {
+    throwOrStoreError(
+      assertionError.get(
+        "invalid_type",
+        `${indexName}.${collectionName}.${fieldName}.multivalued.value`,
+        "boolean",
+      ),
+      verboseErrors,
+      errors,
+    );
+  }
 
+  for (const unexpected of ["minCount", "maxCount"]) {
     if (
-      has(fieldSpec.multivalued, "minCount") &&
-      has(fieldSpec.multivalued, "maxCount") &&
-      fieldSpec.multivalued.minCount > fieldSpec.multivalued.maxCount
+      !fieldSpec.multivalued.value &&
+      has(fieldSpec.multivalued, unexpected)
     ) {
       throwOrStoreError(
         assertionError.get(
-          "invalid_range",
+          "not_multivalued",
           `${indexName}.${collectionName}.${fieldName}`,
-          "minCount",
-          "maxCount",
+          unexpected,
         ),
         verboseErrors,
         errors,
       );
     }
+  }
+
+  if (
+    has(fieldSpec.multivalued, "minCount") &&
+    has(fieldSpec.multivalued, "maxCount") &&
+    fieldSpec.multivalued.minCount > fieldSpec.multivalued.maxCount
+  ) {
+    throwOrStoreError(
+      assertionError.get(
+        "invalid_range",
+        `${indexName}.${collectionName}.${fieldName}`,
+        "minCount",
+        "maxCount",
+      ),
+      verboseErrors,
+      errors,
+    );
   }
 }
 
