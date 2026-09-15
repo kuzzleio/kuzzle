@@ -298,3 +298,36 @@ The cause is [TD-50](../type-debt-register.md#td-50): 43 specs use `mock-require
 - The generalising check after it, *how many files show duplicated function names in the report*, flagged 16% of `.ts` files. That predicate was wrong in exactly the way `as [A-Z]` was wrong for [TD-43](../type-debt-register.md#td-43): a file may legitimately hold two functions of one name, and a class constructor legitimately carries its class's name. The signal that held up is arithmetic on the report itself — **branches above lines** — and it needs no predicate at all.
 
 **Consequence for the sprint.** H4, H5 and H6 are conversions. Each file's definition of done is unchanged except for the coverage clause, which all five already satisfy.
+
+
+## What was done (PR H4 — `validation.js`)
+
+1 file, 890 measurable lines. **js 22 → 21**, strict **127 → 128**, and the converted file measures **99.9%** (993 of 994) on the corrected pipeline. No spec was written: [TD-50](../type-debt-register.md#td-50) is why one looked necessary.
+
+### The specification types were another phantom typedef
+
+`FieldSpecification`, `StructuredFieldSpecification`, `CollectionSpecification` and `DocumentSpecification` were written in JSDoc annotations across `validation.js` *and* `default.config.ts`, and none of them had ever been declared — the same situation H1 found with `TypeOptions`. They now live in `lib/core/validation/specification.ts`.
+
+Writing them made one distinction explicit that the JSDoc could not draw, and it is the reason the file holds four types rather than one: **before and after curation**. What a user submits is a flat map of `/`-separated paths with almost everything optional; what the validator walks is a tree with defaults filled in and `path`/`depth`/`children` added. `curateCollectionSpecification` is the boundary, and the two shapes had shared one name.
+
+`KuzzleConfiguration.validation` was `Record<string, unknown>` next to a `/** @type {DocumentSpecification} */` comment pointing at nothing; it is now `RawSpecification`, and the comment is gone because the type says it.
+
+### Four methods answer "the value, or why it could not be built"
+
+`curateCollectionSpecification`, `structureCollectionValidation`, `curateFieldSpecification` and `validateFormat` each return a curated value **or** a `{ isValid: false, errors }` report, depending on a `verbose` flag. That is not a discriminated union — the success branch is the value itself and carries no tag — so a naive union return type breaks every caller, which is exactly what [TD-41](../type-debt-register.md#td-41) warned about.
+
+Two tools, chosen per case:
+
+- **Overloads** where the caller passes a literal, which is what `validate` and `curateCollectionSpecification` get. Every call site of `validate` passes `false` or `true` written out, so `documentController` and `realtimeController` see `Promise<KuzzleRequest>` and need no narrowing at all.
+- **A type guard** — `isCurationFailure`, `"isValid" in result && result.isValid === false` — where the flag is a runtime boolean. `in` is what makes it a guard rather than an assertion, and with TD-43's `casts` ratchet now live that distinction has a price attached.
+
+### Two defects the types surfaced
+
+- **`realtimeController.publish` wrote `newRequest.input.body._kuzzle_info` on a nullable body.** It was invisible while `validate` came from JavaScript and returned `any`; typing the return made `strict` fail on an *already-adopted* file. Fixed where the defect is, with `newRequest.getBody()` — the same assertion the method already makes on the same object two lines above.
+- **The 13 built-in types were loaded by `require(`./types/${typeFile}`)` over a list of names.** A runtime `require` in a function body is [TD-49](../type-debt-register.md#td-49)'s third spelling, the one no grep for `import … = require` finds. They are static imports now, so the module loads under a runner that resolves the graph itself — which is what H5 will need, since `pluginsManager` reaches this file.
+
+`error.details = { field }` bolted onto a plain `Error` became a `StrictnessError` class. The `error.message !== "strictness"` checks at both catch sites are untouched: `instanceof` would have been a behaviour change, and a conversion does not get to make those.
+
+### What the tests caught
+
+Rewriting the specification lookup to use the typed map dropped a short-circuit — `has(this.specification, index) && get(…)` became `has(indexSpec, collection)` with `indexSpec` possibly `undefined`, and `Object.hasOwn(undefined, …)` throws. Two `validate` specs failed immediately. The guard is back and explicit: `index` and `collection` come from the request, so an inherited property must not answer for a specification.
