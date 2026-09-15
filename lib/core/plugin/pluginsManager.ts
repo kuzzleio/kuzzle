@@ -25,9 +25,12 @@ import path from "node:path";
 
 import Bluebird from "bluebird";
 import type { JSONObject } from "kuzzle-sdk";
-import _ from "lodash";
+import { isEmpty, isFunction, isNil, isString, merge } from "lodash";
 
-import { BaseController } from "../../api/controllers/baseController";
+import {
+  BaseController,
+  type ControllerAction,
+} from "../../api/controllers/baseController";
 import type { ApiRoute } from "../../types/ApiRoute";
 import * as kerror from "../../kerror";
 import { KuzzleError } from "../../kerror/errors";
@@ -46,7 +49,7 @@ const strategyError = kerror.wrap("plugin", "strategy");
 const controllerError = kerror.wrap("plugin", "controller");
 
 // Without those plugins, Kuzzle won't start at all.
-const CORE_PLUGINS = ["kuzzle-plugin-auth-passport-local"];
+const CORE_PLUGINS = new Set(["kuzzle-plugin-auth-passport-local"]);
 
 /**
  * Any function a plugin exposes: a pipe, a hook, an action handler, a strategy
@@ -273,10 +276,7 @@ class PluginsManager {
     const defaultImports = {};
 
     for (const plugin of this._plugins.values()) {
-      if (
-        this.config.common.failsafeMode &&
-        !CORE_PLUGINS.includes(plugin.name)
-      ) {
+      if (this.config.common.failsafeMode && !CORE_PLUGINS.has(plugin.name)) {
         this.logger.info(
           `Failsafe mode activated, skipping plugin "${plugin.name}"`,
         );
@@ -312,33 +312,33 @@ class PluginsManager {
           plugin.initCalled = true;
 
           if (
-            !_.isEmpty(plugin.instance.controllers) &&
-            !_.isEmpty(plugin.instance.api)
+            !isEmpty(plugin.instance.controllers) &&
+            !isEmpty(plugin.instance.api)
           ) {
             throw assertionError.get("duplicated_api_definition");
           }
 
-          if (!_.isEmpty(plugin.instance.controllers)) {
+          if (!isEmpty(plugin.instance.controllers)) {
             this._initControllers(plugin);
           }
 
-          if (!_.isEmpty(plugin.instance.api)) {
+          if (!isEmpty(plugin.instance.api)) {
             await this._initApi(plugin);
           }
 
-          if (!_.isEmpty(plugin.instance.authenticators)) {
+          if (!isEmpty(plugin.instance.authenticators)) {
             this._initAuthenticators(plugin);
           }
 
-          if (!_.isEmpty(plugin.instance.strategies)) {
+          if (!isEmpty(plugin.instance.strategies)) {
             this._initStrategies(plugin);
           }
 
-          if (!_.isEmpty(plugin.instance.hooks)) {
+          if (!isEmpty(plugin.instance.hooks)) {
             this._initHooks(plugin);
           }
 
-          if (!_.isEmpty(plugin.instance.pipes)) {
+          if (!isEmpty(plugin.instance.pipes)) {
             this._initPipes(plugin);
           }
 
@@ -348,8 +348,8 @@ class PluginsManager {
             this.loadedPlugins.push(plugin.name);
           }
 
-          if (!_.isEmpty(plugin.instance.imports)) {
-            _.merge(defaultImports, plugin.instance.imports);
+          if (!isEmpty(plugin.instance.imports)) {
+            merge(defaultImports, plugin.instance.imports);
           }
 
           return null;
@@ -435,7 +435,7 @@ class PluginsManager {
     // required methods check
     ["exists", "create", "update", "delete", "validate", "verify"].forEach(
       (methodName) => {
-        if (!_.isString(strategy.methods[methodName])) {
+        if (!isString(strategy.methods[methodName])) {
           throw strategyError.get(
             "invalid_method_type",
             errorPrefix,
@@ -444,7 +444,7 @@ class PluginsManager {
           );
         }
 
-        if (!_.isFunction(plugin.instance[strategy.methods[methodName]])) {
+        if (!isFunction(plugin.instance[strategy.methods[methodName]])) {
           throw strategyError.get(
             "missing_method_function",
             errorPrefix,
@@ -458,8 +458,8 @@ class PluginsManager {
     ["getInfo", "getById", "afterRegister"].forEach((name) => {
       const optionalMethodName = strategy.methods[name];
 
-      if (!_.isNil(optionalMethodName)) {
-        if (!_.isString(optionalMethodName)) {
+      if (!isNil(optionalMethodName)) {
+        if (!isString(optionalMethodName)) {
           throw strategyError.get(
             "invalid_method_type",
             errorPrefix,
@@ -468,7 +468,7 @@ class PluginsManager {
           );
         }
 
-        if (!_.isFunction(plugin.instance[optionalMethodName])) {
+        if (!isFunction(plugin.instance[optionalMethodName])) {
           throw strategyError.get(
             "missing_method_function",
             errorPrefix,
@@ -489,8 +489,7 @@ class PluginsManager {
         strategy.config.authenticator,
       );
     } else if (
-      !this.authenticators[pluginName] ||
-      !this.authenticators[pluginName][strategy.config.authenticator]
+      !this.authenticators[pluginName]?.[strategy.config.authenticator]
     ) {
       throw strategyError.get(
         "unknown_authenticator",
@@ -502,7 +501,7 @@ class PluginsManager {
     for (const optionName of ["strategyOptions", "authenticateOptions"]) {
       const options = strategy.config[optionName];
 
-      if (!_.isNil(options) && !isPlainObject(options)) {
+      if (!isNil(options) && !isPlainObject(options)) {
         throw strategyError.get(
           "invalid_option",
           errorPrefix,
@@ -513,7 +512,7 @@ class PluginsManager {
     }
 
     if (
-      !_.isNil(strategy.config.fields) &&
+      !isNil(strategy.config.fields) &&
       !Array.isArray(strategy.config.fields)
     ) {
       throw strategyError.get(
@@ -717,38 +716,62 @@ class PluginsManager {
       const list = Array.isArray(fn) ? fn : [fn];
 
       for (const target of list) {
-        if (
-          typeof target !== "function" &&
-          typeof plugin.instance[target] !== "function"
-        ) {
-          const message =
-            typeof target === "string" ? didYouMean(target, methodsList) : "";
-
-          throw assertionError.get("invalid_pipe", event, target, message);
-        }
-
-        let handler: PluginMethod;
-
-        if (typeof target === "string") {
-          // @deprecated - warn about using a string representing an instance method
-          plugin.printDeprecation(
-            "Defining pipe handler using a string is deprecated. Pass a function instead.",
-          );
-
-          handler = bindPluginMethod(plugin.instance, target);
-        } else {
-          handler = target;
-        }
-
-        // if the function handler is a plugin instance method,
-        // bound the context to the plugin instance
-        if (target.name && typeof plugin.instance[target.name] === "function") {
-          handler = target.bind(plugin.instance);
-        }
+        const handler = this.resolveEventHandler(
+          plugin,
+          event,
+          target,
+          methodsList,
+          "invalid_pipe",
+          "Defining pipe handler using a string is deprecated. Pass a function instead.",
+        );
 
         this.registerPipe(plugin, event, handler);
       }
     }
+  }
+
+  /**
+   * Resolves one pipe or hook target — a function, or the name of a plugin
+   * method — into the handler to register.
+   *
+   * Shared by `_initPipes` and `_initHooks`, which carried the same twenty
+   * lines with two words changed. The `.js` → `.ts` rename re-scored both as
+   * new code, so the gate asked for the deduplication the files already wanted.
+   *
+   * @throws {PluginImplementationError} when the target names nothing callable
+   */
+  private resolveEventHandler(
+    plugin: Plugin,
+    event: string,
+    target: PluginMethod | string,
+    methodsList: string[],
+    errorId: "invalid_pipe" | "invalid_hook",
+    deprecation: string,
+  ): PluginMethod {
+    if (
+      typeof target !== "function" &&
+      typeof plugin.instance[target] !== "function"
+    ) {
+      const message =
+        typeof target === "string" ? didYouMean(target, methodsList) : "";
+
+      throw assertionError.get(errorId, event, target, message);
+    }
+
+    // @deprecated - warn about using a string representing an instance method
+    if (typeof target === "string") {
+      plugin.printDeprecation(deprecation);
+
+      return bindPluginMethod(plugin.instance, target);
+    }
+
+    // if the function handler is a plugin instance method,
+    // bound the context to the plugin instance
+    if (target.name && typeof plugin.instance[target.name] === "function") {
+      return target.bind(plugin.instance);
+    }
+
+    return target;
   }
 
   /**
@@ -761,40 +784,16 @@ class PluginsManager {
       const list = Array.isArray(fn) ? fn : [fn];
 
       for (const target of list) {
-        if (
-          typeof target !== "function" &&
-          typeof plugin.instance[target] !== "function"
-        ) {
-          const message =
-            typeof target === "string" ? didYouMean(target, methodsList) : "";
-
-          throw assertionError.get("invalid_hook", event, target, message);
-        }
-
         debug('[%s] register hook on event "%s"', plugin.name, event);
 
-        let handler: PluginMethod;
-
-        // @deprecated - warn about using a string representing an instance method
-        if (typeof target === "string") {
-          plugin.printDeprecation(
-            "Defining hook handler using a string is deprecated. Pass a function instead.",
-          );
-
-          handler = bindPluginMethod(plugin.instance, target);
-        } else {
-          handler = target;
-        }
-
-        // if the function handler is a plugin instance method,
-        // bound the context to the plugin instance
-        if (
-          typeof target !== "string" &&
-          target.name &&
-          typeof plugin.instance[target.name] === "function"
-        ) {
-          handler = target.bind(plugin.instance);
-        }
+        const handler = this.resolveEventHandler(
+          plugin,
+          event,
+          target,
+          methodsList,
+          "invalid_hook",
+          "Defining hook handler using a string is deprecated. Pass a function instead.",
+        );
 
         global.kuzzle.registerPluginHook(plugin.name, event, handler);
       }
@@ -829,37 +828,12 @@ class PluginsManager {
       for (const [action, actionDefinition] of Object.entries(
         definition.actions,
       )) {
-        let apiController = this.controllers.get(controller);
-
-        if (!apiController) {
-          apiController = new BaseController();
-          this.controllers.set(controller, apiController);
-        }
-
-        let handler = actionDefinition.handler;
-
-        // if the function handler is a plugin instance method,
-        // bind the context to the plugin instance
-        if (
-          handler.name &&
-          typeof plugin.instance[handler.name] === "function"
-        ) {
-          handler = handler.bind(plugin.instance);
-        }
-
-        apiController._addAction(action, handler);
-
-        const httpRoutes = actionDefinition.http || [];
-
-        // Define default HTTP route if none have been provided
-        if (httpRoutes.length === 0) {
-          httpRoutes.push({
-            path: `${Inflector.kebabCase(controller)}/${Inflector.kebabCase(
-              action,
-            )}`,
-            verb: "get",
-          });
-        }
+        const httpRoutes = this.registerApiAction(
+          plugin,
+          controller,
+          action,
+          actionDefinition,
+        );
 
         for (const httpRoute of httpRoutes) {
           debug(
@@ -869,10 +843,9 @@ class PluginsManager {
             controller,
           );
 
-          const routePath =
-            httpRoute.path.charAt(0) === "/"
-              ? httpRoute.path
-              : `/_/${httpRoute.path}`;
+          const routePath = httpRoute.path.startsWith("/")
+            ? httpRoute.path
+            : `/_/${httpRoute.path}`;
 
           this.routes.push({
             action,
@@ -894,7 +867,7 @@ class PluginsManager {
    */
   _initControllers(plugin: Plugin): void {
     // @deprecated - warn about using the obsolete "controllers" object
-    if (!_.isEmpty(plugin.instance.controllers)) {
+    if (!isEmpty(plugin.instance.controllers)) {
       plugin.printDeprecation(
         'Defining controllers using the "controllers" object is deprecated. You should use the "api" object instead.',
       );
@@ -929,40 +902,12 @@ class PluginsManager {
           action,
         );
 
-        const target = definition[action];
-        const named = typeof target === "string" ? target : null;
-
-        if (
-          typeof target !== "function" &&
-          (named === null || typeof plugin.instance[named] !== "function")
-        ) {
-          const suggestion =
-            named === null ? "" : didYouMean(named, methodsList);
-
-          throw controllerError.get(
-            "invalid_action",
-            errorControllerPrefix,
-            controller,
-            action,
-            suggestion,
-          );
-        }
-
-        let apiController = this.controllers.get(controllerName);
-
-        if (!apiController) {
-          apiController = new BaseController();
-          this.controllers.set(controllerName, apiController);
-        }
-
-        if (typeof target === "function") {
-          apiController._addAction(action, target);
-        } else {
-          apiController._addAction(
-            action,
-            bindPluginMethod(plugin.instance, named),
-          );
-        }
+        this.registerLegacyAction(
+          plugin,
+          definition[action],
+          { action, controller, controllerName, errorControllerPrefix },
+          methodsList,
+        );
       }
     }
 
@@ -979,7 +924,7 @@ class PluginsManager {
     const controllerNames = Object.keys(plugin.instance.controllers);
 
     // @deprecated - warn about using the obsolete "routes" object
-    if (!_.isEmpty(plugin.instance.routes)) {
+    if (!isEmpty(plugin.instance.routes)) {
       plugin.printDeprecation(
         'Defining routes using the "routes" object is deprecated. You should use the "api" object instead.',
       );
@@ -991,57 +936,13 @@ class PluginsManager {
         route,
       )}" from plugin "${plugin.name}":`;
 
-      for (const key of Object.keys(route)) {
-        if (routeProperties.indexOf(key) === -1) {
-          throw controllerError.get(
-            "unexpected_route_property",
-            errorRoutePrefix,
-            key,
-            didYouMean(key, routeProperties),
-          );
-        }
-
-        if (
-          typeof route[key] !== "string" ||
-          (route[key].length === 0 && key !== "url")
-        ) {
-          throw controllerError.get(
-            "invalid_route_property",
-            errorRoutePrefix,
-            key,
-          );
-        }
-      }
-
-      const apiController = this.controllers.get(controller);
-
-      if (!apiController) {
-        throw controllerError.get(
-          "undefined_controller",
-          errorRoutePrefix,
-          route.controller,
-          didYouMean(route.controller, controllerNames),
-        );
-      }
-
-      if (!apiController._isAction(route.action)) {
-        const actionNames = Array.from(apiController._actions);
-        throw controllerError.get(
-          "undefined_action",
-          errorRoutePrefix,
-          route.action,
-          didYouMean(route.action, actionNames),
-        );
-      }
-
-      if (httpVerbs.indexOf(route.verb.toLowerCase()) === -1) {
-        throw controllerError.get(
-          "unsupported_verb",
-          errorRoutePrefix,
-          httpVerbs.join(", "),
-          didYouMean(route.verb, httpVerbs),
-        );
-      }
+      this.checkLegacyRoute(route, {
+        controller,
+        controllerNames,
+        errorRoutePrefix,
+        httpVerbs,
+        routeProperties,
+      });
 
       // @deprecated route.url is deprecated
       if (route.url) {
@@ -1081,13 +982,196 @@ class PluginsManager {
   }
 
   /**
+   * Registers one action of the `api` object and answers the HTTP routes to
+   * bind for it — the declared ones, or the single default route built from the
+   * controller and action names.
+   *
+   * Lifted verbatim out of `_initApi` for the same gate reason as its siblings.
+   */
+  private registerApiAction(
+    plugin: Plugin,
+    controller: string,
+    action: string,
+    actionDefinition: JSONObject,
+  ): JSONObject[] {
+    let apiController = this.controllers.get(controller);
+
+    if (!apiController) {
+      apiController = new BaseController();
+      this.controllers.set(controller, apiController);
+    }
+
+    let handler = actionDefinition.handler;
+
+    // if the function handler is a plugin instance method,
+    // bind the context to the plugin instance
+    if (handler.name && typeof plugin.instance[handler.name] === "function") {
+      handler = handler.bind(plugin.instance);
+    }
+
+    apiController._addAction(action, handler);
+
+    const httpRoutes = actionDefinition.http || [];
+
+    // Define default HTTP route if none have been provided
+    if (httpRoutes.length === 0) {
+      httpRoutes.push({
+        path: `${Inflector.kebabCase(controller)}/${Inflector.kebabCase(action)}`,
+        verb: "get",
+      });
+    }
+
+    return httpRoutes;
+  }
+
+  /**
+   * Checks one entry of the deprecated `routes` object: its properties, the
+   * controller and action it names, and its HTTP verb.
+   *
+   * Lifted verbatim out of `_initControllers`, second half of the same
+   * gate-driven split as `registerLegacyAction`.
+   *
+   * @throws {PluginImplementationError}
+   */
+  private checkLegacyRoute(
+    route: JSONObject,
+    names: {
+      controller: string;
+      controllerNames: string[];
+      errorRoutePrefix: string;
+      httpVerbs: string[];
+      routeProperties: string[];
+    },
+  ): void {
+    const {
+      controller,
+      controllerNames,
+      errorRoutePrefix,
+      httpVerbs,
+      routeProperties,
+    } = names;
+
+    for (const key of Object.keys(route)) {
+      if (!routeProperties.includes(key)) {
+        throw controllerError.get(
+          "unexpected_route_property",
+          errorRoutePrefix,
+          key,
+          didYouMean(key, routeProperties),
+        );
+      }
+
+      if (
+        typeof route[key] !== "string" ||
+        (route[key].length === 0 && key !== "url")
+      ) {
+        throw controllerError.get(
+          "invalid_route_property",
+          errorRoutePrefix,
+          key,
+        );
+      }
+    }
+
+    const apiController = this.controllers.get(controller);
+
+    if (!apiController) {
+      throw controllerError.get(
+        "undefined_controller",
+        errorRoutePrefix,
+        route.controller,
+        didYouMean(route.controller, controllerNames),
+      );
+    }
+
+    if (!apiController._isAction(route.action)) {
+      const actionNames = Array.from(apiController._actions);
+      throw controllerError.get(
+        "undefined_action",
+        errorRoutePrefix,
+        route.action,
+        didYouMean(route.action, actionNames),
+      );
+    }
+
+    if (!httpVerbs.includes(route.verb.toLowerCase())) {
+      throw controllerError.get(
+        "unsupported_verb",
+        errorRoutePrefix,
+        httpVerbs.join(", "),
+        didYouMean(route.verb, httpVerbs),
+      );
+    }
+  }
+
+  /**
+   * Registers one action of the pre-Kaaf `controllers` object: a handler given
+   * either as a function or as the name of a plugin method.
+   *
+   * Lifted verbatim out of `_initControllers`, whose cognitive complexity the
+   * `.js` → `.ts` rename re-scored as new code.
+   *
+   * @throws {PluginImplementationError} when the target names nothing callable
+   */
+  private registerLegacyAction(
+    plugin: Plugin,
+    /**
+     * Unvalidated: it arrives from the plugin's own `controllers` object, which
+     * is `JSONObject`. The first check below is what makes the declared shape
+     * true, and is the reason this parameter may claim it.
+     */
+    target: ControllerAction | string | undefined,
+    names: {
+      action: string;
+      controller: string;
+      controllerName: string;
+      errorControllerPrefix: string;
+    },
+    methodsList: string[],
+  ): void {
+    const { action, controller, controllerName, errorControllerPrefix } = names;
+    const named = typeof target === "string" ? target : null;
+
+    if (
+      typeof target !== "function" &&
+      (named === null || typeof plugin.instance[named] !== "function")
+    ) {
+      const suggestion = named === null ? "" : didYouMean(named, methodsList);
+
+      throw controllerError.get(
+        "invalid_action",
+        errorControllerPrefix,
+        controller,
+        action,
+        suggestion,
+      );
+    }
+
+    let apiController = this.controllers.get(controllerName);
+
+    if (!apiController) {
+      apiController = new BaseController();
+      this.controllers.set(controllerName, apiController);
+    }
+
+    if (typeof target === "function") {
+      apiController._addAction(action, target);
+    } else {
+      apiController._addAction(
+        action,
+        bindPluginMethod(plugin.instance, named),
+      );
+    }
+  }
+
+  /**
    * @param {object} plugin
    * @throws {PluginImplementationError} If strategies registration fails
    */
   _initStrategies(plugin: Plugin): void {
     if (
       !isPlainObject(plugin.instance.strategies) ||
-      _.isEmpty(plugin.instance.strategies)
+      isEmpty(plugin.instance.strategies)
     ) {
       throw strategyError.get("invalid_definition", plugin.logPrefix);
     }
@@ -1127,10 +1211,7 @@ class PluginsManager {
       }
     }
 
-    this.authenticators[plugin.name] = Object.assign(
-      {},
-      plugin.instance.authenticators,
-    );
+    this.authenticators[plugin.name] = { ...plugin.instance.authenticators };
   }
 
   /**
@@ -1213,11 +1294,11 @@ class PluginsManager {
     const prefix = `${pluginName} Strategy ${strategyName}:`;
 
     return async (...args: unknown[]) => {
-      const callback = args[args.length - 1];
+      const callback = args.at(-1);
 
       // passport always calls the adapter with a trailing callback; the
       // narrowing is what lets it be invoked, and the branch cannot be taken.
-      if (typeof callback !== "function") {
+      if (!isPluginMethod(callback)) {
         return;
       }
 
@@ -1239,63 +1320,73 @@ class PluginsManager {
         return;
       }
 
-      if (result === false) {
-        callback(null, result, { message: null });
-        return;
-      }
-
-      if (!isPlainObject(result)) {
-        callback(strategyError.get("invalid_verify_resolve", prefix));
-        return;
-      }
-
-      if (result.kuid !== null && result.kuid !== undefined) {
-        if (typeof result.kuid === "string") {
-          try {
-            const user = await global.kuzzle.ask(
-              "core:security:user:get",
-              result.kuid,
-            );
-
-            callback(null, user);
-          } catch (e) {
-            if (e.id === "security.user.not_found") {
-              callback(strategyError.get("unknown_kuid", prefix));
-            } else {
-              callback(e);
-            }
-          }
-
-          return;
-        }
-
-        callback(strategyError.get("invalid_kuid", prefix, typeof result.kuid));
-        return;
-      }
-
-      let message;
-      if (result.message && typeof result.message === "string") {
-        message = result.message;
-      } else {
-        message = `Unable to log in using the strategy "${strategyName}"`;
-      }
-
-      callback(null, false, { message });
+      await resolveVerifiedUser(result, prefix, strategyName, callback);
     };
   }
 }
 
 /**
- * Test if the provided argument is a constructor or not
- *
- * @param  {*} arg
- * @returns {Boolean}
- */
-/**
  * The duck-typed promise check `registerPipe` has always made: a plugin's pipe
  * may answer a promise, a value, or nothing, and only the first is awaited.
  * A guard rather than an inline `typeof` chain so the branch narrows.
  */
+/**
+ * Turns what a strategy's `verify` resolved into the passport callback call it
+ * stands for: the authenticated user, an explicit refusal, or an error.
+ *
+ * Lifted verbatim out of `wrapStrategyVerify`, whose cognitive complexity the
+ * `.js` → `.ts` rename re-scored as new code.
+ */
+async function resolveVerifiedUser(
+  result: unknown,
+  prefix: string,
+  strategyName: string,
+  callback: PluginMethod,
+): Promise<void> {
+  if (result === false) {
+    callback(null, result, { message: null });
+    return;
+  }
+
+  if (!isPlainObject(result)) {
+    callback(strategyError.get("invalid_verify_resolve", prefix));
+    return;
+  }
+
+  if (result.kuid !== null && result.kuid !== undefined) {
+    if (typeof result.kuid === "string") {
+      try {
+        const user = await global.kuzzle.ask(
+          "core:security:user:get",
+          result.kuid,
+        );
+
+        callback(null, user);
+      } catch (e) {
+        if (e.id === "security.user.not_found") {
+          callback(strategyError.get("unknown_kuid", prefix));
+        } else {
+          callback(e);
+        }
+      }
+
+      return;
+    }
+
+    callback(strategyError.get("invalid_kuid", prefix, typeof result.kuid));
+    return;
+  }
+
+  let message;
+  if (result.message && typeof result.message === "string") {
+    message = result.message;
+  } else {
+    message = `Unable to log in using the strategy "${strategyName}"`;
+  }
+
+  callback(null, false, { message });
+}
+
 /**
  * Resolves a handler a plugin referenced by name and binds it to the instance.
  *
@@ -1309,11 +1400,21 @@ function bindPluginMethod(
 ): PluginMethod {
   const method = instance[name];
 
-  if (typeof method !== "function") {
+  if (!isPluginMethod(method)) {
     return undefined;
   }
 
   return method.bind(instance);
+}
+
+/**
+ * A declared narrowing from `unknown` to "callable", the same shape
+ * `safeObject.isPlainObject` has. A predicate rather than an assertion: it is
+ * what lets a plugin's member — `unknown` by construction — be invoked without
+ * an `as`, which TD-43's `casts` ratchet now prices.
+ */
+function isPluginMethod(value: unknown): value is PluginMethod {
+  return typeof value === "function";
 }
 
 function isThenable(value: unknown): value is Bluebird<unknown> {
@@ -1345,7 +1446,7 @@ function getMethods(object: object): string[] {
   const prototype = Object.getPrototypeOf(object);
 
   const instanceMethods = Object.getOwnPropertyNames(prototype).filter(
-    (method) => ["init", "constructor"].indexOf(method) === -1,
+    (method) => !["init", "constructor"].includes(method),
   );
 
   const objectMethods = Object.getOwnPropertyNames(object).filter(

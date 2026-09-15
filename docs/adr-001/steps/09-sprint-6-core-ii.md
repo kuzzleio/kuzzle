@@ -392,3 +392,19 @@ Each was fixed where the defect is, per the [TD-40](../type-debt-register.md#td-
 3. **The verify adapter returns early if its trailing argument is not a function.** passport always passes a callback, so the branch cannot be taken; it is what lets the callback be invoked at all. Same shape as the narrowing H4 added to `manageErrorMessage`.
 4. **`doAction` uses `Reflect.apply(Reflect.get(controller, action), controller, [request])`.** `BaseController` deliberately carries no index signature ([TD-28](../type-debt-register.md#td-28)), and `_addAction` already writes through `Reflect.set`. `apply` rather than calling the result of `get` is deliberate: dropping the receiver there is precisely the bug sprint 5's `Build and Run` job caught.
 5. **The two Mocha specs now mock `node:fs` alongside `fs`.** The conversion writes `import fs from "node:fs"`, which compiles to `require("node:fs")`, and `mockrequire("fs", …)` does not intercept that. The source keeps the modern specifier; the specs follow it.
+
+### Gate-driven refactor (H5)
+
+SonarCloud failed the first run on **7 new Critical** (S3776: `_initControllers` 45, `checkControllerDefinition` 33, `_initApi` 22, `_initPipes`/`_initHooks` 21 each, `wrapStrategyVerify` 20, `loadFromDirectory` 16), **4 new Major** and **14 new Minor**. All pre-existing, all re-scored by the two renames.
+
+Extractions, verbatim: `loadPluginErrors`, `checkActionDefinition`, `checkHttpRoute` (plugin.ts); `resolveEventHandler`, `registerApiAction`, `registerLegacyAction`, `checkLegacyRoute`, `resolveVerifiedUser` (pluginsManager.ts).
+
+**`resolveEventHandler` is the one that is not only a split.** `_initPipes` and `_initHooks` carried the same twenty lines with two words changed — the error id and the deprecation message. They now share one method, so the gate asked for a deduplication the files already wanted.
+
+**Equivalence note, H5 — the three places this is not a straight cut:**
+
+1. **`_initPipes` gained a `typeof target !== "string"` guard** before reading `target.name`. A string has no `name`, so the original read `undefined` and skipped the branch; the guard says so instead of relying on it. `_initHooks` already had it.
+2. **`isPluginMethod` replaces three inline `typeof x === "function"` checks.** It is a *predicate*, not an assertion — the same shape `safeObject.isPlainObject` has — and it is what lets a plugin member be invoked without an `as`. The alternative was three casts, which the `casts` ratchet now prices, and pricing them is exactly what should make an author look for the predicate.
+3. **`!a?.b ?? c` became `!(a?.b ?? c)` in `checkControllerDefinition`.** The original parses as `(!a?.b) ?? c`, and `!x` is never nullish, so the fallback was dead. It happens to be equivalent **today only because the packaged default is `false`** — the two would differ the moment that default became `true`. Recorded here because the fix is a parenthesis and the reasoning is not.
+
+Left deliberately: `JSON.parse(JSON.stringify(config))` against S4123's `structuredClone`, `// NOSONAR` with the reason inline — a plugin's configuration is user data and a conversion does not change clone semantics.

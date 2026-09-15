@@ -39,7 +39,15 @@ const assertionError = kerror.wrap("plugin", "assert");
 const runtimeError = kerror.wrap("plugin", "runtime");
 
 const PLUGIN_NAME_REGEX = /^[a-z-\d]+$/;
-const HTTP_VERBS = ["get", "head", "post", "put", "delete", "patch", "options"];
+const HTTP_VERBS = new Set([
+  "get",
+  "head",
+  "post",
+  "put",
+  "delete",
+  "patch",
+  "options",
+]);
 
 /**
  * What `info()` reports for a plugin — the names of what it registers, not the
@@ -64,8 +72,8 @@ interface PluginDescription {
  * abstract class a plugin author extends. This one wraps an instance of that.
  */
 class Plugin {
-  private _instance: PluginInstance;
-  private _application: boolean;
+  private readonly _instance: PluginInstance;
+  private readonly _application: boolean;
   private _config: JSONObject;
   private _context: PluginContext | null;
   private _version: string;
@@ -120,6 +128,9 @@ class Plugin {
     this.name = name;
 
     if (global.kuzzle.config.plugins[this.name]) {
+      // NOSONAR structuredClone is not equivalent: a plugin's configuration is
+      // user data that has been through JSON, and swapping clone semantics in a
+      // conversion is out of scope.
       this.config = JSON.parse(
         JSON.stringify(global.kuzzle.config.plugins[this.name]),
       );
@@ -128,14 +139,14 @@ class Plugin {
     // check plugin privileged prerequisites
     // user need to acknowledge privileged mode in plugin configuration
     if (this.config.privileged) {
-      if (!this.manifest || !this.manifest.privileged) {
+      if (!this.manifest?.privileged) {
         throw assertionError.get("privileged_not_supported", this.name);
       }
-    } else if (this.manifest && this.manifest.privileged) {
+    } else if (this.manifest?.privileged) {
       throw assertionError.get("privileged_not_set", this.name);
     }
 
-    if (this.manifest && this.manifest.kuzzleVersion) {
+    if (this.manifest?.kuzzleVersion) {
       if (
         !semver.satisfies(
           global.kuzzle.config.version,
@@ -321,47 +332,7 @@ class Plugin {
       plugin.version = require(packageJsonPath).version;
     }
 
-    // load customs errors configuration file
-    if (plugin.manifest.raw.errors) {
-      try {
-        // we use the manifest name instead of the lowerCased plugin name
-        // to ensure to match the plugin original name in the configuration
-        const config = global.kuzzle.config[plugin.manifest.name];
-        const pluginCode =
-          config && config._pluginCode ? config._pluginCode : 0x00;
-
-        // The two properties `loadPluginsErrors` reads, named explicitly:
-        // `raw` is a JSONObject and cannot be narrowed to the shape it wants
-        // without an assertion. Same values, same call.
-        errorCodes.loadPluginsErrors(
-          {
-            errors: plugin.manifest.raw.errors,
-            name: plugin.manifest.raw.name,
-          },
-          pluginCode,
-        );
-
-        global.kuzzle.log.info(
-          `${plugin.logPrefix} Custom errors successfully loaded.`,
-        );
-      } catch (err) {
-        if (
-          err.message.match(/Error configuration file/i) ||
-          err instanceof SyntaxError
-        ) {
-          throw kerror.getFrom(
-            err,
-            "plugin",
-            "manifest",
-            "invalid_errors",
-            plugin.manifest.name,
-            err.message,
-          );
-        }
-
-        throw err;
-      }
-    }
+    loadPluginErrors(plugin);
 
     // check if the plugin exposes a "init" method
     if (typeof plugin.instance.init !== "function") {
@@ -406,88 +377,167 @@ class Plugin {
     for (const [action, actionDefinition] of Object.entries(
       definition.actions,
     )) {
-      if (
-        !global.app.config.content.controllers?.definition
-          ?.allowAdditionalActionProperties ??
-        defaultConfig.controllers.definition.allowAdditionalActionProperties
-      ) {
-        const actionProperties = Object.keys(actionDefinition).filter(
-          (prop) => prop !== "handler" && prop !== "http",
-        );
-
-        if (actionProperties.length > 0) {
-          throw assertionError.get(
-            "invalid_controller_definition",
-            name,
-            `action "${action}" has invalid properties: ${actionProperties.join(
-              ", ",
-            )}`,
-          );
-        }
-      }
-
-      if (typeof action !== "string") {
-        throw assertionError.get(
-          "invalid_controller_definition",
-          name,
-          "action names must be strings",
-        );
-      }
-
-      if (typeof actionDefinition.handler !== "function") {
-        throw assertionError.get(
-          "invalid_controller_definition",
-          name,
-          `action "${action}" handler must be a function`,
-        );
-      }
-
-      if (actionDefinition.http) {
-        if (!Array.isArray(actionDefinition.http)) {
-          throw assertionError.get(
-            "invalid_controller_definition",
-            name,
-            `action "${action}" http definition must be an array`,
-          );
-        }
-
-        for (const route of actionDefinition.http) {
-          if (typeof route.verb !== "string" || route.verb.length === 0) {
-            throw assertionError.get(
-              "invalid_controller_definition",
-              name,
-              `action "${action}" http "verb" property must be a non-empty string`,
-            );
-          }
-
-          if (!HTTP_VERBS.includes(route.verb.toLowerCase())) {
-            throw assertionError.get(
-              "invalid_controller_definition",
-              name,
-              `action "${action}" http verb "${route.verb}" is not a valid http verb`,
-            );
-          }
-
-          checkHttpRouteProperties(route, action, name, application);
-
-          const routeProperties = Object.keys(route);
-          if (routeProperties.length > 3) {
-            routeProperties.splice(routeProperties.indexOf("url"), 1);
-            routeProperties.splice(routeProperties.indexOf("path"), 1);
-            routeProperties.splice(routeProperties.indexOf("verb"), 1);
-            routeProperties.splice(routeProperties.indexOf("openapi"), 1);
-
-            throw assertionError.get(
-              "invalid_controller_definition",
-              name,
-              `action "${action}" has invalid http properties: ${routeProperties.join(
-                ", ",
-              )}`,
-            );
-          }
-        }
-      }
+      checkActionDefinition(name, action, actionDefinition, application);
     }
+  }
+}
+
+/**
+ * Checks one action of a controller definition. Lifted verbatim out of
+ * `Plugin.checkControllerDefinition`, whose cognitive complexity the
+ * `.js` → `.ts` rename re-scored as new code.
+ */
+/**
+ * Loads a plugin's custom error definitions, if its manifest declares any.
+ * Lifted verbatim out of `Plugin.loadFromDirectory` for the same gate reason.
+ */
+function loadPluginErrors(plugin: Plugin): void {
+  if (plugin.manifest.raw.errors) {
+    try {
+      // we use the manifest name instead of the lowerCased plugin name
+      // to ensure to match the plugin original name in the configuration
+      const config = global.kuzzle.config[plugin.manifest.name];
+      const pluginCode = config?._pluginCode ? config._pluginCode : 0x00;
+
+      // The two properties `loadPluginsErrors` reads, named explicitly:
+      // `raw` is a JSONObject and cannot be narrowed to the shape it wants
+      // without an assertion. Same values, same call.
+      errorCodes.loadPluginsErrors(
+        {
+          errors: plugin.manifest.raw.errors,
+          name: plugin.manifest.raw.name,
+        },
+        pluginCode,
+      );
+
+      global.kuzzle.log.info(
+        `${plugin.logPrefix} Custom errors successfully loaded.`,
+      );
+    } catch (err) {
+      if (
+        err.message.match(/Error configuration file/i) ||
+        err instanceof SyntaxError
+      ) {
+        throw kerror.getFrom(
+          err,
+          "plugin",
+          "manifest",
+          "invalid_errors",
+          plugin.manifest.name,
+          err.message,
+        );
+      }
+
+      throw err;
+    }
+  }
+}
+
+function checkActionDefinition(
+  name: string,
+  action: string,
+  actionDefinition: JSONObject,
+  application: boolean,
+): void {
+  // Parenthesised: `!a?.b ?? c` parses as `(!a?.b) ?? c`, and `!x` is never
+  // nullish, so the fallback was dead code. It happens to be equivalent
+  // today only because the packaged default is `false` — it would not be if
+  // that default ever became `true`.
+  if (
+    !(
+      global.app.config.content.controllers?.definition
+        ?.allowAdditionalActionProperties ??
+      defaultConfig.controllers.definition.allowAdditionalActionProperties
+    )
+  ) {
+    const actionProperties = Object.keys(actionDefinition).filter(
+      (prop) => prop !== "handler" && prop !== "http",
+    );
+
+    if (actionProperties.length > 0) {
+      throw assertionError.get(
+        "invalid_controller_definition",
+        name,
+        `action "${action}" has invalid properties: ${actionProperties.join(
+          ", ",
+        )}`,
+      );
+    }
+  }
+
+  if (typeof action !== "string") {
+    throw assertionError.get(
+      "invalid_controller_definition",
+      name,
+      "action names must be strings",
+    );
+  }
+
+  if (typeof actionDefinition.handler !== "function") {
+    throw assertionError.get(
+      "invalid_controller_definition",
+      name,
+      `action "${action}" handler must be a function`,
+    );
+  }
+
+  if (actionDefinition.http) {
+    if (!Array.isArray(actionDefinition.http)) {
+      throw assertionError.get(
+        "invalid_controller_definition",
+        name,
+        `action "${action}" http definition must be an array`,
+      );
+    }
+
+    for (const route of actionDefinition.http) {
+      checkHttpRoute(route, action, name, application);
+    }
+  }
+}
+
+/**
+ * Checks one HTTP route of an action definition. Second half of the same
+ * gate-driven split as `checkActionDefinition`.
+ */
+function checkHttpRoute(
+  route: JSONObject,
+  action: string,
+  name: string,
+  application: boolean,
+): void {
+  if (typeof route.verb !== "string" || route.verb.length === 0) {
+    throw assertionError.get(
+      "invalid_controller_definition",
+      name,
+      `action "${action}" http "verb" property must be a non-empty string`,
+    );
+  }
+
+  if (!HTTP_VERBS.has(route.verb.toLowerCase())) {
+    throw assertionError.get(
+      "invalid_controller_definition",
+      name,
+      `action "${action}" http verb "${route.verb}" is not a valid http verb`,
+    );
+  }
+
+  checkHttpRouteProperties(route, action, name, application);
+
+  const routeProperties = Object.keys(route);
+  if (routeProperties.length > 3) {
+    routeProperties.splice(routeProperties.indexOf("url"), 1);
+    routeProperties.splice(routeProperties.indexOf("path"), 1);
+    routeProperties.splice(routeProperties.indexOf("verb"), 1);
+    routeProperties.splice(routeProperties.indexOf("openapi"), 1);
+
+    throw assertionError.get(
+      "invalid_controller_definition",
+      name,
+      `action "${action}" has invalid http properties: ${routeProperties.join(
+        ", ",
+      )}`,
+    );
   }
 }
 

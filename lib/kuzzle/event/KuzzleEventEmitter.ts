@@ -69,7 +69,7 @@ class KuzzleEventEmitter extends EventEmitter {
   private coreSyncedAnswerers: Map<string, HookEventHandler>;
   private corePipes: Map<string, PipeEventHandler[]>;
   private pipeRunner: PipeRunner;
-  private pluginPipes: Map<string, RegisteredPipeHandler[]>;
+  private readonly pluginPipes: Map<string, RegisteredPipeHandler[]>;
   private pluginPipeDefinitions: Map<string, PluginPipeDefinition>;
   private superEmit: typeof EventEmitter.prototype.emit;
 

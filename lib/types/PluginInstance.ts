@@ -23,9 +23,11 @@ import type { JSONObject } from "kuzzle-sdk";
 
 import type PluginManifest from "../core/plugin/pluginManifest";
 import type { PluginContext } from "../core/plugin/pluginContext";
-import type { PluginApiDefinition } from "./Plugin";
-import type { PluginHookDefinition } from "./Plugin";
-import type { PluginPipeDefinition } from "./Plugin";
+import type {
+  PluginApiDefinition,
+  PluginHookDefinition,
+  PluginPipeDefinition,
+} from "./Plugin";
 
 /**
  * What Kuzzle needs of a plugin's own object. The full contract third parties
