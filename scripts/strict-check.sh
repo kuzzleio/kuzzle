@@ -52,6 +52,69 @@ if [ "$tsc_status" -ne 0 ] && ! grep -qE '^[^ ].*\([0-9]+,[0-9]+\): error TS' "$
   exit 2
 fi
 
+# A declaration that lies: a non-nullable type assigned `undefined`, or a
+# function whose declared return type has no path returning it (TS2366). This
+# is checked over the WHOLE program — adopted or not — because it is the one
+# defect class the adoption list cannot help with: TD-40 was found by strict in
+# an adopted file, and TD-56 is the same defect two sprints later in a file
+# strict does not read. *A ratchet a file is exempt from cannot catch the
+# defect it exists for* (ADR-0001, TD-56).
+#
+# Deliberately narrow. It is not "strict everywhere" — the other ~1 600
+# diagnostics are TD-54's per-file triage — only the subset where the type
+# states something the code contradicts on the very line, with no guard to
+# write and nothing to decide.
+#
+# The `Type 'null'` variant is the same lie at a scale this gate cannot carry
+# yet: 56 sites, most of them `x: T = null` field initialisers. See TD-62.
+check_lies() {
+  grep -E "error (TS2366|TS2322: Type 'undefined' is not assignable)" "$LOG" || true
+}
+
+if [ "${1:-}" = "--lies" ]; then
+  check_lies
+  exit 0
+fi
+
+# Per-file error counts, for files that do NOT pass strict. The other half of
+# --candidates: that one answers "what is ready to adopt", this one answers "how
+# far is what I just converted" — the number a conversion PR owes per
+# ADR-0001 (TD-54, #2757). Both read the same log, so both inherit the
+# fail-closed guards above: a count of 0 here means tsc checked the file and
+# found nothing, never that tsc did not run.
+#
+#   scripts/strict-check.sh --count                 # every unadopted file with errors
+#   scripts/strict-check.sh --count lib/a.ts lib/b.ts
+if [ "${1:-}" = "--count" ]; then
+  shift
+  errored="$(grep -oE '^(lib/[^(]+\.ts|index\.ts)' "$LOG" | sort | uniq -c | awk '{print $2" "$1}')"
+
+  if [ "$#" -gt 0 ]; then
+    miss=0
+    for path in "$@"; do
+      # "0" must mean "tsc checked it and found nothing", never "tsc never saw
+      # this path" — a typo would otherwise read as a clean file (TD-44).
+      if [ ! -f "$path" ]; then
+        echo "?? $path (no such file)" >&2
+        miss=1
+        continue
+      fi
+      n="$(printf '%s\n' "$errored" | awk -v p="$path" '$1 == p { print $2 }')"
+      echo "${n:-0} $path"
+    done
+    exit "$miss"
+  fi
+
+  adopted="$(grep -vE '^[[:space:]]*(#|$)' "$ADOPTED" 2>/dev/null | sort -u)"
+  printf '%s\n' "$errored" \
+    | while read -r path n; do
+        [ -n "$path" ] || continue
+        printf '%s\n' "$adopted" | grep -qxF "$path" || echo "$n $path"
+      done \
+    | sort -rn
+  exit 0
+fi
+
 if [ "${1:-}" = "--candidates" ]; then
   errored="$(grep -oE '^(lib/[^(]+\.ts|index\.ts)' "$LOG" | sort -u)"
   all="$( { find lib -name '*.ts'; echo index.ts; } | sort -u )"
@@ -63,6 +126,17 @@ fi
 
 fail=0
 count=0
+adopted_failed=""
+
+lies="$(check_lies)"
+if [ -n "$lies" ]; then
+  echo "❌ strict: a declaration that lies — a non-nullable type assigned \`undefined\`:"
+  printf '%s\n' "$lies" | sed 's/^/   /'
+  echo "   Widen the declaration or stop assigning undefined. This one is checked"
+  echo "   everywhere, adopted or not (ADR-0001, TD-56)."
+  echo ""
+  fail=1
+fi
 while IFS= read -r path; do
   case "$path" in ''|\#*) continue;; esac
   count=$((count + 1))
@@ -74,6 +148,7 @@ while IFS= read -r path; do
     echo "❌ strict: errors in an adopted file: $path"
     printf '%s\n' "$hits" | head -10
     fail=1
+    adopted_failed=1
   fi
 done < "$ADOPTED"
 
@@ -86,8 +161,10 @@ fi
 
 if [ "$fail" -eq 0 ]; then
   echo "✅ strict: all $count adopted file(s) pass."
-else
+elif [ -n "$adopted_failed" ]; then
   echo ""
   echo "→ Fix the errors above, or temporarily remove the file from $ADOPTED."
+  echo "  (A lying declaration is not covered by that escape: it is checked"
+  echo "   whether or not the file is adopted.)"
 fi
 exit "$fail"

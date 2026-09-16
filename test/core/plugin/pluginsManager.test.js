@@ -61,7 +61,9 @@ describe("Plugin", () => {
 
       should(() => {
         pluginsManager.application = application;
-      }).throw();
+      }).throw(
+        "The application plugin can only be set before every other plugins are loaded",
+      );
     });
 
     it("should throws error if there is already plugins", () => {
@@ -69,7 +71,14 @@ describe("Plugin", () => {
 
       should(() => {
         pluginsManager.application = application;
-      }).throw();
+      }).throw(
+        // The same assertion as the test above: setting the application adds it
+        // to `_plugins`, so "already an application" reaches the setter as
+        // "already some plugins". Pinning the message is what makes the two
+        // tests distinguishable — and shows the second assert, on the
+        // `application` property, is covered by neither.
+        "The application plugin can only be set before every other plugins are loaded",
+      );
     });
   });
 
@@ -511,7 +520,7 @@ describe("Plugin", () => {
 
       should(() => {
         pluginsManager._initControllers(plugin);
-      }).throw();
+      }).throw({ id: "plugin.controller.invalid_description" });
     });
 
     it("should abort the plugin initialization if one of the controller action is not correctly defined", () => {
@@ -523,7 +532,7 @@ describe("Plugin", () => {
 
       should(() => {
         pluginsManager._initControllers(plugin);
-      }).throw();
+      }).throw({ id: "plugin.controller.invalid_action" });
     });
 
     it("should abort the controller initialization if one of the controller action target does not exist", () => {

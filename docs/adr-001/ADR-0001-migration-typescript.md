@@ -76,6 +76,7 @@ Stable reference for *how* the migration is enforced and sequenced. How it was b
 - Reuse and enrich `lib/types`; do not duplicate.
 - One PR = one layer (or a coherent subset), small and reviewable, that **decrements the JS baseline**.
 - **If the converted file passes strict, adopt it** into `.migration/strict-adopted.txt` in the same PR — part of the PR's definition of done. `npm run test:strict -- --candidates` lists what is clean but unadopted, and `pr-preflight` warns about it. Deferring adoption is what turns sprint 9 into a wall.
+- **If it does not pass strict, report the count it leaves behind** — the other half of the same duty, and the one nothing asked for until [TD-54](type-debt-register.md#td-54). A conversion PR runs `npx tsc -p tsconfig.strict.json --noEmit` filtered to the files it converted and states, per file, how many errors remain and **which of them are guards the runtime can reach** (a bug list) rather than types the runtime already guarantees. "Excluded from `strict-adopted`" without a number is not a DoD: sprints 6 and 7 left **246** errors across their six largest files, credited wholesale to [TD-53](type-debt-register.md#td-53), of which only 14 were. *A conversion that compiles is not a conversion that checks.*
 - **A file with no unit spec ships one** (vitest + TS) in its conversion PR: converting untested code is converting blind, and it is the only mechanism that makes the mocha counter fall.
 - **No behaviour change in a conversion PR.** Structural refactors stay separate — *except* the behaviour-preserving ones the SonarCloud new-code gate forces (a rename re-scores the whole file as new code, so pre-existing S2004/S3776 smells must be cleared in-PR). Those are **in scope**, under two conditions: the extraction is **verbatim**, and the step file carries an **equivalence note** stating why behaviour is preserved. See [step 06](steps/06-hardening-mid-course.md) for why the rule is written this way rather than broken every sprint.
 
@@ -269,7 +270,8 @@ Canonical "what we decided", one line each. Links point to the step that details
 
 ## References
 
+- **Companion:** [lessons](lessons.md) — every *generalisable part* recorded by this ADR, one line each, with what enforces it. The 📝 rows are the backlog of what to gate next; a review that files a finding adds its row.
 - **Companion:** [type-debt register](type-debt-register.md) — detailed, tracked findings of the 2026-07-12 audit (the ADR sets the strategy; the register tracks the execution).
-- **Steps:** [`steps/`](steps/) — one file per milestone; `00` archives the rejected alternatives, `01`–`07` and `09` cover the sprints delivered, `08` is the parallel type-debt track (open), `10` is the sprint in flight.
+- **Steps:** [`steps/`](steps/) — one file per milestone; `00` archives the rejected alternatives, `01`–`07`, `09` and `10` cover the sprints delivered, `08` is the parallel type-debt track (open). Sprint 8 (`lib/cluster`) has no step file yet.
 - **Process tooling:** the `kuzzle-adr` skill (this hub + steps structure) and the `wrapup` skill (keeps this document live).
 - ADRs live under `docs/adr-<n>/` — distinct from `doc/` (reserved for the Kuzzle documentation tool).

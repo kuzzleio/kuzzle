@@ -39,6 +39,19 @@ the `migration-ratchets` job:
 * When a file passes `strict`, add it to `.migration/strict-adopted.txt`
   (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
   converting, this is part of the PR — not a later chore.
+* **Never declare a type the next line contradicts.** `npm run test:strict` fails on
+  a non-nullable type assigned `undefined` (and on a function that cannot return what
+  it declares) **anywhere in `lib/`**, whether or not the file is in
+  `strict-adopted.txt` — `x: string[]` then `this.x = undefined` is rejected; widen
+  the declaration to `string[] | undefined`. It is the one defect class the adoption
+  list cannot help with, since being exempt is what lets it through (ADR-0001, TD-56).
+* **If it does not pass `strict`, say how far it is.** Converting a file and leaving
+  it out of `strict-adopted.txt` is allowed; leaving it out *silently* is not. Run
+  `npx tsc -p tsconfig.strict.json --noEmit`, filter it to the files you converted,
+  and put in the PR body — per file — how many errors remain and which of them are
+  guards the runtime can actually reach. Those are bugs, not typing chores: the two
+  defects found by hand in sprint 6 were both already in that list. A conversion that
+  compiles is not a conversion that checks.
 * **Converting a file that has no unit spec? Write one** (vitest + TS) in the same PR.
   `.ts` is measured by the coverage gate, so an untested conversion now fails CI.
 
@@ -47,12 +60,22 @@ Run the gates locally before pushing:
 ```bash
 npm run ratchet             # js / mocha / any / implicit-any / casts / cpd-exclusions
 npm run test:strict         # strict type-check on adopted files
-.ci/scripts/pr-preflight.sh # the above + lint + error-codes + two reminders
+.ci/scripts/pr-preflight.sh # the above + lint + error-codes + three reminders
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.
 `npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`, `:casts`) — then
 commit `.migration/`.
+
+### Assertions on errors
+
+An assertion that a call throws must say **which** error: `should(fn).throw({ id: "domain.sub.code" })`
+or a message, and `expect(promise).rejects.toMatchObject({ id })` on the vitest side.
+`should(fn).throw()` and `expect(fn).toThrow()` with no matcher are rejected by
+lint (`no-restricted-syntax`) — in a function whose control flow is a series of
+`assert`s, "it threw" is what every path has in common, so the test passes
+whichever guard fired. `.not.throw()` needs no matcher: "does not throw" is
+already a complete assertion. See ADR-0001, TD-57.
 
 ## Guidelines
 

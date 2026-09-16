@@ -1,6 +1,6 @@
 # Type-debt register — Kuzzle
 
-> Companion to [ADR-0001](ADR-0001-migration-typescript.md). It details and tracks the findings of the **2026-07-12** type-debt audit (multi-agent audit, findings verified adversarially). The ADR sets the *strategy*; this register tracks the *execution*.
+> Companion to [ADR-0001](ADR-0001-migration-typescript.md), and to [lessons.md](lessons.md) — the index of every *generalisable part* below, with what enforces it. It details and tracks the findings of the **2026-07-12** type-debt audit (multi-agent audit, findings verified adversarially). The ADR sets the *strategy*; this register tracks the *execution*.
 
 **Effort legend:** XS (< 1h) · S (~½ day) · M (1–3 d) · L (> 3 d)
 **Status:** ⬜ to do · 🟦 in progress · ✅ done · 🔴 open defect — filed, and wrong *today*: shipped behaviour is incorrect, or the item blocks work that is otherwise ready
@@ -68,6 +68,9 @@
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
 | [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | ✅ |
 | [TD-59](#td-59) | 🟠 med | Correctness | Every node has **two** unrelated `knode-*` ids — the cluster's and the one it logs under — so no cluster log line can be attributed to a container — [#2764](https://github.com/kuzzleio/kuzzle/issues/2764) | S | ✅ |
+| [TD-60](#td-60) | 🟡 low | Enforcement | `pr-preflight.sh` diffs against `master`, 278 commits behind `2-dev`: both of its reminders saw ~330 changed files on every branch, so neither could fire meaningfully | XS | ✅ |
+| [TD-61](#td-61) | 🟡 low | Enforcement | [TD-54](#td-54)'s DoD lived only in the decision log: nothing a conversion author reads carried the strict-count rule, and no tool printed the number | XS | ✅ |
+| [TD-62](#td-62) | 🟡 low | Correctness | 56 `x: T = null` declarations state a type the constructor contradicts — [TD-56](#td-56)'s gate covers the `undefined` spelling, not this one | M | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1068,7 +1071,9 @@ This is [TD-40](#td-40) — *declared non-nullable, resolves `null`* — written
 The branch is dead — all four call sites establish the member is callable first — so the cost is what the *next* caller reads off the signature.
 
 - **✅ Fixed (2026-09-16):** the return type is `PluginMethod | undefined`. Under the current non-strict program the union collapses, so no call site needs a guard yet; the guards appear the day the file joins `strict-adopted`, which is also the moment to decide whether the dead branch should throw with the unresolved name instead. `isThenable`'s predicate, which claimed `Bluebird<unknown>` for a duck-typed `then`/`catch` check, now says `Promise<unknown>`.
-- **The generalisable part:** *a ratchet a file is exempt from cannot catch the defect it exists for.* TD-40 was found by strict; TD-56 is TD-40 in a file strict does not read.
+- **🔒 Gated (2026-09-16):** `strict-check.sh` now fails on `TS2366` and on `TS2322: Type 'undefined' is not assignable` **over the whole program, adopted or not** — the one diagnostic class the adoption list cannot help with, because the defect is precisely that the file is exempt. It is deliberately narrow: not "strict everywhere" (the other ~1 600 diagnostics are [TD-54](#td-54)'s per-file triage), only the subset where the type states something the code contradicts on the same line, with no guard to write and nothing to decide.
+  Three sites existed and are fixed: `idCardHandler.ts:176` (`candidate` is `string | undefined` after the first turn of [TD-59](#td-59)'s loop — which is what makes the `??` fall through), `profile.optimizedPolicies` (cleared before persisting, and two readers already tested it for `undefined`), and `kuzzleError.props`. No cascade: the 135 adopted files still pass, total strict errors 1 602 → 1 599. Verified negatively by reintroducing the `kuzzleError` one, the way [TD-44](#td-44) established.
+- **The generalisable part:** *a ratchet a file is exempt from cannot catch the defect it exists for.* TD-40 was found by strict; TD-56 is TD-40 in a file strict does not read. The fix is not to adopt the file — it is to pick the defect class that does not need the file adopted.
 
 ---
 
@@ -1080,6 +1085,8 @@ The branch is dead — all four call sites establish the member is callable firs
 3. **The memoisation was untested.** `kuzzle-vault` deletes the variable from the environment after reading it, and Kaaf loads the vault twice — which is the entire reason the module-scope variable exists.
 
 - **✅ Fixed (2026-09-16):** `string | undefined`; the env-var spec asserts *which* error comes back, not that one does; and two tests cover the memoisation — the key survives the environment being cleared, and it does not survive a fresh process. The spec re-requires the module per test so that module state stops leaking between them.
+- **🔒 Gated (2026-09-16):** two `no-restricted-syntax` selectors over `test/`, `tests/`, `features/` and `features-legacy/` reject a matcher-less `should(fn).throw()` / `.throwError()` and `expect(fn).toThrow()` / `.toThrowError()`. `.not.throw()` is excluded — "does not throw" is a complete assertion; the vacuous one is the positive. It found **15** sites in three files, all now pinned to an error id or message, and one of the fifteen was pinned to the wrong id first: `zrangebyscore`'s `limit: "1"` answers `api.assert.invalid_argument`, not `invalid_type`, which is the rule making its own case.
+- **What pinning them showed.** `pluginsManager`'s two "already an application" / "already some plugins" tests assert the *same* message — setting the application adds it to `_plugins`, so the second guard is unreachable by the route the test name claims — and the setter's second assertion, on the `application` property, is covered by neither. `memoryStorageController`'s "non-numeric coordinate" case passes on the geopoint-shape error just as happily as on the float error it means to exercise.
 - **The generalisable part:** *`should(fn).throw()` with no matcher is not a test of why.* In a function whose control flow is four `assert`s, "it threw" is what every path has in common.
 
 ---
@@ -1134,3 +1141,53 @@ names a node that no other line in the run mentions. Measured on the `legacy:mqt
 - **✅ Fixed (2026-09-16), in two halves.** [#2763](https://github.com/kuzzleio/kuzzle/pull/2763) made `handshake()` print both ids, so every dump from that point on is self-attributing whatever else is true. [#2765](https://github.com/kuzzleio/kuzzle/pull/2765) removed the second identity: `createIdCard()` adopts `global.nodeId`.
 - **Why adopting it is safe, and why the loop stays.** `global.nodeId` is itself a random draw, but two cases can still leave it unusable — a stale IdCard from a crashed incarnation holding the key, and a Kuzzle running without a `Backend`, where there is no `global.nodeId` at all. Both fall through to a fresh draw on the next turn of the loop that has always been there, and `handshake()` prints both ids **only when they differ**, which is exactly those two cases.
 - **The generalisable part:** *two ids from the same generator with the same prefix are one id as far as a reader is concerned.* Nothing in the logs suggested there were two — the extra names read as peers that had come and gone, which is exactly how six reviews read them.
+
+---
+
+### TD-60
+**`pr-preflight.sh` measured every branch against the wrong base** · 🟡 low · `.ci/scripts/pr-preflight.sh`
+
+The two heuristic reminders — *"`lib/` changed with no test changed"* and *"this file passes strict but is not adopted"* — both work off a diff:
+
+```bash
+base_ref="$(git merge-base HEAD origin/master 2>/dev/null || ...)"
+```
+
+The migration's base branch is **`2-dev`**, and `master` is the released 2.56.0. `git merge-base HEAD origin/master` therefore resolves to the release tag commit, **278 commits and 328 changed files** behind the branch under test — so every branch, including one that changed a single file, was measured against the whole migration. The strict-adoption reminder listed files nobody had touched, and the test-coverage reminder was green on every branch that touched any test anywhere in those 278 commits, which is all of them.
+
+Nothing failed, which is why it survived: both checks are `[WARN]`-only, and a warning that is always the same is read as furniture.
+
+- **✅ Fixed (2026-09-16):** the base is `2-dev`, with `PREFLIGHT_BASE` for a branch based elsewhere and the old `master` resolution kept as the last fallback.
+- **The generalisable part:** *a diff-based check names a base branch, and a base branch is a fact about the project, not about git.* `origin/master` is the default that is always syntactically right; here it was 278 commits wrong, and the check reported on it in full confidence. Same shape as [TD-45](#td-45) — the predicate, not the label.
+
+---
+
+### TD-61
+**Nothing reports the strict count a conversion leaves behind** · 🟡 low · `.ci/scripts/pr-preflight.sh`, `scripts/strict-check.sh`
+
+The mechanism half of [TD-54](#td-54)'s decision (ADR decision register, 2026-09-16). The rule — *a conversion either adopts its files into strict or states, per file, the count it leaves and which errors are guards the runtime can reach* — was recorded as a dated decision-log entry and nowhere a conversion author reads at the time they convert.
+
+- **✅ Done (2026-09-16):** the rule is now a bullet in [ADR § Conversion standards (per file)](ADR-0001-migration-typescript.md#conversion-standards-per-file) and in `CONTRIBUTING.md` › *TypeScript migration*, next to the adoption rule it is the other half of. `scripts/strict-check.sh --count [path…]` prints per-file error counts off the same tsc log as `--candidates`, so it inherits TD-44's fail-closed guards, and prints `?? path (no such file)` rather than `0` for a path tsc never saw. `pr-preflight.sh` detects a `.js` → `.ts` conversion (a git-detected rename, or an `A`/`D` pair when the rewrite fell under the similarity threshold), and for any converted file not in `strict-adopted.txt` prints its count with the reading the PR owes. Verified against [#2753](https://github.com/kuzzleio/kuzzle/pull/2753): it reproduces TD-54's table — `dumpGenerator.ts` 11, `internalIndexHandler.ts` 6.
+- **Why a reminder and not a gate.** The number is cheap to compute and worthless alone; what the DoD asks for is the *reading* of it — which errors are reachable guards — and no script can check that a sentence was written honestly. The gate is the reviewer; the script's job is to make sure the number is on the table.
+- **The generalisable part:** *a decision recorded only in a decision log is a decision the next author will not read.* The log says what was decided and why; the standards list is what gets followed. A rule that lands in one and not the other is prose.
+
+---
+
+### TD-62
+**Fifty-six declarations assigned `null` on the line that declares them** · 🟡 low · `lib/**`
+
+[TD-56](#td-56)'s gate fails on `Type 'undefined' is not assignable`. The same lie written `null` is 56 sites, which is why it is a ticket rather than part of that gate:
+
+| File | Sites |
+|---|---:|
+| `lib/service/storage/7/elasticsearch.ts` | 16 |
+| `lib/service/storage/8/elasticsearch.ts` | 16 |
+| `lib/cluster/idCardHandler.ts` | 4 |
+| `lib/util/dump-collection.ts`, `lib/util/bufferedPassThrough.ts`, `lib/core/auth/tokenManager.ts`, `lib/api/controllers/serverController.ts` | 2 each |
+| 15 others | 1 each |
+
+Almost all are the JavaScript idiom a conversion carried over verbatim — `this.client = null` in a constructor, with the field declared `Client` — so the type is false for the whole window before `init()`, which is exactly [TD-57](#td-57)'s `ENV_VAULT_KEY` at class scope. The fix per site is `| null` on the declaration or a definite-assignment assertion, and it is mechanical; the reason it is `M` and not `XS` is that the two `elasticsearch.ts` files hold 32 of them and their readers then need guards.
+
+- **Why not fold it into TD-56's gate.** A gate that fails on 56 pre-existing sites is a gate nobody can turn on. This one needs a pass of its own, and then the gate widens to `Type 'null'` in the same breath — one line in `check_lies()`.
+- **Sequencing:** `lib/cluster`'s four land naturally in **sprint 8**, under the strict-count DoD. The rest is a standalone PR.
+- **The generalisable part:** *the narrow version of a gate is the one that ships.* [TD-56](#td-56) could have been filed as "no lying declarations" and stalled on 59 sites; filed as "no `undefined` assigned to a non-nullable", it cost three fixes and is live today, and widening it later is one regex.

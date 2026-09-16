@@ -70,7 +70,7 @@ describe("#api/controllers/MemoryStorageController", () => {
     it("rejects a point that is not a geopoint", async () => {
       await expect(
         run("geoadd", { _id: "key", body: { points: [{ lon: 3.9 }] } }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ id: "api.assert.invalid_argument" });
     });
 
     it("rejects a non-numeric coordinate", async () => {
@@ -79,7 +79,10 @@ describe("#api/controllers/MemoryStorageController", () => {
           _id: "key",
           body: { points: [{ lon: "here", lat: 43.6, name: "palais" }] },
         }),
-      ).rejects.toThrow();
+        // invalid_type, not invalid_argument: the point has all three
+        // properties, so it clears the geopoint-shape guard and fails on
+        // assertFloat. Untold apart, this test passes on either error.
+      ).rejects.toMatchObject({ id: "api.assert.invalid_type" });
     });
   });
 
@@ -101,7 +104,7 @@ describe("#api/controllers/MemoryStorageController", () => {
     it("rejects an entry without a field", async () => {
       await expect(
         run("hmset", { _id: "key", body: { entries: [{ value: "bar" }] } }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ id: "api.assert.invalid_argument" });
     });
   });
 
@@ -127,7 +130,7 @@ describe("#api/controllers/MemoryStorageController", () => {
     it("rejects an entry without a key", async () => {
       await expect(
         run("mset", { body: { entries: [{ value: "v1" }] } }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ id: "api.assert.invalid_argument" });
     });
   });
 
@@ -145,11 +148,15 @@ describe("#api/controllers/MemoryStorageController", () => {
     });
 
     it("rejects a non-string match", async () => {
-      await expect(run("scan", { cursor: 0, match: 42 })).rejects.toThrow();
+      await expect(run("scan", { cursor: 0, match: 42 })).rejects.toMatchObject(
+        { id: "api.assert.invalid_type" },
+      );
     });
 
     it("rejects a non-integer count", async () => {
-      await expect(run("scan", { cursor: 0, count: "many" })).rejects.toThrow();
+      await expect(
+        run("scan", { cursor: 0, count: "many" }),
+      ).rejects.toMatchObject({ id: "api.assert.invalid_type" });
     });
   });
 
@@ -182,7 +189,7 @@ describe("#api/controllers/MemoryStorageController", () => {
           max: 10,
           limit: "1",
         }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ id: "api.assert.invalid_argument" });
     });
   });
 
@@ -204,7 +211,7 @@ describe("#api/controllers/MemoryStorageController", () => {
     it("rejects an element without a member", async () => {
       await expect(
         run("zadd", { _id: "key", body: { elements: [{ score: 1 }] } }),
-      ).rejects.toThrow();
+      ).rejects.toMatchObject({ id: "api.assert.missing_argument" });
     });
   });
 

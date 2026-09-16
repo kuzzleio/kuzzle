@@ -168,7 +168,9 @@ export class ClusterIdCardHandler {
    */
   async createIdCard(): Promise<void> {
     let reserved = false;
-    let candidate = global.nodeId;
+    // `undefined` after the first turn, which is what makes the `??` below
+    // fall through to a fresh draw — so the declaration has to admit it.
+    let candidate: string | undefined = global.nodeId;
 
     do {
       this.nodeId =

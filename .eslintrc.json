@@ -40,6 +40,27 @@
           }
         ]
       }
+    },
+    {
+      "files": [
+        "test/**",
+        "tests/**",
+        "features/**",
+        "features-legacy/**"
+      ],
+      "rules": {
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector": "CallExpression[arguments.length=0][callee.type='MemberExpression'][callee.property.name=/^(throw|throwError)$/]:not([callee.object.property.name='not'])",
+            "message": "should(fn).throw() with no matcher is not a test of why — assert the error type, message or id. In a function whose control flow is four asserts, \"it threw\" is what every path has in common. (ADR-0001, TD-57)"
+          },
+          {
+            "selector": "CallExpression[arguments.length=0][callee.type='MemberExpression'][callee.property.name=/^toThrow(Error)?$/]:not([callee.object.property.name='not'])",
+            "message": "expect(fn).toThrow() with no matcher is not a test of why — pass the expected error, message or a matcher object. (ADR-0001, TD-57)"
+          }
+        ]
+      }
     }
   ]
 }

@@ -5,6 +5,7 @@
 #   - error codes documentation (matches the `error-codes-check` job)
 #   - the migration ratchets + strict (matches the `migration-ratchets` job)
 #   - a reminder to adopt a converted file into strict once it is clean
+#   - a reminder to report the strict count a conversion leaves behind
 #   - a heuristic reminder about test/doc coverage (CONTRIBUTING.md)
 #
 # Requires local Node.js/npm (same as `npm run test:lint` would).
@@ -62,7 +63,16 @@ fi
 
 echo
 echo "==> Test & doc coverage reminder (heuristic, not a hard gate)"
-base_ref="$(git merge-base HEAD origin/master 2>/dev/null || git merge-base HEAD master 2>/dev/null || true)"
+# The base is `2-dev`, not `master`: the migration lands there, and master is
+# hundreds of commits behind it. Diffing against master made both reminders
+# below read ~330 changed files on every branch, which is the same as no
+# reminder at all. PREFLIGHT_BASE overrides it for a branch based elsewhere.
+base_branch="${PREFLIGHT_BASE:-2-dev}"
+base_ref=""
+for ref in "origin/$base_branch" "$base_branch" origin/master master; do
+  base_ref="$(git merge-base HEAD "$ref" 2>/dev/null || true)"
+  [ -n "$base_ref" ] && break
+done
 if [ -n "$base_ref" ]; then
   changed="$(git diff --name-only "$base_ref"...HEAD; git diff --name-only; git diff --name-only --cached)"
 else
@@ -100,6 +110,47 @@ if [ -n "$unadopted" ]; then
 else
   echo "[OK] no changed file is strict-clean-but-unadopted"
 fi
+
+echo "==> Strict-count reminder for conversions (ADR-0001: a conversion reports the count it leaves behind)"
+# A conversion shows up as a rename: lib/x.js -> lib/x.ts. If the result is not
+# adopted into strict, the PR owes a per-file error count and a reading of it —
+# which errors are guards the runtime can reach (bugs) rather than types it
+# already guarantees. Sprints 6 and 7 left 246 unreported (TD-54, #2757).
+if [ -n "$base_ref" ]; then
+  # Two spellings of the same event: a rename git detected, and an add of x.ts
+  # next to a delete of x.js that it did not (a conversion that rewrites enough
+  # of the file falls under the similarity threshold).
+  converted="$( {
+    git diff --find-renames --diff-filter=R --name-status "$base_ref"...HEAD 2>/dev/null \
+      | awk -F'\t' '$2 ~ /\.js$/ && $3 ~ /^(lib|index)/ && $3 ~ /\.ts$/ { print $3 }'
+    git diff --no-renames --name-status "$base_ref"...HEAD 2>/dev/null \
+      | awk -F'\t' '$1 == "A" && $2 ~ /^(lib|index)/ && $2 ~ /\.ts$/ { added[$2] = 1 }
+                    $1 == "D" && $2 ~ /\.js$/ { sub(/\.js$/, ".ts", $2); deleted[$2] = 1 }
+                    END { for (f in added) if (f in deleted) print f }'
+  } | sort -u || true)"
+else
+  converted=""
+fi
+
+adopted_list="$(grep -vE '^[[:space:]]*(#|$)' .migration/strict-adopted.txt 2>/dev/null || true)"
+unreported=""
+for f in $converted; do
+  printf '%s\n' "$adopted_list" | grep -qxF "$f" || unreported="$unreported$f"$'\n'
+done
+
+if [ -z "$converted" ]; then
+  echo "[OK] no .js -> .ts conversion in this branch"
+elif [ -z "$unreported" ]; then
+  echo "[OK] every file converted here is in .migration/strict-adopted.txt"
+else
+  echo "[WARN] converted but not adopted into strict — report these counts in the PR body:"
+  # shellcheck disable=SC2086
+  bash scripts/strict-check.sh --count $(printf '%s' "$unreported") 2>/dev/null | sed 's/^/    /'
+  echo "       For each file, say which of those errors are guards the runtime can"
+  echo "       reach — those are bugs, not typing chores. A conversion that compiles"
+  echo "       is not a conversion that checks. (ADR-0001, TD-54)"
+fi
+
 echo
 if [ "$status" -eq 0 ]; then
   echo "Preflight passed."
