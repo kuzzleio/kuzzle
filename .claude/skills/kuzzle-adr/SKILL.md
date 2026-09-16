@@ -53,6 +53,11 @@ In order:
 6. **Decision register**: **dated** list, one line per decision — the canonical "what we decided" view. Each line may link to the step file that details it.
 7. **Open points** + **References**.
 
+Alongside the hub, an ADR that runs long enough to accumulate review findings keeps a **lessons index** (`lessons.md`):
+one row per *generalisable part*, with its source finding and **what enforces it** — a gate, a line in the standards a
+contributor reads, or nothing. The last column is the point: a lesson that stays prose gets broken again, so the
+un-enforced rows are read as the backlog of what to gate next. Reference implementation: `docs/adr-001/lessons.md`.
+
 The hub **never** holds a step's detailed narrative nor a session-by-session journal — that lives in the step files.
 
 ## A STEP file — `steps/NN-<slug>.md`

@@ -270,7 +270,8 @@ Canonical "what we decided", one line each. Links point to the step that details
 
 ## References
 
+- **Companion:** [lessons](lessons.md) — every *generalisable part* recorded by this ADR, one line each, with what enforces it. The 📝 rows are the backlog of what to gate next; a review that files a finding adds its row.
 - **Companion:** [type-debt register](type-debt-register.md) — detailed, tracked findings of the 2026-07-12 audit (the ADR sets the strategy; the register tracks the execution).
-- **Steps:** [`steps/`](steps/) — one file per milestone; `00` archives the rejected alternatives, `01`–`07` and `09` cover the sprints delivered, `08` is the parallel type-debt track (open), `10` is the sprint in flight.
+- **Steps:** [`steps/`](steps/) — one file per milestone; `00` archives the rejected alternatives, `01`–`07`, `09` and `10` cover the sprints delivered, `08` is the parallel type-debt track (open). Sprint 8 (`lib/cluster`) has no step file yet.
 - **Process tooling:** the `kuzzle-adr` skill (this hub + steps structure) and the `wrapup` skill (keeps this document live).
 - ADRs live under `docs/adr-<n>/` — distinct from `doc/` (reserved for the Kuzzle documentation tool).

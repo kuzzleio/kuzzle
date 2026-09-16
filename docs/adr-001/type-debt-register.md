@@ -1,6 +1,6 @@
 # Type-debt register — Kuzzle
 
-> Companion to [ADR-0001](ADR-0001-migration-typescript.md). It details and tracks the findings of the **2026-07-12** type-debt audit (multi-agent audit, findings verified adversarially). The ADR sets the *strategy*; this register tracks the *execution*.
+> Companion to [ADR-0001](ADR-0001-migration-typescript.md), and to [lessons.md](lessons.md) — the index of every *generalisable part* below, with what enforces it. It details and tracks the findings of the **2026-07-12** type-debt audit (multi-agent audit, findings verified adversarially). The ADR sets the *strategy*; this register tracks the *execution*.
 
 **Effort legend:** XS (< 1h) · S (~½ day) · M (1–3 d) · L (> 3 d)
 **Status:** ⬜ to do · 🟦 in progress · ✅ done · 🔴 open defect — filed, and wrong *today*: shipped behaviour is incorrect, or the item blocks work that is otherwise ready
