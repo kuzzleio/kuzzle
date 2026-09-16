@@ -109,7 +109,7 @@ describe("Test: validation utilities", () => {
 
       should(() => {
         curateStructuredFields(typeAllowChildren, fields, maxDepth);
-      }).throw();
+      }).throw({ id: "validation.assert.missing_nested_spec" });
     });
 
     it("should throw an error if a parent has not the appropriate type", () => {
@@ -128,7 +128,7 @@ describe("Test: validation utilities", () => {
 
       should(() => {
         curateStructuredFields(typeAllowChildren, fields, maxDepth);
-      }).throw();
+      }).throw({ id: "validation.assert.unexpected_children" });
     });
   });
 
@@ -187,7 +187,7 @@ describe("Test: validation utilities", () => {
 
       should(() => {
         getParent(structuredField, fieldPath);
-      }).throw();
+      }).throw({ id: "validation.assert.missing_parent" });
     });
   });
 

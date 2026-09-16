@@ -61,6 +61,16 @@ If you legitimately reduce a count, update its baseline in the same PR — e.g.
 `npm run ratchet:js -- --update` (idem `:mocha`, `:any`, `:implicit-any`, `:casts`) — then
 commit `.migration/`.
 
+### Assertions on errors
+
+An assertion that a call throws must say **which** error: `should(fn).throw({ id: "domain.sub.code" })`
+or a message, and `expect(promise).rejects.toMatchObject({ id })` on the vitest side.
+`should(fn).throw()` and `expect(fn).toThrow()` with no matcher are rejected by
+lint (`no-restricted-syntax`) — in a function whose control flow is a series of
+`assert`s, "it threw" is what every path has in common, so the test passes
+whichever guard fired. `.not.throw()` needs no matcher: "does not throw" is
+already a complete assertion. See ADR-0001, TD-57.
+
 ## Guidelines
 
 * Prefer async/await or promises instead of callbacks as often as you can

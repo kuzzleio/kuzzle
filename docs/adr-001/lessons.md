@@ -59,7 +59,7 @@ warn) · 📝 prose only — recorded, not enforced.
 | *The frozen suite and the new one do not resolve modules the same way — "the Mocha spec passes" says nothing about whether the vitest tree can load the subject at all.* | [TD-49](type-debt-register.md#td-49) | 📝 — the tree loads today; nothing checks that it still will |
 | *"This is a style rule" and "this is what makes the program loadable" can be the same rule.* | [TD-49](type-debt-register.md#td-49) | 🔒 `@typescript-eslint/consistent-type-imports` as an **error**, repo-wide |
 | *`lib/` does not import the package's own `index.ts` barrel* — a leaf takes on the whole public surface to name one type. | [ADR log, 2026-09-14](ADR-0001-migration-typescript.md#decision-register) | 📝 — **candidate for `no-restricted-imports`** |
-| *`should(fn).throw()` with no matcher is not a test of why.* | [TD-57](type-debt-register.md#td-57) | 📝 — **candidate for a lint rule** |
+| *`should(fn).throw()` with no matcher is not a test of why.* | [TD-57](type-debt-register.md#td-57) | 🔒 `no-restricted-syntax` over the test trees, for `should().throw()` and `expect().toThrow()` alike; `.not.throw()` excluded |
 | *A spec that stubs its subject's base class is not testing anything.* | [TD-46](type-debt-register.md#td-46) | 📝 |
 | *When a review concludes "this call was always dead, the real work happens elsewhere", it has just established where the invariant lives — and that nothing tests it there.* | [TD-48](type-debt-register.md#td-48) | 📄 covered for the stack-trace invariant; the reading generalises |
 
@@ -79,6 +79,7 @@ warn) · 📝 prose only — recorded, not enforced.
 The 📝 rows ranked by the odds of recurrence, highest first:
 
 1. **[TD-56](type-debt-register.md#td-56)** — declared non-nullable, returns `undefined`. Already recurred once ([TD-40](type-debt-register.md#td-40)), and it recurs specifically in files exempt from strict, which is most of `lib/`.
-2. **[TD-57](type-debt-register.md#td-57)** — `should(fn).throw()` / `expect(fn).toThrow()` with no matcher. Mechanical to detect, and the frozen Mocha suite is full of the pattern.
-3. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
-4. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
+2. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
+3. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
+
+~~[TD-57](type-debt-register.md#td-57) — matcher-less throw assertions~~ — gated 2026-09-16. It was worth the two hours: 15 sites, and pinning them exposed two tests that were passing on an error other than the one their name claims.
