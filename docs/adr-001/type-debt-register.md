@@ -66,7 +66,8 @@
 | [TD-55](#td-55) | 🟡 low | Correctness | `waterfall.shift()` resolves the chain silently where the JavaScript rejected — [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | XS | ✅ |
 | [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
-| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | 🔴 |
+| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | ✅ |
+| [TD-59](#td-59) | 🟠 med | Correctness | Every node has **two** unrelated `knode-*` ids — the cluster's and the one it logs under — so no cluster log line can be attributed to a container — [#2764](https://github.com/kuzzleio/kuzzle/issues/2764) | S | 🟦 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -562,9 +563,11 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
 
   **The node evicts itself over a real message loss**, at cluster formation, before any test runs. And the reason this thread has survived five reviews without a root cause is a printf: the gap is reported as `messageId - lastMessageId - 1` while `lastMessageId` already holds the *expected* id, so a one-message loss prints `0 messages lost` and reads as a spurious eviction. [TD-58](#td-58) / [#2762](https://github.com/kuzzleio/kuzzle/issues/2762), and it should land **before** sprint 8 converts `lib/cluster`.
 
-  **Still unexplained:** seven `knode-*` identities for four containers. Three appear only as *peers* — no container logged one as its own `nodeId`, and each logged `Starting Kuzzle` exactly once, so nothing restarted. Node 3 formed its quorum against two identities no container in that run claims.
+  **The identities puzzle is [TD-59](#td-59), resolved a run later:** every node draws **two** independent `knode-*` names — `global.nodeId` (what it logs under) and the cluster's own, from `idCardHandler.createIdCard()`. Same generator, same prefix, nothing prints both. So the peers named in cluster lines are the *other* halves of the same four processes, and no cluster log line has ever been attributable to a container. That is why this analysis had to be reconstructed from timestamps.
 
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
+
+- **✅ Fixed (2026-09-16) — the log dump was scoped to the wrong half of the run.** Both cluster scripts cleared the trap (`trap - err`) immediately *before* the suite, so `dump_cluster_logs` only ever fired for a **readiness** failure. The class of failure where the nodes' own view is the whole evidence — a scenario failing because state did not propagate — dumped nothing. Two occurrences prove the cost: the 2026-09-16 `legacy:http, 24, 8` failure (74 scenarios, one red step on `services.storage.unknown_collection` at `IndexCache.assertCollectionExists`, **no node logs**), and both monkey `room_not_found` failures (seeds `d6432db20ca96eff`, `c884b3318030acc7`), which are the same shape. The trap now covers the suite in `run-test-cluster.sh` and the monkey run in `run-monkey-tests.sh`.
 
 - **✅ Fixed (2026-09-15) — `fail-fast` on the monkey matrix.** `(3)` above says "on the functional matrix", and that is all it was: `cluster-monkey-tests` kept the default, so each of the two failures above cancelled its five siblings and showed up as six red checks for one real failure. It now carries `fail-fast: false` too. While there, `.github/actions/monkey-tests/action.yml` declares the `es-version` input it has always been passed — the value did reach the step env, so this only silences `##[warning]Unexpected input(s) 'es-version'`, but an action whose declaration does not match its call site is one rename away from silently running the wrong Elasticsearch.
 - **⬜ Still open — the third symptom (`nyc-open-data` already exists) is *not* addressed by this.** That one is inside the cucumber `Before` hook, not in the readiness gate: `admin:resetDatabase` with `refresh: "wait_for"` returns on an Elasticsearch *refresh* acknowledgement, which says nothing about the other cluster nodes. The two share a shape — *a per-node acknowledgement trusted as cluster state* — but not a fix.
@@ -1079,5 +1082,31 @@ if (this.lastMessageId.notEquals(message.messageId)) {
 `Long` is not the culprit: `long`'s prototype defines `valueOf`, so the subtraction coerces correctly.
 
 - **Why it is worth more than an off-by-one.** It is why [TD-33](#td-33) has survived five reviews without a root cause. Every startup failure there was read as a *membership* problem because the log said `0 messages lost` — which reads as a spurious eviction, so the detector was never believed. It is the only component in that thread telling the truth: a sync message really is lost at cluster formation.
-- **Fix:** drop the `- 1`, and add the spec. `subscriber.js` is one of the six remaining `.js` files in `lib/` and goes through sprint 8 — this should land **before** the conversion, so the sprint's own CI failures are legible while it runs.
+- **✅ Fixed (2026-09-16):** the `- 1` is gone, with the reason on the lines above it. The spec asserted only that `evictSelf` was called, never with what — which is how the off-by-one survived — and now pins both counts: the two-message gap the existing case produces, and the one-message gap that used to read as zero. Landed **before** sprint 8 converts `subscriber.js`, so the sprint's own CI failures are legible while it runs.
 - **The generalisable part:** *a diagnostic that under-reports by one is worse than no diagnostic, because it reads as a contradiction and gets dismissed.* Five reviews treated "0 messages lost" as evidence the detector was wrong.
+
+---
+
+### TD-59
+**Every node has two unrelated `knode-*` identities** · 🟠 med · `lib/cluster/idCardHandler.ts:163`, `lib/core/backend/backend.ts:245` · [#2764](https://github.com/kuzzleio/kuzzle/issues/2764)
+
+```ts
+// backend.ts:245 — becomes global.nodeId
+this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
+
+// idCardHandler.ts:163 — the id the cluster knows this node by
+this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
+```
+
+Two independent draws from the same generator with the same prefix. `global.nodeId` is what `Logger` stamps on every line, what `kuzzle.ts:313` prints as *"node name"*, and what `accessLogger` and `pluginContext` expose; the cluster uses the other for handshakes, evictions, heartbeats and the Redis IdCard. **Nothing prints both**, so eight identities exist for four processes and
+
+```
+[CLUSTER] Node "knode-energetic-defoe-8020" evicted. Reason: heartbeat timeout
+```
+
+names a node that no other line in the run mentions. Measured on the `legacy:mqtt, 22, 7` dump of [#2763](https://github.com/kuzzleio/kuzzle/pull/2763): the four containers log as `brash-nietzsche`, `crooked-ghostwriter`, `illegal-cow` and `lucky-dancer`, while the cluster traffic names `energetic-defoe`, `zany-giraffe`, `healthy-architect` and `colossal-arborist` — disjoint sets.
+
+- **This is the single biggest reason [TD-33](#td-33) has been unreadable** across six occurrences. Its "seven identities for four containers, unexplained" is this, and its node-by-node timelines had to be rebuilt from timestamps because the names carried nothing.
+- **🟦 Half-fixed (2026-09-16, [#2763](https://github.com/kuzzleio/kuzzle/pull/2763)):** `handshake()` now logs both ids, so every dump from here on is self-attributing. That is the diagnostic half.
+- **⬜ The real fix:** have `ClusterIdCardHandler` reuse `global.nodeId` rather than draw its own. The id goes into the Redis IdCard and is broadcast to peers, so it changes what is stored and what other nodes see — its own PR. `createIdCard()`'s retry loop resolves a collision on the reserved key, so reuse must keep a fallback draw for that case.
+- **The generalisable part:** *two ids from the same generator with the same prefix are one id as far as a reader is concerned.* Nothing in the logs suggested there were two — the extra names read as peers that had come and gone, which is exactly how six reviews read them.

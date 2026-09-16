@@ -41,6 +41,11 @@ KUZZLE_PORT=17512 ./bin/wait-kuzzle
 KUZZLE_PORT=17513 ./bin/wait-kuzzle
 KUZZLE_PORT=7512 ./bin/wait-kuzzle
 
-trap - err
-
+# The trap stays on for the suite. It used to be cleared here, so the one class
+# of failure where the cluster's own view matters most — a scenario failing
+# because state did not propagate between nodes (TD-33, #2715) — dumped nothing.
+# That is how the 2026-09-16 `legacy:http, 24, 8` failure was lost: 74 scenarios,
+# one red step on `services.storage.unknown_collection`, and no node logs.
 npm run $KUZZLE_FUNCTIONAL_TESTS
+
+trap - err
