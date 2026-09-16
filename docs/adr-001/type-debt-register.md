@@ -67,7 +67,7 @@
 | [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
 | [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | ✅ |
-| [TD-59](#td-59) | 🟠 med | Correctness | Every node has **two** unrelated `knode-*` ids — the cluster's and the one it logs under — so no cluster log line can be attributed to a container — [#2764](https://github.com/kuzzleio/kuzzle/issues/2764) | S | 🟦 |
+| [TD-59](#td-59) | 🟠 med | Correctness | Every node has **two** unrelated `knode-*` ids — the cluster's and the one it logs under — so no cluster log line can be attributed to a container — [#2764](https://github.com/kuzzleio/kuzzle/issues/2764) | S | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -533,7 +533,7 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
                               aren't enough nodes connected"
   ```
 
-  `kuzzle_node_prod` runs **without the cluster plugin**, so the cluster is exactly nodes 1-3 and `minimumNodes: 3` leaves no slack — all three must be connected. Nodes 1 and 2 answered, which means each of them counted three members; node 3 counted fewer, for a minute, and said so. Its container logged no error, no fatal and no exit.
+  ~~`kuzzle_node_prod` runs **without the cluster plugin**, so the cluster is exactly nodes 1-3 and `minimumNodes: 3` leaves no slack — all three must be connected.~~ **Wrong on both halves, corrected 2026-09-16 (see the seventh occurrence below).** The cluster is **core**, not a plugin: `kuzzle.ts:335` starts it whenever `config.cluster.enabled`, and the `cluster` entry in nodes 1-3's *"Successfully loaded 3 plugins"* is a different thing. `kuzzle_node_prod` is a **full cluster member**, so the cluster is **four** nodes against a `minimumNodes` of 3 — there is slack, and the losses are not a quorum-sizing problem. Nodes 1 and 2 answered, which means each of them counted enough members; node 3 counted fewer, for a minute, and said so. Its container logged no error, no fatal and no exit.
 
   So this is not "a node was slow to start", which is how the fourth symptom was first read. **Two nodes considered the cluster formed while the third did not** — an asymmetric membership view, which is the same disagreement the `realtime:join` failures show one layer up, where a node answers requests with a room table the others do not share.
 
@@ -564,6 +564,30 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
   **The node evicts itself over a real message loss**, at cluster formation, before any test runs. And the reason this thread has survived five reviews without a root cause is a printf: the gap is reported as `messageId - lastMessageId - 1` while `lastMessageId` already holds the *expected* id, so a one-message loss prints `0 messages lost` and reads as a spurious eviction. [TD-58](#td-58) / [#2762](https://github.com/kuzzleio/kuzzle/issues/2762), and it should land **before** sprint 8 converts `lib/cluster`.
 
   **The identities puzzle is [TD-59](#td-59), resolved a run later:** every node draws **two** independent `knode-*` names — `global.nodeId` (what it logs under) and the cluster's own, from `idCardHandler.createIdCard()`. Same generator, same prefix, nothing prints both. So the peers named in cluster lines are the *other* halves of the same four processes, and no cluster log line has ever been attributable to a container. That is why this analysis had to be reconstructed from timestamps.
+
+- **A seventh occurrence (2026-09-16) — the first fully attributable one, and it names a culprit.** `legacy:mqtt, 22, 7` on [#2765](https://github.com/kuzzleio/kuzzle/pull/2765), with [TD-59](#td-59)'s fix in place so every id maps to a container:
+
+  | container | id |
+  |---|---|
+  | `kuzzle_node_1` | `knode-illustrious-ungoliant-80341` |
+  | `kuzzle_node_2` | `knode-irritating-poseidon-29609` |
+  | `kuzzle_node_3` | `knode-determined-gaia-50422` |
+  | `kuzzle_node_prod` | `knode-infamous-zephyrus-18239` |
+
+  Every out-of-sync report in the run names **the same source**, and it is `kuzzle_node_prod`:
+
+  ```
+  node_3 11:44:35.984 ERROR Node out-of-sync: 1 messages lost from node knode-infamous-zephyrus-18239
+  node_1 11:44:35.988 WARN  Node "knode-determined-gaia-50422" evicted.
+                            Reason: Node out-of-sync: 1 messages lost from node knode-infamous-zephyrus-18239
+  node_2 11:44:36.011 WARN  … same …
+  node_3 ×7 more through 11:44:40.908, then
+  node_3 11:44:41.523 WARN  Node "knode-infamous-zephyrus-18239" evicted. Reason: heartbeat timeout
+  ```
+
+  (Nodes 1 and 2 are reporting `gaia`'s **self**-eviction, broadcast by `evictSelf`, whose reason names the peer *it* lost sync with.)
+
+  So the shape is: **the production-mode node drops a sync message at formation, and whoever reads it self-evicts.** `kuzzle_node_prod` differs from the other three in exactly one way in `.ci/test-cluster-{7,8}.yml` — `NODE_ENV: "production"` — which makes its publisher the first place to look, not the membership logic. Two prerequisites had to land before this was even statable: [TD-59](#td-59) (ids that map to containers) and the log dump covering the suite.
 
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
@@ -1107,6 +1131,6 @@ Two independent draws from the same generator with the same prefix. `global.node
 names a node that no other line in the run mentions. Measured on the `legacy:mqtt, 22, 7` dump of [#2763](https://github.com/kuzzleio/kuzzle/pull/2763): the four containers log as `brash-nietzsche`, `crooked-ghostwriter`, `illegal-cow` and `lucky-dancer`, while the cluster traffic names `energetic-defoe`, `zany-giraffe`, `healthy-architect` and `colossal-arborist` — disjoint sets.
 
 - **This is the single biggest reason [TD-33](#td-33) has been unreadable** across six occurrences. Its "seven identities for four containers, unexplained" is this, and its node-by-node timelines had to be rebuilt from timestamps because the names carried nothing.
-- **🟦 Half-fixed (2026-09-16, [#2763](https://github.com/kuzzleio/kuzzle/pull/2763)):** `handshake()` now logs both ids, so every dump from here on is self-attributing. That is the diagnostic half.
-- **⬜ The real fix:** have `ClusterIdCardHandler` reuse `global.nodeId` rather than draw its own. The id goes into the Redis IdCard and is broadcast to peers, so it changes what is stored and what other nodes see — its own PR. `createIdCard()`'s retry loop resolves a collision on the reserved key, so reuse must keep a fallback draw for that case.
+- **✅ Fixed (2026-09-16), in two halves.** [#2763](https://github.com/kuzzleio/kuzzle/pull/2763) made `handshake()` print both ids, so every dump from that point on is self-attributing whatever else is true. [#2765](https://github.com/kuzzleio/kuzzle/pull/2765) removed the second identity: `createIdCard()` adopts `global.nodeId`.
+- **Why adopting it is safe, and why the loop stays.** `global.nodeId` is itself a random draw, but two cases can still leave it unusable — a stale IdCard from a crashed incarnation holding the key, and a Kuzzle running without a `Backend`, where there is no `global.nodeId` at all. Both fall through to a fresh draw on the next turn of the loop that has always been there, and `handshake()` prints both ids **only when they differ**, which is exactly those two cases.
 - **The generalisable part:** *two ids from the same generator with the same prefix are one id as far as a reader is concerned.* Nothing in the logs suggested there were two — the extra names read as peers that had come and gone, which is exactly how six reviews read them.
