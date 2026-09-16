@@ -253,6 +253,18 @@ for a condition that cannot happen. **The generalisable part:** the strict list
 reads like a quality score per file, and these two are evidence it is partly a
 score of *what a file happens to touch*.
 
+> ⚠️ **Corrected 2026-09-16 — [TD-54](../type-debt-register.md#td-54),
+> [#2757](https://github.com/kuzzleio/kuzzle/issues/2757).** Two things above are
+> wrong. **"Nine errors between them, and every one of them is the same error"**:
+> there are **17**, and 6 are not the config shape — two `unknown` catch bindings
+> (`dumpGenerator.ts:81,83`), an unguarded `Array.prototype.shift()` result
+> (`:247`), `corefiles[0]` passed as a `PathLike` (`:172`), an unguarded index
+> (`:254`) and an overload mismatch (`internalIndexHandler.ts:203`). And the
+> generalisation drawn from them does not survive the same measurement taken
+> across sprints 6 and 7: **14 of 246** strict errors are the config shape. The
+> strict list mostly *is* a quality score per file. These two files are the case
+> where it is partly something else — not the proof that it generally is.
+
 ### Equivalence note
 
 1. **`fs.rmSync` replaces `fs.rmdirSync(…, { recursive: true })`** — verified
