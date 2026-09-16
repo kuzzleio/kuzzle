@@ -592,6 +592,37 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
 
   So the shape is: **the production-mode node drops a sync message at formation, and whoever reads it self-evicts.** `kuzzle_node_prod` differs from the other three in exactly one way in `.ci/test-cluster-{7,8}.yml` — `NODE_ENV: "production"` — which makes its publisher the first place to look, not the membership logic. Two prerequisites had to land before this was even statable: [TD-59](#td-59) (ids that map to containers) and the log dump covering the suite.
 
+- **An eighth occurrence (2026-09-16), and it corrects the seventh: the culprit is not `kuzzle_node_prod`.** Four jobs of one run on [#2767](https://github.com/kuzzleio/kuzzle/pull/2767) — `http 20/8`, `http 24/8`, `legacy:mqtt 20/8`, `legacy:websocket 20/8` — a docs-only PR. **All four are the ES 8 variants; every ES 7 variant passed.** All four die in readiness with `Rejected: this cluster is disabled because there aren't enough nodes connected`, and the dump reads straight through:
+
+  | container | id |
+  |---|---|
+  | `kuzzle_node_1` | `knode-tense-naturalist-40368` |
+  | `kuzzle_node_2` | `knode-few-thales-21177` |
+  | `kuzzle_node_3` | `knode-livid-ehrenfest-76618` |
+  | `kuzzle_node_prod` | `knode-chunky-haydn-20724` |
+
+  ```
+  node_1 13:10:46.504 INFO  handshake with knode-few-thales-21177 (node_2) complete
+  node_1 13:10:46.691 ERROR Node out-of-sync: 1 messages lost from knode-few-thales-21177
+  node_3 13:10:46.699 WARN  Node "knode-tense-naturalist-40368" (node_1) evicted.
+                            Reason: … 1 messages lost from knode-few-thales-21177
+  node_2 13:10:46.707 WARN  … same relay …
+  node_1 13:10:48.129 WARN  Node "knode-chunky-haydn-20724" (node_prod) evicted.
+                            Reason: … 1 messages lost from knode-few-thales-21177
+  node_2 13:10:48.128 / node_3 13:10:48.131  … same relay …
+  node_1 13:10:49.273 INFO  Kuzzle is ready (node name: knode-tense-naturalist-40368)
+  node_2 13:10:51.601 INFO  Kuzzle is ready (node name: knode-few-thales-21177)
+  node_1 13:10:52.326 WARN  Node "knode-few-thales-21177" evicted. Reason: heartbeat timeout
+  ```
+
+  **Two nodes self-evict — `node_1` and `node_prod` — and both name the same source: `kuzzle_node_2`.** Not the production node, which is on this occasion a *victim*. The seventh occurrence's `NODE_ENV: "production"` correlation does not survive: it was one draw.
+
+  **What does survive, and is now the finding:** *one node's publisher drops exactly one message at formation, and every node that reads it self-evicts.* The count is `1 messages lost` in both occurrences — a single message, at the same moment in the lifecycle, right after the handshakes complete. Which container plays that role varies; `prod` in the seventh, `node_2` here. So [step 11](steps/11-sprint-8-cluster.md)'s instruction — *look at the publisher, not at the membership logic* — stands, but it is `publisher.js` as a file, not one node's configuration.
+
+  **Also new: the readiness paradox is visible.** `node_1` self-evicts at `46.699` and then prints *"Kuzzle is ready"* at `49.273`. Whatever `Node.init()` waits for, it is satisfied by a node that has already left the cluster — which is why `bin/wait-kuzzle` cannot see this, and is the same gap as *a readiness probe must exercise the thing the caller depends on*.
+
+  **ES 8 only, 4 for 4.** Too clean to ignore and too small a sample to conclude from; the next occurrence should be checked for it first. If it holds, the question is what `.ci/test-cluster-8.yml` does differently to formation timing.
+
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
 - **✅ Fixed (2026-09-16) — the log dump was scoped to the wrong half of the run.** Both cluster scripts cleared the trap (`trap - err`) immediately *before* the suite, so `dump_cluster_logs` only ever fired for a **readiness** failure. The class of failure where the nodes' own view is the whole evidence — a scenario failing because state did not propagate — dumped nothing. Two occurrences prove the cost: the 2026-09-16 `legacy:http, 24, 8` failure (74 scenarios, one red step on `services.storage.unknown_collection` at `IndexCache.assertCollectionExists`, **no node logs**), and both monkey `room_not_found` failures (seeds `d6432db20ca96eff`, `c884b3318030acc7`), which are the same shape. The trap now covers the suite in `run-test-cluster.sh` and the monkey run in `run-monkey-tests.sh`.
