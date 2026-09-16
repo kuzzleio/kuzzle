@@ -337,6 +337,10 @@ jobs:
     needs: [functional-tests, build-and-run-kuzzle]
     runs-on: ubuntu-24.04
     strategy:
+      # Same reason as the functional matrix above, and it was left off this one
+      # when TD-33 added it there: the monkey suite is randomised, so one
+      # variant failing is exactly when the other five results matter most.
+      fail-fast: false
       matrix:
         node-version: [20, 22, 24]
         es-version: [7, 8]
