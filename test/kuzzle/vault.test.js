@@ -5,7 +5,32 @@ const fs = require("fs");
 const should = require("should");
 const sinon = require("sinon");
 
-const vault = require("../../lib/kuzzle/vault");
+const vaultPath = require.resolve("../../lib/kuzzle/vault");
+
+let vault;
+
+/**
+ * `load()` memoises the vault key in module state, on purpose: kuzzle-vault
+ * deletes KUZZLE_VAULT_KEY from the environment after reading it, and Kaaf
+ * instantiates the vault twice. A fresh copy per test keeps that state from
+ * leaking into the next one — and lets one test drive it deliberately.
+ */
+function freshVault() {
+  delete require.cache[vaultPath];
+
+  return require(vaultPath);
+}
+
+/** The error `load()` threw, or `undefined`. */
+function loadError(...args) {
+  try {
+    vault.load(...args);
+  } catch (error) {
+    return error;
+  }
+
+  return undefined;
+}
 
 describe("/lib/kuzzle/vault", () => {
   let existsSync;
@@ -15,6 +40,8 @@ describe("/lib/kuzzle/vault", () => {
 
     delete process.env.KUZZLE_VAULT_KEY;
     delete process.env.KUZZLE_SECRETS_FILE;
+
+    vault = freshVault();
   });
 
   afterEach(() => {
@@ -58,8 +85,49 @@ describe("/lib/kuzzle/vault", () => {
     existsSync.returns(true);
     process.env.KUZZLE_VAULT_KEY = "secret key";
 
-    // The key is found, so the "cannot find the Vault key" assertion passes and
-    // decryption is attempted on the default secrets file.
-    should(() => vault.load()).throw();
+    const error = loadError();
+
+    // `should(...).throw()` with no matcher was the old assertion, and it held
+    // whether or not the environment was read: with no key, load() throws the
+    // missing-key assertion instead. What proves the key was read is *which*
+    // error comes back — decryption was attempted, so it is not that one
+    // (TD-57, #2760).
+    should(error).be.an.Error();
+    should(error.message).not.startWith(
+      "A secret file has been provided but Kuzzle cannot find the Vault key",
+    );
+  });
+
+  it("should remember the vault key once the environment has been cleared", () => {
+    existsSync.returns(true);
+    process.env.KUZZLE_VAULT_KEY = "secret key";
+
+    loadError();
+
+    // What kuzzle-vault does to the environment after reading it, and the whole
+    // reason the module keeps the key: Kaaf loads the vault twice, once before
+    // init and once after.
+    delete process.env.KUZZLE_VAULT_KEY;
+
+    const error = loadError();
+
+    should(error).be.an.Error();
+    should(error.message).not.startWith(
+      "A secret file has been provided but Kuzzle cannot find the Vault key",
+    );
+  });
+
+  it("should not carry a remembered key into a fresh process", () => {
+    existsSync.returns(true);
+    process.env.KUZZLE_VAULT_KEY = "secret key";
+
+    loadError();
+
+    delete process.env.KUZZLE_VAULT_KEY;
+    vault = freshVault();
+
+    should(loadError().message).startWith(
+      "A secret file has been provided but Kuzzle cannot find the Vault key",
+    );
   });
 });

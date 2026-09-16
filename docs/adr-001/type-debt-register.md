@@ -3,7 +3,7 @@
 > Companion to [ADR-0001](ADR-0001-migration-typescript.md). It details and tracks the findings of the **2026-07-12** type-debt audit (multi-agent audit, findings verified adversarially). The ADR sets the *strategy*; this register tracks the *execution*.
 
 **Effort legend:** XS (< 1h) · S (~½ day) · M (1–3 d) · L (> 3 d)
-**Status:** ⬜ to do · 🟦 in progress · ✅ done
+**Status:** ⬜ to do · 🟦 in progress · ✅ done · 🔴 open defect — filed, and wrong *today*: shipped behaviour is incorrect, or the item blocks work that is otherwise ready
 
 ## Overview
 
@@ -61,7 +61,12 @@
 | [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | 🟦 |
 | [TD-51](#td-51) | 🟡 low | Correctness | The application logger is never flushed on shutdown: the optional chain reads `log` off the Plugin wrapper, which never has one — [#2747](https://github.com/kuzzleio/kuzzle/issues/2747) | XS | 🔴 |
 | [TD-52](#td-52) | 🔴 high | Correctness | Three things `httpwsProtocol` reads that are never set: the multipart file-size limit is not enforced, and an HTTP connection's headers are always empty — [#2749](https://github.com/kuzzleio/kuzzle/issues/2749) | S | 🔴 |
-| [TD-53](#td-53) | 🟠 med | Enforcement | `KuzzleConfiguration` is `Partial<…>`, so every config section is `undefined` under strict: no file that reads `global.kuzzle.config` can be adopted, whatever its own quality | M | 🔴 |
+| [TD-53](#td-53) | 🟠 med | Enforcement | `KuzzleConfiguration` is `Partial<…>`, so every config section is `undefined` under strict — but it accounts for 14 of the 246 strict errors in the converted files, not for all of them — [#2756](https://github.com/kuzzleio/kuzzle/issues/2756) | M | 🔴 |
+| [TD-54](#td-54) | 🟠 med | Enforcement | 232 of the 246 strict errors in the sprint 6/7 conversions are not TD-53: the nullability work was deferred, not blocked — [#2757](https://github.com/kuzzleio/kuzzle/issues/2757) | L | 🔴 |
+| [TD-55](#td-55) | 🟡 low | Correctness | `waterfall.shift()` resolves the chain silently where the JavaScript rejected — [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | XS | ✅ |
+| [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
+| [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
+| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -533,6 +538,32 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
 
   What it is **not** is a readiness-gate failure: the gate reported the truth. The cause is in cluster membership itself (`lib/cluster`, still JavaScript), and it is not identified.
 
+- **The cleanest witness of the same disagreement, and the one to reproduce against.** `features/BulkController.feature:137`, two **consecutive steps of one scenario**, with nginx balancing over nodes 1-3:
+
+  ```
+  ✔ Given a collection "garden":"fruits"
+  ✖ And I "create" the following multiple documents:
+      PreconditionError: The index "garden" does not exist.
+  ```
+
+  (`Scenario: Bulk mWrite allows custom kuzzle metadata`.) The step that creates the index returned success, and the very next step — routed to another node — did not see it. Passes on re-run. This is the third symptom (`nyc-open-data already exists`) and the fifth (asymmetric membership) in their shortest form: **no reset, no cluster formation, no realtime state — one write acknowledged by one node and not visible to the next.** Two steps and one feature file make it the cheapest reproduction we have, and it is where work on this should start.
+
+- **A sixth symptom (2026-09-16), and the first the log dump made readable — it corrects the reading of the fifth.** `Functional tests (legacy:websocket, 22, 8)` on [#2761](https://github.com/kuzzleio/kuzzle/pull/2761), a PR touching `waterfall`, one `pluginsManager` annotation and `vault`. `dump-cluster-logs.sh` turned an hour of work into one `grep`:
+
+  | time | what |
+  |---|---|
+  | 10:16:46.989 | node 3 logs `[✔] Kuzzle 2.56.0 is ready` — **first of the three** |
+  | 10:16:48.015 | `ERROR [CLUSTER] Node out-of-sync: 1 messages lost from node knode-spicy-radiologist-99792` |
+  | 10:16:50.524-526 | both peers `evicted. Reason: heartbeat timeout` |
+  | 10:16:50.527 | `Not enough nodes active (expected: 3, active: 2). Deactivating node until new ones are added.` |
+  | 10:16:51 → 10:17:51 | `wait-kuzzle :17512` rejects `not_enough_nodes` for the full budget |
+
+  **It is not "a node was slow", and not only "the views disagree".** Node 3 was the *fastest*, it **did** reach quorum — `Node.init()` blocks until `countActiveNodes() >= minimumNodes`, which is why it logged ready at all — and then **lost** its peers 3.5 s later and never regained them. The gate reported that truthfully for 60 s.
+
+  **The node evicts itself over a real message loss**, at cluster formation, before any test runs. And the reason this thread has survived five reviews without a root cause is a printf: the gap is reported as `messageId - lastMessageId - 1` while `lastMessageId` already holds the *expected* id, so a one-message loss prints `0 messages lost` and reads as a spurious eviction. [TD-58](#td-58) / [#2762](https://github.com/kuzzleio/kuzzle/issues/2762), and it should land **before** sprint 8 converts `lib/cluster`.
+
+  **Still unexplained:** seven `knode-*` identities for four containers. Three appear only as *peers* — no container logged one as its own `nodeId`, and each logged `Starting Kuzzle` exactly once, so nothing restarted. Node 3 formed its quorum against two identities no container in that run claims.
+
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
 - **✅ Fixed (2026-09-15) — `fail-fast` on the monkey matrix.** `(3)` above says "on the functional matrix", and that is all it was: `cluster-monkey-tests` kept the default, so each of the two failures above cancelled its five siblings and showed up as six red checks for one real failure. It now carries `fail-fast: false` too. While there, `.github/actions/monkey-tests/action.yml` declares the `es-version` input it has always been passed — the value did reach the step env, so this only silences `##[warning]Unexpected input(s) 'es-version'`, but an action whose declaration does not match its call site is one rename away from silently running the wrong Elasticsearch.
@@ -909,4 +940,144 @@ internalIndexHandler.ts(216,13): Property 'authToken' does not exist on type 'Se
 - **Why it is `Partial` at all:** the type serves two jobs at once. It describes what a **user** may put in a `.kuzzlerc` — where every section is genuinely optional — *and* what `global.kuzzle.config` holds at runtime, which is that file **merged over the packaged defaults**, where no section is ever missing. One name for both, so the looser of the two wins everywhere.
 - **Fix:** split the two. `IKuzzleConfiguration` is already the total shape; `global.kuzzle.config` should be typed with it, and the partial kept for what the user supplies (`Partial<IKuzzleConfiguration>`, under a name that says so). The change itself is small; the blast radius is not, since every config reader's narrowing assumptions change at once — which is why it is its own piece of work and not a conversion's.
 - **Until then:** a converted file that reads config is adopted into strict only once this lands. I2 leaves both its files out of `.migration/strict-adopted.txt` rather than scattering guards for a condition that cannot happen.
-- **The generalisable part:** *a ratchet measures the file it names, but a type can make a file unmeasurable from the outside.* The strict list has been read as a quality score per file; these two are evidence it is partly a score of what the file happens to touch.
+- **Tracked as [#2756](https://github.com/kuzzleio/kuzzle/issues/2756).**
+- **The generalisable part, corrected by [TD-54](#td-54):** *a ratchet measures the file it names, but a type can make a file unmeasurable from the outside.* That is true, and it was over-applied. Measured across the whole of sprints 6 and 7, the config shape accounts for **14 of 246** strict errors. The strict list mostly *is* a quality score per file — these two files are the case where it is partly something else, not the proof that it generally is.
+
+---
+
+## Fifth review — the sprint 6/7 conversions, 2026-09-16
+
+The seven PRs merged into `2-dev` between [#2745](https://github.com/kuzzleio/kuzzle/pull/2745) and [#2755](https://github.com/kuzzleio/kuzzle/pull/2755) were re-read end to end: sprint 6's H4/H5/H6, sprint 7's I1/I2, and the two ADR PRs.
+
+**The conversions hold.** Zero `as any`, zero `: any`, zero `@ts-ignore` across 5 200 lines of new TypeScript. Four of the equivalence notes were re-verified against the pre-conversion JavaScript and all four are exact: `validate`'s dead `if (collectionSpec)` (the `|| {}` fallback is on the line above), the validators branch's `check(...) && isValid` (the check still runs, so its message still lands), `Buffer.from(content.data)` for a JSON-serialised Buffer, and `Number(headers["content-length"])` against the JavaScript's `>` coercion. The gate-driven refactors are documented to a standard that made this review possible at all.
+
+**What the review found is one shape, in three sizes.**
+
+The conversions typed the code and deferred the question the types exist to ask. 246 strict errors across the six largest converted files, of which 14 are the config shape the ADR named ([TD-54](#td-54)) — so the exclusions were read as blocked when they were mostly unattempted, and the generalisation drawn from two files has been corrected in [step 10](steps/10-sprint-7-kuzzle.md). At the next size down, the same deferral produced [TD-56](#td-56), which is [TD-40](#td-40) written again in a helper added to make a conversion compile: *a ratchet a file is exempt from cannot catch the defect it exists for.* At the smallest, [TD-55](#td-55) is one merged lookup that turns a rejected pipe chain into a silent success, and [TD-57](#td-57) is a type that strict cannot see through and a spec that asserts "it threw" in a function where every path throws.
+
+Two of these were already the sprint's own findings, and the compiler had both: [TD-52](#td-52)'s unenforced multipart limit is a `TS2564` on line 134 of the file it was found in by hand, and [TD-51](#td-51) was found only because a wrapper got a type. That is the argument for [TD-54](#td-54) in one line — *the remaining 232 are the same class of question, unanswered.*
+
+**Also filed:** the missing tracker for [TD-53](#td-53) ([#2756](https://github.com/kuzzleio/kuzzle/issues/2756)), and the `garden` witness recorded in [TD-33](#td-33) — two consecutive steps of one scenario, which is the cheapest reproduction of the cross-node disagreement we have.
+
+| Finding | Sev. | Issue | Status |
+|---|---|---|---|
+| `KuzzleConfiguration` is `Partial<…>` — tracker opened | 🟠 med | [#2756](https://github.com/kuzzleio/kuzzle/issues/2756) | 🔴 |
+| 232 of 246 strict errors in the conversions are not TD-53 | 🟠 med | [#2757](https://github.com/kuzzleio/kuzzle/issues/2757) | 🔴 |
+| `waterfall.shift()` resolves where the JavaScript rejected | 🟡 low | [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | ✅ |
+| `bindPluginMethod` declared non-nullable, returns `undefined` | 🟡 low | [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | ✅ |
+| `vault`: false type on first call, vacuous env-var spec | 🟡 low | [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | ✅ |
+
+**What did not survive verification.** Two candidates were dropped: `validation.ts:174`'s move from lodash `get(spec[index], collection)` to `has(indexSpec, collection) && indexSpec[collection]` is a *hardening* (the lodash form resolves paths and reaches the prototype), not a regression, and deserved a line in H4's equivalence note rather than a ticket; and `_initHooks`' `debug()` call now runs before the target is validated rather than after, which changes one log line on a path that then throws.
+
+**The rule for sprint 8.** `lib/cluster` is the last conversion sprint. If it lands the way these did, the migration finishes with its six biggest files typed and unchecked — so the DoD for a conversion should name the strict count it leaves behind, the way it already names coverage.
+
+### TD-54
+**232 of the 246 strict errors in the sprint 6/7 conversions are not TD-53** · 🟠 med · Enforcement · [#2757](https://github.com/kuzzleio/kuzzle/issues/2757)
+
+The six largest files converted in sprints 6 and 7 are in TypeScript and out of `.migration/strict-adopted.txt`. Running the strict program over them (`npx tsc -p tsconfig.strict.json --noEmit`, 2026-09-16):
+
+| File | `--strict` errors |
+|------|------:|
+| `lib/core/validation/validation.ts` | 95 |
+| `lib/core/network/protocols/httpwsProtocol.ts` | 51 |
+| `lib/core/plugin/pluginsManager.ts` | 42 |
+| `lib/core/plugin/plugin.ts` | 27 |
+| `lib/core/network/entryPoint.ts` | 14 |
+| `lib/kuzzle/dumpGenerator.ts` | 11 |
+| `lib/kuzzle/internalIndexHandler.ts` | 6 |
+| **total** | **246** |
+
+[Step 10](steps/10-sprint-7-kuzzle.md) attributes the exclusion to [TD-53](#td-53) and generalises from it. **14 of the 246 are the config shape**; the rest are not:
+
+| Diagnostic | Count |
+|---|---:|
+| `TS18048` — *X is possibly undefined* | 76 |
+| `TS2345` — argument not assignable | 43 |
+| `TS18046` — *`error`/`e` is of type `unknown`* (catch bindings) | 25 |
+| `TS2531` / `TS2532` / `TS18047` — object/null guards | 49 |
+| `TS2769` — no overload matches | 18 |
+| rest | 35 |
+
+Even in the two files the generalisation was drawn from it does not hold: they carry 17 errors between them, 6 of which are not the config shape — two `unknown` catch bindings (`dumpGenerator.ts:81,83`), an unguarded `Array.prototype.shift()` result (`:247`), `corefiles[0]` passed as a `PathLike` (`:172`), an unguarded index (`:254`), and an overload mismatch (`internalIndexHandler.ts:203`).
+
+- **Why it matters beyond the ratchet.** Two of the sprint's own findings are in this list, and the compiler had both: [TD-52](#td-52)'s unenforced multipart limit is `httpwsProtocol.ts(134,10): Property 'maxFormFileSize' has no initializer and is not definitely assigned in the constructor`, and [TD-51](#td-51) was found only because H5 gave a wrapper a type. The other 232 are the same class of question, unanswered — `httpwsProtocol.ts(397)`'s `socket.count` on a back-pressure counter, `validation.ts(350-372)`'s `specSubset` indexed six times without a guard.
+- **Reco:** (1) a per-file triage of the 246 splitting *needs a guard the runtime can reach* from *needs a type the runtime already guarantees* — the first kind is a bug list; (2) the correction to step 10's generalisable part, done above; (3) a rule for sprint 8, because `lib/cluster` is the last conversion sprint and if it lands the same way the migration finishes with its six biggest files typed and unchecked.
+- **The generalisable part:** *a conversion that compiles is not a conversion that checks.* The `js` ratchet counts files moved; nothing counted what the move was worth, and the strict list — the thing that does count it — was read as blocked when it was mostly unattempted.
+
+---
+
+### TD-55
+**`waterfall.shift()` resolves silently where the JavaScript rejected** · 🟡 low · `lib/kuzzle/event/waterfall.ts` · [#2758](https://github.com/kuzzleio/kuzzle/issues/2758)
+
+The JavaScript asked two questions — `hasNext()` about the chain, then an indexed read of the value. Sprint 7's I1 merged them into one truthiness test, and the two forms disagree on a chain entry that is not callable:
+
+- **Before:** `hasNext()` is `true`, `next()` calls `undefined(...)`, the `TypeError` reaches `waterfallNext`'s `try`, and the chain **rejects**.
+- **After:** `shift()` answers `undefined` and the chain **resolves** with the payload it has — silently, skipping every remaining step.
+
+Unreachable today: `pluginsManager.resolveEventHandler` rejects a non-callable target at registration. It is a ticket for *what* silently succeeds — a pipe chain is where a plugin denies a request, and a truncated chain reported as success is the one failure mode this file must not have.
+
+- **✅ Fixed (2026-09-16):** `exhausted` answers the chain, `invokeNext()` answers the value and throws a named `TypeError` into the same `try` the JavaScript relied on. `noUncheckedIndexedAccess` is why the call could not simply be written back the way it was.
+- **The generalisable part:** *two questions merged into one lookup are only equivalent when the value can answer both.* Safe for `pipeRunner`'s `Denque`, which owns its elements; unsafe for an array of third-party callables.
+
+---
+
+### TD-56
+**`bindPluginMethod` is declared non-nullable and returns `undefined`** · 🟡 low · `lib/core/plugin/pluginsManager.ts` · [#2759](https://github.com/kuzzleio/kuzzle/issues/2759)
+
+```ts
+function bindPluginMethod(instance: PluginInstance, name: string): PluginMethod {
+  const method = instance[name];
+
+  if (!isPluginMethod(method)) {
+    return undefined;
+  }
+
+  return method.bind(instance);
+}
+```
+
+This is [TD-40](#td-40) — *declared non-nullable, resolves `null`* — written a second time, two sprints later, in a helper added to make the conversion type-check. It compiled because `pluginsManager.ts` is not in `strict-adopted` ([TD-54](#td-54)): without `strictNullChecks`, `undefined` is assignable to everything.
+
+The branch is dead — all four call sites establish the member is callable first — so the cost is what the *next* caller reads off the signature.
+
+- **✅ Fixed (2026-09-16):** the return type is `PluginMethod | undefined`. Under the current non-strict program the union collapses, so no call site needs a guard yet; the guards appear the day the file joins `strict-adopted`, which is also the moment to decide whether the dead branch should throw with the unresolved name instead. `isThenable`'s predicate, which claimed `Bluebird<unknown>` for a duck-typed `then`/`catch` check, now says `Promise<unknown>`.
+- **The generalisable part:** *a ratchet a file is exempt from cannot catch the defect it exists for.* TD-40 was found by strict; TD-56 is TD-40 in a file strict does not read.
+
+---
+
+### TD-57
+**`vault`: a type that is false on the first call, and a spec that asserts nothing** · 🟡 low · `lib/kuzzle/vault.ts`, `test/kuzzle/vault.test.js` · [#2760](https://github.com/kuzzleio/kuzzle/issues/2760)
+
+1. **`let ENV_VAULT_KEY: string;`** is never assigned at declaration and is read on the first call. `vault.ts` **is** in `strict-adopted` and passes: TypeScript's definite-assignment analysis covers locals, not module-scope `let`, so the declared type was false for every read before the first assignment.
+2. **`should(() => vault.load()).throw()`** — no matcher — was the only test of the `KUZZLE_VAULT_KEY` path. Without the env var, `load()` throws the *missing-key* assertion instead, so the test passed either way. It asserted that `load()` throws, which every other test in the file already establishes.
+3. **The memoisation was untested.** `kuzzle-vault` deletes the variable from the environment after reading it, and Kaaf loads the vault twice — which is the entire reason the module-scope variable exists.
+
+- **✅ Fixed (2026-09-16):** `string | undefined`; the env-var spec asserts *which* error comes back, not that one does; and two tests cover the memoisation — the key survives the environment being cleared, and it does not survive a fresh process. The spec re-requires the module per test so that module state stops leaking between them.
+- **The generalisable part:** *`should(fn).throw()` with no matcher is not a test of why.* In a function whose control flow is four `assert`s, "it threw" is what every path has in common.
+
+---
+
+### TD-58
+**`Node out-of-sync` reports one fewer message than was lost** · 🟠 med · `lib/cluster/subscriber.js:754-760` · [#2762](https://github.com/kuzzleio/kuzzle/issues/2762)
+
+```js
+this.lastMessageId = this.lastMessageId.add(1);
+
+if (this.lastMessageId.notEquals(message.messageId)) {
+  await this.localNode.evictSelf(
+    `Node out-of-sync: ${message.messageId - this.lastMessageId - 1} messages lost from node ${this.remoteNodeId}`,
+  );
+```
+
+`lastMessageId` has already been advanced to the id this node *expects*, on the line above, so the number of missing messages is `messageId - lastMessageId`. The `- 1` is a leftover from computing the gap against the *previous* id.
+
+| expected | received | really lost | reported |
+|---:|---:|---:|---:|
+| 1 | 2 | **1** | **0** |
+| 1 | 3 | 2 | 1 |
+
+`Long` is not the culprit: `long`'s prototype defines `valueOf`, so the subtraction coerces correctly.
+
+- **Why it is worth more than an off-by-one.** It is why [TD-33](#td-33) has survived five reviews without a root cause. Every startup failure there was read as a *membership* problem because the log said `0 messages lost` — which reads as a spurious eviction, so the detector was never believed. It is the only component in that thread telling the truth: a sync message really is lost at cluster formation.
+- **Fix:** drop the `- 1`, and add the spec. `subscriber.js` is one of the six remaining `.js` files in `lib/` and goes through sprint 8 — this should land **before** the conversion, so the sprint's own CI failures are legible while it runs.
+- **The generalisable part:** *a diagnostic that under-reports by one is worse than no diagnostic, because it reads as a contradiction and gets dismissed.* Five reviews treated "0 messages lost" as evidence the detector was wrong.

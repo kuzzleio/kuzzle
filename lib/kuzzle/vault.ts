@@ -28,7 +28,12 @@ import isEmpty from "lodash/isEmpty";
 
 // The Vault package remove the variable from env after reading it and we have
 // to instantiate the Vault two times with Kaaf (one before init and one after)
-let ENV_VAULT_KEY: string;
+//
+// `| undefined` is the truth until the first call assigns it. A module-scope
+// `let` escapes TypeScript's definite-assignment analysis, so `: string` passed
+// strict while being false for every read before that first assignment
+// (TD-57, #2760).
+let ENV_VAULT_KEY: string | undefined;
 
 function load(vaultKey?: string, secretsFile?: string): Vault {
   // Using KaaF kuzzle is an npm package and is located under node_modules folder

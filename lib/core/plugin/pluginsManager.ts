@@ -1397,11 +1397,21 @@ async function resolveKuid(
  * `plugin.instance[name]` is `unknown` — a plugin may expose anything — so the
  * `typeof` check is what makes the result callable. Every call site had already
  * made that check; this is the same one, in the place that needs it.
+ *
+ * The result is `undefined` when the name resolves to nothing callable. That is
+ * unreachable today — all four call sites establish it first — but the first
+ * version of this helper declared `PluginMethod` and returned `undefined`
+ * anyway, which is [TD-40](https://github.com/kuzzleio/kuzzle/issues/2727)
+ * written a second time (TD-56, #2759). Under the repo's current non-strict
+ * program the union collapses, so this annotation costs no call site a guard;
+ * it is what makes them appear the day this file joins `strict-adopted`
+ * (TD-54, #2757), which is the moment to decide whether the dead branch should
+ * throw instead.
  */
 function bindPluginMethod(
   instance: PluginInstance,
   name: string,
-): PluginMethod {
+): PluginMethod | undefined {
   const method = instance[name];
 
   if (!isPluginMethod(method)) {
@@ -1425,8 +1435,12 @@ function isPluginMethod(value: unknown): value is PluginMethod {
  * The duck-typed promise check `registerPipe` has always made: a plugin's pipe
  * may answer a promise, a value, or nothing, and only the first is awaited.
  * A guard rather than an inline `typeof` chain so the branch narrows.
+ *
+ * `Promise` rather than `Bluebird`: nothing here proves the plugin returned a
+ * Bluebird, and `then`/`catch` — which is exactly what the guard tests and what
+ * `registerPipe` calls — is all of `Promise` the callers need (TD-56, #2759).
  */
-function isThenable(value: unknown): value is Bluebird<unknown> {
+function isThenable(value: unknown): value is Promise<unknown> {
   return (
     typeof value === "object" &&
     value !== null &&
