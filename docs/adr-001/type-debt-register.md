@@ -41,7 +41,7 @@
 | [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ✅ [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) |
 | [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | ✅ [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 | [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | ✅ [#2716](https://github.com/kuzzleio/kuzzle/pull/2716) |
-| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky variant blocks unrelated PRs; cluster readiness is not gated — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | 🟦 readiness gate done; `fail-fast: false` now on both matrices; the cross-node visibility race still open, seen on `resetDatabase` and on `realtime:join` |
+| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky variant blocks unrelated PRs; cluster nodes disagree on membership — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | 🟦 readiness gate + `fail-fast: false` done, failures now self-diagnosing; the cross-node disagreement still open, seen on `resetDatabase`, `realtime:join` and cluster formation |
 | [TD-34](#td-34) | 🟠 med | Correctness | `Profile._hash`'s new overload declared `string \| false`; the patch (`global.kuzzle.hash`) returns a `number`, and `profileRepository` still cast the site to `any` | XS | ✅ |
 | [TD-35](#td-35) | 🟠 med | Enforcement | `npm run build` ran `copy-binaries` through `tsx` (esbuild native binary) and nothing asserted its payload — a broken copy step shipped a `.proto`-less package | XS | ✅ |
 | [TD-36](#td-36) | 🔴 high | Enforcement | TD-35's payload gate never sees the published artifact: `npm publish` re-runs `prepublishOnly` → `build`, which wipes the `dist/` the workflow step verified | XS | ✅ |
@@ -516,6 +516,24 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
   A `realtime:join` on a room created against another node. Both runs also had the **same node** (`:17510`) slow to come up — "Connection error" on the first, "attempt timed out after 5s" on the second — so the suspicion is a node that joins late and answers requests before its room table has caught up. Both passed on re-run with no change.
 
   Note what the readiness gate can and cannot say here. Its fix above is exactly right about *quorum*: `funnel.throttle()` stops rejecting once the node is in the cluster. But that is **peer discovery, not state propagation** — nothing in `wait-kuzzle` waits for realtime rooms, and nothing could, since there is no request whose answer means "I have everyone's rooms". So this is the third symptom's shape once more, one layer further in, and the gate is not the place to fix it.
+
+- **A fifth symptom (2026-09-16), and it is the sharpest so far: the membership views disagree.** `Functional tests (legacy:http, 22, 7)` died at the readiness gate, before Cucumber ran:
+
+  ```
+  ./bin/wait-kuzzle :17510   6 attempts timed out, then ready
+  ./bin/wait-kuzzle :17511   ready immediately
+  ./bin/wait-kuzzle :17512   52 attempts, the whole 60s budget,
+                             "this cluster is disabled because there
+                              aren't enough nodes connected"
+  ```
+
+  `kuzzle_node_prod` runs **without the cluster plugin**, so the cluster is exactly nodes 1-3 and `minimumNodes: 3` leaves no slack — all three must be connected. Nodes 1 and 2 answered, which means each of them counted three members; node 3 counted fewer, for a minute, and said so. Its container logged no error, no fatal and no exit.
+
+  So this is not "a node was slow to start", which is how the fourth symptom was first read. **Two nodes considered the cluster formed while the third did not** — an asymmetric membership view, which is the same disagreement the `realtime:join` failures show one layer up, where a node answers requests with a room table the others do not share.
+
+  What it is **not** is a readiness-gate failure: the gate reported the truth. The cause is in cluster membership itself (`lib/cluster`, still JavaScript), and it is not identified.
+
+- **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
 - **✅ Fixed (2026-09-15) — `fail-fast` on the monkey matrix.** `(3)` above says "on the functional matrix", and that is all it was: `cluster-monkey-tests` kept the default, so each of the two failures above cancelled its five siblings and showed up as six red checks for one real failure. It now carries `fail-fast: false` too. While there, `.github/actions/monkey-tests/action.yml` declares the `es-version` input it has always been passed — the value did reach the step env, so this only silences `##[warning]Unexpected input(s) 'es-version'`, but an action whose declaration does not match its call site is one rename away from silently running the wrong Elasticsearch.
 - **⬜ Still open — the third symptom (`nyc-open-data` already exists) is *not* addressed by this.** That one is inside the cucumber `Before` hook, not in the readiness gate: `admin:resetDatabase` with `refresh: "wait_for"` returns on an Elasticsearch *refresh* acknowledgement, which says nothing about the other cluster nodes. The two share a shape — *a per-node acknowledgement trusted as cluster state* — but not a fix.
