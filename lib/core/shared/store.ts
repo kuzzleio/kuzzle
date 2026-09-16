@@ -61,7 +61,13 @@ export class Store {
   public index: string;
   public scope: storeScopeEnum;
 
-  private readonly logger = global.kuzzle.log.child("core:shared:store");
+  /**
+   * `protected`, and not `readonly`: `InternalIndexHandler` has always
+   * replaced it with a child logger of its own in its constructor. The
+   * JavaScript could do that through a `private` declaration; saying so is
+   * what lets the subclass compile.
+   */
+  protected logger = global.kuzzle.log.child("core:shared:store");
 
   constructor(index: string, scope: storeScopeEnum) {
     this.index = index;

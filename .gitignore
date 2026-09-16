@@ -72,7 +72,11 @@ upgrade-*.report
 
 # JS generated files from TS
 *.d.ts
-!lib/types/Global.d.ts
+# ...except hand-written declarations, which only ever live here. `outDir` is
+# `dist/` (ignored below), so tsc never emits into lib/types — anything matching
+# this is something someone wrote. Was a per-file exception for `Global.d.ts`,
+# which is `Global.ts` now.
+!lib/types/*.d.ts
 *.js.map
 
 # NPM package

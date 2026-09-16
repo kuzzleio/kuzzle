@@ -19,34 +19,31 @@
  * limitations under the License.
  */
 
-"use strict";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import zlib from "node:zlib";
 
-const path = require("path");
-const fs = require("fs");
-const os = require("os");
+import Bluebird from "bluebird";
+import dumpme from "dumpme";
+import moment from "moment";
 
-const Bluebird = require("bluebird");
-const moment = require("moment");
-const dumpme = require("dumpme");
-const zlib = require("zlib");
-
-const { Request } = require("../api/request");
-const kerror = require("../kerror");
-const { BadRequestError } = require("../kerror/errors");
+import packageJson from "../../package.json";
+import * as kerror from "../kerror";
+import { BadRequestError } from "../kerror/errors";
 
 class DumpGenerator {
+  private _dump = false;
+  private readonly logger;
+
   constructor() {
-    this._dump = false;
     this.logger = global.kuzzle.log.child("dump:dumpGenerator");
   }
 
   /**
    * Create a dump
-   *
-   * @param {string} suffix
-   * @returns {Promise}
    */
-  async dump(suffix) {
+  async dump(suffix: string): Promise<string> {
     if (this._dump) {
       throw kerror.get("api", "process", "action_locked", "dump");
     }
@@ -96,7 +93,7 @@ class DumpGenerator {
       JSON.stringify(
         {
           config: global.kuzzle.config,
-          version: require("../../package.json").version,
+          version: packageJson.version,
         },
         null,
         " ",
@@ -165,7 +162,7 @@ class DumpGenerator {
         const readStream = fs.createReadStream(corefiles[0]);
         const writeStream = fs.createWriteStream(`${dumpPath}/core.gz`);
 
-        await new Bluebird((resolve) =>
+        await new Bluebird<void>((resolve) =>
           readStream
             .pipe(zlib.createGzip())
             .pipe(writeStream)
@@ -173,7 +170,10 @@ class DumpGenerator {
               // rm the original core file
               try {
                 fs.unlinkSync(corefiles[0]);
-              } catch (e) {
+              } catch {
+                // The unlink error is deliberately dropped: the core file is a
+                // best-effort cleanup and its own path is already in the
+                // warning.
                 this.logger.warn(
                   `> unable to clean up core file ${corefiles[0]}`,
                 );
@@ -194,9 +194,10 @@ class DumpGenerator {
 
     // dumping Kuzzle's stats
     this.logger.info("> dumping kuzzle's stats");
-    const statistics = await global.kuzzle.statistics.getAllStats(
-      new Request({ action: "getAllStats", controller: "statistics" }),
-    );
+    // `getAllStats()` takes no argument and never has: it forwards to
+    // `getStats()` with none. The `Request` the JavaScript built here was
+    // constructed and discarded on every dump.
+    const statistics = await global.kuzzle.statistics.getAllStats();
 
     fs.writeFileSync(
       path.join(dumpPath, "statistics.json"),
@@ -213,7 +214,7 @@ class DumpGenerator {
     return dumpPath;
   }
 
-  _cleanUpHistory() {
+  _cleanUpHistory(): void {
     const config = global.kuzzle.config.dump,
       dumpPath = path.normalize(global.kuzzle.config.dump.path);
 
@@ -222,7 +223,8 @@ class DumpGenerator {
         dumpPath,
         fs.constants.R_OK | fs.constants.W_OK | fs.constants.X_OK,
       );
-    } catch (e) {
+    } catch {
+      // Not readable, writable and traversable: there is no history to clean.
       return;
     }
 
@@ -244,7 +246,7 @@ class DumpGenerator {
     while (dumps.length >= config.history.reports) {
       const dir = dumps.shift().path;
 
-      fs.rmdirSync(dir, { recursive: true });
+      fs.rmSync(dir, { recursive: true });
     }
 
     for (let i = 0; i < dumps.length - config.history.coredump; i++) {
@@ -259,7 +261,7 @@ class DumpGenerator {
     }
   }
 
-  _listFilesMatching(directory, start) {
+  _listFilesMatching(directory: string, start: string): string[] {
     return fs
       .readdirSync(directory)
       .filter(
@@ -271,4 +273,4 @@ class DumpGenerator {
   }
 }
 
-module.exports = DumpGenerator;
+export = DumpGenerator;

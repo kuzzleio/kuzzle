@@ -2,7 +2,7 @@
 
 **Status:** 🟦 In progress — opened 2026-09-15
 **Date:** 2026-09-15 → …
-**PR(s):** —
+**PR(s):** I1 [#2752](https://github.com/kuzzleio/kuzzle/pull/2752) · I2 [#2753](https://github.com/kuzzleio/kuzzle/pull/2753)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
@@ -75,6 +75,8 @@ Both have Mocha specs. Per the standing rule, **convert first, then touch the sp
 ## Expected counters
 
 `js` **17 → 11** · `strict` **131 → 137** (all six are expected to adopt; `--candidates` will confirm) · `mocha` unchanged at **149** unless a spec is replaced rather than kept · `any` and `implicit-any` must not rise.
+
+> **What actually happened to `strict`: 131 → 135, not 137.** The four leaves adopted; the two classes did not, and not for anything in them — they read `global.kuzzle.config`, which is `Partial<…>`, so every section is `undefined` under `strictNullChecks`. That is [TD-53](../type-debt-register.md#td-53), filed by I2.
 
 ## What was done (PR I1 — the four leaves)
 
@@ -171,3 +173,97 @@ somewhere else entirely, down a single path. The line figure was true and
 useless, and the branch figure was the tell — the same shape as
 [TD-50](../type-debt-register.md#td-50)'s "93% of branches next to 36% of lines",
 read the other way round.
+
+## What was done (PR I2 — the two classes)
+
+2 files, 508 LOC, and **`lib/kuzzle` holds no JavaScript**. **js 13 → 11**, strict
+unchanged at **135** (see TD-53 below). `any`, `implicit-any` and `casts` untouched.
+
+### `Store` declared `logger` private, and its subclass has always replaced it
+
+`InternalIndexHandler extends Store`, and its constructor ends with
+
+```ts
+this.logger = global.kuzzle.log.child("internalIndexHandler");
+```
+
+`Store.logger` was `private readonly`. JavaScript does not care — the assignment
+just overwrote the field — but `private` is a claim that no one outside the class
+writes it, and that claim was false for as long as this subclass has existed. It
+is now `protected` and not `readonly`, with the reason on it. Same shape as H6's
+`implements NetworkEntryPoint`: the base was describing itself, not its use.
+
+### Two dead things in `dumpGenerator`
+
+1. **A `Request` built and discarded on every dump.**
+
+   ```js
+   await global.kuzzle.statistics.getAllStats(
+     new Request({ action: "getAllStats", controller: "statistics" }));
+   ```
+
+   `Statistics.getAllStats()` takes **no arguments** and forwards to `getStats()`
+   with none. The compiler said `Expected 0 arguments, but got 1`; the argument
+   is gone, and with it the `Request` import.
+
+2. **`fs.rmdirSync(dir, { recursive: true })`.** `@types/node` no longer declares
+   the option — it was deprecated in Node 14 and the docs say it will be removed.
+   Checked on the runtime the CI actually uses before touching it: on **Node 24
+   it still works**, printing `DEP0147`. So this is not the bug it looked like,
+   and the fix is the documented replacement, `fs.rmSync`, which does the same
+   thing without the warning.
+
+### Two declarations rather than two casts
+
+Neither `dumpme` nor `process.moduleLoadList` has types, and both are load-bearing here:
+
+- `lib/types/dumpme.d.ts` — the module's whole API, read off its `index.js`: one
+  default-exported function, both arguments optional.
+- `lib/types/node-internals.d.ts` — `process.moduleLoadList`, real since v0.x and
+  still on v24, undocumented, so `@types/node` does not carry it. `dumpGenerator`
+  has always written it into `nodejs.json`.
+
+Declaring them costs the `implicit-any` ratchet nothing and the `casts` ratchet
+nothing. An `as` in each call site would have cost both.
+
+Neither could be committed as written: `.gitignore` carried a blanket `*.d.ts`
+with a single per-file exception for a `Global.d.ts` that is `Global.ts` now.
+`outDir` is `dist/`, so tsc never emits into `lib/types` — anything matching
+there is hand-written by definition, and the rule is now `!lib/types/*.d.ts`.
+
+### ⚠️ Neither file could be adopted into strict — [TD-53](../type-debt-register.md#td-53)
+
+Both convert cleanly and pass `tsc --noEmit`. Under `strict` they produce nine
+errors between them, and **every one of them is the same error**:
+
+```
+dumpGenerator.ts(158,12):        'global.kuzzle.config.dump' is possibly 'undefined'.
+internalIndexHandler.ts(93,7):   'global.kuzzle.config.services' is possibly 'undefined'.
+internalIndexHandler.ts(216,13): Property 'authToken' does not exist on type 'SecurityConfiguration | undefined'.
+```
+
+`KuzzleConfiguration` is `Partial<IKuzzleConfiguration>`, because one type is
+doing two jobs: describing what a user may write in a `.kuzzlerc`, where every
+section is optional, *and* what `global.kuzzle.config` holds at runtime, which is
+that file merged over the packaged defaults, where none of them is. The looser
+job wins, everywhere.
+
+The files stay out of `.migration/strict-adopted.txt` rather than carrying guards
+for a condition that cannot happen. **The generalisable part:** the strict list
+reads like a quality score per file, and these two are evidence it is partly a
+score of *what a file happens to touch*.
+
+### Equivalence note
+
+1. **`fs.rmSync` replaces `fs.rmdirSync(…, { recursive: true })`** — verified
+   equivalent on the CI runtime before the change, not assumed from the types.
+2. **Two `catch (e)` bindings are dropped** where the error was never read, each
+   with the reason it is ignored: a best-effort core-file cleanup whose path is
+   already in the warning, and an `accessSync` probe whose failure *is* the
+   answer ("no history to clean").
+3. **Three specs follow the source's `node:` specifiers.** `mock-require` matches
+   the **specifier**, not the module, so `mockrequire("fs", …)` does not intercept
+   `require("node:fs")`. Both spellings are now registered — the same adjustment
+   H5 and H6 made, and the reason `test:unit:mocha` went red before it went green.
+4. **`FsMock` gains an `rmSync` stub** and `dumpGenerator.test.js` counts it
+   instead of `rmdirSync`, following (1).

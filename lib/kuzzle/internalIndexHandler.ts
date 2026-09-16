@@ -19,17 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import crypto from "node:crypto";
 
-const crypto = require("crypto");
+import Bluebird from "bluebird";
 
-const Bluebird = require("bluebird");
+import { Store } from "../core/shared/store";
+import type { StorageEngineElasticsearch } from "../types";
+import { storeScopeEnum } from "../core/storage/storeScopeEnum";
+import * as kerror from "../kerror";
+import createDebug from "../util/debug";
+import { Mutex } from "../util/mutex"; // NOSONAR: see init()
 
-const debug = require("../util/debug")("kuzzle:bootstrap:internalIndex");
-const { Store } = require("../core/shared/store");
-const { Mutex } = require("../util/mutex");
-const { storeScopeEnum } = require("../core/storage/storeScopeEnum");
-const kerror = require("../kerror");
+const debug = createDebug("kuzzle:bootstrap:internalIndex");
 
 const securitiesBootstrap = {
   profiles: {
@@ -78,6 +79,15 @@ const securitiesBootstrap = {
 const dataModelVersion = "2.0.0";
 
 class InternalIndexHandler extends Store {
+  private readonly timeout: number;
+  /** Indexed access rather than a new name, so it cannot drift from the config. */
+  private readonly config: StorageEngineElasticsearch["internalIndex"];
+
+  /** IDs for config documents */
+  private readonly _BOOTSTRAP_DONE_ID: string;
+  private readonly _DATAMODEL_VERSION_ID: string;
+  private readonly _JWT_SECRET_ID: string;
+
   constructor() {
     super(
       global.kuzzle.config.services.storageEngine.internalIndex.name,
@@ -96,16 +106,14 @@ class InternalIndexHandler extends Store {
     this.logger = global.kuzzle.log.child("internalIndexHandler");
   }
 
-  /**
-   * @returns {Promise}
-   */
-  async init() {
+  async init(): Promise<void> {
     await super.init(this.config.collections);
 
-    const mutex = new Mutex("InternalIndexBootstrap", {
-      timeout: -1,
-      ttl: 30000,
-    });
+    // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
+    // incompatible acquisition/TTL formats and must not contend on the same
+    // key — swapping it is a behaviour change, deferred to TD-20 (#2688).
+    const lockOptions = { timeout: -1, ttl: 30000 };
+    const mutex = new Mutex("InternalIndexBootstrap", lockOptions); // NOSONAR
 
     await mutex.lock();
 
@@ -145,7 +153,7 @@ class InternalIndexHandler extends Store {
   /**
    * @override
    */
-  async _bootstrapSequence() {
+  async _bootstrapSequence(): Promise<void> {
     debug("Bootstrapping security structure");
     await this.createInitialSecurities();
 
@@ -168,7 +176,7 @@ class InternalIndexHandler extends Store {
   /**
    * Creates initial roles and profiles as specified in Kuzzle configuration
    */
-  async createInitialSecurities() {
+  async createInitialSecurities(): Promise<void> {
     await Bluebird.map(
       Object.entries(securitiesBootstrap.roles),
       ([roleId, content]) => {
@@ -188,7 +196,7 @@ class InternalIndexHandler extends Store {
     );
   }
 
-  async createInitialValidations() {
+  async createInitialValidations(): Promise<void> {
     const initialValidations = global.kuzzle.config.validation;
     const promises = [];
 
@@ -205,9 +213,12 @@ class InternalIndexHandler extends Store {
     await Bluebird.all(promises);
   }
 
-  async _initSecret() {
-    const { authToken, jwt } = global.kuzzle.config.security;
-    const configSeed = authToken?.secret ?? jwt?.secret;
+  async _initSecret(): Promise<void> {
+    // NOSONAR: `jwt` is the deprecated spelling of `authToken`, read second so
+    // an existing configuration keeps working. Dropping it is a breaking change
+    // for anyone who has not migrated, not a conversion's to make.
+    const { authToken, jwt } = global.kuzzle.config.security; // NOSONAR
+    const configSeed = authToken?.secret ?? jwt?.secret; // NOSONAR
 
     let storedSeed = await this.exists("config", this._JWT_SECRET_ID);
 
@@ -225,10 +236,10 @@ class InternalIndexHandler extends Store {
         "[!] Kuzzle is using a generated seed for authentication. This is suitable for development but should NEVER be used in production. See https://docs.kuzzle.io/core/2/guides/getting-started/deploy-your-application/",
       );
     }
-    global.kuzzle.secret = configSeed
-      ? configSeed
-      : (await this.get("config", this._JWT_SECRET_ID))._source.seed;
+    global.kuzzle.secret =
+      configSeed ||
+      (await this.get("config", this._JWT_SECRET_ID))._source.seed;
   }
 }
 
-module.exports = InternalIndexHandler;
+export = InternalIndexHandler;
