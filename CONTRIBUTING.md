@@ -39,6 +39,12 @@ the `migration-ratchets` job:
 * When a file passes `strict`, add it to `.migration/strict-adopted.txt`
   (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
   converting, this is part of the PR — not a later chore.
+* **Never declare a type the next line contradicts.** `npm run test:strict` fails on
+  a non-nullable type assigned `undefined` (and on a function that cannot return what
+  it declares) **anywhere in `lib/`**, whether or not the file is in
+  `strict-adopted.txt` — `x: string[]` then `this.x = undefined` is rejected; widen
+  the declaration to `string[] | undefined`. It is the one defect class the adoption
+  list cannot help with, since being exempt is what lets it through (ADR-0001, TD-56).
 * **If it does not pass `strict`, say how far it is.** Converting a file and leaving
   it out of `strict-adopted.txt` is allowed; leaving it out *silently* is not. Run
   `npx tsc -p tsconfig.strict.json --noEmit`, filter it to the files you converted,

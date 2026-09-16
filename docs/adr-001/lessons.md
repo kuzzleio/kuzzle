@@ -42,8 +42,9 @@ warn) · 📝 prose only — recorded, not enforced.
 |---|---|---|
 | *A conversion that compiles is not a conversion that checks.* | [TD-54](type-debt-register.md#td-54) | 📄 the strict-count DoD — ADR § Conversion standards, CONTRIBUTING, and a `pr-preflight` reminder ([TD-61](type-debt-register.md#td-61)) |
 | *A ratchet measures the file it names, but a type can make a file unmeasurable from the outside* — true, and over-applied. | [TD-53](type-debt-register.md#td-53) / corrected by [TD-54](type-debt-register.md#td-54) | 📝 open ([#2756](https://github.com/kuzzleio/kuzzle/issues/2756)) — 14 of 246 errors were the config shape, not all of them |
-| *A ratchet a file is exempt from cannot catch the defect it exists for.* | [TD-56](type-debt-register.md#td-56) | 📝 — **candidate for a lint rule** ([TD-40](type-debt-register.md#td-40) recurred here, two sprints later) |
-| *"No cast" is a proxy for "no unchecked claim", and a wrong return type is the same claim made more quietly.* | [TD-40](type-debt-register.md#td-40) | 📝 — strict catches it only in adopted files |
+| *A ratchet a file is exempt from cannot catch the defect it exists for.* | [TD-56](type-debt-register.md#td-56) | 🔒 `strict-check.sh` fails on `TS2366` / `TS2322: Type 'undefined'` over the **whole** program, adopted or not |
+| *The narrow version of a gate is the one that ships.* | [TD-62](type-debt-register.md#td-62) | 📄 the same gate — filed as "no `undefined` assigned to a non-nullable" it cost 3 fixes; as "no lying declarations" it would have stalled on 59 |
+| *"No cast" is a proxy for "no unchecked claim", and a wrong return type is the same claim made more quietly.* | [TD-40](type-debt-register.md#td-40) | 🔒 via [TD-56](type-debt-register.md#td-56)'s gate for the `undefined` spelling; the `null` spelling is [TD-62](type-debt-register.md#td-62), 56 sites open |
 | *A declaration is only load-bearing once every caller is typed against it.* | [TD-34](type-debt-register.md#td-34) | 📄 `any` + `casts` ratchets charge for the call-site hatch, but not for the specific pattern |
 | *Widening a parameter to make a call site compile is not the same as supporting that call.* | [TD-41](type-debt-register.md#td-41) | 📝 |
 | *A boolean-returning validator that every caller follows with a property read is a type guard that has not been declared yet.* | [step 09](steps/09-sprint-6-core-ii.md) | 📝 — free to fix at conversion time |
@@ -78,8 +79,11 @@ warn) · 📝 prose only — recorded, not enforced.
 
 The 📝 rows ranked by the odds of recurrence, highest first:
 
-1. **[TD-56](type-debt-register.md#td-56)** — declared non-nullable, returns `undefined`. Already recurred once ([TD-40](type-debt-register.md#td-40)), and it recurs specifically in files exempt from strict, which is most of `lib/`.
+1. **[TD-62](type-debt-register.md#td-62)** — the `null` spelling of a lying declaration, 56 sites, 32 of them in the two `elasticsearch.ts`. Fixing them widens [TD-56](type-debt-register.md#td-56)'s live gate by one regex.
 2. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
 3. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
 
-~~[TD-57](type-debt-register.md#td-57) — matcher-less throw assertions~~ — gated 2026-09-16. It was worth the two hours: 15 sites, and pinning them exposed two tests that were passing on an error other than the one their name claims.
+Gated on 2026-09-16, and both were worth the hour:
+
+- ~~[TD-57](type-debt-register.md#td-57) — matcher-less throw assertions.~~ 15 sites, and pinning them exposed two tests passing on an error other than the one their name claims.
+- ~~[TD-56](type-debt-register.md#td-56) — a non-nullable declaration assigned `undefined`.~~ 3 sites, checked everywhere rather than only in adopted files, which is the whole point of the finding.

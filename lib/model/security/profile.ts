@@ -47,7 +47,12 @@ type InternalProfilePolicy = {
 export class Profile {
   public _id: string;
   public policies: Policy[];
-  public optimizedPolicies: OptimizedPolicy[];
+  /**
+   * Unset while the profile is persisted — `persistToDatabase` clears it so the
+   * derived form is never written — and the two readers below already test for
+   * `undefined`. The declaration says so (ADR-0001, TD-40 / TD-56).
+   */
+  public optimizedPolicies: OptimizedPolicy[] | undefined;
   public rateLimit: number;
 
   constructor() {

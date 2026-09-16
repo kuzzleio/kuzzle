@@ -47,7 +47,7 @@ export class KuzzleError extends Error {
   /**
    * Placeholders used to construct the error message.
    */
-  public props: string[];
+  public props: string[] | undefined;
 
   constructor(message: string, status: number, id?: string, code?: number) {
     super(message);
