@@ -68,6 +68,8 @@
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
 | [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | ✅ |
 | [TD-59](#td-59) | 🟠 med | Correctness | Every node has **two** unrelated `knode-*` ids — the cluster's and the one it logs under — so no cluster log line can be attributed to a container — [#2764](https://github.com/kuzzleio/kuzzle/issues/2764) | S | ✅ |
+| [TD-60](#td-60) | 🟡 low | Enforcement | `pr-preflight.sh` diffs against `master`, 278 commits behind `2-dev`: both of its reminders saw ~330 changed files on every branch, so neither could fire meaningfully | XS | ✅ |
+| [TD-61](#td-61) | 🟡 low | Enforcement | [TD-54](#td-54)'s DoD lived only in the decision log: nothing a conversion author reads carried the strict-count rule, and no tool printed the number | XS | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1134,3 +1136,32 @@ names a node that no other line in the run mentions. Measured on the `legacy:mqt
 - **✅ Fixed (2026-09-16), in two halves.** [#2763](https://github.com/kuzzleio/kuzzle/pull/2763) made `handshake()` print both ids, so every dump from that point on is self-attributing whatever else is true. [#2765](https://github.com/kuzzleio/kuzzle/pull/2765) removed the second identity: `createIdCard()` adopts `global.nodeId`.
 - **Why adopting it is safe, and why the loop stays.** `global.nodeId` is itself a random draw, but two cases can still leave it unusable — a stale IdCard from a crashed incarnation holding the key, and a Kuzzle running without a `Backend`, where there is no `global.nodeId` at all. Both fall through to a fresh draw on the next turn of the loop that has always been there, and `handshake()` prints both ids **only when they differ**, which is exactly those two cases.
 - **The generalisable part:** *two ids from the same generator with the same prefix are one id as far as a reader is concerned.* Nothing in the logs suggested there were two — the extra names read as peers that had come and gone, which is exactly how six reviews read them.
+
+---
+
+### TD-60
+**`pr-preflight.sh` measured every branch against the wrong base** · 🟡 low · `.ci/scripts/pr-preflight.sh`
+
+The two heuristic reminders — *"`lib/` changed with no test changed"* and *"this file passes strict but is not adopted"* — both work off a diff:
+
+```bash
+base_ref="$(git merge-base HEAD origin/master 2>/dev/null || ...)"
+```
+
+The migration's base branch is **`2-dev`**, and `master` is the released 2.56.0. `git merge-base HEAD origin/master` therefore resolves to the release tag commit, **278 commits and 328 changed files** behind the branch under test — so every branch, including one that changed a single file, was measured against the whole migration. The strict-adoption reminder listed files nobody had touched, and the test-coverage reminder was green on every branch that touched any test anywhere in those 278 commits, which is all of them.
+
+Nothing failed, which is why it survived: both checks are `[WARN]`-only, and a warning that is always the same is read as furniture.
+
+- **✅ Fixed (2026-09-16):** the base is `2-dev`, with `PREFLIGHT_BASE` for a branch based elsewhere and the old `master` resolution kept as the last fallback.
+- **The generalisable part:** *a diff-based check names a base branch, and a base branch is a fact about the project, not about git.* `origin/master` is the default that is always syntactically right; here it was 278 commits wrong, and the check reported on it in full confidence. Same shape as [TD-45](#td-45) — the predicate, not the label.
+
+---
+
+### TD-61
+**Nothing reports the strict count a conversion leaves behind** · 🟡 low · `.ci/scripts/pr-preflight.sh`, `scripts/strict-check.sh`
+
+The mechanism half of [TD-54](#td-54)'s decision (ADR decision register, 2026-09-16). The rule — *a conversion either adopts its files into strict or states, per file, the count it leaves and which errors are guards the runtime can reach* — was recorded as a dated decision-log entry and nowhere a conversion author reads at the time they convert.
+
+- **✅ Done (2026-09-16):** the rule is now a bullet in [ADR § Conversion standards (per file)](ADR-0001-migration-typescript.md#conversion-standards-per-file) and in `CONTRIBUTING.md` › *TypeScript migration*, next to the adoption rule it is the other half of. `scripts/strict-check.sh --count [path…]` prints per-file error counts off the same tsc log as `--candidates`, so it inherits TD-44's fail-closed guards, and prints `?? path (no such file)` rather than `0` for a path tsc never saw. `pr-preflight.sh` detects a `.js` → `.ts` conversion (a git-detected rename, or an `A`/`D` pair when the rewrite fell under the similarity threshold), and for any converted file not in `strict-adopted.txt` prints its count with the reading the PR owes. Verified against [#2753](https://github.com/kuzzleio/kuzzle/pull/2753): it reproduces TD-54's table — `dumpGenerator.ts` 11, `internalIndexHandler.ts` 6.
+- **Why a reminder and not a gate.** The number is cheap to compute and worthless alone; what the DoD asks for is the *reading* of it — which errors are reachable guards — and no script can check that a sentence was written honestly. The gate is the reviewer; the script's job is to make sure the number is on the table.
+- **The generalisable part:** *a decision recorded only in a decision log is a decision the next author will not read.* The log says what was decided and why; the standards list is what gets followed. A rule that lands in one and not the other is prose.

@@ -39,6 +39,13 @@ the `migration-ratchets` job:
 * When a file passes `strict`, add it to `.migration/strict-adopted.txt`
   (`npm run test:strict -- --candidates` lists the ready ones). For a file you are
   converting, this is part of the PR — not a later chore.
+* **If it does not pass `strict`, say how far it is.** Converting a file and leaving
+  it out of `strict-adopted.txt` is allowed; leaving it out *silently* is not. Run
+  `npx tsc -p tsconfig.strict.json --noEmit`, filter it to the files you converted,
+  and put in the PR body — per file — how many errors remain and which of them are
+  guards the runtime can actually reach. Those are bugs, not typing chores: the two
+  defects found by hand in sprint 6 were both already in that list. A conversion that
+  compiles is not a conversion that checks.
 * **Converting a file that has no unit spec? Write one** (vitest + TS) in the same PR.
   `.ts` is measured by the coverage gate, so an untested conversion now fails CI.
 
@@ -47,7 +54,7 @@ Run the gates locally before pushing:
 ```bash
 npm run ratchet             # js / mocha / any / implicit-any / casts / cpd-exclusions
 npm run test:strict         # strict type-check on adopted files
-.ci/scripts/pr-preflight.sh # the above + lint + error-codes + two reminders
+.ci/scripts/pr-preflight.sh # the above + lint + error-codes + three reminders
 ```
 
 If you legitimately reduce a count, update its baseline in the same PR — e.g.

@@ -52,6 +52,45 @@ if [ "$tsc_status" -ne 0 ] && ! grep -qE '^[^ ].*\([0-9]+,[0-9]+\): error TS' "$
   exit 2
 fi
 
+# Per-file error counts, for files that do NOT pass strict. The other half of
+# --candidates: that one answers "what is ready to adopt", this one answers "how
+# far is what I just converted" — the number a conversion PR owes per
+# ADR-0001 (TD-54, #2757). Both read the same log, so both inherit the
+# fail-closed guards above: a count of 0 here means tsc checked the file and
+# found nothing, never that tsc did not run.
+#
+#   scripts/strict-check.sh --count                 # every unadopted file with errors
+#   scripts/strict-check.sh --count lib/a.ts lib/b.ts
+if [ "${1:-}" = "--count" ]; then
+  shift
+  errored="$(grep -oE '^(lib/[^(]+\.ts|index\.ts)' "$LOG" | sort | uniq -c | awk '{print $2" "$1}')"
+
+  if [ "$#" -gt 0 ]; then
+    miss=0
+    for path in "$@"; do
+      # "0" must mean "tsc checked it and found nothing", never "tsc never saw
+      # this path" — a typo would otherwise read as a clean file (TD-44).
+      if [ ! -f "$path" ]; then
+        echo "?? $path (no such file)" >&2
+        miss=1
+        continue
+      fi
+      n="$(printf '%s\n' "$errored" | awk -v p="$path" '$1 == p { print $2 }')"
+      echo "${n:-0} $path"
+    done
+    exit "$miss"
+  fi
+
+  adopted="$(grep -vE '^[[:space:]]*(#|$)' "$ADOPTED" 2>/dev/null | sort -u)"
+  printf '%s\n' "$errored" \
+    | while read -r path n; do
+        [ -n "$path" ] || continue
+        printf '%s\n' "$adopted" | grep -qxF "$path" || echo "$n $path"
+      done \
+    | sort -rn
+  exit 0
+fi
+
 if [ "${1:-}" = "--candidates" ]; then
   errored="$(grep -oE '^(lib/[^(]+\.ts|index\.ts)' "$LOG" | sort -u)"
   all="$( { find lib -name '*.ts'; echo index.ts; } | sort -u )"
