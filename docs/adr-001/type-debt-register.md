@@ -66,7 +66,7 @@
 | [TD-55](#td-55) | 🟡 low | Correctness | `waterfall.shift()` resolves the chain silently where the JavaScript rejected — [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | XS | ✅ |
 | [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
-| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | 🔴 |
+| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1079,5 +1079,5 @@ if (this.lastMessageId.notEquals(message.messageId)) {
 `Long` is not the culprit: `long`'s prototype defines `valueOf`, so the subtraction coerces correctly.
 
 - **Why it is worth more than an off-by-one.** It is why [TD-33](#td-33) has survived five reviews without a root cause. Every startup failure there was read as a *membership* problem because the log said `0 messages lost` — which reads as a spurious eviction, so the detector was never believed. It is the only component in that thread telling the truth: a sync message really is lost at cluster formation.
-- **Fix:** drop the `- 1`, and add the spec. `subscriber.js` is one of the six remaining `.js` files in `lib/` and goes through sprint 8 — this should land **before** the conversion, so the sprint's own CI failures are legible while it runs.
+- **✅ Fixed (2026-09-16):** the `- 1` is gone, with the reason on the lines above it. The spec asserted only that `evictSelf` was called, never with what — which is how the off-by-one survived — and now pins both counts: the two-message gap the existing case produces, and the one-message gap that used to read as zero. Landed **before** sprint 8 converts `subscriber.js`, so the sprint's own CI failures are legible while it runs.
 - **The generalisable part:** *a diagnostic that under-reports by one is worse than no diagnostic, because it reads as a contradiction and gets dismissed.* Five reviews treated "0 messages lost" as evidence the detector was wrong.
