@@ -70,25 +70,34 @@ class WaterfallContext {
     this.args[0] = result;
   }
 
-  /**
-   * The next step to run, or `undefined` once the chain is exhausted.
-   *
-   * The JavaScript asked twice — `hasNext()` and then an indexed read — and
-   * the compiler cannot see that the second is safe because the first ran.
-   * One lookup answers both questions, so there is no invariant left to assert.
-   */
-  shift(): WaterfallStep | undefined {
-    const step = this.chain[this.index];
-
-    if (step) {
-      this.index++;
-    }
-
-    return step;
+  /** Whether every step of the chain has been run. */
+  get exhausted(): boolean {
+    return this.index >= this.chain.length;
   }
 
-  /** Runs a step against the current payload. */
-  invoke(step: WaterfallStep, cb: WaterfallCallback): void {
+  /**
+   * Runs the next step against the current payload and advances.
+   *
+   * The two questions this file asks are about different things: `exhausted`
+   * is about the *chain*, this is about the *value*. Collapsing them into one
+   * truthiness test — which is what the first conversion did — resolves the
+   * waterfall early on a chain entry that is not callable, silently skipping
+   * every remaining step (TD-55, #2758). A pipe chain is where a plugin denies
+   * a request, so the one outcome it must not have is a silent success.
+   *
+   * The JavaScript called `undefined(...)` and let the `TypeError` reach
+   * `waterfallNext`'s `try`. The throw below is that, spelled, because
+   * `noUncheckedIndexedAccess` does not let the call be written directly.
+   */
+  invokeNext(cb: WaterfallCallback): void {
+    const step = this.chain[this.index++];
+
+    if (step === undefined) {
+      throw new TypeError(
+        `waterfall: chain step ${this.index - 1} is not a function`,
+      );
+    }
+
     step(...this.args, cb);
   }
 
@@ -121,15 +130,13 @@ function waterfallCB(this: WaterfallContext, err?: unknown, res?: unknown) {
 /* eslint-enable no-invalid-this */
 
 function waterfallNext(ctx: WaterfallContext): void {
-  const step = ctx.shift();
-
-  if (!step) {
+  if (ctx.exhausted) {
     ctx.resolve();
     return;
   }
 
   try {
-    ctx.invoke(step, waterfallCB.bind(ctx));
+    ctx.invokeNext(waterfallCB.bind(ctx));
   } catch (error) {
     ctx.reject(error);
   }
