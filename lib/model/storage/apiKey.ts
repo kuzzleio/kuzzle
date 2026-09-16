@@ -198,7 +198,8 @@ class ApiKey extends BaseModel {
       });
     }
 
-    return apiKey as ApiKey;
+    // @ts-expect-error We fetch from the api key collection so this is safe
+    return apiKey satisfies ApiKey;
   }
 
   /**

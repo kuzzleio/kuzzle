@@ -39,6 +39,7 @@ interface KuzzleHttpRoute {
   };
   /** Alias of `path`, populated below. */
   url?: string;
+  openapi?: Record<string, any>;
 }
 
 const routes: KuzzleHttpRoute[] = [
