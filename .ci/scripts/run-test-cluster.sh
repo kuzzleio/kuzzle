@@ -26,7 +26,10 @@ docker compose -f $YML_FILE run --rm --no-deps kuzzle_node_1 npm ci
 
 echo "[$(date)] - Starting Kuzzle Cluster..."
 
-trap 'docker compose -f $YML_FILE logs' err
+# shellcheck source=./dump-cluster-logs.sh
+source "$(dirname "${BASH_SOURCE[0]}")/dump-cluster-logs.sh"
+
+trap dump_cluster_logs err
 
 docker compose -f $YML_FILE up -d
 
