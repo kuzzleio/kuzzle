@@ -155,12 +155,25 @@ export class ClusterIdCardHandler {
   /**
    * Generates and reserves a unique ID for this node instance.
    * Makes sure that the ID is not already taken by another node instance.
+   *
+   * The first candidate is `global.nodeId` — the id the rest of the process
+   * logs under. It used to draw its own from the same generator with the same
+   * `knode` prefix, so every node carried two indistinguishable identities and
+   * no cluster log line could be matched to a process (TD-59, #2764).
+   *
+   * The loop stays: `global.nodeId` is itself a random draw, but a stale IdCard
+   * left in Redis by a crashed incarnation can still hold the key, and Kuzzle
+   * can run without a `Backend`, in which case there is no `global.nodeId` at
+   * all. Either way the next turn draws a fresh name, exactly as before.
    */
   async createIdCard(): Promise<void> {
     let reserved = false;
+    let candidate = global.nodeId;
 
     do {
-      this.nodeId = NameGenerator.generateRandomName({ prefix: "knode" });
+      this.nodeId =
+        candidate ?? NameGenerator.generateRandomName({ prefix: "knode" });
+      candidate = undefined;
       this.nodeIdKey = `${REDIS_PREFIX}${this.nodeId}`;
       this.idCard = new IdCard({
         birthdate: Date.now(),

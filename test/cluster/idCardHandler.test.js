@@ -76,6 +76,60 @@ describe("ClusterIdCardHandler", () => {
       }
     });
 
+    /** `global.nodeId` is a getter installed by Backend; tests own it here. */
+    function setGlobalNodeId(value) {
+      Object.defineProperty(global, "nodeId", {
+        configurable: true,
+        value,
+        writable: true,
+      });
+    }
+
+    afterEach(() => {
+      delete global.nodeId;
+    });
+
+    it("should adopt global.nodeId, so a cluster log line names a known process", async () => {
+      // TD-59 (#2764): the cluster used to draw its own `knode-*` from the same
+      // generator with the same prefix, so every node carried two
+      // indistinguishable identities and no cluster log line — an eviction, a
+      // handshake — could be matched to a container.
+      setGlobalNodeId("knode-wiry-cat-69101");
+
+      await idCardHandler.createIdCard();
+
+      should(idCardHandler.nodeId).be.eql("knode-wiry-cat-69101");
+      should(idCardHandler.nodeIdKey).be.eql(
+        "{cluster/node}/knode-wiry-cat-69101",
+      );
+    });
+
+    it("should draw a fresh name when that id is already reserved", async () => {
+      // A stale IdCard left in Redis by a crashed incarnation still holds the
+      // key, which is what the loop has always been for.
+      setGlobalNodeId("knode-wiry-cat-69101");
+      kuzzle.ask
+        .withArgs("core:cache:internal:store")
+        .onFirstCall()
+        .resolves(false);
+
+      await idCardHandler.createIdCard();
+
+      should(idCardHandler.nodeId)
+        .be.a.String()
+        .and.not.eql("knode-wiry-cat-69101");
+      should(idCardHandler.nodeId).startWith("knode-");
+    });
+
+    it("should draw a name when there is no global.nodeId", async () => {
+      // Kuzzle can run without a Backend, and then nothing has defined one.
+      delete global.nodeId;
+
+      await idCardHandler.createIdCard();
+
+      should(idCardHandler.nodeId).be.a.String().and.startWith("knode-");
+    });
+
     it("should create a new uniq IdCard and store it in Redis and update the index", async () => {
       await idCardHandler.createIdCard();
 
