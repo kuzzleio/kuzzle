@@ -66,6 +66,7 @@
 | [TD-55](#td-55) | 🟡 low | Correctness | `waterfall.shift()` resolves the chain silently where the JavaScript rejected — [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | XS | ✅ |
 | [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
 | [TD-57](#td-57) | 🟡 low | Tests | `vault.ENV_VAULT_KEY` is typed `string` and starts `undefined`; its only env-var spec asserts nothing — [#2760](https://github.com/kuzzleio/kuzzle/issues/2760) | XS | ✅ |
+| [TD-58](#td-58) | 🟠 med | Correctness | `Node out-of-sync` under-reports by one: every single-message loss prints `0 messages lost`, which is why TD-33 has been dismissed five times — [#2762](https://github.com/kuzzleio/kuzzle/issues/2762) | XS | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -546,6 +547,22 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
   ```
 
   (`Scenario: Bulk mWrite allows custom kuzzle metadata`.) The step that creates the index returned success, and the very next step — routed to another node — did not see it. Passes on re-run. This is the third symptom (`nyc-open-data already exists`) and the fifth (asymmetric membership) in their shortest form: **no reset, no cluster formation, no realtime state — one write acknowledged by one node and not visible to the next.** Two steps and one feature file make it the cheapest reproduction we have, and it is where work on this should start.
+
+- **A sixth symptom (2026-09-16), and the first the log dump made readable — it corrects the reading of the fifth.** `Functional tests (legacy:websocket, 22, 8)` on [#2761](https://github.com/kuzzleio/kuzzle/pull/2761), a PR touching `waterfall`, one `pluginsManager` annotation and `vault`. `dump-cluster-logs.sh` turned an hour of work into one `grep`:
+
+  | time | what |
+  |---|---|
+  | 10:16:46.989 | node 3 logs `[✔] Kuzzle 2.56.0 is ready` — **first of the three** |
+  | 10:16:48.015 | `ERROR [CLUSTER] Node out-of-sync: 1 messages lost from node knode-spicy-radiologist-99792` |
+  | 10:16:50.524-526 | both peers `evicted. Reason: heartbeat timeout` |
+  | 10:16:50.527 | `Not enough nodes active (expected: 3, active: 2). Deactivating node until new ones are added.` |
+  | 10:16:51 → 10:17:51 | `wait-kuzzle :17512` rejects `not_enough_nodes` for the full budget |
+
+  **It is not "a node was slow", and not only "the views disagree".** Node 3 was the *fastest*, it **did** reach quorum — `Node.init()` blocks until `countActiveNodes() >= minimumNodes`, which is why it logged ready at all — and then **lost** its peers 3.5 s later and never regained them. The gate reported that truthfully for 60 s.
+
+  **The node evicts itself over a real message loss**, at cluster formation, before any test runs. And the reason this thread has survived five reviews without a root cause is a printf: the gap is reported as `messageId - lastMessageId - 1` while `lastMessageId` already holds the *expected* id, so a one-message loss prints `0 messages lost` and reads as a spurious eviction. [TD-58](#td-58) / [#2762](https://github.com/kuzzleio/kuzzle/issues/2762), and it should land **before** sprint 8 converts `lib/cluster`.
+
+  **Still unexplained:** seven `knode-*` identities for four containers. Three appear only as *peers* — no container logged one as its own `nodeId`, and each logged `Starting Kuzzle` exactly once, so nothing restarted. Node 3 formed its quorum against two identities no container in that run claims.
 
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
@@ -1037,3 +1054,30 @@ The branch is dead — all four call sites establish the member is callable firs
 
 - **✅ Fixed (2026-09-16):** `string | undefined`; the env-var spec asserts *which* error comes back, not that one does; and two tests cover the memoisation — the key survives the environment being cleared, and it does not survive a fresh process. The spec re-requires the module per test so that module state stops leaking between them.
 - **The generalisable part:** *`should(fn).throw()` with no matcher is not a test of why.* In a function whose control flow is four `assert`s, "it threw" is what every path has in common.
+
+---
+
+### TD-58
+**`Node out-of-sync` reports one fewer message than was lost** · 🟠 med · `lib/cluster/subscriber.js:754-760` · [#2762](https://github.com/kuzzleio/kuzzle/issues/2762)
+
+```js
+this.lastMessageId = this.lastMessageId.add(1);
+
+if (this.lastMessageId.notEquals(message.messageId)) {
+  await this.localNode.evictSelf(
+    `Node out-of-sync: ${message.messageId - this.lastMessageId - 1} messages lost from node ${this.remoteNodeId}`,
+  );
+```
+
+`lastMessageId` has already been advanced to the id this node *expects*, on the line above, so the number of missing messages is `messageId - lastMessageId`. The `- 1` is a leftover from computing the gap against the *previous* id.
+
+| expected | received | really lost | reported |
+|---:|---:|---:|---:|
+| 1 | 2 | **1** | **0** |
+| 1 | 3 | 2 | 1 |
+
+`Long` is not the culprit: `long`'s prototype defines `valueOf`, so the subtraction coerces correctly.
+
+- **Why it is worth more than an off-by-one.** It is why [TD-33](#td-33) has survived five reviews without a root cause. Every startup failure there was read as a *membership* problem because the log said `0 messages lost` — which reads as a spurious eviction, so the detector was never believed. It is the only component in that thread telling the truth: a sync message really is lost at cluster formation.
+- **Fix:** drop the `- 1`, and add the spec. `subscriber.js` is one of the six remaining `.js` files in `lib/` and goes through sprint 8 — this should land **before** the conversion, so the sprint's own CI failures are legible while it runs.
+- **The generalisable part:** *a diagnostic that under-reports by one is worse than no diagnostic, because it reads as a contradiction and gets dismissed.* Five reviews treated "0 messages lost" as evidence the detector was wrong.
