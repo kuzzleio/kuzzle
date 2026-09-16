@@ -395,6 +395,27 @@ describe("ClusterSubscriber", () => {
         should(ret).be.false();
         should(localNode.evictSelf).calledOnce();
       });
+
+      it("should report the number of messages actually lost", async () => {
+        // Expected 1, received 3: the messages with ids 1 and 2 are missing.
+        message.messageId = new Long(3, 0, true);
+
+        await subscriber.validateMessage(message);
+
+        should(localNode.evictSelf).be.calledWithMatch(/^Node out-of-sync: 2 /);
+      });
+
+      it("should report a single-message loss as one, not as zero", async () => {
+        // The case TD-58 (#2762) got wrong, and the frequent one: expected 1,
+        // received 2, so the message with id 1 is missing. It used to print
+        // "0 messages lost", which reads as a spurious eviction — and is why
+        // five reviews of TD-33 (#2715) dismissed this detector.
+        message.messageId = new Long(2, 0, true);
+
+        await subscriber.validateMessage(message);
+
+        should(localNode.evictSelf).be.calledWithMatch(/^Node out-of-sync: 1 /);
+      });
     });
 
     describe("#handlerHeartbeat", () => {
