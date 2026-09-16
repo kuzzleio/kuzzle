@@ -533,7 +533,7 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
                               aren't enough nodes connected"
   ```
 
-  `kuzzle_node_prod` runs **without the cluster plugin**, so the cluster is exactly nodes 1-3 and `minimumNodes: 3` leaves no slack — all three must be connected. Nodes 1 and 2 answered, which means each of them counted three members; node 3 counted fewer, for a minute, and said so. Its container logged no error, no fatal and no exit.
+  ~~`kuzzle_node_prod` runs **without the cluster plugin**, so the cluster is exactly nodes 1-3 and `minimumNodes: 3` leaves no slack — all three must be connected.~~ **Wrong on both halves, corrected 2026-09-16 (see the seventh occurrence below).** The cluster is **core**, not a plugin: `kuzzle.ts:335` starts it whenever `config.cluster.enabled`, and the `cluster` entry in nodes 1-3's *"Successfully loaded 3 plugins"* is a different thing. `kuzzle_node_prod` is a **full cluster member**, so the cluster is **four** nodes against a `minimumNodes` of 3 — there is slack, and the losses are not a quorum-sizing problem. Nodes 1 and 2 answered, which means each of them counted enough members; node 3 counted fewer, for a minute, and said so. Its container logged no error, no fatal and no exit.
 
   So this is not "a node was slow to start", which is how the fourth symptom was first read. **Two nodes considered the cluster formed while the third did not** — an asymmetric membership view, which is the same disagreement the `realtime:join` failures show one layer up, where a node answers requests with a room table the others do not share.
 
@@ -564,6 +564,30 @@ So the SDK's auto-reconnect cannot be the retry mechanism for a *first* connecti
   **The node evicts itself over a real message loss**, at cluster formation, before any test runs. And the reason this thread has survived five reviews without a root cause is a printf: the gap is reported as `messageId - lastMessageId - 1` while `lastMessageId` already holds the *expected* id, so a one-message loss prints `0 messages lost` and reads as a spurious eviction. [TD-58](#td-58) / [#2762](https://github.com/kuzzleio/kuzzle/issues/2762), and it should land **before** sprint 8 converts `lib/cluster`.
 
   **The identities puzzle is [TD-59](#td-59), resolved a run later:** every node draws **two** independent `knode-*` names — `global.nodeId` (what it logs under) and the cluster's own, from `idCardHandler.createIdCard()`. Same generator, same prefix, nothing prints both. So the peers named in cluster lines are the *other* halves of the same four processes, and no cluster log line has ever been attributable to a container. That is why this analysis had to be reconstructed from timestamps.
+
+- **A seventh occurrence (2026-09-16) — the first fully attributable one, and it names a culprit.** `legacy:mqtt, 22, 7` on [#2765](https://github.com/kuzzleio/kuzzle/pull/2765), with [TD-59](#td-59)'s fix in place so every id maps to a container:
+
+  | container | id |
+  |---|---|
+  | `kuzzle_node_1` | `knode-illustrious-ungoliant-80341` |
+  | `kuzzle_node_2` | `knode-irritating-poseidon-29609` |
+  | `kuzzle_node_3` | `knode-determined-gaia-50422` |
+  | `kuzzle_node_prod` | `knode-infamous-zephyrus-18239` |
+
+  Every out-of-sync report in the run names **the same source**, and it is `kuzzle_node_prod`:
+
+  ```
+  node_3 11:44:35.984 ERROR Node out-of-sync: 1 messages lost from node knode-infamous-zephyrus-18239
+  node_1 11:44:35.988 WARN  Node "knode-determined-gaia-50422" evicted.
+                            Reason: Node out-of-sync: 1 messages lost from node knode-infamous-zephyrus-18239
+  node_2 11:44:36.011 WARN  … same …
+  node_3 ×7 more through 11:44:40.908, then
+  node_3 11:44:41.523 WARN  Node "knode-infamous-zephyrus-18239" evicted. Reason: heartbeat timeout
+  ```
+
+  (Nodes 1 and 2 are reporting `gaia`'s **self**-eviction, broadcast by `evictSelf`, whose reason names the peer *it* lost sync with.)
+
+  So the shape is: **the production-mode node drops a sync message at formation, and whoever reads it self-evicts.** `kuzzle_node_prod` differs from the other three in exactly one way in `.ci/test-cluster-{7,8}.yml` — `NODE_ENV: "production"` — which makes its publisher the first place to look, not the membership logic. Two prerequisites had to land before this was even statable: [TD-59](#td-59) (ids that map to containers) and the log dump covering the suite.
 
 - **✅ Improved (2026-09-16) — the failure now diagnoses itself.** Establishing the paragraph above took an hour and was then lost to a re-run, because `trap 'docker compose logs' err` dumps four Kuzzle nodes interleaved with Elasticsearch's JSON firehose in one flat block, and "which node saw which" is not findable in it. Both cluster scripts now share `.ci/scripts/dump-cluster-logs.sh`: one collapsible group per Kuzzle service, infrastructure tail-limited. This fixes nothing about the race; it makes the next occurrence conclusive instead of expensive.
 
