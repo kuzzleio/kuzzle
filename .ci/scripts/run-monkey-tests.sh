@@ -34,10 +34,16 @@ KUZZLE_PORT=17510 ./bin/wait-kuzzle
 KUZZLE_PORT=17511 ./bin/wait-kuzzle
 KUZZLE_PORT=17512 ./bin/wait-kuzzle
 
-trap - err
-
 echo "Installing Kuzzle Monkey Tester..."
 
 cd kuzzle-monkey-tests
 npm ci
+
+# The trap stays on for the run, for the same reason as run-test-cluster.sh: the
+# monkey failures in TD-33 (#2715) — `core.realtime.room_not_found`, seeds
+# d6432db20ca96eff and c884b3318030acc7 — are exactly the case where the nodes'
+# own view is the evidence, and clearing the trap here is why neither produced
+# any.
 node index.js
+
+trap - err
