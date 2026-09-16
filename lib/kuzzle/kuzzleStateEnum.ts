@@ -19,16 +19,11 @@
  * limitations under the License.
  */
 
-"use strict";
-
 /**
- * @typedef {number} kuzzleStateEnum
- */
-
-/**
- * Enum for Kuzzle's state
- * @readOnly
- * @enum {kuzzleStateEnum}
+ * Enum for Kuzzle's state.
+ *
+ * A frozen object rather than a TypeScript `enum`: the JavaScript exported a
+ * frozen one, and an `enum` emits an ordinary, mutable object.
  */
 const kuzzleStateEnum = Object.freeze({
   NOT_ENOUGH_NODES: 4,
@@ -37,4 +32,16 @@ const kuzzleStateEnum = Object.freeze({
   STARTING: 1,
 });
 
-module.exports = kuzzleStateEnum;
+/**
+ * The value and the type keep the same name, which is what lets `kuzzle.ts`
+ * write both `kuzzleStateEnum.RUNNING` and `get state(): kuzzleStateEnum` —
+ * the two spellings the JavaScript supported through a `@typedef`.
+ *
+ * Derived from the object rather than declared, so it cannot drift. It widens
+ * to `number`, which is exactly what `@typedef {number} kuzzleStateEnum` said:
+ * `Object.freeze` over a plain literal gives `Readonly<{ … : number }>`, not
+ * literal types, so no call site has to change.
+ */
+type kuzzleStateEnum = (typeof kuzzleStateEnum)[keyof typeof kuzzleStateEnum];
+
+export = kuzzleStateEnum;

@@ -112,7 +112,11 @@ lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
 lib/kerror/errors/index.ts
 lib/kerror/errors/multipleErrorsError.ts
+lib/kuzzle/event/pipeRunner.ts
+lib/kuzzle/event/waterfall.ts
 lib/kuzzle/index.ts
+lib/kuzzle/kuzzleStateEnum.ts
+lib/kuzzle/vault.ts
 lib/model/security/rights.ts
 lib/model/storage/apiKey.ts
 lib/service/storage/7/esWrapper.ts

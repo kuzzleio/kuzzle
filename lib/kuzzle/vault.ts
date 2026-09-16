@@ -19,19 +19,18 @@
  * limitations under the License.
  */
 
-"use strict";
+import assert from "node:assert";
+import fs from "node:fs";
+import path from "node:path";
 
-const assert = require("assert");
-const fs = require("fs");
-const path = require("path");
-const _ = require("lodash");
-const { Vault } = require("kuzzle-vault");
+import { Vault } from "kuzzle-vault";
+import isEmpty from "lodash/isEmpty";
 
 // The Vault package remove the variable from env after reading it and we have
 // to instantiate the Vault two times with Kaaf (one before init and one after)
-let ENV_VAULT_KEY;
+let ENV_VAULT_KEY: string;
 
-function load(vaultKey, secretsFile) {
+function load(vaultKey?: string, secretsFile?: string): Vault {
   // Using KaaF kuzzle is an npm package and is located under node_modules folder
   // We need to get back to root folder of the project to get the secret file
   const defaultEncryptedSecretsFile = __dirname.endsWith(
@@ -47,8 +46,8 @@ function load(vaultKey, secretsFile) {
 
   let key = vaultKey;
   if (
-    _.isEmpty(vaultKey) &&
-    (!_.isEmpty(process.env.KUZZLE_VAULT_KEY) || !_.isEmpty(ENV_VAULT_KEY))
+    isEmpty(vaultKey) &&
+    (!isEmpty(process.env.KUZZLE_VAULT_KEY) || !isEmpty(ENV_VAULT_KEY))
   ) {
     // Keep the vault key value when reading it from the env
     key = ENV_VAULT_KEY = process.env.KUZZLE_VAULT_KEY || ENV_VAULT_KEY;
@@ -56,7 +55,7 @@ function load(vaultKey, secretsFile) {
 
   const fileExists = fs.existsSync(encryptedSecretsFile);
   // Abort if a custom secrets file has been provided but Kuzzle can't load it
-  if (!_.isEmpty(process.env.KUZZLE_SECRETS_FILE) || !_.isEmpty(secretsFile)) {
+  if (!isEmpty(process.env.KUZZLE_SECRETS_FILE) || !isEmpty(secretsFile)) {
     assert(
       fileExists,
       `A secret file has been provided but Kuzzle cannot find it at "${encryptedSecretsFile}".`,
@@ -66,14 +65,14 @@ function load(vaultKey, secretsFile) {
   // Abort if a secret file is found (default or custom)
   // but no vault key has been provided
   assert(
-    !(fileExists && _.isEmpty(key)),
+    !(fileExists && isEmpty(key)),
     "A secret file has been provided but Kuzzle cannot find the Vault key. Aborting.",
   );
 
   // Abort if a vault key has been provided
   // but no secrets file can be loaded (default or custom)
   assert(
-    !(!_.isEmpty(key) && !fileExists),
+    !(!isEmpty(key) && !fileExists),
     `A Vault key is present but Kuzzle cannot find the secret file at "${encryptedSecretsFile}". Aborting.`,
   );
 
@@ -86,4 +85,4 @@ function load(vaultKey, secretsFile) {
   return vault;
 }
 
-module.exports = { load };
+export = { load };

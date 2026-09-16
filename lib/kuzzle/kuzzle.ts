@@ -99,7 +99,7 @@ type ImportStatus = {
 
 class Kuzzle extends KuzzleEventEmitter {
   public config: KuzzleConfiguration;
-  private _state: number = kuzzleStateEnum.STARTING;
+  private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
   public rootPath: string;
