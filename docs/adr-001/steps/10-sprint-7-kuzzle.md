@@ -1,7 +1,7 @@
 # Step 10 — Sprint 7: `lib/kuzzle` (bootstrap, vault, dumps, event runner)
 
-**Status:** 🟦 In progress — opened 2026-09-15
-**Date:** 2026-09-15 → …
+**Status:** ✅ Done — 2026-09-15 → 2026-09-16, frozen
+**Date:** 2026-09-15 → 2026-09-16
 **PR(s):** I1 [#2752](https://github.com/kuzzleio/kuzzle/pull/2752) · I2 [#2753](https://github.com/kuzzleio/kuzzle/pull/2753)
 **Hub:** [ADR-0001](../ADR-0001-migration-typescript.md)
 
