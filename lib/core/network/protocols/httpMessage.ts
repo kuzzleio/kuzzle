@@ -40,7 +40,17 @@ class HttpMessage {
 
   private _content: HttpMessageContent;
 
-  constructor(connection: ClientConnection, request: uWS.HttpRequest) {
+  /**
+   * @param headers - the request's headers when the caller has already
+   * collected them (a uWS `HttpRequest` only exposes them through `forEach`, so
+   * `httpwsProtocol` collects them once for both the connection and the
+   * message); omitted, they are collected here.
+   */
+  constructor(
+    connection: ClientConnection,
+    request: uWS.HttpRequest,
+    headers?: Record<string, string>,
+  ) {
     this.connection = connection;
     this._content = null;
     this.ips = connection.ips;
@@ -56,9 +66,13 @@ class HttpMessage {
     this.url = this.path; // NOSONAR this is what declares the alias
 
     this.method = request.getMethod().toUpperCase();
-    this.headers = {};
 
-    request.forEach((name, value) => (this.headers[name] = value));
+    if (headers) {
+      this.headers = headers;
+    } else {
+      this.headers = {};
+      request.forEach((name, value) => (this.headers[name] = value));
+    }
 
     this.requestId = this.headers["x-kuzzle-request-id"] || connection.id;
   }
