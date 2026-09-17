@@ -152,6 +152,8 @@ Filed as [TD-65](../type-debt-register.md#td-65) ([#2773](https://github.com/kuz
 
 And it **never shut down**: evicted from every peer at 14:01:47, it answered HTTP behind nginx for the next 33 seconds from state that had stopped advancing. `evictSelf` broadcasts `NodeEvicted` naming itself, and a ZeroMQ `PUB` does not loop back, so the `global.kuzzle.shutdown()` branch written for that case is unreachable by the one node that needs it. The gap is never resynced either, so the same drop re-reported nine times in five seconds.
 
+**It reproduced on the next run, on the same variant with different actors** — node_1 as victim, `knode-jaded-prokofiev-65530` as source — which rules out a property of one container, and the second log is the sharper one: the gap is reported **2 ms before** the handshake with that node is declared successful. `node.js` calls `subscriber.sync(...)` **without awaiting it**, so the gap is found inside `sync()`'s buffer replay, against messages the subscriber had already captured. The earliest buffered message is `N+2` where the snapshot said `N` — [TD-65](../type-debt-register.md#td-65)'s prediction, observed. Two failures, both on `http, 24, 8`, every other ES 8 variant green: worth checking next occurrence rather than concluding from two.
+
 Filed as [TD-67](../type-debt-register.md#td-67) ([#2776](https://github.com/kuzzleio/kuzzle/issues/2776)). **Neither is caused by this PR** — the conversion changes no runtime behaviour, and both files are byte-equivalent in what they execute. What J1 changed is that the layer is now readable.
 
 ### What SonarCloud charged for the rename

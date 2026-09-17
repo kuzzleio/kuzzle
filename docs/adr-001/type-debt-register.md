@@ -1292,6 +1292,17 @@ So let the snapshot in step 2 be taken at T₁ and the subscription register at 
 - *Timing-sensitive, ES 8 four-for-four in one run.* The window is a race; anything that shifts boot timing shifts how often it is lost.
 - *Nothing is wrong with the membership logic*, which is where five reviews looked.
 
+**Second occurrence, 2026-09-17, and it times the loss precisely.** Same variant as the first (`http, 24, 8`), different actors:
+
+```
+14:17:52.756  node_1  ERROR Node out-of-sync: 1 messages lost from node knode-jaded-prokofiev-65530
+14:17:52.758  node_1  INFO  Successfully completed the handshake with node knode-jaded-prokofiev-65530
+```
+
+The gap is reported **2 ms before** the handshake with that node is declared successful, because `node.js` calls `subscriber.sync(...)` **without awaiting it** and logs success on the next line. `sync()` replays the buffer, so the gap is found *inside that replay* — against messages the subscriber had **already captured**, not against something arriving later. The earliest buffered message is `N+2` where the snapshot said `N`: message `N+1` was published while the subscription had not taken effect, and the publisher dropped it. That is this entry's prediction, observed.
+
+**A diagnostic defect falls out of the same two lines:** `Successfully completed the handshake with node X` is printed unconditionally, for a node whose sync against X has already failed. Same family as [TD-58](#td-58) and [TD-59](#td-59) — the cluster's log describing a state the code is not in. Cheap to fix with the main change: `await` the sync, and log success only if it succeeded.
+
 - **What would confirm it.** Log, on the subscriber, the moment its first message arrives against the id it was synced to; or bind the sync socket as `XPUB` with `ZMQ_XPUB_VERBOSE` so subscription arrivals are observable, and compare their timestamps to the `getFullState` response. A reproduction should be possible by delaying `subscriber.init()`'s resolution relative to `getFullState`.
 - **Fix direction, for its own PR.** The counter and the subscription must be ordered by the same channel. Either the joining node signals *subscription established* on the command channel and the remote reports its `lastMessageId` only then, or the resume point travels on the sync socket itself. A subscriber that has never received a message could also tolerate its first gap — cheaper, but it trades a real desync detector for silence.
 - **The generalisable part:** *a resume point is only valid if the transport it resumes was already listening when the point was taken.* Two channels, one counter, and no ordering between them is a gap by construction — and the diagnostic that finally exposed it ([TD-58](#td-58)) had been dismissed five times for printing `0 messages lost`.
