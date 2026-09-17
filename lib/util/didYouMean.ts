@@ -26,6 +26,7 @@
  * name. A default import compiles to `didyoumean_1.default` and the stub would
  * silently miss. It goes when that spec moves to vitest.
  */
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import didYouMean = require("didyoumean");
 
 import "../types/Global";

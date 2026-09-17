@@ -1246,7 +1246,7 @@ class PluginsManager {
       return loadedPlugins;
     }
 
-    let pluginsPath = [];
+    let pluginsPath;
 
     try {
       pluginsPath = fs
@@ -1458,7 +1458,7 @@ function isConstructor(arg: unknown): boolean {
 
   try {
     Reflect.construct(Object, [], arg);
-  } catch (e) {
+  } catch {
     return false;
   }
 

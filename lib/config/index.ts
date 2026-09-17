@@ -93,7 +93,7 @@ function unstringify(cfg) {
         } else if (cfg[k].startsWith("*json:")) {
           try {
             cfg[k] = JSON.parse(cfg[k].replace(/^\*json:/, ""));
-          } catch (e) {
+          } catch {
             throw wrapped.get(
               "cannot_parse",
               `the key "${k}" does not contain a valid stringified JSON (${cfg[k]})`,

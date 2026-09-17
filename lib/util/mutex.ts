@@ -219,7 +219,7 @@ export class Mutex {
   }): Promise<boolean> {
     let duration = 0;
 
-    let isLocked = true;
+    let isLocked;
 
     do {
       isLocked = await global.kuzzle.ask(

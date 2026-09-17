@@ -274,7 +274,7 @@ export class Backend {
     try {
       const info = JSON.parse(fs.readFileSync("./package.json", "utf8"));
       this.version = info.version;
-    } catch (error) {
+    } catch {
       // Silent if no version can be found
     }
 

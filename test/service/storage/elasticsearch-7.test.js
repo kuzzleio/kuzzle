@@ -451,7 +451,7 @@ describe("Test: ElasticSearch service", () => {
           ],
           searchBody,
         });
-      } catch (error) {
+      } catch {
         // Catch error since we throw to skip the rest of the execution
       } finally {
         should(elasticsearch.client._client.search.firstCall.args[0]).match({

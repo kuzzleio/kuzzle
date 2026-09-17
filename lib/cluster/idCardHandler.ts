@@ -167,7 +167,7 @@ export class ClusterIdCardHandler {
    * all. Either way the next turn draws a fresh name, exactly as before.
    */
   async createIdCard(): Promise<void> {
-    let reserved = false;
+    let reserved;
     // `undefined` after the first turn, which is what makes the `??` below
     // fall through to a fresh draw — so the declaration has to admit it.
     let candidate: string | undefined = global.nodeId;
@@ -236,7 +236,7 @@ export class ClusterIdCardHandler {
       if (!childProcess.killed || childProcess.connected) {
         try {
           childProcess.disconnect();
-        } catch (e) {
+        } catch {
           // It could happens that the worker has been killed before the dispose causing disconnect to fail
         }
       }
@@ -291,7 +291,7 @@ export class ClusterIdCardHandler {
     ) {
       try {
         this.refreshWorker.send({ action: "dispose" });
-      } catch (e) {
+      } catch {
         // It could happens that the worker has been killed before the dispose causing send to fail
       }
     }

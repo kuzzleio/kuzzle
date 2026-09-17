@@ -470,7 +470,7 @@ class AuthController extends NativeController {
    * @returns {Promise<object>}
    */
   async checkToken(request) {
-    let token = "";
+    let token;
 
     if (
       globalThis.kuzzle.config.http.cookieAuthentication &&

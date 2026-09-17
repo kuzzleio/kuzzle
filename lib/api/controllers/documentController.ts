@@ -43,11 +43,7 @@ type FetchMethod = "mGet" | "mExists";
 
 /** The five multi-document writes `_mChanges` serves. */
 type ChangeMethod =
-  | "mCreate"
-  | "mCreateOrReplace"
-  | "mUpdate"
-  | "mUpsert"
-  | "mReplace";
+  "mCreate" | "mCreateOrReplace" | "mUpdate" | "mUpsert" | "mReplace";
 
 /**
  * @description actions available on the document Controller (used by generic events)

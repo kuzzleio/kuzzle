@@ -6,7 +6,7 @@ import { Then } from "@cucumber/cucumber";
 import Bluebird from "bluebird";
 
 // TODO should is deprecated it needs to be removed
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const should = require("should");
 
 Then(
@@ -185,7 +185,7 @@ Then("I debug {string}", function (path) {
 
   try {
     console.log(JSON.stringify(prop, null, 2));
-  } catch (e) {
+  } catch {
     console.log(prop);
   }
 });

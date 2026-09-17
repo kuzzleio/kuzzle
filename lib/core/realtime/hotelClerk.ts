@@ -654,7 +654,7 @@ export class HotelClerk {
     // @deprecated -- to be removed in the next major version
     try {
       await global.kuzzle.pipe("room:remove", roomId);
-    } catch (e) {
+    } catch {
       return;
     }
   }

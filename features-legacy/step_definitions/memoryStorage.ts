@@ -70,7 +70,7 @@ Then(
       try {
         should(JSON.parse(pattern)).be.eql(val);
         callback();
-      } catch (err) {
+      } catch {
         return callback(
           new Error(
             "Error: " + JSON.stringify(val) + " does not match " + pattern,
