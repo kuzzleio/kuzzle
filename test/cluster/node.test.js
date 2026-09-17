@@ -1039,6 +1039,36 @@ describe("#Cluster Node", () => {
 
       should(node.idCardHandler.addNode).not.called();
     });
+
+    it("should prove the subscription is live before resuming from a counter", async () => {
+      // `lastMessageId` arrives here over the command channel, in the joining
+      // node's handshake, while the subscription lives on the sync channel.
+      // #2777 fixed this ordering in handshake() and missed this path, which is
+      // the one every *existing* node takes when a new node joins — so all of
+      // them resumed from a counter their subscription had not started
+      // tracking, at the same instant. TD-65 (#2773).
+      await node.addNode("foo", "1.2.3.4", Long.fromInt(23, true));
+
+      const subscriber = node.remoteNodes.get("foo");
+
+      should(subscriber.waitForSubscription).calledOnce();
+      should(
+        subscriber.waitForSubscription.calledBefore(subscriber.sync),
+      ).be.true();
+    });
+
+    it("should warn but carry on when the subscription cannot be proven live", async () => {
+      ClusterSubscriberMock.prototype.__waitForSubscription = false;
+
+      await node.addNode("foo", "1.2.3.4", Long.fromInt(23, true));
+
+      should(node.logger.warn).calledWithMatch(
+        /No sync message received from node foo within \d+ms/,
+      );
+      should(node.remoteNodes.get("foo").sync).calledOnce();
+
+      delete ClusterSubscriberMock.prototype.__waitForSubscription;
+    });
   });
 
   describe("#self eviction", () => {
