@@ -19,25 +19,66 @@
  * limitations under the License.
  */
 
-"use strict";
+import Bluebird from "bluebird";
+import Long from "long";
+import * as protobuf from "protobufjs";
+import { Publisher } from "zeromq";
 
-const { Publisher } = require("zeromq");
-const protobuf = require("protobufjs");
-const Long = require("long");
-const Bluebird = require("bluebird");
+import type { JSONObject } from "kuzzle-sdk";
+import type { NormalizedFilter } from "koncorde";
+
+import type DocumentNotification from "../core/realtime/notification/document";
+import type UserNotification from "../core/realtime/notification/user";
+import type { storeScopeEnum } from "../core/storage/storeScopeEnum";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 
 const STATE = Object.freeze({
   READY: 1,
   SENDING: 2,
 });
 
+type PublisherState = (typeof STATE)[keyof typeof STATE];
+
+/**
+ * What the publisher needs from the node that owns it. `node.js` is converted
+ * in J3; this is the part of its surface this file actually reads, not a
+ * placeholder for the whole class.
+ */
+type PublishingNode = {
+  config: IKuzzleConfiguration["cluster"];
+};
+
+type BufferedMessage = {
+  topic: string;
+  /**
+   * protobuf's `finish()` returns a `Uint8Array`, not a `Buffer` — the JSDoc on
+   * `bufferSend` claimed `Buffer` for as long as the file was JavaScript.
+   */
+  data: Uint8Array;
+};
+
 // Handles messages publication to other nodes
 class ClusterPublisher {
+  private readonly node: PublishingNode;
+
   /**
-   * @constructor
-   * @param {ClusterNode} node
+   * ID of the last message sent. Read by `command.js` to answer a handshake,
+   * and by every `send*` caller that needs to name the message it just queued.
    */
-  constructor(node) {
+  public lastMessageId: Long;
+
+  private socket: Publisher | null;
+
+  private protoroot: protobuf.Root | null;
+
+  private state: PublisherState;
+
+  private buffer: BufferedMessage[];
+
+  /**
+   * @param node the cluster node this publisher belongs to
+   */
+  constructor(node: PublishingNode) {
     this.node = node;
     this.lastMessageId = new Long(0, 0, true);
     this.socket = null;
@@ -53,7 +94,7 @@ class ClusterPublisher {
     this.buffer = [];
   }
 
-  async init() {
+  async init(): Promise<void> {
     this.socket = new Publisher();
     await this.socket.bind(`tcp://*:${this.node.config.ports.sync}`);
 
@@ -63,10 +104,10 @@ class ClusterPublisher {
   /**
    * Publishes an event telling them that this node has created a new room
    *
-   * @param {NormalizedFilter} normalized - Obtained with Koncorde.normalize()
-   * @return {Long} ID of the message sent to other nodes
+   * @param normalized - Obtained with Koncorde.normalize()
+   * @return ID of the message sent to other nodes
    */
-  sendNewRealtimeRoom(normalized) {
+  sendNewRealtimeRoom(normalized: NormalizedFilter): Long {
     const payload = {
       filter: JSON.stringify(normalized.filter),
       id: normalized.id,
@@ -80,19 +121,19 @@ class ClusterPublisher {
    * Publishes an event telling telling them that this node
    * no longer has subscribers on the provided realtime room.
    *
-   * @param  {string} roomId
-   * @return {Long} ID of the message sent to other nodes
+   * @param roomId
+   * @return ID of the message sent to other nodes
    */
-  sendRemoveRealtimeRoom(roomId) {
+  sendRemoveRealtimeRoom(roomId: string): Long {
     return this.send("RemoveRealtimeRoom", { roomId });
   }
 
   /**
    * Publishes an event telling that a room has one less subscriber
-   * @param  {string} roomId
-   * @return {Long} ID of the message sent to other nodes
+   * @param roomId
+   * @return ID of the message sent to other nodes
    */
-  sendUnsubscription(roomId) {
+  sendUnsubscription(roomId: string): Long {
     return this.send("Unsubscription", { roomId });
   }
 
@@ -100,10 +141,10 @@ class ClusterPublisher {
    * Publishes an event telling that a new subscription has been made
    * made to an existing room
    *
-   * @param  {string} roomId
-   * @return {Long} Id of the message sent to other nodes
+   * @param roomId
+   * @return Id of the message sent to other nodes
    */
-  sendSubscription(roomId) {
+  sendSubscription(roomId: string): Long {
     return this.send("Subscription", { roomId });
   }
 
@@ -111,11 +152,14 @@ class ClusterPublisher {
    * Publishes an event telling that a document notification must be
    * propagated
    *
-   * @param  {Array.<string>} rooms - Koncorde rooms
-   * @param  {DocumentNotification} notification
-   * @return {Long} Id of the message sent to other nodes
+   * @param rooms - Koncorde rooms
+   * @param notification
+   * @return Id of the message sent to other nodes
    */
-  sendDocumentNotification(rooms, notification) {
+  sendDocumentNotification(
+    rooms: string[],
+    notification: DocumentNotification,
+  ): Long {
     return this.send("DocumentNotification", {
       action: notification.action,
       collection: notification.collection,
@@ -136,11 +180,11 @@ class ClusterPublisher {
    * Publishes an event telling that a user notification must be
    * propagated
    *
-   * @param  {string} room - Koncorde room
-   * @param  {UserNotification} notification
-   * @return {Long} Id of the message sent to other nodes
+   * @param room - Koncorde room
+   * @param notification
+   * @return Id of the message sent to other nodes
    */
-  sendUserNotification(room, notification) {
+  sendUserNotification(room: string, notification: UserNotification): Long {
     return this.send("UserNotification", {
       action: notification.action,
       collection: notification.collection,
@@ -160,12 +204,16 @@ class ClusterPublisher {
    * Publishes an event telling that a new authentication strategy has been
    * dynamically added
    *
-   * @param {string} strategyName
-   * @param {string} pluginName
-   * @param {Object} strategy
-   * @return {Long} Id of the message sent to other nodes
+   * @param strategyName
+   * @param pluginName
+   * @param strategy
+   * @return Id of the message sent to other nodes
    */
-  sendNewAuthStrategy(strategyName, pluginName, strategy) {
+  sendNewAuthStrategy(
+    strategyName: string,
+    pluginName: string,
+    strategy: JSONObject,
+  ): Long {
     return this.send("NewAuthStrategy", {
       pluginName,
       strategy,
@@ -177,12 +225,11 @@ class ClusterPublisher {
    * Publishes an event telling that a new authentication strategy has been
    * dynamically added
    *
-   * @param {string} strategyName
-   * @param {string} pluginName
-   * @param {Object} strategyObject
-   * @return {Long} Id of the message sent to other nodes
+   * @param strategyName
+   * @param pluginName
+   * @return Id of the message sent to other nodes
    */
-  sendRemoveAuthStrategy(strategyName, pluginName) {
+  sendRemoveAuthStrategy(strategyName: string, pluginName: string): Long {
     return this.send("RemoveAuthStrategy", {
       pluginName,
       strategyName,
@@ -192,67 +239,75 @@ class ClusterPublisher {
   /**
    * Publishes an event telling other nodes to create an info dump
    *
-   * @param  {string} suffix - dump directory suffix name
-   * @returns {Long} ID of the message sent
+   * @param suffix - dump directory suffix name
+   * @returns ID of the message sent
    */
-  sendDumpRequest(suffix) {
+  sendDumpRequest(suffix: string): Long {
     return this.send("DumpRequest", { suffix });
   }
 
   /**
    * Publishes an event about a new index being added
    *
-   * @param  {storeScopeEnum} scope
-   * @param  {string} index
-   * @returns {Long} ID of the message sent
+   * @param scope
+   * @param index
+   * @returns ID of the message sent
    */
-  sendAddIndex(scope, index) {
+  sendAddIndex(scope: storeScopeEnum, index: string): Long {
     return this.send("AddIndex", { index, scope });
   }
 
   /**
    * Publishes an event about a new collection being added
    *
-   * @param  {storeScopeEnum} scope
-   * @param  {string} index
-   * @param  {string} collection
-   * @returns {Long} ID of the message sent
+   * @param scope
+   * @param index
+   * @param collection
+   * @returns ID of the message sent
    */
-  sendAddCollection(scope, index, collection) {
+  sendAddCollection(
+    scope: storeScopeEnum,
+    index: string,
+    collection: string,
+  ): Long {
     return this.send("AddCollection", { collection, index, scope });
   }
 
   /**
    * Publishes an event about indexes been removed
    *
-   * @param  {storeScopeEnum} scope
-   * @param  {Array.<string>} indexes
-   * @returns {Long} ID of the message sent
+   * @param scope
+   * @param indexes
+   * @returns ID of the message sent
    */
-  sendRemoveIndexes(scope, indexes) {
+  sendRemoveIndexes(scope: storeScopeEnum, indexes: string[]): Long {
     return this.send("RemoveIndexes", { indexes, scope });
   }
 
   /**
    * Publishes an event about a collection been removed
    *
-   * @param  {storeScopeEnum} scope
-   * @param  {string} index
-   * @param  {string} collection
-   * @returns {Long} ID of the message sent
+   * @param scope
+   * @param index
+   * @param collection
+   * @returns ID of the message sent
    */
-  sendRemoveCollection(scope, index, collection) {
+  sendRemoveCollection(
+    scope: storeScopeEnum,
+    index: string,
+    collection: string,
+  ): Long {
     return this.send("RemoveCollection", { collection, index, scope });
   }
 
   /**
    * Publishes an event about a cluster-wide event emission
    *
-   * @param  {string} event name
-   * @param  {Object} payload - event payload
-   * @returns {Long} ID of the message sent
+   * @param event name
+   * @param payload - event payload
+   * @returns ID of the message sent
    */
-  sendClusterWideEvent(event, payload) {
+  sendClusterWideEvent(event: string, payload: JSONObject): Long {
     return this.send("ClusterWideEvent", {
       event,
       payload: JSON.stringify(payload),
@@ -262,45 +317,45 @@ class ClusterPublisher {
   /**
    * Publishes an event about shutdown
    *
-   * @param  {Object} nodeId - node ID
+   * @param nodeId - node ID
    *
-   * @returns {Long} ID of the message sent
+   * @returns ID of the message sent
    */
-  sendNodeShutdown(nodeId) {
+  sendNodeShutdown(nodeId: string): Long {
     return this.send("NodeShutdown", { nodeId });
   }
 
   /**
    * Publishes an event about the node being in debug mode
-   * @param {bool} evictionPrevented
+   * @param evictionPrevented
    *
-   * @returns {Long} ID of the message sent
+   * @returns ID of the message sent
    */
-  sendNodePreventEviction(evictionPrevented) {
+  sendNodePreventEviction(evictionPrevented: boolean): Long {
     return this.send("NodePreventEviction", { evictionPrevented });
   }
 
   /**
    * Publishes an event about a node being evicted
    *
-   * @param  {string} evictor node ID of the evictor
-   * @param  {Object} nodeId - node ID of the node being evicted
-   * @param  {Object} reason - reason of the eviction
+   * @param evictor node ID of the evictor
+   * @param nodeId - node ID of the node being evicted
+   * @param reason - reason of the eviction
    *
-   * @returns {Long} ID of the message sent
+   * @returns ID of the message sent
    */
-  sendNodeEvicted(evictor, nodeId, reason) {
+  sendNodeEvicted(evictor: string, nodeId: string, reason: string): Long {
     return this.send("NodeEvicted", { evictor, nodeId, reason });
   }
 
   /**
    * Publishes an event about heartbeat
    *
-   * @param  {string} address node sync address
+   * @param address node sync address
    *
-   * @returns {Long} ID of the message sent
+   * @returns ID of the message sent
    */
-  sendHeartbeat(address) {
+  sendHeartbeat(address: string): Long {
     return this.send("Heartbeat", { address });
   }
 
@@ -309,19 +364,19 @@ class ClusterPublisher {
    * Returns immediately, but the message to be sent migh be bufferized and send
    * later.
    *
-   * @param  {String} topic name
-   * @param  {Object} data
-   * @returns {Long} ID of the message sent
+   * @param topic name
+   * @param data
+   * @returns ID of the message sent
    * @throws If the topic's protobuf type cannot be found
    */
-  send(topic, data) {
+  send(topic: string, data: JSONObject): Long {
     if (this.socket === null) {
       return Long.NEG_ONE;
     }
 
     this.lastMessageId = this.lastMessageId.add(1);
 
-    const payload = Object.assign({ messageId: this.lastMessageId }, data);
+    const payload = { messageId: this.lastMessageId, ...data };
     const type = this.protoroot.lookupType(topic);
     const buffer = type.encode(type.create(payload)).finish();
 
@@ -342,11 +397,10 @@ class ClusterPublisher {
    * Sends the provided message, and then sends all pending ones waiting in
    * the buffer, in order
    *
-   * @param  {string} topic
-   * @param  {Buffer} data
-   * @return {void}
+   * @param topic
+   * @param data
    */
-  async bufferSend(topic, data) {
+  async bufferSend(topic: string, data: Uint8Array): Promise<void> {
     this.buffer.push({ data, topic });
 
     if (this.state === STATE.SENDING) {
@@ -359,8 +413,11 @@ class ClusterPublisher {
       const _buffer = this.buffer;
       this.buffer = [];
 
-      for (let i = 0; i < _buffer.length; i++) {
-        const payload = _buffer[i];
+      // `_buffer` is a local snapshot — `this.buffer` is reassigned to a new
+      // array above, never mutated in place — so iterating it directly is the
+      // same traversal as the index loop this replaces, without the
+      // `noUncheckedIndexedAccess` noise.
+      for (const payload of _buffer) {
         // This method will never return a rejected promise
         // http://zeromq.github.io/zeromq.js/classes/publisher.html#send
         await this.socket.send([payload.topic, payload.data]);
@@ -370,7 +427,7 @@ class ClusterPublisher {
     this.state = STATE.READY;
   }
 
-  async dispose() {
+  async dispose(): Promise<void> {
     // waits for the buffer to be empty before closing
     while (this.state !== STATE.READY) {
       await Bluebird.delay(100);
@@ -383,4 +440,4 @@ class ClusterPublisher {
   }
 }
 
-module.exports = ClusterPublisher;
+export = ClusterPublisher;

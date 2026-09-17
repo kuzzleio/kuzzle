@@ -41,7 +41,7 @@
 | [TD-30](#td-30) | 🟡 low | Enforcement | `bin/copy-binaries.js` miscounted as a plugin fixture: the `js` floor is 3, not 4 — [#2705](https://github.com/kuzzleio/kuzzle/issues/2705) | XS | ✅ [#2713](https://github.com/kuzzleio/kuzzle/pull/2713) |
 | [TD-31](#td-31) | 🟡 low | Duplication | TD-23's helpers take loose `methodName`/`action`, which can disagree — [#2706](https://github.com/kuzzleio/kuzzle/issues/2706) | XS | ✅ [#2711](https://github.com/kuzzleio/kuzzle/pull/2711) |
 | [TD-32](#td-32) | 🟡 low | Enforcement | `tsconfig.json`'s `rootDir` sits outside `compilerOptions` and has never applied — [#2714](https://github.com/kuzzleio/kuzzle/issues/2714) | XS | ✅ [#2716](https://github.com/kuzzleio/kuzzle/pull/2716) |
-| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky variant blocks unrelated PRs; cluster nodes disagree on membership — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | 🟦 readiness gate + `fail-fast: false` done, failures now self-diagnosing; the cross-node disagreement still open, seen on `resetDatabase`, `realtime:join` and cluster formation |
+| [TD-33](#td-33) | 🟠 med | Enforcement | One flaky variant blocks unrelated PRs; cluster nodes disagree on membership — [#2715](https://github.com/kuzzleio/kuzzle/issues/2715) | M | 🟦 readiness gate + `fail-fast: false` done, failures now self-diagnosing; the cross-node disagreement now has a named mechanism in [TD-65](#td-65) ([#2773](https://github.com/kuzzleio/kuzzle/issues/2773)) — what remains here is the harness half |
 | [TD-34](#td-34) | 🟠 med | Correctness | `Profile._hash`'s new overload declared `string \| false`; the patch (`global.kuzzle.hash`) returns a `number`, and `profileRepository` still cast the site to `any` | XS | ✅ |
 | [TD-35](#td-35) | 🟠 med | Enforcement | `npm run build` ran `copy-binaries` through `tsx` (esbuild native binary) and nothing asserted its payload — a broken copy step shipped a `.proto`-less package | XS | ✅ |
 | [TD-36](#td-36) | 🔴 high | Enforcement | TD-35's payload gate never sees the published artifact: `npm publish` re-runs `prepublishOnly` → `build`, which wipes the `dist/` the workflow step verified | XS | ✅ |
@@ -73,6 +73,9 @@
 | [TD-62](#td-62) | 🟡 low | Correctness | 56 `x: T = null` declarations state a type the constructor contradicts — [TD-56](#td-56)'s gate covers the `undefined` spelling, not this one | M | ⬜ |
 | [TD-63](#td-63) | 🟠 med | Correctness | `IDCardRenewer` reports a redis failure to `this.parentPort`, which it never has: the node is evicted without the reason — [#2770](https://github.com/kuzzleio/kuzzle/issues/2770) | XS | 🔴 |
 | [TD-64](#td-64) | 🟠 med | Enforcement | The `tests/` mirror convention resolved `.ts` targets only, so a vitest spec on a not-yet-converted file counted for nothing — [#2771](https://github.com/kuzzleio/kuzzle/issues/2771) | XS | ✅ |
+| [TD-65](#td-65) | 🔴 high | Correctness | A joining node resumes from a message id snapshotted on the **command** channel while its **sync** subscription is still propagating: messages published in that window are dropped by ZeroMQ and read as a desync — the mechanism [TD-33](#td-33) has been chasing — [#2773](https://github.com/kuzzleio/kuzzle/issues/2773) | M | 🔴 |
+| [TD-66](#td-66) | 🟡 low | Enforcement | [TD-61](#td-61)'s strict-count reminder reads committed history only, so it prints *"no conversion in this branch"* in the state a conversion is usually checked in — [#2774](https://github.com/kuzzleio/kuzzle/issues/2774) | XS | 🔴 |
+| [TD-67](#td-67) | 🔴 high | Correctness | `evictSelf` broadcasts the node's own eviction and never receives it, so the node keeps serving traffic with state that stopped advancing; the gap is also never resynced, so one drop reports forever — [#2776](https://github.com/kuzzleio/kuzzle/issues/2776) | S | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -491,6 +494,8 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 
 ### TD-33
 **A flaky functional variant blocks unrelated PRs** · 🟠 medium · `.ci/scripts/run-test-cluster.sh`, `bin/wait-kuzzle`
+
+> **Update 2026-09-17 (sprint 8 J1).** The half of this entry that is *not* a harness problem is now split into two entries, and **both should be read before this one**: **[TD-65](#td-65)** ([#2773](https://github.com/kuzzleio/kuzzle/issues/2773)) is *why a message is lost* at formation, and **[TD-67](#td-67)** ([#2776](https://github.com/kuzzleio/kuzzle/issues/2776)) is *why one lost message costs a whole run* — the node that detects the gap broadcasts its own eviction, never receives it, and keeps serving traffic behind nginx with state that stopped advancing. TD-67 carries the ninth occurrence, the first whose log ties the lost message to the failing assertion end to end. What stays here is the CI harness half, whose three proposals are all done.
 
 The 30-variant functional matrix is `fail-fast`, so **one flake cancels the other 29 jobs** and the PR must be re-run whole. Four occurrences: [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) (sprint 5 G2), [#2708](https://github.com/kuzzleio/kuzzle/pull/2708) — a **docs-only** PR — [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) and [#2718](https://github.com/kuzzleio/kuzzle/pull/2718). All three on 2026-09-10 passed on re-run with no code change.
 
@@ -1258,3 +1263,87 @@ This is not an edge case — it is the shape [step 11](steps/11-sprint-8-cluster
 - **Fix:** try `lib/<path>.js` and `lib/<path>/index.js` too. Blast radius is exactly one file today (`command.js`); the other two unresolved specs — `tests/ci/prepareCoverage.test.ts` and `tests/api/controllers/securityController/apiKeys.test.ts` — have no `lib/` target by design.
 - **What it was hiding.** `command.js` read **41.5%** raw and **16.9%** after normalisation, and the gate sees the normalised number. Step 11 recorded 41.5% as the correction to an earlier 16.9%; both were mocha figures, one raw and one normalised, and the file was in worse shape than either reading suggested. Measured by the runner that owns it, it is now **98.8%**.
 - **The generalisable part:** *a convention that maps names to files encodes an assumption about which files exist yet.* The mirror convention was written when every vitest spec targeted something already converted, and it silently stopped being true the first time someone wrote a spec ahead of a rename — which is the practice the ADR recommends.
+
+---
+
+### TD-65
+**A joining node resumes from a counter that its subscription had not yet started tracking** · 🔴 high · `lib/cluster/node.js`, `lib/cluster/subscriber.js`, `lib/cluster/publisher.ts`
+
+This is a reading of [TD-33](#td-33)'s surviving half, obtained while converting `publisher.ts` in sprint 8 J1. It is derived from the code, not from a reproduction — see *What would confirm it* below.
+
+**The cluster talks over two independent sockets.** `publisher.ts` binds a ZeroMQ `PUB` on `config.ports.sync` (7511); `command.js` binds a `ROUTER`/`REP` pair on `config.ports.command` (7510). They share no ordering: a message sent on one establishes nothing about the other.
+
+**A joining node's handshake uses both, in this order** (`node.js`, `handshake()`):
+
+1. For every discovered node, `new ClusterSubscriber(...)` then `subscriber.init()` — which does `socket.connect(syncAddress)` and `socket.subscribe()`.
+2. `command.getFullState(nodes)` — a request/response round trip on the **command** channel. The answer carries each node's `lastMessageId`, read off `this.node.publisher.lastMessageId` (`command.js:129`).
+3. `command.broadcastHandshake(nodes)`.
+4. `subscriber.sync(lastMessageId)` — the subscriber adopts that id as the last message it is deemed to have seen, and from then on expects `lastMessageId + 1`.
+
+**Step 1 does not finish when it returns.** In ZeroMQ, `connect()` is asynchronous and a subscription is a message the subscriber sends *to the publisher*, which does the filtering. Until that subscription reaches the remote `PUB` socket, the remote has no subscriber on this connection and **silently drops** everything it publishes — the *slow joiner*, and the one failure mode the ZeroMQ guide warns about for PUB/SUB.
+
+So let the snapshot in step 2 be taken at T₁ and the subscription register at Tₛ. Nothing in the protocol orders Tₛ before T₁: the two travel on different sockets. **If Tₛ > T₁, every message the remote published in (T₁, Tₛ) is dropped**, while step 4 has told the subscriber to resume at T₁. Its next received message is not T₁+1, `processData` finds the gap, and the node self-evicts with `Node out-of-sync: N messages lost`.
+
+**Why this fits every observation recorded for TD-33:**
+
+- *Exactly one message lost.* At formation the only periodic traffic on the sync channel is `sendHeartbeat`, so the window usually straddles zero or one publication.
+- *Right after the handshakes complete.* Step 4 is the first moment the counter is enforced.
+- *Any node can be the culprit.* The seventh occurrence blamed `kuzzle_node_prod`, the eighth `kuzzle_node_2`. Under this reading neither is a culprit: the source is whichever node happens to publish inside a peer's window.
+- *Timing-sensitive, ES 8 four-for-four in one run.* The window is a race; anything that shifts boot timing shifts how often it is lost.
+- *Nothing is wrong with the membership logic*, which is where five reviews looked.
+
+**Second occurrence, 2026-09-17, and it times the loss precisely.** Same variant as the first (`http, 24, 8`), different actors:
+
+```
+14:17:52.756  node_1  ERROR Node out-of-sync: 1 messages lost from node knode-jaded-prokofiev-65530
+14:17:52.758  node_1  INFO  Successfully completed the handshake with node knode-jaded-prokofiev-65530
+```
+
+The gap is reported **2 ms before** the handshake with that node is declared successful, because `node.js` calls `subscriber.sync(...)` **without awaiting it** and logs success on the next line. `sync()` replays the buffer, so the gap is found *inside that replay* — against messages the subscriber had **already captured**, not against something arriving later. The earliest buffered message is `N+2` where the snapshot said `N`: message `N+1` was published while the subscription had not taken effect, and the publisher dropped it. That is this entry's prediction, observed.
+
+**A diagnostic defect falls out of the same two lines:** `Successfully completed the handshake with node X` is printed unconditionally, for a node whose sync against X has already failed. Same family as [TD-58](#td-58) and [TD-59](#td-59) — the cluster's log describing a state the code is not in. Cheap to fix with the main change: `await` the sync, and log success only if it succeeded.
+
+- **What would confirm it.** Log, on the subscriber, the moment its first message arrives against the id it was synced to; or bind the sync socket as `XPUB` with `ZMQ_XPUB_VERBOSE` so subscription arrivals are observable, and compare their timestamps to the `getFullState` response. A reproduction should be possible by delaying `subscriber.init()`'s resolution relative to `getFullState`.
+- **Fix direction, for its own PR.** The counter and the subscription must be ordered by the same channel. Either the joining node signals *subscription established* on the command channel and the remote reports its `lastMessageId` only then, or the resume point travels on the sync socket itself. A subscriber that has never received a message could also tolerate its first gap — cheaper, but it trades a real desync detector for silence.
+- **The generalisable part:** *a resume point is only valid if the transport it resumes was already listening when the point was taken.* Two channels, one counter, and no ordering between them is a gap by construction — and the diagnostic that finally exposed it ([TD-58](#td-58)) had been dismissed five times for printing `0 messages lost`.
+
+---
+
+### TD-66
+**The strict-count reminder cannot see an uncommitted conversion** · 🟡 low · `.ci/scripts/pr-preflight.sh`
+
+[TD-61](#td-61) gave `pr-preflight.sh` a reminder that detects a `.js` → `.ts` conversion and prints the strict count it leaves behind. It finds conversions with `git diff "$base_ref"...HEAD`, which reads **committed history only**.
+
+Run on sprint 8 J1's two conversions before committing them, it printed `[OK] no .js -> .ts conversion in this branch`. Committing the same tree made it print both files and their counts.
+
+The tell is that the *neighbouring* reminder in the same script, ten lines above, already unions three sources — `"$base_ref"...HEAD`, `git diff` and `git diff --cached` — precisely so it fires on work in progress. Two reminders in one script disagree about what "changed" means, and the one that disagrees is the one enforcing a definition of done.
+
+- **Fix:** give the conversion detector the same three-source union the coverage reminder uses.
+- **The generalisable part:** *a check that answers "is this ready?" must read the state it is asked about, not the state it was easiest to diff.* [TD-60](#td-60) was the same script reading the wrong **base**; this is the same script reading the wrong **range**.
+
+---
+
+### TD-67
+**A node survives its own eviction and keeps serving traffic** · 🔴 high · `lib/cluster/node.js`, `lib/cluster/subscriber.js`
+
+Found in CI on [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) (`Functional tests (http, 24, 8)`, run 35230334541). It is [TD-33](#td-33)'s **ninth** occurrence and the first whose log ties the lost message to the failing assertion end to end — and it names a second defect, downstream of [TD-65](#td-65).
+
+```
+14:01:46.507  node_1  Successfully completed the handshake with node knode-solid-peacock-99998
+14:01:47.276  node_2  ERROR Node out-of-sync: 1 messages lost from node knode-solid-peacock-99998
+14:01:47.280  node_1  WARN  Node "knode-wrathful-potamoi-85816" evicted. Reason: …1 messages lost…
+   … node_2 repeats the same ERROR 9 times, through 14:01:52.422 …
+14:02:19              Given an existing collection "nyc-open-data":"yellow-taxi"
+                      ✖ Error: Index nyc-open-data does not exist
+```
+
+`kuzzle_node_2` **is** `knode-wrathful-potamoi-85816`, and it **never shut down**. Evicted from every peer's view at 14:01:47, it answered HTTP behind nginx for the remaining 33 seconds with state that had stopped tracking the cluster. The failing step is the first one nginx happened to route to it after `loadFixtures` created the index elsewhere.
+
+**Why it survives.** `evictSelf` logs the reason and calls `publisher.sendNodeEvicted(this.nodeId, this.nodeId, reason)`. Every *other* node receives that and takes `handleNodeEviction`'s `message.nodeId !== this.localNode.nodeId` branch, dropping it. The broadcasting node never receives its own publication — a ZeroMQ `PUB` does not loop back — so the `global.kuzzle.shutdown()` branch written for exactly this case is unreachable by the only node that needs it.
+
+**Why one message becomes nine.** `subscriber.js`'s gap branch calls `evictSelf` and returns `false` without resynchronising `lastMessageId`. Advanced by one per message, it stays permanently one behind, so every subsequent message re-trips the check and re-broadcasts. Occurrence counts read off these lines overcount: nine lines, one event.
+
+- **Impact.** A single drop at formation ([TD-65](#td-65) is the mechanism) does not degrade one message — it removes a node from the cluster while leaving it in the load balancer. The node serves reads and writes from state that stopped advancing, and nothing can correct it because every peer has already forgotten it.
+- **Fix direction, for its own PR.** (1) `evictSelf` calls the shutdown path directly instead of relying on a broadcast it cannot receive; (2) resync `lastMessageId` or mark the subscriber `EVICTED` so one drop is one event; (3) — a design decision, not a bug fix — prefer requesting a fresh full state over leaving the cluster.
+- **Open detail, not invented here:** the reports stop after 5 s and this log does not say why. Worth establishing before assuming the window is bounded.
+- **The generalisable part:** *a broadcast is not a way to tell yourself something.* The self-eviction path was written as a message, and the one subscriber that had to act on it is the one that could never receive it.

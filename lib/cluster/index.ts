@@ -19,6 +19,12 @@
  * limitations under the License.
  */
 
-"use strict";
+import ClusterNode from "./node";
 
-module.exports = require("./node");
+/**
+ * `lib/cluster` is the node itself: this barrel keeps the CommonJS shape the
+ * package has always exported (`module.exports = ClusterNode`), which is why it
+ * is an `export =` and not a default export — `bin/` and plugins `require()`
+ * this path directly.
+ */
+export = ClusterNode;

@@ -1,6 +1,6 @@
 # Step 11 — Sprint 8: `lib/cluster`, the last conversion sprint
 
-**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) ✅ · J1 [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -39,7 +39,7 @@ Conversions and spec efforts stay in **separate PRs** — that is [step 09](09-s
 | # | Content | Lines | Why this grouping |
 |---|---|---:|---|
 | **J0** ✅ | Spec effort: `command.js` (41.5% → **98.8%**) and `workers/IDCardRenewer.js` (73.1% → **85.4%**) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, then J3 converts them with the gate already green. **Not "in JS" for both** — see *What J0 found about its own premise* below. |
-| **J1** | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. |
+| **J1** ✅ | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. **It also produced [TD-65](../type-debt-register.md#td-65)** — see *What J1 found* below. |
 | **J2** | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. |
 | **J3** | `node.js` + the two files J0 covered | 1 640 | `node.js` is the membership logic and the largest file in the sprint. |
 | **J4** | Adoption sweep: `state.ts`, `idCardHandler.ts` and whatever J1–J3 left, into `strict-adopted.txt` | — | 11 known errors on the two existing TS files, plus 4 of [TD-62](../type-debt-register.md#td-62)'s `null` declarations in `idCardHandler.ts`. |
@@ -98,3 +98,69 @@ It `require()`s `lib/service/cache/redis.ts`. That is [TD-49](../type-debt-regis
 [TD-63](../type-debt-register.md#td-63) ([#2770](https://github.com/kuzzleio/kuzzle/issues/2770)): `IDCardRenewer` reports a redis connection failure to `this.parentPort`, which nothing ever assigns — the `worker_threads` API in a file spawned with `fork()`, where every other line uses `process.send`. The node is still evicted, by the parent's `close` handler, but with *"ID Card renewer worker closed unexpectedly"* instead of the redis error. Pinned by the spec, filed, and left for its own PR.
 
 The tell was in the old spec: it set `idCardRenewer.parentPort = { postMessage: sinon.stub() }` by hand, exactly as `http.test.js` set `httpWs.maxFormFileSize = 2` for [TD-52](../type-debt-register.md#td-52).
+
+---
+
+## What J1 found
+
+### `index.js` and `publisher.js` convert without a behaviour change
+
+Both become `export =`, which preserves the CommonJS shape the package has always exported: `require("lib/cluster")` is still the `ClusterNode` class, `require("lib/cluster/publisher")` still `ClusterPublisher`. `bin/` and plugins `require()` these paths directly, so a default export would have been a breaking change disguised as a conversion. Verified against the build, not only the types.
+
+The `js` ratchet drops **11 → 9**; no other counter moves; mocha stays at **3058** and vitest at **233**, the same numbers `2-dev` produces — the conversion adds and loses no test.
+
+**Strict:** `index.ts` is adopted. `publisher.ts` leaves **2**, and both are the same kind:
+
+| Line | Error | Reachable? |
+|---|---|---|
+| `send()`'s `this.protoroot.lookupType` | `TS2531: Object is possibly 'null'` | No — `init()` assigns `socket` then awaits `protobuf.load`, so the window exists, but `node.init()` awaits `publisher.init()` before any event that can call `send()` is registered. |
+| `bufferSend()`'s `this.socket.send` | `TS2531: Object is possibly 'null'` | No — `dispose()` waits for `state === READY`, i.e. for the buffer to drain, before nulling the socket. |
+
+Both express the same unstated fact: `socket` and `protoroot` are assigned together and only `init()` may do it. They become *checkable* rather than asserted in **J3**, when `node.js` is converted and the call order is expressed in types — so they are reported here rather than silenced with a `!`.
+
+Two errors were fixed rather than reported: `noUncheckedIndexedAccess` on `bufferSend`'s index loop, replaced by a `for…of` over the same local snapshot (`_buffer` is never mutated in place — `this.buffer` is reassigned to a new array).
+
+**And a JSDoc type was wrong**, which is [step 09](09-sprint-6-core-ii.md)'s lesson arriving on schedule: `bufferSend`'s `@param {Buffer} data` is protobuf's `finish()` output, a `Uint8Array`. It had said `Buffer` for as long as the file was JavaScript, and nothing could contradict it.
+
+### TD-65 — the risk section said to look at `publisher.js`, and looking at it found the mechanism
+
+This step's *Risks* said: *one node's publisher drops exactly one message at formation, and every node that reads it self-evicts — look at `publisher.js` as a file, not at one node's config.* Converting it made the reason legible, and it is not in `publisher.js` at all: it is in **which socket carries which fact**.
+
+The publisher binds `PUB` on `ports.sync`; `command.js` binds on `ports.command`. `node.js`'s `handshake()` subscribes on the **sync** channel (step 1), then reads each node's `lastMessageId` over the **command** channel (step 2), then tells the subscriber to resume from it (step 4). ZeroMQ registers a subscription by sending it to the publisher, which does the filtering — so until it arrives, the remote `PUB` **silently drops** what it publishes. Nothing orders that arrival before the snapshot: they travel on different sockets.
+
+Every message published between the snapshot and the subscription registering is therefore lost, and the subscriber has been told to expect the first of them. One heartbeat is usually all that fits in the window, which is why the count is always **1**, why any node can play the culprit, and why it is four-for-four on ES 8 in one run and absent in the next.
+
+Filed as [TD-65](../type-debt-register.md#td-65) ([#2773](https://github.com/kuzzleio/kuzzle/issues/2773)), **not fixed here** — the fix changes cluster formation and gets its own PR. [TD-33](../type-debt-register.md#td-33)'s remaining half now has a named mechanism and an experiment that would confirm it.
+
+### TD-66 — the DoD reminder was blind in the state it is run in
+
+[TD-61](../type-debt-register.md#td-61)'s strict-count reminder printed `[OK] no .js -> .ts conversion in this branch` for this very slice, because it diffs `"$base_ref"...HEAD` — committed history only — while the coverage reminder ten lines above it unions the working tree and the index too. Committing the same tree made it fire correctly. [TD-66](../type-debt-register.md#td-66) ([#2774](https://github.com/kuzzleio/kuzzle/issues/2774)); [TD-60](../type-debt-register.md#td-60) was this same script reading the wrong base, this is it reading the wrong range.
+
+### TD-67 — the CI failure on J1's own PR was the evidence TD-65 needed
+
+`Functional tests (http, 24, 8)` failed on this PR, and the log is the first in nine TD-33 occurrences to connect the lost message to the failing assertion without inference:
+
+```
+14:01:46.507  node_1  Successfully completed the handshake with node knode-solid-peacock-99998
+14:01:47.276  node_2  ERROR Node out-of-sync: 1 messages lost from node knode-solid-peacock-99998
+14:01:47.280  node_1  WARN  Node "knode-wrathful-potamoi-85816" evicted. Reason: …1 messages lost…
+14:02:19              ✖ Given an existing collection "nyc-open-data":"yellow-taxi"
+                        Error: Index nyc-open-data does not exist
+```
+
+`kuzzle_node_2` **is** `knode-wrathful-potamoi-85816`, one message lost **0.8 s after a handshake** — the window [TD-65](../type-debt-register.md#td-65) describes.
+
+And it **never shut down**: evicted from every peer at 14:01:47, it answered HTTP behind nginx for the next 33 seconds from state that had stopped advancing. `evictSelf` broadcasts `NodeEvicted` naming itself, and a ZeroMQ `PUB` does not loop back, so the `global.kuzzle.shutdown()` branch written for that case is unreachable by the one node that needs it. The gap is never resynced either, so the same drop re-reported nine times in five seconds.
+
+**It reproduced on the next run, on the same variant with different actors** — node_1 as victim, `knode-jaded-prokofiev-65530` as source — which rules out a property of one container, and the second log is the sharper one: the gap is reported **2 ms before** the handshake with that node is declared successful. `node.js` calls `subscriber.sync(...)` **without awaiting it**, so the gap is found inside `sync()`'s buffer replay, against messages the subscriber had already captured. The earliest buffered message is `N+2` where the snapshot said `N` — [TD-65](../type-debt-register.md#td-65)'s prediction, observed. Two failures, both on `http, 24, 8`, every other ES 8 variant green: worth checking next occurrence rather than concluding from two.
+
+Filed as [TD-67](../type-debt-register.md#td-67) ([#2776](https://github.com/kuzzleio/kuzzle/issues/2776)). **Neither is caused by this PR** — the conversion changes no runtime behaviour, and both files are byte-equivalent in what they execute. What J1 changed is that the layer is now readable.
+
+### What SonarCloud charged for the rename
+
+Two major violations, both rules that can only fire on TypeScript, on code the conversion did not write — the *Risks* section predicted this for `node.js` and it arrived on a 386-line file first:
+
+- `S2933` — `node` is assigned once in the constructor → `readonly`.
+- `S6661` — `Object.assign({ messageId }, data)` → `{ messageId, ...data }`. Equivalent: both copy `data`'s own enumerable properties over a fresh literal in the same order.
+
+Worth carrying into J2 and J3: **budget for TS-only rules on every converted file**, not only for the pre-existing complexity smells the risk section named.
