@@ -21,6 +21,7 @@
 
 import type { JSONObject } from "kuzzle-sdk";
 
+import type { Logger } from "../kuzzle/Logger";
 import type PluginManifest from "../core/plugin/pluginManifest";
 import type { PluginContext } from "../core/plugin/pluginContext";
 import type {
@@ -44,6 +45,13 @@ export interface PluginInstance {
   [member: string]: unknown;
 
   init?: (config: JSONObject, context: PluginContext) => unknown;
+  /**
+   * An application's own logger (`Backend.log`). Only an application has one —
+   * a plain plugin does not — and it lives here, on the instance, not on the
+   * `Plugin` wrapper: the shutdown path read it off the wrapper for years and
+   * silently flushed nothing (TD-51).
+   */
+  log?: Logger;
   authenticators?: JSONObject;
   version?: string;
   _manifest?: PluginManifest;

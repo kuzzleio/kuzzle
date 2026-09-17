@@ -297,6 +297,31 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         Bluebird.delay.restore();
       }
     });
+
+    it("should flush the application logger", async () => {
+      sinon.stub(process, "exit");
+
+      const flush = sinon.stub().resolves();
+
+      // `log` lives on the application instance; `pluginsManager.application`
+      // is the Plugin wrapper around it, and the shutdown used to read `log`
+      // off the wrapper, which never has one (TD-51).
+      kuzzle.pluginsManager.application = new Plugin(
+        { init: sinon.stub(), log: { flush } },
+        { application: true, name: "application" },
+      );
+
+      kuzzle.funnel.remainingRequests = 0;
+
+      try {
+        await kuzzle.shutdown();
+
+        should(flush).calledOnce();
+        should(kuzzle.log.flush).calledOnce();
+      } finally {
+        process.exit.restore();
+      }
+    });
   });
 
   describe("#install", () => {

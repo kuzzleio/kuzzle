@@ -478,6 +478,31 @@ describe("core/network/protocols/http", () => {
       httpWs.server._httpResponse._onData(payload, true);
     });
 
+    it("should give the connection the request headers", async () => {
+      sinon.stub(httpWs, "httpProcessRequest");
+
+      httpWs.server._httpOnMessage("get", "/", "", {
+        "user-agent": "curl/8.0.1",
+        "x-kuzzle-volatile": "{}",
+      });
+
+      await httpWs.server._httpResponse._onData(Buffer.from(""), true);
+
+      // `ClientConnection`'s doc says an http connection receives the request
+      // headers, and it never did: the JavaScript read `request.headers` off a
+      // uWS `HttpRequest`, which has no such property (TD-52).
+      should(httpWs.httpProcessRequest)
+        .calledOnce()
+        .calledWithMatch(httpWs.server._httpResponse, {
+          connection: {
+            headers: {
+              "user-agent": "curl/8.0.1",
+              "x-kuzzle-volatile": "{}",
+            },
+          },
+        });
+    });
+
     it("should be able to handle data submitted in chunks", async () => {
       sinon.stub(httpWs, "httpProcessRequest");
 
@@ -569,7 +594,11 @@ describe("core/network/protocols/http", () => {
     });
 
     it("should reject multipart/form-data requests with too large files", async () => {
-      httpWs.maxFormFileSize = 2;
+      // Configured, not set on the instance: `maxFormFileSize` used to be read
+      // off a property production never assigned, so the comparison was
+      // `byteLength > undefined` and the limit was never enforced (TD-52).
+      entryPoint.config.protocols.http.maxFormFileSize = 2;
+      await httpWs.init(entryPoint);
 
       httpWs.server._httpOnMessage("get", "/", "", {
         "content-type": "multipart/form-data; boundary=foo",

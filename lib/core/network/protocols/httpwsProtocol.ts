@@ -121,18 +121,6 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
   public socketByConnectionId: Map<string, KuzzleWebSocket>;
   public logger: ReturnType<typeof global.kuzzle.log.child>;
 
-  /**
-   * NEVER ASSIGNED in production — see ADR-0001 TD-52.
-   *
-   * `httpReadData` compares a multipart part against it, so the comparison is
-   * `byteLength > undefined`, which is always false and the limit is not
-   * enforced. The configured value is parsed and validated by `lib/config`, and
-   * `parseHttpOptions` puts it in `httpConfig.opts.maxFormFileSize`; nothing
-   * copies it here. Declared, not assigned: this conversion preserves the
-   * behaviour and makes the defect visible instead of quietly fixing it.
-   */
-  public maxFormFileSize: number;
-
   constructor() {
     super("websocket");
 
@@ -549,18 +537,17 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     response: uWS.HttpResponse,
     request: uWS.HttpRequest,
   ): void {
+    // Collected once, here, and handed to both: a uWS `HttpRequest` has no
+    // `headers` property, so the JavaScript's `request.headers` was `undefined`
+    // and every HTTP connection carried `{}` — despite `ClientConnection`'s own
+    // doc promising the request headers (TD-52).
+    const headers = getRequestHeaders(request);
     const connection = new ClientConnection(
       "HTTP/1.1",
       getHttpIps(response, request),
-      // `undefined`, spelled. The JavaScript passed `request.headers`, and a
-      // uWS `HttpRequest` has no such property — its headers are only reachable
-      // through `forEach`, which is how `HttpMessage` below collects them. So
-      // an HTTP connection's `headers` has always been `{}`, despite
-      // `ClientConnection`'s own doc promising the request headers. Preserved
-      // rather than fixed: populating it is a behaviour change. See TD-52.
-      undefined,
+      headers,
     );
-    const message = new HttpMessage(connection, request);
+    const message = new HttpMessage(connection, request, headers);
 
     debugHTTP("[%s] Received HTTP request: %a", connection.id, message);
 
@@ -719,10 +706,11 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
    * Fills `message.content` from a multipart/form-data payload, file parts
    * base64-encoded and the rest read as text.
    *
-   * Returns false when a part is over `maxFormFileSize`, leaving the caller to
-   * raise the error — a boolean rather than a throw so `httpParseContent` keeps
-   * answering through its callback, and split out of it to stay under the
-   * cognitive complexity ceiling the `.js` → `.ts` rename re-scores as new code.
+   * Returns false when a part is over the configured `maxFormFileSize`, leaving
+   * the caller to raise the error — a boolean rather than a throw so
+   * `httpParseContent` keeps answering through its callback, and split out of
+   * it to stay under the cognitive complexity ceiling the `.js` → `.ts` rename
+   * re-scores as new code.
    */
   private httpParseMultipart(message: HttpMessage, content: Buffer): boolean {
     const parts = uWS.getParts(content, message.headers["content-type"]);
@@ -734,7 +722,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
     }
 
     for (const part of parts) {
-      if (part.data.byteLength > this.maxFormFileSize) {
+      if (part.data.byteLength > this.httpConfig.opts.maxFormFileSize) {
         return false;
       }
 
@@ -1358,6 +1346,17 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
  * @param {uWS.HttpRequest} request
  * @return {Array.<string>}
  */
+/**
+ * Collects a uWS request's headers, which are only reachable through `forEach`.
+ */
+function getRequestHeaders(request: uWS.HttpRequest): Record<string, string> {
+  const headers: Record<string, string> = {};
+
+  request.forEach((name, value) => (headers[name] = value));
+
+  return headers;
+}
+
 function getHttpIps(
   response: uWS.HttpResponse,
   request: uWS.HttpRequest,
