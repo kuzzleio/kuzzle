@@ -1,6 +1,6 @@
 # Step 11 — Sprint 8: `lib/cluster`, the last conversion sprint
 
-**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) ✅ · J1 [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) ✅ · J1 [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) ✅ · J2 [#2780](https://github.com/kuzzleio/kuzzle/pull/2780) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -40,7 +40,7 @@ Conversions and spec efforts stay in **separate PRs** — that is [step 09](09-s
 |---|---|---:|---|
 | **J0** ✅ | Spec effort: `command.js` (41.5% → **98.8%**) and `workers/IDCardRenewer.js` (73.1% → **85.4%**) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, then J3 converts them with the gate already green. **Not "in JS" for both** — see *What J0 found about its own premise* below. |
 | **J1** ✅ | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. **It also produced [TD-65](../type-debt-register.md#td-65)** — see *What J1 found* below. |
-| **J2** | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. |
+| **J2** ✅ | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. **Produced [TD-68](../type-debt-register.md#td-68)** and typed the wire from `sync.proto`. |
 | **J3** | `node.js` + the two files J0 covered | 1 640 | `node.js` is the membership logic and the largest file in the sprint. |
 | **J4** | Adoption sweep: `state.ts`, `idCardHandler.ts` and whatever J1–J3 left, into `strict-adopted.txt` | — | 11 known errors on the two existing TS files, plus 4 of [TD-62](../type-debt-register.md#td-62)'s `null` declarations in `idCardHandler.ts`. |
 
@@ -164,3 +164,39 @@ Two major violations, both rules that can only fire on TypeScript, on code the c
 - `S6661` — `Object.assign({ messageId }, data)` → `{ messageId, ...data }`. Equivalent: both copy `data`'s own enumerable properties over a fresh literal in the same order.
 
 Worth carrying into J2 and J3: **budget for TS-only rules on every converted file**, not only for the pre-existing complexity smells the risk section named.
+
+---
+
+## What J2 found
+
+`subscriber.js` → `subscriber.ts` (865 lines), plus a new `protobuf/syncMessages.ts` (240 lines) that mirrors `sync.proto` field for field. The `js` ratchet drops **9 → 8**; **no `any`, no cast** (both ratchets unmoved at 204 and 87); mocha **3068** (+4 specs), vitest 233.
+
+### Typing the wire from the schema, not from memory
+
+The decoded messages were the whole typing question: 24 topics, each a different shape, dispatched through one frozen handler table. Rather than invent a shape or reach for `any`, `syncMessages.ts` transcribes `sync.proto` — which is the source of truth — into one type per message plus a `SyncMessages` map from topic name to message type. The handler table is then `{ [T in SyncTopic]: (message: SyncMessages[T]) => … }`, so **a handler registered under the wrong topic stops compiling**.
+
+Two decoding details are load-bearing and now written down: a proto `uint64` arrives as a **`Long`**, not a number (`messageId`, `timestamp`), and every field the schema comments as "serialized JSON" is a **string** that its handler parses.
+
+### Three narrowings the compiler asked for, and what each was hiding
+
+| Site | What the compiler said | What it meant |
+|---|---|---|
+| `processData`'s `protoroot.lookup(topic)` | the result is any reflection object, not necessarily a message type | a topic naming a nested type reached `decoder.decode` with that method undefined — a `TypeError` thrown out of a method documented as *never throwing*, into `listen()`'s un-awaitable loop |
+| `this.handlers[topic]` | `string` cannot index the handler table | a decodable topic is not automatically one this node can apply, and there was no check |
+| `message.scope` / `message.user` | `string` is not assignable to `RealtimeScope` / `RealtimeUsers` | **[TD-68](../type-debt-register.md#td-68)** — see below |
+
+The first two now fall into the existing *unknown topic* eviction, which is what that branch already meant. Neither was reachable in practice; both were a `TypeError` waiting on a malformed peer.
+
+### TD-68 — the one that is a behaviour change
+
+`sync.proto` types a notification's `scope` and `user` as plain strings; `RealtimeScope` and `RealtimeUsers` are closed unions. The handlers passed the wire value straight into the notification, and nothing checked. The conversion could not compile without either validating or lying in the type, so it validates: an out-of-union value is treated as the malformed message it is and the sender is evicted.
+
+**The tell was in the spec, for the third time in this sprint.** It fed `scope: "scope"` — never a member of anything — and asserted the notification was dispatched. And the neighbouring `handleUserNotification` spec was a copy of the document one, carrying `scope`, `requestId` and `rooms`, which that handler never reads, and neither `user` nor `room`, which it does. Both are rewritten, with a spec each pinning the rejection.
+
+### Strict count
+
+**14** on `subscriber.ts`, 0 on `syncMessages.ts`. Two were fixed rather than reported (`confirmSubscription` and `timer`, both "assigned in a callback the compiler cannot see run"), taking it from 16. The rest group into three:
+
+- **`socket` / `protoroot` possibly null** (4) — the same lifecycle fact as `publisher.ts`'s two, and checkable for the same reason in J3.
+- **`messageId` possibly undefined** (4) — honest: `DecodedMessage` is `Partial<SyncMessage>` precisely because establishing that the field is there is `validateMessage`'s job. Closing it wants an assertion function, not a type.
+- **the dispatch's `this` context, and `catch (e)`'s `unknown`** (6) — the handler table is a union of function types and `.call` cannot correlate the topic with its message without a `switch`. That is the one real restructuring this file still wants, and it belongs to J4's adoption sweep rather than to a conversion.

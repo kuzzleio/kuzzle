@@ -634,52 +634,92 @@ describe("ClusterSubscriber", () => {
     });
 
     describe("#handleDocumentNotification", () => {
-      it("should handle the message", async () => {
-        const message = {
-          scope: "scope",
-          action: "create",
-          result: '["result"]',
-          status: "status",
-          requestId: "requestId",
-          timestamp: new Long(0, 0, true),
-          index: "index",
-          collection: "collection",
-          controller: "controller",
-          protocol: "protocol",
-          volatile: '["volatile"]',
-          rooms: "rooms",
-        };
+      // `scope` used to read "scope" here — a value that has never been a member
+      // of RealtimeScope. Nothing on either side of the wire checked, so the
+      // spec passed while describing a notification the rest of Kuzzle cannot
+      // represent. TD-68 (#2779).
+      const documentMessage = () => ({
+        scope: "in",
+        action: "create",
+        result: '["result"]',
+        status: 200,
+        requestId: "requestId",
+        timestamp: new Long(0, 0, true),
+        index: "index",
+        collection: "collection",
+        controller: "controller",
+        protocol: "protocol",
+        volatile: '["volatile"]',
+        rooms: ["rooms"],
+      });
 
-        await subscriber.handleDocumentNotification(message);
+      it("should handle the message", async () => {
+        await subscriber.handleDocumentNotification(documentMessage());
 
         // @todo check that the method is called with the notification
         // when the Notification.from method is reay
         should(kuzzle.ask).be.called();
       });
+
+      it("should evict the sender of an unknown scope rather than apply it", async () => {
+        const message = { ...documentMessage(), scope: "sideways" };
+
+        await subscriber.handleDocumentNotification(message);
+
+        should(kuzzle.ask).not.be.called();
+        should(localNode.evictNode).be.calledOnce();
+
+        const [nodeId, options] = localNode.evictNode.firstCall.args;
+
+        should(nodeId).be.eql(remoteNodeId);
+        should(options.broadcast).be.true();
+        should(options.reason).match(
+          /unknown document notification scope "sideways"/,
+        );
+      });
     });
 
     describe("#handleUserNotification", () => {
-      it("should handle the message", async () => {
-        const message = {
-          scope: "scope",
-          action: "create",
-          result: '["result"]',
-          status: "status",
-          requestId: "requestId",
-          timestamp: new Long(0, 0, true),
-          index: "index",
-          collection: "collection",
-          controller: "controller",
-          protocol: "protocol",
-          volatile: '["volatile"]',
-          rooms: "rooms",
-        };
+      // This message used to be a copy of the document one: it carried `scope`,
+      // `requestId` and `rooms`, which this handler never reads, and neither
+      // `user` nor `room`, which it does. It now describes a user notification.
+      const userMessage = () => ({
+        user: "in",
+        room: "room",
+        action: "create",
+        result: '["result"]',
+        status: 200,
+        timestamp: new Long(0, 0, true),
+        index: "index",
+        collection: "collection",
+        controller: "controller",
+        protocol: "protocol",
+        volatile: '["volatile"]',
+      });
 
-        await subscriber.handleUserNotification(message);
+      it("should handle the message", async () => {
+        await subscriber.handleUserNotification(userMessage());
 
         // @todo check that the method is called with the notification
         // when the Notification.from method is reay
         should(kuzzle.ask).be.called();
+      });
+
+      it("should evict the sender of an unknown user scope rather than apply it", async () => {
+        const message = { ...userMessage(), user: "sideways" };
+
+        await subscriber.handleUserNotification(message);
+
+        should(kuzzle.ask).not.be.called();
+        should(localNode.evictNode).be.calledOnce();
+
+        const [nodeId, options] = localNode.evictNode.firstCall.args;
+
+        should(nodeId).be.eql(remoteNodeId);
+        should(options.broadcast).be.true();
+        should(options.reason).match(
+          /unknown user notification scope "sideways"/,
+        );
       });
     });
 
