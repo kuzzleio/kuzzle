@@ -160,11 +160,7 @@ describe("/lib/kuzzle/vault", () => {
     });
 
     it("should use the legacy AES-256-CBC cipher when the new algorithm is not opted in", () => {
-      vault.load(
-        "the spoon does not exist",
-        "config/secrets.enc.json",
-        false,
-      );
+      vault.load("the spoon does not exist", "config/secrets.enc.json", false);
 
       should(VaultStub).be.calledWith("the spoon does not exist", {
         cipher: "aes-256-cbc",

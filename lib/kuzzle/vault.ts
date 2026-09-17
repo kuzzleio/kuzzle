@@ -35,7 +35,11 @@ import isEmpty from "lodash/isEmpty";
 // (TD-57, #2760).
 let ENV_VAULT_KEY: string | undefined;
 
-function load(vaultKey?: string, secretsFile?: string, useNewAlgorithm: boolean = false): Vault {
+function load(
+  vaultKey?: string,
+  secretsFile?: string,
+  useNewAlgorithm: boolean = false,
+): Vault {
   // Using KaaF kuzzle is an npm package and is located under node_modules folder
   // We need to get back to root folder of the project to get the secret file
   const defaultEncryptedSecretsFile = __dirname.endsWith(
