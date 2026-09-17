@@ -75,6 +75,7 @@
 | [TD-64](#td-64) | 🟠 med | Enforcement | The `tests/` mirror convention resolved `.ts` targets only, so a vitest spec on a not-yet-converted file counted for nothing — [#2771](https://github.com/kuzzleio/kuzzle/issues/2771) | XS | ✅ |
 | [TD-65](#td-65) | 🔴 high | Correctness | A joining node resumes from a message id snapshotted on the **command** channel while its **sync** subscription is still propagating: messages published in that window are dropped by ZeroMQ and read as a desync — the mechanism [TD-33](#td-33) has been chasing — [#2773](https://github.com/kuzzleio/kuzzle/issues/2773) | M | 🔴 |
 | [TD-66](#td-66) | 🟡 low | Enforcement | [TD-61](#td-61)'s strict-count reminder reads committed history only, so it prints *"no conversion in this branch"* in the state a conversion is usually checked in — [#2774](https://github.com/kuzzleio/kuzzle/issues/2774) | XS | 🔴 |
+| [TD-67](#td-67) | 🔴 high | Correctness | `evictSelf` broadcasts the node's own eviction and never receives it, so the node keeps serving traffic with state that stopped advancing; the gap is also never resynced, so one drop reports forever — [#2776](https://github.com/kuzzleio/kuzzle/issues/2776) | S | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -494,7 +495,7 @@ The DoD and the 2026-09-09 register entry state that all 4 remaining `bin/` `.js
 ### TD-33
 **A flaky functional variant blocks unrelated PRs** · 🟠 medium · `.ci/scripts/run-test-cluster.sh`, `bin/wait-kuzzle`
 
-> **Update 2026-09-17 (sprint 8 J1).** The half of this entry that is *not* a harness problem — nodes disagreeing at cluster formation, one message lost, whoever reads the gap self-evicting — now has a named mechanism and its own entry: **[TD-65](#td-65)** ([#2773](https://github.com/kuzzleio/kuzzle/issues/2773)). Read that first; what stays here is the CI harness half, whose three proposals are all done.
+> **Update 2026-09-17 (sprint 8 J1).** The half of this entry that is *not* a harness problem is now split into two entries, and **both should be read before this one**: **[TD-65](#td-65)** ([#2773](https://github.com/kuzzleio/kuzzle/issues/2773)) is *why a message is lost* at formation, and **[TD-67](#td-67)** ([#2776](https://github.com/kuzzleio/kuzzle/issues/2776)) is *why one lost message costs a whole run* — the node that detects the gap broadcasts its own eviction, never receives it, and keeps serving traffic behind nginx with state that stopped advancing. TD-67 carries the ninth occurrence, the first whose log ties the lost message to the failing assertion end to end. What stays here is the CI harness half, whose three proposals are all done.
 
 The 30-variant functional matrix is `fail-fast`, so **one flake cancels the other 29 jobs** and the PR must be re-run whole. Four occurrences: [#2696](https://github.com/kuzzleio/kuzzle/pull/2696) (sprint 5 G2), [#2708](https://github.com/kuzzleio/kuzzle/pull/2708) — a **docs-only** PR — [#2712](https://github.com/kuzzleio/kuzzle/pull/2712) and [#2718](https://github.com/kuzzleio/kuzzle/pull/2718). All three on 2026-09-10 passed on re-run with no code change.
 
@@ -1308,3 +1309,30 @@ The tell is that the *neighbouring* reminder in the same script, ten lines above
 
 - **Fix:** give the conversion detector the same three-source union the coverage reminder uses.
 - **The generalisable part:** *a check that answers "is this ready?" must read the state it is asked about, not the state it was easiest to diff.* [TD-60](#td-60) was the same script reading the wrong **base**; this is the same script reading the wrong **range**.
+
+---
+
+### TD-67
+**A node survives its own eviction and keeps serving traffic** · 🔴 high · `lib/cluster/node.js`, `lib/cluster/subscriber.js`
+
+Found in CI on [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) (`Functional tests (http, 24, 8)`, run 35230334541). It is [TD-33](#td-33)'s **ninth** occurrence and the first whose log ties the lost message to the failing assertion end to end — and it names a second defect, downstream of [TD-65](#td-65).
+
+```
+14:01:46.507  node_1  Successfully completed the handshake with node knode-solid-peacock-99998
+14:01:47.276  node_2  ERROR Node out-of-sync: 1 messages lost from node knode-solid-peacock-99998
+14:01:47.280  node_1  WARN  Node "knode-wrathful-potamoi-85816" evicted. Reason: …1 messages lost…
+   … node_2 repeats the same ERROR 9 times, through 14:01:52.422 …
+14:02:19              Given an existing collection "nyc-open-data":"yellow-taxi"
+                      ✖ Error: Index nyc-open-data does not exist
+```
+
+`kuzzle_node_2` **is** `knode-wrathful-potamoi-85816`, and it **never shut down**. Evicted from every peer's view at 14:01:47, it answered HTTP behind nginx for the remaining 33 seconds with state that had stopped tracking the cluster. The failing step is the first one nginx happened to route to it after `loadFixtures` created the index elsewhere.
+
+**Why it survives.** `evictSelf` logs the reason and calls `publisher.sendNodeEvicted(this.nodeId, this.nodeId, reason)`. Every *other* node receives that and takes `handleNodeEviction`'s `message.nodeId !== this.localNode.nodeId` branch, dropping it. The broadcasting node never receives its own publication — a ZeroMQ `PUB` does not loop back — so the `global.kuzzle.shutdown()` branch written for exactly this case is unreachable by the only node that needs it.
+
+**Why one message becomes nine.** `subscriber.js`'s gap branch calls `evictSelf` and returns `false` without resynchronising `lastMessageId`. Advanced by one per message, it stays permanently one behind, so every subsequent message re-trips the check and re-broadcasts. Occurrence counts read off these lines overcount: nine lines, one event.
+
+- **Impact.** A single drop at formation ([TD-65](#td-65) is the mechanism) does not degrade one message — it removes a node from the cluster while leaving it in the load balancer. The node serves reads and writes from state that stopped advancing, and nothing can correct it because every peer has already forgotten it.
+- **Fix direction, for its own PR.** (1) `evictSelf` calls the shutdown path directly instead of relying on a broadcast it cannot receive; (2) resync `lastMessageId` or mark the subscriber `EVICTED` so one drop is one event; (3) — a design decision, not a bug fix — prefer requesting a fresh full state over leaving the cluster.
+- **Open detail, not invented here:** the reports stop after 5 s and this log does not say why. Worth establishing before assuming the window is bounded.
+- **The generalisable part:** *a broadcast is not a way to tell yourself something.* The self-eviction path was written as a message, and the one subscriber that had to act on it is the one that could never receive it.

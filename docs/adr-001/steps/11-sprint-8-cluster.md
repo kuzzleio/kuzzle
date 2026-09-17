@@ -135,3 +135,30 @@ Filed as [TD-65](../type-debt-register.md#td-65) ([#2773](https://github.com/kuz
 ### TD-66 — the DoD reminder was blind in the state it is run in
 
 [TD-61](../type-debt-register.md#td-61)'s strict-count reminder printed `[OK] no .js -> .ts conversion in this branch` for this very slice, because it diffs `"$base_ref"...HEAD` — committed history only — while the coverage reminder ten lines above it unions the working tree and the index too. Committing the same tree made it fire correctly. [TD-66](../type-debt-register.md#td-66) ([#2774](https://github.com/kuzzleio/kuzzle/issues/2774)); [TD-60](../type-debt-register.md#td-60) was this same script reading the wrong base, this is it reading the wrong range.
+
+### TD-67 — the CI failure on J1's own PR was the evidence TD-65 needed
+
+`Functional tests (http, 24, 8)` failed on this PR, and the log is the first in nine TD-33 occurrences to connect the lost message to the failing assertion without inference:
+
+```
+14:01:46.507  node_1  Successfully completed the handshake with node knode-solid-peacock-99998
+14:01:47.276  node_2  ERROR Node out-of-sync: 1 messages lost from node knode-solid-peacock-99998
+14:01:47.280  node_1  WARN  Node "knode-wrathful-potamoi-85816" evicted. Reason: …1 messages lost…
+14:02:19              ✖ Given an existing collection "nyc-open-data":"yellow-taxi"
+                        Error: Index nyc-open-data does not exist
+```
+
+`kuzzle_node_2` **is** `knode-wrathful-potamoi-85816`, one message lost **0.8 s after a handshake** — the window [TD-65](../type-debt-register.md#td-65) describes.
+
+And it **never shut down**: evicted from every peer at 14:01:47, it answered HTTP behind nginx for the next 33 seconds from state that had stopped advancing. `evictSelf` broadcasts `NodeEvicted` naming itself, and a ZeroMQ `PUB` does not loop back, so the `global.kuzzle.shutdown()` branch written for that case is unreachable by the one node that needs it. The gap is never resynced either, so the same drop re-reported nine times in five seconds.
+
+Filed as [TD-67](../type-debt-register.md#td-67) ([#2776](https://github.com/kuzzleio/kuzzle/issues/2776)). **Neither is caused by this PR** — the conversion changes no runtime behaviour, and both files are byte-equivalent in what they execute. What J1 changed is that the layer is now readable.
+
+### What SonarCloud charged for the rename
+
+Two major violations, both rules that can only fire on TypeScript, on code the conversion did not write — the *Risks* section predicted this for `node.js` and it arrived on a 386-line file first:
+
+- `S2933` — `node` is assigned once in the constructor → `readonly`.
+- `S6661` — `Object.assign({ messageId }, data)` → `{ messageId, ...data }`. Equivalent: both copy `data`'s own enumerable properties over a fresh literal in the same order.
+
+Worth carrying into J2 and J3: **budget for TS-only rules on every converted file**, not only for the pre-existing complexity smells the risk section named.
