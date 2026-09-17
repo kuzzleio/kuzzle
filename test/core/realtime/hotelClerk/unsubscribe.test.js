@@ -102,6 +102,22 @@ describe("Test: hotelClerk.unsubscribe", () => {
       });
   });
 
+  it("should still remove the room when a deprecated room:remove listener throws", async () => {
+    // `room:remove` is a deprecated pipe: a plugin listening on it must not be
+    // able to keep a room alive by failing.
+    kuzzle.tokenManager.getKuidFromConnection.returns("Umraniye");
+    kuzzle.pipe.withArgs("room:remove").rejects(new Error("plugin failed"));
+    hotelClerk.subscriptions.set(
+      connectionId,
+      new ConnectionRooms(new Map([[roomId, null]])),
+    );
+
+    await hotelClerk.unsubscribe(connectionId, roomId);
+
+    should(hotelClerk.roomsCount).be.eql(0);
+    should(hotelClerk.rooms).be.empty();
+  });
+
   it("should remove the room from the customer list and remove the connection entry if empty", async () => {
     kuzzle.tokenManager.getKuidFromConnection.returns("Umraniye");
     hotelClerk.subscriptions.set(
