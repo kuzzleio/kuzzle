@@ -443,13 +443,11 @@ function checkActionDefinition(
   // nullish, so the fallback was dead code. It happens to be equivalent
   // today only because the packaged default is `false` — it would not be if
   // that default ever became `true`.
-  if (
-    !(
-      global.app.config.content.controllers?.definition
-        ?.allowAdditionalActionProperties ??
-      defaultConfig.controllers.definition.allowAdditionalActionProperties
-    )
-  ) {
+  if (!(
+    global.app.config.content.controllers?.definition
+      ?.allowAdditionalActionProperties ??
+    defaultConfig.controllers.definition.allowAdditionalActionProperties
+  )) {
     const actionProperties = Object.keys(actionDefinition).filter(
       (prop) => prop !== "handler" && prop !== "http",
     );

@@ -43,8 +43,7 @@ type RedisClient = IORedis | Cluster;
 type DynamicCommand = (...args: unknown[]) => Promise<unknown>;
 
 type RedisServiceConfig =
-  | InternalCacheConfiguration
-  | PublicCacheRedisConfiguration;
+  InternalCacheConfiguration | PublicCacheRedisConfiguration;
 
 interface RedisInfo {
   memoryPeak: string;

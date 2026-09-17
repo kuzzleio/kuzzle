@@ -173,12 +173,10 @@ export class BackendImport extends ApplicationManager {
     } else if (!isPlainObject(users)) {
       throw assertionError.get("invalid_type", "users", "object");
     } else if (options.onExistingUsers) {
-      if (
-        !(
-          options.onExistingUsers === "overwrite" ||
-          options.onExistingUsers === "skip"
-        )
-      ) {
+      if (!(
+        options.onExistingUsers === "overwrite" ||
+        options.onExistingUsers === "skip"
+      )) {
         throw assertionError.get("invalid_type", "onExistingUsers", [
           "overwrite",
           "skip",
