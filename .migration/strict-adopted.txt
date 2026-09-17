@@ -57,6 +57,7 @@ lib/api/openapi/OpenApiManager.ts
 lib/api/openapi/index.ts
 lib/api/openapi/openApiGenerator.ts
 lib/api/request/index.ts
+lib/cluster/index.ts
 lib/config/default.config.ts
 lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts
