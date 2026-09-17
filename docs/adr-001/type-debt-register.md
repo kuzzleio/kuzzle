@@ -71,6 +71,8 @@
 | [TD-60](#td-60) | 🟡 low | Enforcement | `pr-preflight.sh` diffs against `master`, 278 commits behind `2-dev`: both of its reminders saw ~330 changed files on every branch, so neither could fire meaningfully | XS | ✅ |
 | [TD-61](#td-61) | 🟡 low | Enforcement | [TD-54](#td-54)'s DoD lived only in the decision log: nothing a conversion author reads carried the strict-count rule, and no tool printed the number | XS | ✅ |
 | [TD-62](#td-62) | 🟡 low | Correctness | 56 `x: T = null` declarations state a type the constructor contradicts — [TD-56](#td-56)'s gate covers the `undefined` spelling, not this one | M | ⬜ |
+| [TD-63](#td-63) | 🟠 med | Correctness | `IDCardRenewer` reports a redis failure to `this.parentPort`, which it never has: the node is evicted without the reason — [#2770](https://github.com/kuzzleio/kuzzle/issues/2770) | XS | 🔴 |
+| [TD-64](#td-64) | 🟠 med | Enforcement | The `tests/` mirror convention resolved `.ts` targets only, so a vitest spec on a not-yet-converted file counted for nothing — [#2771](https://github.com/kuzzleio/kuzzle/issues/2771) | XS | ✅ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1222,3 +1224,37 @@ Almost all are the JavaScript idiom a conversion carried over verbatim — `this
 - **Why not fold it into TD-56's gate.** A gate that fails on 56 pre-existing sites is a gate nobody can turn on. This one needs a pass of its own, and then the gate widens to `Type 'null'` in the same breath — one line in `check_lies()`.
 - **Sequencing:** `lib/cluster`'s four land naturally in **sprint 8**, under the strict-count DoD. The rest is a standalone PR.
 - **The generalisable part:** *the narrow version of a gate is the one that ships.* [TD-56](#td-56) could have been filed as "no lying declarations" and stalled on 59 sites; filed as "no `undefined` assigned to a non-nullable", it cost three fixes and is live today, and widening it later is one regex.
+
+---
+
+### TD-63
+**`IDCardRenewer` reports a redis failure to a port it never has** · 🟠 med · `lib/cluster/workers/IDCardRenewer.js`
+
+```js
+this.parentPort.postMessage({
+  error: `Failed to connect to redis, could not refresh ID card: ${error.message}`,
+});
+```
+
+`this.parentPort` is never assigned anywhere in `lib/`, and it is the wrong API rather than a missing assignment: the worker is spawned with `child_process.fork()` (`idCardHandler.ts:233`) and talks over `process.send`, which every other line of the file does — including the two error paths a few lines below. `parentPort` belongs to `worker_threads`, left behind by an earlier implementation.
+
+The parent turns a worker's `{ error }` into `evictSelf(message.error)`. So when redis is unreachable at worker startup, the `catch` logs, then raises `TypeError: Cannot read properties of undefined`, the rejection escapes an unawaited `async` handler, the worker dies, and `idCardHandler`'s `close` handler evicts the node with the generic *"ID Card renewer worker closed unexpectedly"*. **The node still leaves the cluster; it leaves without the reason** — a redis outage and a worker crash produce the same line.
+
+- **Fix:** `process.send({ error })`, matching the other two paths. A **behaviour change**, so it is not folded into the spec PR that found it; J0's spec pins the current behaviour with a comment naming this entry.
+- **Why it outranks its severity.** It is the third diagnostic defect found in this layer in three weeks, after [TD-58](#td-58) and [TD-59](#td-59), and [TD-33](#td-33)'s remaining half is diagnosed by reading eviction reasons out of CI logs.
+- **The generalisable part:** *a spec that assigns a property before calling the code is either describing production or replacing it, and only the source can say which.* The existing spec set `idCardRenewer.parentPort = { postMessage: sinon.stub() }` by hand — the same tell as `httpWs.maxFormFileSize = 2` in [TD-52](#td-52), sitting just as long.
+
+---
+
+### TD-64
+**A vitest spec on a not-yet-converted file was measured by neither runner** · 🟠 med · `.ci/scripts/prepare-coverage.ts`
+
+Pass 2 gives each file one owning runner, and resolved a spec's target through the `tests/` mirror convention — `tests/<path>.test.ts` → `lib/<path>.ts` or `lib/<path>/index.ts`. **`.js` was not tried.**
+
+So `tests/cluster/command.test.ts`, which has existed and passed since before sprint 8 opened, resolved to nothing: `command.js` was never handed to the vitest report, its mocha record stood, and the three tests in that spec counted for **zero** on the gate.
+
+This is not an edge case — it is the shape [step 11](steps/11-sprint-8-cluster.md)'s **J0** is built on. A file under the coverage threshold has its specs written *before* the rename, so the conversion does not fail CI on a number that has nothing to do with it. Under the old resolution that sequencing could not work: the specs did not count until the rename, which is the moment they were supposed to make safe.
+
+- **Fix:** try `lib/<path>.js` and `lib/<path>/index.js` too. Blast radius is exactly one file today (`command.js`); the other two unresolved specs — `tests/ci/prepareCoverage.test.ts` and `tests/api/controllers/securityController/apiKeys.test.ts` — have no `lib/` target by design.
+- **What it was hiding.** `command.js` read **41.5%** raw and **16.9%** after normalisation, and the gate sees the normalised number. Step 11 recorded 41.5% as the correction to an earlier 16.9%; both were mocha figures, one raw and one normalised, and the file was in worse shape than either reading suggested. Measured by the runner that owns it, it is now **98.8%**.
+- **The generalisable part:** *a convention that maps names to files encodes an assumption about which files exist yet.* The mirror convention was written when every vitest spec targeted something already converted, and it silently stopped being true the first time someone wrote a spec ahead of a rename — which is the practice the ADR recommends.

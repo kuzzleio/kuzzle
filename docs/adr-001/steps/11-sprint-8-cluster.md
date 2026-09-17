@@ -1,6 +1,6 @@
 # Step 11 — Sprint 8: `lib/cluster`, the last conversion sprint
 
-**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** — · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -38,7 +38,7 @@ Conversions and spec efforts stay in **separate PRs** — that is [step 09](09-s
 
 | # | Content | Lines | Why this grouping |
 |---|---|---:|---|
-| **J0** | Spec effort: `command.js` (41.5%) and `workers/IDCardRenewer.js` (73.1%) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, in JS against the current files, then J3 converts them with the gate already green. |
+| **J0** ✅ | Spec effort: `command.js` (41.5% → **98.8%**) and `workers/IDCardRenewer.js` (73.1% → **85.4%**) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, then J3 converts them with the gate already green. **Not "in JS" for both** — see *What J0 found about its own premise* below. |
 | **J1** | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. |
 | **J2** | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. |
 | **J3** | `node.js` + the two files J0 covered | 1 640 | `node.js` is the membership logic and the largest file in the sprint. |
@@ -70,3 +70,31 @@ bash scripts/strict-check.sh --count lib/cluster/node.ts   # the number the DoD 
 bash scripts/strict-check.sh --count                       # every unadopted file, ranked
 npm run ratchet                                            # js must drop; no counter may rise
 ```
+
+---
+
+## What J0 found about its own premise
+
+The slice table said *"specs first, in JS against the current files"*. Half of that was wrong, and the other half was impossible for a different reason than the one assumed.
+
+### `command.js` — the spec already existed and counted for nothing
+
+`tests/cluster/command.test.ts` has existed, and passed, since before this sprint opened. It contributed **zero** to the gate: `prepare-coverage.ts`'s mirror convention resolved a spec's target as `lib/<path>.ts` or `lib/<path>/index.ts` and never tried `.js`, so `command.js` was not handed to the vitest report and its mocha record stood.
+
+That is [TD-64](../type-debt-register.md#td-64) ([#2771](https://github.com/kuzzleio/kuzzle/issues/2771)), and it is this slice's own premise: **J0 exists to make specs count before a rename, and the pipeline only counted them after one.** Fixed by trying `.js` targets too — one file affected today.
+
+It also corrects a number this step carried. `command.js` reads **41.5%** raw and **16.9%** normalised, and the gate sees the normalised figure; the ⚠️ note above recorded 41.5% as the correction to an earlier 16.9%, but those are the same mocha measurement before and after normalisation. Measured by the runner that owns its spec, the file is now **98.8%**.
+
+So `command.js`'s specs are **vitest**, extended from 3 tests to 10: `init`, `dispose`, all three `listen` topics against a real server, `getFullState`'s success path and `broadcastHandshake`. The sockets are real — `zeromq` is reached through a CommonJS `require` that vitest cannot intercept, and this file *is* the request/response boundary, so a mocked socket would assert the shape of the mock.
+
+### `workers/IDCardRenewer.js` — cannot have a vitest spec at all yet
+
+It `require()`s `lib/service/cache/redis.ts`. That is [TD-49](../type-debt-register.md#td-49) exactly: a CommonJS `require` of a converted module leaves a runtime call Node's resolver cannot satisfy for a `.ts` path, and vitest fails to load the file before a single test runs. TD-49 fixed the 25 such imports *in `lib/`* by rewriting them as `import`; this one cannot be, because the importing file is still JavaScript.
+
+**A not-yet-converted file can be specced in vitest only if its dependencies are still resolvable at runtime.** `command.js` qualifies (zeromq, protobufjs, bluebird — all real packages); `IDCardRenewer.js` does not. Its coverage therefore comes from its existing **mocha** spec, extended in place — no new `test/**/*.test.js` file, so the mocha ratchet is untouched at 149 — and it converts to vitest in J3, when the rename makes `import` available.
+
+### And it found a defect, which is the point of the exercise
+
+[TD-63](../type-debt-register.md#td-63) ([#2770](https://github.com/kuzzleio/kuzzle/issues/2770)): `IDCardRenewer` reports a redis connection failure to `this.parentPort`, which nothing ever assigns — the `worker_threads` API in a file spawned with `fork()`, where every other line uses `process.send`. The node is still evicted, by the parent's `close` handler, but with *"ID Card renewer worker closed unexpectedly"* instead of the redis error. Pinned by the spec, filed, and left for its own PR.
+
+The tell was in the old spec: it set `idCardRenewer.parentPort = { postMessage: sinon.stub() }` by hand, exactly as `http.test.js` set `httpWs.maxFormFileSize = 2` for [TD-52](../type-debt-register.md#td-52).
