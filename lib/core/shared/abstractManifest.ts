@@ -54,6 +54,9 @@ class AbstractManifest {
 
   load() {
     try {
+      // The manifest of a plugin or protocol loaded from disk: the path is
+      // only known at runtime.
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       this.raw = require(this.manifestPath);
     } catch (e) {
       throw kerror.get("cannot_load", this.manifestPath, (e as Error).message);

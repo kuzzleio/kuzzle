@@ -2,7 +2,7 @@ import { Then } from "@cucumber/cucumber";
 import _ from "lodash";
 
 // TODO should is deprecated it needs to be removed
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const should = require("should");
 
 Then(

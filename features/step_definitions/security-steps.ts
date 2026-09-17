@@ -210,7 +210,7 @@ Then(
     } catch (error) {
       if (error.status === 404) {
         if (!shouldNot) {
-          throw new Error(`User "${userId}" should exists.`);
+          throw new Error(`User "${userId}" should exists.`, { cause: error });
         }
       } else {
         throw error;

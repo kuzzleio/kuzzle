@@ -664,7 +664,7 @@ export class KuzzleRequest {
         if (Array.isArray(parsedValue)) {
           return parsedValue;
         }
-      } catch (e) {
+      } catch {
         // Do nothing, let the code continue
       }
     }
@@ -1131,7 +1131,7 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        } catch (e) {
+        } catch {
           // Do nothing, let the error be thrown below
         }
       }
@@ -1180,7 +1180,7 @@ export class KuzzleRequest {
             set(obj, name, parsedValue);
             return parsedValue;
           }
-        } catch (e) {
+        } catch {
           // Do nothing, let the error be thrown below
         }
       }

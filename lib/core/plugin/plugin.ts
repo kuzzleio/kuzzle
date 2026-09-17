@@ -304,7 +304,7 @@ class Plugin {
     try {
       // A plugin is loaded from disk at runtime: the path is only known then,
       // so this require is the feature, not an unconverted import.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       PluginClass = require(pluginPath);
 
       const pluginInstance = new PluginClass();
@@ -328,7 +328,7 @@ class Plugin {
     const packageJsonPath = path.join(pluginPath, "package.json");
     if (fs.existsSync(packageJsonPath) && !plugin.version) {
       // Same as the plugin's own module above: a path known only at runtime.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       plugin.version = require(packageJsonPath).version;
     }
 

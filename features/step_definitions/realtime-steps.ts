@@ -1,7 +1,7 @@
 import { Then } from "@cucumber/cucumber";
 
 // TODO should is deprecated it needs to be removed
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const should = require("should");
 
 Then(
@@ -86,7 +86,7 @@ Then(
         tryAssert();
 
         done();
-      } catch (error) {
+      } catch {
         // retry later
         setTimeout(() => {
           tryAssert();

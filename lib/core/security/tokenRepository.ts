@@ -337,7 +337,7 @@ export class TokenRepository extends ObjectRepository<Token> {
     const isApiKey = token.startsWith(Token.APIKEY_PREFIX);
     const tokenWithoutPrefix = this.removeTokenPrefix(token);
 
-    let decoded = null;
+    let decoded;
 
     try {
       decoded = jwt.verify(tokenWithoutPrefix, global.kuzzle.secret);

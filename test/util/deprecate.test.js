@@ -47,10 +47,9 @@ describe("Test: Deprecate util", () => {
     });
 
     it("should print default deprecation warning", () => {
-      let something = deprecatedObject.foo;
-      something = deprecatedObject.leet;
-
-      should(something).not.be.undefined();
+      // Reading the property is what emits the warning; both reads matter.
+      should(deprecatedObject.foo).not.be.undefined();
+      should(deprecatedObject.leet).not.be.undefined();
       should(kuzzle.log.warn.callCount).be.eql(4);
       should(kuzzle.log.warn.getCall(0).args[0]).be.eql("DEPRECATION WARNING");
       should(kuzzle.log.warn.getCall(1).args[0]).be.eql(

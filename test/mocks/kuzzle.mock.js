@@ -42,7 +42,7 @@ class KuzzleMock extends KuzzleEventEmitter {
             pipeArgs = [await handler(...pipeArgs)].slice(0, 1);
           }
           return pipeArgs[0];
-        } catch (e) {
+        } catch {
           return args[1];
         }
       }

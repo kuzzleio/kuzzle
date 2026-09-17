@@ -152,7 +152,7 @@ export default class HttpApi {
 
           return true;
         }
-      } catch (error) {
+      } catch {
         return false;
       }
 

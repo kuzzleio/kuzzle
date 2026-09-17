@@ -915,7 +915,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
 
       const arrayBufferOffset = response.getWriteOffset();
 
-      let backpressure = false;
+      let backpressure;
 
       /**
        * Switch method of writing data to the response
@@ -955,7 +955,7 @@ class HttpWsProtocol extends Protocol<HttpWsProtocolConfig> {
             return true;
           }
 
-          let retryBackpressure = false;
+          let retryBackpressure;
           const remainingChunkData = response.arrayBuffer.slice(
             offset - response.arrayBufferOffset,
           );
