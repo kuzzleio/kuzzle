@@ -73,6 +73,72 @@ describe("ClusterIDCardRenewer", () => {
       should(stub).be.calledOnce().and.be.calledWith(sinon.match.func, 1);
     });
 
+    it("should default the refresh delay to 2s when the parent sent none", async () => {
+      await idCardRenewer.init({
+        nodeIdKey: "nodeIdKey",
+        redis: {},
+      });
+
+      should(idCardRenewer.refreshDelay).be.eql(2000);
+    });
+
+    it("should do nothing when it has already been initialized", async () => {
+      await idCardRenewer.init({
+        nodeIdKey: "nodeIdKey",
+        redis: {},
+      });
+
+      idCardRenewer.initRedis.resetHistory();
+      process.send.resetHistory();
+
+      await idCardRenewer.init({
+        nodeIdKey: "another-key",
+        redis: {},
+      });
+
+      should(idCardRenewer.initRedis).not.be.called();
+      should(process.send).not.be.called();
+      should(idCardRenewer.nodeIdKey).be.eql("nodeIdKey");
+    });
+
+    it("should throw on `this.parentPort` instead of reporting a redis failure", async () => {
+      /*
+       * ⚠️ This pins a DEFECT, not a contract — ADR-0001 TD-63.
+       *
+       * `this.parentPort` is never assigned anywhere in `lib/`. The worker is
+       * spawned with `child_process.fork()` and talks over `process.send`,
+       * which every other line of this file does; `parentPort` is the
+       * `worker_threads` API, left behind by an earlier implementation.
+       *
+       * So the one path that exists to say *why* the ID card cannot be renewed
+       * raises a TypeError instead of sending `{ error }`. `idCardHandler`
+       * turns such a message into `evictSelf(message.error)` and never gets
+       * one; the worker dies, and its `close` handler evicts the node with the
+       * generic "ID Card renewer worker closed unexpectedly" rather than
+       * "Failed to connect to redis". The node still leaves the cluster — it
+       * leaves without the reason.
+       *
+       * Left as found: routing this to `process.send` is a behaviour change,
+       * and this is a spec effort.
+       */
+      const consoleError = sinon.stub(console, "error");
+
+      idCardRenewer.initRedis.rejects(new Error("connection refused"));
+
+      try {
+        await should(
+          idCardRenewer.init({ nodeIdKey: "nodeIdKey", redis: {} }),
+        ).be.rejectedWith(TypeError);
+
+        should(consoleError).be.calledWith(
+          "Failed to connect to redis, could not refresh ID card: connection refused",
+        );
+        should(process.send).not.be.called();
+      } finally {
+        consoleError.restore();
+      }
+    });
+
     it("should notify parent when initialization is finished", async () => {
       await idCardRenewer.init({
         redis: {
@@ -143,6 +209,17 @@ describe("ClusterIDCardRenewer", () => {
         .and.be.calledWith({ error: "Node too slow: ID card expired" });
     });
 
+    it("should dispose and report when redis itself fails", async () => {
+      idCardRenewer.redis.commands.pexpire.rejects(new Error("redis is gone"));
+
+      await idCardRenewer.renewIDCard();
+
+      should(idCardRenewer.dispose).be.called();
+      should(process.send).be.calledWith({
+        error: "Failed to refresh ID Card: redis is gone",
+      });
+    });
+
     it("should not do nothing if already disposed", async () => {
       idCardRenewer.redis.commands.pexpire.resetHistory();
       idCardRenewer.disposed = true;
@@ -195,6 +272,24 @@ describe("ClusterIDCardRenewer", () => {
       await idCardRenewer.dispose();
 
       should(redis.commands.del).not.be.called();
+    });
+
+    it("should log and return when redis refuses the delete", async () => {
+      const consoleError = sinon.stub(console, "error");
+
+      idCardRenewer.redis.commands.del.rejects(new Error("redis is gone"));
+
+      try {
+        // Disposal is the last thing this worker does; a redis that is already
+        // gone must not turn it into an unhandled rejection.
+        await should(idCardRenewer.dispose()).be.fulfilled();
+
+        should(consoleError).be.calledWith(
+          "Could not delete key 'foo' from redis: redis is gone",
+        );
+      } finally {
+        consoleError.restore();
+      }
     });
 
     it("should do nothing when already disposed", async () => {
