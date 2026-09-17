@@ -46,7 +46,10 @@ class ClusterSubscriberMock {
 
     this.init = sinon.stub().resolves();
     this.dispose = sinon.stub();
-    this.sync = sinon.stub().resolves();
+    this.sync = sinon.stub().resolves(true);
+    this.waitForSubscription = sinon
+      .stub()
+      .callsFake(async () => this.__waitForSubscription !== false);
 
     this.remoteNodeIP = "1.2.3.4";
   }
@@ -819,10 +822,47 @@ describe("#Cluster Node", () => {
       should(node.fullState.loadFullState).calledOnce().calledWith(fullstate);
       should(node.heartbeatTimer).not.be.null();
 
+      // TD-65 (#2773): the fullstate snapshots each node's lastMessageId on the
+      // command channel, and the subscription lives on the sync channel — so
+      // the snapshot must not be taken until the subscription is proven live,
+      // or whatever the remote publishes in between is dropped and read as a
+      // desync.
+      for (const subscriber of node.remoteNodes.values()) {
+        should(subscriber.waitForSubscription).calledOnce();
+        should(
+          subscriber.waitForSubscription.calledBefore(
+            node.command.getFullState,
+          ),
+        ).be.true();
+      }
+
       should(node.idCardHandler.addNode).calledThrice();
       should(node.idCardHandler.addNode).calledWith("bar");
       should(node.idCardHandler.addNode).calledWith("baz");
       should(node.idCardHandler.addNode).calledWith("qux");
+    });
+
+    it("should warn but carry on when a subscription cannot be proven live", async () => {
+      // A node whose ID card outlived it is exactly what the fullstate retry
+      // below exists for, so an unproven subscription is not fatal here.
+      const fullstate = { full: "state", activity: [], nodesState: [] };
+
+      node.command.getFullState.resolves(fullstate);
+      node.idCardHandler.getRemoteIdCards.resolves([
+        new IdCard({ id: "bar", ip: "2.3.4.1" }),
+      ]);
+      node.command.broadcastHandshake.resolves({ bar: {} });
+
+      ClusterSubscriberMock.prototype.__waitForSubscription = false;
+
+      await node.handshake();
+
+      should(node.logger.warn).calledWithMatch(
+        /No sync message received from node bar within \d+ms/,
+      );
+      should(node.command.getFullState).calledOnce();
+
+      delete ClusterSubscriberMock.prototype.__waitForSubscription;
     });
 
     it("should retry getting a fullstate if unable to get one the first time", async () => {
@@ -1014,6 +1054,19 @@ describe("#Cluster Node", () => {
       should(node.publisher.sendNodeEvicted)
         .calledOnce()
         .calledWith("qux", "qux", "foo");
+    });
+
+    it("should shut this node down, since the broadcast cannot reach it", async () => {
+      // A ZeroMQ PUB socket does not deliver to its own process, so
+      // `handleNodeEviction`'s shutdown branch is unreachable by the node that
+      // needs it. Without this, the node leaves the cluster and keeps answering
+      // requests behind the load balancer from state that stopped advancing.
+      // TD-67 (#2776).
+      node.nodeId = "qux";
+
+      await node.evictSelf("foo");
+
+      should(kuzzle.shutdown).calledOnce();
     });
   });
 
