@@ -329,6 +329,7 @@ describe("Test: security/userRepository", () => {
     let fakeUser;
 
     beforeEach(() => {
+      fakeUser = new User();
       sinon.stub(userRepository, "persist").resolves(fakeUser);
       sinon.stub(userRepository, "fromDTO").resolves(fakeUser);
     });

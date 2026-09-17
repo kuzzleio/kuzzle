@@ -13,7 +13,6 @@ describe("Test: hotelClerk.join", () => {
   let kuzzle;
   let hotelClerk;
   let request;
-  let context;
   let realtimeModule;
 
   beforeEach(async () => {
@@ -106,16 +105,13 @@ describe("Test: hotelClerk.join", () => {
   });
 
   it("should throw if the room does not exist", () => {
-    const joinRequest = new Request(
-      {
-        index: "foo",
-        collection: "bar",
-        controller: "realtime",
-        action: "join",
-        body: { roomId: "i-exist" },
-      },
-      context,
-    );
+    const joinRequest = new Request({
+      index: "foo",
+      collection: "bar",
+      controller: "realtime",
+      action: "join",
+      body: { roomId: "i-exist" },
+    });
 
     return should(hotelClerk.join(joinRequest)).be.rejectedWith(NotFoundError, {
       id: "core.realtime.room_not_found",
@@ -123,16 +119,13 @@ describe("Test: hotelClerk.join", () => {
   });
 
   it('should propagate notification only with "cluster" option', async () => {
-    const joinRequest = new Request(
-      {
-        index: "foo",
-        collection: "bar",
-        controller: "realtime",
-        action: "join",
-        body: { roomId: "i-exist" },
-      },
-      context,
-    );
+    const joinRequest = new Request({
+      index: "foo",
+      collection: "bar",
+      controller: "realtime",
+      action: "join",
+      body: { roomId: "i-exist" },
+    });
     const response = { cluster: false, channel: "foobar", subscribed: true };
     hotelClerk.rooms.set("i-exist", {});
 
