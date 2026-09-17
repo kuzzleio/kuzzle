@@ -65,17 +65,17 @@ const debug = createDebug("kuzzle:cluster:sync");
  * wire and the notification checked that the string was a member. See TD-68
  * (#2779); keep these lists in step with the unions they `satisfies`.
  */
-const REALTIME_SCOPES = [
+const REALTIME_SCOPES: readonly string[] = [
   "all",
   "in",
   "out",
-] as const satisfies readonly RealtimeScope[];
-const REALTIME_USERS = [
+] satisfies readonly RealtimeScope[];
+const REALTIME_USERS: readonly string[] = [
   "all",
   "in",
   "none",
   "out",
-] as const satisfies readonly RealtimeUsers[];
+] satisfies readonly RealtimeUsers[];
 
 /**
  * A topic is a protobuf type name, and the handler table below covers exactly
@@ -90,11 +90,11 @@ function isSyncTopic(
 }
 
 function isRealtimeScope(value: string): value is RealtimeScope {
-  return REALTIME_SCOPES.some((scope) => scope === value);
+  return REALTIME_SCOPES.includes(value);
 }
 
 function isRealtimeUsers(value: string): value is RealtimeUsers {
-  return REALTIME_USERS.some((users) => users === value);
+  return REALTIME_USERS.includes(value);
 }
 
 /* eslint-disable sort-keys */
@@ -152,15 +152,15 @@ type BufferedFrame = [topic: string, data: Buffer];
 
 // Handles messages received from other nodes
 class ClusterSubscriber {
-  static stateEnum = stateEnum;
+  static readonly stateEnum = stateEnum;
 
-  private localNode: SubscribingNode;
+  private readonly localNode: SubscribingNode;
 
-  public remoteNodeIP: string;
+  public readonly remoteNodeIP: string;
 
-  private remoteNodeAddress: string;
+  private readonly remoteNodeAddress: string;
 
-  public remoteNodeId: string;
+  public readonly remoteNodeId: string;
 
   /** Used in debug mode when the node might be slower */
   public remoteNodeEvictionPrevented: boolean;
@@ -174,7 +174,7 @@ class ClusterSubscriber {
 
   public subscriptionConfirmed: boolean;
 
-  private subscriptionProof: Promise<void>;
+  private readonly subscriptionProof: Promise<void>;
 
   private confirmSubscription: () => void;
 
@@ -186,11 +186,11 @@ class ClusterSubscriber {
 
   public lastHeartbeat: number;
 
-  private heartbeatDelay: number;
+  private readonly heartbeatDelay: number;
 
   public readonly handlers: Readonly<SyncMessageHandlers>;
 
-  private logger: ReturnType<typeof global.kuzzle.log.child>;
+  private readonly logger: ReturnType<typeof global.kuzzle.log.child>;
 
   /**
    * @param localNode the cluster node this subscriber belongs to
@@ -386,8 +386,8 @@ class ClusterSubscriber {
       const _buffer = this.buffer;
       this.buffer = [];
 
-      for (let i = 0; i < _buffer.length; i++) {
-        await this.processData(_buffer[i][0], _buffer[i][1]);
+      for (const [topic, data] of _buffer) {
+        await this.processData(topic, data);
 
         // A gap found during the replay evicts this node. Without this check
         // the loop would go on applying messages and then overwrite EVICTED

@@ -160,14 +160,6 @@ export type DumpRequestMessage = SyncMessage & {
   suffix: string;
 };
 
-export type ResetSecurityMessage = SyncMessage;
-
-export type ShutdownMessage = SyncMessage;
-
-export type RefreshValidatorsMessage = SyncMessage;
-
-export type RefreshIndexCacheMessage = SyncMessage;
-
 export type InvalidateProfileMessage = SyncMessage & {
   profileId: string;
 };
@@ -211,6 +203,8 @@ export type ClusterWideEventMessage = SyncMessage & {
  * stops compiling.
  */
 export type SyncMessages = {
+  // Four topics carry nothing but the `messageId` every sync message has, so
+  // they map to `SyncMessage` itself rather than to an alias of it.
   AddCollection: AddCollectionMessage;
   AddIndex: AddIndexMessage;
   ClusterWideEvent: ClusterWideEventMessage;
@@ -224,14 +218,14 @@ export type SyncMessages = {
   NodeEvicted: NodeEvictedMessage;
   NodePreventEviction: NodePreventEvictionMessage;
   NodeShutdown: NodeShutdownMessage;
-  RefreshIndexCache: RefreshIndexCacheMessage;
-  RefreshValidators: RefreshValidatorsMessage;
+  RefreshIndexCache: SyncMessage;
+  RefreshValidators: SyncMessage;
   RemoveAuthStrategy: RemoveAuthStrategyMessage;
   RemoveCollection: RemoveCollectionMessage;
   RemoveIndexes: RemoveIndexesMessage;
   RemoveRealtimeRoom: RemoveRealtimeRoomMessage;
-  ResetSecurity: ResetSecurityMessage;
-  Shutdown: ShutdownMessage;
+  ResetSecurity: SyncMessage;
+  Shutdown: SyncMessage;
   Subscription: SubscriptionMessage;
   Unsubscription: UnsubscriptionMessage;
   UserNotification: UserNotificationMessage;
