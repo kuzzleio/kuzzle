@@ -51,6 +51,8 @@ warn) · 📝 prose only — recorded, not enforced.
 | *A JSDoc type in an unconverted file is not a type, it is a name lookup in that file's scope.* | [step 09](steps/09-sprint-6-core-ii.md) | 📝 — check what the name resolves to before inferring from it |
 | *Optional chaining is a null guard, not a correctness guard.* | [TD-51](type-debt-register.md#td-51) | 📝 the site is fixed ([#2769](https://github.com/kuzzleio/kuzzle/pull/2769)) and `PluginInstance.log` is now typed, so *that* path is checked; nothing gates the next `?.` over a property that never exists |
 | *A comparison against `undefined` is not a check, and JavaScript cannot tell you which of your reads is one.* | [TD-52](type-debt-register.md#td-52) | 📝 the three sites are fixed ([#2769](https://github.com/kuzzleio/kuzzle/pull/2769)); strict says `TS2564` but `httpwsProtocol.ts` is still unadopted, so a new one would not be caught — [TD-54](type-debt-register.md#td-54) is what closes that |
+| *A spec that assigns a property before calling the code is either describing production or replacing it.* | [TD-63](type-debt-register.md#td-63) | 📝 open ([#2770](https://github.com/kuzzleio/kuzzle/issues/2770)) — the same tell as [TD-52](type-debt-register.md#td-52)'s `httpWs.maxFormFileSize = 2`, found the same way and just as late |
+| *A convention that maps names to files encodes an assumption about which files exist yet.* | [TD-64](type-debt-register.md#td-64) | 🔒 `prepare-coverage.ts` resolves `.js` targets too, so a spec written ahead of a rename counts from the day it lands |
 | *The strict list reads like a quality score per file; partly it scores what a file happens to touch.* | [step 10](steps/10-sprint-7-kuzzle.md) | 📝 — narrowed by [TD-54](type-debt-register.md#td-54) |
 
 ## Tests

@@ -1,49 +1,245 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Reply } from "zeromq";
+import protobuf from "protobufjs";
+import { Reply, Request } from "zeromq";
 
 import ClusterCommand from "../../lib/cluster/command";
 
 /**
  * `command.js` reaches for `zeromq` through a CommonJS `require`, which vitest
  * cannot intercept: a `vi.mock("zeromq")` is silently ignored and the real
- * sockets are used anyway. So the peer is real here — a `Reply` socket this
- * spec binds when the remote node is supposed to answer, and nothing at all
- * otherwise, which is exactly how a dead node looks from the outside.
+ * sockets are used anyway. So the peers here are real — a `Reply` socket this
+ * spec binds when the remote node is supposed to answer, a `Request` socket
+ * when the spec plays the remote node against a real `ClusterCommand` server,
+ * and nothing at all when a node is supposed to look dead.
+ *
+ * That is a deliberate choice rather than a limitation worked around: this
+ * file *is* the cluster's request/response boundary, and a spec that replaced
+ * the socket would assert the shape of a mock instead of the shape of the
+ * protocol. Each test binds its own port so nothing shares state.
  */
-const COMMAND_PORT = 24001;
+
+/** Distinct per describe block: a lingering socket must not reach the next one. */
+const PORT = {
+  broadcastHandshake: 24005,
+  fullStateClient: 24004,
+  getFullState: 24001,
+  sendSingleHandshake: 24002,
+  server: 24003,
+};
+
+/**
+ * The `ClusterNode` surface `command.js` reaches into. Narrow on purpose: what
+ * it touches is the whole of its coupling to the node, and a wider fake would
+ * hide a widening.
+ */
+function fakeNode({
+  addNode = vi.fn().mockResolvedValue(true),
+  activity = [],
+  lastMessageId = 12,
+  port,
+  remoteNodes = new Map(),
+  rooms = [],
+}: {
+  addNode?: ReturnType<typeof vi.fn>;
+  activity?: unknown[];
+  lastMessageId?: number;
+  port: number;
+  remoteNodes?: Map<string, { lastMessageId: number }>;
+  rooms?: unknown[];
+}) {
+  return {
+    activity,
+    addNode,
+    config: {
+      ports: { command: port },
+      // Long enough not to race a loaded CI runner, short enough that a spec
+      // waiting for a node that will never answer stays cheap.
+      syncTimeout: 250,
+    },
+    fullState: { serialize: () => ({ authStrategies: [], rooms }) },
+    ip: "127.0.0.1",
+    nodeId: "knode-local",
+    publisher: { lastMessageId },
+    remoteNodes,
+  };
+}
 
 describe("#cluster/ClusterCommand", () => {
   let command;
   let logger;
   let peer: Reply | null;
+  let client: Request | null;
 
   beforeEach(() => {
     peer = null;
+    client = null;
 
     logger = { child: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() };
     logger.child.mockReturnValue(logger);
 
     (globalThis as { kuzzle?: unknown }).kuzzle = { log: logger };
 
-    command = new ClusterCommand({
-      config: {
-        ports: { command: COMMAND_PORT },
-        // Long enough not to race a loaded CI runner, short enough that a
-        // spec waiting for a node that will never answer stays cheap.
-        syncTimeout: 250,
-      },
-      ip: "127.0.0.1",
-      nodeId: "knode-local",
-      publisher: { lastMessageId: 12 },
+    command = new ClusterCommand(fakeNode({ port: PORT.getFullState }));
+  });
+
+  afterEach(async () => {
+    peer?.close();
+    client?.close();
+
+    // `dispose()` is what stops `listen()`'s loop; without it the unresolved
+    // `receive()` keeps the socket — and the port — for the next test.
+    if (command.server && command.state !== 3) {
+      command.dispose();
+    }
+  });
+
+  describe("#init", () => {
+    it("loads the protobuf root, binds the command port and starts listening", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.server }));
+
+      await command.init();
+
+      expect(command.protoroot.lookupType("HandshakeRequest")).toBeTruthy();
+      expect(command.server).not.toBeNull();
+      // 2 = RUNNING. `listen()` is deliberately not awaited by `init()`, so
+      // the state flag is what says the loop is running.
+      expect(command.state).toBe(2);
     });
   });
 
-  afterEach(() => {
-    peer?.close();
+  describe("#dispose", () => {
+    it("marks the server closed and stops the listen loop", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.server }));
+      await command.init();
+
+      command.dispose();
+
+      // 3 = CLOSED. The loop reads this flag between two `receive()` calls,
+      // and swallows the error the closed socket raises in the meantime.
+      expect(command.state).toBe(3);
+    });
+  });
+
+  describe("#listen", () => {
+    /** Drives a real request against a real server, and returns its reply. */
+    async function ask(topic: string, payload: Buffer | null) {
+      client = new Request();
+      client.receiveTimeout = 2000;
+      client.connect(`tcp://127.0.0.1:${PORT.server}`);
+
+      await client.send([topic, payload]);
+
+      return client.receive();
+    }
+
+    it("answers a fullstate request with the node's serialized state", async () => {
+      const remoteNodes = new Map([["knode-2", { lastMessageId: 7 }]]);
+
+      command = new ClusterCommand(
+        fakeNode({
+          activity: [],
+          lastMessageId: 12,
+          port: PORT.server,
+          remoteNodes,
+        }),
+      );
+      await command.init();
+
+      const [topic, payload] = await ask("fullstate", null);
+
+      expect(topic.toString()).toBe("fullstate");
+
+      const decoder = command.protoroot.lookupType("FullStateResponse");
+      const state = decoder.toObject(decoder.decode(payload));
+
+      // Every remote node, plus this one — the requesting node uses this list
+      // to know how far behind it is per peer.
+      expect(
+        state.nodesState.map(({ id }: { id: string }) => id).sort(),
+      ).toEqual(["knode-2", "knode-local"]);
+    });
+
+    it("answers a handshake request with what addNode decided", async () => {
+      const addNode = vi.fn().mockResolvedValue(true);
+
+      command = new ClusterCommand(
+        fakeNode({ addNode, lastMessageId: 12, port: PORT.server }),
+      );
+      await command.init();
+
+      const root = await protobuf.load(
+        `${process.cwd()}/lib/cluster/protobuf/command.proto`,
+      );
+      const encoder = root.lookupType("HandshakeRequest");
+      const request = encoder
+        .encode(
+          encoder.create({
+            ip: "127.0.0.2",
+            lastMessageId: 3,
+            nodeId: "knode-2",
+          }),
+        )
+        .finish();
+
+      const [topic, payload] = await ask("handshake", Buffer.from(request));
+
+      expect(topic.toString()).toBe("handshake");
+
+      // `lastMessageId` is a protobuf `uint64`, so what reaches `addNode` is a
+      // `Long`, not a number — worth pinning, because the node compares it
+      // against its own counters.
+      const [nodeId, ip, lastMessageId] = addNode.mock.calls[0];
+
+      expect([nodeId, ip]).toEqual(["knode-2", "127.0.0.2"]);
+      expect(lastMessageId.toString()).toBe("3");
+
+      const decoder = command.protoroot.lookupType("HandshakeResponse");
+
+      expect(decoder.toObject(decoder.decode(payload))).toMatchObject({
+        added: true,
+      });
+    });
+
+    it("discards an unknown topic rather than leaving the REQ socket hanging", async () => {
+      command = new ClusterCommand(fakeNode({ port: PORT.server }));
+      await command.init();
+
+      const [topic] = await ask("not-a-topic", null);
+
+      // REP/REQ is strictly alternating: a request with no reply would wedge
+      // the remote node's socket for good, so an invalid topic still answers.
+      expect(topic.toString()).toBe("discarded");
+    });
   });
 
   describe("#getFullState", () => {
+    it("returns the state of the first node that answers", async () => {
+      const server = new ClusterCommand(
+        fakeNode({ port: PORT.fullStateClient, rooms: [] }),
+      );
+      await server.init();
+
+      try {
+        command = new ClusterCommand(
+          fakeNode({ port: PORT.fullStateClient, remoteNodes: new Map() }),
+        );
+        command.protoroot = await protobuf.load(
+          `${process.cwd()}/lib/cluster/protobuf/command.proto`,
+        );
+
+        const fullState = await command.getFullState([
+          { id: "knode-1", ip: "127.0.0.1" },
+        ]);
+
+        expect(fullState).not.toBeNull();
+        expect(fullState.nodesState).toHaveLength(1);
+        expect(logger.warn).not.toHaveBeenCalled();
+      } finally {
+        server.dispose();
+      }
+    });
+
     it("tries the next node when one does not answer, and gives up after a full turn", async () => {
       const nodes = [
         { id: "knode-1", ip: "127.0.0.1" },
@@ -63,12 +259,44 @@ describe("#cluster/ClusterCommand", () => {
     });
   });
 
+  describe("#broadcastHandshake", () => {
+    it("decodes each answer and maps a silent node to null", async () => {
+      const server = new ClusterCommand(
+        fakeNode({ lastMessageId: 42, port: PORT.broadcastHandshake }),
+      );
+      await server.init();
+
+      try {
+        command = new ClusterCommand(
+          fakeNode({ lastMessageId: 12, port: PORT.broadcastHandshake }),
+        );
+        command.protoroot = await protobuf.load(
+          `${process.cwd()}/lib/cluster/protobuf/command.proto`,
+        );
+
+        // TEST-NET-1 (RFC 5737): guaranteed not to route anywhere, which is
+        // how a node that died between two heartbeats looks from here. Another
+        // loopback address would not do — the server binds `tcp://*`, so it
+        // would answer on that one too.
+        const result = await command.broadcastHandshake([
+          { id: "knode-1", ip: "127.0.0.1" },
+          { id: "knode-dead", ip: "192.0.2.1" },
+        ]);
+
+        expect(result["knode-1"]).toMatchObject({ added: true });
+        expect(result["knode-dead"]).toBeNull();
+      } finally {
+        server.dispose();
+      }
+    });
+  });
+
   describe("#_sendSingleHandshake", () => {
     it("returns the response the remote node sends back", async () => {
       const encoded = Buffer.from("handshake response");
 
       peer = new Reply();
-      await peer.bind(`tcp://127.0.0.1:${COMMAND_PORT}`);
+      await peer.bind(`tcp://127.0.0.1:${PORT.sendSingleHandshake}`);
 
       const answering = peer.receive().then(([topic, payload]) => {
         expect(topic.toString()).toBe("handshake");
@@ -76,6 +304,8 @@ describe("#cluster/ClusterCommand", () => {
 
         return peer.send(["handshake", encoded]);
       });
+
+      command.node.config.ports.command = PORT.sendSingleHandshake;
 
       const response = await command._sendSingleHandshake(
         "knode-1",
