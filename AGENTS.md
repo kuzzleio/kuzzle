@@ -23,7 +23,7 @@ Local dev stack (Elasticsearch, Redis, Kuzzle with hot reload):
 ## Tests — always run these before considering a change done
 
 ```bash
-npm run test:lint          # eslint ./lib ./test ./bin ./features
+npm run test:lint          # eslint ./lib ./test ./tests ./bin ./features ./features-legacy
 npm run test:unit:vitest   # unit tests under tests/
 npm run test:unit:mocha    # unit tests under test/ (needs `npm run build` first)
 ```
@@ -50,7 +50,11 @@ most likely to fail on a first push.
 
 ## Code style
 
-- ESLint config: `.eslintrc.json` (`eslint-plugin-kuzzle`, stricter TS ruleset for `*.ts`).
+- ESLint config: `eslint.config.mjs` — flat config, one file for the whole repo
+  (`eslint-plugin-kuzzle` 2.x, which also ships prettier and typescript-eslint).
+  The TS ruleset is scoped to `**/*.ts` and `**/*.js` is linted as CommonJS;
+  both are load-bearing, see the comments in the file. ESLint 10 needs Node
+  `^20.19.0 || >=22.12.0`, tighter than the `engines` of the server itself.
 - Prettier: `.prettierrc` (semicolons on).
 - Async/await or promises over callbacks — **except** for code invoked before
   the funnel module (network connection handling), which must use callbacks
