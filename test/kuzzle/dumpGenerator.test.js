@@ -77,6 +77,29 @@ describe("Test: kuzzle/dumpGenerator", () => {
     );
   });
 
+  it("should reject, and keep the cause, when the dump folder cannot be created", async () => {
+    const cause = new Error("EACCES: permission denied, mkdir '/tmp/dump'");
+    fsStub.mkdirSync.throws(cause);
+
+    const rejection = await dumpGenerator.dump(suffix).catch((error) => error);
+
+    should(rejection).be.an.instanceOf(Error);
+    should(rejection.message).be.exactly(
+      `Unable to create dump folder: ${cause.message}`,
+    );
+    should(rejection.cause).be.exactly(cause);
+  });
+
+  it("should report an already existing dump folder as such", async () => {
+    fsStub.mkdirSync.throws(new Error("EEXIST: file already exists"));
+
+    const rejection = await dumpGenerator.dump(suffix).catch((error) => error);
+
+    should(rejection.message).be.exactly(
+      "Dump directory already exists. Skipping..",
+    );
+  });
+
   it("should generate dump files", async () => {
     const baseDumpPath = `/tmp/${new Date().getFullYear()}-${suffix}`;
 
