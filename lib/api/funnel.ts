@@ -673,7 +673,7 @@ class Funnel {
     let cookie;
     try {
       cookie = Cookie.parse(request.input.headers.cookie);
-    } catch (error) {
+    } catch {
       throw kerror.get("security", "cookie", "invalid");
     }
 
@@ -757,7 +757,7 @@ class Funnel {
           if (!(responseData instanceof HttpStream)) {
             JSON.stringify(responseData);
           }
-        } catch (e) {
+        } catch {
           _request.setResult(null); // NOSONAR: TD-20 (#2688)
           throw kerror.get("plugin", "controller", "unserializable_response");
         }
@@ -1098,7 +1098,7 @@ class Funnel {
           } else {
             break;
           }
-        } catch (error) {
+        } catch {
           break;
         }
       }

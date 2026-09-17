@@ -329,7 +329,7 @@ function checkRadius(shape: GeoShape, errorMessages: string[]): boolean {
   if (typeof shape.radius === "string") {
     try {
       valid = typeof Koncorde.convertDistance(shape.radius) === "number";
-    } catch (error) {
+    } catch {
       // an unparseable distance is an invalid radius, like any other
       valid = false;
     }

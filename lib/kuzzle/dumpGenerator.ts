@@ -83,7 +83,7 @@ class DumpGenerator {
         : `Unable to create dump folder: ${e.message}`;
 
       this.logger.error(message);
-      throw new Error(message);
+      throw new Error(message, { cause: e });
     }
 
     // dump kuzzle information

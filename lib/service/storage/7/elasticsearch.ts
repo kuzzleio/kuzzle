@@ -3677,7 +3677,7 @@ export class ES7 {
           );
           await Bluebird.delay(1000);
         }
-      } catch (e) {
+      } catch {
         await Bluebird.delay(1000);
       }
     }

@@ -304,7 +304,7 @@ class Plugin {
     try {
       // A plugin is loaded from disk at runtime: the path is only known then,
       // so this require is the feature, not an unconverted import.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       PluginClass = require(pluginPath);
 
       const pluginInstance = new PluginClass();
@@ -328,7 +328,7 @@ class Plugin {
     const packageJsonPath = path.join(pluginPath, "package.json");
     if (fs.existsSync(packageJsonPath) && !plugin.version) {
       // Same as the plugin's own module above: a path known only at runtime.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       plugin.version = require(packageJsonPath).version;
     }
 
@@ -443,13 +443,11 @@ function checkActionDefinition(
   // nullish, so the fallback was dead code. It happens to be equivalent
   // today only because the packaged default is `false` — it would not be if
   // that default ever became `true`.
-  if (
-    !(
-      global.app.config.content.controllers?.definition
-        ?.allowAdditionalActionProperties ??
-      defaultConfig.controllers.definition.allowAdditionalActionProperties
-    )
-  ) {
+  if (!(
+    global.app.config.content.controllers?.definition
+      ?.allowAdditionalActionProperties ??
+    defaultConfig.controllers.definition.allowAdditionalActionProperties
+  )) {
     const actionProperties = Object.keys(actionDefinition).filter(
       (prop) => prop !== "handler" && prop !== "http",
     );

@@ -911,7 +911,7 @@ class Kuzzle extends KuzzleEventEmitter {
     if (this.config.dump.enabled) {
       try {
         await this.dump(suffix);
-      } catch (error) {
+      } catch {
         // this catch is just there to prevent unhandled rejections, there is
         // nothing to do with that error
       }

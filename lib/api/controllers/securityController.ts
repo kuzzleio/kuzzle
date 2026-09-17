@@ -1438,7 +1438,7 @@ class SecurityController extends NativeController {
       ? () => NameGenerator.generateRandomName({ prefix: "kuid" })
       : () => "kuid-" + uuidv4();
 
-    let id = "";
+    let id;
     let alreadyExists = false;
     // Early checks before the user is created
     do {

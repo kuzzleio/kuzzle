@@ -1,7 +1,0 @@
-!bin/.upgrades
-
-# JS generated files from TS
-*.d.ts
-*.js.map
-
-dist/**

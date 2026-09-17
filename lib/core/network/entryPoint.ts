@@ -200,7 +200,7 @@ class EntryPoint implements NetworkEntryPoint {
 
     try {
       dirs = fs.readdirSync(dir);
-    } catch (e) {
+    } catch {
       // ignore if there is no protocols directory
       return;
     }
@@ -211,7 +211,7 @@ class EntryPoint implements NetworkEntryPoint {
 
     await Bluebird.map(dirs, (protoDir) => {
       // A protocol is loaded from disk at runtime: the path is only known then.
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const protocol = new (require(protoDir))();
       const manifest = new Manifest(protoDir, protocol);
 

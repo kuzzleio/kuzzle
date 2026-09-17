@@ -203,6 +203,24 @@ describe("ClusterIdCardHandler", () => {
       should(stub).be.called().and.be.calledWith({ action: "dispose" });
       should(idCardHandler.disposed).be.true();
     });
+
+    it("should still dispose when the worker died before being notified", async () => {
+      // A killed worker whose channel is not torn down yet still looks alive
+      // from here, and `send` throws instead of reporting it.
+      const stub = sinon.stub().throws(new Error("channel closed"));
+      idCardHandler.disposed = false;
+      idCardHandler.refreshWorker = {
+        send: stub,
+        connected: true,
+        killed: false,
+        channel: {},
+      };
+
+      await idCardHandler.dispose();
+
+      should(stub).be.calledOnce();
+      should(idCardHandler.disposed).be.true();
+    });
   });
 
   describe("#getRemoteIdCards", () => {
