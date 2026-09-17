@@ -77,6 +77,7 @@ class KuzzleMock extends KuzzleEventEmitter {
       debug: sinon.stub(),
       verbose: sinon.stub(),
       trace: sinon.stub(),
+      flush: sinon.stub().resolves(),
       child: sinon.stub().returns({
         error: sinon.stub(),
         warn: sinon.stub(),
