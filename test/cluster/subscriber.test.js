@@ -201,14 +201,76 @@ describe("ClusterSubscriber", () => {
           ["topic2", "data2"],
         ];
 
-        await subscriber.sync(42);
+        const synced = await subscriber.sync(42);
 
+        should(synced).be.true();
         should(subscriber.lastMessageId).be.eql(42);
         should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.SANE);
         should(subscriber.processData).be.calledTwice();
         should(subscriber.processData)
           .be.calledWith("topic1", "data1")
           .be.calledWith("topic2", "data2");
+      });
+
+      it("should stop replaying and report failure once the replay evicts this node", async () => {
+        // A gap found while replaying evicts this node. Before TD-67 (#2776)
+        // the loop went on applying the rest of the buffer and then overwrote
+        // EVICTED with SANE on the way out, so the handshake announced success
+        // for a node that had just left the cluster.
+        subscriber.state = ClusterSubscriber.stateEnum.BUFFERING;
+        subscriber.processData = sinon.stub().callsFake(async () => {
+          subscriber.state = ClusterSubscriber.stateEnum.EVICTED;
+        });
+        subscriber.buffer = [
+          ["topic1", "data1"],
+          ["topic2", "data2"],
+        ];
+
+        const synced = await subscriber.sync(42);
+
+        should(synced).be.false();
+        should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.EVICTED);
+        should(subscriber.processData).be.calledOnce();
+      });
+    });
+
+    describe("#waitForSubscription", () => {
+      it("should resolve true as soon as a message has been received", async () => {
+        // Receiving anything is the only observable proof that the subscription
+        // has taken effect on the remote PUB socket (TD-65, #2773).
+        should(subscriber.subscriptionConfirmed).be.false();
+
+        const waiting = subscriber.waitForSubscription(5000);
+
+        subscriber.subscriptionConfirmed = true;
+        subscriber.confirmSubscription();
+
+        should(await waiting).be.true();
+      });
+
+      it("should resolve true immediately when already confirmed", async () => {
+        subscriber.subscriptionConfirmed = true;
+
+        should(await subscriber.waitForSubscription(0)).be.true();
+      });
+
+      it("should resolve false when no message arrives within the timeout", async () => {
+        should(await subscriber.waitForSubscription(10)).be.false();
+      });
+
+      it("should be confirmed by the listening loop on the first message", async () => {
+        subscriber.socket = new ZeroMQSubscriberMock();
+        subscriber.socket.receive.onFirstCall().resolves(["topic", "data"]);
+        subscriber.socket.receive.onSecondCall().callsFake(async () => {
+          subscriber.state = ClusterSubscriber.stateEnum.EVICTED;
+          return ["topic", "data"];
+        });
+        subscriber.state = ClusterSubscriber.stateEnum.BUFFERING;
+
+        await subscriber.listen();
+
+        should(subscriber.subscriptionConfirmed).be.true();
+        should(await subscriber.waitForSubscription(0)).be.true();
       });
     });
 
@@ -403,6 +465,19 @@ describe("ClusterSubscriber", () => {
         await subscriber.validateMessage(message);
 
         should(localNode.evictSelf).be.calledWithMatch(/^Node out-of-sync: 2 /);
+      });
+
+      it("should evict this subscriber so one drop is reported once", async () => {
+        // `lastMessageId` is advanced by one per message and is not resynced
+        // here, so a still-running subscriber re-trips this check on every
+        // subsequent message: one drop was reported nine times in five seconds
+        // in CI. TD-67 (#2776).
+        message.messageId = new Long(3, 0, true);
+
+        await subscriber.validateMessage(message);
+
+        should(subscriber.state).be.eql(ClusterSubscriber.stateEnum.EVICTED);
+        should(localNode.evictSelf).calledOnce();
       });
 
       it("should report a single-message loss as one, not as zero", async () => {
