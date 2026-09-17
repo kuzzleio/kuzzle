@@ -49,8 +49,8 @@ warn) · 📝 prose only — recorded, not enforced.
 | *Widening a parameter to make a call site compile is not the same as supporting that call.* | [TD-41](type-debt-register.md#td-41) | 📝 |
 | *A boolean-returning validator that every caller follows with a property read is a type guard that has not been declared yet.* | [step 09](steps/09-sprint-6-core-ii.md) | 📝 — free to fix at conversion time |
 | *A JSDoc type in an unconverted file is not a type, it is a name lookup in that file's scope.* | [step 09](steps/09-sprint-6-core-ii.md) | 📝 — check what the name resolves to before inferring from it |
-| *Optional chaining is a null guard, not a correctness guard.* | [TD-51](type-debt-register.md#td-51) | 📝 open ([#2747](https://github.com/kuzzleio/kuzzle/issues/2747)) — `?.` over a property that never exists is indistinguishable at runtime from one merely absent |
-| *A comparison against `undefined` is not a check, and JavaScript cannot tell you which of your reads is one.* | [TD-52](type-debt-register.md#td-52) | 📝 open ([#2749](https://github.com/kuzzleio/kuzzle/issues/2749)) — strict says `TS2564`, in a file strict does not read |
+| *Optional chaining is a null guard, not a correctness guard.* | [TD-51](type-debt-register.md#td-51) | 📝 the site is fixed ([#2769](https://github.com/kuzzleio/kuzzle/pull/2769)) and `PluginInstance.log` is now typed, so *that* path is checked; nothing gates the next `?.` over a property that never exists |
+| *A comparison against `undefined` is not a check, and JavaScript cannot tell you which of your reads is one.* | [TD-52](type-debt-register.md#td-52) | 📝 the three sites are fixed ([#2769](https://github.com/kuzzleio/kuzzle/pull/2769)); strict says `TS2564` but `httpwsProtocol.ts` is still unadopted, so a new one would not be caught — [TD-54](type-debt-register.md#td-54) is what closes that |
 | *The strict list reads like a quality score per file; partly it scores what a file happens to touch.* | [step 10](steps/10-sprint-7-kuzzle.md) | 📝 — narrowed by [TD-54](type-debt-register.md#td-54) |
 
 ## Tests
