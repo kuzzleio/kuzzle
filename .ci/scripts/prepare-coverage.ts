@@ -255,11 +255,25 @@ function dropRecords(lcov: string, paths: Set<string>): string {
   return output.join("\n");
 }
 
-/** The source file a vitest spec measures, per the `tests/` mirror convention. */
+/**
+ * The source file a vitest spec measures, per the `tests/` mirror convention.
+ *
+ * `.js` is tried as well as `.ts`, and it is not a leftover: a file is allowed
+ * to get its vitest spec **before** it is converted, which is how a sprint
+ * clears the coverage gate ahead of a rename rather than inside it (ADR-0001
+ * step 11, slice J0). Resolving `.ts` only meant such a spec measured a file
+ * this pass then left to the mocha report — `tests/cluster/command.test.ts`
+ * ran, passed, and counted for nothing.
+ */
 function specTarget(spec: string): string | null {
   const relative = spec.slice("tests/".length, -".test.ts".length);
 
-  for (const candidate of [`lib/${relative}.ts`, `lib/${relative}/index.ts`]) {
+  for (const candidate of [
+    `lib/${relative}.ts`,
+    `lib/${relative}/index.ts`,
+    `lib/${relative}.js`,
+    `lib/${relative}/index.js`,
+  ]) {
     if (existsSync(candidate)) {
       return candidate;
     }
@@ -267,6 +281,8 @@ function specTarget(spec: string): string | null {
 
   return null;
 }
+
+export { specTarget };
 
 function vitestOwnedFiles(): Set<string> {
   const owned = new Set<string>();
