@@ -5,6 +5,8 @@ const fs = require("fs");
 const should = require("should");
 const sinon = require("sinon");
 
+const kuzzleVault = require("kuzzle-vault");
+
 const vaultPath = require.resolve("../../lib/kuzzle/vault");
 
 let vault;
@@ -129,5 +131,48 @@ describe("/lib/kuzzle/vault", () => {
     should(loadError().message).startWith(
       "A secret file has been provided but Kuzzle cannot find the Vault key",
     );
+  });
+
+  describe("#cipher selection", () => {
+    let VaultStub;
+    let RealVault;
+
+    beforeEach(() => {
+      existsSync.returns(true);
+
+      RealVault = kuzzleVault.Vault;
+      VaultStub = sinon.stub().returns({ decrypt: sinon.stub() });
+      kuzzleVault.Vault = VaultStub;
+
+      vault = freshVault();
+    });
+
+    afterEach(() => {
+      kuzzleVault.Vault = RealVault;
+    });
+
+    it("should use the legacy AES-256-CBC cipher by default", () => {
+      vault.load("the spoon does not exist", "config/secrets.enc.json");
+
+      should(VaultStub).be.calledWith("the spoon does not exist", {
+        cipher: "aes-256-cbc",
+      });
+    });
+
+    it("should use the legacy AES-256-CBC cipher when the new algorithm is not opted in", () => {
+      vault.load("the spoon does not exist", "config/secrets.enc.json", false);
+
+      should(VaultStub).be.calledWith("the spoon does not exist", {
+        cipher: "aes-256-cbc",
+      });
+    });
+
+    it("should use the AES-256-GCM cipher when the new algorithm is opted in", () => {
+      vault.load("the spoon does not exist", "config/secrets.enc.json", true);
+
+      should(VaultStub).be.calledWith("the spoon does not exist", {
+        cipher: "aes-256-gcm",
+      });
+    });
   });
 });

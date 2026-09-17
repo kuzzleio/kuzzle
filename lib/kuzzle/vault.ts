@@ -23,7 +23,7 @@ import assert from "node:assert";
 import fs from "node:fs";
 import path from "node:path";
 
-import { Vault } from "kuzzle-vault";
+import { Vault, CryptonomiconCipher } from "kuzzle-vault";
 import isEmpty from "lodash/isEmpty";
 
 // The Vault package remove the variable from env after reading it and we have
@@ -35,7 +35,11 @@ import isEmpty from "lodash/isEmpty";
 // (TD-57, #2760).
 let ENV_VAULT_KEY: string | undefined;
 
-function load(vaultKey?: string, secretsFile?: string): Vault {
+function load(
+  vaultKey?: string,
+  secretsFile?: string,
+  useNewAlgorithm: boolean = false,
+): Vault {
   // Using KaaF kuzzle is an npm package and is located under node_modules folder
   // We need to get back to root folder of the project to get the secret file
   const defaultEncryptedSecretsFile = __dirname.endsWith(
@@ -81,7 +85,11 @@ function load(vaultKey?: string, secretsFile?: string): Vault {
     `A Vault key is present but Kuzzle cannot find the secret file at "${encryptedSecretsFile}". Aborting.`,
   );
 
-  const vault = new Vault(key);
+  const vault = new Vault(key, {
+    cipher: useNewAlgorithm
+      ? CryptonomiconCipher.AES_256_GCM
+      : CryptonomiconCipher.AES_256_CBC,
+  });
 
   if (key) {
     vault.decrypt(encryptedSecretsFile);
