@@ -59,7 +59,7 @@ type BufferedMessage = {
 
 // Handles messages publication to other nodes
 class ClusterPublisher {
-  private node: PublishingNode;
+  private readonly node: PublishingNode;
 
   /**
    * ID of the last message sent. Read by `command.js` to answer a handshake,
@@ -376,7 +376,7 @@ class ClusterPublisher {
 
     this.lastMessageId = this.lastMessageId.add(1);
 
-    const payload = Object.assign({ messageId: this.lastMessageId }, data);
+    const payload = { messageId: this.lastMessageId, ...data };
     const type = this.protoroot.lookupType(topic);
     const buffer = type.encode(type.create(payload)).finish();
 
