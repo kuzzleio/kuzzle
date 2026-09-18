@@ -19,17 +19,83 @@
  * limitations under the License.
  */
 
-"use strict";
+import Long from "long";
+import * as protobuf from "protobufjs";
+import { Subscriber } from "zeromq";
 
-const { Subscriber } = require("zeromq");
-const protobuf = require("protobufjs");
-const Long = require("long");
+import DocumentNotification from "../core/realtime/notification/document";
+import UserNotification from "../core/realtime/notification/user";
+import createDebug from "../util/debug";
+import { fromKoncordeIndex } from "../util/koncordeCompat";
+import { has } from "../util/safeObject";
 
-const debug = require("../util/debug")("kuzzle:cluster:sync");
-const DocumentNotification = require("../core/realtime/notification/document");
-const UserNotification = require("../core/realtime/notification/user");
-const { has } = require("../util/safeObject");
-const { fromKoncordeIndex } = require("../util/koncordeCompat");
+import type { RealtimeScope, RealtimeUsers } from "../types";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type State from "./state";
+import type {
+  AddCollectionMessage,
+  AddIndexMessage,
+  ClusterWideEventMessage,
+  DocumentNotificationMessage,
+  DumpRequestMessage,
+  InvalidateProfileMessage,
+  InvalidateRoleMessage,
+  NewAuthStrategyMessage,
+  NewRealtimeRoomMessage,
+  NodeEvictedMessage,
+  NodePreventEvictionMessage,
+  NodeShutdownMessage,
+  RemoveAuthStrategyMessage,
+  RemoveCollectionMessage,
+  RemoveIndexesMessage,
+  RemoveRealtimeRoomMessage,
+  SubscriptionMessage,
+  SyncMessage,
+  SyncMessages,
+  SyncTopic,
+  UnsubscriptionMessage,
+  UserNotificationMessage,
+} from "./protobuf/syncMessages";
+
+const debug = createDebug("kuzzle:cluster:sync");
+
+/**
+ * `sync.proto` types `scope` and `user` as plain strings, while the
+ * notifications built from them take closed unions — and nothing between the
+ * wire and the notification checked that the string was a member. See TD-68
+ * (#2779); keep these lists in step with the unions they `satisfies`.
+ */
+const REALTIME_SCOPES: readonly string[] = [
+  "all",
+  "in",
+  "out",
+] satisfies readonly RealtimeScope[];
+const REALTIME_USERS: readonly string[] = [
+  "all",
+  "in",
+  "none",
+  "out",
+] satisfies readonly RealtimeUsers[];
+
+/**
+ * A topic is a protobuf type name, and the handler table below covers exactly
+ * `sync.proto`'s message list — but `lookup()` also resolves nested types, so a
+ * decodable topic is not automatically one this node knows how to apply.
+ */
+function isSyncTopic(
+  handlers: Readonly<SyncMessageHandlers>,
+  topic: string,
+): topic is SyncTopic {
+  return Object.hasOwn(handlers, topic);
+}
+
+function isRealtimeScope(value: string): value is RealtimeScope {
+  return REALTIME_SCOPES.includes(value);
+}
+
+function isRealtimeUsers(value: string): value is RealtimeUsers {
+  return REALTIME_USERS.includes(value);
+}
 
 /* eslint-disable sort-keys */
 const stateEnum = Object.freeze({
@@ -40,15 +106,101 @@ const stateEnum = Object.freeze({
 });
 /* eslint-enable sort-keys */
 
+/**
+ * A frame as `protobufjs` hands it back, before `validateMessage()` has
+ * established that it carries the `messageId` every sync message must have.
+ */
+type DecodedMessage = Partial<SyncMessage> & Record<string, unknown>;
+
+/**
+ * What a subscriber needs from the node that owns it. `node.js` is converted in
+ * J3; this is the part of its surface this file actually reads.
+ */
+type SubscribingNode = {
+  config: IKuzzleConfiguration["cluster"];
+  heartbeatDelay: number;
+  nodeId: string;
+  fullState: State;
+  eventEmitter: { emit(event: string, payload: unknown): void };
+  evictNode(
+    nodeId: string,
+    options: { broadcast: boolean; reason: string },
+  ): Promise<void>;
+  evictSelf(reason: string, error?: Error): Promise<void>;
+};
+
+/**
+ * A topic's handler, as the dispatch table holds it: each one is declared with
+ * the message type `sync.proto` gives its topic, so registering a handler under
+ * the wrong topic stops compiling.
+ */
+type SyncMessageHandlers = {
+  [T in SyncTopic]: (message: SyncMessages[T]) => void | Promise<void>;
+};
+
+/** One raw frame as it comes off the socket, before it is decoded. */
+type BufferedFrame = [topic: string, data: Buffer];
+
 // Handles messages received from other nodes
 class ClusterSubscriber {
+  static readonly stateEnum = stateEnum;
+
+  private readonly localNode: SubscribingNode;
+
+  public readonly remoteNodeIP: string;
+
+  private readonly remoteNodeAddress: string;
+
+  public readonly remoteNodeId: string;
+
+  /** Used in debug mode when the node might be slower */
+  public remoteNodeEvictionPrevented: boolean;
+
+  private socket: Subscriber | null;
+
+  private protoroot: protobuf.Root | null;
+
+  /** keeps track of received message ids from the remote node */
+  public lastMessageId: Long;
+
+  public subscriptionConfirmed: boolean;
+
+  private readonly subscriptionProof: Promise<void>;
+
+  private confirmSubscription: () => void;
+
   /**
-   * @constructor
-   * @param {ClusterNode} localNode
-   * @param {string} remoteNodeId - Remote node unique ID
-   * @param {string} remoteNodeIP - address of the distant node
+   * One of the values of `stateEnum`. Deliberately `number` and not the
+   * literal union `1 | 2 | 3 | 4`: `state` is mutated by other methods while
+   * `listen()` is awaiting a socket read, and TypeScript's control-flow
+   * narrowing does not model that — under the literal union it reports the
+   * deliberate re-checks after an `await` as impossible comparisons. Those
+   * re-checks are the point.
    */
-  constructor(localNode, remoteNodeId, remoteNodeIP) {
+  public state: number;
+
+  private buffer: BufferedFrame[];
+
+  private heartbeatTimer: NodeJS.Timeout | null;
+
+  public lastHeartbeat: number;
+
+  private readonly heartbeatDelay: number;
+
+  public readonly handlers: Readonly<SyncMessageHandlers>;
+
+  private readonly logger: ReturnType<typeof global.kuzzle.log.child>;
+
+  /**
+   * @param localNode the cluster node this subscriber belongs to
+   * @param remoteNodeId - Remote node unique ID
+   * @param remoteNodeIP - address of the distant node
+   */
+  constructor(
+    localNode: SubscribingNode,
+    remoteNodeId: string,
+    remoteNodeIP: string,
+  ) {
     // not to be confused with remote nodes
     this.localNode = localNode;
 
@@ -69,7 +221,10 @@ class ClusterSubscriber {
     // the filtering, and until it lands the publisher silently drops what it
     // sends. See waitForSubscription() and TD-65 (#2773).
     this.subscriptionConfirmed = false;
-    this.subscriptionProof = new Promise((resolve) => {
+    // The executor runs synchronously, so the no-op is replaced before anything
+    // can call it — it is there to state that this field is never unassigned.
+    this.confirmSubscription = () => {};
+    this.subscriptionProof = new Promise<void>((resolve) => {
       this.confirmSubscription = resolve;
     });
 
@@ -121,7 +276,7 @@ class ClusterSubscriber {
    * Initializes this class, establishes a connection to the remote node and
    * starts listening to it.
    */
-  async init() {
+  async init(): Promise<void> {
     this.protoroot = await protobuf.load(`${__dirname}/protobuf/sync.proto`);
     this.socket = new Subscriber();
     this.socket.connect(this.remoteNodeAddress);
@@ -139,10 +294,10 @@ class ClusterSubscriber {
    * Do NOT wait this method: it's an infinite loop, it's not meant to ever
    * return (unless the remote node has been evicted)
    */
-  async listen() {
+  async listen(): Promise<void> {
     while (this.state !== stateEnum.EVICTED) {
-      let topic;
-      let data;
+      let topic: Buffer;
+      let data: Buffer;
 
       try {
         [topic, data] = await this.socket.receive();
@@ -191,16 +346,16 @@ class ClusterSubscriber {
    * default) from before it is discoverable, so this normally costs less than
    * one round.
    *
-   * @param  {number} timeout - ms to wait before giving up
-   * @return {Promise<boolean>} whether the subscription was proven live
+   * @param timeout - ms to wait before giving up
+   * @return whether the subscription was proven live
    */
-  async waitForSubscription(timeout) {
+  async waitForSubscription(timeout: number): Promise<boolean> {
     if (this.subscriptionConfirmed) {
       return true;
     }
 
-    let timer;
-    const expired = new Promise((resolve) => {
+    let timer: NodeJS.Timeout | undefined;
+    const expired = new Promise<boolean>((resolve) => {
       timer = setTimeout(() => resolve(false), timeout);
     });
 
@@ -218,11 +373,10 @@ class ClusterSubscriber {
    * Plays all buffered sync messages, and switches this subscriber state from
    * BUFFERING to SANE.
    *
-   * @param  {Long} lastMessageId
-   * @return {Promise<boolean>} false if a gap was found while replaying, which
-   *                            evicts this node
+   * @param lastMessageId
+   * @return false if a gap was found while replaying, which evicts this node
    */
-  async sync(lastMessageId) {
+  async sync(lastMessageId: Long): Promise<boolean> {
     this.lastMessageId = lastMessageId;
 
     // copy the buffer for processing: new sync messages might be buffered
@@ -231,8 +385,8 @@ class ClusterSubscriber {
       const _buffer = this.buffer;
       this.buffer = [];
 
-      for (let i = 0; i < _buffer.length; i++) {
-        await this.processData(_buffer[i][0], _buffer[i][1]);
+      for (const [topic, data] of _buffer) {
+        await this.processData(topic, data);
 
         // A gap found during the replay evicts this node. Without this check
         // the loop would go on applying messages and then overwrite EVICTED
@@ -257,18 +411,27 @@ class ClusterSubscriber {
    * and it also cannot afford to attach a rejection handler everytime a message
    * is received to prevent clogging the event loop with unnecessary promises
    *
-   * @param  {string} topic
-   * @param  {Buffer} data
-   * @return {void}
+   * @param topic
+   * @param data
    */
-  async processData(topic, data) {
+  async processData(topic: string, data: Buffer): Promise<void> {
     if (this.state === stateEnum.EVICTED) {
       return;
     }
 
     const decoder = this.protoroot.lookup(topic);
 
-    if (decoder === null) {
+    // `lookup` resolves any reflection object, not only message types, so a
+    // topic naming — say — a nested namespace used to reach `decoder.decode`
+    // with that method undefined: a TypeError thrown out of a method documented
+    // as never throwing, into `listen()`'s un-awaitable loop. The compiler asked
+    // for the narrowing; treating it as the unknown-topic case below is what the
+    // `null` branch already meant.
+    if (
+      decoder === null ||
+      !(decoder instanceof protobuf.Type) ||
+      !isSyncTopic(this.handlers, topic)
+    ) {
       await this.evictNode({
         broadcast: true,
         reason: `received an invalid message from ${this.remoteNodeId} (unknown topic "${topic}")`,
@@ -276,7 +439,7 @@ class ClusterSubscriber {
       return;
     }
 
-    const message = decoder.toObject(decoder.decode(data));
+    const message: DecodedMessage = decoder.toObject(decoder.decode(data));
 
     if (!(await this.validateMessage(message))) {
       return;
@@ -297,26 +460,26 @@ class ClusterSubscriber {
     }
   }
 
-  async handleNodePreventEviction(message) {
+  async handleNodePreventEviction(
+    message: NodePreventEvictionMessage,
+  ): Promise<void> {
     this.remoteNodeEvictionPrevented = message.evictionPrevented;
   }
 
   /**
    * Handles a heartbeat from the remote node
    *
-   * @return {void}
    */
-  handleHeartbeat() {
+  handleHeartbeat(): void {
     this.lastHeartbeat = Date.now();
   }
 
   /**
    * Handles a node eviction message.
    *
-   * @param  {Object} message - decoded NodeEvicted protobuf message
-   * @return {void}
+   * @param message - decoded NodeEvicted protobuf message
    */
-  async handleNodeEviction(message) {
+  async handleNodeEviction(message: NodeEvictedMessage): Promise<void> {
     if (message.nodeId === this.localNode.nodeId) {
       this.logger.error(
         `[CLUSTER] Node evicted by ${message.evictor}. Reason: ${message.reason}`,
@@ -334,10 +497,9 @@ class ClusterSubscriber {
   /**
    * Handles a node shutdown.
    *
-   * @param  {Object} message - decoded NodeShutdown protobuf message
-   * @return {void}
+   * @param message - decoded NodeShutdown protobuf message
    */
-  async handleNodeShutdown(message) {
+  async handleNodeShutdown(message: NodeShutdownMessage): Promise<void> {
     await this.localNode.evictNode(message.nodeId, {
       broadcast: false,
       reason: "Node is shutting down",
@@ -347,10 +509,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about realtime room creations
    *
-   * @param  {Object} message - decoded NewRealtimeRoom protobuf message
-   * @return {void}
+   * @param message - decoded NewRealtimeRoom protobuf message
    */
-  handleNewRealtimeRoom(message) {
+  handleNewRealtimeRoom(message: NewRealtimeRoomMessage): void {
     const { id, index, filter, messageId } = message;
     const icpair = fromKoncordeIndex(index);
 
@@ -379,10 +540,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about realtime subscriptions
    *
-   * @param  {Object} message - decoded Subscription protobuf message
-   * @return {void}
+   * @param message - decoded Subscription protobuf message
    */
-  handleSubscription(message) {
+  handleSubscription(message: SubscriptionMessage): void {
     debug(
       "New realtime subscription received from node %s (message: %d, room: %s)",
       this.remoteNodeId,
@@ -400,10 +560,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about realtime room removal
    *
-   * @param  {Object} message - decoded RemoveRealtimeRoom protobuf message
-   * @return {void}
+   * @param message - decoded RemoveRealtimeRoom protobuf message
    */
-  handleRealtimeRoomRemoval(message) {
+  handleRealtimeRoomRemoval(message: RemoveRealtimeRoomMessage): void {
     debug(
       "Realtime room removal received from node %s (message: %d, room: %s)",
       this.remoteNodeId,
@@ -420,10 +579,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about user unsubscriptions
    *
-   * @param  {Object} message - decoded Unscription protobuf message
-   * @return {void}
+   * @param message - decoded Unsubscription protobuf message
    */
-  handleUnsubscription(message) {
+  handleUnsubscription(message: UnsubscriptionMessage): void {
     debug(
       "Realtime unsubscription received from node %s (message: %d, room: %s)",
       this.remoteNodeId,
@@ -441,10 +599,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about cluster-wide events
    *
-   * @param {Object} message - decoded ClusterWideEvent protobuf message
-   * @return {void}
+   * @param message - decoded ClusterWideEvent protobuf message
    */
-  handleClusterWideEvent(message) {
+  handleClusterWideEvent(message: ClusterWideEventMessage): void {
     const payload = JSON.parse(message.payload);
 
     this.localNode.eventEmitter.emit(message.event, payload);
@@ -453,10 +610,23 @@ class ClusterSubscriber {
   /**
    * Handles messages about document notifications
    *
-   * @param {Object} message - decoded DocumentNotification protobuf message
-   * @return {void}
+   * @param message - decoded DocumentNotification protobuf message
    */
-  async handleDocumentNotification(message) {
+  async handleDocumentNotification(
+    message: DocumentNotificationMessage,
+  ): Promise<void> {
+    // The wire says `string`, `DocumentNotification` says "in" | "out" | "all",
+    // and until this conversion nothing checked. Treated as the malformed
+    // message it is — the same answer this file already gives to an unknown
+    // topic or a missing `messageId`. TD-68 (#2779).
+    if (!isRealtimeScope(message.scope)) {
+      await this.evictNode({
+        broadcast: true,
+        reason: `received an invalid message from ${this.remoteNodeId} (unknown document notification scope "${message.scope}")`,
+      });
+      return;
+    }
+
     const notification = new DocumentNotification({
       action: message.action,
       collection: message.collection,
@@ -482,10 +652,21 @@ class ClusterSubscriber {
   /**
    * Handles messages about user notifications
    *
-   * @param {Object} message - decoded UserNotification protobuf message
-   * @return {void}
+   * @param message - decoded UserNotification protobuf message
    */
-  async handleUserNotification(message) {
+  async handleUserNotification(
+    message: UserNotificationMessage,
+  ): Promise<void> {
+    // Same as handleDocumentNotification above: "in" | "out" | "all" | "none"
+    // on this side, an unchecked string on the wire. TD-68 (#2779).
+    if (!isRealtimeUsers(message.user)) {
+      await this.evictNode({
+        broadcast: true,
+        reason: `received an invalid message from ${this.remoteNodeId} (unknown user notification scope "${message.user}")`,
+      });
+      return;
+    }
+
     const notification = new UserNotification({
       action: message.action,
       collection: message.collection,
@@ -510,10 +691,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about new authentication strategies
    *
-   * @param  {Object} message - decoded NewAuthStrategy protobuf message
-   * @return {void}
+   * @param message - decoded NewAuthStrategy protobuf message
    */
-  handleNewAuthStrategy(message) {
+  handleNewAuthStrategy(message: NewAuthStrategyMessage): void {
     const { pluginName, strategy, strategyName } = message;
 
     debug(
@@ -535,10 +715,9 @@ class ClusterSubscriber {
   /**
    * Handles messages about authentication strategy removals
    *
-   * @param  {Object} message - decoded RemoveAuthStrategy protobuf message
-   * @return {void}
+   * @param message - decoded RemoveAuthStrategy protobuf message
    */
-  handleAuthStrategyRemoval(message) {
+  handleAuthStrategyRemoval(message: RemoveAuthStrategyMessage): void {
     const { pluginName, strategyName } = message;
 
     debug(
@@ -555,9 +734,8 @@ class ClusterSubscriber {
   /**
    * Handles messages about security resets
    *
-   * @return {void}
    */
-  async handleResetSecurity() {
+  async handleResetSecurity(): Promise<void> {
     debug("Security reset received from node %s", this.remoteNodeId);
     await global.kuzzle.ask("core:security:profile:invalidate");
     await global.kuzzle.ask("core:security:role:invalidate");
@@ -566,19 +744,17 @@ class ClusterSubscriber {
   /**
    * Handles a cross-nodes dump request
    *
-   * @param {Object} message - decoded DumpRequest protobuf message
-   * @return {void}
+   * @param message - decoded DumpRequest protobuf message
    */
-  handleDumpRequest(message) {
+  handleDumpRequest(message: DumpRequestMessage): void {
     debug("Dump generation request received from node %s", this.remoteNodeId);
     global.kuzzle.dump(message.suffix);
   }
 
   /**
    * Handles cluster-wide shutdown
-   * @return {void}
    */
-  handleShutdown() {
+  handleShutdown(): void {
     debug(
       "Cluster-wide shutdown request received from node %s",
       this.remoteNodeId,
@@ -592,9 +768,8 @@ class ClusterSubscriber {
   /**
    * Handles changes on document validators
    *
-   * @return {void}
    */
-  async handleRefreshValidators() {
+  async handleRefreshValidators(): Promise<void> {
     debug(
       "Validators changed notification received from node %s",
       this.remoteNodeId,
@@ -605,7 +780,7 @@ class ClusterSubscriber {
   /**
    * Handles manual refresh of the index cache
    */
-  async handleRefreshIndexCache() {
+  async handleRefreshIndexCache(): Promise<void> {
     debug(
       "Index cache manually refresh received from node %s",
       this.remoteNodeId,
@@ -618,10 +793,11 @@ class ClusterSubscriber {
   /**
    * Invalidates a profile to force reloading it from the storage space
    *
-   * @param {Object} message - decoded DumpRequest protobuf message
-   * @return {void}
+   * @param message - decoded InvalidateProfile protobuf message
    */
-  async handleProfileInvalidation(message) {
+  async handleProfileInvalidation(
+    message: InvalidateProfileMessage,
+  ): Promise<void> {
     debug(
       "Profile invalidation request received from node %s (profile: %s)",
       this.remoteNodeId,
@@ -637,10 +813,9 @@ class ClusterSubscriber {
   /**
    * Invalidates a role to force reloading it from the storage space
    *
-   * @param {Object} message - decoded DumpRequest protobuf message
-   * @return {void}
+   * @param message - decoded InvalidateRole protobuf message
    */
-  async handleRoleInvalidation(message) {
+  async handleRoleInvalidation(message: InvalidateRoleMessage): Promise<void> {
     debug(
       "Role invalidation request received from node %s (role: %s)",
       this.remoteNodeId,
@@ -653,10 +828,9 @@ class ClusterSubscriber {
   /**
    * Adds a new index to the index cache
    *
-   * @param {Object} message - decoded IndexCacheAdd protobuf message
-   * @return {void}
+   * @param message - decoded AddIndex protobuf message
    */
-  async handleIndexAddition(message) {
+  async handleIndexAddition(message: AddIndexMessage): Promise<void> {
     const { index, scope } = message;
 
     debug(
@@ -672,10 +846,9 @@ class ClusterSubscriber {
   /**
    * Removes indexes from the index cache
    *
-   * @param {Object} message - decoded IndexCacheAdd protobuf message
-   * @return {void}
+   * @param message - decoded RemoveIndexes protobuf message
    */
-  async handleIndexesRemoval(message) {
+  async handleIndexesRemoval(message: RemoveIndexesMessage): Promise<void> {
     const { indexes, scope } = message;
 
     debug(
@@ -694,10 +867,9 @@ class ClusterSubscriber {
   /**
    * Adds a new collection to the index cache
    *
-   * @param {Object} message - decoded IndexCacheAdd protobuf message
-   * @return {void}
+   * @param message - decoded AddCollection protobuf message
    */
-  async handleCollectionAddition(message) {
+  async handleCollectionAddition(message: AddCollectionMessage): Promise<void> {
     const { collection, index, scope } = message;
 
     debug(
@@ -718,10 +890,11 @@ class ClusterSubscriber {
   /**
    * Removes a collection from the index cache
    *
-   * @param {Object} message - decoded IndexCacheAdd protobuf message
-   * @return {void}
+   * @param message - decoded RemoveCollection protobuf message
    */
-  async handleCollectionRemoval(message) {
+  async handleCollectionRemoval(
+    message: RemoveCollectionMessage,
+  ): Promise<void> {
     const { collection, index, scope } = message;
 
     debug(
@@ -744,7 +917,7 @@ class ClusterSubscriber {
    * If a heartbeat is missing, we allow 1 heartbeat round for the remote node
    * to recover, otherwise we evict it from the cluster.
    */
-  async checkHeartbeat() {
+  async checkHeartbeat(): Promise<void> {
     if (this.remoteNodeEvictionPrevented) {
       // Fake the heartbeat while the node eviction prevention is enabled
       // otherwise when the node eviction prevention is disabled
@@ -776,7 +949,7 @@ class ClusterSubscriber {
   /**
    * Disconnects from the remote node, and frees all allocated resources.
    */
-  dispose() {
+  dispose(): void {
     if (this.state === stateEnum.EVICTED) {
       return;
     }
@@ -789,10 +962,10 @@ class ClusterSubscriber {
 
   /**
    * Checks that the received message is the one we expect.
-   * @param  {Object} message - decoded protobuf message
-   * @return {boolean} false: the message must be discarded, true otherwise
+   * @param message - decoded protobuf message
+   * @return false: the message must be discarded, true otherwise
    */
-  async validateMessage(message) {
+  async validateMessage(message: DecodedMessage): Promise<boolean> {
     if (!has(message, "messageId")) {
       this.logger.warn(
         `Invalid message received from node ${this.remoteNodeId}. Evicting it.`,
@@ -853,13 +1026,17 @@ class ClusterSubscriber {
     return true;
   }
 
-  async evictNode({ broadcast, reason }) {
+  async evictNode({
+    broadcast,
+    reason,
+  }: {
+    broadcast: boolean;
+    reason: string;
+  }): Promise<void> {
     this.state = stateEnum.EVICTED;
 
     await this.localNode.evictNode(this.remoteNodeId, { broadcast, reason });
   }
 }
 
-ClusterSubscriber.stateEnum = stateEnum;
-
-module.exports = ClusterSubscriber;
+export = ClusterSubscriber;
