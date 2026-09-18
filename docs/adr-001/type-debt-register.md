@@ -79,6 +79,8 @@
 | [TD-68](#td-68) | 🟠 med | Correctness | `sync.proto` types a notification's `scope`/`user` as `string`, the notification types as closed unions, and nothing between them checked — [#2779](https://github.com/kuzzleio/kuzzle/issues/2779) | XS | ✅ |
 | [TD-69](#td-69) | 🔴 high | Correctness | The mappings-import mutex has a 5 s TTL it never renews and decides from reads taken before the lock: a node that loses the race calls `document:create` on an id that now exists and **refuses to boot** — [#2782](https://github.com/kuzzleio/kuzzle/issues/2782) | S | ✅ [#2786](https://github.com/kuzzleio/kuzzle/pull/2786) — `Mutex`'s 5 s default left as it is, deliberately |
 | [TD-70](#td-70) | 🟠 med | Tests | `array of objects matching` compares positionally, so 25 `"hits"` assertions pin the order of an Elasticsearch search nothing ordered — [#2784](https://github.com/kuzzleio/kuzzle/issues/2784) | S | ✅ [#2787](https://github.com/kuzzleio/kuzzle/pull/2787) — the 40 `successes`/`errors` assertions weakened with it, stated in the entry |
+| [TD-71](#td-71) | 🔴 high | Enforcement | The `implicit-any` and `casts` ratchets read a `tsc` that never ran as *"0 — progress!"*, and print the command that would write 0 into the baseline — [#2793](https://github.com/kuzzleio/kuzzle/issues/2793) | XS | ✅ [#2795](https://github.com/kuzzleio/kuzzle/pull/2795) — [TD-44](#td-44)'s finding, in the two sibling scripts nobody re-checked |
+| [TD-72](#td-72) | 🟠 med | Enforcement | `docker-test.sh unit` runs `npm ci` over the bind-mounted host tree, leaving Linux native builds (or nothing) in a macOS checkout — [#2790](https://github.com/kuzzleio/kuzzle/issues/2790) | XS | ✅ [#2797](https://github.com/kuzzleio/kuzzle/pull/2797) — unit path only; the functional path and the CI flake stay open |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1428,3 +1430,43 @@ The step at `controllers-steps.ts:70` sorts for the scalar case and compares **p
 **Two things worth knowing before touching these steps again:** `matchObject` is **not** a `should` built-in, it is `features/support/assertions.ts`, so any standalone harness must load that file; and **cucumber-js passes the inner capture group, not the wrapper** — the arity is not readable from the regex and has to be measured.
 
 - **The generalisable part:** *an assertion stricter than the contract fails on the implementation's freedom, not on a defect.* Nothing promises a search hit order without a `sort`, so pinning it tests Elasticsearch's mood.
+
+---
+
+### TD-71
+**Two ratchets measured with a tool that can fail to run, and read its silence as progress** · 🔴 high · `scripts/ratchet.sh` · [#2793](https://github.com/kuzzleio/kuzzle/issues/2793)
+
+Observed directly while working on [#2792](https://github.com/kuzzleio/kuzzle/pull/2792), with `node_modules` in a half-installed state ([TD-72](#td-72) is how it got there). `npm run ratchet:implicit-any` printed:
+
+```
+🎉 Progress on 'implicit-any': 0 < baseline 455.
+   Update the baseline in the same PR: npm run ratchet:implicit-any -- --update
+```
+
+There were 455, exactly as before. `tsc` never compiled anything, nothing matched `error TS7xxx`, `grep -c` answered `0`, and `|| true` swallowed the failure. **Following the instruction it prints would have written `0` into the baseline and disarmed the ratchet permanently** — and the PR doing it would have looked like the best result the migration had ever had.
+
+This is [TD-44](#td-44) in a sibling script: `strict-check.sh` read an empty `tsc` log as *"every adopted file passes"* for exactly the same reason, was fixed in [#2736](https://github.com/kuzzleio/kuzzle/pull/2736), and the two ratchets measured the same way were left alone because nobody looked for the second instance of the finding.
+
+- **Fix:** the same discriminator — a run that checked anything says so on a `path(line,col): error TSxxxx` line. A run is accepted only if it printed **nothing at all** (a clean `--noEmit`) or printed file diagnostics; anything else exits 2 with its output quoted.
+- **The exit code alone is not enough, and that is the case that actually happened:** with no local `typescript`, `npx tsc` prints *"This is not the tsc command you are looking for"* and exits **0**.
+- `casts` gets the same treatment for the same reason — `tail -n 1` of a crashed counter is a stack-trace line, not a number.
+
+**✅ Fixed in [#2795](https://github.com/kuzzleio/kuzzle/pull/2795) (merged 2026-09-18).** Verified in both directions: normal runs still report 455 and 87, and each ratchet exits 2 when the compiler is missing, the project file is gone, or the counter throws.
+
+- **The generalisable part:** *a ratchet's test is "did the tool run", never "is the count small" — because zero is the answer the whole effort is working towards, and it is also what every broken measurement returns.* The four remaining counters (`js`, `mocha`, `cpd-exclusions`, plus `any`'s grep) count files or matches with tools that cannot half-run, which is why they were not affected; **any future ratchet that measures with a compiler inherits this failure mode by default.**
+
+---
+
+### TD-72
+**The local Docker unit runner installs into the bind-mounted host tree** · 🟠 med · `.ci/scripts/docker-test.sh` · [#2790](https://github.com/kuzzleio/kuzzle/issues/2790)
+
+`docker-test.sh unit` runs `npm ci` inside the container while the repository is bind-mounted at `/var/app`, so the install deletes and rewrites the **host's** `node_modules`. Two consequences, both observed rather than predicted:
+
+- it leaves **Linux** native builds in a macOS checkout, after which host `node` cannot load `re2`, `dumpme`, `kuzzle-espresso-logic-minimizer` or `boost-geospatial-index` — so `node -e "require('./dist/...')"` stops working and any host-side verification silently becomes impossible;
+- when the install fails partway it leaves the host with an **empty** tree and no toolchain — which is how [TD-71](#td-71) was found, and the reason this entry is filed next to it rather than as a convenience annoyance.
+
+**✅ Fixed for the unit path in [#2797](https://github.com/kuzzleio/kuzzle/pull/2797) (merged 2026-09-18).** The container installs into a **named volume** instead. The host tree is untouched — verified by counting entries either side of a run (755 → 755) and by loading a host-built native module after one — and the volume survives between runs, so repeated local runs reinstall into a warm tree.
+
+**Scope, deliberately partial.** This is the *local convenience wrapper's* unit path only. The functional path cannot be fixed the same way — the cluster services brought up by `docker compose up` must see the installed dependencies, so that one needs the volume declared in the compose files. CI's `run-test-cluster.sh` is untouched. **[#2790](https://github.com/kuzzleio/kuzzle/issues/2790) stays open** for the functional path and for the CI `npm ci` flake it was filed against.
+
+- **The generalisable part:** *a container that bind-mounts the source tree and then installs into it is not isolating the build, it is sharing it* — and the platform mismatch that follows is invisible until something on the host tries to load a native module. The tell is that the failure lands on the *host*, minutes later, in a command that has nothing to do with the test run.

@@ -33,8 +33,10 @@ warn) · 📝 prose only — recorded, not enforced.
 | *A job's `if:` is inherited by everything downstream of it.* | [TD-38](type-debt-register.md#td-38) | 📄 workflow restructured — nothing prevents the next conditional mid-chain job |
 | *A tool's scope is a glob written once and never revisited, while the tree it was written for is the one the migration is moving away from.* | [TD-39](type-debt-register.md#td-39) | 🔒 lint + prettier now cover `tests/` |
 | *A diff-based check names a base branch, and a base branch is a fact about the project, not about git.* | [TD-60](type-debt-register.md#td-60) | 🔒 `pr-preflight.sh` bases on `2-dev`, `PREFLIGHT_BASE` to override |
-| *A check that answers "is this ready?" must read the state it is asked about, not the state it was easiest to diff.* | [TD-66](type-debt-register.md#td-66) | 📝 open ([#2774](https://github.com/kuzzleio/kuzzle/issues/2774)) — same script as [TD-60](type-debt-register.md#td-60), wrong **range** rather than wrong base |
+| *A check that answers "is this ready?" must read the state it is asked about, not the state it was easiest to diff.* | [TD-66](type-debt-register.md#td-66) | 🔒 `pr-preflight.sh`'s conversion detector unions `…HEAD`, `git diff`, `--cached` **and untracked `.ts` paired against HEAD** ([#2796](https://github.com/kuzzleio/kuzzle/pull/2796)) |
 | *A decision recorded only in a decision log is a decision the next author will not read.* | [TD-61](type-debt-register.md#td-61) | 📄 this file, plus the rule itself in ADR § Conversion standards and CONTRIBUTING |
+| *A ratchet's test is "did the tool run", never "is the count small" — zero is both the goal and what every broken measurement returns.* | [TD-71](type-debt-register.md#td-71) | 🔒 `ratchet.sh` fails closed on `implicit-any` and `casts`; a compiler that printed neither diagnostics nor silence exits 2 ([#2795](https://github.com/kuzzleio/kuzzle/pull/2795)) |
+| *A container that bind-mounts the source tree and then installs into it is sharing the build, not isolating it.* | [TD-72](type-debt-register.md#td-72) | 🔒 `docker-test.sh unit` installs into a named volume; 📝 the functional path still bind-mounts ([#2790](https://github.com/kuzzleio/kuzzle/issues/2790)) |
 | *A review finding is a rule, not an anecdote.* | [TD-46](type-debt-register.md#td-46) | 📄 this file is the mechanism such as it is; the failure mode is a rule written in a PR body and broken in the same PR |
 
 ## Typing
@@ -94,6 +96,8 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 2. **`Mutex`'s 5 s default TTL** — [TD-69](type-debt-register.md#td-69)'s residue. **7 of its 14 call sites take it**, none renews it, and every site that set one explicitly chose 30 s or 60 s: the default is understood to be wrong by everyone who stopped to think about it, and silently held by everyone who did not. A lock that expires under its own holder fails as a corruption, not as a timeout. Cheapest form is probably a lint rule requiring an explicit `ttl`, not a new default.
 3. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
 4. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
+
+Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 
 Gated on 2026-09-16, and both were worth the hour:
 
