@@ -65,6 +65,7 @@ warn) · 📝 prose only — recorded, not enforced.
 | *"This is a style rule" and "this is what makes the program loadable" can be the same rule.* | [TD-49](type-debt-register.md#td-49) | 🔒 `@typescript-eslint/consistent-type-imports` as an **error**, repo-wide |
 | *`lib/` does not import the package's own `index.ts` barrel* — a leaf takes on the whole public surface to name one type. | [ADR log, 2026-09-14](ADR-0001-migration-typescript.md#decision-register) | 📝 — **candidate for `no-restricted-imports`** |
 | *`should(fn).throw()` with no matcher is not a test of why.* | [TD-57](type-debt-register.md#td-57) | 🔒 `no-restricted-syntax` over the test trees, for `should().throw()` and `expect().toThrow()` alike; `.not.throw()` excluded |
+| *An assertion stricter than the contract fails on the implementation's freedom, not on a defect.* | [TD-70](type-debt-register.md#td-70) | 📝 open ([#2784](https://github.com/kuzzleio/kuzzle/issues/2784)) — `array of objects matching` compares positionally; 25 `"hits"` assertions pin an unordered search's order |
 | *A spec that stubs its subject's base class is not testing anything.* | [TD-46](type-debt-register.md#td-46) | 📝 |
 | *When a review concludes "this call was always dead, the real work happens elsewhere", it has just established where the invariant lives — and that nothing tests it there.* | [TD-48](type-debt-register.md#td-48) | 📄 covered for the stack-trace invariant; the reading generalises |
 
