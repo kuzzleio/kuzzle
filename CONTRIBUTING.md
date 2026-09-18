@@ -17,6 +17,14 @@ We use most of the [NPM Coding Style](https://www.w3resource.com/npm/npm-coding-
 
 Kuzzle is being migrated from JavaScript to TypeScript incrementally (see
 [`docs/adr-001/ADR-0001-migration-typescript.md`](docs/adr-001/ADR-0001-migration-typescript.md)).
+
+**Since 2026-09-18, `lib/` is 100% TypeScript** — the five remaining `.js` files are all
+in `bin/` and are the agreed floor. The live phase is now the **strict flip**
+([step 12](docs/adr-001/steps/12-sprint-9-strict-flip.md)): 112 files still fail
+`strict`, and the rule for fixing one is that **the fix removes the error rather than
+moving it** — no `!`, no `as`, no widening a parameter to silence a call site. The
+`casts` and `any` ratchets below are what enforce that.
+
 While the migration is in progress, a few ratcheted rules apply, enforced in CI by
 the `migration-ratchets` job:
 
