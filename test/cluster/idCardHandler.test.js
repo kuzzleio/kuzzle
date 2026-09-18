@@ -2,6 +2,7 @@
 
 const should = require("should");
 const sinon = require("sinon");
+const { existsSync } = require("fs");
 
 const Kuzzle = require("../mocks/kuzzle.mock");
 
@@ -87,6 +88,34 @@ describe("ClusterIdCardHandler", () => {
 
     afterEach(() => {
       delete global.nodeId;
+    });
+
+    it("should fork a worker file that exists on disk", async () => {
+      // This suite runs from `dist/`, where the worker is a `.js` either way,
+      // so it would NOT have caught the regression it is named after: the path
+      // was a hard-coded `.js` while the module around it is a `.ts`, and the
+      // functional cluster starts Kuzzle from source with
+      // `-r ts-node/register`. Every node failed to fork with "Cannot find
+      // module", the worker's `close` handler evicted it, and no node became
+      // ready — the whole functional matrix, on a conversion that changed no
+      // behaviour.
+      //
+      // What this does guard is the half it can see: the forked path resolves
+      // to a file that is actually there. The source-mode half is the
+      // functional suite's, and the fix is to derive the extension from
+      // `__filename` rather than to spell it.
+      let forkedPath = null;
+
+      idCardHandler.constructWorker = (path) => {
+        forkedPath = path;
+        return new ChildProcessMock(path);
+      };
+
+      await idCardHandler.createIdCard();
+
+      should(existsSync(forkedPath)).be.true(
+        `the forked worker does not exist: ${forkedPath}`,
+      );
     });
 
     it("should adopt global.nodeId, so a cluster log line names a known process", async () => {
