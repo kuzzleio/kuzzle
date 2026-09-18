@@ -76,6 +76,7 @@
 | [TD-65](#td-65) | 🔴 high | Correctness | A joining node resumes from a message id snapshotted on the **command** channel while its **sync** subscription is still propagating: messages published in that window are dropped by ZeroMQ and read as a desync — the mechanism [TD-33](#td-33) has been chasing — [#2773](https://github.com/kuzzleio/kuzzle/issues/2773) | M | ✅ [#2777](https://github.com/kuzzleio/kuzzle/pull/2777) — a residual race via a third party's lag is documented in the entry |
 | [TD-66](#td-66) | 🟡 low | Enforcement | [TD-61](#td-61)'s strict-count reminder reads committed history only, so it prints *"no conversion in this branch"* in the state a conversion is usually checked in — [#2774](https://github.com/kuzzleio/kuzzle/issues/2774) | XS | 🔴 |
 | [TD-67](#td-67) | 🔴 high | Correctness | `evictSelf` broadcasts the node's own eviction and never receives it, so the node keeps serving traffic with state that stopped advancing; the gap is also never resynced, so one drop reports forever — [#2776](https://github.com/kuzzleio/kuzzle/issues/2776) | S | ✅ [#2777](https://github.com/kuzzleio/kuzzle/pull/2777) — *resync instead of evict* is a design decision left open |
+| [TD-68](#td-68) | 🟠 med | Correctness | `sync.proto` types a notification's `scope`/`user` as `string`, the notification types as closed unions, and nothing between them checked — [#2779](https://github.com/kuzzleio/kuzzle/issues/2779) | XS | ✅ |
 | [TD-69](#td-69) | 🔴 high | Correctness | The mappings-import mutex has a 5 s TTL it never renews and decides from reads taken before the lock: a node that loses the race calls `document:create` on an id that now exists and **refuses to boot** — [#2782](https://github.com/kuzzleio/kuzzle/issues/2782) | S | 🔴 |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
@@ -1365,6 +1366,21 @@ Found in CI on [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) (`Functiona
 - **Original fix direction, kept for the record.** (1) `evictSelf` calls the shutdown path directly instead of relying on a broadcast it cannot receive; (2) resync `lastMessageId` or mark the subscriber `EVICTED` so one drop is one event; (3) — a design decision, not a bug fix — prefer requesting a fresh full state over leaving the cluster.
 - **Open detail, not invented here:** the reports stop after 5 s and this log does not say why. Worth establishing before assuming the window is bounded.
 - **The generalisable part:** *a broadcast is not a way to tell yourself something.* The self-eviction path was written as a message, and the one subscriber that had to act on it is the one that could never receive it.
+
+---
+
+### TD-68
+**A notification scope crossed the cluster unchecked** · 🟠 med · `lib/cluster/subscriber.ts`
+
+`sync.proto` types two fields as plain strings — `DocumentNotification.scope` and `UserNotification.user` — while the objects built from them take closed unions: `RealtimeScope` is `"in" | "out" | "all"`, `RealtimeUsers` adds `"none"`. `handleDocumentNotification` and `handleUserNotification` passed the wire value straight into the constructor, and **nothing on either side checked that the string was a member**. Any node on the sync channel could put an arbitrary value into a notification that channel matching and `notifier` then treat as one of three or four known cases.
+
+It is not reachable from the public API — these arrive on the cluster's own PUB/SUB channel — which is what keeps it medium.
+
+**The tell was in the spec, for the third time.** `subscriber.test.js` fed `scope: "scope"`, a value that has never been a member of `RealtimeScope`, and asserted the notification was dispatched. It passed for as long as the file was JavaScript, because nothing could contradict it — the same shape as [TD-52](#td-52)'s `httpWs.maxFormFileSize = 2` and [TD-63](#td-63)'s hand-set `parentPort`. The neighbouring `handleUserNotification` spec was a copy of the document one: it carried `scope`, `requestId` and `rooms`, which that handler never reads, and neither `user` nor `room`, which it does, so it asserted nothing about the handler it named.
+
+- **Fixed in the conversion**, because it could not compile otherwise and the only two options were to validate or to lie in the type. A value outside its union is now treated as the malformed message it is and the sender is evicted, which is the answer this file already gives to an unknown topic or a missing `messageId`. **This is a behaviour change:** before, the value was applied.
+- **Worth doing separately:** the lists backing the guards live in `subscriber.ts` and `satisfies` their unions, so an invalid entry stops compiling — but a member *added* to a union and forgotten there would be silently rejected at runtime. One exported constant per union, next to the type, removes that for every consumer.
+- **The generalisable part:** *a serialization schema and a domain type that describe the same field are two claims, and only one of them is enforced.* The proto could not express the union, so the union stopped being true at the point the data entered the process.
 
 ---
 
