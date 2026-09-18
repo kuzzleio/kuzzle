@@ -43,7 +43,18 @@ run_unit() {
       ;;
   esac
 
+  # `node_modules` lives in a named volume, NOT in the bind-mounted checkout.
+  #
+  # The repository is mounted at /var/app, so without this the container's
+  # `npm ci` deletes and rewrites the HOST's `node_modules` — leaving Linux
+  # native builds in a macOS checkout (host `node` then cannot load `re2`),
+  # and, when the install fails partway, leaving the host with an empty tree
+  # and no toolchain at all. Both happened. See #2790.
+  #
+  # The volume also survives between runs, so repeated local runs reinstall
+  # into a warm tree instead of a bare one.
   docker compose -f docker-compose.yml run --rm --no-deps \
+    -v kuzzle_test_node_modules:/var/app/node_modules \
     -e NODE_ENV=test \
     node bash -lc "npm ci && npm run build && npm run test:unit:${suite}"
 }
