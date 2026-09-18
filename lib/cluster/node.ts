@@ -50,6 +50,7 @@ import { fromKoncordeIndex } from "../util/koncordeCompat";
 import { Mutex } from "../util/mutex"; // NOSONAR
 import ClusterCommand from "./command";
 import { ClusterIdCardHandler } from "./idCardHandler";
+import type { IdCard } from "./idCardHandler";
 import type { Activity } from "./protobuf/commandMessages";
 import ClusterPublisher from "./publisher";
 import ClusterState from "./state";
@@ -473,11 +474,6 @@ class ClusterNode {
    * /!\ Do not wait for this method: it's meant to run as a background check.
    * It'll never throw, and it'll never generate unhandled rejections.
    */
-  // NOSONAR (S3776, cognitive complexity 29): the split election below is
-  // pre-existing logic this conversion did not write, and it is the code that
-  // decides which nodes shut themselves down. Splitting it into helpers is a
-  // change to the hardest path in the cluster, and the sprint's rule is that a
-  // conversion changes no behaviour. Filed as a refactor rather than done here.
   async enforceClusterConsistency(): Promise<void> {
     // Delay the check to 1 heartbeat round, to allow all nodes to update
     // their ID cards
@@ -487,102 +483,13 @@ class ClusterNode {
       const idCards = await this.idCardHandler.getRemoteIdCards();
       idCards.push(this.idCardHandler.idCard);
 
-      let splits = [];
-
-      for (const idCard of idCards) {
-        let topology = Array.from(idCard.topology);
-        topology.push(idCard.id);
-
-        if (topology.length !== idCards.length) {
-          // Explicit comparator rather than the default: identical for these
-          // ASCII node ids, and the split election below compares the sorted
-          // arrays element by element, so the ordering is load-bearing.
-          topology = topology.sort((a, b) => {
-            if (a === b) {
-              return 0;
-            }
-
-            return a < b ? -1 : 1;
-          });
-          const found = splits.some((split) => {
-            if (split.length !== topology.length) {
-              return false;
-            }
-
-            return split.every((id, index) => id === topology[index]);
-          });
-
-          if (!found) {
-            splits.push(topology);
-          }
-        }
-      }
+      const splits = this.detectSplits(idCards);
 
       // No split detected, the cluster is consistent
       if (splits.length === 0) {
         return;
       }
-      // There is at least 1 cluster split detected.
-      //
-      // First we elect the smallest split possible.
-      // If multiple splits are eligibles, we choose amongst them the split
-      // containing the youngest isolated node (isolated = the node is in this
-      // split alone, and in no other splits). If no split is eligible using
-      // this method, we fall back to the smallest split containing the youngest
-      // node (isolated or not).
-      //
-      // The goal of this process is to force at least 1 node to kill itself,
-      // with all nodes concluding on their own on the same list of nodes to
-      // shut down.
-
-      // First remove every non existing node from topologies
-      splits = splits.map((topology) =>
-        topology.filter((nodeId) => idCards.find((card) => card.id === nodeId)),
-      );
-
-      splits = splits.sort((a, b) => a.length - b.length);
-      const eligibleSplits = splits.filter(
-        (split) => split.length === splits[0].length,
-      );
-
-      let candidates;
-
-      if (eligibleSplits.length === 1) {
-        candidates = eligibleSplits[0];
-      } else {
-        // Beware: search isolated nodes in ALL the splits, not only the
-        // smallest ones
-        let isolatedNodes = xor(...splits);
-        const eligibleNodes = [...new Set(eligibleSplits.flat())];
-
-        isolatedNodes = intersection(isolatedNodes, eligibleNodes);
-
-        const isIsolated = isolatedNodes.length > 0;
-
-        // safety measure: this should never happen
-        if (isolatedNodes.length === 0) {
-          isolatedNodes = eligibleNodes;
-        }
-
-        let youngestNode;
-
-        for (const isolatedNode of isolatedNodes) {
-          const idCard = idCards.find((card) => card.id === isolatedNode);
-          if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
-            youngestNode = idCard;
-          }
-        }
-
-        if (isIsolated) {
-          for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
-            if (eligibleSplits[i].includes(youngestNode.id)) {
-              candidates = intersection(eligibleSplits[i], isolatedNodes);
-            }
-          }
-        } else {
-          candidates = [youngestNode.id];
-        }
-      }
+      const candidates = this.electShutdownCandidates(splits, idCards);
 
       if (candidates.includes(this.nodeId)) {
         this.logger.error(
@@ -601,17 +508,132 @@ class ClusterNode {
   }
 
   /**
+   * Builds the distinct topologies the cluster's ID cards disagree on. A
+   * topology shorter than the number of known cards is a split: that card sees
+   * fewer nodes than exist.
+   *
+   * Extracted from `enforceClusterConsistency()` unchanged — a pure function of
+   * the cards it is given, which is what makes moving it safe.
+   */
+  private detectSplits(idCards: IdCard[]): string[][] {
+    const splits: string[][] = [];
+
+    for (const idCard of idCards) {
+      let topology = Array.from(idCard.topology);
+      topology.push(idCard.id);
+
+      if (topology.length !== idCards.length) {
+        // Explicit comparator rather than the default: identical for these
+        // ASCII node ids, and the split election compares the sorted arrays
+        // element by element, so the ordering is load-bearing.
+        topology = topology.sort((a, b) => {
+          if (a === b) {
+            return 0;
+          }
+
+          return a < b ? -1 : 1;
+        });
+        const found = splits.some((split) => {
+          if (split.length !== topology.length) {
+            return false;
+          }
+
+          return split.every((id, index) => id === topology[index]);
+        });
+
+        if (!found) {
+          splits.push(topology);
+        }
+      }
+    }
+
+    return splits;
+  }
+
+  /**
+   * Decides which nodes must shut themselves down, given the detected splits.
+   *
+   * Extracted from `enforceClusterConsistency()` unchanged. Every node runs
+   * this on its own and must reach the same list, so it is a pure function of
+   * `splits` and `idCards` — no clock, no randomness, no state.
+   */
+  private electShutdownCandidates(
+    splits: string[][],
+    idCards: IdCard[],
+  ): string[] {
+    // There is at least 1 cluster split detected.
+    //
+    // First we elect the smallest split possible.
+    // If multiple splits are eligibles, we choose amongst them the split
+    // containing the youngest isolated node (isolated = the node is in this
+    // split alone, and in no other splits). If no split is eligible using
+    // this method, we fall back to the smallest split containing the youngest
+    // node (isolated or not).
+    //
+    // The goal of this process is to force at least 1 node to kill itself,
+    // with all nodes concluding on their own on the same list of nodes to
+    // shut down.
+
+    // First remove every non existing node from topologies
+    splits = splits.map((topology) =>
+      topology.filter((nodeId) => idCards.find((card) => card.id === nodeId)),
+    );
+
+    splits = splits.sort((a, b) => a.length - b.length);
+    const eligibleSplits = splits.filter(
+      (split) => split.length === splits[0].length,
+    );
+
+    let candidates: string[];
+
+    if (eligibleSplits.length === 1) {
+      candidates = eligibleSplits[0];
+    } else {
+      // Beware: search isolated nodes in ALL the splits, not only the
+      // smallest ones
+      let isolatedNodes = xor(...splits);
+      const eligibleNodes = [...new Set(eligibleSplits.flat())];
+
+      isolatedNodes = intersection(isolatedNodes, eligibleNodes);
+
+      const isIsolated = isolatedNodes.length > 0;
+
+      // safety measure: this should never happen
+      if (isolatedNodes.length === 0) {
+        isolatedNodes = eligibleNodes;
+      }
+
+      let youngestNode;
+
+      for (const isolatedNode of isolatedNodes) {
+        const idCard = idCards.find((card) => card.id === isolatedNode);
+        if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
+          youngestNode = idCard;
+        }
+      }
+
+      if (isIsolated) {
+        for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
+          if (eligibleSplits[i].includes(youngestNode.id)) {
+            candidates = intersection(eligibleSplits[i], isolatedNodes);
+          }
+        }
+      } else {
+        candidates = [youngestNode.id];
+      }
+    }
+    return candidates;
+  }
+
+  /**
    * Discovers other active nodes from the cluster and, if other nodes exist,
    * starts a handshake procedure to sync this node and to make it able to
    * handle new client requests
    *
    * @return {void}
    */
-  // NOSONAR (S3776, cognitive complexity 26): same as above — the retry loop,
-  // the mutex, the timeout and the per-node sync are one interlocking sequence,
-  // and TD-65 lives in exactly this ordering. Refactoring it belongs in its own
-  // PR, with the functional suite as the witness.
   async handshake(): Promise<void> {
+    // NOSONAR
     const handshakeTimeout = setTimeout(() => {
       this.logger.error(
         `[CLUSTER] Failed to join the cluster: timed out (joinTimeout: ${this.config.joinTimeout}ms)`,
@@ -619,9 +641,11 @@ class ClusterNode {
       global.kuzzle.shutdown();
     }, this.config.joinTimeout);
 
-    const mutex = new Mutex("clusterHandshake", {
-      timeout: this.config.joinTimeout,
-    });
+    // NOSONAR (S1874): same deferral as the import above — every node takes
+    // "clusterHandshake" with `Mutex`, so converting one site to `withLock`
+    // would remove the exclusion it exists for. TD-20 (#2688).
+    const lockOptions = { timeout: this.config.joinTimeout };
+    const mutex = new Mutex("clusterHandshake", lockOptions); // NOSONAR
 
     try {
       await mutex.lock();
@@ -663,35 +687,8 @@ class ClusterNode {
           return;
         }
 
-        // Subscribe to remote nodes and start buffering sync messages.
-        //
-        // The wait is what makes `getFullState` below safe: it snapshots each
-        // node's `lastMessageId` on the *command* channel, and this
-        // subscription lives on the *sync* channel, so nothing orders the
-        // snapshot after the subscription taking effect. Until it does, the
-        // remote's PUB socket drops what it publishes — and this node is then
-        // told to resume from just before the dropped message. See TD-65
-        // (#2773).
-        await Bluebird.map(nodes, async ({ id, ip }) => {
-          const subscriber = new ClusterSubscriber(this, id, ip);
-          this.remoteNodes.set(id, subscriber);
-          await subscriber.init();
+        await this.subscribeToNodes(nodes);
 
-          const live = await subscriber.waitForSubscription(
-            this.heartbeatDelay * 2,
-          );
-
-          if (!live) {
-            // Not fatal: a node whose ID card outlived it is exactly what the
-            // `fullState === null` retry below exists for. Say so, and let that
-            // path decide.
-            this.logger.warn(
-              `[CLUSTER] No sync message received from node ${id} within ${
-                this.heartbeatDelay * 2
-              }ms: proceeding with a subscription that is not proven live.`,
-            );
-          }
-        });
         debug("[CLUSTER] Successfully subscribed to nodes");
 
         fullState = await this.command.getFullState(nodes);
@@ -736,34 +733,7 @@ class ClusterNode {
 
       debug("[CLUSTER] Successful handshakes with other nodes.");
 
-      // Update subscribers: start synchronizing, or unsubscribes from nodes who
-      // didn't respond
-      for (const [nodeId, handshakeData] of Object.entries(
-        handshakeResponses,
-      )) {
-        const subscriber = this.remoteNodes.get(nodeId);
-        if (handshakeData === null) {
-          subscriber.dispose();
-          this.remoteNodes.delete(nodeId);
-        } else {
-          await this.idCardHandler.addNode(nodeId);
-          const nodesStates = fullState.nodesState || [];
-          const nodeStatus = nodesStates.find((node) => node.id === nodeId);
-          // Awaited: `sync()` replays the buffered messages, and a gap found
-          // there evicts this node. Fired and forgotten, it used to print
-          // "Successfully completed the handshake" 2ms AFTER the eviction that
-          // contradicts it — a log describing a state the code is not in.
-          const synced = await subscriber.sync(
-            nodeStatus ? nodeStatus.lastMessageId : handshakeData.lastMessageId,
-          );
-
-          if (synced) {
-            this.logger.info(
-              `[CLUSTER] Successfully completed the handshake with node ${nodeId}`,
-            );
-          }
-        }
-      }
+      await this.syncWithPeers(handshakeResponses, fullState);
 
       // `createIdCard()` adopts `global.nodeId`, so these are normally the same
       // string and the line reads as one name (TD-59, #2764). They still differ
@@ -779,6 +749,90 @@ class ClusterNode {
     } finally {
       clearTimeout(handshakeTimeout);
       await mutex.unlock();
+    }
+  }
+
+  /**
+   * Subscribes to every discovered node and starts buffering their sync
+   * messages.
+   *
+   * Extracted from `handshake()` unchanged, including its awaits: the wait
+   * below is what makes the `getFullState` that follows it safe, so the
+   * ordering is the point of the method, not an implementation detail.
+   */
+  private async subscribeToNodes(
+    nodes: Array<{ id: string; ip: string }>,
+  ): Promise<void> {
+    // Subscribe to remote nodes and start buffering sync messages.
+    //
+    // The wait is what makes `getFullState` below safe: it snapshots each
+    // node's `lastMessageId` on the *command* channel, and this
+    // subscription lives on the *sync* channel, so nothing orders the
+    // snapshot after the subscription taking effect. Until it does, the
+    // remote's PUB socket drops what it publishes — and this node is then
+    // told to resume from just before the dropped message. See TD-65
+    // (#2773).
+    await Bluebird.map(nodes, async ({ id, ip }) => {
+      const subscriber = new ClusterSubscriber(this, id, ip);
+      this.remoteNodes.set(id, subscriber);
+      await subscriber.init();
+
+      const live = await subscriber.waitForSubscription(
+        this.heartbeatDelay * 2,
+      );
+
+      if (!live) {
+        // Not fatal: a node whose ID card outlived it is exactly what the
+        // `fullState === null` retry below exists for. Say so, and let that
+        // path decide.
+        this.logger.warn(
+          `[CLUSTER] No sync message received from node ${id} within ${
+            this.heartbeatDelay * 2
+          }ms: proceeding with a subscription that is not proven live.`,
+        );
+      }
+    });
+  }
+
+  /**
+   * Starts synchronizing with each peer that answered the handshake, and drops
+   * the ones that did not.
+   *
+   * Extracted from `handshake()` unchanged. `sync()` is awaited here for the
+   * reason written inside: a gap found during its replay evicts this node, and
+   * the success line must not be printed before that is known.
+   */
+  private async syncWithPeers(
+    handshakeResponses: Awaited<
+      ReturnType<ClusterCommand["broadcastHandshake"]>
+    >,
+    fullState: Awaited<ReturnType<ClusterCommand["getFullState"]>>,
+  ): Promise<void> {
+    // Update subscribers: start synchronizing, or unsubscribes from nodes who
+    // didn't respond
+    for (const [nodeId, handshakeData] of Object.entries(handshakeResponses)) {
+      const subscriber = this.remoteNodes.get(nodeId);
+      if (handshakeData === null) {
+        subscriber.dispose();
+        this.remoteNodes.delete(nodeId);
+      } else {
+        await this.idCardHandler.addNode(nodeId);
+        const nodesStates = fullState.nodesState || [];
+        const nodeStatus = nodesStates.find((node) => node.id === nodeId);
+        // Awaited: `sync()` replays the buffered messages, and a gap found
+        // there evicts this node. Fired and forgotten, it used to print
+        // "Successfully completed the handshake" 2ms AFTER the eviction that
+        // contradicts it — a log describing a state the code is not in.
+        const synced = await subscriber.sync(
+          nodeStatus ? nodeStatus.lastMessageId : handshakeData.lastMessageId,
+        );
+
+        if (synced) {
+          this.logger.info(
+            `[CLUSTER] Successfully completed the handshake with node ${nodeId}`,
+          );
+        }
+      }
     }
   }
 
