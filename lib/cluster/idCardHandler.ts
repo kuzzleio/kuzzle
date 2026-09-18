@@ -21,6 +21,7 @@
 
 import { NameGenerator } from "../util/name-generator";
 import { fork } from "node:child_process";
+import { extname } from "node:path";
 import type { ChildProcess } from "node:child_process";
 import Bluebird from "bluebird";
 
@@ -189,8 +190,14 @@ export class ClusterIdCardHandler {
 
     await this.addIdCardToIndex();
 
+    // Same extension as this module, not a hard-coded `.js`: the functional
+    // cluster starts Kuzzle from source with `-r ts-node/register`, where this
+    // file is `lib/cluster/idCardHandler.ts` and its neighbour is a `.ts` too;
+    // a built Kuzzle runs the same code from `dist/` with both as `.js`.
+    // `fork()` inherits `process.execArgv`, so a child spawned from a `.ts`
+    // parent gets the same loader and can require a `.ts`.
     this.refreshWorker = this.constructWorker(
-      `${__dirname}/workers/IDCardRenewer.js`,
+      `${__dirname}/workers/IDCardRenewer${extname(__filename)}`,
     );
 
     this.refreshWorker.on("message", async (message: JSONObject) => {
