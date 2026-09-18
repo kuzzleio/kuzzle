@@ -116,21 +116,50 @@ echo "==> Strict-count reminder for conversions (ADR-0001: a conversion reports 
 # adopted into strict, the PR owes a per-file error count and a reading of it —
 # which errors are guards the runtime can reach (bugs) rather than types it
 # already guarantees. Sprints 6 and 7 left 246 unreported (TD-54, #2757).
-if [ -n "$base_ref" ]; then
-  # Two spellings of the same event: a rename git detected, and an add of x.ts
-  # next to a delete of x.js that it did not (a conversion that rewrites enough
-  # of the file falls under the similarity threshold).
-  converted="$( {
-    git diff --find-renames --diff-filter=R --name-status "$base_ref"...HEAD 2>/dev/null \
-      | awk -F'\t' '$2 ~ /\.js$/ && $3 ~ /^(lib|index)/ && $3 ~ /\.ts$/ { print $3 }'
-    git diff --no-renames --name-status "$base_ref"...HEAD 2>/dev/null \
-      | awk -F'\t' '$1 == "A" && $2 ~ /^(lib|index)/ && $2 ~ /\.ts$/ { added[$2] = 1 }
-                    $1 == "D" && $2 ~ /\.js$/ { sub(/\.js$/, ".ts", $2); deleted[$2] = 1 }
-                    END { for (f in added) if (f in deleted) print f }'
-  } | sort -u || true)"
-else
-  converted=""
-fi
+# Read from the same three sources as the coverage reminder above, plus
+# untracked files: a conversion is usually checked BEFORE it is committed, and
+# `"$base_ref"...HEAD` sees committed history only. Run on sprint 8 J1's two
+# conversions before committing them, this printed "no .js -> .ts conversion in
+# this branch"; committing the same tree made it print both. See TD-66 (#2774).
+#
+# Untracked matters on top of TD-66's three: a freshly written `x.ts` that has
+# not been `git add`ed appears in no `git diff` at all, which is exactly the
+# state a conversion is in when its author runs preflight.
+#
+# Two spellings of the same event: a rename git detected, and an add of x.ts
+# next to a delete of x.js that it did not (a conversion that rewrites enough
+# of the file falls under the similarity threshold).
+collect_conversions() {
+  # $@ : the `git diff` range arguments (none = working tree)
+  git diff --find-renames --diff-filter=R --name-status "$@" 2>/dev/null \
+    | awk -F'\t' '$2 ~ /\.js$/ && $3 ~ /^(lib|index)/ && $3 ~ /\.ts$/ { print $3 }'
+  git diff --no-renames --name-status "$@" 2>/dev/null \
+    | awk -F'\t' '$1 == "A" && $2 ~ /^(lib|index)/ && $2 ~ /\.ts$/ { added[$2] = 1 }
+                  $1 == "D" && $2 ~ /\.js$/ { sub(/\.js$/, ".ts", $2); deleted[$2] = 1 }
+                  END { for (f in added) if (f in deleted) print f }'
+}
+
+converted="$( {
+  if [ -n "$base_ref" ]; then
+    collect_conversions "$base_ref"...HEAD
+  fi
+  collect_conversions
+  collect_conversions --cached
+
+  # An untracked x.ts whose x.js sibling is gone from disk but exists in HEAD.
+  # Tested against HEAD rather than the index on purpose: the delete may be
+  # unstaged, staged (`git rm`) or already committed, and only HEAD is true in
+  # all three.
+  git ls-files --others --exclude-standard 2>/dev/null \
+    | grep -E '^(lib|index).*\.ts$' \
+    | while read -r ts; do
+        js="${ts%.ts}.js"
+
+        if ! [ -e "$js" ] && git cat-file -e "HEAD:$js" > /dev/null 2>&1; then
+          printf '%s\n' "$ts"
+        fi
+      done
+} | sort -u || true)"
 
 adopted_list="$(grep -vE '^[[:space:]]*(#|$)' .migration/strict-adopted.txt 2>/dev/null || true)"
 unreported=""
