@@ -24,8 +24,12 @@ export type SecurityConfiguration = {
 
   /**
    * @deprecated Use `security.authToken` instead.
+   *
+   * Not optional on the merged shape: `default.config.ts` always ships it, and
+   * `authToken`'s readers fall back to it — `authToken.algorithm ?? jwt.algorithm`.
+   * A user who supplies none of it still gets it (ADR-0001, TD-53).
    */
-  jwt?: JSONObject;
+  jwt: JSONObject;
 
   /**
    * Configuration for the npm package jsonwebtoken

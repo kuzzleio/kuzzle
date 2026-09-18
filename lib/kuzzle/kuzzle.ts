@@ -44,7 +44,7 @@ import Statistics from "../core/statistics/statistics";
 import StorageEngine from "../core/storage/storageEngine";
 import Validation from "../core/validation/validation";
 import * as kerror from "../kerror";
-import type { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import AsyncStore from "../util/asyncStore";
 import { sha256 } from "../util/crypto";
 import { Mutex } from "../util/mutex";
@@ -98,7 +98,7 @@ type ImportStatus = {
 };
 
 class Kuzzle extends KuzzleEventEmitter {
-  public config: KuzzleConfiguration;
+  public config: IKuzzleConfiguration;
   private _state: kuzzleStateEnum = kuzzleStateEnum.STARTING;
   public log: Logger;
   /** Read by `PluginsManager` to locate the plugins directories. */
@@ -185,7 +185,7 @@ class Kuzzle extends KuzzleEventEmitter {
    */
   public id: string;
 
-  constructor(config: KuzzleConfiguration) {
+  constructor(config: IKuzzleConfiguration) {
     super(
       config.plugins.common.maxConcurrentPipes,
       config.plugins.common.pipesBufferSize,

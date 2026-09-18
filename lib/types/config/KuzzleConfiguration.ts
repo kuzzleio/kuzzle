@@ -10,6 +10,13 @@ import type {
   ServicesConfiguration,
 } from "../index";
 
+/**
+ * The **merged, runtime** configuration: a user's `.kuzzlerc` applied over the
+ * packaged defaults. Nothing here is optional, because `loadConfig()` always
+ * produces every section — this is what `global.kuzzle.config` holds.
+ *
+ * For what a user may *write*, see {@link KuzzleConfiguration}.
+ */
 export interface IKuzzleConfiguration {
   /**
    * Kuzzle version, populated at runtime from `package.json`.
@@ -201,4 +208,43 @@ export interface IKuzzleConfiguration {
   };
 }
 
-export type KuzzleConfiguration = Partial<IKuzzleConfiguration>;
+/**
+ * What `lib/config/default.config.ts` ships: every section except the two
+ * `loadConfig()` derives at startup — `version`, read from `package.json`, and
+ * `internal`, computed from the rest (the hash seed, the notifiable protocols,
+ * the `allowAllOrigins` flag). Declaring the omission is what keeps the defaults
+ * file total — any other missing section is an error, not an oversight.
+ */
+export type PackagedKuzzleConfiguration = Omit<
+  IKuzzleConfiguration,
+  "version" | "internal"
+>;
+
+/**
+ * Recursively optional. Written out here rather than imported because the user
+ * shape below is its only use: an override is always *partial at every depth*,
+ * and a shallow `Partial` demands the whole of any section it is given.
+ *
+ * Arrays and functions are left alone — a partial array element is not a thing
+ * a config override can express, and `_.merge` replaces arrays wholesale.
+ */
+type DeepPartial<T> = T extends unknown[]
+  ? T
+  : T extends (...args: never[]) => unknown
+    ? T
+    : T extends object
+      ? { [K in keyof T]?: DeepPartial<T[K]> }
+      : T;
+
+/**
+ * What a **user** may supply: a `.kuzzlerc` file, the object passed to
+ * `app.config.merge()`, an environment override. Everything is optional, at
+ * every depth, because the packaged defaults provide the rest — and because
+ * that is what `rc` and `_.merge` actually accept.
+ *
+ * This is **not** the shape of `global.kuzzle.config`, which is this merged
+ * over `lib/config/default.config.ts` and therefore total — that one is
+ * {@link IKuzzleConfiguration}. One name used for both is what kept every
+ * config reader out of `strict`: see ADR-0001, TD-53 (#2756).
+ */
+export type KuzzleConfiguration = DeepPartial<IKuzzleConfiguration>;
