@@ -67,9 +67,48 @@ Then(
   },
 );
 
+/**
+ * Matches each expected object against *some* element of the result, rather
+ * than against the element at the same index.
+ *
+ * Most of the arrays these steps assert on are search hits, and a search
+ * carries no order unless the request asked for one — so comparing
+ * positionally pins a property nothing promises, and fails on whichever run
+ * Elasticsearch happens to answer differently. See TD-70 (#2784).
+ *
+ * Matching is greedy first-fit: an element already claimed by an earlier
+ * expectation cannot serve a later one. `matchObject` is a partial match, so
+ * with deliberately overlapping expectations a greedy pass can fail where a
+ * perfect pairing exists; the failure names what was left over, which is
+ * enough to see that is what happened.
+ */
+function matchObjectsInAnyOrder(result: unknown[], expected: unknown[]) {
+  const remaining = [...result];
+
+  for (const expectation of expected) {
+    const index = remaining.findIndex((element) => {
+      try {
+        should(element).matchObject(expectation);
+        return true;
+      } catch {
+        return false;
+      }
+    });
+
+    if (index === -1) {
+      throw new Error(
+        `No element of the array matches ${JSON.stringify(expectation)}.\n` +
+          `Unmatched elements: ${JSON.stringify(remaining, null, 2)}`,
+      );
+    }
+
+    remaining.splice(index, 1);
+  }
+}
+
 Then(
-  /I should receive a ("(.*?)" )?array (of objects )?matching:/,
-  function (name, objects, dataTable) {
+  /I should receive a ("(.*?)" )?array (of objects )?matching( in order)?:/,
+  function (name, objects, inOrder, dataTable) {
     const expected = objects
       ? this.parseObjectArray(dataTable)
       : _.flatten(dataTable.rawTable).map((obj: any) => JSON.parse(obj));
@@ -84,6 +123,12 @@ Then(
       should(result.sort()).match(expected.sort());
       return;
     }
+
+    if (!inOrder) {
+      matchObjectsInAnyOrder(result, expected);
+      return;
+    }
+
     for (let i = 0; i < expected.length; i++) {
       should(result[i]).matchObject(expected[i]);
     }
