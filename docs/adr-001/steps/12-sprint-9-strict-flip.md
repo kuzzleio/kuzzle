@@ -1,6 +1,6 @@
 # Step 12 — Sprint 9: the strict flip
 
-**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** — · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -72,7 +72,7 @@ Ordered so that each one is independently mergeable and the flip is last. Nothin
 
 | # | Content | Errors | Why this grouping |
 |---|---|---:|---|
-| **K0** | [TD-53](../type-debt-register.md#td-53) — make `KuzzleConfiguration` a real shape instead of `Partial<…>` ([#2756](https://github.com/kuzzleio/kuzzle/issues/2756)) | ~83 | It is the one blocker that is *someone else's* to fix: every config reader in the repo waits on it, it is spread thin (83 errors over many files), and it already blocks a named file from adoption — `idCardHandler.ts`, [step 11](11-sprint-8-cluster.md#idcardhandlerts-is-not-adopted-and-the-reason-is-worth-stating). First, because everything after it re-measures. |
+| **K0** ✅ | [TD-53](../type-debt-register.md#td-53) — make `KuzzleConfiguration` a real shape instead of `Partial<…>` ([#2756](https://github.com/kuzzleio/kuzzle/issues/2756)) — **cleared 106**, see *What K0 found* | ~83 | It is the one blocker that is *someone else's* to fix: every config reader in the repo waits on it, it is spread thin (83 errors over many files), and it already blocks a named file from adoption — `idCardHandler.ts`, [step 11](11-sprint-8-cluster.md#idcardhandlerts-is-not-adopted-and-the-reason-is-worth-stating). First, because everything after it re-measures. |
 | **K1** | The 60 files at ≤ 5 errors, in layer-sized batches | 153 | 54% of the remaining files for 9% of the errors. Adopting them shrinks `--count`'s output to the files that actually need thought, and it is the cheapest way to make the ratchet's list stop being a survey. |
 | **K2** | `lib/api/request/*` — `kuzzleRequest`, `requestContext`, `requestResponse`, `requestInput` | 133 | One object, four files, and it is **public API surface** (`KuzzleRequest` is re-exported). Its types are what every controller and every plugin sees, so fixing it changes error counts everywhere else — do it before the controllers, not after. |
 | **K3** | The two `elasticsearch.ts` | 433 | 26% of the debt in two files, and [TD-62](../type-debt-register.md#td-62) says 32 of its 56 lying `null` declarations live here. Same file twice (ES 7 and ES 8), so the second is largely the first's diff. Its own PR because its size will dominate any review it shares. |
@@ -105,3 +105,20 @@ bash scripts/strict-check.sh --candidates       # files that pass strict but are
 npx tsc -p tsconfig.strict.json --noEmit        # the raw diagnostics, with their codes
 npm run ratchet                                 # no counter may rise
 ```
+
+---
+
+## What K0 found
+
+**1 673 → 1 567 errors, 112 → 108 files, 141 → 145 adopted.** 106 cleared against the 83 estimated: the top-level `Partial` also produced `TS2551`s — a property read off `SecurityConfiguration | undefined` — which the estimate had counted as a separate class. 30 files improved without becoming clean; the four that did are `internalIndexHandler.ts` and `storageEngine.ts` (the two sprint 7 named this blocker for), plus `Logger.ts` and `service.ts`.
+
+The fix is three types where there was one name — `IKuzzleConfiguration` (merged, total), `PackagedKuzzleConfiguration` (what the defaults file ships), `KuzzleConfiguration` (what a user writes, now a **deep** partial). The register entry for [TD-53](../type-debt-register.md#td-53) carries the detail and the three things the fix found that were not in the plan.
+
+**Two notes for the slices that follow:**
+
+- **The estimate was low for a reason worth repeating.** 83 came from counting `TS18048` lines mentioning `config`; the real figure was 106, because one bad type produces errors in more than one code. **A per-class estimate under-counts whatever the class boundary cuts through** — so read the K1–K5 figures in the table above as lower bounds, not budgets.
+- **K1 is now 60 files at ≤ 5 errors on a re-measure, not the same 60.** Every slice moves the others; re-run `--count` before picking one up.
+
+### And it hit the `any` ratchet on a comment
+
+The ratchet went 204 → 205 on a change that added no `any`: `grep -rE ': any'` matched the words *"total: anything else"* in a doc comment. That is [TD-73](../type-debt-register.md#td-73), and it is the fourth telling of a lesson this ADR has already paid for twice — the comment was reworded to get the PR through, which is precisely the behaviour [TD-43](../type-debt-register.md#td-43) predicted a grep-based ratchet would teach.

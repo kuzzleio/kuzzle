@@ -22,7 +22,8 @@
 import { KuzzleLogger } from "kuzzle-logger";
 import type { JSONObject } from "kuzzle-sdk";
 
-import type { KuzzleConfiguration, KuzzleRequest } from "../../index";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type { KuzzleRequest } from "../api/request/kuzzleRequest";
 
 /**
  * The Logger class provides logging functionality for Kuzzle.
@@ -37,7 +38,10 @@ export class Logger extends KuzzleLogger {
   private warnedForSillyDeprecation = false;
   private warnedForVerboseDeprecation = false;
 
-  constructor(kuzzleConfig: KuzzleConfiguration, namespace: string = "kuzzle") {
+  constructor(
+    kuzzleConfig: IKuzzleConfiguration,
+    namespace: string = "kuzzle",
+  ) {
     const config = kuzzleConfig.server.appLogs;
     const deprecatedConfig = kuzzleConfig.plugins["kuzzle-plugin-logger"];
 

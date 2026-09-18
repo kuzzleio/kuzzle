@@ -1,5 +1,5 @@
 import httpRoutes from "../api/httpRoutes";
-import type { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import type { PackagedKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 
 /* eslint-disable sort-keys */
 
@@ -14,7 +14,7 @@ import type { KuzzleConfiguration } from "../types/config/KuzzleConfiguration";
  * @class KuzzleConfiguration
  */
 
-const defaultConfig: KuzzleConfiguration = {
+const defaultConfig: PackagedKuzzleConfiguration = {
   // @deprecated
   realtime: {
     pcreSupport: false,

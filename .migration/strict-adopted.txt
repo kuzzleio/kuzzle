@@ -98,6 +98,7 @@ lib/core/security/index.ts
 lib/core/security/securityLoader.ts
 lib/core/shared/KoncordeWrapper.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+lib/core/storage/storageEngine.ts
 lib/core/storage/storeScopeEnum.ts
 lib/core/validation/baseType.ts
 lib/core/validation/specification.ts
@@ -117,13 +118,16 @@ lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
 lib/kerror/errors/index.ts
 lib/kerror/errors/multipleErrorsError.ts
+lib/kuzzle/Logger.ts
 lib/kuzzle/event/pipeRunner.ts
 lib/kuzzle/event/waterfall.ts
 lib/kuzzle/index.ts
+lib/kuzzle/internalIndexHandler.ts
 lib/kuzzle/kuzzleStateEnum.ts
 lib/kuzzle/vault.ts
 lib/model/security/rights.ts
 lib/model/storage/apiKey.ts
+lib/service/service.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/esWrapper.ts
 lib/service/storage/Elasticsearch.ts

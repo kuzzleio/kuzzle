@@ -23,6 +23,7 @@ import assert from "assert";
 
 import rc from "rc";
 import defaultConfig from "./default.config";
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import packageJson from "../../package.json";
 import { wrap } from "../kerror";
 import { isPlainObject } from "../util/safeObject";
@@ -31,10 +32,17 @@ import bytes from "../util/bytes";
 const wrapped = wrap("core", "configuration");
 
 /**
- * Loads, interprets and checks configuration files
- * @returns {object}
+ * Loads, interprets and checks configuration files.
+ *
+ * The return type is the **merged** shape, not the partial one a user writes:
+ * `rc()` applies `.kuzzlerc` and the environment over the packaged defaults,
+ * and the two sections the defaults do not carry — `version` and `internal` —
+ * are assigned below. That is what makes every section present, and it is the
+ * claim `global.kuzzle.config` is read against everywhere else (ADR-0001,
+ * TD-53). Anything added to {@link IKuzzleConfiguration} has to be produced
+ * here or in `default.config.ts`, or the two files stop agreeing.
  */
-export function loadConfig() {
+export function loadConfig(): IKuzzleConfiguration {
   let config: any;
 
   try {

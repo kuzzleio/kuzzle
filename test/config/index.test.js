@@ -61,6 +61,54 @@ describe("lib/config/index.js", () => {
     });
   });
 
+  describe("#totality", () => {
+    // lib/config/index.ts declares `loadConfig(): IKuzzleConfiguration`, the
+    // TOTAL shape — not the partial one a user writes. Every config reader in
+    // lib/ is type-checked against that claim, so nothing else would notice if
+    // a section stopped being produced: the types would keep saying it is there.
+    // See ADR-0001, TD-53 (#2756).
+    const declaredSections = [
+      "application",
+      "cluster",
+      "controllers",
+      "dump",
+      "http",
+      "internal",
+      "limits",
+      "plugins",
+      "realtime",
+      "repositories",
+      "security",
+      "server",
+      "services",
+      "stats",
+      "validation",
+      "vault",
+      "version",
+    ];
+
+    it("should return every section the merged configuration type declares", () => {
+      const result = config.loadConfig();
+
+      const missing = declaredSections.filter(
+        (section) => result[section] === undefined,
+      );
+
+      // Named rather than asserted one by one: the failure that matters is
+      // "which section stopped being produced", not "the first one".
+      should(missing).be.empty();
+    });
+
+    it("should still carry the deprecated security.jwt section merged from the defaults", () => {
+      // Declared non-optional on the merged shape because authToken's readers
+      // fall back to it (`authToken.algorithm ?? jwt.algorithm`) with no guard.
+      const result = config.loadConfig();
+
+      should(result.security.jwt).be.an.Object();
+      should(result.security.jwt.algorithm).be.a.String();
+    });
+  });
+
   describe("#load", () => {
     it('should invoke "rc" to load both the default and custom configs', () => {
       config.loadConfig();

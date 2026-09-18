@@ -36,6 +36,7 @@ warn) · 📝 prose only — recorded, not enforced.
 | *A check that answers "is this ready?" must read the state it is asked about, not the state it was easiest to diff.* | [TD-66](type-debt-register.md#td-66) | 🔒 `pr-preflight.sh`'s conversion detector unions `…HEAD`, `git diff`, `--cached` **and untracked `.ts` paired against HEAD** ([#2796](https://github.com/kuzzleio/kuzzle/pull/2796)) |
 | *A decision recorded only in a decision log is a decision the next author will not read.* | [TD-61](type-debt-register.md#td-61) | 📄 this file, plus the rule itself in ADR § Conversion standards and CONTRIBUTING |
 | *A ratchet's test is "did the tool run", never "is the count small" — zero is both the goal and what every broken measurement returns.* | [TD-71](type-debt-register.md#td-71) | 🔒 `ratchet.sh` fails closed on `implicit-any` and `casts`; a compiler that printed neither diagnostics nor silence exits 2 ([#2795](https://github.com/kuzzleio/kuzzle/pull/2795)) |
+| *When a finding names a class of tool, fixing the reported instance is half the work — enumerate the siblings in the same PR.* | [TD-71](type-debt-register.md#td-71), [TD-73](type-debt-register.md#td-73) | 📝 open — TD-44 was fixed in one script of three, TD-43 in one ratchet of two; both came back |
 | *A container that bind-mounts the source tree and then installs into it is sharing the build, not isolating it.* | [TD-72](type-debt-register.md#td-72) | 🔒 `docker-test.sh unit` installs into a named volume; 📝 the functional path still bind-mounts ([#2790](https://github.com/kuzzleio/kuzzle/issues/2790)) |
 | *A review finding is a rule, not an anecdote.* | [TD-46](type-debt-register.md#td-46) | 📄 this file is the mechanism such as it is; the failure mode is a rule written in a PR body and broken in the same PR |
 
@@ -94,8 +95,9 @@ The 📝 rows ranked by the odds of recurrence, highest first:
 
 1. **[TD-62](type-debt-register.md#td-62)** — the `null` spelling of a lying declaration, 56 sites, 32 of them in the two `elasticsearch.ts`. Fixing them widens [TD-56](type-debt-register.md#td-56)'s live gate by one regex.
 2. **`Mutex`'s 5 s default TTL** — [TD-69](type-debt-register.md#td-69)'s residue. **7 of its 14 call sites take it**, none renews it, and every site that set one explicitly chose 30 s or 60 s: the default is understood to be wrong by everyone who stopped to think about it, and silently held by everyone who did not. A lock that expires under its own holder fails as a corruption, not as a timeout. Cheapest form is probably a lint rule requiring an explicit `ttl`, not a new default.
-3. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
-4. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
+3. **[TD-73](type-debt-register.md#td-73)** — the `any` ratchet still greps, so it counts prose; `count-casts.ts` is the pattern and it already exists. Fourth telling of the same lesson.
+4. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
+5. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
 
 Gated on 2026-09-18: [TD-66](type-debt-register.md#td-66) (the preflight range) and [TD-71](type-debt-register.md#td-71) (the two ratchets that could not fail).
 

@@ -61,7 +61,7 @@
 | [TD-50](#td-50) | 🔴 high | Enforcement | c8 loses coverage when a module is loaded twice in one process: the whole coverage gate reads 11 points low, and sprint 6's five remaining files by 30 to 60 — [#2744](https://github.com/kuzzleio/kuzzle/issues/2744) | S | ✅ |
 | [TD-51](#td-51) | 🟡 low | Correctness | The application logger is never flushed on shutdown: the optional chain reads `log` off the Plugin wrapper, which never has one — [#2747](https://github.com/kuzzleio/kuzzle/issues/2747) | XS | ✅ |
 | [TD-52](#td-52) | 🔴 high | Correctness | Three things `httpwsProtocol` reads that are never set: the multipart file-size limit is not enforced, and an HTTP connection's headers are always empty — [#2749](https://github.com/kuzzleio/kuzzle/issues/2749) | S | ✅ |
-| [TD-53](#td-53) | 🟠 med | Enforcement | `KuzzleConfiguration` is `Partial<…>`, so every config section is `undefined` under strict — but it accounts for 14 of the 246 strict errors in the converted files, not for all of them — [#2756](https://github.com/kuzzleio/kuzzle/issues/2756) | M | 🔴 |
+| [TD-53](#td-53) | 🟠 med | Enforcement | `KuzzleConfiguration` is `Partial<…>`, so every config section is `undefined` under strict — but it accounts for 14 of the 246 strict errors in the converted files, not for all of them — [#2756](https://github.com/kuzzleio/kuzzle/issues/2756) | M | ✅ [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) — 106 errors cleared, 4 files adopted |
 | [TD-54](#td-54) | 🟠 med | Enforcement | 232 of the 246 strict errors in the sprint 6/7 conversions are not TD-53: the nullability work was deferred, not blocked — [#2757](https://github.com/kuzzleio/kuzzle/issues/2757) | L | 🔴 |
 | [TD-55](#td-55) | 🟡 low | Correctness | `waterfall.shift()` resolves the chain silently where the JavaScript rejected — [#2758](https://github.com/kuzzleio/kuzzle/issues/2758) | XS | ✅ |
 | [TD-56](#td-56) | 🟡 low | Correctness | `bindPluginMethod` declares `PluginMethod` and returns `undefined` — TD-40 again, in a file strict does not read — [#2759](https://github.com/kuzzleio/kuzzle/issues/2759) | XS | ✅ |
@@ -81,6 +81,7 @@
 | [TD-70](#td-70) | 🟠 med | Tests | `array of objects matching` compares positionally, so 25 `"hits"` assertions pin the order of an Elasticsearch search nothing ordered — [#2784](https://github.com/kuzzleio/kuzzle/issues/2784) | S | ✅ [#2787](https://github.com/kuzzleio/kuzzle/pull/2787) — the 40 `successes`/`errors` assertions weakened with it, stated in the entry |
 | [TD-71](#td-71) | 🔴 high | Enforcement | The `implicit-any` and `casts` ratchets read a `tsc` that never ran as *"0 — progress!"*, and print the command that would write 0 into the baseline — [#2793](https://github.com/kuzzleio/kuzzle/issues/2793) | XS | ✅ [#2795](https://github.com/kuzzleio/kuzzle/pull/2795) — [TD-44](#td-44)'s finding, in the two sibling scripts nobody re-checked |
 | [TD-72](#td-72) | 🟠 med | Enforcement | `docker-test.sh unit` runs `npm ci` over the bind-mounted host tree, leaving Linux native builds (or nothing) in a macOS checkout — [#2790](https://github.com/kuzzleio/kuzzle/issues/2790) | XS | ✅ [#2797](https://github.com/kuzzleio/kuzzle/pull/2797) — unit path only; the functional path and the CI flake stay open |
+| [TD-73](#td-73) | 🟡 low | Enforcement | The `any` ratchet greps, so it counts English: a doc comment containing *"total: anything else"* is one `: any` — the fourth instance of the lesson [TD-43](#td-43) fixed for `casts` only | XS | ⬜ |
 
 **Quick wins (handled first, cf. ADR step 01 — type quick wins):** TD-01, TD-04, TD-05, TD-06.
 
@@ -1014,6 +1015,26 @@ internalIndexHandler.ts(216,13): Property 'authToken' does not exist on type 'Se
 - **Fix:** split the two. `IKuzzleConfiguration` is already the total shape; `global.kuzzle.config` should be typed with it, and the partial kept for what the user supplies (`Partial<IKuzzleConfiguration>`, under a name that says so). The change itself is small; the blast radius is not, since every config reader's narrowing assumptions change at once — which is why it is its own piece of work and not a conversion's.
 - **Until then:** a converted file that reads config is adopted into strict only once this lands. I2 leaves both its files out of `.migration/strict-adopted.txt` rather than scattering guards for a condition that cannot happen.
 - **Tracked as [#2756](https://github.com/kuzzleio/kuzzle/issues/2756).**
+
+**✅ Fixed in [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) (step 12, K0).** Three shapes where there was one name, and the split is what makes each one honest:
+
+| Type | What it describes | Where |
+|---|---|---|
+| `IKuzzleConfiguration` | the **merged** config — total, nothing optional | `global.kuzzle.config`, `Kuzzle`'s constructor, `BackendConfig.content`, `Logger`, and `loadConfig()`'s declared return |
+| `PackagedKuzzleConfiguration` | `Omit<I…, "version" \| "internal">` — what `default.config.ts` ships | the defaults file |
+| `KuzzleConfiguration` | what a **user** may write — now a **deep** partial | `app.config.merge()`, `.kuzzlerc`, the public export |
+
+**Strict 1 673 → 1 567 errors, 112 → 108 files** — 106 cleared, against the 83 the step estimated, because the top-level `Partial` also produced `TS2551`s (a property read off `SecurityConfiguration | undefined`) that the estimate counted as their own class. **30 files improved**; 4 became clean and are adopted: `internalIndexHandler.ts` and `storageEngine.ts` — the two sprint 7 explicitly left out for this reason — plus `Logger.ts` and `service.ts`.
+
+**Three things the fix found, none of them in the plan:**
+
+- **`default.config.ts` is not the total shape and never was.** It ships every section except `version` (read from `package.json`) and `internal` (derived from the rest at startup). Typing it as total fails; `PackagedKuzzleConfiguration` states the omission instead, so anything *else* missing from the defaults is now a compile error rather than an `undefined` at runtime.
+- **The public partial was never usable.** `Partial<IKuzzleConfiguration>` is shallow: a user writing `{ security: { restrictedProfileIds: [...] } }` had to supply the whole `security` section to type-check, which is not what `rc` or `_.merge` do. It is a `DeepPartial` now — strictly more permissive, so nothing that compiled before stops compiling.
+- **`security.jwt` was optional on a shape that always has it.** The defaults ship it and `authToken`'s readers fall back to it unguarded (`authToken.algorithm ?? jwt.algorithm`), so four `possibly undefined` in `tokenRepository.ts` were reporting a condition the merge cannot produce. Required now, deprecation unchanged.
+
+**What guards the claim.** `loadConfig(): IKuzzleConfiguration` is a promise nothing else can check — every reader is type-checked *against* it, so if a section stopped being produced the types would keep saying it is there. Two specs in `test/config/index.test.js` pin it: every declared section is present after a real load, and `security.jwt` survives the merge. Verified to bite — commenting out `config.version = packageJson.version` fails the first one (and 14 other specs, which is its own answer to "was this section load-bearing").
+
+- **The generalisable part:** *one type serving two directions — what a user may write and what the program then holds — always resolves in favour of the looser one, and every reader downstream pays for it.* The tell is a type whose name says what it *is* rather than who *produces* it.
 - **The generalisable part, corrected by [TD-54](#td-54):** *a ratchet measures the file it names, but a type can make a file unmeasurable from the outside.* That is true, and it was over-applied. Measured across the whole of sprints 6 and 7, the config shape accounts for **14 of 246** strict errors. The strict list mostly *is* a quality score per file — these two files are the case where it is partly something else, not the proof that it generally is.
 
 ---
@@ -1470,3 +1491,25 @@ This is [TD-44](#td-44) in a sibling script: `strict-check.sh` read an empty `ts
 **Scope, deliberately partial.** This is the *local convenience wrapper's* unit path only. The functional path cannot be fixed the same way — the cluster services brought up by `docker compose up` must see the installed dependencies, so that one needs the volume declared in the compose files. CI's `run-test-cluster.sh` is untouched. **[#2790](https://github.com/kuzzleio/kuzzle/issues/2790) stays open** for the functional path and for the CI `npm ci` flake it was filed against.
 
 - **The generalisable part:** *a container that bind-mounts the source tree and then installs into it is not isolating the build, it is sharing it* — and the platform mismatch that follows is invisible until something on the host tries to load a native module. The tell is that the failure lands on the *host*, minutes later, in a command that has nothing to do with the test run.
+
+
+---
+
+### TD-73
+**The `any` ratchet greps, so it counts English** · 🟡 low · `scripts/ratchet.sh`
+
+Hit while writing [TD-53](#td-53)'s fix. The ratchet went `204 → 205` on a PR that added no `any`, and the extra one was a **doc comment**:
+
+```
+ * file total: anything else missing from it is an error, not an oversight.
+```
+
+`grep -rE ': any|as any|as unknown as'` matches `: any` inside *": **any**thing"*. The counter is otherwise correct; it simply cannot tell a type annotation from a sentence.
+
+This is the **fourth** instance of one finding — [TD-45](#td-45) (`*.js` never matched the two extensionless executables), [TD-49](#td-49) (one class, four spellings, three unmatchable), [TD-43](#td-43) (`as [A-Z]` matched 84 imports and prose against 16 real assertions) — and TD-43 is the one that already paid for the answer: `scripts/count-casts.ts` walks the TypeScript AST and counts assertion *nodes*. **The fix was applied to the ratchet the finding was filed against, and not to its sibling**, which is also exactly [TD-71](#td-71)'s shape, two weeks later.
+
+- **Why it is 🟡 and not higher:** it over-counts, so it fails closed — no `any` slips through. What it costs is a contributor's afternoon and, worse, the reflex the lesson warned about: **the way to get the PR through is to reword the comment**, which is what was done here, because the alternative was to fix the ratchet inside an unrelated PR.
+- **Fix:** count `AnyKeyword` nodes off the AST, the way `count-casts.ts` does, and keep `as unknown as` (an `unknown` node followed by an assertion) as its own predicate. The baseline will move when the predicate does — like TD-43's 16 → 87, the new number is not a regression, and the PR that changes it should say so.
+- **Not filed as an issue yet** — it belongs with the `implicit-any` counter's own rework, if step 12 ends up doing one.
+
+- **The generalisable part, fourth telling:** *a grep-based metric counts text, and source files contain prose.* The corollary is the operational one: **when a finding names a class of tool, fixing the instance that was reported is half the work** — enumerate the siblings in the same PR, or the same bug is refiled under a new number later.
