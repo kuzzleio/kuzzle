@@ -65,7 +65,7 @@ warn) · 📝 prose only — recorded, not enforced.
 | *"This is a style rule" and "this is what makes the program loadable" can be the same rule.* | [TD-49](type-debt-register.md#td-49) | 🔒 `@typescript-eslint/consistent-type-imports` as an **error**, repo-wide |
 | *`lib/` does not import the package's own `index.ts` barrel* — a leaf takes on the whole public surface to name one type. | [ADR log, 2026-09-14](ADR-0001-migration-typescript.md#decision-register) | 📝 — **candidate for `no-restricted-imports`** |
 | *`should(fn).throw()` with no matcher is not a test of why.* | [TD-57](type-debt-register.md#td-57) | 🔒 `no-restricted-syntax` over the test trees, for `should().throw()` and `expect().toThrow()` alike; `.not.throw()` excluded |
-| *An assertion stricter than the contract fails on the implementation's freedom, not on a defect.* | [TD-70](type-debt-register.md#td-70) | 📝 open ([#2784](https://github.com/kuzzleio/kuzzle/issues/2784)) — `array of objects matching` compares positionally; 25 `"hits"` assertions pin an unordered search's order |
+| *An assertion stricter than the contract fails on the implementation's freedom, not on a defect.* | [TD-70](type-debt-register.md#td-70) | 🔒 `array of objects matching` is order-insensitive by default; pinning an order now takes the explicit `in order` variant, so asserting more than the contract has to be deliberate |
 | *A spec that stubs its subject's base class is not testing anything.* | [TD-46](type-debt-register.md#td-46) | 📝 |
 | *When a review concludes "this call was always dead, the real work happens elsewhere", it has just established where the invariant lives — and that nothing tests it there.* | [TD-48](type-debt-register.md#td-48) | 📄 covered for the stack-trace invariant; the reading generalises |
 
@@ -77,7 +77,7 @@ warn) · 📝 prose only — recorded, not enforced.
 | *A success line printed unconditionally is not a diagnostic, it is decoration — and it will eventually contradict the line above it.* | [TD-67](type-debt-register.md#td-67) | 🔒 `handshake()` awaits `sync()` and logs success only on success; it used to print *Successfully completed the handshake* 2 ms after the eviction denying it |
 | *Two ids from the same generator with the same prefix are one id as far as a reader is concerned.* | [TD-59](type-debt-register.md#td-59) | 🔒 `createIdCard()` adopts `global.nodeId`; `handshake()` prints both when they differ |
 | *A readiness probe must exercise the thing the caller depends on.* | [TD-33](type-debt-register.md#td-33) | 🔒 `bin/wait-kuzzle` accepts a node only once `funnel.throttle()` stops rejecting it, i.e. once it is in quorum — closed 2026-09-17 |
-| *A lock whose TTL is a guess about how long its body takes is not a lock, and a decision read before acquiring it is not protected by it.* | [TD-69](type-debt-register.md#td-69) | 📝 open ([#2782](https://github.com/kuzzleio/kuzzle/issues/2782)) — `Mutex` defaults to `ttl: 5000` with no renewal, and 7 of 14 `new Mutex(` sites take that default |
+| *A lock whose TTL is a guess about how long its body takes is not a lock, and a decision read before acquiring it is not protected by it.* | [TD-69](type-debt-register.md#td-69) | 🔒 the import lock reads under the lock and writes idempotently, with 4 specs — but `Mutex` still defaults to `ttl: 5000` with no renewal, and **7 of its 14 call sites take that default**, so the lesson is gated at one site and prose everywhere else |
 | *A resume point is only valid if the transport it resumes was already listening when the point was taken.* | [TD-65](type-debt-register.md#td-65) | 🔒 `handshake()` awaits `waitForSubscription()` before `getFullState`, and a spec pins the ordering; a residual race via a third party's lag is named in the entry |
 | *The same ordering defect usually exists once per code path, and a fix verified against the path you found it on says nothing about the others.* | [TD-65](type-debt-register.md#td-65) | 🔒 both `handshake()` and `addNode()` await the subscription, each with a spec — the first fix did one of the two and CI found the other |
 | *A broadcast is not a way to tell yourself something.* | [TD-67](type-debt-register.md#td-67) | 🔒 `evictSelf` calls `shutdown()` itself, and a spec pins it; the four callers all meant the node must stop |
@@ -91,8 +91,9 @@ warn) · 📝 prose only — recorded, not enforced.
 The 📝 rows ranked by the odds of recurrence, highest first:
 
 1. **[TD-62](type-debt-register.md#td-62)** — the `null` spelling of a lying declaration, 56 sites, 32 of them in the two `elasticsearch.ts`. Fixing them widens [TD-56](type-debt-register.md#td-56)'s live gate by one regex.
-2. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
-3. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
+2. **`Mutex`'s 5 s default TTL** — [TD-69](type-debt-register.md#td-69)'s residue. **7 of its 14 call sites take it**, none renews it, and every site that set one explicitly chose 30 s or 60 s: the default is understood to be wrong by everyone who stopped to think about it, and silently held by everyone who did not. A lock that expires under its own holder fails as a corruption, not as a timeout. Cheapest form is probably a lint rule requiring an explicit `ttl`, not a new default.
+3. **`no-restricted-imports` on the root barrel** — [TD-49](type-debt-register.md#td-49) showed the cost is not style, it is loadability.
+4. **[TD-52](type-debt-register.md#td-52)** — blocked on [TD-54](type-debt-register.md#td-54): the compiler already has the answer in files nothing reads it for.
 
 Gated on 2026-09-16, and both were worth the hour:
 
