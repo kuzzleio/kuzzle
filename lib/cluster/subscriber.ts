@@ -86,7 +86,7 @@ function isSyncTopic(
   handlers: Readonly<SyncMessageHandlers>,
   topic: string,
 ): topic is SyncTopic {
-  return Object.prototype.hasOwnProperty.call(handlers, topic);
+  return Object.hasOwn(handlers, topic);
 }
 
 function isRealtimeScope(value: string): value is RealtimeScope {
