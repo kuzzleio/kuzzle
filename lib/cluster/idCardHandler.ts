@@ -46,17 +46,19 @@ export class IdCard {
    *
    * knode-pensive-einstein-844221
    */
-  private id: string;
+  /** Read by `node.ts` (consistency checks, status, logs): the class never
+   * reassigns it after construction, and nothing outside writes it. */
+  public readonly id: string;
 
   /**
    * Node IP address
    */
-  private ip: string;
+  public readonly ip: string;
 
   /**
    * Node creation timestamp
    */
-  private birthdate: number;
+  public readonly birthdate: number;
 
   /**
    * Node known topology composed of node IDs
@@ -130,7 +132,8 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID
    */
-  private nodeId: string = null;
+  /** Read by `node.ts` once `createIdCard()` has reserved it. */
+  public nodeId: string = null;
 
   /**
    * Local node Redis key

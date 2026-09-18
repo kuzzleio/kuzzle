@@ -19,25 +19,39 @@
  * limitations under the License.
  */
 
-"use strict";
+// Bare specifiers, not the `node:` prefix: `node.test.js` intercepts `os` with
+// `mock-require` to feed `getIP()` a fixed set of network interfaces, and a
+// `node:os` import compiles to `require("node:os")`, which that interception
+// does not see. A conversion must not change how a module is resolved — see
+// J3a, where a hard-coded `.js` next to a renamed file took the whole
+// functional matrix down.
+import assert from "assert";
+import net from "net";
+import os from "os";
 
-const os = require("os");
-const net = require("net");
-const assert = require("assert");
+import Bluebird from "bluebird";
+import EventEmitter from "eventemitter3";
+import type { NormalizedFilter } from "koncorde";
+import type DocumentNotification from "../core/realtime/notification/document";
+import type UserNotification from "../core/realtime/notification/user";
+import type { storeScopeEnum } from "../core/storage/storeScopeEnum";
+import type { AuthStrategy } from "./protobuf/syncMessages";
+import _ from "lodash";
+import type Long from "long";
 
-const Bluebird = require("bluebird");
-const EventEmitter = require("eventemitter3");
-const _ = require("lodash");
+import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
+import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
+import createDebug from "../util/debug";
+import { fromKoncordeIndex } from "../util/koncordeCompat";
+import { Mutex } from "../util/mutex";
+import ClusterCommand from "./command";
+import { ClusterIdCardHandler } from "./idCardHandler";
+import type { Activity } from "./protobuf/commandMessages";
+import ClusterPublisher from "./publisher";
+import ClusterState from "./state";
+import ClusterSubscriber from "./subscriber";
 
-const debug = require("../util/debug")("kuzzle:cluster:sync");
-const { Mutex } = require("../util/mutex");
-const { ClusterIdCardHandler } = require("./idCardHandler");
-const ClusterPublisher = require("./publisher");
-const ClusterSubscriber = require("./subscriber");
-const ClusterState = require("./state");
-const ClusterCommand = require("./command");
-const kuzzleStateEnum = require("../kuzzle/kuzzleStateEnum");
-const { fromKoncordeIndex } = require("../util/koncordeCompat");
+const debug = createDebug("kuzzle:cluster:sync");
 
 /**
  * Test an IP address and determine if it's in the public or private range.
@@ -45,7 +59,7 @@ const { fromKoncordeIndex } = require("../util/koncordeCompat");
  * @param  {String}  ip
  * @return {Boolean}
  */
-function isPrivateIP(ip) {
+function isPrivateIP(ip: string): boolean {
   if (net.isIPv6(ip)) {
     const prefix = ip.split(":")[0];
 
@@ -70,7 +84,7 @@ function isPrivateIP(ip) {
  * @param  {String}  ip
  * @return {Boolean}
  */
-function isInternalIP(ip) {
+function isInternalIP(ip: string): boolean {
   // To my knowledge, there aren't any reserved, non-loopback and non-routable
   // IPv6 addresses
   if (net.isIPv6(ip)) {
@@ -99,7 +113,15 @@ function isInternalIP(ip) {
  * @param  {String} [options.ip] Used to target public or private addresses
  * @return {String|null}
  */
-function getIP({ family = "IPv4", interface: netInterface, ip } = {}) {
+function getIP({
+  family = "IPv4",
+  interface: netInterface,
+  ip,
+}: {
+  family?: string;
+  interface?: string;
+  ip?: string;
+} = {}): string | null {
   const mustBePrivate = ip === "private";
 
   let interfaces = [];
@@ -144,17 +166,70 @@ function getIP({ family = "IPv4", interface: netInterface, ip } = {}) {
   return null;
 }
 
-/**
- * @typedef {nodeActivityEnum}
- */
+/** What `trackActivity` records: a node joined, or a node was evicted. */
 const nodeActivityEnum = Object.freeze({
   ADDED: 1,
   EVICTED: 2,
 });
 
+/** One entry of the cluster activity ring buffer. */
+type NodeActivity = Activity;
+
+/** What `cluster:status:get` answers with. */
+type ClusterStatus = {
+  activeNodes: number;
+  activity: Array<{
+    address: string;
+    date: string;
+    event: string;
+    id: string;
+    reason?: string;
+  }>;
+  nodes: Array<{ address: string; birthdate: string; id: string }>;
+};
+
 // Handles the node logic: discovery, eviction, heartbeat, ...
 // Dependencies: core:cache module must be started
 class ClusterNode {
+  public readonly config: IKuzzleConfiguration["cluster"];
+
+  private readonly logger: ReturnType<typeof global.kuzzle.log.child>;
+
+  public readonly heartbeatDelay: number;
+
+  public readonly ip: string;
+
+  /**
+   * Assigned by `handshake()`, from the ID card this node manages to reserve —
+   * so it is null until the handshake gets that far. `subscriber.ts` and
+   * `command.ts` both declare it a `string`, which is true by the time either
+   * of them reads it.
+   */
+  public nodeId: string;
+
+  private heartbeatTimer: NodeJS.Timeout | null;
+
+  public readonly idCardHandler: ClusterIdCardHandler;
+
+  public readonly publisher: ClusterPublisher;
+
+  public readonly fullState: ClusterState;
+
+  public readonly command: ClusterCommand;
+
+  public readonly eventEmitter: EventEmitter;
+
+  /** Links remote node IDs with their subscriber counterpart */
+  public readonly remoteNodes: Map<string, ClusterSubscriber>;
+
+  private readonly activityMaxLength: number;
+
+  /**
+   * Cluster nodes activity, used to keep track of nodes being added or
+   * removed, to give more insights to cluster statuses
+   */
+  public activity: NodeActivity[];
+
   constructor() {
     this.config = global.kuzzle.config.cluster;
     this.logger = global.kuzzle.log.child("cluster:node");
@@ -183,25 +258,17 @@ class ClusterNode {
     this.command = new ClusterCommand(this);
     this.eventEmitter = new EventEmitter();
 
-    /**
-     * Links remote node IDs with their subscriber counterpart
-     * @type {Map.<string, ClusterSubscriber>}
-     */
     this.remoteNodes = new Map();
 
-    /**
-     * Cluster nodes activity, used to keep track of nodes being added or
-     * removed, to give more insights to cluster statuses
-     */
     this.activityMaxLength = this.config.activityDepth;
     this.activity = [];
   }
 
-  get syncAddress() {
+  get syncAddress(): string {
     return `tcp://${this.ip}:${this.config.ports.sync}`;
   }
 
-  async init() {
+  async init(): Promise<string> {
     // The publisher needs to be created and initialized before the handshake:
     // other nodes we'll connect to during the handshake will start to subscribe
     // to this node right away
@@ -236,7 +303,7 @@ class ClusterNode {
    * Shutdown event: clears all timers, sends a termination status to other
    * nodes, and removes entries from the cache
    */
-  async shutdown() {
+  async shutdown(): Promise<void> {
     clearInterval(this.heartbeatTimer);
     await this.idCardHandler.dispose();
 
@@ -255,16 +322,14 @@ class ClusterNode {
    *
    * @param {bool} evictionPrevented
    */
-  preventEviction(evictionPrevented) {
+  preventEviction(evictionPrevented: boolean): void {
     this.publisher.sendNodePreventEviction(evictionPrevented);
     // This node is subscribed to the other node and might not receive their heartbeat while debugging
     // so this node should not have the responsability of evicting others when his own eviction is prevented
     // when debugging.
     // Otherwise when recovering from a debug session, all the other nodes will be evicted.
     for (const subscriber of this.remoteNodes.values()) {
-      subscriber.handleNodePreventEviction({
-        evictionPrevented,
-      });
+      subscriber.setEvictionPrevented(evictionPrevented);
     }
   }
 
@@ -275,7 +340,7 @@ class ClusterNode {
    * @param {number} lastMessageId - remote node last message ID
    * @return {boolean} false if the node was already known, true otherwise
    */
-  async addNode(id, ip, lastMessageId) {
+  async addNode(id: string, ip: string, lastMessageId: Long): Promise<boolean> {
     if (this.remoteNodes.has(id)) {
       return false;
     }
@@ -327,7 +392,7 @@ class ClusterNode {
    * @param  {Error} [error]
    * @return {void}
    */
-  async evictSelf(reason, error = null) {
+  async evictSelf(reason: string, error: Error = null): Promise<void> {
     this.logger.error(`[CLUSTER] ${reason}`);
 
     if (error) {
@@ -353,7 +418,13 @@ class ClusterNode {
    * @param {boolean} [options.broadcast] - broadcast the eviction to the cluster
    * @param {string}  [options.reason] - reason of eviction
    */
-  async evictNode(nodeId, { broadcast = false, reason = "" }) {
+  async evictNode(
+    nodeId: string,
+    {
+      broadcast = false,
+      reason = "",
+    }: { broadcast?: boolean; reason?: string },
+  ): Promise<void> {
     const subscriber = this.remoteNodes.get(nodeId);
 
     if (!subscriber) {
@@ -398,7 +469,7 @@ class ClusterNode {
    * /!\ Do not wait for this method: it's meant to run as a background check.
    * It'll never throw, and it'll never generate unhandled rejections.
    */
-  async enforceClusterConsistency() {
+  async enforceClusterConsistency(): Promise<void> {
     // Delay the check to 1 heartbeat round, to allow all nodes to update
     // their ID cards
     await Bluebird.delay(this.heartbeatDelay);
@@ -518,7 +589,7 @@ class ClusterNode {
    *
    * @return {void}
    */
-  async handshake() {
+  async handshake(): Promise<void> {
     const handshakeTimeout = setTimeout(() => {
       this.logger.error(
         `[CLUSTER] Failed to join the cluster: timed out (joinTimeout: ${this.config.joinTimeout}ms)`,
@@ -689,11 +760,11 @@ class ClusterNode {
     }
   }
 
-  countActiveNodes() {
+  countActiveNodes(): number {
     return this.remoteNodes.size + 1;
   }
 
-  startHeartbeat() {
+  startHeartbeat(): void {
     this.heartbeatTimer = setInterval(() => {
       this.publisher.sendHeartbeat(this.syncAddress);
     }, this.heartbeatDelay);
@@ -707,7 +778,7 @@ class ClusterNode {
    * @param {nodeActivityEnum} event
    * @param {string} [reason]
    */
-  trackActivity(id, ip, event, reason) {
+  trackActivity(id: string, ip: string, event: number, reason?: string): void {
     if (this.activity.length > this.activityMaxLength) {
       this.activity.shift();
     }
@@ -725,8 +796,8 @@ class ClusterNode {
    * Returns the full status of the cluster
    * @return {Object}
    */
-  async getStatus() {
-    const status = {
+  async getStatus(): Promise<ClusterStatus> {
+    const status: ClusterStatus = {
       activeNodes: 0,
       activity: this.activity.map(({ address, date, event, id, reason }) => ({
         address,
@@ -756,7 +827,7 @@ class ClusterNode {
   /**
    * Registers ask events
    */
-  registerAskEvents() {
+  registerAskEvents(): void {
     global.kuzzle.onAsk("cluster:node:preventEviction", (state) => {
       this.preventEviction(state);
     });
@@ -863,7 +934,7 @@ class ClusterNode {
    *
    * @return {void}
    */
-  registerEvents() {
+  registerEvents(): void {
     global.kuzzle.on("admin:afterRefreshIndexCache", () =>
       this.onIndexCacheRefreshed(),
     );
@@ -987,7 +1058,7 @@ class ClusterNode {
    * @param  {NormalizedFilter} payload
    * @return {void}
    */
-  onNewRealtimeRoom(payload) {
+  onNewRealtimeRoom(payload: NormalizedFilter): void {
     const roomMessageId = this.publisher.sendNewRealtimeRoom(payload);
 
     debug(
@@ -1018,7 +1089,7 @@ class ClusterNode {
    * @param  {string} roomId
    * @return {void}
    */
-  onNewSubscription(roomId) {
+  onNewSubscription(roomId: string): void {
     const subMessageId = this.publisher.sendSubscription(roomId);
 
     debug(
@@ -1037,7 +1108,7 @@ class ClusterNode {
    * @param  {string} roomId
    * @return {void}
    */
-  removeRealtimeRoom(roomId) {
+  removeRealtimeRoom(roomId: string): void {
     const messageId = this.publisher.sendRemoveRealtimeRoom(roomId);
 
     debug(
@@ -1056,7 +1127,7 @@ class ClusterNode {
    * @param {string} event name
    * @param {Object} payload - event payload
    */
-  broadcast(event, payload) {
+  broadcast(event: string, payload: unknown): void {
     const messageId = this.publisher.sendClusterWideEvent(event, payload);
 
     debug(
@@ -1073,7 +1144,7 @@ class ClusterNode {
    * @param  {string} roomId
    * @return {void}
    */
-  onUnsubscription(roomId) {
+  onUnsubscription(roomId: string): void {
     const messageId = this.publisher.sendUnsubscription(roomId);
 
     debug(
@@ -1093,7 +1164,10 @@ class ClusterNode {
    * @param  {DocumentNotification} notification
    * @return {void}
    */
-  onDocumentNotification(rooms, notification) {
+  onDocumentNotification(
+    rooms: string[],
+    notification: DocumentNotification,
+  ): void {
     this.publisher.sendDocumentNotification(rooms, notification);
   }
 
@@ -1104,7 +1178,7 @@ class ClusterNode {
    * @param  {UserNotification} notification
    * @return {void}
    */
-  onUserNotification(room, notification) {
+  onUserNotification(room: string, notification: UserNotification): void {
     this.publisher.sendUserNotification(room, notification);
   }
 
@@ -1116,7 +1190,11 @@ class ClusterNode {
    * @param  {Object} strategyObject
    * @return {void}
    */
-  onAuthStrategyAdded(strategyName, pluginName, strategyObject) {
+  onAuthStrategyAdded(
+    strategyName: string,
+    pluginName: string,
+    strategyObject: AuthStrategy,
+  ): void {
     this.publisher.sendNewAuthStrategy(
       strategyName,
       pluginName,
@@ -1137,7 +1215,7 @@ class ClusterNode {
    * @param  {string} pluginName
    * @return {void}
    */
-  onAuthStrategyRemoved(strategyName, pluginName) {
+  onAuthStrategyRemoved(strategyName: string, pluginName: string): void {
     this.publisher.sendRemoveAuthStrategy(strategyName, pluginName);
 
     this.fullState.removeAuthStrategy(strategyName);
@@ -1149,7 +1227,7 @@ class ClusterNode {
    * @param  {string} suffix
    * @return {void}
    */
-  onDumpRequest(suffix) {
+  onDumpRequest(suffix: string): void {
     this.publisher.sendDumpRequest(suffix);
   }
 
@@ -1158,7 +1236,7 @@ class ClusterNode {
    *
    * @return {void}
    */
-  onSecurityReset() {
+  onSecurityReset(): void {
     this.publisher.send("ResetSecurity", {});
   }
 
@@ -1167,7 +1245,7 @@ class ClusterNode {
    *
    * @return {void}
    */
-  onValidatorsChanged() {
+  onValidatorsChanged(): void {
     this.publisher.send("RefreshValidators", {});
   }
 
@@ -1177,7 +1255,7 @@ class ClusterNode {
    * @param  {string} profileId
    * @return {void}
    */
-  onProfileChanged(profileId) {
+  onProfileChanged(profileId: string): void {
     this.publisher.send("InvalidateProfile", { profileId });
   }
 
@@ -1187,7 +1265,7 @@ class ClusterNode {
    * @param {string} roleId
    * @return {void}
    */
-  onRoleChanged(roleId) {
+  onRoleChanged(roleId: string): void {
     this.publisher.send("InvalidateRole", { roleId });
   }
 
@@ -1198,7 +1276,7 @@ class ClusterNode {
    * @param  {string} index
    * @return {void}
    */
-  onIndexAdded(scope, index) {
+  onIndexAdded(scope: storeScopeEnum, index: string): void {
     this.publisher.sendAddIndex(scope, index);
   }
 
@@ -1210,7 +1288,11 @@ class ClusterNode {
    * @param  {string} collection
    * @return {void}
    */
-  onCollectionAdded(scope, index, collection) {
+  onCollectionAdded(
+    scope: storeScopeEnum,
+    index: string,
+    collection: string,
+  ): void {
     this.publisher.sendAddCollection(scope, index, collection);
   }
 
@@ -1221,7 +1303,7 @@ class ClusterNode {
    * @param  {Array.<string>} indexes
    * @return {void}
    */
-  onIndexesRemoved(scope, indexes) {
+  onIndexesRemoved(scope: storeScopeEnum, indexes: string[]): void {
     this.publisher.sendRemoveIndexes(scope, indexes);
   }
 
@@ -1233,7 +1315,11 @@ class ClusterNode {
    * @param  {string} collection
    * @return {void}
    */
-  onCollectionRemoved(scope, index, collection) {
+  onCollectionRemoved(
+    scope: storeScopeEnum,
+    index: string,
+    collection: string,
+  ): void {
     this.publisher.sendRemoveCollection(scope, index, collection);
   }
 
@@ -1242,14 +1328,14 @@ class ClusterNode {
    *
    * @return {void}
    */
-  onShutdown() {
+  onShutdown(): void {
     this.publisher.send("Shutdown", {});
   }
 
   /**
    * Triggered when the index cache has been manually refreshed
    */
-  onIndexCacheRefreshed() {
+  onIndexCacheRefreshed(): void {
     this.publisher.send("RefreshIndexCache", {});
   }
 
@@ -1260,9 +1346,9 @@ class ClusterNode {
    * @param {string} roomId
    * @return {void}
    */
-  async countRealtimeSubscribers(roomId) {
+  async countRealtimeSubscribers(roomId: string): Promise<number> {
     return this.fullState.countRealtimeSubscriptions(roomId);
   }
 }
 
-module.exports = ClusterNode;
+export = ClusterNode;
