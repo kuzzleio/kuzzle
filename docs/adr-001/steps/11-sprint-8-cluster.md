@@ -1,6 +1,6 @@
 # Step 11 — Sprint 8: `lib/cluster`, the last conversion sprint
 
-**Status:** 🟦 Open · **Opened:** 2026-09-16 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) ✅ · J1 [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) ✅ · J2 [#2780](https://github.com/kuzzleio/kuzzle/pull/2780) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** ✅ Done — frozen · **Opened:** 2026-09-16 · **Closed:** 2026-09-18 · **PR(s):** J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) · J1 [#2775](https://github.com/kuzzleio/kuzzle/pull/2775) · J2 [#2780](https://github.com/kuzzleio/kuzzle/pull/2780) · J3a [#2791](https://github.com/kuzzleio/kuzzle/pull/2791) · J3b [#2792](https://github.com/kuzzleio/kuzzle/pull/2792) · J4 [#2794](https://github.com/kuzzleio/kuzzle/pull/2794) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -221,3 +221,41 @@ Four of [TD-62](../type-debt-register.md#td-62)'s `null` declarations are fixed 
 | `keys[i]` possibly undefined | `noUncheckedIndexedAccess` over two arrays the code walks in lockstep. |
 
 **So TD-53 now demonstrably blocks a `lib/cluster` file from strict adoption**, which is the first time its cost is concrete rather than argued.
+
+---
+
+## Sprint 8 closed — 2026-09-18
+
+**`lib/` holds no JavaScript.** The `js` ratchet is at **5**, all of them in `bin/`: the 3 plugin fixtures that are the floor, plus the two extensionless executables [TD-45](../type-debt-register.md#td-45) taught the predicate to count. The language axis of [ADR-0001](../ADR-0001-migration-typescript.md) is done for production code — eight sprints, `js` **111 → 5**.
+
+| Counter | At sprint 8's open (2026-09-16) | At close (2026-09-18) |
+|---|---:|---:|
+| `js` | 11 | **5** |
+| `strict-adopted` | 135 | **141** |
+| `mocha` (spec files) | 149 | **148** |
+| `any` | 204 | 204 |
+| `implicit-any` | 455 | 455 |
+| `casts` | 87 | 87 |
+
+Neither `any` counter moved across six PRs and 2 843 converted lines, and no cast was added — the sprint converted the layer without buying a single hatch.
+
+### What the sprint produced besides the conversion
+
+Six type-debt entries, five of them found **by typing the code** rather than by reading CI:
+
+| Entry | What it was | Landed |
+|---|---|---|
+| [TD-63](../type-debt-register.md#td-63) | `IDCardRenewer` reports a redis failure to a `parentPort` it never has | J3a [#2791](https://github.com/kuzzleio/kuzzle/pull/2791) |
+| [TD-64](../type-debt-register.md#td-64) | The `tests/` mirror convention resolved `.ts` targets only, so a spec on a not-yet-converted file counted for nothing | J0 [#2772](https://github.com/kuzzleio/kuzzle/pull/2772) |
+| [TD-65](../type-debt-register.md#td-65) | The handshake resumes the sync subscription from a message id snapshotted on the command channel — **[TD-33](../type-debt-register.md#td-33)'s mechanism**, after five investigations that did not find it | [#2777](https://github.com/kuzzleio/kuzzle/pull/2777) |
+| [TD-67](../type-debt-register.md#td-67) | `evictSelf` broadcasts an eviction the node cannot receive, so it keeps serving stale state | [#2777](https://github.com/kuzzleio/kuzzle/pull/2777) |
+| [TD-68](../type-debt-register.md#td-68) | `sync.proto` says `string` where the notification types are closed unions, and nothing between them checked | J2 [#2780](https://github.com/kuzzleio/kuzzle/pull/2780) |
+| [TD-66](../type-debt-register.md#td-66) | The strict-count reminder could not see an uncommitted conversion — found by running it on this sprint's own work | [#2796](https://github.com/kuzzleio/kuzzle/pull/2796) |
+
+Two more came from the sprint's *surroundings* rather than from its code, and both are enforcement: [TD-71](../type-debt-register.md#td-71), the `implicit-any` and `casts` ratchets reading a `tsc` that never ran as progress ([#2795](https://github.com/kuzzleio/kuzzle/pull/2795)), and [TD-72](../type-debt-register.md#td-72), the local Docker unit runner rewriting the host's `node_modules` ([#2797](https://github.com/kuzzleio/kuzzle/pull/2797)) — which is how TD-71 was found.
+
+### What it leaves for step 12
+
+**30 strict errors on `node.ts`, 21 on `command.ts`, 12 on `subscriber.ts`, 2 on `publisher.ts`** — reported per PR as the DoD required, and every one of them is now step 12's input rather than an undocumented exclusion. `idCardHandler.ts` is the sprint's one named refusal: four of [TD-62](../type-debt-register.md#td-62)'s `null` declarations were fixed, six errors remain, and one of them is [TD-53](../type-debt-register.md#td-53) — **the first concrete demonstration that the config shape blocks a file from adoption**, rather than the argument it had been.
+
+The sprint's own verdict on the DoD it was built to test ([TD-54](../type-debt-register.md#td-54)): **it worked, and it is not enough.** Every PR produced the number, and the numbers add to 65 on four files — against 246 that sprints 6 and 7 left on six files without being asked. What the rule cannot do is make a conversion *fix* them: it makes the debt visible and attributable at the moment it is created, which is why step 12 opens with a measured backlog instead of a survey.
