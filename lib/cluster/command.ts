@@ -235,7 +235,11 @@ class ClusterCommand {
   async getFullState(
     nodes: Array<{ id: string; ip: string }>,
   ): Promise<Decoded<FullStateResponse> | null> {
-    let idx = Math.floor(Math.random() * Math.floor(nodes.length));
+    // NOSONAR (S2245): this picks which peer to ask for the full state, and the
+    // point is only to spread the serialization cost over the cluster instead
+    // of always loading the same node. Nothing here is a secret, a token or an
+    // identifier — a predictable choice would cost performance, not security.
+    let idx = Math.floor(Math.random() * Math.floor(nodes.length)); // NOSONAR
     let fullState = null;
 
     for (

@@ -42,25 +42,18 @@ type IdCardStore = {
 };
 
 class IDCardRenewer {
-  public redis: IdCardStore | null;
+  public redis: IdCardStore | null = null;
 
-  public refreshTimer: NodeJS.Timeout | null;
+  public refreshTimer: NodeJS.Timeout | null = null;
 
-  public nodeIdKey: string | null;
+  public nodeIdKey: string | null = null;
 
-  public refreshDelay: number;
+  public refreshDelay = 2000;
 
   public refreshMultiplier: number;
 
-  public disposed: boolean;
-
-  constructor() {
-    this.redis = null;
-    this.refreshTimer = null;
-    this.nodeIdKey = null;
-    this.refreshDelay = 2000;
-    this.disposed = true; // Disposed until initialized
-  }
+  /** Disposed until `init()` says otherwise. */
+  public disposed = true;
 
   async init(config: IDCardRenewerConfig): Promise<void> {
     if (!this.disposed) {

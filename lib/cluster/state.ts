@@ -246,14 +246,14 @@ export default class State {
    *
    * Map<roomId, RoomState>
    */
-  private realtime = new Map<string, RoomState>();
+  private readonly realtime = new Map<string, RoomState>();
 
   /**
    * State of authentication strategies
    *
    * Map<strategyName, strategyDefinition>
    */
-  private strategies = new Map<string, FullStateAuthStrategy>();
+  private readonly strategies = new Map<string, FullStateAuthStrategy>();
 
   /**
    * Adds a new realtime room to the state
