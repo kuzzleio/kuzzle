@@ -753,5 +753,93 @@ describe("/lib/kuzzle/kuzzle.js", () => {
         type: "permissions",
       });
     });
+
+    it("should read the import bookkeeping only after acquiring the lock", async () => {
+      // TD-69 (#2782): the two reads used to happen before `mutex.lock()`, so
+      // the holder decided from a snapshot another node could already have
+      // invalidated, and then created a document that existed.
+      kuzzle.ask.withArgs("core:cache:internal:get").resolves(null);
+      kuzzle.ask
+        .withArgs("core:storage:private:document:exist")
+        .resolves(false);
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      kuzzle.persistHashedImport = sinon.stub().resolves();
+
+      await kuzzle.loadInitialState(toImport, {});
+
+      // `userMappings` is the last import type, so the last mutex is its own.
+      const lastMutex = MutexMock.__getLastMutex();
+
+      sinon.assert.callOrder(
+        lastMutex.lock,
+        kuzzle.ask.withArgs(
+          "core:cache:internal:get",
+          "backend:init:import:userMappings",
+        ),
+        kuzzle.ask.withArgs(
+          "core:storage:private:document:exist",
+          "kuzzle",
+          "imports",
+          "backend:init:import:userMappings",
+        ),
+      );
+    });
+
+    it("should hold the import lock for longer than the default 5s TTL", async () => {
+      // The lock is held until the `finally`, across every import type and the
+      // wait that follows; the 5s default expired under its own holder.
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+      kuzzle.persistHashedImport = sinon.stub().resolves();
+
+      await kuzzle.loadInitialState(toImport, {});
+
+      should(MutexMock.__getLastMutex().ttl).be.greaterThan(5000);
+    });
+
+    it("should persist the hash with createOrReplace, so a concurrent initializer is not fatal", async () => {
+      // The id is fixed, so a conflict means another node initialized the same
+      // import — convergence, not an error. `create` made it kill startup.
+      kuzzle._waitForImportToFinish = sinon.stub().resolves();
+
+      await kuzzle.persistHashedImport({
+        existingESHash: false,
+        existingRedisHash: null,
+        importPayloadHash: "hash",
+        type: "mappings",
+      });
+
+      should(kuzzle.ask).calledWith(
+        "core:storage:private:document:createOrReplace",
+        "kuzzle",
+        "imports",
+        "backend:init:import:mappings",
+        { hash: "hash" },
+      );
+
+      should(kuzzle.ask).not.calledWith("core:storage:private:document:create");
+    });
+
+    it("should use createOrReplace when only the redis cache holds the hash", async () => {
+      kuzzle.ask
+        .withArgs("core:cache:internal:get", "backend:init:import:mappings")
+        .resolves("cached-hash");
+
+      await kuzzle.persistHashedImport({
+        existingESHash: false,
+        existingRedisHash: "cached-hash",
+        importPayloadHash: "hash",
+        type: "mappings",
+      });
+
+      should(kuzzle.ask).calledWith(
+        "core:storage:private:document:createOrReplace",
+        "kuzzle",
+        "imports",
+        "backend:init:import:mappings",
+        { hash: "cached-hash" },
+      );
+
+      should(kuzzle.ask).not.calledWith("core:storage:private:document:create");
+    });
   });
 });

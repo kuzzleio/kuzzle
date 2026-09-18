@@ -650,14 +650,18 @@ class Kuzzle extends KuzzleEventEmitter {
       // If the import is not initialized in the redis cache and in the ES, we initialize it
       this.log.info(`${type} import is not initialized, initializing...`);
 
+      // `createOrReplace`, not `create`: this document has a fixed id, so a
+      // conflict on it means another node initialized the same import — an
+      // outcome to converge on, not an error to die on. `create` made that
+      // conflict fatal to startup (TD-69, #2782).
       await this.ask(
-        "core:storage:private:document:create",
+        "core:storage:private:document:createOrReplace",
         "kuzzle",
         "imports",
+        `backend:init:import:${type}`,
         {
           hash: importPayloadHash,
         },
-        { id: `backend:init:import:${type}` },
       );
       await this.ask(
         "core:cache:internal:store",
@@ -676,14 +680,15 @@ class Kuzzle extends KuzzleEventEmitter {
         `backend:init:import:${type}`,
       );
 
+      // Same reasoning as above: a fixed id, so a conflict is convergence.
       await this.ask(
-        "core:storage:private:document:create",
+        "core:storage:private:document:createOrReplace",
         "kuzzle",
         "imports",
+        `backend:init:import:${type}`,
         {
           hash: redisCache,
         },
-        { id: `backend:init:import:${type}` },
       );
     } else if (!existingRedisHash && existingESHash) {
       // If the import is initialized in the ES but not in the redis cache
@@ -746,8 +751,24 @@ class Kuzzle extends KuzzleEventEmitter {
         }
 
         const importPayloadHash = sha256(stringify(importPayload));
-        const mutex = new Mutex(`backend:import:${type}`, { timeout: 0 });
+        // `timeout: 0` means a single acquisition attempt: exactly one node
+        // runs the import and the others carry on with `locked: false`.
+        // The TTL has to outlive the import itself, because this lock is held
+        // until the `finally` below — across every import type and the wait
+        // that follows. It is still an upper bound rather than a guarantee,
+        // which is why the bookkeeping write below is idempotent (TD-69).
+        const mutex = new Mutex(`backend:import:${type}`, {
+          timeout: 0,
+          ttl: 60000,
+        });
 
+        const locked = await mutex.lock();
+
+        // Read the bookkeeping *after* the lock, never before: a read taken
+        // before acquiring it is not protected by it, and the holder that
+        // acted on a stale "not initialized" used to create a document the
+        // previous holder had just written — killing its own startup with
+        // `Document already exists`. See TD-69 (#2782).
         const existingRedisHash = await this.ask(
           "core:cache:internal:get",
           `backend:init:import:${type}`,
@@ -775,8 +796,6 @@ class Kuzzle extends KuzzleEventEmitter {
           );
           initialized = esDocument._source.hash === importPayloadHash;
         }
-
-        const locked = await mutex.lock();
 
         await importMethod(
           { toImport, toSupport },
