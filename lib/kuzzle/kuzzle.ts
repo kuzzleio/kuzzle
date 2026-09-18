@@ -757,10 +757,13 @@ class Kuzzle extends KuzzleEventEmitter {
         // until the `finally` below — across every import type and the wait
         // that follows. It is still an upper bound rather than a guarantee,
         // which is why the bookkeeping write below is idempotent (TD-69).
-        const mutex = new Mutex(`backend:import:${type}`, {
-          timeout: 0,
-          ttl: 60000,
-        });
+        // NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two
+        // use incompatible acquisition/TTL formats and must not contend on the
+        // same key — every other node still takes this lock with `Mutex`, so
+        // swapping one site would remove the exclusion it exists for. Deferred
+        // to TD-20 (#2688), like the remaining call sites.
+        const lockOptions = { timeout: 0, ttl: 60000 };
+        const mutex = new Mutex(`backend:import:${type}`, lockOptions); // NOSONAR
 
         const locked = await mutex.lock();
 
