@@ -23,6 +23,7 @@ import { NormalizedFilter } from "koncorde";
 import type { JSONObject } from "kuzzle-sdk";
 
 import type { RoomList } from "../types";
+import type { FullStateAuthStrategy } from "./protobuf/commandMessages";
 import type Long from "long";
 
 import * as kerror from "../kerror";
@@ -252,7 +253,7 @@ export default class State {
    *
    * Map<strategyName, strategyDefinition>
    */
-  private strategies = new Map<string, JSONObject>();
+  private strategies = new Map<string, FullStateAuthStrategy>();
 
   /**
    * Adds a new realtime room to the state
@@ -405,7 +406,7 @@ export default class State {
    * Adds a new dynamic strategy to the full state
    *
    */
-  addAuthStrategy(strategyObject: JSONObject) {
+  addAuthStrategy(strategyObject: FullStateAuthStrategy) {
     this.strategies.set(strategyObject.strategyName, strategyObject);
   }
 
@@ -460,7 +461,7 @@ export default class State {
 }
 
 export type SerializedState = {
-  authStrategies: JSONObject[];
+  authStrategies: FullStateAuthStrategy[];
 
   rooms: SerializedRoomState[];
 };

@@ -41,7 +41,8 @@ Conversions and spec efforts stay in **separate PRs** — that is [step 09](09-s
 | **J0** ✅ | Spec effort: `command.js` (41.5% → **98.8%**) and `workers/IDCardRenewer.js` (73.1% → **85.4%**) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, then J3 converts them with the gate already green. **Not "in JS" for both** — see *What J0 found about its own premise* below. |
 | **J1** ✅ | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. **It also produced [TD-65](../type-debt-register.md#td-65)** — see *What J1 found* below. |
 | **J2** ✅ | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. **Produced [TD-68](../type-debt-register.md#td-68)** and typed the wire from `sync.proto`. |
-| **J3** | `node.js` + the two files J0 covered | 1 640 | `node.js` is the membership logic and the largest file in the sprint. |
+| **J3a** | `command.js` + `workers/IDCardRenewer.js` | 428 | Split out of J3: they carry a **behaviour change** ([TD-63](../type-debt-register.md#td-63)) that deserves its own review rather than riding behind a 1 268-line conversion. |
+| **J3b** | `node.js` | 1 268 | The membership logic and the largest file in the sprint. |
 | **J4** | Adoption sweep: `state.ts`, `idCardHandler.ts` and whatever J1–J3 left, into `strict-adopted.txt` | — | 11 known errors on the two existing TS files, plus 4 of [TD-62](../type-debt-register.md#td-62)'s `null` declarations in `idCardHandler.ts`. |
 
 ## Definition of done, per PR
@@ -195,7 +196,7 @@ The first two now fall into the existing *unknown topic* eviction, which is what
 
 ### Strict count
 
-**14** on `subscriber.ts`, 0 on `syncMessages.ts`. Two were fixed rather than reported (`confirmSubscription` and `timer`, both "assigned in a callback the compiler cannot see run"), taking it from 16. The rest group into three:
+**12** on `subscriber.ts`, 0 on `syncMessages.ts` — 16 before fixing four rather than reporting them: `confirmSubscription` and `timer` (both "assigned in a callback the compiler cannot see run"), and two indexed reads the replay loop's `for-of` retired. The rest group into three:
 
 - **`socket` / `protoroot` possibly null** (4) — the same lifecycle fact as `publisher.ts`'s two, and checkable for the same reason in J3.
 - **`messageId` possibly undefined** (4) — honest: `DecodedMessage` is `Partial<SyncMessage>` precisely because establishing that the field is there is `validateMessage`'s job. Closing it wants an assertion function, not a type.

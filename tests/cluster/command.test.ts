@@ -1,9 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
 
+import Long from "long";
 import protobuf from "protobufjs";
 import { Reply, Request } from "zeromq";
 
 import ClusterCommand from "../../lib/cluster/command";
+import type { Activity } from "../../lib/cluster/protobuf/commandMessages";
+import type { SerializedRoomState } from "../../lib/cluster/state";
 
 /**
  * `command.js` reaches for `zeromq` through a CommonJS `require`, which vitest
@@ -28,25 +32,39 @@ const PORT = {
   server: 24003,
 };
 
+/** The signature `command.ts` calls back into the node with. */
+type AddNode = (
+  id: string,
+  ip: string,
+  lastMessageId: Long,
+) => Promise<boolean>;
+
 /**
  * The `ClusterNode` surface `command.js` reaches into. Narrow on purpose: what
  * it touches is the whole of its coupling to the node, and a wider fake would
  * hide a widening.
  */
 function fakeNode({
-  addNode = vi.fn().mockResolvedValue(true),
+  addNode = vi.fn<AddNode>().mockResolvedValue(true),
   activity = [],
   lastMessageId = 12,
   port,
   remoteNodes = new Map(),
   rooms = [],
 }: {
-  addNode?: ReturnType<typeof vi.fn>;
-  activity?: unknown[];
+  addNode?: Mock<AddNode>;
+  activity?: Activity[];
+  /**
+   * Written as a plain number here because that is how a reader thinks about a
+   * message counter, and converted below: what the node actually holds is a
+   * `Long`, like `publisher.lastMessageId` and every `uint64` on the wire. The
+   * fake used to hand over the number itself, which is the one shape the real
+   * node never has.
+   */
   lastMessageId?: number;
   port: number;
   remoteNodes?: Map<string, { lastMessageId: number }>;
-  rooms?: unknown[];
+  rooms?: SerializedRoomState[];
 }) {
   return {
     activity,
@@ -60,8 +78,13 @@ function fakeNode({
     fullState: { serialize: () => ({ authStrategies: [], rooms }) },
     ip: "127.0.0.1",
     nodeId: "knode-local",
-    publisher: { lastMessageId },
-    remoteNodes,
+    publisher: { lastMessageId: Long.fromNumber(lastMessageId, true) },
+    remoteNodes: new Map(
+      Array.from(remoteNodes.entries(), ([id, { lastMessageId: id_ }]) => [
+        id,
+        { lastMessageId: Long.fromNumber(id_, true) },
+      ]),
+    ),
   };
 }
 
