@@ -100,7 +100,7 @@ export class ClusterIdCardHandler {
   /**
    * Local node ID Card
    */
-  public idCard: IdCard = null;
+  public idCard: IdCard | null = null;
 
   /**
    * Local node IP address
@@ -122,7 +122,7 @@ export class ClusterIdCardHandler {
   /**
    * Worker thread in charge of refreshing the ID Card once the node has started
    */
-  private refreshWorker: ChildProcess = null;
+  private refreshWorker: ChildProcess | null = null;
 
   /**
    * Hold the timer in charge of refreshing the ID Card before the worker starts
@@ -133,12 +133,12 @@ export class ClusterIdCardHandler {
    * Local node ID
    */
   /** Read by `node.ts` once `createIdCard()` has reserved it. */
-  public nodeId: string = null;
+  public nodeId: string | null = null;
 
   /**
    * Local node Redis key
    */
-  private nodeIdKey: string = null;
+  private nodeIdKey: string | null = null;
 
   /**
    * Flag to prevent updating the id card if it has been disposed.
@@ -199,17 +199,22 @@ export class ClusterIdCardHandler {
     // a built Kuzzle runs the same code from `dist/` with both as `.js`.
     // `fork()` inherits `process.execArgv`, so a child spawned from a `.ts`
     // parent gets the same loader and can require a `.ts`.
-    this.refreshWorker = this.constructWorker(
+    // Held in a local as well as on `this`: the field is nullable (it has no
+    // worker before this line) and the compiler drops that narrowing across the
+    // callbacks registered below.
+    const refreshWorker = this.constructWorker(
       `${__dirname}/workers/IDCardRenewer${extname(__filename)}`,
     );
 
-    this.refreshWorker.on("message", async (message: JSONObject) => {
+    this.refreshWorker = refreshWorker;
+
+    refreshWorker.on("message", async (message: JSONObject) => {
       if (message.error) {
         await this.node.evictSelf(message.error);
       }
     });
 
-    this.refreshWorker.on("close", async () => {
+    refreshWorker.on("close", async () => {
       if (!this.disposed) {
         this.disposed = true;
         await this.node.evictSelf("ID Card renewer worker closed unexpectedly");
@@ -217,7 +222,7 @@ export class ClusterIdCardHandler {
     });
 
     // Transfer informations to the worker
-    this.refreshWorker.send({
+    refreshWorker.send({
       action: "start", // start the worker
       kuzzle: {
         config: global.kuzzle.config,
@@ -348,10 +353,13 @@ export class ClusterIdCardHandler {
     for (let i = 0; i < keys.length; i++) {
       // filter keys that might have expired between the key search and their
       // values retrieval
-      if (rawIdCards[i] !== null) {
-        idCards.push(IdCard.unserialize(JSON.parse(rawIdCards[i])));
+      const raw = rawIdCards[i];
+      const key = keys[i];
+
+      if (raw !== null && raw !== undefined) {
+        idCards.push(IdCard.unserialize(JSON.parse(raw)));
       } else {
-        expiredIdCards.push(keys[i]);
+        expiredIdCards.push(key);
       }
     }
 

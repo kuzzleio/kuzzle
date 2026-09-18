@@ -41,9 +41,9 @@ Conversions and spec efforts stay in **separate PRs** — that is [step 09](09-s
 | **J0** ✅ | Spec effort: `command.js` (41.5% → **98.8%**) and `workers/IDCardRenewer.js` (73.1% → **85.4%**) | 428 | Both are under the 80% gate, so converting them first fails CI on a coverage number that has nothing to do with the conversion. Specs first, then J3 converts them with the gate already green. **Not "in JS" for both** — see *What J0 found about its own premise* below. |
 | **J1** ✅ | `index.js` + `publisher.js` | 410 | The two leaves. `index.js` is 24 lines; `publisher.js` is the layer's write side and is gate-safe. **It also produced [TD-65](../type-debt-register.md#td-65)** — see *What J1 found* below. |
 | **J2** ✅ | `subscriber.js` | 793 | Holds [TD-58](../type-debt-register.md#td-58)'s fixed counter. The read side of the same protocol as J1 — convert it next while the shapes are fresh. **Produced [TD-68](../type-debt-register.md#td-68)** and typed the wire from `sync.proto`. |
-| **J3a** | `command.js` + `workers/IDCardRenewer.js` | 428 | Split out of J3: they carry a **behaviour change** ([TD-63](../type-debt-register.md#td-63)) that deserves its own review rather than riding behind a 1 268-line conversion. |
-| **J3b** | `node.js` | 1 268 | The membership logic and the largest file in the sprint. |
-| **J4** | Adoption sweep: `state.ts`, `idCardHandler.ts` and whatever J1–J3 left, into `strict-adopted.txt` | — | 11 known errors on the two existing TS files, plus 4 of [TD-62](../type-debt-register.md#td-62)'s `null` declarations in `idCardHandler.ts`. |
+| **J3a** ✅ | `command.js` + `workers/IDCardRenewer.js` | 428 | Split out of J3: they carry a **behaviour change** ([TD-63](../type-debt-register.md#td-63)) that deserves its own review rather than riding behind a 1 268-line conversion. |
+| **J3b** ✅ | `node.js` | 1 268 | The membership logic and the largest file in the sprint. |
+| **J4** ✅ | Adoption sweep: `state.ts`, `idCardHandler.ts` and whatever J1–J3 left, into `strict-adopted.txt` | — | 11 known errors on the two existing TS files, plus 4 of [TD-62](../type-debt-register.md#td-62)'s `null` declarations in `idCardHandler.ts`. |
 
 ## Definition of done, per PR
 
@@ -201,3 +201,23 @@ The first two now fall into the existing *unknown topic* eviction, which is what
 - **`socket` / `protoroot` possibly null** (4) — the same lifecycle fact as `publisher.ts`'s two, and checkable for the same reason in J3.
 - **`messageId` possibly undefined** (4) — honest: `DecodedMessage` is `Partial<SyncMessage>` precisely because establishing that the field is there is `validateMessage`'s job. Closing it wants an assertion function, not a type.
 - **the dispatch's `this` context, and `catch (e)`'s `unknown`** (6) — the handler table is a union of function types and `.call` cannot correlate the topic with its message without a `switch`. That is the one real restructuring this file still wants, and it belongs to J4's adoption sweep rather than to a conversion.
+
+---
+
+## What J4 found
+
+Strict adoption **136 → 141**, and `lib/` holds no JavaScript: the `js` ratchet's 5 are all in `bin/` (three plugin fixtures, plus the two extensionless executables [TD-45](../type-debt-register.md#td-45) taught it to count).
+
+Adopted: `protobuf/commandMessages.ts` and `protobuf/syncMessages.ts` (both written strict-clean in J2 and J3a), the two `.d.ts`, and **`state.ts`**, which took four fixes of the same shape — `list[room.index]` re-indexed after the branch that assigns it, which the compiler cannot follow. Held in locals via `??=`, it is one lookup per level instead of three.
+
+### `idCardHandler.ts` is NOT adopted, and the reason is worth stating
+
+Four of [TD-62](../type-debt-register.md#td-62)'s `null` declarations are fixed here — `idCard`, `refreshWorker`, `nodeId` and `nodeIdKey` were declared non-nullable and initialised to `null`. That did not clear the file; it **moved the lie from the declaration to the reads**, which is the honest place for it. Six remain:
+
+| Site | What it is |
+|---|---|
+| `global.kuzzle.config.services` possibly undefined | **[TD-53](../type-debt-register.md#td-53)** — `KuzzleConfiguration` is `Partial<…>`. Nothing in this file can fix it. |
+| `this.idCard` ×3, `this.refreshWorker` ×1 | an invariant the type does not express: these exist once `createIdCard()` has run, and the guard is `this.disposed`. Making the type true wants a discriminated shape, not a guard — adding one would be a dead branch asserting what the code already knows. |
+| `keys[i]` possibly undefined | `noUncheckedIndexedAccess` over two arrays the code walks in lockstep. |
+
+**So TD-53 now demonstrably blocks a `lib/cluster` file from strict adoption**, which is the first time its cost is concrete rather than argued.

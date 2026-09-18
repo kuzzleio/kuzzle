@@ -351,15 +351,13 @@ export default class State {
     const list: RoomList = {};
 
     for (const room of this.realtime.values()) {
-      if (!list[room.index]) {
-        list[room.index] = {};
-      }
+      // Held in locals rather than re-indexed: the compiler cannot see that the
+      // branch above just assigned the entry, so each re-read was a "possibly
+      // undefined". Same lookups, one per level instead of three.
+      const index = (list[room.index] ??= {});
+      const collection = (index[room.collection] ??= {});
 
-      if (!list[room.index][room.collection]) {
-        list[room.index][room.collection] = {};
-      }
-
-      list[room.index][room.collection][room.id] = room.countSubscriptions();
+      collection[room.id] = room.countSubscriptions();
     }
 
     return list;
