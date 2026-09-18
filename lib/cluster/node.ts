@@ -589,40 +589,100 @@ class ClusterNode {
     if (eligibleSplits.length === 1) {
       candidates = eligibleSplits[0];
     } else {
-      // Beware: search isolated nodes in ALL the splits, not only the
-      // smallest ones
-      let isolatedNodes = xor(...splits);
-      const eligibleNodes = [...new Set(eligibleSplits.flat())];
-
-      isolatedNodes = intersection(isolatedNodes, eligibleNodes);
-
-      const isIsolated = isolatedNodes.length > 0;
-
-      // safety measure: this should never happen
-      if (isolatedNodes.length === 0) {
-        isolatedNodes = eligibleNodes;
-      }
-
-      let youngestNode;
-
-      for (const isolatedNode of isolatedNodes) {
-        const idCard = idCards.find((card) => card.id === isolatedNode);
-        if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
-          youngestNode = idCard;
-        }
-      }
-
-      if (isIsolated) {
-        for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
-          if (eligibleSplits[i].includes(youngestNode.id)) {
-            candidates = intersection(eligibleSplits[i], isolatedNodes);
-          }
-        }
-      } else {
-        candidates = [youngestNode.id];
-      }
+      candidates = this.electFromTiedSplits(eligibleSplits, splits, idCards);
     }
     return candidates;
+  }
+
+  /**
+   * Breaks a tie between equally small splits: prefer the one holding the
+   * youngest *isolated* node (present in that split and no other), and fall
+   * back to the youngest node overall.
+   *
+   * Extracted from `electShutdownCandidates()` unchanged, and pure like it —
+   * every node must reach the same answer from the same inputs.
+   */
+  private electFromTiedSplits(
+    eligibleSplits: string[][],
+    splits: string[][],
+    idCards: IdCard[],
+  ): string[] {
+    let candidates: string[];
+    // Beware: search isolated nodes in ALL the splits, not only the
+    // smallest ones
+    let isolatedNodes = xor(...splits);
+    const eligibleNodes = [...new Set(eligibleSplits.flat())];
+
+    isolatedNodes = intersection(isolatedNodes, eligibleNodes);
+
+    const isIsolated = isolatedNodes.length > 0;
+
+    // safety measure: this should never happen
+    if (isolatedNodes.length === 0) {
+      isolatedNodes = eligibleNodes;
+    }
+
+    let youngestNode;
+
+    for (const isolatedNode of isolatedNodes) {
+      const idCard = idCards.find((card) => card.id === isolatedNode);
+      if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
+        youngestNode = idCard;
+      }
+    }
+
+    if (isIsolated) {
+      for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
+        if (eligibleSplits[i].includes(youngestNode.id)) {
+          candidates = intersection(eligibleSplits[i], isolatedNodes);
+        }
+      }
+    } else {
+      candidates = [youngestNode.id];
+    }
+
+    return candidates;
+  }
+
+  /**
+   * Handles a full-state round that no node answered: gives up if this was
+   * already the second attempt, otherwise drops every subscriber and waits a
+   * redis heartbeat round so the discovery can be redone against ID cards that
+   * may since have expired.
+   *
+   * Extracted from `handshake()` unchanged.
+   *
+   * @returns false when the caller must stop — the cluster is split and this
+   *          node is shutting down
+   */
+  private async retryFullState(retried: boolean): Promise<boolean> {
+    // Uh oh... no node was able to give us the full state.
+    // We must retry later, to check if the redis keys have expired. If they
+    // are still there and we still aren't able to fetch a full state, this
+    // means we're probably facing a network split, and we must then shut
+    // down.
+    if (retried) {
+      this.logger.error(
+        "[CLUSTER] Could not connect to discovered cluster nodes (network split detected). Shutting down.",
+      );
+      global.kuzzle.shutdown();
+      return false;
+    }
+
+    // Disposes all subscribers
+    for (const subscriber of this.remoteNodes.values()) {
+      subscriber.dispose();
+    }
+    this.remoteNodes.clear();
+
+    // Waits for a redis heartbeat round
+    const retryDelay = this.heartbeatDelay * 1.5;
+    this.logger.warn(
+      `[CLUSTER] Unable to connect to discovered cluster nodes. Retrying in ${retryDelay}ms...`,
+    );
+    await Bluebird.delay(retryDelay);
+
+    return true;
   }
 
   /**
@@ -633,7 +693,6 @@ class ClusterNode {
    * @return {void}
    */
   async handshake(): Promise<void> {
-    // NOSONAR
     const handshakeTimeout = setTimeout(() => {
       this.logger.error(
         `[CLUSTER] Failed to join the cluster: timed out (joinTimeout: ${this.config.joinTimeout}ms)`,
@@ -693,33 +752,12 @@ class ClusterNode {
 
         fullState = await this.command.getFullState(nodes);
 
-        // Uh oh... no node was able to give us the full state.
-        // We must retry later, to check if the redis keys have expired. If they
-        // are still there and we still aren't able to fetch a full state, this
-        // means we're probably facing a network split, and we must then shut
-        // down.
         if (fullState === null) {
-          if (retried) {
-            this.logger.error(
-              "[CLUSTER] Could not connect to discovered cluster nodes (network split detected). Shutting down.",
-            );
-            global.kuzzle.shutdown();
+          if (!(await this.retryFullState(retried))) {
             return;
           }
 
-          // Disposes all subscribers
-          for (const subscriber of this.remoteNodes.values()) {
-            subscriber.dispose();
-          }
-          this.remoteNodes.clear();
-
-          // Waits for a redis heartbeat round
           retried = true;
-          const retryDelay = this.heartbeatDelay * 1.5;
-          this.logger.warn(
-            `[CLUSTER] Unable to connect to discovered cluster nodes. Retrying in ${retryDelay}ms...`,
-          );
-          await Bluebird.delay(retryDelay);
         }
       } while (fullState === null);
       debug("[CLUSTER] Fullstate retrieved, loading into node..");
