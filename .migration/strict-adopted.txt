@@ -45,6 +45,7 @@
 # optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
 # settled value is `T | undefined`, which is what `resolve()` and
 # which is what it always did. pluginRepository.ts can now say what it returns.
+
 bin/copy-binaries.ts
 index.ts
 lib/api/controllers/adminController.ts
@@ -58,6 +59,9 @@ lib/api/openapi/index.ts
 lib/api/openapi/openApiGenerator.ts
 lib/api/request/index.ts
 lib/cluster/index.ts
+lib/cluster/protobuf/commandMessages.ts
+lib/cluster/protobuf/syncMessages.ts
+lib/cluster/state.ts
 lib/config/default.config.ts
 lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts
@@ -159,10 +163,12 @@ lib/types/controllers/ControllerRights.ts
 lib/types/controllers/adminController.type.ts
 lib/types/controllers/authController.type.ts
 lib/types/core/auth/formatProcessing.type.ts
+lib/types/dumpme.d.ts
 lib/types/errors/ErrorDefinition.ts
 lib/types/errors/ErrorDomains.ts
 lib/types/events/EventProtocol.ts
 lib/types/index.ts
+lib/types/node-internals.d.ts
 lib/types/realtime/RealtimeScope.ts
 lib/types/realtime/RealtimeUsers.ts
 lib/types/realtime/RoomList.ts
