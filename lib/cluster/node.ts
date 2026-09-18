@@ -25,9 +25,9 @@
 // does not see. A conversion must not change how a module is resolved — see
 // J3a, where a hard-coded `.js` next to a renamed file took the whole
 // functional matrix down.
-import assert from "assert";
-import net from "net";
-import os from "os";
+import assert from "assert"; // NOSONAR
+import net from "net"; // NOSONAR
+import os from "os"; // NOSONAR
 
 import Bluebird from "bluebird";
 import EventEmitter from "eventemitter3";
@@ -36,14 +36,18 @@ import type DocumentNotification from "../core/realtime/notification/document";
 import type UserNotification from "../core/realtime/notification/user";
 import type { storeScopeEnum } from "../core/storage/storeScopeEnum";
 import type { AuthStrategy } from "./protobuf/syncMessages";
-import _ from "lodash";
+import intersection from "lodash/intersection";
+import xor from "lodash/xor";
 import type Long from "long";
 
 import type { IKuzzleConfiguration } from "../types/config/KuzzleConfiguration";
 import kuzzleStateEnum from "../kuzzle/kuzzleStateEnum";
 import createDebug from "../util/debug";
 import { fromKoncordeIndex } from "../util/koncordeCompat";
-import { Mutex } from "../util/mutex";
+// NOSONAR: `Mutex` is deprecated in favour of `withLock`, but the two use
+// incompatible acquisition/TTL formats and must not contend on the same key —
+// every node takes "clusterHandshake" with `Mutex`. Deferred to TD-20 (#2688).
+import { Mutex } from "../util/mutex"; // NOSONAR
 import ClusterCommand from "./command";
 import { ClusterIdCardHandler } from "./idCardHandler";
 import type { Activity } from "./protobuf/commandMessages";
@@ -469,6 +473,11 @@ class ClusterNode {
    * /!\ Do not wait for this method: it's meant to run as a background check.
    * It'll never throw, and it'll never generate unhandled rejections.
    */
+  // NOSONAR (S3776, cognitive complexity 29): the split election below is
+  // pre-existing logic this conversion did not write, and it is the code that
+  // decides which nodes shut themselves down. Splitting it into helpers is a
+  // change to the hardest path in the cluster, and the sprint's rule is that a
+  // conversion changes no behaviour. Filed as a refactor rather than done here.
   async enforceClusterConsistency(): Promise<void> {
     // Delay the check to 1 heartbeat round, to allow all nodes to update
     // their ID cards
@@ -485,7 +494,16 @@ class ClusterNode {
         topology.push(idCard.id);
 
         if (topology.length !== idCards.length) {
-          topology = topology.sort();
+          // Explicit comparator rather than the default: identical for these
+          // ASCII node ids, and the split election below compares the sorted
+          // arrays element by element, so the ordering is load-bearing.
+          topology = topology.sort((a, b) => {
+            if (a === b) {
+              return 0;
+            }
+
+            return a < b ? -1 : 1;
+          });
           const found = splits.some((split) => {
             if (split.length !== topology.length) {
               return false;
@@ -534,10 +552,10 @@ class ClusterNode {
       } else {
         // Beware: search isolated nodes in ALL the splits, not only the
         // smallest ones
-        let isolatedNodes = _.xor(...splits);
-        const eligibleNodes = _.uniq(_.flatten(eligibleSplits));
+        let isolatedNodes = xor(...splits);
+        const eligibleNodes = [...new Set(eligibleSplits.flat())];
 
-        isolatedNodes = _.intersection(isolatedNodes, eligibleNodes);
+        isolatedNodes = intersection(isolatedNodes, eligibleNodes);
 
         const isIsolated = isolatedNodes.length > 0;
 
@@ -548,8 +566,8 @@ class ClusterNode {
 
         let youngestNode;
 
-        for (let i = 0; i < isolatedNodes.length; i++) {
-          const idCard = idCards.find((card) => card.id === isolatedNodes[i]);
+        for (const isolatedNode of isolatedNodes) {
+          const idCard = idCards.find((card) => card.id === isolatedNode);
           if (!youngestNode || idCard.birthdate > youngestNode.birthdate) {
             youngestNode = idCard;
           }
@@ -558,7 +576,7 @@ class ClusterNode {
         if (isIsolated) {
           for (let i = 0; !candidates && i < eligibleSplits.length; i++) {
             if (eligibleSplits[i].includes(youngestNode.id)) {
-              candidates = _.intersection(eligibleSplits[i], isolatedNodes);
+              candidates = intersection(eligibleSplits[i], isolatedNodes);
             }
           }
         } else {
@@ -589,6 +607,10 @@ class ClusterNode {
    *
    * @return {void}
    */
+  // NOSONAR (S3776, cognitive complexity 26): same as above — the retry loop,
+  // the mutex, the timeout and the per-node sync are one interlocking sequence,
+  // and TD-65 lives in exactly this ordering. Refactoring it belongs in its own
+  // PR, with the functional suite as the witness.
   async handshake(): Promise<void> {
     const handshakeTimeout = setTimeout(() => {
       this.logger.error(
@@ -612,7 +634,7 @@ class ClusterNode {
 
       this.nodeId = this.idCardHandler.nodeId;
 
-      await this.startHeartbeat();
+      await this.startHeartbeat(); // NOSONAR: TD-26
       debug("[CLUSTER] Start heartbeat");
 
       let retried = false;
@@ -705,7 +727,7 @@ class ClusterNode {
       } while (fullState === null);
       debug("[CLUSTER] Fullstate retrieved, loading into node..");
 
-      await this.fullState.loadFullState(fullState);
+      await this.fullState.loadFullState(fullState); // NOSONAR: TD-26
       this.activity = fullState.activity ? fullState.activity : this.activity;
 
       debug("[CLUSTER] Fullstate loaded.");
