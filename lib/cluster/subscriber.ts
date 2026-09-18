@@ -460,10 +460,22 @@ class ClusterSubscriber {
     }
   }
 
+  /**
+   * Set from two places: a `NodePreventEviction` message published by this
+   * peer, and `node.preventEviction()` on this node. The local caller used to
+   * reach the wire handler below with a hand-built `{ evictionPrevented }` —
+   * an object shaped like a sync message that never came off the wire and
+   * carries no `messageId`. The conversion could not type that, and it should
+   * not have to: the two callers want the same effect, not the same envelope.
+   */
+  setEvictionPrevented(evictionPrevented: boolean): void {
+    this.remoteNodeEvictionPrevented = evictionPrevented;
+  }
+
   async handleNodePreventEviction(
     message: NodePreventEvictionMessage,
   ): Promise<void> {
-    this.remoteNodeEvictionPrevented = message.evictionPrevented;
+    this.setEvictionPrevented(message.evictionPrevented);
   }
 
   /**
