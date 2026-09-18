@@ -107,15 +107,6 @@ const stateEnum = Object.freeze({
 /* eslint-enable sort-keys */
 
 /**
- * The values of `stateEnum`. Deliberately `number` and not the literal union
- * `1 | 2 | 3 | 4`: `state` is mutated by other methods while `listen()` is
- * awaiting a socket read, and TypeScript's control-flow narrowing does not
- * model that — under the literal union it reports the deliberate re-checks
- * after an `await` as impossible comparisons. Those re-checks are the point.
- */
-type SubscriberState = number;
-
-/**
  * A frame as `protobufjs` hands it back, before `validateMessage()` has
  * established that it carries the `messageId` every sync message must have.
  */
@@ -178,7 +169,15 @@ class ClusterSubscriber {
 
   private confirmSubscription: () => void;
 
-  public state: SubscriberState;
+  /**
+   * One of the values of `stateEnum`. Deliberately `number` and not the
+   * literal union `1 | 2 | 3 | 4`: `state` is mutated by other methods while
+   * `listen()` is awaiting a socket read, and TypeScript's control-flow
+   * narrowing does not model that — under the literal union it reports the
+   * deliberate re-checks after an `await` as impossible comparisons. Those
+   * re-checks are the point.
+   */
+  public state: number;
 
   private buffer: BufferedFrame[];
 
