@@ -78,9 +78,10 @@ class DumpGenerator {
     try {
       fs.mkdirSync(dumpPath, { recursive: true });
     } catch (e) {
-      const message = e.message.startsWith("EEXIST")
+      const error = e instanceof Error ? e : new Error(String(e));
+      const message = error.message.startsWith("EEXIST")
         ? "Dump directory already exists. Skipping.."
-        : `Unable to create dump folder: ${e.message}`;
+        : `Unable to create dump folder: ${error.message}`;
 
       this.logger.error(message);
       throw new Error(message, { cause: e });
@@ -157,9 +158,12 @@ class DumpGenerator {
     // Gzip the core
     try {
       const corefiles = this._listFilesMatching(dumpPath, "core");
+      // Read once: the same element is used four times below, twice from
+      // inside a callback where the `if` above no longer narrows it.
+      const corefile = corefiles[0];
 
-      if (corefiles[0]) {
-        const readStream = fs.createReadStream(corefiles[0]);
+      if (corefile) {
+        const readStream = fs.createReadStream(corefile);
         const writeStream = fs.createWriteStream(`${dumpPath}/core.gz`);
 
         await new Bluebird<void>((resolve) =>
@@ -169,14 +173,12 @@ class DumpGenerator {
             .on("finish", () => {
               // rm the original core file
               try {
-                fs.unlinkSync(corefiles[0]);
+                fs.unlinkSync(corefile);
               } catch {
                 // The unlink error is deliberately dropped: the core file is a
                 // best-effort cleanup and its own path is already in the
                 // warning.
-                this.logger.warn(
-                  `> unable to clean up core file ${corefiles[0]}`,
-                );
+                this.logger.warn(`> unable to clean up core file ${corefile}`);
               }
               resolve();
             }),
@@ -244,19 +246,29 @@ class DumpGenerator {
       });
 
     while (dumps.length >= config.history.reports) {
-      const dir = dumps.shift().path;
+      const dump = dumps.shift();
 
-      fs.rmSync(dir, { recursive: true });
+      // `shift()` answers both questions at once. It matters: a configured
+      // `history.reports` of 0 makes the condition above constant-true, and the
+      // old shape then read `.path` off undefined.
+      if (dump === undefined) {
+        break;
+      }
+
+      fs.rmSync(dump.path, { recursive: true });
     }
 
-    for (let i = 0; i < dumps.length - config.history.coredump; i++) {
+    // `slice` rather than an index loop: a non-positive end yields an empty
+    // list, which is what the old `i < dumps.length - coredump` bound meant.
+    for (const dump of dumps.slice(0, dumps.length - config.history.coredump)) {
       const corefiles = this._listFilesMatching(
-        path.normalize(dumps[i].path),
+        path.normalize(dump.path),
         "core",
       );
+      const corefile = corefiles[0];
 
-      if (corefiles[0]) {
-        fs.unlinkSync(corefiles[0]);
+      if (corefile) {
+        fs.unlinkSync(corefile);
       }
     }
   }

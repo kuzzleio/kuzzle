@@ -156,7 +156,7 @@ class BaseModel {
    * Hook called in the delete method after deletion from the database
    */
   async _afterDelete(): Promise<void> {
-    return null;
+    // Nothing to do by default; subclasses override this.
   }
 
   // Getter/Setter =============================================================
@@ -239,7 +239,9 @@ class BaseModel {
       searchBody,
       options,
     );
-    return resp.hits.map((hit) => this._instantiateFromDb(hit));
+    return resp.hits.map((hit: StorageDocument) =>
+      this._instantiateFromDb(hit),
+    );
   }
 
   /**

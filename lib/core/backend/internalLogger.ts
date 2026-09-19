@@ -22,6 +22,10 @@
 import util from "util";
 import { ApplicationManager } from "./index";
 
+/** The Logger methods this class forwards to — see the wrappers below. */
+type LogLevel =
+  "trace" | "debug" | "info" | "warn" | "error" | "fatal" | "verbose";
+
 export class InternalLogger extends ApplicationManager {
   /**
    * Logs a trace message
@@ -88,7 +92,7 @@ export class InternalLogger extends ApplicationManager {
     }
   }
 
-  private _log(level: string, message: any) {
+  private _log(level: LogLevel, message: any) {
     if (!this._application.started) {
       // eslint-disable-next-line no-console
       console.log(util.inspect(message));

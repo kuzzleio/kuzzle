@@ -79,7 +79,7 @@ export default class AsyncStore implements AsyncStoreInterface {
   private _getStore(): Store {
     const store = this._asyncLocalStorage.getStore();
 
-    assert(Boolean(store), "Associated AsyncStore is not set");
+    assert(store !== undefined, "Associated AsyncStore is not set");
 
     return store;
   }

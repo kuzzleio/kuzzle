@@ -60,7 +60,7 @@ export class Inflector {
   /**
    * Converts a string to camelCase
    */
-  static camelCase(string) {
+  static camelCase(string: string) {
     return _.camelCase(string);
   }
 

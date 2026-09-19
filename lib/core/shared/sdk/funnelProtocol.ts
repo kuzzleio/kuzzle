@@ -23,11 +23,12 @@ import type { RequestPayload } from "kuzzle-sdk";
 import { KuzzleEventEmitter } from "kuzzle-sdk";
 
 import { Request } from "../../../api/request";
+import type { User } from "../../../model/security/user";
 import * as kerror from "../../../kerror";
 
 export class FunnelProtocol extends KuzzleEventEmitter {
   private id = "funnel";
-  private connectionId: string = null;
+  private connectionId: string | null = null;
 
   constructor() {
     super();
@@ -50,15 +51,29 @@ export class FunnelProtocol extends KuzzleEventEmitter {
    *  Hydrate the user and execute SDK query
    */
   async query(request: RequestPayload) {
-    if (!this.connectionId) {
-      this.connectionId = await global.kuzzle.ask(
+    // Through a local: the field is nullable and the narrowing an `if` on it
+    // gives does not survive the `await` below.
+    let connectionId = this.connectionId;
+
+    if (connectionId === null) {
+      // `ask` answers `any`; `InternalProtocol` registers this one as
+      // `() => this.connection.id`, a string.
+      const id: string = await global.kuzzle.ask(
         "core:network:internal:connectionId:get",
       );
+
+      connectionId = id;
+      this.connectionId = id;
     }
 
-    const requestOptions = {
+    // Annotated, because the initialiser alone infers `user: null` and every
+    // read below is then a read off `never`.
+    const requestOptions: {
+      connection: { id: string; protocol: string };
+      user: User | null;
+    } = {
       connection: {
-        id: this.connectionId,
+        id: connectionId,
         protocol: this.id,
       },
       user: null,

@@ -440,7 +440,10 @@ class RoleRepository extends ObjectRepository<Role> {
               role._id,
               action,
               roleController,
-              didYouMean(action, controller._actions),
+              // `_actions` is a Set. didyoumean@1.2.1 walks `list.length`,
+              // which a Set does not have, so this suggestion had always been
+              // empty — the new declaration for the module is what said so.
+              didYouMean(action, Array.from(controller._actions)),
             );
           }
         });

@@ -45,11 +45,11 @@ debug.formatArgs = () => {};
 function createDebug(namespace: string) {
   const myDebug = debug(namespace);
 
-  myDebug.log = (...args) => {
+  myDebug.log = (msg, ...args) => {
     if (!["debug", "trace"].includes(global.kuzzle.log.level)) {
       global.kuzzle.log.level = "debug";
     }
-    global.kuzzle.log.debug({ namespace }, ...args);
+    global.kuzzle.log.debug({ namespace }, msg, ...args);
   };
 
   return myDebug;

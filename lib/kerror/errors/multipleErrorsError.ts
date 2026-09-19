@@ -26,7 +26,7 @@ export class MultipleErrorsError extends KuzzleError {
   public count: number;
 
   constructor(
-    message: string,
+    message: string = "",
     errors: KuzzleError[] = [],
     id?: string,
     code?: number,

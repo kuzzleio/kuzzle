@@ -91,13 +91,18 @@ export default class PassportWrapper {
         if (e instanceof KuzzleError) {
           reject(e);
         } else {
+          // A strategy is plugin code and `authenticate` can throw anything;
+          // the `as Error` this replaces asserted otherwise on the very line
+          // that read `.message` off it.
+          const error = e instanceof Error ? e : new Error(String(e));
+
           reject(
             kerror.getFrom(
-              e,
+              error,
               "plugin",
               "runtime",
               "unexpected_error",
-              (e as Error).message,
+              error.message,
             ),
           );
         }

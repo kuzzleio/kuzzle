@@ -24,6 +24,17 @@ import * as util from "util";
 import type { JSONObject } from "kuzzle-sdk";
 
 /**
+ * `util.types.isNativeError` rather than `instanceof Error`: it answers true
+ * for an error built in another realm, which `instanceof` does not, and false
+ * for an object that merely has `Error.prototype`. Node deprecates it in
+ * favour of `Error.isError`, which needs Node 24 while this package supports
+ * `>=20` — hence the NOSONAR. Revisit when the floor moves.
+ */
+function isError(value: unknown): value is Error {
+  return util.types.isNativeError(value); // NOSONAR
+}
+
+/**
  * API error are instances of this class.
  * See https://docs.kuzzle.io/core/2/api/errors/types/
  */
@@ -36,21 +47,39 @@ export class KuzzleError extends Error {
   /**
    * Error unique code
    * @see https://docs.kuzzle.io/core/2/api/errors/error-codes/
+   *
+   * Undefined for an error built by hand rather than from the code registry
+   * (`new BadRequestError("...")`), which both plugins and Kuzzle itself do.
    */
-  public code: number;
+  public code: number | undefined;
 
   /**
    * Error unique identifier
+   *
+   * Undefined under the same conditions as {@link code}.
    */
-  public id: string;
+  public id: string | undefined;
 
   /**
    * Placeholders used to construct the error message.
    */
   public props: string[] | undefined;
 
-  constructor(message: string, status: number, id?: string, code?: number) {
-    super(message);
+  /**
+   * `message` admits `undefined` because callers really do omit it:
+   * `doc/build-error-codes.js` constructs one of each class with no arguments
+   * just to read its `status`, and plugin code in JavaScript may do the same.
+   * That produced an error with an empty message before this file was typed,
+   * and it still does. It is spelled as part of the type rather than as a
+   * default value because `status` after it is required.
+   */
+  constructor(
+    message: string | Error | undefined,
+    status: number,
+    id?: string,
+    code?: number,
+  ) {
+    super(isError(message) ? message.message : (message ?? ""));
 
     this.status = status;
     this.code = code;
@@ -58,11 +87,9 @@ export class KuzzleError extends Error {
     this.props = undefined;
     this.stack = undefined;
 
-    if (util.types.isNativeError(message)) {
-      this.message = message.message;
+    if (isError(message)) {
       this.stack = message.stack;
     } else {
-      this.message = message;
       Error.captureStackTrace(this, KuzzleError);
     }
   }

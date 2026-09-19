@@ -121,7 +121,10 @@ class Router {
     this.http.post("_query", (request, cb) => {
       // We need to build a new request from the body
       // and we also need to keep the original request context
-      const requestPayload = request.input.body;
+      // `input.body` is nullable: a POST /_query with no body used to reach
+      // `requestPayload.jwt` and throw a TypeError. `getBody()` answers the
+      // same object and rejects the empty case with api.assert.body_required.
+      const requestPayload = request.getBody();
 
       if (request.input.jwt && requestPayload.jwt === undefined) {
         requestPayload.jwt = request.input.jwt;
@@ -200,9 +203,11 @@ class Router {
     const connectionsByProtocol: Record<string, number> = {};
 
     for (const connection of this.connections.values()) {
-      const protocol = connection.connection.protocol.toLowerCase();
+      const protocol = connection.connection.protocol?.toLowerCase();
 
-      if (protocol === "internal") {
+      // A request context carries a nullable protocol; one without is not a
+      // client connection to count.
+      if (protocol === undefined || protocol === "internal") {
         continue;
       }
 

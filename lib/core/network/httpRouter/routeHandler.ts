@@ -24,7 +24,7 @@ import type { JSONObject } from "kuzzle-sdk";
 import { Request } from "../../../api/request";
 import { wrap } from "../../../kerror";
 import type HttpMessage from "../protocols/httpMessage";
-import type { RouteCallback, RouteHandlerFunction } from "./routeTypes";
+import type { RouteHandlerFunction } from "./routeTypes";
 
 const kerror = wrap("network", "http");
 
@@ -65,21 +65,24 @@ class RouteHandler {
       },
     };
 
-    for (const k of Object.keys(message.headers)) {
+    // `Object.entries` rather than `Object.keys` + three indexed reads: the
+    // value comes back with the key, so there is nothing to look up twice and
+    // nothing for `noUncheckedIndexedAccess` to object to.
+    for (const [name, value] of Object.entries(message.headers)) {
       if (
-        k.toLowerCase() === "authorization" &&
-        message.headers[k].toLowerCase().startsWith("bearer ")
+        name.toLowerCase() === "authorization" &&
+        value.toLowerCase().startsWith("bearer ")
       ) {
-        this.data.jwt = message.headers[k].substring("Bearer ".length);
-      } else if (k.toLowerCase() === "x-kuzzle-volatile") {
+        this.data.jwt = value.substring("Bearer ".length);
+      } else if (name.toLowerCase() === "x-kuzzle-volatile") {
         try {
-          this.data.volatile = JSON.parse(message.headers[k]);
+          this.data.volatile = JSON.parse(value);
         } catch (e) {
-          throw kerror.getFrom(
-            e,
-            "volatile_parse_failed",
-            (e as Error).message,
-          );
+          // A malformed header is whatever JSON.parse threw, which is a
+          // SyntaxError in practice but is not typed as one.
+          const error = e instanceof Error ? e : new Error(String(e));
+
+          throw kerror.getFrom(error, "volatile_parse_failed", error.message);
         }
       }
     }
@@ -93,16 +96,13 @@ class RouteHandler {
 
   /**
    * Add a parametric argument to the request object
+   *
+   * `value` is optional because its only caller pairs a route's placeholder
+   * names with the values collected during the descent, and a name with no
+   * value has always been written through as `undefined` rather than skipped.
    */
-  addArgument(name: string, value: string): void {
+  addArgument(name: string, value: string | undefined): void {
     this.data[name] = value;
-  }
-
-  /**
-   * Invokes the registered handler
-   */
-  invokeHandler(callback: RouteCallback): void {
-    this.handler(this.request, callback);
   }
 }
 

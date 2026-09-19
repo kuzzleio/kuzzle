@@ -107,16 +107,23 @@ async function raceAgainstLoss<T>(
     throw new MutexLockLostError(key, signal.error);
   }
 
-  let onAbort: () => void;
+  // The listener is unsubscribed through its own controller rather than
+  // through a handler captured out of the Promise executor: the executor does
+  // run synchronously, so the capture was sound, but nothing in the types says
+  // so, and `signal:` says the same thing without asking to be trusted.
+  const listenerScope = new AbortController();
   const abortPromise = new Promise<never>((_resolve, reject) => {
-    onAbort = () => reject(new MutexLockLostError(key, signal.error));
-    signal.addEventListener("abort", onAbort, { once: true });
+    signal.addEventListener(
+      "abort",
+      () => reject(new MutexLockLostError(key, signal.error)),
+      { once: true, signal: listenerScope.signal },
+    );
   });
 
   try {
     return await Promise.race([callbackPromise, abortPromise]);
   } finally {
-    signal.removeEventListener("abort", onAbort);
+    listenerScope.abort();
   }
 }
 

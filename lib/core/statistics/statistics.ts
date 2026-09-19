@@ -307,7 +307,7 @@ export default class Statistics {
       frames.sort(),
     );
 
-    values.forEach((v, idx) => {
+    values.forEach((v: string, idx: number) => {
       const frameDateTime = Number(frames[idx].replace(regex, ""));
 
       if (

@@ -123,7 +123,13 @@ export function assertIsAuthenticated(
   anonymousId: string,
   request: KuzzleRequest,
 ): void {
-  if (request.context.user._id === anonymousId) {
+  // `context.user` is null until the request has been authenticated, which is
+  // precisely the case this assertion exists to reject — reading `_id` off it
+  // threw a TypeError instead of the intended error.
+  if (
+    request.context.user === null ||
+    request.context.user._id === anonymousId
+  ) {
     throw kerror.get("security", "rights", "unauthorized");
   }
 }

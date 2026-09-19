@@ -26,12 +26,14 @@ describe("Test: Deprecate util", () => {
   });
 
   describe("#didYouMean", () => {
+    // The library also takes a `key` to compare on when the list holds
+    // objects. Every Kuzzle call site passes a list of strings, so the
+    // declaration in lib/types/didyoumean.d.ts does not offer one and neither
+    // does this wrapper.
     it("should call didYouMean library with provided args", () => {
-      didYouMean(item, list, "key");
+      didYouMean(item, list);
 
-      should(didYouMeanLibraryStub)
-        .be.calledOnce()
-        .be.calledWith(item, list, "key");
+      should(didYouMeanLibraryStub).be.calledOnce().be.calledWith(item, list);
     });
 
     it("should empty string in production environment", () => {
