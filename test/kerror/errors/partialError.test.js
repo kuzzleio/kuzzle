@@ -25,6 +25,17 @@ describe("#PartialError", () => {
     should(err.count).be.eql(2);
   });
 
+  it("should accept the shifted (message, id, code) form", () => {
+    const err = new PartialError("foobar", "some.error.id", 42);
+
+    should(err.message).be.eql("foobar");
+    should(err.status).be.eql(206);
+    should(err.id).be.eql("some.error.id");
+    should(err.code).be.eql(42);
+    should(err.errors).be.an.Array().and.be.empty();
+    should(err.count).be.eql(0);
+  });
+
   it("should serialize correctly", () => {
     let err = JSON.parse(
       JSON.stringify(new PartialError("foobar", ["foo", "bar"])),

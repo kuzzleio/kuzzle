@@ -1,14 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
 # 'npm run test:strict -- --candidates' lists files that are already clean.
 # A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
 # Every production file that passed `strict-check.sh --candidates` on that date is
@@ -45,6 +34,9 @@
 # optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
 # settled value is `T | undefined`, which is what `resolve()` and
 # which is what it always did. pluginRepository.ts can now say what it returns.
+# Step 12 K1, batch 1 (2026-09-19): lib/kerror's error classes. Their
+# constructors carried no types at all; KuzzleError's `code`/`id` are now
+# optional, which is what `new BadRequestError("...")` has always produced.
 
 bin/copy-binaries.ts
 index.ts
@@ -116,8 +108,22 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
+lib/kerror/errors/badRequestError.ts
+lib/kerror/errors/externalServiceError.ts
+lib/kerror/errors/forbiddenError.ts
+lib/kerror/errors/gatewayTimeoutError.ts
 lib/kerror/errors/index.ts
+lib/kerror/errors/internalError.ts
+lib/kerror/errors/kuzzleError.ts
 lib/kerror/errors/multipleErrorsError.ts
+lib/kerror/errors/notFoundError.ts
+lib/kerror/errors/partialError.ts
+lib/kerror/errors/pluginImplementationError.ts
+lib/kerror/errors/preconditionError.ts
+lib/kerror/errors/serviceUnavailableError.ts
+lib/kerror/errors/sizeLimitError.ts
+lib/kerror/errors/tooManyRequestsError.ts
+lib/kerror/errors/unauthorizedError.ts
 lib/kuzzle/Logger.ts
 lib/kuzzle/event/pipeRunner.ts
 lib/kuzzle/event/waterfall.ts

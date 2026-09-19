@@ -36,21 +36,31 @@ export class KuzzleError extends Error {
   /**
    * Error unique code
    * @see https://docs.kuzzle.io/core/2/api/errors/error-codes/
+   *
+   * Undefined for an error built by hand rather than from the code registry
+   * (`new BadRequestError("...")`), which both plugins and Kuzzle itself do.
    */
-  public code: number;
+  public code: number | undefined;
 
   /**
    * Error unique identifier
+   *
+   * Undefined under the same conditions as {@link code}.
    */
-  public id: string;
+  public id: string | undefined;
 
   /**
    * Placeholders used to construct the error message.
    */
   public props: string[] | undefined;
 
-  constructor(message: string, status: number, id?: string, code?: number) {
-    super(message);
+  constructor(
+    message: string | Error,
+    status: number,
+    id?: string,
+    code?: number,
+  ) {
+    super(typeof message === "string" ? message : message.message);
 
     this.status = status;
     this.code = code;
