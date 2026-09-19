@@ -49,7 +49,8 @@ class RateLimiter {
   async isAllowed(request: KuzzleRequest): Promise<boolean> {
     const { controller, action } = request.input;
     let count = 0;
-    let limit = -1;
+    // Assigned in both branches below, before the only read at the end.
+    let limit: number;
 
     if (controller === "auth" && action === "login") {
       // A request context can carry no connection id — internal requests do
