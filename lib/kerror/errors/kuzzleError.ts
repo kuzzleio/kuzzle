@@ -24,6 +24,17 @@ import * as util from "util";
 import type { JSONObject } from "kuzzle-sdk";
 
 /**
+ * `util.types.isNativeError` rather than `instanceof Error`: it answers true
+ * for an error built in another realm, which `instanceof` does not, and false
+ * for an object that merely has `Error.prototype`. Node deprecates it in
+ * favour of `Error.isError`, which needs Node 24 while this package supports
+ * `>=20` — hence the NOSONAR. Revisit when the floor moves.
+ */
+function isError(value: unknown): value is Error {
+  return util.types.isNativeError(value); // NOSONAR
+}
+
+/**
  * API error are instances of this class.
  * See https://docs.kuzzle.io/core/2/api/errors/types/
  */
@@ -68,9 +79,7 @@ export class KuzzleError extends Error {
     id?: string,
     code?: number,
   ) {
-    super(
-      util.types.isNativeError(message) ? message.message : (message ?? ""),
-    );
+    super(isError(message) ? message.message : (message ?? ""));
 
     this.status = status;
     this.code = code;
@@ -78,7 +87,7 @@ export class KuzzleError extends Error {
     this.props = undefined;
     this.stack = undefined;
 
-    if (util.types.isNativeError(message)) {
+    if (isError(message)) {
       this.stack = message.stack;
     } else {
       Error.captureStackTrace(this, KuzzleError);
