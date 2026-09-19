@@ -53,6 +53,9 @@
 # item type is the ES service's missing mCreateOrReplace return type),
 # internalProtocol (K5 — Protocol.init's overload shape, shared with
 # httpwsProtocol) and the three lib/model/security files (K4, TD-62).
+# Step 12 K2 (2026-09-19): lib/api/request. 121 of its 133 errors were the
+# zero-width-space private-field convention; the backing keys are now declared
+# class members, which changes nothing at runtime.
 
 bin/copy-binaries.ts
 index.ts
@@ -68,6 +71,10 @@ lib/api/openapi/index.ts
 lib/api/openapi/openApiGenerator.ts
 lib/api/rateLimiter.ts
 lib/api/request/index.ts
+lib/api/request/kuzzleRequest.ts
+lib/api/request/requestContext.ts
+lib/api/request/requestInput.ts
+lib/api/request/requestResponse.ts
 lib/cluster/idCardHandler.ts
 lib/cluster/index.ts
 lib/cluster/protobuf/commandMessages.ts

@@ -21,6 +21,9 @@
 
 import type { JSONObject } from "kuzzle-sdk";
 import * as assert from "../../util/assertType";
+// Type-only: `kuzzleRequest` imports this module back, and an import elided at
+// compile time cannot close that cycle at runtime.
+import type { KuzzleRequest } from "./kuzzleRequest";
 import type { Deprecation } from "../../types";
 import type { KuzzleError } from "../../kerror/errors/kuzzleError";
 
@@ -36,7 +39,9 @@ const restrictedHeaders = ["set-cookie"];
 export class Headers {
   public headers: JSONObject;
   private namesMap: Map<string, string>;
-  private proxy: any;
+  // Not private: `RequestResponse.headers` hands this proxy out, which is the
+  // whole point of building one.
+  proxy: any;
 
   constructor() {
     this.namesMap = new Map();
@@ -55,7 +60,7 @@ export class Headers {
    *
    * @param name Header name. Could be a string (case-insensitive) or a symbol
    */
-  getHeader(name: any): string | void {
+  getHeader(name: any): string | undefined {
     if (typeof name === "symbol") {
       return this.headers[name as unknown as string];
     }
@@ -66,7 +71,9 @@ export class Headers {
       return;
     }
 
-    return this.headers[this.namesMap.get(name.toLowerCase())];
+    const storedName = this.namesMap.get(name.toLowerCase());
+
+    return storedName === undefined ? undefined : this.headers[storedName];
   }
 
   removeHeader(name: string): boolean {
@@ -154,7 +161,18 @@ export class RequestResponse {
    */
   public raw: boolean;
 
-  constructor(request) {
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They keep the zero-width-space keys rather than
+   * becoming `private` or `#` names, which is what keeps `console.log` output
+   * as it has been for ten years — see the comment on those constants.
+   * Declaring them changes nothing at runtime.
+   */
+  [_request]: KuzzleRequest;
+  [_headers]: Headers;
+  [_userHeaders]: Set<string>;
+
+  constructor(request: KuzzleRequest) {
     this.raw = false;
     this[_request] = request;
     this[_headers] = new Headers();
@@ -174,7 +192,7 @@ export class RequestResponse {
    * Set the parent request deprecations
    * @param {Object[]} deprecations
    */
-  set deprecations(deprecations: Array<Deprecation> | void) {
+  set deprecations(deprecations: Array<Deprecation> | undefined) {
     this[_request].deprecations = deprecations;
   }
 
@@ -197,7 +215,12 @@ export class RequestResponse {
     return this[_request].error;
   }
 
-  set error(e: KuzzleError | null) {
+  /**
+   * Narrower than the getter on purpose: `setError` throws an InternalError on
+   * anything that is not an Error, so assigning null here has never cleared the
+   * error — `KuzzleRequest.clearError()` is what does that.
+   */
+  set error(e: KuzzleError) {
     this[_request].setError(e);
   }
 
@@ -312,7 +335,7 @@ export class RequestResponse {
   /**
    * Gets a header value (case-insensitive)
    */
-  getHeader(name: string): string | null {
+  getHeader(name: string): string | undefined {
     return this[_headers].getHeader(name);
   }
 
@@ -361,7 +384,7 @@ export class RequestResponse {
       };
     }
 
-    const filteredHeaders = {};
+    const filteredHeaders: Record<string, string | undefined> = {};
     for (const name of this[_userHeaders]) {
       filteredHeaders[name] = this.getHeader(name);
     }
