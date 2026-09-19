@@ -46,6 +46,8 @@
 # although they are in the same ≤ 5 bucket: their remaining errors are the one
 # `_id: string = null` question, and answering it in the model moves 10 errors
 # into the auth repositories. That cluster belongs to K4, with TD-62.
+# Step 12 K1, batch 4 (2026-09-19): the nine files in lib/core that were ≤ 5
+# errors AND answerable without touching anything outside them.
 
 bin/copy-binaries.ts
 index.ts
@@ -67,16 +69,22 @@ lib/config/default.config.ts
 lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts
 lib/core/auth/passportResponse.ts
+lib/core/auth/passportWrapper.ts
 lib/core/backend/applicationManager.ts
 lib/core/backend/backendCluster.ts
 lib/core/backend/backendConfig.ts
+lib/core/backend/backendController.ts
+lib/core/backend/backendErrors.ts
 lib/core/backend/backendHook.ts
 lib/core/backend/backendImport.ts
 lib/core/backend/backendOpenApi.ts
 lib/core/backend/backendPipe.ts
 lib/core/backend/backendPlugin.ts
+lib/core/backend/backendStorage.ts
 lib/core/backend/backendSubscription.ts
+lib/core/backend/backendVault.ts
 lib/core/backend/index.ts
+lib/core/backend/internalLogger.ts
 lib/core/cache/cacheDbEnum.ts
 lib/core/network/clientConnection.ts
 lib/core/network/context.ts
@@ -94,11 +102,14 @@ lib/core/realtime/connectionRooms.ts
 lib/core/realtime/index.ts
 lib/core/realtime/notification/index.ts
 lib/core/realtime/notification/server.ts
+lib/core/realtime/notifier.ts
 lib/core/realtime/room.ts
 lib/core/security/index.ts
 lib/core/security/securityLoader.ts
 lib/core/shared/KoncordeWrapper.ts
+lib/core/shared/sdk/embeddedSdk.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+lib/core/statistics/statistics.ts
 lib/core/storage/storageEngine.ts
 lib/core/storage/storeScopeEnum.ts
 lib/core/validation/baseType.ts

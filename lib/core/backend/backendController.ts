@@ -149,7 +149,15 @@ export class BackendController extends ApplicationManager {
       // if the function handler is an instance method,
       // bind the context to the controller instance
       const handlerName = definition.handler.name;
-      if (handlerName && typeof controller[handlerName] === "function") {
+      // `Reflect.get`, not safeObject's `get`: a controller's actions are class
+      // methods and live on the prototype, which that helper deliberately does
+      // not read. Landed in an `unknown` so the reflective read's `any` goes no
+      // further than the `typeof` below.
+      const method: unknown = handlerName
+        ? Reflect.get(controller, handlerName)
+        : undefined;
+
+      if (typeof method === "function") {
         definition.handler = definition.handler.bind(controller);
       }
     }

@@ -92,7 +92,7 @@ export class BackendErrors extends ApplicationManager {
     domain: string,
     subDomain: string,
     name: string,
-    ...placeholders
+    ...placeholders: unknown[]
   ): KuzzleError {
     return kerror.rawGet(
       this.domains,
@@ -119,7 +119,7 @@ export class BackendErrors extends ApplicationManager {
     domain: string,
     subDomain: string,
     name: string,
-    ...placeholders
+    ...placeholders: unknown[]
   ): KuzzleError {
     return kerror.rawGetFrom(
       this.domains,

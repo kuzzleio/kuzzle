@@ -38,7 +38,7 @@ import ImpersonatedSDK from "./impersonatedSdk";
 
 const contextError = kerror.wrap("plugin", "context");
 
-const forbiddenEmbeddedActions = {
+const forbiddenEmbeddedActions: Record<string, Set<string>> = {
   auth: new Set([
     "checkRights",
     "createApiKey",
@@ -119,7 +119,10 @@ interface EmbeddedRealtime extends RealtimeController {
  * Kuzzle embedded SDK to make API calls inside applications or plugins.
  */
 export class EmbeddedSDK extends Kuzzle {
-  realtime: EmbeddedRealtime;
+  // `declare`: the base Kuzzle constructor already assigns this; the
+  // redeclaration only narrows RealtimeController to EmbeddedRealtime, and must
+  // not emit a field of its own.
+  declare realtime: EmbeddedRealtime;
 
   constructor() {
     // FunnelProtocol is not technically a valid SDK protocol
@@ -174,10 +177,9 @@ export class EmbeddedSDK extends Kuzzle {
       );
     }
 
-    if (
-      forbiddenEmbeddedActions[request.controller] !== undefined &&
-      forbiddenEmbeddedActions[request.controller].has(request.action)
-    ) {
+    const forbiddenActions = forbiddenEmbeddedActions[request.controller];
+
+    if (forbiddenActions?.has(request.action)) {
       throw kerror.get(
         "api",
         "process",
