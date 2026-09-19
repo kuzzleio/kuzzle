@@ -41,6 +41,11 @@
 # declarations for the two untyped modules they import (`debug`, `didyoumean`)
 # — @types packages would have been a dependency change, and dumpme.d.ts is the
 # precedent.
+# Step 12 K1, batch 3 (2026-09-19): lib/types' five small files and
+# baseModel.ts. lib/model/security/{profile,user,token,role}.ts are NOT here
+# although they are in the same ≤ 5 bucket: their remaining errors are the one
+# `_id: string = null` question, and answering it in the model moves 10 errors
+# into the auth repositories. That cluster belongs to K4, with TD-62.
 
 bin/copy-binaries.ts
 index.ts
@@ -137,6 +142,7 @@ lib/kuzzle/kuzzleStateEnum.ts
 lib/kuzzle/vault.ts
 lib/model/security/rights.ts
 lib/model/storage/apiKey.ts
+lib/model/storage/baseModel.ts
 lib/service/service.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/esWrapper.ts
@@ -145,6 +151,7 @@ lib/types/ApiRoute.ts
 lib/types/ClientConnection.ts
 lib/types/Deprecation.ts
 lib/types/EventHandler.ts
+lib/types/Global.ts
 lib/types/HttpMessage.ts
 lib/types/HttpStream.ts
 lib/types/Kuzzle.ts
@@ -152,6 +159,7 @@ lib/types/KuzzleDocument.ts
 lib/types/KuzzleWebSocket.ts
 lib/types/OpenApiDefinition.ts
 lib/types/PasswordPolicy.ts
+lib/types/Plugin.ts
 lib/types/PluginInstance.ts
 lib/types/PluginManifest.ts
 lib/types/Policy.ts
@@ -165,6 +173,7 @@ lib/types/config/DumpConfiguration.ts
 lib/types/config/HttpConfiguration.ts
 lib/types/config/KuzzleConfiguration.ts
 lib/types/config/LimitsConfiguration.ts
+lib/types/config/PluginsConfiguration.ts
 lib/types/config/SecurityConfiguration.ts
 lib/types/config/ServerConfiguration.ts
 lib/types/config/ServicesConfiguration.ts
@@ -172,6 +181,7 @@ lib/types/config/cache/BaseCacheRedisConfiguration.ts
 lib/types/config/internalCache/InternalCacheRedisConfiguration.ts
 lib/types/config/publicCache/PublicCacheRedisConfiguration.ts
 lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.ts
+lib/types/controllers/Controller.ts
 lib/types/controllers/ControllerDefinition.ts
 lib/types/controllers/ControllerRights.ts
 lib/types/controllers/adminController.type.ts
@@ -182,6 +192,7 @@ lib/types/didyoumean.d.ts
 lib/types/dumpme.d.ts
 lib/types/errors/ErrorDefinition.ts
 lib/types/errors/ErrorDomains.ts
+lib/types/events/EventGenericDocument.ts
 lib/types/events/EventProtocol.ts
 lib/types/index.ts
 lib/types/node-internals.d.ts

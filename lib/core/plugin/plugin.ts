@@ -348,9 +348,9 @@ class Plugin {
 
   static checkControllerDefinition(
     name: string,
-    definition: ControllerDefinition,
+    definition: ControllerDefinition | undefined,
     { application = false }: { application?: boolean } = {},
-  ): void {
+  ): asserts definition is ControllerDefinition {
     if (typeof name !== "string") {
       throw assertionError.get(
         "invalid_controller_definition",
