@@ -2364,7 +2364,7 @@ export class ES8 {
       includeHidden: true,
     });
 
-    return collections.some((col: string) => col === HIDDEN_COLLECTION);
+    return collections.includes(HIDDEN_COLLECTION);
   }
 
   /**
@@ -2448,20 +2448,21 @@ export class ES8 {
             status: 400,
           });
         } else {
-          operations.push({
-            index: {
-              _id: document._id,
-              _index: alias,
+          operations.push(
+            {
+              index: {
+                _id: document._id,
+                _index: alias,
+              },
             },
-          });
-          operations.push(document._source);
+            document._source,
+          );
 
           toImport.push(document);
         }
         idx++;
       } else {
-        operations.push({ index: { _index: alias } });
-        operations.push(document._source);
+        operations.push({ index: { _index: alias } }, document._source);
 
         toImport.push(document);
       }
@@ -2526,13 +2527,15 @@ export class ES8 {
      * request can contain more than 10K elements
      */
     for (const extractedDocument of extractedDocuments) {
-      operations.push({
-        index: {
-          _id: extractedDocument._id,
-          _index: alias,
+      operations.push(
+        {
+          index: {
+            _id: extractedDocument._id,
+            _index: alias,
+          },
         },
-      });
-      operations.push(extractedDocument._source);
+        extractedDocument._source,
+      );
     }
     /* end critical code section */
 
@@ -2592,21 +2595,23 @@ export class ES8 {
      */
     for (const extractedDocument of extractedDocuments) {
       if (typeof extractedDocument._id === "string") {
-        operations.push({
-          update: {
-            _id: extractedDocument._id,
-            _index: alias,
-            retry_on_conflict:
-              retryOnConflict || this._config.defaults.onUpdateConflictRetries,
+        operations.push(
+          {
+            update: {
+              _id: extractedDocument._id,
+              _index: alias,
+              retry_on_conflict:
+                retryOnConflict ||
+                this._config.defaults.onUpdateConflictRetries,
+            },
           },
-        });
-
-        // _source: true => makes ES return the updated document source in the
-        // response. Required by the real-time notifier component
-        operations.push({
-          _source: true,
-          doc: extractedDocument._source,
-        });
+          // _source: true => makes ES return the updated document source in
+          // the response. Required by the real-time notifier component
+          {
+            _source: true,
+            doc: extractedDocument._source,
+          },
+        );
         toImport.push(extractedDocument);
       } else {
         extractedDocument._source._kuzzle_info = undefined;
@@ -2819,13 +2824,15 @@ export class ES8 {
       // a shorter mget answer than the request reached the `in` first, which
       // throws on undefined.
       if (doc !== undefined && !("error" in doc) && doc.found) {
-        operations.push({
-          index: {
-            _id: document._id,
-            _index: alias,
+        operations.push(
+          {
+            index: {
+              _id: document._id,
+              _index: alias,
+            },
           },
-        });
-        operations.push(document._source);
+          document._source,
+        );
 
         toImport.push(document);
       } else {

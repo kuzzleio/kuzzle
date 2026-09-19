@@ -21,6 +21,8 @@
 
 /* eslint sort-keys: 0 */
 
+import { inspect } from "node:util";
+
 import Bluebird from "bluebird";
 import get from "lodash/get";
 import type { Client } from "sdk-es8";
@@ -209,8 +211,10 @@ class ESWrapper {
     // `catch` answers `unknown`, and a rejected client promise can in principle
     // carry anything. Everything below reads an Error's shape, so that is what
     // it gets — without asserting that whatever arrived already was one.
+    // `inspect`, not `String`: a thrown object stringifies to "[object
+    // Object]", which is the one thing the message must not say.
     const esError: ThrownESError =
-      error instanceof Error ? error : new Error(String(error));
+      error instanceof Error ? error : new Error(inspect(error));
 
     global.kuzzle.emit("services:storage:error", {
       message: `Elasticsearch Client error: ${esError.message}`,
