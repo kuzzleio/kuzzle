@@ -26,7 +26,7 @@ import { ApplicationManager } from "./index";
 
 export class BackendStorage extends ApplicationManager {
   private _client: any = null;
-  private _Client: new (clientConfig?: any) => any = null;
+  private _Client: (new (clientConfig?: any) => any) | null = null;
 
   /**
    * Storage client constructor.

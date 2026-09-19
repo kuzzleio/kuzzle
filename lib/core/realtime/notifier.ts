@@ -389,17 +389,22 @@ class NotifierController {
 
     const toDelete: string[] = [];
 
-    await Bluebird.map(result, (rooms, index) => {
+    // Walk the ids, not the results: `cacheIds`, `documents` and `result` are
+    // the same length by construction, and this is the array whose element the
+    // body needs non-optionally.
+    await Bluebird.map(cacheIds, (cacheId, index) => {
+      const rooms = result[index] ?? [];
+
       if (rooms.length > 0) {
         return global.kuzzle.ask(
           "core:cache:internal:store",
-          cacheIds[index],
+          cacheId,
           JSON.stringify(rooms),
           { ttl: this.ttl },
         );
       }
 
-      toDelete.push(cacheIds[index]);
+      toDelete.push(cacheId);
       return null;
     });
 

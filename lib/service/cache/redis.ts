@@ -67,6 +67,27 @@ class Redis extends Service<RedisServiceConfig, RedisInfo> {
   private pingIntervalID: ReturnType<typeof setInterval> | null = null;
   private readonly logger: Logger;
 
+  /**
+   * The connected client.
+   *
+   * `client` is null until `init()` builds it, and every consumer is wired up
+   * by `cacheEngine.init()` *after* that — so "not connected" is a programming
+   * error, stated once here where it can actually happen, rather than a null
+   * check at each call site where it cannot.
+   */
+  get connectedClient(): RedisClient {
+    if (this.client === null) {
+      throw kerrorLib.get(
+        "core",
+        "fatal",
+        "assertion_failed",
+        `redis adapter "${this.adapterName}" is not connected`,
+      );
+    }
+
+    return this.client;
+  }
+
   constructor(config: RedisServiceConfig, name: string) {
     super("redis", config);
 

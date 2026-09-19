@@ -22,7 +22,7 @@
 import { KuzzleError } from "./kuzzleError";
 
 export class PreconditionError extends KuzzleError {
-  constructor(message, id?, code?) {
+  constructor(message: string | Error = "", id?: string, code?: number) {
     super(message, 412, id, code);
   }
 }

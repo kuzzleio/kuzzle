@@ -67,13 +67,19 @@ export abstract class Plugin {
 
   /**
    * Plugin context.
+   *
+   * Optional: Kuzzle hands it to `init(config, context)` and never assigns it
+   * here — storing it is a convention plugin authors follow, not a contract
+   * the base class fulfils.
    */
-  public context: PluginContext;
+  public context?: PluginContext;
 
   /**
    * Plugin config.
+   *
+   * Optional, for the same reason as {@link context}.
    */
-  public config: JSONObject;
+  public config?: JSONObject;
 
   /**
    * Define new API controllers.

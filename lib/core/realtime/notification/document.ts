@@ -45,11 +45,16 @@ interface DocumentNotificationOptions {
   node: string;
   requestId?: string;
   timestamp: number;
-  volatile: JSONObject;
+  /**
+   * Nullable, like the other four below: they come straight off the request,
+   * where each is nullable, and a notification built from a request without one
+   * has always been emitted — and received — with `null` in that field.
+   */
+  volatile: JSONObject | null;
   index: string;
   collection: string;
-  controller: string;
-  protocol: string;
+  controller: string | null;
+  protocol: string | null;
 }
 
 function getEvent(action: string): DocumentNotificationEvent {
@@ -94,11 +99,11 @@ class DocumentNotification {
   public event: DocumentNotificationEvent;
   public requestId?: string;
   public timestamp: number;
-  public volatile: JSONObject;
+  public volatile: JSONObject | null;
   public index: string;
   public collection: string;
-  public controller: string;
-  public protocol: string;
+  public controller: string | null;
+  public protocol: string | null;
 
   constructor(opts: DocumentNotificationOptions) {
     this.status = opts.status;

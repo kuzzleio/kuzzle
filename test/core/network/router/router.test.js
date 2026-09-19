@@ -151,5 +151,18 @@ describe("Test: router", () => {
         },
       });
     });
+
+    // A request context carries a nullable protocol. One without is not a
+    // client connection to count, and reading `.toLowerCase()` off it threw.
+    it("should skip a connection that carries no protocol", () => {
+      router.newConnection(
+        new RequestContext({ connection: { id: "foo", protocol: "bar" } }),
+      );
+      router.newConnection(
+        new RequestContext({ connection: { id: "nada", protocol: null } }),
+      );
+
+      should(router.metrics()).match({ connections: { bar: 1 } });
+    });
   });
 });

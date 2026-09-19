@@ -370,7 +370,10 @@ class ClusterPublisher {
    * @throws If the topic's protobuf type cannot be found
    */
   send(topic: string, data: JSONObject): Long {
-    if (this.socket === null) {
+    // `socket` and `protoroot` are both filled by `init()` and nulled by
+    // `dispose()`, together: one guard answers for both, where the old one
+    // answered for the socket and left `protoroot` to be taken on trust.
+    if (this.socket === null || this.protoroot === null) {
       return Long.NEG_ONE;
     }
 
@@ -418,6 +421,16 @@ class ClusterPublisher {
       // same traversal as the index loop this replaces, without the
       // `noUncheckedIndexedAccess` noise.
       for (const payload of _buffer) {
+        // `dispose()` can null the socket while this loop awaits. Before, that
+        // surfaced as a TypeError on the next iteration; there is nothing left
+        // to flush once the socket is gone.
+        if (this.socket === null) {
+          this.buffer = [];
+          this.state = STATE.READY;
+
+          return;
+        }
+
         // This method will never return a rejected promise
         // http://zeromq.github.io/zeromq.js/classes/publisher.html#send
         await this.socket.send([payload.topic, payload.data]);

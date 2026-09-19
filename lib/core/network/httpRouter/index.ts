@@ -148,11 +148,15 @@ class Router {
 
       applyACAOHeader(message, routeHandler.request);
 
-      if (routeHandler.handler === null) {
+      // Read once and invoke here: `invokeHandler` used to re-read the field
+      // this check had just proved non-null, one call away from the proof.
+      const handler = routeHandler.handler;
+
+      if (handler === null) {
         throw kerror.get("url_not_found", routeHandler.url);
       }
 
-      routeHandler.invokeHandler(cb);
+      handler(routeHandler.request, cb);
     } catch (err) {
       let request;
 

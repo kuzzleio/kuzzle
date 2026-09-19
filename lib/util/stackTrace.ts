@@ -75,7 +75,13 @@ export function removeStacktrace<T extends Error | SerializedRequestResponse>(
     if (global.NODE_ENV !== "development") {
       data.stack = undefined;
     } else {
-      data.stack = data.stack.split("\n").map(hilightUserCode).join("\n");
+      // `KuzzleError` sets `stack` to undefined in its own constructor before
+      // deciding what to put there, so an Error with no stack is not a
+      // hypothetical here — the branch below already spelled this out for the
+      // serialized-response case.
+      data.stack = data.stack
+        ? data.stack.split("\n").map(hilightUserCode).join("\n")
+        : undefined;
     }
   } else if (data?.content?.error) {
     // @todo v3: stack should be removed only for "production" env

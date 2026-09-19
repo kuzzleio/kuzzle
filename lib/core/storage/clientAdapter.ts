@@ -1094,18 +1094,21 @@ class ClientAdapter {
       throw kerror.get("api", "assert", "invalid_argument", fixtures, "object");
     }
 
-    for (const index of Object.keys(fixtures)) {
-      if (!isPlainObject(fixtures[index])) {
+    // `Object.entries`, not `keys` + three indexed reads: the value comes back
+    // with the key and there is nothing left for `noUncheckedIndexedAccess` to
+    // object to.
+    for (const [index, collections] of Object.entries(fixtures)) {
+      if (!isPlainObject(collections)) {
         throw kerror.get(
           "api",
           "assert",
           "invalid_argument",
-          fixtures[index],
+          collections,
           "object",
         );
       }
 
-      for (const [collection, payload] of Object.entries(fixtures[index])) {
+      for (const [collection, payload] of Object.entries(collections)) {
         this.cache.assertCollectionExists(index, collection);
 
         const { errors } = await this.client.import(
@@ -1147,18 +1150,18 @@ class ClientAdapter {
     await mutex.lock();
 
     try {
-      for (const index of Object.keys(fixtures)) {
-        if (!isPlainObject(fixtures[index])) {
+      for (const [index, collections] of Object.entries(fixtures)) {
+        if (!isPlainObject(collections)) {
           throw kerror.get(
             "api",
             "assert",
             "invalid_argument",
-            fixtures[index],
+            collections,
             "object",
           );
         }
 
-        for (const [collection, mappings] of Object.entries(fixtures[index])) {
+        for (const [collection, mappings] of Object.entries(collections)) {
           await this._loadCollectionMappings(
             index,
             collection,

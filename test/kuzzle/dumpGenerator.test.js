@@ -226,6 +226,20 @@ describe("Test: kuzzle/dumpGenerator", () => {
     should(fsStub.rmSync.callCount).be.eql(5);
   });
 
+  // `history.reports: 0` makes `dumps.length >= reports` constant-true, so the
+  // loop ran once more than there were dumps and read `.path` off `undefined`.
+  it("should not crash when history.reports is 0", async () => {
+    kuzzle.config.dump.history.reports = 0;
+
+    fsStub.readdirSync.returns(["foo", "bar"]);
+    fsStub.accessSync.throws(new Error("no coredump here"));
+    fsStub.accessSync.withArgs("/tmp", 0).returns();
+
+    await dumpGenerator.dump(suffix);
+
+    should(fsStub.rmSync.callCount).be.eql(2);
+  });
+
   it("should delete coredumps in reports directories, if over the limit", async () => {
     // do not let directory removals interfers with coredump removals
     sinon.stub(dumpGenerator, "_listFilesMatching");

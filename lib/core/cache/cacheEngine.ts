@@ -154,7 +154,7 @@ class CacheEngine {
     global.kuzzle.onAsk(
       "core:cache:internal:script:define",
       (name, keys, script) => {
-        return this.internal.client.defineCommand(name, {
+        return this.internal.connectedClient.defineCommand(name, {
           lua: script,
           numberOfKeys: keys,
         });
@@ -171,7 +171,7 @@ class CacheEngine {
     global.kuzzle.onAsk(
       "core:cache:internal:script:execute",
       (name: string, ...args: unknown[]) => {
-        const client = this.internal.client;
+        const client = this.internal.connectedClient;
 
         // `defineCommand` attaches the script to the client INSTANCE, so it has
         // to be invoked as a method: a detached reference loses `this` and

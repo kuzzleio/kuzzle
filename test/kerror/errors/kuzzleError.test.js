@@ -24,6 +24,16 @@ describe("#ExternalServiceError", () => {
     should(err.stack).be.eql(orig.stack);
   });
 
+  // `doc/build-error-codes.js` constructs one of each class with no arguments
+  // just to read its `status`, and plugin code in JavaScript may do the same.
+  // The typed constructor has to keep accepting that.
+  it("should build with no message at all", () => {
+    const err = new KuzzleError(undefined, 500);
+
+    should(err.message).be.eql("");
+    should(err.status).be.eql(500);
+  });
+
   it("should serialize correctly", () => {
     const err = new KuzzleError("foobar", 500, "ohnoes", 123),
       serialized = JSON.parse(JSON.stringify(err));

@@ -61,7 +61,7 @@ export class NameGenerator {
    * @returns a random name
    */
   static getRandomName(): string {
-    return names[randomNumber(names.length)];
+    return randomItem(names);
   }
 
   /**
@@ -76,7 +76,7 @@ export class NameGenerator {
    * @returns a random adjective
    */
   static getRandomAdjective(): string {
-    return adjectives[randomNumber(adjectives.length)];
+    return randomItem(adjectives);
   }
 
   /**
@@ -143,7 +143,20 @@ export function randomNumber(min: number, max?: number): number {
   return Math.floor(Math.random() * (max - min)) + min;
 }
 
-const adjectives = [
+/**
+ * Picks one of `items` at random.
+ *
+ * `items[i]` is `T | undefined` under `noUncheckedIndexedAccess` whatever the
+ * index — a tuple type does not help, the index is still a `number`. The head,
+ * whose index IS a literal and is therefore typed `T`, stands in for the
+ * out-of-range read that cannot happen. No assertion, and no branch claiming a
+ * runtime state that does not exist: the lists below are non-empty by type.
+ */
+function randomItem<T>(items: readonly [T, ...T[]]): T {
+  return items[randomNumber(items.length)] ?? items[0];
+}
+
+const adjectives: [string, ...string[]] = [
   "aback",
   "abandoned",
   "abashed",
@@ -854,7 +867,7 @@ const adjectives = [
   "zippy",
 ];
 
-const names = [
+const names: [string, ...string[]] = [
   "aardvark",
   "achilles",
   "acrobat",

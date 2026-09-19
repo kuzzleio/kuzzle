@@ -32,6 +32,8 @@ type Chunk = {
 
 type Callback = (error?: Error) => void;
 
+const DEFAULT_BUFFER_SIZE = 8196;
+
 /**
  * This streams accumulate chunks data into a buffer until the amount of data is equal or exceed  the buffer size.
  * Then, it emits a single chunk with the accumulated data.
@@ -44,10 +46,18 @@ export class BufferedPassThrough extends stream.Duplex {
   private buffer: Buffer;
   private offset: number;
 
-  constructor(options: stream.DuplexOptions = { highWaterMark: 8196 }) {
-    super(options);
-    this.bufferSize = options.highWaterMark;
-    this.buffer = Buffer.alloc(options.highWaterMark);
+  constructor(options?: stream.DuplexOptions) {
+    // `highWaterMark` is optional on DuplexOptions, so it is resolved once and
+    // handed to both the stream and the internal buffer. It used to be a
+    // default argument, which covered the no-argument call and nothing else:
+    // `new BufferedPassThrough({})` reached `Buffer.alloc(undefined)`, which
+    // throws.
+    const highWaterMark = options?.highWaterMark ?? DEFAULT_BUFFER_SIZE;
+
+    super({ ...options, highWaterMark });
+
+    this.bufferSize = highWaterMark;
+    this.buffer = Buffer.alloc(highWaterMark);
     this.offset = 0;
   }
 
@@ -182,12 +192,7 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param callback
    */
   _final(callback: Callback) {
-    if (this.buffer && this.offset > 0) {
-      // Push last bit of data
-      this.push(this.buffer.slice(0, this.offset));
-    }
-    this.push(null); // Close the stream
-    this.buffer = null;
+    this.flushAndClose();
     callback();
   }
 
@@ -198,12 +203,26 @@ export class BufferedPassThrough extends stream.Duplex {
    * @param callback
    */
   _destroy(err: Error, callback: Callback) {
-    if (this.buffer && this.offset > 0) {
+    this.flushAndClose();
+    callback(err);
+  }
+
+  /**
+   * Pushes whatever the buffer still holds, closes the stream and releases the
+   * buffer. Both `_final` and `_destroy` end up here, and `_destroy` may run
+   * after `_final` has already flushed — resetting the offset is what stops the
+   * tail being pushed twice. It used to be `this.buffer = null` that stopped
+   * it, which made the declared `Buffer` a lie the two call sites had to
+   * maintain.
+   */
+  private flushAndClose(): void {
+    if (this.offset > 0) {
       // Push last bit of data
       this.push(this.buffer.slice(0, this.offset));
+      this.offset = 0;
     }
+
     this.push(null); // Close the stream
-    this.buffer = null;
-    callback(err);
+    this.buffer = Buffer.alloc(0);
   }
 }

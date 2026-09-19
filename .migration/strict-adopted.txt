@@ -1,14 +1,3 @@
-
-
-
-
-
-
-
-
-
-
-
 # 'npm run test:strict -- --candidates' lists files that are already clean.
 # A file listed here MUST pass 'strict: true'. Add more as hardening progresses;
 # Every production file that passed `strict-check.sh --candidates` on that date is
@@ -45,6 +34,25 @@
 # optional entryPoint, a route tree read through noUncheckedIndexedAccess) and
 # settled value is `T | undefined`, which is what `resolve()` and
 # which is what it always did. pluginRepository.ts can now say what it returns.
+# Step 12 K1, batch 1 (2026-09-19): lib/kerror's error classes. Their
+# constructors carried no types at all; KuzzleError's `code`/`id` are now
+# optional, which is what `new BadRequestError("...")` has always produced.
+# Step 12 K1, batch 2 (2026-09-19): lib/util's ten small files, plus local
+# declarations for the two untyped modules they import (`debug`, `didyoumean`)
+# — @types packages would have been a dependency change, and dumpme.d.ts is the
+# precedent.
+# Step 12 K1, batch 3 (2026-09-19): lib/types' five small files and
+# baseModel.ts. lib/model/security/{profile,user,token,role}.ts are NOT here
+# although they are in the same ≤ 5 bucket: their remaining errors are the one
+# `_id: string = null` question, and answering it in the model moves 10 errors
+# into the auth repositories. That cluster belongs to K4, with TD-62.
+# Step 12 K1, batch 4 (2026-09-19): the nine files in lib/core that were ≤ 5
+# errors AND answerable without touching anything outside them.
+# Step 12 K1, batch 5 (2026-09-19): the last fifteen files of the ≤ 5 bucket.
+# What is left of K1 is five files with a reason each: bulkController (K3 — its
+# item type is the ES service's missing mCreateOrReplace return type),
+# internalProtocol (K5 — Protocol.init's overload shape, shared with
+# httpwsProtocol) and the three lib/model/security files (K4, TD-62).
 
 bin/copy-binaries.ts
 index.ts
@@ -52,38 +60,52 @@ lib/api/controllers/adminController.ts
 lib/api/controllers/clusterController.ts
 lib/api/controllers/debugController.ts
 lib/api/controllers/index.ts
+lib/api/controllers/indexController.ts
 lib/api/controllers/realtimeController.ts
 lib/api/httpRoutes.ts
 lib/api/openapi/OpenApiManager.ts
 lib/api/openapi/index.ts
 lib/api/openapi/openApiGenerator.ts
+lib/api/rateLimiter.ts
 lib/api/request/index.ts
+lib/cluster/idCardHandler.ts
 lib/cluster/index.ts
 lib/cluster/protobuf/commandMessages.ts
 lib/cluster/protobuf/syncMessages.ts
+lib/cluster/publisher.ts
 lib/cluster/state.ts
 lib/config/default.config.ts
 lib/config/documentEventAliases.ts
 lib/core/auth/formatProcessing.ts
 lib/core/auth/passportResponse.ts
+lib/core/auth/passportWrapper.ts
 lib/core/backend/applicationManager.ts
 lib/core/backend/backendCluster.ts
 lib/core/backend/backendConfig.ts
+lib/core/backend/backendController.ts
+lib/core/backend/backendErrors.ts
 lib/core/backend/backendHook.ts
 lib/core/backend/backendImport.ts
 lib/core/backend/backendOpenApi.ts
 lib/core/backend/backendPipe.ts
 lib/core/backend/backendPlugin.ts
+lib/core/backend/backendStorage.ts
 lib/core/backend/backendSubscription.ts
+lib/core/backend/backendVault.ts
 lib/core/backend/index.ts
+lib/core/backend/internalLogger.ts
 lib/core/cache/cacheDbEnum.ts
+lib/core/cache/cacheEngine.ts
 lib/core/network/clientConnection.ts
 lib/core/network/context.ts
+lib/core/network/httpRouter/routeHandler.ts
+lib/core/network/httpRouter/routePart.ts
 lib/core/network/httpRouter/routeTypes.ts
 lib/core/network/networkEntryPoint.ts
 lib/core/network/protocolManifest.ts
 lib/core/network/protocols/httpMessage.ts
 lib/core/network/protocols/protocol.ts
+lib/core/network/router.ts
 lib/core/plugin/pluginManifest.ts
 lib/core/plugin/pluginRepository.ts
 lib/core/plugin/privilegedContext.ts
@@ -91,13 +113,22 @@ lib/core/realtime/actionEnum.ts
 lib/core/realtime/channel.ts
 lib/core/realtime/connectionRooms.ts
 lib/core/realtime/index.ts
+lib/core/realtime/notification/document.ts
 lib/core/realtime/notification/index.ts
 lib/core/realtime/notification/server.ts
+lib/core/realtime/notification/user.ts
+lib/core/realtime/notifier.ts
 lib/core/realtime/room.ts
+lib/core/realtime/subscription.ts
 lib/core/security/index.ts
 lib/core/security/securityLoader.ts
 lib/core/shared/KoncordeWrapper.ts
+lib/core/shared/sdk/embeddedSdk.ts
+lib/core/shared/sdk/funnelProtocol.ts
 lib/core/shared/sdk/impersonatedSdk.ts
+lib/core/statistics/statistics.ts
+lib/core/storage/clientAdapter.ts
+lib/core/storage/indexCache.ts
 lib/core/storage/storageEngine.ts
 lib/core/storage/storeScopeEnum.ts
 lib/core/validation/baseType.ts
@@ -116,9 +147,24 @@ lib/core/validation/types/numeric.ts
 lib/core/validation/types/object.ts
 lib/core/validation/types/string.ts
 lib/core/validation/types/url.ts
+lib/kerror/errors/badRequestError.ts
+lib/kerror/errors/externalServiceError.ts
+lib/kerror/errors/forbiddenError.ts
+lib/kerror/errors/gatewayTimeoutError.ts
 lib/kerror/errors/index.ts
+lib/kerror/errors/internalError.ts
+lib/kerror/errors/kuzzleError.ts
 lib/kerror/errors/multipleErrorsError.ts
+lib/kerror/errors/notFoundError.ts
+lib/kerror/errors/partialError.ts
+lib/kerror/errors/pluginImplementationError.ts
+lib/kerror/errors/preconditionError.ts
+lib/kerror/errors/serviceUnavailableError.ts
+lib/kerror/errors/sizeLimitError.ts
+lib/kerror/errors/tooManyRequestsError.ts
+lib/kerror/errors/unauthorizedError.ts
 lib/kuzzle/Logger.ts
+lib/kuzzle/dumpGenerator.ts
 lib/kuzzle/event/pipeRunner.ts
 lib/kuzzle/event/waterfall.ts
 lib/kuzzle/index.ts
@@ -127,6 +173,7 @@ lib/kuzzle/kuzzleStateEnum.ts
 lib/kuzzle/vault.ts
 lib/model/security/rights.ts
 lib/model/storage/apiKey.ts
+lib/model/storage/baseModel.ts
 lib/service/service.ts
 lib/service/storage/7/esWrapper.ts
 lib/service/storage/8/esWrapper.ts
@@ -135,6 +182,7 @@ lib/types/ApiRoute.ts
 lib/types/ClientConnection.ts
 lib/types/Deprecation.ts
 lib/types/EventHandler.ts
+lib/types/Global.ts
 lib/types/HttpMessage.ts
 lib/types/HttpStream.ts
 lib/types/Kuzzle.ts
@@ -142,6 +190,7 @@ lib/types/KuzzleDocument.ts
 lib/types/KuzzleWebSocket.ts
 lib/types/OpenApiDefinition.ts
 lib/types/PasswordPolicy.ts
+lib/types/Plugin.ts
 lib/types/PluginInstance.ts
 lib/types/PluginManifest.ts
 lib/types/Policy.ts
@@ -155,6 +204,7 @@ lib/types/config/DumpConfiguration.ts
 lib/types/config/HttpConfiguration.ts
 lib/types/config/KuzzleConfiguration.ts
 lib/types/config/LimitsConfiguration.ts
+lib/types/config/PluginsConfiguration.ts
 lib/types/config/SecurityConfiguration.ts
 lib/types/config/ServerConfiguration.ts
 lib/types/config/ServicesConfiguration.ts
@@ -162,14 +212,18 @@ lib/types/config/cache/BaseCacheRedisConfiguration.ts
 lib/types/config/internalCache/InternalCacheRedisConfiguration.ts
 lib/types/config/publicCache/PublicCacheRedisConfiguration.ts
 lib/types/config/storageEngine/StorageEngineElasticsearchConfiguration.ts
+lib/types/controllers/Controller.ts
 lib/types/controllers/ControllerDefinition.ts
 lib/types/controllers/ControllerRights.ts
 lib/types/controllers/adminController.type.ts
 lib/types/controllers/authController.type.ts
 lib/types/core/auth/formatProcessing.type.ts
+lib/types/debug.d.ts
+lib/types/didyoumean.d.ts
 lib/types/dumpme.d.ts
 lib/types/errors/ErrorDefinition.ts
 lib/types/errors/ErrorDomains.ts
+lib/types/events/EventGenericDocument.ts
 lib/types/events/EventProtocol.ts
 lib/types/index.ts
 lib/types/node-internals.d.ts
@@ -179,15 +233,25 @@ lib/types/realtime/RoomList.ts
 lib/types/shared/StoreCollectionsDefinition.ts
 lib/types/storage/7/Elasticsearch.ts
 lib/types/storage/8/Elasticsearch.ts
+lib/util/Inflector.ts
 lib/util/array.ts
 lib/util/assertType.ts
+lib/util/asyncStore.ts
+lib/util/bufferedPassThrough.ts
 lib/util/bytes.ts
 lib/util/crypto.ts
+lib/util/debug.ts
 lib/util/deprecate.ts
+lib/util/didYouMean.ts
+lib/util/distributedLock.ts
 lib/util/esRequest.ts
 lib/util/extractFields.ts
+lib/util/koncordeCompat.ts
 lib/util/memoize.ts
 lib/util/mutex.ts
+lib/util/name-generator.ts
 lib/util/promback.ts
+lib/util/requestAssertions.ts
 lib/util/safeObject.ts
+lib/util/stackTrace.ts
 lib/util/time.ts

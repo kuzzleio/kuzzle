@@ -31,12 +31,12 @@ import didYouMean = require("didyoumean");
 
 import "../types/Global";
 
-function printDidYouMean(...args: unknown[]): string {
+function printDidYouMean(str: string, list: readonly string[]): string {
   if (global.NODE_ENV !== "development") {
     return "";
   }
 
-  const result = didYouMean(...args);
+  const result = didYouMean(str, list);
 
   if (!result) {
     return "";
