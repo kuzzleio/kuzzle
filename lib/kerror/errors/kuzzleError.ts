@@ -54,8 +54,15 @@ export class KuzzleError extends Error {
    */
   public props: string[] | undefined;
 
+  /**
+   * `message` has a default because callers really do omit it:
+   * `doc/build-error-codes.js` constructs one of each class with no arguments
+   * just to read its `status`, and plugin code in JavaScript may do the same.
+   * That produced an error with an empty message before this file was typed,
+   * and it still does.
+   */
   constructor(
-    message: string | Error,
+    message: string | Error = "",
     status: number,
     id?: string,
     code?: number,

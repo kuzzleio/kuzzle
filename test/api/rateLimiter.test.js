@@ -178,5 +178,27 @@ describe("#api.rateLimiter", () => {
       should(await rateLimiter.isAllowed(request)).be.true();
       should(rateLimiter.frame["-1"]).be.eql(1);
     });
+
+    // The profile's rateLimit is the only thing this branch reads, and there is
+    // no profile without a user. Falling through left `limit` at -1 and denied
+    // the request, which is not what "no limit applies" means.
+    it("should allow a request that carries no user", async () => {
+      request.context.user = null;
+
+      should(await rateLimiter.isAllowed(request)).be.true();
+      should(mGetProfilesStub).not.be.called();
+    });
+
+    // An internal request has no connection id. It has always been counted
+    // under the stringified null, and still is: the limit is not lifted for
+    // whoever can reach auth:login without one.
+    it("should count logins with no connection id under a single bucket", async () => {
+      request.context.connection.id = null;
+      request.input.controller = "auth";
+      request.input.action = "login";
+
+      should(await rateLimiter.isAllowed(request)).be.true();
+      should(rateLimiter.frame.null).be.eql(1);
+    });
   });
 });

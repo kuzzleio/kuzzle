@@ -42,7 +42,8 @@ export class Subscription {
   public collection: string;
   public filters: JSONObject;
 
-  public kuid: string;
+  /** Null for an anonymous subscription — `user._id` is what fills it. */
+  public kuid: string | null;
 
   constructor(
     index: string,

@@ -24,7 +24,6 @@ import * as URL from "node:url";
 
 import type { JSONObject } from "kuzzle-sdk";
 
-import { has } from "../../../util/safeObject";
 import type HttpMessage from "../protocols/httpMessage";
 import RouteHandler from "./routeHandler";
 import type { RouteHandlerFunction } from "./routeTypes";
@@ -38,7 +37,12 @@ class RoutePart {
   public handler: RouteHandlerFunction | null;
 
   constructor() {
-    this.subparts = {};
+    // Null-prototype: URL parts are attacker-controlled, and `{}` answers
+    // `subparts["toString"]` with a function. That is why every read below used
+    // to go through `has()` first; with no prototype to inherit from, a single
+    // indexed read is both safe and honest — it is `RoutePart | undefined`, and
+    // nothing has to be taken on trust between the check and the use.
+    this.subparts = Object.create(null);
     this.placeholders = null;
 
     this.handler = null;
@@ -48,20 +52,23 @@ class RoutePart {
    * Checks if an url part already exists
    */
   exists(part: string): boolean {
-    return (
-      this.subparts[part] !== undefined && this.subparts[part].handler !== null
-    );
+    const subpart = this.subparts[part];
+
+    return subpart !== undefined && subpart.handler !== null;
   }
 
   /**
    * Gets the next element of an URL part, creating a new tree leaf if necessary
    */
   getNext(part: string): RoutePart {
-    if (!has(this.subparts, part)) {
-      this.subparts[part] = new RoutePart();
+    let subpart = this.subparts[part];
+
+    if (subpart === undefined) {
+      subpart = new RoutePart();
+      this.subparts[part] = subpart;
     }
 
-    return this.subparts[part];
+    return subpart;
   }
 
   /**
@@ -103,11 +110,11 @@ function getHandlerPart(
   routeHandler: RouteHandler,
   placeholders: string[] = [],
 ): RouteHandler {
-  let part: string | undefined;
+  let part = parts.shift();
 
-  do {
+  while (part !== undefined && part.length === 0 && parts.length > 0) {
     part = parts.shift();
-  } while (parts.length > 0 && part.length === 0);
+  }
 
   if (part === undefined) {
     routeHandler.handler = routePart.handler;
@@ -123,24 +130,18 @@ function getHandlerPart(
 
   part = querystring.unescape(part);
 
-  if (has(routePart.subparts, part)) {
-    return getHandlerPart(
-      routePart.subparts[part],
-      parts,
-      routeHandler,
-      placeholders,
-    );
+  const subpart = routePart.subparts[part];
+
+  if (subpart !== undefined) {
+    return getHandlerPart(subpart, parts, routeHandler, placeholders);
   }
 
-  if (routePart.subparts["*"]) {
+  const wildcard = routePart.subparts["*"];
+
+  if (wildcard !== undefined) {
     placeholders.push(part);
 
-    return getHandlerPart(
-      routePart.subparts["*"],
-      parts,
-      routeHandler,
-      placeholders,
-    );
+    return getHandlerPart(wildcard, parts, routeHandler, placeholders);
   }
 
   return routeHandler;

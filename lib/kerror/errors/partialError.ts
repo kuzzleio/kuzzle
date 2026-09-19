@@ -25,9 +25,9 @@ export class PartialError extends KuzzleError {
   public errors: Array<KuzzleError>;
   public count: number;
 
-  constructor(message: string | Error, id?: string, code?: number);
+  constructor(message?: string | Error, id?: string, code?: number);
   constructor(
-    message: string | Error,
+    message?: string | Error,
     body?: KuzzleError[],
     id?: string,
     code?: number,
@@ -40,7 +40,7 @@ export class PartialError extends KuzzleError {
    * arguments are shifted by one.
    */
   constructor(
-    message: string | Error,
+    message: string | Error = "",
     body?: KuzzleError[] | string,
     id?: string | number,
     code?: number,

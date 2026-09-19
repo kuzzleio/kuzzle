@@ -22,7 +22,7 @@
 import { KuzzleError } from "./kuzzleError";
 
 export class ServiceUnavailableError extends KuzzleError {
-  constructor(message: string | Error, id?: string, code?: number) {
+  constructor(message: string | Error = "", id?: string, code?: number) {
     super(message, 503, id, code);
   }
 }

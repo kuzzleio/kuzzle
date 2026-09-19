@@ -25,6 +25,14 @@ describe("#PartialError", () => {
     should(err.count).be.eql(2);
   });
 
+  it("should build with no arguments at all", () => {
+    const err = new PartialError();
+
+    should(err.message).be.eql("");
+    should(err.status).be.eql(206);
+    should(err.errors).be.an.Array().and.be.empty();
+  });
+
   it("should accept the shifted (message, id, code) form", () => {
     const err = new PartialError("foobar", "some.error.id", 42);
 

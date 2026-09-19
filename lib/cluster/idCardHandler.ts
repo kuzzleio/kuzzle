@@ -238,7 +238,7 @@ export class ClusterIdCardHandler {
       refreshMultiplier: this.refreshMultiplier,
     });
 
-    this.startTemporaryRefresh();
+    this.startTemporaryRefresh(refreshWorker);
   }
 
   /**
@@ -269,7 +269,7 @@ export class ClusterIdCardHandler {
    *
    * Once the worker starts, this timer will be stopped.
    */
-  private startTemporaryRefresh() {
+  private startTemporaryRefresh(refreshWorker: ChildProcess) {
     this.refreshTimer = setInterval(async () => {
       try {
         await this.save();
@@ -280,7 +280,10 @@ export class ClusterIdCardHandler {
       }
     }, this.refreshDelay * this.refreshMultiplier);
 
-    this.refreshWorker.on(
+    // Handed the worker rather than reading `this.refreshWorker`, for the
+    // reason already stated where that field is assigned: it is nullable, and
+    // this method runs on the line after it is filled.
+    refreshWorker.on(
       "message",
       ({ initialized }: { initialized: JSONObject }) => {
         if (initialized) {
@@ -350,11 +353,12 @@ export class ClusterIdCardHandler {
     );
     const expiredIdCards: string[] = [];
 
-    for (let i = 0; i < keys.length; i++) {
+    // `entries()` over the keys: `rawIdCards` is the answer to a mget over
+    // exactly these keys, so the pair is what the loop is really walking.
+    for (const [i, key] of keys.entries()) {
       // filter keys that might have expired between the key search and their
       // values retrieval
       const raw = rawIdCards[i];
-      const key = keys[i];
 
       if (raw !== null && raw !== undefined) {
         idCards.push(IdCard.unserialize(JSON.parse(raw)));
@@ -380,7 +384,7 @@ export class ClusterIdCardHandler {
    * Adds a remote node IdCard to the node known topology
    */
   async addNode(id: string): Promise<void> {
-    if (this.disposed || this.idCard.topology.has(id)) {
+    if (this.disposed || this.idCard === null || this.idCard.topology.has(id)) {
       return;
     }
 
@@ -393,7 +397,11 @@ export class ClusterIdCardHandler {
    * Removes a remote node IdCard from the node known topology
    */
   async removeNode(id: string): Promise<void> {
-    if (!this.disposed && this.idCard.topology.delete(id)) {
+    if (
+      !this.disposed &&
+      this.idCard !== null &&
+      this.idCard.topology.delete(id)
+    ) {
       await this.save();
     }
   }

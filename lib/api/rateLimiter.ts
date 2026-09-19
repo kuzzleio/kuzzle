@@ -52,12 +52,25 @@ class RateLimiter {
     let limit = -1;
 
     if (controller === "auth" && action === "login") {
-      const cid = request.context.connection.id;
+      // A request context can carry no connection id — internal requests do
+      // not have one. They have always shared a single bucket under the
+      // stringified `null`; keeping that key preserves the limit rather than
+      // quietly lifting it for whoever can reach this without a connection.
+      const cid = request.context.connection.id ?? "null";
 
       count = this.frame[cid] = (this.frame[cid] || 0) + 1;
       limit = this.loginsPerSecond;
     } else {
-      const { _id, profileIds } = request.context.user;
+      const user = request.getUser();
+
+      // No user resolved means no profile, and a profile's rateLimit is the
+      // only thing this branch reads. Falling through would leave `limit` at
+      // -1 and deny the request, which is not what "unlimited" means.
+      if (user === null) {
+        return true;
+      }
+
+      const { _id, profileIds } = user;
 
       // By definition, auth:logout should be unrestricted
       if (_id !== "-1" && controller === "auth" && action === "logout") {

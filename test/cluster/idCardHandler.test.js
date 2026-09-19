@@ -40,8 +40,11 @@ describe("ClusterIdCardHandler", () => {
       idCardHandler.refreshWorker = new ChildProcessMock("some/path");
     });
 
+    // startTemporaryRefresh() is handed the worker rather than reading the
+    // nullable field, so the spec passes the one it just installed.
+
     it("should start a timer to refresh the ID Card", (done) => {
-      idCardHandler.startTemporaryRefresh();
+      idCardHandler.startTemporaryRefresh(idCardHandler.refreshWorker);
 
       setTimeout(() => {
         should(idCardHandler.save).be.calledOnce();
@@ -50,7 +53,7 @@ describe("ClusterIdCardHandler", () => {
     });
 
     it("should stop the timer when the worker has started", () => {
-      idCardHandler.startTemporaryRefresh();
+      idCardHandler.startTemporaryRefresh(idCardHandler.refreshWorker);
 
       idCardHandler.refreshWorker.emit("message", { initialized: true });
 

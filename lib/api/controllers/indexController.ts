@@ -46,7 +46,9 @@ class IndexController extends NativeController {
 
     const publicIndexes = await this.ask("core:storage:public:index:list");
 
-    const filtered = publicIndexes.filter((index) => indexes.includes(index));
+    const filtered = publicIndexes.filter((index: string) =>
+      indexes.includes(index),
+    );
 
     const allowed = await this._allowedIndexes(request, filtered);
 
@@ -102,7 +104,11 @@ class IndexController extends NativeController {
     };
 
     if (countCollection) {
-      response.collections = {};
+      // Through a local: `response.collections` is optional, and the narrowing
+      // the assignment gives does not reach inside the callbacks below.
+      const counts: { [index: string]: number } = {};
+
+      response.collections = counts;
 
       const promises = [];
 
@@ -110,7 +116,7 @@ class IndexController extends NativeController {
         promises.push(
           this.ask("core:storage:public:collection:list", index).then(
             (collections) => {
-              response.collections[index] = collections.length;
+              counts[index] = collections.length;
             },
           ),
         );
@@ -153,11 +159,13 @@ class IndexController extends NativeController {
    * @param {String[]} publicIndexes - Public indexes list
    */
   _allowedIndexes(request: KuzzleRequest, publicIndexes: string[]) {
-    if (request.getUser() === null) {
+    const user = request.getUser();
+
+    if (user === null) {
       return publicIndexes;
     }
 
-    const allowedIndexes = [];
+    const allowedIndexes: string[] = [];
 
     const promises = publicIndexes.map((index) => {
       const deleteIndexRequest = new Request(
@@ -165,13 +173,11 @@ class IndexController extends NativeController {
         request.context,
       );
 
-      return request.context.user
-        .isActionAllowed(deleteIndexRequest)
-        .then((isAllowed) => {
-          if (isAllowed) {
-            allowedIndexes.push(index);
-          }
-        });
+      return user.isActionAllowed(deleteIndexRequest).then((isAllowed) => {
+        if (isAllowed) {
+          allowedIndexes.push(index);
+        }
+      });
     });
 
     return Promise.all(promises).then(() => allowedIndexes);
