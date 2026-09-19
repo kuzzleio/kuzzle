@@ -77,20 +77,7 @@ class RateLimiter {
         return true;
       }
 
-      const profiles = await global.kuzzle.ask(
-        "core:security:profile:mGet",
-        profileIds,
-      );
-
-      for (const profile of profiles) {
-        const { rateLimit = 0 } = profile;
-
-        if (limit === 0 || rateLimit === 0) {
-          limit = 0;
-        } else {
-          limit = Math.max(limit, rateLimit);
-        }
-      }
+      limit = await this.profilesLimit(profileIds);
 
       if (limit > 0) {
         count = this.frame[_id] = (this.frame[_id] || 0) + 1;
@@ -98,6 +85,34 @@ class RateLimiter {
     }
 
     return limit === 0 || count <= limit;
+  }
+
+  /**
+   * The rate limit a user's profiles impose, as a single number: 0 is
+   * unlimited, and one unlimited profile makes the whole set unlimited.
+   *
+   * Extracted from isAllowed(), whose cognitive complexity this loop pushed
+   * past the gate once the null-user branch above was added.
+   */
+  private async profilesLimit(profileIds: string[]): Promise<number> {
+    const profiles = await global.kuzzle.ask(
+      "core:security:profile:mGet",
+      profileIds,
+    );
+
+    let limit = -1;
+
+    for (const profile of profiles) {
+      const { rateLimit = 0 } = profile;
+
+      if (limit === 0 || rateLimit === 0) {
+        limit = 0;
+      } else {
+        limit = Math.max(limit, rateLimit);
+      }
+    }
+
+    return limit;
   }
 }
 
