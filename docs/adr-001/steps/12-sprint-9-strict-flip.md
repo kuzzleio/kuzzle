@@ -1,6 +1,6 @@
 # Step 12 — Sprint 9: the strict flip
 
-**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
+**Status:** 🟦 Open · **Opened:** 2026-09-18 · **PR(s):** K0 [#2799](https://github.com/kuzzleio/kuzzle/pull/2799) · K1 [#2800](https://github.com/kuzzleio/kuzzle/pull/2800) · K2 [#2801](https://github.com/kuzzleio/kuzzle/pull/2801) · ← [ADR-0001](../ADR-0001-migration-typescript.md)
 
 ## Goal
 
@@ -212,3 +212,57 @@ contend with the [deps-bump PRs](../type-debt-register.md). Both got a local
 `.d.ts` covering the surface `lib/` actually uses, the way `dumpme.d.ts`
 already did — and writing `didyoumean`'s is what surfaced the `Set` defect
 above.
+
+## What K2 found
+
+**1 435 → 1 302 errors, 54 → 50 files, 201 → 205 adopted**, and **zero collateral**: no file outside `lib/api/request` changed its count, which for the public request API is the result worth reporting.
+
+### 121 of the 133 were one convention
+
+Every accessor in these four classes is backed by a string key with a **zero-width space** appended — `const _input = "input\u200b"` — so that `console.log(request)` prints `input` where the real property is `input​`. It is deliberate, ten years old, and commented as such. The compiler cannot check `this[_input]` when the class never declares that key.
+
+The keys are now **declared as class members**, keyed by the same constants. Nothing changes at runtime. That was chosen over `private _input` and over `#input`, both of which move the runtime key and change what a plugin author sees when inspecting a request — see the [decision register, 2026-09-19](../ADR-0001-migration-typescript.md#decision-register). **Removing the masquerade is still available as its own decision; it is not something a typing slice should do on the way past.**
+
+### Three defects
+
+- **`RequestResponse.deprecations` had never worked.** Its setter assigns through to `KuzzleRequest.deprecations`, which had a getter and **no setter** — in a module, which is strict mode, that is a `TypeError`. Nothing in the tree exercised it, so the throw was never seen.
+- **`RequestResponse.error` accepted `null` and could not honour it.** `setError` throws an `InternalError` on anything that is not an `Error`, so `response.error = null` never cleared anything; `clearError()` does.
+- **`RequestInput.triggerEvents` was initialised to `null`** while its getter declared `boolean | undefined` and its setter normalised to `undefined`.
+
+### Stating a public return type beats widening it
+
+`getIndex`, `getCollection` and `getId` answer `string` for every caller except the one shape that can return null — `{ required: false }`, `{ ifMissing: "ignore" }` — which is now an **overload**. Only `documentController` passes `required: false`, so the union reaches exactly the call site that can observe it. The same reasoning made `assertObject` generic over what it is handed rather than widening its result to a bare record.
+
+---
+
+## What K3 has done so far
+
+🟨 **Unfinished.** Branch `feat/step-12-k3-elasticsearch`, off `2-dev` at `fd5100e5a`, one WIP commit. **Neither ES file is adopted**, so nothing guards the work yet.
+
+| File                                     | At K3's start |                           Now |
+| ---------------------------------------- | ------------: | ----------------------------: |
+| `lib/service/storage/8/elasticsearch.ts` |           233 |                       **132** |
+| `lib/service/storage/7/elasticsearch.ts` |           196 |           **196** — untouched |
+| `lib/service/storage/8/esWrapper.ts`     |   0 (adopted) | **0** — re-typed, still clean |
+
+`implicit-any` 386 → 339. All six ratchets at baseline, 3 070 mocha green, build and error-codes green.
+
+### The three levers already pulled — do not re-derive them
+
+1. **`ESWrapper.formatESError` takes `unknown`.** `catch` answers `unknown` and the wrapper was declared `JSONObject`: that mismatch alone was **39** of ES8's errors, at the call sites rather than in the wrapper. It now normalises once (`error instanceof Error ? error : new Error(String(error))`), and the handlers say what they need — `meta` is what distinguishes a cluster response from a client-side failure, so the three that read it require it instead of re-checking it four times each.
+2. **A bulk request's `operations` is built as a local and handed over by reference.** It is optional on `BulkRequest`, so reading it back off the request was `| undefined` however it had been initialised.
+3. **Nine index loops became `for…of`** (two keep the index through `entries()`). The `@warning Critical code section` comments stay: the traversal is identical, minus an indexed read that had to be trusted.
+
+### Three defects, one of which only the specs could catch
+
+- **`mCreateOrReplace` reset `esRequest.operations = []`** after construction and before anything had been pushed. Dead code as written — but once the array was shared by reference it silently discarded every operation, and the mocha suite said so on the first run. _A refactor that turns dead code into live code is the dangerous kind._
+- **`mCreateOrReplace` read `"error" in doc` before `doc?.found`**, so an mget answer shorter than its request threw on the `in`.
+- **`deleteByQuery` built `max_docs: size` and then assigned `undefined` to it** — the one shape [TD-56](../type-debt-register.md#td-56)'s gate checks over the whole program, adopted or not. It is built once now, and `refresh` with it: that property was being assigned onto an object already spread into the search above.
+
+### What is left, and why it is slower
+
+ES8's remaining 132 are dominated by `TS2345`/`TS2322` **assignability against the ES8 SDK's own types** — each one a question about what Kuzzle passes versus what the client declares, with no shared root cause left to pull. Expect case-by-case work.
+
+**ES7 is a near-identical twin: 616 differing lines out of 7 736.** Most of its 196 errors are the same fixes ported, including all three levers above — `lib/service/storage/7/esWrapper.ts` has had none of the error-path work. Do ES8 to zero first, then port; doing them in parallel means diffing two moving files.
+
+[TD-62](../type-debt-register.md#td-62) (32 of its 56 lying `null` declarations live in these two files) is still to be closed _through_ this slice.
