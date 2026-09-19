@@ -37,6 +37,10 @@
 # Step 12 K1, batch 1 (2026-09-19): lib/kerror's error classes. Their
 # constructors carried no types at all; KuzzleError's `code`/`id` are now
 # optional, which is what `new BadRequestError("...")` has always produced.
+# Step 12 K1, batch 2 (2026-09-19): lib/util's ten small files, plus local
+# declarations for the two untyped modules they import (`debug`, `didyoumean`)
+# — @types packages would have been a dependency change, and dumpme.d.ts is the
+# precedent.
 
 bin/copy-binaries.ts
 index.ts
@@ -173,6 +177,8 @@ lib/types/controllers/ControllerRights.ts
 lib/types/controllers/adminController.type.ts
 lib/types/controllers/authController.type.ts
 lib/types/core/auth/formatProcessing.type.ts
+lib/types/debug.d.ts
+lib/types/didyoumean.d.ts
 lib/types/dumpme.d.ts
 lib/types/errors/ErrorDefinition.ts
 lib/types/errors/ErrorDomains.ts
@@ -185,15 +191,25 @@ lib/types/realtime/RoomList.ts
 lib/types/shared/StoreCollectionsDefinition.ts
 lib/types/storage/7/Elasticsearch.ts
 lib/types/storage/8/Elasticsearch.ts
+lib/util/Inflector.ts
 lib/util/array.ts
 lib/util/assertType.ts
+lib/util/asyncStore.ts
+lib/util/bufferedPassThrough.ts
 lib/util/bytes.ts
 lib/util/crypto.ts
+lib/util/debug.ts
 lib/util/deprecate.ts
+lib/util/didYouMean.ts
+lib/util/distributedLock.ts
 lib/util/esRequest.ts
 lib/util/extractFields.ts
+lib/util/koncordeCompat.ts
 lib/util/memoize.ts
 lib/util/mutex.ts
+lib/util/name-generator.ts
 lib/util/promback.ts
+lib/util/requestAssertions.ts
 lib/util/safeObject.ts
+lib/util/stackTrace.ts
 lib/util/time.ts
