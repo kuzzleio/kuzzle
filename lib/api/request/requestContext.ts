@@ -63,6 +63,18 @@ export type ContextMisc = {
  * Information about the connection at the origin of the request.
  */
 export class Connection {
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They keep the zero-width-space keys rather than
+   * becoming `private` or `#` names, which is what keeps `console.log` output
+   * as it has been for ten years — see the comment on those constants.
+   * Declaring them changes nothing at runtime.
+   */
+  [_c_id]: string | null;
+  [_c_protocol]: string | null;
+  [_c_ips]: string[];
+  [_c_misc]: ContextMisc;
+
   constructor(connection: any) {
     this[_c_id] = null;
     this[_c_protocol] = null;
@@ -75,11 +87,19 @@ export class Connection {
       return;
     }
 
-    for (const prop of Object.keys(connection)) {
-      if (["id", "protocol", "ips"].includes(prop)) {
-        this[prop] = connection[prop];
+    // Assigned by name rather than through a dynamic index, and straight to the
+    // backing fields: the value read out of an arbitrary object is `unknown`,
+    // and asserting it here is the same single check the matching setter would
+    // have run.
+    for (const [prop, value] of Object.entries(connection)) {
+      if (prop === "id") {
+        this[_c_id] = assert.assertString("connection.id", value);
+      } else if (prop === "protocol") {
+        this[_c_protocol] = assert.assertString("connection.protocol", value);
+      } else if (prop === "ips") {
+        this[_c_ips] = assert.assertArray("connection.ips", value, "string");
       } else {
-        this.misc[prop] = connection[prop];
+        this.misc[prop] = value;
       }
     }
   }
@@ -87,7 +107,7 @@ export class Connection {
   /**
    * Unique identifier of the user connection
    */
-  set id(str: string) {
+  set id(str: string | null) {
     this[_c_id] = assert.assertString("connection.id", str);
   }
 
@@ -98,7 +118,7 @@ export class Connection {
   /**
    * Network protocol name
    */
-  set protocol(str: string) {
+  set protocol(str: string | null) {
     this[_c_protocol] = assert.assertString("connection.protocol", str);
   }
 
@@ -144,6 +164,17 @@ export class Connection {
  * and origin (connection, protocol).
  */
 export class RequestContext {
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They keep the zero-width-space keys rather than
+   * becoming `private` or `#` names, which is what keeps `console.log` output
+   * as it has been for ten years — see the comment on those constants.
+   * Declaring them changes nothing at runtime.
+   */
+  [_token]: Token | null;
+  [_user]: User | null;
+  [_connection]: Connection;
+
   constructor(options: any = {}) {
     this[_token] = null;
     this[_user] = null;

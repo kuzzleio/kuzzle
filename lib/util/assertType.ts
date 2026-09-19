@@ -29,10 +29,24 @@ import { BadRequestError } from "../kerror/errors";
  * @param attr - tested attribute name
  * @param data
  */
+export function assertObject<T extends object>(
+  attr: string,
+  data: T | null | undefined,
+): T | null;
 export function assertObject(
   attr: string,
   data: unknown,
-): Record<string, unknown> | null {
+): Record<string, unknown> | null;
+/**
+ * The first overload is what the callers in `lib/api/request` need: they hand
+ * it a value they already have a type for and want it back, not widened to a
+ * bare record. The second is the original signature, kept because the function
+ * has to accept anything in order to reject it.
+ */
+export function assertObject<T extends object>(
+  attr: string,
+  data: T | null | undefined,
+): T | null {
   if (data === null || data === undefined) {
     return null;
   }
@@ -41,7 +55,7 @@ export function assertObject(
     throw new BadRequestError(`Attribute ${attr} must be of type "object"`);
   }
 
-  return data as Record<string, unknown>;
+  return data;
 }
 
 /**
@@ -77,6 +91,21 @@ export function assertArrayOrObject(
  * @throws
  * @param attr - tested attribute name
  * @param data
+ */
+export function assertArray(
+  attr: string,
+  data: unknown,
+  type: "string",
+): string[];
+export function assertArray(
+  attr: string,
+  data: unknown,
+  type: string,
+): unknown[];
+/**
+ * The overload above is not a claim the implementation does not make: every
+ * element that reaches the returned array has been checked with
+ * `typeof d !== type`, so a call with `"string"` really does answer `string[]`.
  */
 export function assertArray(
   attr: string,

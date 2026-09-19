@@ -62,6 +62,25 @@ export class KuzzleRequest {
    */
   public id: string;
 
+  /*
+   * The backing fields behind the accessors below, declared so that the
+   * compiler checks them. They are keyed by the zero-width-space constants
+   * above rather than by a `private` name or a `#` field, which is what keeps
+   * `console.log(request)` printing what it has printed for ten years — see
+   * the comment on those constants. Declaring them changes nothing at runtime.
+   */
+  [_internalId]: string;
+  [_status]: number;
+  [_input]: RequestInput;
+  [_context]: RequestContext;
+  [_error]: KuzzleError | null;
+  // `unknown`, not `any`: the accessor below still answers `any` for callers,
+  // but nothing inside this class needs to treat the stored result as one.
+  [_result]: unknown;
+  [_response]: RequestResponse | null;
+  [_deprecations]: Deprecation[] | undefined;
+  [_timestamp]: number;
+
   constructor(data: any, options?: any) {
     this[_internalId] = uuid.v4();
     this[_status] = 102;
@@ -76,9 +95,14 @@ export class KuzzleRequest {
     // property
     this[_input].headers = this[_context].connection.misc.headers;
 
-    this.id = data.requestId
+    // Through a local: `assertString` answers `string | null` and the ternary
+    // is what proves it non-null here, which the declaration of `id` cannot
+    // see. `?? uuid.v4()` keeps the falsy-requestId path exactly as it was.
+    const requestId = data.requestId
       ? assert.assertString("requestId", data.requestId)
-      : uuid.v4();
+      : null;
+
+    this.id = requestId ?? uuid.v4();
 
     this[_timestamp] = data.timestamp || Date.now();
 
@@ -111,11 +135,17 @@ export class KuzzleRequest {
             options.error.status || 500,
           );
 
-          for (const prop of Object.keys(options.error).filter(
-            (key) => key !== "message" && key !== "status",
-          )) {
-            error[prop] = options.error[prop];
-          }
+          // `Object.assign` rather than an indexed write: a KuzzleError has no
+          // index signature, and these are arbitrary extra properties carried
+          // over from a plain object.
+          Object.assign(
+            error,
+            Object.fromEntries(
+              Object.entries(options.error).filter(
+                ([key]) => key !== "message" && key !== "status",
+              ),
+            ),
+          );
 
           this.setError(error);
         }
@@ -141,6 +171,16 @@ export class KuzzleRequest {
    */
   get deprecations(): Deprecation[] | void {
     return this[_deprecations];
+  }
+
+  /**
+   * The setter `RequestResponse.deprecations` has always assigned through to
+   * here, and there was no setter to assign to: in a module — which is strict
+   * mode — writing to an accessor-only property throws a TypeError. Nothing in
+   * the tree exercised it, so the throw was never seen.
+   */
+  set deprecations(deprecations: Deprecation[] | undefined) {
+    this[_deprecations] = deprecations;
   }
 
   /**
@@ -372,14 +412,14 @@ export class KuzzleRequest {
   /**
    * Return the requested controller
    */
-  getController(): string {
+  getController(): string | null {
     return this[_input].controller;
   }
 
   /**
    * Returns the requested controller's action
    */
-  getAction(): string {
+  getAction(): string | null {
     return this[_input].action;
   }
 
@@ -736,7 +776,9 @@ export class KuzzleRequest {
   /**
    * Returns the index specified in the request
    */
-  getIndex({ required = true } = {}): string {
+  getIndex(options?: { required?: true }): string;
+  getIndex(options: { required: false }): string | null;
+  getIndex({ required = true } = {}): string | null {
     const index = this.input.args.index;
 
     this.checkRequired(index, "index", required);
@@ -747,7 +789,9 @@ export class KuzzleRequest {
   /**
    * Returns the collection specified in the request
    */
-  getCollection({ required = true } = {}): string {
+  getCollection(options?: { required?: true }): string;
+  getCollection(options: { required: false }): string | null;
+  getCollection({ required = true } = {}): string | null {
     const collection = this.input.args.collection;
 
     this.checkRequired(collection, "collection", required);
@@ -801,12 +845,20 @@ export class KuzzleRequest {
    *    - `generator`: function used to generate an ID (default: 'uuid.v4')
    *
    */
+  getId(options?: {
+    ifMissing?: "error" | "generate";
+    generator?: () => string;
+  }): string;
+  getId(options: {
+    ifMissing: "ignore";
+    generator?: () => string;
+  }): string | null;
   getId(
     options: {
       ifMissing?: "error" | "generate" | "ignore";
       generator?: () => string;
     } = { generator: uuid.v4, ifMissing: "error" },
-  ): string {
+  ): string | null {
     const id = this.input.args._id;
 
     options.generator = options.generator || uuid.v4; // Default to uuid v4

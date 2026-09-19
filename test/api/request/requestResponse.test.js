@@ -76,6 +76,19 @@ describe("#RequestResponse", () => {
       response.result = result;
       should(req.result).be.exactly(result);
     });
+
+    // This setter assigns through to `KuzzleRequest.deprecations`, which had a
+    // getter and no setter — in a module, which is strict mode, that throws a
+    // TypeError. Nothing exercised it, so the throw was never seen.
+    it("should set the request deprecations", () => {
+      const deprecations = [{ message: "deprecated", version: "2.0.0" }],
+        response = new RequestResponse(req);
+
+      response.deprecations = deprecations;
+
+      should(req.deprecations).be.exactly(deprecations);
+      should(response.deprecations).be.exactly(deprecations);
+    });
   });
 
   describe("headers", () => {

@@ -17,6 +17,20 @@ describe("#RequestInput", () => {
     should(input.args).be.an.Object().and.be.empty();
     should(input.jwt).be.null();
     should(input.headers).be.null();
+    // Not null: the setter normalises "not asked for" to undefined, and the
+    // getter has always declared `boolean | undefined`. The only reader is a
+    // truthiness test in funnel.ts.
+    should(input.triggerEvents).be.undefined();
+  });
+
+  it("should set triggerEvents only when explicitly true", () => {
+    const input = new RequestInput({});
+
+    input.triggerEvents = false;
+    should(input.triggerEvents).be.undefined();
+
+    input.triggerEvents = true;
+    should(input.triggerEvents).be.true();
   });
 
   it("should dispatch data correctly across properties", () => {
