@@ -112,7 +112,7 @@ function getHandlerPart(
 ): RouteHandler {
   let part = parts.shift();
 
-  while (part !== undefined && part.length === 0 && parts.length > 0) {
+  while (part?.length === 0 && parts.length > 0) {
     part = parts.shift();
   }
 

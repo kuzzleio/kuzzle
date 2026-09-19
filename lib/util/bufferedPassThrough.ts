@@ -46,15 +46,18 @@ export class BufferedPassThrough extends stream.Duplex {
   private buffer: Buffer;
   private offset: number;
 
-  constructor(
-    options: stream.DuplexOptions = { highWaterMark: DEFAULT_BUFFER_SIZE },
-  ) {
-    super(options);
-    // `highWaterMark` is optional on DuplexOptions, and the default above only
-    // covers the no-argument call: `new BufferedPassThrough({})` reached
-    // `Buffer.alloc(undefined)`, which throws.
-    this.bufferSize = options.highWaterMark ?? DEFAULT_BUFFER_SIZE;
-    this.buffer = Buffer.alloc(this.bufferSize);
+  constructor(options?: stream.DuplexOptions) {
+    // `highWaterMark` is optional on DuplexOptions, so it is resolved once and
+    // handed to both the stream and the internal buffer. It used to be a
+    // default argument, which covered the no-argument call and nothing else:
+    // `new BufferedPassThrough({})` reached `Buffer.alloc(undefined)`, which
+    // throws.
+    const highWaterMark = options?.highWaterMark ?? DEFAULT_BUFFER_SIZE;
+
+    super({ ...options, highWaterMark });
+
+    this.bufferSize = highWaterMark;
+    this.buffer = Buffer.alloc(highWaterMark);
     this.offset = 0;
   }
 

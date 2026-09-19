@@ -397,11 +397,7 @@ export class ClusterIdCardHandler {
    * Removes a remote node IdCard from the node known topology
    */
   async removeNode(id: string): Promise<void> {
-    if (
-      !this.disposed &&
-      this.idCard !== null &&
-      this.idCard.topology.delete(id)
-    ) {
+    if (!this.disposed && this.idCard?.topology.delete(id)) {
       await this.save();
     }
   }

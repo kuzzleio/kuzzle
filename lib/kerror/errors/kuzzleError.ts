@@ -55,19 +55,22 @@ export class KuzzleError extends Error {
   public props: string[] | undefined;
 
   /**
-   * `message` has a default because callers really do omit it:
+   * `message` admits `undefined` because callers really do omit it:
    * `doc/build-error-codes.js` constructs one of each class with no arguments
    * just to read its `status`, and plugin code in JavaScript may do the same.
    * That produced an error with an empty message before this file was typed,
-   * and it still does.
+   * and it still does. It is spelled as part of the type rather than as a
+   * default value because `status` after it is required.
    */
   constructor(
-    message: string | Error = "",
+    message: string | Error | undefined,
     status: number,
     id?: string,
     code?: number,
   ) {
-    super(typeof message === "string" ? message : message.message);
+    super(
+      util.types.isNativeError(message) ? message.message : (message ?? ""),
+    );
 
     this.status = status;
     this.code = code;
@@ -76,10 +79,8 @@ export class KuzzleError extends Error {
     this.stack = undefined;
 
     if (util.types.isNativeError(message)) {
-      this.message = message.message;
       this.stack = message.stack;
     } else {
-      this.message = message;
       Error.captureStackTrace(this, KuzzleError);
     }
   }
