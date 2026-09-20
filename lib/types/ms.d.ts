@@ -20,26 +20,22 @@
  */
 
 /**
- * Target definition
+ * `ms` 2.1.3 ships no types. Declared here rather than depended on through
+ * `@types/ms`, the same reasoning as `didyoumean.d.ts`: a dependency change is
+ * not this slice's to make, and the API Kuzzle uses is one function.
  *
- * Target are used to specify multiple index and collection
- * inside of a single query
- * @example
- * {
- *   "index": "yellow-taxi",
- *   "collections": ["foo", "bar"]
- * }
+ * `ms` also converts the other way (`ms(60000)` → `"1m"`) and takes a `long`
+ * option. Kuzzle only ever parses a duration string, so only that direction is
+ * declared: an unused declaration is a claim nothing checks.
  */
-export type Target = {
-  index?: string;
-  collections?: string[];
-};
+declare module "ms" {
+  /**
+   * @param value - a duration string, e.g. `"15m"`
+   *
+   * @returns the duration in milliseconds, or `undefined` when `value` is not
+   * a duration `ms` understands.
+   */
+  function ms(value: string): number | undefined;
 
-/**
- * A target that has been through `BaseController.assertTargetsAreValid`.
- *
- * That assertion rejects a target missing `index` or `collections`, so the
- * storage layer — which is only ever handed validated targets — can read both
- * without re-checking them.
- */
-export type ValidatedTarget = Required<Target>;
+  export = ms;
+}

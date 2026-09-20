@@ -56,6 +56,13 @@
 # Step 12 K2 (2026-09-19): lib/api/request. 121 of its 133 errors were the
 # zero-width-space private-field convention; the backing keys are now declared
 # class members, which changes nothing at runtime.
+# Step 12 K3, part 1 (2026-09-20): lib/service/storage/8/elasticsearch.ts, the
+# heaviest file of the flip (235 errors). Four levers carried most of it: a
+# nullable `userId`/`_kuzzle_info` (TD-62), writing document metadata through
+# the local the request holds rather than back off the optional request field,
+# a `_catAliases` helper that narrows what `cat.aliases` declares as optional,
+# and a non-empty tuple from `_getAliasFromIndice`. `ms` and `semver` got local
+# declarations rather than @types packages, the didyoumean.d.ts precedent.
 
 bin/copy-binaries.ts
 index.ts
@@ -183,6 +190,7 @@ lib/model/storage/apiKey.ts
 lib/model/storage/baseModel.ts
 lib/service/service.ts
 lib/service/storage/7/esWrapper.ts
+lib/service/storage/8/elasticsearch.ts
 lib/service/storage/8/esWrapper.ts
 lib/service/storage/Elasticsearch.ts
 lib/types/ApiRoute.ts
